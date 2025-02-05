@@ -89,10 +89,7 @@ rules:
     comment: >
       This is not possible because the integrations generates entities
       based on a user supplied config or discovery.
-  reconfiguration-flow:
-    status: done
-    comment: >
-      This integration can also be reconfigured via options flow.
+  reconfiguration-flow: done
   dynamic-devices:
     status: done
     comment: |
@@ -126,6 +123,7 @@ rules:
     comment: |
       This integration does not use web sessions.
   strict-typing:
-    status: todo
-    comment: |
-      Requirement 'paho-mqtt==1.6.1' appears untyped
+    status: done
+    comment: >
+      Typing for 'paho-mqtt==1.6.1' supported via 'types-paho-mqtt==1.6.0.20240321'
+      (requirements_test.txt).

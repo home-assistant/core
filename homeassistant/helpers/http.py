@@ -46,9 +46,9 @@ def request_handler_factory(
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
     """Wrap the handler classes."""
     is_coroutinefunction = asyncio.iscoroutinefunction(handler)
-    assert is_coroutinefunction or is_callback(
-        handler
-    ), "Handler should be a coroutine or a callback."
+    assert is_coroutinefunction or is_callback(handler), (
+        "Handler should be a coroutine or a callback."
+    )
 
     async def handle(request: web.Request) -> web.StreamResponse:
         """Handle incoming request."""

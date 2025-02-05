@@ -1,7 +1,7 @@
 """Tests for La Marzocco sensors."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pylamarzocco.const import MachineModel
@@ -9,21 +9,13 @@ from pylamarzocco.models import LaMarzoccoScale
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-SENSORS = (
-    "total_coffees_made",
-    "total_flushes_made",
-    "shot_timer",
-    "current_coffee_temperature",
-    "current_steam_temperature",
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_sensors(
@@ -35,19 +27,9 @@ async def test_sensors(
 ) -> None:
     """Test the La Marzocco sensors."""
 
-    serial_number = mock_lamarzocco.serial_number
-
-    await async_init_integration(hass, mock_config_entry)
-
-    for sensor in SENSORS:
-        state = hass.states.get(f"sensor.{serial_number}_{sensor}")
-        assert state
-        assert state == snapshot(name=f"{serial_number}_{sensor}-sensor")
-
-        entry = entity_registry.async_get(state.entity_id)
-        assert entry
-        assert entry.device_id
-        assert entry == snapshot(name=f"{serial_number}_{sensor}-entry")
+    with patch("homeassistant.components.lamarzocco.PLATFORMS", [Platform.SENSOR]):
+        await async_init_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_shot_timer_not_exists(
@@ -102,6 +84,7 @@ async def test_scale_battery(
     await async_init_integration(hass, mock_config_entry)
 
     state = hass.states.get("sensor.lmz_123a45_battery")
+    assert state
     assert state == snapshot
 
     entry = entity_registry.async_get(state.entity_id)

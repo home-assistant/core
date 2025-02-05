@@ -4,7 +4,6 @@ from unittest.mock import Mock, patch
 
 import pytest
 
-from homeassistant.components import usb
 from homeassistant.components.hassio import AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_ZIGBEE,
@@ -17,10 +16,11 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from tests.common import MockConfigEntry
 
-USB_DATA_SKY = usb.UsbServiceInfo(
+USB_DATA_SKY = UsbServiceInfo(
     device="/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
     vid="10C4",
     pid="EA60",
@@ -29,7 +29,7 @@ USB_DATA_SKY = usb.UsbServiceInfo(
     description="SkyConnect v1.0",
 )
 
-USB_DATA_ZBT1 = usb.UsbServiceInfo(
+USB_DATA_ZBT1 = UsbServiceInfo(
     device="/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0",
     vid="10C4",
     pid="EA60",
@@ -47,7 +47,7 @@ USB_DATA_ZBT1 = usb.UsbServiceInfo(
     ],
 )
 async def test_config_flow(
-    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+    usb_data: UsbServiceInfo, model: str, hass: HomeAssistant
 ) -> None:
     """Test the config flow for SkyConnect."""
     result = await hass.config_entries.flow.async_init(
@@ -102,7 +102,7 @@ async def test_config_flow(
     ],
 )
 async def test_options_flow(
-    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+    usb_data: UsbServiceInfo, model: str, hass: HomeAssistant
 ) -> None:
     """Test the options flow for SkyConnect."""
     config_entry = MockConfigEntry(
@@ -168,7 +168,7 @@ async def test_options_flow(
     ],
 )
 async def test_options_flow_multipan_uninstall(
-    usb_data: usb.UsbServiceInfo, model: str, hass: HomeAssistant
+    usb_data: UsbServiceInfo, model: str, hass: HomeAssistant
 ) -> None:
     """Test options flow for when multi-PAN firmware is installed."""
     config_entry = MockConfigEntry(

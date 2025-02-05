@@ -64,7 +64,7 @@
     },
     "toggle": {
       "name": "[%key:common::action::toggle%]",
-      "description": "Toggle a script. Starts it, if isn't running, stops it otherwise."
+      "description": "Starts a script if it isn't running, stops it otherwise."
     }
   }
 }

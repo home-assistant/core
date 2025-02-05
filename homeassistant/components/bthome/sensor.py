@@ -67,6 +67,16 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    # Conductivity (µS/cm)
+    (
+        BTHomeSensorDeviceClass.CONDUCTIVITY,
+        Units.CONDUCTIVITY,
+    ): SensorEntityDescription(
+        key=f"{BTHomeSensorDeviceClass.CONDUCTIVITY}_{Units.CONDUCTIVITY}",
+        device_class=SensorDeviceClass.CONDUCTIVITY,
+        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     # Count (-)
     (BTHomeSensorDeviceClass.COUNT, None): SensorEntityDescription(
         key=str(BTHomeSensorDeviceClass.COUNT),
@@ -97,6 +107,12 @@ SENSOR_DESCRIPTIONS = {
         key=f"{BTHomeSensorDeviceClass.DEW_POINT}_{Units.TEMP_CELSIUS}",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Directions (°)
+    (BTHomeExtendedSensorDeviceClass.DIRECTION, Units.DEGREE): SensorEntityDescription(
+        key=f"{BTHomeExtendedSensorDeviceClass.DIRECTION}_{Units.DEGREE}",
+        native_unit_of_measurement=DEGREE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Distance (mm)
@@ -219,6 +235,16 @@ SENSOR_DESCRIPTIONS = {
         key=f"{BTHomeSensorDeviceClass.POWER}_{Units.POWER_WATT}",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    # Precipitation (mm)
+    (
+        BTHomeExtendedSensorDeviceClass.PRECIPITATION,
+        Units.LENGTH_MILLIMETERS,
+    ): SensorEntityDescription(
+        key=f"{BTHomeExtendedSensorDeviceClass.PRECIPITATION}_{Units.LENGTH_MILLIMETERS}",
+        device_class=SensorDeviceClass.PRECIPITATION,
+        native_unit_of_measurement=UnitOfLength.MILLIMETERS,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     # Pressure (mbar)
@@ -356,16 +382,6 @@ SENSOR_DESCRIPTIONS = {
         device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.TOTAL,
-    ),
-    # Conductivity (µS/cm)
-    (
-        BTHomeSensorDeviceClass.CONDUCTIVITY,
-        Units.CONDUCTIVITY,
-    ): SensorEntityDescription(
-        key=f"{BTHomeSensorDeviceClass.CONDUCTIVITY}_{Units.CONDUCTIVITY}",
-        device_class=SensorDeviceClass.CONDUCTIVITY,
-        native_unit_of_measurement=UnitOfConductivity.MICROSIEMENS_PER_CM,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
 }
 

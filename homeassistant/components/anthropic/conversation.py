@@ -27,7 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, TemplateError
 from homeassistant.helpers import device_registry as dr, intent, llm, template
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import ulid
+from homeassistant.util import ulid as ulid_util
 
 from . import AnthropicConfigEntry
 from .const import (
@@ -164,7 +164,7 @@ class AnthropicConversationEntity(
             ]
 
         if user_input.conversation_id is None:
-            conversation_id = ulid.ulid_now()
+            conversation_id = ulid_util.ulid_now()
             messages = []
 
         elif user_input.conversation_id in self.history:
@@ -177,8 +177,8 @@ class AnthropicConversationEntity(
             # a new conversation was started. If the user picks their own, they
             # want to track a conversation and we respect it.
             try:
-                ulid.ulid_to_bytes(user_input.conversation_id)
-                conversation_id = ulid.ulid_now()
+                ulid_util.ulid_to_bytes(user_input.conversation_id)
+                conversation_id = ulid_util.ulid_now()
             except ValueError:
                 conversation_id = user_input.conversation_id
 

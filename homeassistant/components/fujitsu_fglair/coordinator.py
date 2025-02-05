@@ -48,10 +48,16 @@ class FGLairCoordinator(DataUpdateCoordinator[dict[str, FujitsuHVAC]]):
             raise ConfigEntryAuthFailed("Credentials expired for Ayla IoT API") from e
 
         if not listening_entities:
-            devices = [dev for dev in devices if isinstance(dev, FujitsuHVAC)]
+            devices = [
+                dev
+                for dev in devices
+                if isinstance(dev, FujitsuHVAC) and dev.is_online()
+            ]
         else:
             devices = [
-                dev for dev in devices if dev.device_serial_number in listening_entities
+                dev
+                for dev in devices
+                if dev.device_serial_number in listening_entities and dev.is_online()
             ]
 
         try:

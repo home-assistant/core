@@ -8,7 +8,6 @@ import logging
 from typing import Any, final
 
 import aiohttp
-from universal_silabs_flasher.const import ApplicationType
 import voluptuous as vol
 
 from homeassistant.components.hassio import (
@@ -25,6 +24,7 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     OptionsFlowHandler as MultiprotocolOptionsFlowHandler,
     SerialPortSettings as MultiprotocolSerialPortSettings,
 )
+from homeassistant.components.homeassistant_hardware.util import ApplicationType
 from homeassistant.config_entries import (
     SOURCE_HARDWARE,
     ConfigEntry,

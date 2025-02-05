@@ -13,7 +13,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_CALC_METHOD,

@@ -55,9 +55,9 @@ async def test_chat(
             Message(role="user", content="test message"),
         ]
 
-        assert (
-            result.response.response_type == intent.IntentResponseType.ACTION_DONE
-        ), result
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+            result
+        )
         assert result.response.speech["plain"]["speech"] == "test response"
 
     # Test Conversation tracing
@@ -106,9 +106,9 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id=mock_config_entry.entry_id
         )
 
-    assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
 
     args = mock_chat.call_args.kwargs
     prompt = args["messages"][0]["content"]
@@ -341,7 +341,7 @@ async def test_message_history_trimming(
         for i in range(5):
             result = await conversation.async_converse(
                 hass,
-                f"message {i+1}",
+                f"message {i + 1}",
                 conversation_id="1234",
                 context=Context(),
                 agent_id=mock_config_entry.entry_id,
@@ -432,7 +432,7 @@ async def test_message_history_pruning(
         for i in range(3):
             result = await conversation.async_converse(
                 hass,
-                f"message {i+1}",
+                f"message {i + 1}",
                 conversation_id=None,
                 context=Context(),
                 agent_id=mock_config_entry.entry_id,
@@ -463,9 +463,9 @@ async def test_message_history_pruning(
             context=Context(),
             agent_id=mock_config_entry.entry_id,
         )
-        assert (
-            result.response.response_type == intent.IntentResponseType.ACTION_DONE
-        ), result
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+            result
+        )
 
         # Only the most recent histories should remain
         assert len(agent._history) == 2
@@ -490,7 +490,7 @@ async def test_message_history_unlimited(
         for i in range(100):
             result = await conversation.async_converse(
                 hass,
-                f"message {i+1}",
+                f"message {i + 1}",
                 conversation_id=conversation_id,
                 context=Context(),
                 agent_id=mock_config_entry.entry_id,

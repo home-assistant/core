@@ -35,6 +35,7 @@ from .const import (
     DATA_ADDONS_CHANGELOGS,
     DATA_ADDONS_INFO,
     DATA_ADDONS_STATS,
+    DATA_COMPONENT,
     DATA_CORE_INFO,
     DATA_CORE_STATS,
     DATA_HOST_INFO,
@@ -56,7 +57,7 @@ from .const import (
     SUPERVISOR_CONTAINER,
     SupervisorEntityModel,
 )
-from .handler import HassIO, HassioAPIError, get_supervisor_client
+from .handler import HassioAPIError, get_supervisor_client
 
 if TYPE_CHECKING:
     from .issues import SupervisorIssues
@@ -310,7 +311,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
                 hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),
         )
-        self.hassio: HassIO = hass.data[DOMAIN]
+        self.hassio = hass.data[DATA_COMPONENT]
         self.data = {}
         self.entry_id = config_entry.entry_id
         self.dev_reg = dev_reg

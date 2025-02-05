@@ -208,6 +208,17 @@ SWITCH_ENTITIES = (
     ),
 )
 
+AVAILABILITY_SWITCH_ENTITIES = (
+    ReolinkSwitchEntityDescription(
+        key="privacy_mode",
+        translation_key="privacy_mode",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "privacy_mode"),
+        value=lambda api, ch: api.baichuan.privacy_mode(ch),
+        method=lambda api, ch, value: api.baichuan.set_privacy_mode(ch, value),
+    ),
+)
+
 NVR_SWITCH_ENTITIES = (
     ReolinkNVRSwitchEntityDescription(
         key="email",
@@ -265,18 +276,6 @@ CHIME_SWITCH_ENTITIES = (
         value=lambda chime: chime.led_state,
         method=lambda chime, value: chime.set_option(led=value),
     ),
-)
-
-# Can be removed in HA 2025.2.0
-DEPRECATED_HDR = ReolinkSwitchEntityDescription(
-    key="hdr",
-    cmd_key="GetIsp",
-    translation_key="hdr",
-    entity_category=EntityCategory.CONFIG,
-    entity_registry_enabled_default=False,
-    supported=lambda api, ch: api.supported(ch, "HDR"),
-    value=lambda api, ch: api.HDR_on(ch) is True,
-    method=lambda api, ch, value: api.set_HDR(ch, value),
 )
 
 # Can be removed in HA 2025.4.0
@@ -356,6 +355,12 @@ async def async_setup_entry(
         for entity_description in CHIME_SWITCH_ENTITIES
         for chime in reolink_data.host.api.chime_list
     )
+    entities.extend(
+        ReolinkAvailabilitySwitchEntity(reolink_data, channel, entity_description)
+        for entity_description in AVAILABILITY_SWITCH_ENTITIES
+        for channel in reolink_data.host.api.channels
+        if entity_description.supported(reolink_data.host.api, channel)
+    )
 
     # Can be removed in HA 2025.4.0
     depricated_dict = {}
@@ -367,26 +372,6 @@ async def async_setup_entry(
     entity_reg = er.async_get(hass)
     reg_entities = er.async_entries_for_config_entry(entity_reg, config_entry.entry_id)
     for entity in reg_entities:
-        # Can be removed in HA 2025.2.0
-        if entity.domain == "switch" and entity.unique_id.endswith("_hdr"):
-            if entity.disabled:
-                entity_reg.async_remove(entity.entity_id)
-                continue
-
-            ir.async_create_issue(
-                hass,
-                DOMAIN,
-                "hdr_switch_deprecated",
-                is_fixable=False,
-                severity=ir.IssueSeverity.WARNING,
-                translation_key="hdr_switch_deprecated",
-            )
-            entities.extend(
-                ReolinkSwitchEntity(reolink_data, channel, DEPRECATED_HDR)
-                for channel in reolink_data.host.api.channels
-                if DEPRECATED_HDR.supported(reolink_data.host.api, channel)
-            )
-
         # Can be removed in HA 2025.4.0
         if entity.domain == "switch" and entity.unique_id in depricated_dict:
             if entity.disabled:
@@ -439,6 +424,15 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, self._channel, False)
         self.async_write_ha_state()
+
+
+class ReolinkAvailabilitySwitchEntity(ReolinkSwitchEntity):
+    """Switch entity class for Reolink IP cameras which will be available even if API is unavailable."""
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return self._host.api.camera_online(self._channel)
 
 
 class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):
