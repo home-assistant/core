@@ -11,6 +11,7 @@ from freezegun.api import FrozenDateTimeFactory
 from habiticalib import HabiticaUserResponse
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from syrupy.extensions.image import PNGImageSnapshotExtension
 
 from homeassistant.components.habitica.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -75,7 +76,9 @@ async def test_image_platform(
         resp = await client.get(state.attributes["entity_picture"])
         assert resp.status == HTTPStatus.OK
 
-        assert (await resp.read()) == snapshot
+        assert (await resp.read()) == snapshot(
+            extension_class=PNGImageSnapshotExtension
+        )
 
         habitica.get_user.return_value = HabiticaUserResponse.from_json(
             load_fixture("rogue_fixture.json", DOMAIN)
@@ -91,4 +94,6 @@ async def test_image_platform(
         resp = await client.get(state.attributes["entity_picture"])
         assert resp.status == HTTPStatus.OK
 
-        assert (await resp.read()) == snapshot
+        assert (await resp.read()) == snapshot(
+            extension_class=PNGImageSnapshotExtension
+        )
