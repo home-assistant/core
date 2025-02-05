@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     FAN_MEDIUM,
     ClimateEntity,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
@@ -49,6 +50,14 @@ ADVANTAGE_AIR_MYTEMP_ENABLED = "climateControlModeEnabled"
 ADVANTAGE_AIR_HEAT_TARGET = "myAutoHeatTargetTemp"
 ADVANTAGE_AIR_COOL_TARGET = "myAutoCoolTargetTemp"
 ADVANTAGE_AIR_MYFAN = "autoAA"
+ADVANTAGE_AIR_MYAUTO_MODE_SET = "myAutoModeCurrentSetMode"
+
+HVAC_ACTIONS = {
+    "cool": HVACAction.COOLING,
+    "heat": HVACAction.HEATING,
+    "vent": HVACAction.FAN,
+    "dry": HVACAction.DRYING,
+}
 
 HVAC_MODES = [
     HVACMode.OFF,
@@ -174,6 +183,17 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
         if self._ac["state"] == ADVANTAGE_AIR_STATE_ON:
             return ADVANTAGE_AIR_HVAC_MODES.get(self._ac["mode"])
         return HVACMode.OFF
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current running HVAC action."""
+        if self._ac["state"] == ADVANTAGE_AIR_STATE_OFF:
+            return HVACAction.OFF
+        if self._ac["mode"] == "myauto":
+            return HVAC_ACTIONS.get(
+                self._ac.get(ADVANTAGE_AIR_MYAUTO_MODE_SET, HVACAction.OFF)
+            )
+        return HVAC_ACTIONS.get(self._ac["mode"])
 
     @property
     def fan_mode(self) -> str | None:
