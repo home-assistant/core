@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
+from .const import CONF_ACCESSORIES, CONF_EXPERT, DOMAIN
 from .coordinator import ToloSaunaUpdateCoordinator
 
 PLATFORMS = [
@@ -40,3 +40,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data[DOMAIN].pop(entry.entry_id)
 
     return unload_ok
+
+
+async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Migrate TOLO config entry."""
+    config_data = dict(config_entry.data)
+
+    if config_entry.minor_version < 2:
+        if config_data.get(CONF_ACCESSORIES) is None:
+            config_data[CONF_ACCESSORIES] = {}
+        if config_data.get(CONF_EXPERT) is None:
+            config_data[CONF_EXPERT] = {}
+    hass.config_entries.async_update_entry(
+        config_entry, data=config_data, minor_version=2, version=1
+    )
+
+    return True

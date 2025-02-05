@@ -79,6 +79,9 @@ CONFIG_SCHEMA = vol.Schema(
 class ToloConfigFlow(ConfigFlow, domain=DOMAIN):
     """ConfigFlow for the TOLO Integration."""
 
+    VERSION = 1
+    MINOR_VERSION = 2
+
     _dhcp_discovery_info: DhcpServiceInfo | None = None
 
     @staticmethod
