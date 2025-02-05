@@ -21,8 +21,8 @@ from .errors import (
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_get_cert(
-    hass: HomeAssistant,
     host: str,
     port: int,
 ) -> Optional[OpenSSL.crypto.X509]:
@@ -32,7 +32,7 @@ async def async_get_cert(
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
     context.verify_flags = context.verify_flags | ssl.VERIFY_CRL_CHECK_CHAIN
-    
+
     conn = socket.create_connection((host, port), timeout=TIMEOUT)
     sock = context.wrap_socket(conn, server_hostname=host)
     try:
@@ -43,14 +43,14 @@ async def async_get_cert(
         return None
     return OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, der_cert)
 
+
 async def get_cert_expiry_timestamp(
-    hass: HomeAssistant,
     hostname: str,
     port: int,
 ) -> datetime.datetime:
     """Return the certificate's expiration timestamp."""
     try:
-        cert = await async_get_cert(hass, hostname, port)
+        cert = await async_get_cert(hostname, port)
     except socket.gaierror as err:
         raise ResolveFailed(f"Cannot resolve hostname: {hostname}") from err
     except TimeoutError as err:
@@ -67,9 +67,15 @@ async def get_cert_expiry_timestamp(
         raise ValidationFailure(err.args[0]) from err
 
     if cert is None:
-        raise ValidationFailure(f"No certificate received from server: {hostname}:{port}")
+        raise ValidationFailure(
+            f"No certificate received from server: {hostname}:{port}"
+        )
 
     not_after = cert.get_notAfter()
     if not_after is None:
-        raise ValidationFailure(f"No expiry date in certificate from server: {hostname}:{port}")
-    return datetime.datetime.strptime(not_after.decode(encoding="ascii"), "%Y%m%d%H%M%SZ").replace(tzinfo=pytz.UTC)
+        raise ValidationFailure(
+            f"No expiry date in certificate from server: {hostname}:{port}"
+        )
+    return datetime.datetime.strptime(
+        not_after.decode(encoding="ascii"), "%Y%m%d%H%M%SZ"
+    ).replace(tzinfo=pytz.UTC)

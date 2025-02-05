@@ -39,7 +39,6 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
         """Test connection to the server and try to get the certificate."""
         try:
             await get_cert_expiry_timestamp(
-                self.hass,
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
             )
