@@ -120,7 +120,10 @@ class ListCompleteItemIntent(intent.IntentHandler):
         # Find item in list
         matching_item = None
         for todo_item in target_list.todo_items or ():
-            if item in (todo_item.uid, todo_item.summary):
+            if (
+                item in (todo_item.uid, todo_item.summary)
+                and todo_item.status == TodoItemStatus.NEEDS_ACTION
+            ):
                 matching_item = todo_item
                 break
         if not matching_item or not matching_item.uid:

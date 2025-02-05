@@ -71,8 +71,16 @@ async def test_complete_item_intent_errors(
     test_entity: TodoListEntity,
 ) -> None:
     """Test errors with the complete item intent."""
-    test_entity._attr_name = "List 1"
-    await create_mock_platform(hass, [test_entity])
+    entity1 = MockTodoListEntity(
+        [
+            TodoItem(summary="beer", uid="1", status=TodoItemStatus.COMPLETED),
+        ]
+    )
+    entity1._attr_name = "List 1"
+    entity1.entity_id = "todo.list_1"
+
+    # Add entities to hass
+    await create_mock_platform(hass, [entity1])
 
     # Try to complete item in list that does not exist
     with pytest.raises(intent.MatchFailedError):
@@ -94,6 +102,16 @@ async def test_complete_item_intent_errors(
             "test",
             todo_intent.INTENT_LIST_COMPLETE_ITEM,
             {ATTR_ITEM: {"value": "bread"}, ATTR_NAME: {"value": "list 1"}},
+            assistant=conversation.DOMAIN,
+        )
+
+    # Item is already completed
+    with pytest.raises(intent.IntentHandleError):
+        await intent.async_handle(
+            hass,
+            "test",
+            todo_intent.INTENT_LIST_COMPLETE_ITEM,
+            {ATTR_ITEM: {"value": "beer"}, ATTR_NAME: {"value": "list 1"}},
             assistant=conversation.DOMAIN,
         )
 
