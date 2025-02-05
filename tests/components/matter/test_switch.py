@@ -198,14 +198,14 @@ async def test_evse_sensor(
     matter_node: MatterNode,
 ) -> None:
     """Test evse sensors."""
-    state = hass.states.get("switch.evse_evse_charging")
+    state = hass.states.get("switch.evse_enable_charging")
     assert state
     assert state.state == "on"
     # test switch service
     await hass.services.async_call(
         "switch",
         "turn_off",
-        {"entity_id": "switch.evse_evse_charging"},
+        {"entity_id": "switch.evse_enable_charging"},
         blocking=True,
     )
     assert matter_client.send_device_command.call_count == 1
@@ -218,7 +218,7 @@ async def test_evse_sensor(
     await hass.services.async_call(
         "switch",
         "turn_on",
-        {"entity_id": "switch.evse_evse_charging"},
+        {"entity_id": "switch.evse_enable_charging"},
         blocking=True,
     )
     assert matter_client.send_device_command.call_count == 2

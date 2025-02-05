@@ -330,7 +330,7 @@
         "name": "Child lock"
       },
       "evse_charging_switch": {
-        "name": "EVSE charging"
+        "name": "Enable charging"
       }
     },
     "vacuum": {

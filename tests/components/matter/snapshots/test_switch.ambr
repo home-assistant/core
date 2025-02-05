@@ -327,7 +327,7 @@
     'state': 'off',
   })
 # ---
-# name: test_switches[silabs_evse_charging][switch.evse_evse_charging-entry]
+# name: test_switches[silabs_evse_charging][switch.evse_enable_charging-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -339,7 +339,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.evse_evse_charging',
+    'entity_id': 'switch.evse_enable_charging',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -351,7 +351,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'EVSE charging',
+    'original_name': 'Enable charging',
     'platform': 'matter',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -360,13 +360,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switches[silabs_evse_charging][switch.evse_evse_charging-state]
+# name: test_switches[silabs_evse_charging][switch.evse_enable_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse EVSE charging',
+      'friendly_name': 'evse Enable charging',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.evse_evse_charging',
+    'entity_id': 'switch.evse_enable_charging',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
