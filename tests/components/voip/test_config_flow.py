@@ -91,3 +91,17 @@ async def test_options_flow(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {"sip_port": 5061, "sip_user": "HA"}
+
+    # Manual remove user
+    result = await hass.config_entries.options.async_init(
+        config_entry.entry_id,
+    )
+
+    assert config_entry.options == {"sip_port": 5061, "sip_user": "HA"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={"sip_port": 5060, "sip_user": None},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert config_entry.options == {"sip_port": 5060, "sip_user": None}
