@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_API, CONF_DEVICES, CONF_ID, CONF_NAME, CONF_PWM, DOMAIN
+from .const import CONF_API, CONF_DEVICES, CONF_ID, CONF_NAME, DOMAIN, PLATFORM_PWM
 from .entity import GryfConfigFlowEntity, GryfYamlEntity
 
 
@@ -35,7 +35,7 @@ async def async_setup_platform(
         )
         lights.append(GryfYamlLight(device))
 
-    for conf in hass.data[DOMAIN].get(CONF_PWM, {}):
+    for conf in hass.data[DOMAIN].get(PLATFORM_PWM, {}):
         device = _GryfPwm(
             conf.get(CONF_NAME),
             conf.get(CONF_ID) // 10,
@@ -66,7 +66,7 @@ async def async_setup_entry(
                 config_entry.runtime_data[CONF_API],
             )
             lights.append(GryfConfigFlowLight(device, config_entry))
-        elif conf.get(CONF_TYPE) == CONF_PWM:
+        elif conf.get(CONF_TYPE) == PLATFORM_PWM:
             device = _GryfPwm(
                 conf.get(CONF_NAME),
                 conf.get(CONF_ID) // 10,
