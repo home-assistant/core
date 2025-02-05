@@ -66,7 +66,9 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class ActronSystemClimate(CoordinatorEntity, ClimateEntity):
+class ActronSystemClimate(
+    CoordinatorEntity[ActronNeoDataUpdateCoordinator], ClimateEntity
+):
     """Representation of the Actron Air Neo system."""
 
     _attr_has_entity_name = True
