@@ -15,7 +15,7 @@ MAC = bytes.fromhex("c4dd57f8a55f")
 
 
 @pytest.mark.parametrize(
-    "system_status",
+    ("system_status", "state"),
     [
         (None, "none"),
         (MotionMountSystemError.MotorError, "motor"),
@@ -28,11 +28,10 @@ MAC = bytes.fromhex("c4dd57f8a55f")
 async def test_error_status_sensor_states(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    system_status: (MotionMountSystemError, str),
+    system_status: MotionMountSystemError,
+    state: str,
 ) -> None:
     """Tests the state attributes."""
-    (status, state) = system_status
-
     with patch(
         "homeassistant.components.motionmount.motionmount.MotionMount",
         autospec=True,
@@ -40,7 +39,7 @@ async def test_error_status_sensor_states(
         motionmount_mock.return_value.name = ZEROCONF_NAME
         motionmount_mock.return_value.mac = MAC
         motionmount_mock.return_value.is_authenticated = True
-        motionmount_mock.return_value.system_status = [status]
+        motionmount_mock.return_value.system_status = [system_status]
 
         mock_config_entry.add_to_hass(hass)
 

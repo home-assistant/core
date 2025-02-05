@@ -1,5 +1,7 @@
 """Support for MotionMount sensors."""
 
+from typing import Final
+
 import motionmount
 from motionmount import MotionMountSystemError
 
@@ -10,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import MotionMountConfigEntry
 from .entity import MotionMountEntity
 
-error_messages = {
+ERROR_MESSAGES: Final = {
     MotionMountSystemError.MotorError: "motor",
     MotionMountSystemError.ObstructionDetected: "obstruction",
     MotionMountSystemError.TVWidthConstraintError: "tv_width_constraint",
@@ -56,7 +58,7 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
         """Return error status."""
         status = self.mm.system_status
 
-        for error, message in error_messages.items():
+        for error, message in ERROR_MESSAGES.items():
             if error in status:
                 return message
 
