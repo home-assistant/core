@@ -6,7 +6,7 @@ from datetime import timedelta
 from typing import Any
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_25
+from aioshelly.const import GEN1, MODEL_25
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -39,7 +39,7 @@ async def init_integration(
     gen: int | None,
     model=MODEL_25,
     sleep_period=0,
-    script: bool = False,
+    script: bool | None = None,
     options: dict[str, Any] | None = None,
     skip_setup: bool = False,
 ) -> MockConfigEntry:
@@ -48,7 +48,7 @@ async def init_integration(
         CONF_HOST: "192.168.1.37",
         CONF_SLEEP_PERIOD: sleep_period,
         "model": model,
-        CONF_SCRIPT: script,
+        CONF_SCRIPT: script or gen != GEN1,
     }
     if gen is not None:
         data[CONF_GEN] = gen

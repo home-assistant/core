@@ -957,7 +957,7 @@ async def test_options_flow_enabled_gen_2(
 ) -> None:
     """Test options are enabled for gen2 devices."""
     await async_setup_component(hass, "config", {})
-    entry = await init_integration(hass, 2, script=True)
+    entry = await init_integration(hass, 2)
 
     ws_client = await hass_ws_client(hass)
 
