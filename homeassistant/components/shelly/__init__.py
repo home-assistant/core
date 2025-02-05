@@ -39,6 +39,7 @@ from .const import (
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_COAP_PORT,
+    CONF_GEN,
     CONF_SCRIPT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
@@ -349,19 +350,29 @@ async def async_remove_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> N
         async_remove_scanner(hass, mac_address)
 
 
-async def async_migrate_entry(
-    hass: HomeAssistant, config_entry: ShellyConfigEntry
-) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Migrate old entry."""
-    if config_entry.data.get(
-        CONF_MODEL
-    ) == MODEL_WALL_DISPLAY and not config_entry.data.get(CONF_SCRIPT):
+
+    LOGGER.debug("Migrating from version %s", entry.version)
+
+    if entry.minor_version == 2:
+        if (
+            entry.data.get(CONF_GEN) not in RPC_GENERATIONS
+            or entry.data.get(CONF_SLEEP_PERIOD) is not None
+            or entry.data.get(CONF_MODEL) == MODEL_WALL_DISPLAY
+        ):
+            script_supported = False
+        else:
+            script_supported = True
+
         hass.config_entries.async_update_entry(
-            config_entry,
+            entry,
             data={
-                **config_entry.data,
-                CONF_SCRIPT: False,
+                **entry.data,
+                CONF_SCRIPT: script_supported,
             },
+            minor_version=3,
         )
-        return True
-    return False
+
+    LOGGER.debug("Migration successful")
+    return True

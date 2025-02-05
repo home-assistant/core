@@ -12,6 +12,7 @@ import pytest
 
 from homeassistant.components.shelly.const import (
     CONF_GEN,
+    CONF_SCRIPT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     REST_SENSORS_UPDATE_INTERVAL,
@@ -38,6 +39,7 @@ async def init_integration(
     gen: int | None,
     model=MODEL_25,
     sleep_period=0,
+    script: bool = False,
     options: dict[str, Any] | None = None,
     skip_setup: bool = False,
 ) -> MockConfigEntry:
@@ -46,6 +48,7 @@ async def init_integration(
         CONF_HOST: "192.168.1.37",
         CONF_SLEEP_PERIOD: sleep_period,
         "model": model,
+        CONF_SCRIPT: script,
     }
     if gen is not None:
         data[CONF_GEN] = gen

@@ -57,11 +57,11 @@ DISCOVERY_INFO_WITH_MAC = ZeroconfServiceInfo(
 
 
 @pytest.mark.parametrize(
-    ("gen", "model", "port"),
+    ("gen", "model", "port", "script"),
     [
-        (1, MODEL_1, DEFAULT_HTTP_PORT),
-        (2, MODEL_PLUS_2PM, DEFAULT_HTTP_PORT),
-        (3, MODEL_PLUS_2PM, 11200),
+        (1, MODEL_1, DEFAULT_HTTP_PORT, False),
+        (2, MODEL_PLUS_2PM, DEFAULT_HTTP_PORT, True),
+        (3, MODEL_PLUS_2PM, 11200, True),
     ],
 )
 async def test_form(
@@ -69,6 +69,7 @@ async def test_form(
     gen: int,
     model: str,
     port: int,
+    script: bool,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
 ) -> None:
@@ -112,6 +113,7 @@ async def test_form(
         "model": model,
         "sleep_period": 0,
         "gen": gen,
+        "script": script,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -148,25 +150,28 @@ async def test_form_gen1_custom_port(
 
 
 @pytest.mark.parametrize(
-    ("gen", "model", "user_input", "username"),
+    ("gen", "model", "user_input", "username", "script"),
     [
         (
             1,
             MODEL_1,
             {"username": "test user", "password": "test1 password"},
             "test user",
+            False,
         ),
         (
             2,
             MODEL_PLUS_2PM,
             {"password": "test2 password"},
             "admin",
+            True,
         ),
         (
             3,
             MODEL_PLUS_2PM,
             {"password": "test2 password"},
             "admin",
+            True,
         ),
     ],
 )
@@ -176,6 +181,7 @@ async def test_form_auth(
     model: str,
     user_input: dict[str, str],
     username: str,
+    script: bool,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
 ) -> None:
@@ -222,6 +228,7 @@ async def test_form_auth(
         "gen": gen,
         "username": username,
         "password": user_input["password"],
+        "script": script,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -511,22 +518,25 @@ async def test_form_auth_errors_test_connection_gen2(
 
 
 @pytest.mark.parametrize(
-    ("gen", "model", "get_info"),
+    ("gen", "model", "get_info", "script"),
     [
         (
             1,
             MODEL_1,
             {"mac": "test-mac", "type": MODEL_1, "auth": False, "gen": 1},
+            False,
         ),
         (
             2,
             MODEL_PLUS_2PM,
             {"mac": "test-mac", "model": MODEL_PLUS_2PM, "auth": False, "gen": 2},
+            True,
         ),
         (
             3,
             MODEL_PLUS_2PM,
             {"mac": "test-mac", "model": MODEL_PLUS_2PM, "auth": False, "gen": 3},
+            True,
         ),
     ],
 )
@@ -534,6 +544,7 @@ async def test_zeroconf(
     hass: HomeAssistant,
     gen: int,
     model: str,
+    script: bool,
     get_info: dict[str, Any],
     mock_block_device: Mock,
     mock_rpc_device: Mock,
@@ -579,6 +590,7 @@ async def test_zeroconf(
         "model": model,
         "sleep_period": 0,
         "gen": gen,
+        "script": script,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -600,6 +612,7 @@ async def test_zeroconf_sleeping_device(
             "type": MODEL_1,
             "auth": False,
             "sleep_mode": True,
+            "script": False,
         },
     ):
         result = await hass.config_entries.flow.async_init(
@@ -637,6 +650,7 @@ async def test_zeroconf_sleeping_device(
         "model": MODEL_1,
         "sleep_period": 600,
         "gen": 1,
+        "script": False,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -652,6 +666,7 @@ async def test_zeroconf_sleeping_device_error(hass: HomeAssistant) -> None:
                 "type": MODEL_1,
                 "auth": False,
                 "sleep_mode": True,
+                "script": False,
             },
         ),
         patch(
@@ -799,6 +814,7 @@ async def test_zeroconf_require_auth(
         "gen": 1,
         "username": "test username",
         "password": "test password",
+        "script": False,
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -941,7 +957,7 @@ async def test_options_flow_enabled_gen_2(
 ) -> None:
     """Test options are enabled for gen2 devices."""
     await async_setup_component(hass, "config", {})
-    entry = await init_integration(hass, 2)
+    entry = await init_integration(hass, 2, script=True)
 
     ws_client = await hass_ws_client(hass)
 
@@ -1039,7 +1055,13 @@ async def test_zeroconf_already_configured_triggers_refresh_mac_in_name(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
-        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 0, "model": MODEL_1},
+        data={
+            "host": "1.1.1.1",
+            "gen": 2,
+            "sleep_period": 0,
+            "model": MODEL_1,
+            "script": False,
+        },
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -1074,7 +1096,13 @@ async def test_zeroconf_already_configured_triggers_refresh(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
-        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 0, "model": MODEL_1},
+        data={
+            "host": "1.1.1.1",
+            "gen": 2,
+            "sleep_period": 0,
+            "model": MODEL_1,
+            "script": False,
+        },
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -1114,7 +1142,13 @@ async def test_zeroconf_sleeping_device_not_triggers_refresh(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
-        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": MODEL_1},
+        data={
+            "host": "1.1.1.1",
+            "gen": 2,
+            "sleep_period": 1000,
+            "model": MODEL_1,
+            "script": False,
+        },
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -1161,7 +1195,13 @@ async def test_zeroconf_sleeping_device_attempts_configure(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
-        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": MODEL_1},
+        data={
+            "host": "1.1.1.1",
+            "gen": 2,
+            "sleep_period": 1000,
+            "model": MODEL_1,
+            "script": False,
+        },
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -1358,6 +1398,7 @@ async def test_sleeping_device_gen2_with_new_firmware(
         "model": MODEL_PLUS_2PM,
         "sleep_period": 666,
         "gen": 2,
+        "script": True,
     }
 
 

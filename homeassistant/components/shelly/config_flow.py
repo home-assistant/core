@@ -157,6 +157,7 @@ async def validate_input(
         CONF_SLEEP_PERIOD: sleep_period,
         "model": block_device.model,
         CONF_GEN: gen,
+        CONF_SCRIPT: False,
     }
 
 
@@ -164,7 +165,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     host: str = ""
     port: int = DEFAULT_HTTP_PORT
@@ -217,6 +218,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                                 "model": device_info["model"],
                                 CONF_GEN: device_info[CONF_GEN],
+                                CONF_SCRIPT: device_info[CONF_SCRIPT],
                             },
                         )
                     errors["base"] = "firmware_not_fully_provisioned"
@@ -257,6 +259,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                             "model": device_info["model"],
                             CONF_GEN: device_info[CONF_GEN],
+                            CONF_SCRIPT: device_info[CONF_SCRIPT],
                         },
                     )
                 errors["base"] = "firmware_not_fully_provisioned"
@@ -366,6 +369,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
                         "model": self.device_info["model"],
                         CONF_GEN: self.device_info[CONF_GEN],
+                        CONF_SCRIPT: self.device_info[CONF_SCRIPT],
                     },
                 )
             self._set_confirm_only()
