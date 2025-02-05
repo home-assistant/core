@@ -1,15 +1,8 @@
 {
   "issues": {
-    "automatic_backup_agents_not_loaded": {
-      "title": "The backup location {agent_id} is not loaded",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "The backup location {agent_id} is not loaded",
-            "description": "The backup location `{agent_id}` is not loaded but is still configured for automatic backups.\n\nTo remove this backup location from configured automatic backups, press the submit button. Closing this dialog will keep the backup location configured but it will not be working until the backup location is loaded successfully again."
-          }
-        }
-      }
+    "automatic_backup_agents_unavailable": {
+      "title": "The backup location {agent_id} is unavailable",
+      "description": "The backup location `{agent_id}` is unavailable but is still configured for automatic backups.\n\nPlease visit the [automatic backup configuration page]({backup_settings}) to review and update your backup locations. Backups will not be uploaded to selected locations that are unavailable."
     },
     "automatic_backup_failed_create": {
       "title": "Automatic backup could not be created",

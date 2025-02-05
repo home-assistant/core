@@ -12,15 +12,18 @@ from typing import TYPE_CHECKING, Self, TypedDict
 from cronsim import CronSim
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.event import async_call_later, async_track_point_in_time
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .models import BackupManagerError, Folder
 
 if TYPE_CHECKING:
     from .manager import BackupManager, ManagerBackup
+
+AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID = "automatic_backup_agents_unavailable"
 
 CRON_PATTERN_DAILY = "{m} {h} * * *"
 CRON_PATTERN_WEEKLY = "{m} {h} * * {d}"
@@ -151,6 +154,7 @@ class BackupConfig:
             retention=RetentionConfig(),
             schedule=BackupSchedule(),
         )
+        self._hass = hass
         self._manager = manager
 
     def load(self, stored_config: StoredBackupConfig) -> None:
@@ -181,6 +185,14 @@ class BackupConfig:
         if automatic_backups_configured is not UNDEFINED:
             self.data.automatic_backups_configured = automatic_backups_configured
         if create_backup is not UNDEFINED:
+            if (new_agent_ids := create_backup.get("agent_ids", [])) and (
+                discarded_agent_ids := set(self.data.create_backup.agent_ids)
+                - set(new_agent_ids)
+            ):
+                for agent_id in discarded_agent_ids:
+                    delete_automatic_backup_agents_unavailable_issue(
+                        self._hass, agent_id
+                    )
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
         if retention is not UNDEFINED:
             new_retention = RetentionConfig(**retention)
@@ -561,4 +573,34 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
 
     await manager.async_delete_filtered_backups(
         include_filter=_automatic_backups_filter, delete_filter=_delete_filter
+    )
+
+
+@callback
+def create_automatic_backup_agents_unavailable_issue(
+    hass: HomeAssistant, agent_id: str
+) -> None:
+    """Create automatic backup agents unavailable issue."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_{agent_id}",
+        is_fixable=False,
+        learn_more_url="homeassistant://config/backup",
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="automatic_backup_agents_unavailable",
+        translation_placeholders={
+            "agent_id": agent_id,
+            "backup_settings": "/config/backup/settings",
+        },
+    )
+
+
+@callback
+def delete_automatic_backup_agents_unavailable_issue(
+    hass: HomeAssistant, agent_id: str
+) -> None:
+    """Delete automatic backup agents unavailable issue."""
+    ir.async_delete_issue(
+        hass, DOMAIN, f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_{agent_id}"
     )
