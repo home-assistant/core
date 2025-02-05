@@ -292,8 +292,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the EDL21 sensor."""
-    hass.data[DOMAIN] = EDL21(hass, config_entry.data, async_add_entities)
-    await hass.data[DOMAIN].connect()
+    api = EDL21(hass, config_entry.data, async_add_entities)
+    await api.connect()
 
 
 class EDL21:

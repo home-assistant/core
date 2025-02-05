@@ -83,6 +83,7 @@ class VeSyncSwitchHA(VeSyncBaseSwitch, SwitchEntity):
     ) -> None:
         """Initialize the VeSync switch device."""
         super().__init__(plug, coordinator)
+        self._attr_unique_id = f"{super().unique_id}-device_status"
         self.smartplug = plug
 
 
@@ -94,4 +95,5 @@ class VeSyncLightSwitch(VeSyncBaseSwitch, SwitchEntity):
     ) -> None:
         """Initialize Light Switch device class."""
         super().__init__(switch, coordinator)
+        self._attr_unique_id = f"{super().unique_id}-device_status"
         self.switch = switch

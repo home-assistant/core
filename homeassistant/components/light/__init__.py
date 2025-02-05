@@ -10,7 +10,7 @@ import logging
 import os
 from typing import Any, Final, Self, cast, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -35,7 +35,7 @@ from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.loader import bind_hass
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from .const import (  # noqa: F401
     COLOR_MODES_BRIGHTNESS,

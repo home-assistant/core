@@ -99,7 +99,7 @@ class IncomfortSensor(IncomfortBoilerEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self._heater.status[self.entity_description.value_key]
+        return self._heater.status[self.entity_description.value_key]  # type: ignore [no-any-return]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

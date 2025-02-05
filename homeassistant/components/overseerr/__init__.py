@@ -116,15 +116,13 @@ class OverseerrWebhookManager:
             allowed_methods=[METH_POST],
         )
         if not await self.check_need_change():
+            self.entry.runtime_data.push = True
             return
         for url in self.webhook_urls:
             if await self.test_and_set_webhook(url):
                 return
         LOGGER.info("Failed to register Overseerr webhook")
-        if (
-            cloud.async_active_subscription(self.hass)
-            and CONF_CLOUDHOOK_URL not in self.entry.data
-        ):
+        if cloud.async_active_subscription(self.hass):
             LOGGER.info("Trying to register a cloudhook URL")
             url = await _async_cloudhook_generate_url(self.hass, self.entry)
             if await self.test_and_set_webhook(url):
@@ -151,6 +149,7 @@ class OverseerrWebhookManager:
                 webhook_url=url,
                 json_payload=JSON_PAYLOAD,
             )
+            self.entry.runtime_data.push = True
             return True
         return False
 

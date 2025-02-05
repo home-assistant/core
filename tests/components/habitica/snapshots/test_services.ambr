@@ -764,7 +764,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('88de7cd9-af2b-49ce-9afd-bf941d87336b'),
         'isDue': None,
         'nextDue': list([
@@ -837,7 +838,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('2f6fcabc-f670-4ec3-ba65-817e8deea490'),
         'isDue': None,
         'nextDue': list([
@@ -913,7 +915,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('1aa3137e-ef72-4d1f-91ee-41933602f438'),
         'isDue': None,
         'nextDue': list([
@@ -984,7 +987,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('86ea2475-d1b5-4020-bdcc-c188c7996afa'),
         'isDue': None,
         'nextDue': list([
@@ -1056,7 +1060,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b'),
         'isDue': None,
         'nextDue': list([
@@ -1284,7 +1289,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('162f0bbe-a097-4a06-b4f4-8fbeed85d2ba'),
         'isDue': None,
         'nextDue': list([
@@ -1356,7 +1362,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('3fa06743-aa0f-472b-af1a-f27c755e329c'),
         'isDue': None,
         'nextDue': list([
@@ -1853,7 +1860,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('88de7cd9-af2b-49ce-9afd-bf941d87336b'),
         'isDue': None,
         'nextDue': list([
@@ -2996,7 +3004,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('88de7cd9-af2b-49ce-9afd-bf941d87336b'),
         'isDue': None,
         'nextDue': list([
@@ -3069,7 +3078,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('2f6fcabc-f670-4ec3-ba65-817e8deea490'),
         'isDue': None,
         'nextDue': list([
@@ -3145,7 +3155,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('1aa3137e-ef72-4d1f-91ee-41933602f438'),
         'isDue': None,
         'nextDue': list([
@@ -3216,7 +3227,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('86ea2475-d1b5-4020-bdcc-c188c7996afa'),
         'isDue': None,
         'nextDue': list([
@@ -3288,7 +3300,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b'),
         'isDue': None,
         'nextDue': list([
@@ -3612,7 +3625,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('3fa06743-aa0f-472b-af1a-f27c755e329c'),
         'isDue': None,
         'nextDue': list([
@@ -3690,7 +3704,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('162f0bbe-a097-4a06-b4f4-8fbeed85d2ba'),
         'isDue': None,
         'nextDue': list([
@@ -5544,7 +5559,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b'),
         'isDue': None,
         'nextDue': list([
@@ -5621,7 +5637,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('88de7cd9-af2b-49ce-9afd-bf941d87336b'),
         'isDue': None,
         'nextDue': list([
@@ -5694,7 +5711,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('2f6fcabc-f670-4ec3-ba65-817e8deea490'),
         'isDue': None,
         'nextDue': list([
@@ -5770,7 +5788,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('1aa3137e-ef72-4d1f-91ee-41933602f438'),
         'isDue': None,
         'nextDue': list([
@@ -5841,7 +5860,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('86ea2475-d1b5-4020-bdcc-c188c7996afa'),
         'isDue': None,
         'nextDue': list([
@@ -5913,7 +5933,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b'),
         'isDue': None,
         'nextDue': list([
@@ -5984,7 +6005,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('162f0bbe-a097-4a06-b4f4-8fbeed85d2ba'),
         'isDue': None,
         'nextDue': list([
@@ -6056,7 +6078,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('3fa06743-aa0f-472b-af1a-f27c755e329c'),
         'isDue': None,
         'nextDue': list([
@@ -6134,7 +6157,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('88de7cd9-af2b-49ce-9afd-bf941d87336b'),
         'isDue': None,
         'nextDue': list([
@@ -6207,7 +6231,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('2f6fcabc-f670-4ec3-ba65-817e8deea490'),
         'isDue': None,
         'nextDue': list([
@@ -6283,7 +6308,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('1aa3137e-ef72-4d1f-91ee-41933602f438'),
         'isDue': None,
         'nextDue': list([
@@ -6354,7 +6380,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('86ea2475-d1b5-4020-bdcc-c188c7996afa'),
         'isDue': None,
         'nextDue': list([
@@ -6426,7 +6453,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('162f0bbe-a097-4a06-b4f4-8fbeed85d2ba'),
         'isDue': None,
         'nextDue': list([
@@ -6498,7 +6526,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('3fa06743-aa0f-472b-af1a-f27c755e329c'),
         'isDue': None,
         'nextDue': list([

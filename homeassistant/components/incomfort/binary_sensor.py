@@ -102,7 +102,7 @@ class IncomfortBinarySensor(IncomfortBoilerEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the status of the sensor."""
-        return self._heater.status[self.entity_description.value_key]
+        return bool(self._heater.status[self.entity_description.value_key])
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

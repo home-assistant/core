@@ -89,6 +89,19 @@ def get_options_schema(country: str) -> vol.Schema:
     return vol.Schema(schema)
 
 
+def get_entry_name(language: str, country: str, province: str | None) -> str:
+    """Generate the entity name from the user language and location."""
+    try:
+        locale = Locale.parse(language, sep="-")
+    except UnknownLocaleError:
+        # Default to (US) English if language not recognized by babel
+        # Mainly an issue with English flavors such as "en-GB"
+        locale = Locale("en")
+    country_str = locale.territories[country]  # blocking I/O
+    province_str = f", {province}" if province else ""
+    return f"{country_str}{province_str}"
+
+
 class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Holiday."""
 
@@ -159,15 +172,9 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({**data, **(options or {})})
 
-            try:
-                locale = Locale.parse(self.hass.config.language, sep="-")
-            except UnknownLocaleError:
-                # Default to (US) English if language not recognized by babel
-                # Mainly an issue with English flavors such as "en-GB"
-                locale = Locale("en")
-            province_str = f", {province}" if province else ""
-            name = f"{locale.territories[country]}{province_str}"
-
+            name = await self.hass.async_add_executor_job(
+                get_entry_name, self.hass.config.language, country, province
+            )
             return self.async_create_entry(title=name, data=data, options=options)
 
         options_schema = await self.hass.async_add_executor_job(
@@ -196,14 +203,9 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._async_abort_entries_match({**data, **(options or {})})
 
-            try:
-                locale = Locale.parse(self.hass.config.language, sep="-")
-            except UnknownLocaleError:
-                # Default to (US) English if language not recognized by babel
-                # Mainly an issue with English flavors such as "en-GB"
-                locale = Locale("en")
-            province_str = f", {province}" if province else ""
-            name = f"{locale.territories[country]}{province_str}"
+            name = await self.hass.async_add_executor_job(
+                get_entry_name, self.hass.config.language, country, province
+            )
 
             if options:
                 return self.async_update_reload_and_abort(

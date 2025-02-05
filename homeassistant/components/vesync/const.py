@@ -48,6 +48,7 @@ DEV_TYPE_TO_HA = {
     "EverestAir": "fan",
     "Vital200S": "fan",
     "Vital100S": "fan",
+    "SmartTowerFan": "fan",
     "ESD16": "walldimmer",
     "ESWD16": "walldimmer",
     "ESL100": "bulb-dimmable",
@@ -91,4 +92,9 @@ SKU_TO_BASE_DEVICE = {
     "LAP-EL551S-AEUR": "EverestAir",  # Alt ID Model EverestAir
     "LAP-EL551S-WEU": "EverestAir",  # Alt ID Model EverestAir
     "LAP-EL551S-WUS": "EverestAir",  # Alt ID Model EverestAir
+    "SmartTowerFan": "SmartTowerFan",
+    "LTF-F422S-KEU": "SmartTowerFan",  # Alt ID Model SmartTowerFan
+    "LTF-F422S-WUSR": "SmartTowerFan",  # Alt ID Model SmartTowerFan
+    "LTF-F422_WJP": "SmartTowerFan",  # Alt ID Model SmartTowerFan
+    "LTF-F422S-WUS": "SmartTowerFan",  # Alt ID Model SmartTowerFan
 }

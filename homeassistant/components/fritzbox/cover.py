@@ -71,21 +71,21 @@ class FritzboxCover(FritzBoxDeviceEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.hass.async_add_executor_job(self.data.set_blind_open)
+        await self.hass.async_add_executor_job(self.data.set_blind_open, True)
         await self.coordinator.async_refresh()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        await self.hass.async_add_executor_job(self.data.set_blind_close)
+        await self.hass.async_add_executor_job(self.data.set_blind_close, True)
         await self.coordinator.async_refresh()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.hass.async_add_executor_job(
-            self.data.set_level_percentage, 100 - kwargs[ATTR_POSITION]
+            self.data.set_level_percentage, 100 - kwargs[ATTR_POSITION], True
         )
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
-        await self.hass.async_add_executor_job(self.data.set_blind_stop)
+        await self.hass.async_add_executor_job(self.data.set_blind_stop, True)
         await self.coordinator.async_refresh()

@@ -23,7 +23,7 @@ from .const import (
 )
 from .coordinator import LetPotDeviceCoordinator
 
-PLATFORMS: list[Platform] = [Platform.TIME]
+PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.TIME]
 
 type LetPotConfigEntry = ConfigEntry[list[LetPotDeviceCoordinator]]
 

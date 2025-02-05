@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import datetime
 import logging
 import struct
 from typing import Any, cast
@@ -44,7 +43,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import get_hub
 from .const import (
+    CALL_TYPE_COIL,
     CALL_TYPE_REGISTER_HOLDING,
+    CALL_TYPE_WRITE_COIL,
     CALL_TYPE_WRITE_REGISTER,
     CALL_TYPE_WRITE_REGISTERS,
     CONF_CLIMATES,
@@ -71,6 +72,7 @@ from .const import (
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_OFF_VALUE,
     CONF_HVAC_ON_VALUE,
+    CONF_HVAC_ONOFF_COIL,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -113,15 +115,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Read configuration and create Modbus climate."""
-    if discovery_info is None:
+    if discovery_info is None or not (climates := discovery_info[CONF_CLIMATES]):
         return
-
-    entities = []
-    for entity in discovery_info[CONF_CLIMATES]:
-        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        entities.append(ModbusThermostat(hass, hub, entity))
-
-    async_add_entities(entities)
+    hub = get_hub(hass, discovery_info[CONF_NAME])
+    async_add_entities(ModbusThermostat(hass, hub, config) for config in climates)
 
 
 class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
@@ -260,6 +257,13 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
         else:
             self._hvac_onoff_register = None
 
+        if CONF_HVAC_ONOFF_COIL in config:
+            self._hvac_onoff_coil = config[CONF_HVAC_ONOFF_COIL]
+            if HVACMode.OFF not in self._attr_hvac_modes:
+                self._attr_hvac_modes.append(HVACMode.OFF)
+        else:
+            self._hvac_onoff_coil = None
+
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
@@ -293,6 +297,15 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     CALL_TYPE_WRITE_REGISTER,
                 )
 
+        if self._hvac_onoff_coil is not None:
+            # Turn HVAC Off by writing 0 to the On/Off coil, or 1 otherwise.
+            await self._hub.async_pb_call(
+                self._slave,
+                self._hvac_onoff_coil,
+                0 if hvac_mode == HVACMode.OFF else 1,
+                CALL_TYPE_WRITE_COIL,
+            )
+
         if self._hvac_mode_register is not None:
             # Write a value to the mode register for the desired mode.
             for value, mode in self._hvac_mode_mapping:
@@ -313,7 +326,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                         )
                     break
 
-        await self.async_update()
+        await self._async_update_write_state()
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
@@ -335,7 +348,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                     CALL_TYPE_WRITE_REGISTER,
                 )
 
-        await self.async_update()
+        await self._async_update_write_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new target swing mode."""
@@ -358,7 +371,7 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                             CALL_TYPE_WRITE_REGISTER,
                         )
                     break
-        await self.async_update()
+        await self._async_update_write_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -413,9 +426,9 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
                 CALL_TYPE_WRITE_REGISTERS,
             )
         self._attr_available = result is not None
-        await self.async_update()
+        await self._async_update_write_state()
 
-    async def async_update(self, now: datetime | None = None) -> None:
+    async def _async_update(self) -> None:
         """Update Target & Current Temperature."""
         # remark "now" is a dummy parameter to avoid problems with
         # async_track_time_interval
@@ -490,7 +503,10 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             if onoff == self._hvac_off_value:
                 self._attr_hvac_mode = HVACMode.OFF
 
-        self.async_write_ha_state()
+        if self._hvac_onoff_coil is not None:
+            onoff = await self._async_read_coil(self._hvac_onoff_coil)
+            if onoff == 0:
+                self._attr_hvac_mode = HVACMode.OFF
 
     async def _async_read_register(
         self, register_type: str, register: int, raw: bool | None = False
@@ -516,3 +532,11 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             return None
         self._attr_available = True
         return float(self._value)
+
+    async def _async_read_coil(self, address: int) -> int | None:
+        result = await self._hub.async_pb_call(self._slave, address, 1, CALL_TYPE_COIL)
+        if result is not None and result.bits is not None:
+            self._attr_available = True
+            return int(result.bits[0])
+        self._attr_available = False
+        return None

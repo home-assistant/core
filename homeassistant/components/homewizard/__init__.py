@@ -1,12 +1,18 @@
 """The Homewizard integration."""
 
-from homewizard_energy import HomeWizardEnergy, HomeWizardEnergyV1, HomeWizardEnergyV2
+from homewizard_energy import (
+    HomeWizardEnergy,
+    HomeWizardEnergyV1,
+    HomeWizardEnergyV2,
+    has_v2_api,
+)
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import HWEnergyDeviceUpdateCoordinator
@@ -19,7 +25,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
 
     api: HomeWizardEnergy
 
-    if token := entry.data.get(CONF_TOKEN):
+    is_battery = entry.unique_id.startswith("HWE-BAT") if entry.unique_id else False
+
+    if (token := entry.data.get(CONF_TOKEN)) and is_battery:
         api = HomeWizardEnergyV2(
             entry.data[CONF_IP_ADDRESS],
             token=token,
@@ -30,6 +38,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
             entry.data[CONF_IP_ADDRESS],
             clientsession=async_get_clientsession(hass),
         )
+
+        if is_battery:
+            await async_check_v2_support_and_create_issue(hass, entry)
 
     coordinator = HWEnergyDeviceUpdateCoordinator(hass, api)
     try:
@@ -63,3 +74,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_check_v2_support_and_create_issue(
+    hass: HomeAssistant, entry: HomeWizardConfigEntry
+) -> None:
+    """Check if the device supports v2 and create an issue if not."""
+
+    if not await has_v2_api(entry.data[CONF_IP_ADDRESS], async_get_clientsession(hass)):
+        return
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        f"migrate_to_v2_api_{entry.entry_id}",
+        is_fixable=True,
+        is_persistent=False,
+        learn_more_url="https://home-assistant.io/integrations/homewizard/#which-button-do-i-need-to-press-to-configure-the-device",
+        translation_key="migrate_to_v2_api",
+        translation_placeholders={
+            "title": entry.title,
+        },
+        severity=IssueSeverity.WARNING,
+        data={"entry_id": entry.entry_id},
+    )
