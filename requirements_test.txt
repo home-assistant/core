@@ -41,7 +41,6 @@ types-beautifulsoup4==4.12.0.20250204
 types-caldav==1.3.0.20241107
 types-chardet==0.1.5
 types-decorator==5.1.8.20250121
-types-paho-mqtt==1.6.0.20240321
 types-pexpect==4.9.0.20241208
 types-pillow==10.2.0.20240822
 types-protobuf==5.29.1.20241207
