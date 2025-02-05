@@ -5,10 +5,10 @@
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
           "password": "[%key:common::config_flow::data::password%]",
-          "channel": "DMX Starting Channel",
+          "channel": "DMX starting channel",
           "light_type": "Light type"
         },
-        "description": "Please enter the following details, including the IP address of your local Axion DMX Controller. It is recommended you set it to a static IP address or configure a DHCP reservation so this address does not change."
+        "description": "Please enter the following details, including the IP address of your local Axion DMX controller. It is recommended you set it to a static IP address or configure a DHCP reservation so this address does not change."
       }
     },
     "error": {
