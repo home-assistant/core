@@ -30,6 +30,22 @@ async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> 
         )
     assert str(excinfo.value) == "Item beer not found on your shopping list"
 
+    # Item is on list, but is already completed
+    await intent.async_handle(
+        hass, "test", "HassShoppingListAddItem", {"item": {"value": "beer"}}
+    )
+
+    await intent.async_handle(
+        hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
+    )
+
+    with pytest.raises(IntentHandleError) as excinfo:
+        await intent.async_handle(
+            hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
+        )
+
+    assert str(excinfo.value) == "Item beer not found on your shopping list"
+
 
 async def test_recent_items_intent(hass: HomeAssistant, sl_setup) -> None:
     """Test recent items."""
