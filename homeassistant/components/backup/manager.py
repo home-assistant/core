@@ -50,7 +50,14 @@ from .const import (
     EXCLUDE_FROM_BACKUP,
     LOGGER,
 )
-from .models import AgentBackup, BackupError, BackupManagerError, BaseBackup, Folder
+from .models import (
+    AgentBackup,
+    BackupError,
+    BackupManagerError,
+    BackupReaderWriterError,
+    BaseBackup,
+    Folder,
+)
 from .store import BackupStore
 from .util import (
     AsyncIteratorReader,
@@ -272,12 +279,6 @@ class BackupReaderWriter(abc.ABC):
         on_progress: Callable[[RestoreBackupEvent | IdleEvent], None],
     ) -> None:
         """Get restore events after core restart."""
-
-
-class BackupReaderWriterError(BackupError):
-    """Backup reader/writer error."""
-
-    error_code = "backup_reader_writer_error"
 
 
 class IncorrectPasswordError(BackupReaderWriterError):

@@ -136,7 +136,7 @@ async def test_create_backup_service(
         agent_ids=["backup.local"],
         backup_name="Custom backup 2025.1.0",
         extra_metadata={
-            "instance_id": hass.data["core.uuid"],
+            "instance_id": "our_uuid",
             "with_automatic_settings": False,
         },
         include_addons=None,
@@ -595,7 +595,7 @@ async def test_initiate_backup(
         "compressed": True,
         "date": ANY,
         "extra": {
-            "instance_id": hass.data["core.uuid"],
+            "instance_id": "our_uuid",
             "with_automatic_settings": False,
         },
         "homeassistant": {
@@ -625,6 +625,7 @@ async def test_initiate_backup(
         "backup_id": backup_id,
         "database_included": include_database,
         "date": ANY,
+        "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
         "failed_agent_ids": [],
         "folders": [],
         "homeassistant_included": True,
@@ -675,6 +676,10 @@ async def test_initiate_backup_with_agent_error(
             "backup_id": "backup1",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -691,6 +696,10 @@ async def test_initiate_backup_with_agent_error(
             "backup_id": "backup2",
             "database_included": False,
             "date": "1980-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "unknown_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -713,6 +722,10 @@ async def test_initiate_backup_with_agent_error(
             "backup_id": "backup3",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -836,6 +849,7 @@ async def test_initiate_backup_with_agent_error(
         "backup_id": "abc123",
         "database_included": True,
         "date": ANY,
+        "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
         "failed_agent_ids": ["test.remote"],
         "folders": [],
         "homeassistant_included": True,
@@ -1770,6 +1784,10 @@ async def test_receive_backup_agent_error(
             "backup_id": "backup1",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -1786,6 +1804,10 @@ async def test_receive_backup_agent_error(
             "backup_id": "backup2",
             "database_included": False,
             "date": "1980-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "unknown_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -1808,6 +1830,10 @@ async def test_receive_backup_agent_error(
             "backup_id": "backup3",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -3325,6 +3351,7 @@ async def test_initiate_backup_per_agent_encryption(
         "backup_id": backup_id,
         "database_included": True,
         "date": ANY,
+        "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
         "failed_agent_ids": [],
         "folders": [],
         "homeassistant_included": True,
