@@ -27,6 +27,7 @@ async def test_switch_on(
 ) -> None:
     """Test turn-on service."""
     mock_homee.nodes = [build_mock_node("switches.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("switch.test_switch").state is not STATE_ON
@@ -47,6 +48,7 @@ async def test_switch_off(
 ) -> None:
     """Test turn-off service."""
     mock_homee.nodes = [build_mock_node("switches.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("switch.test_switch_identification_mode").state is STATE_ON
@@ -74,7 +76,7 @@ async def test_switch_device_class(
         == SwitchDeviceClass.OUTLET
     )
     assert (
-        hass.states.get("switch.test_switch_impulse_2").attributes["device_class"]
+        hass.states.get("switch.test_switch_watchdog").attributes["device_class"]
         == SwitchDeviceClass.SWITCH
     )
 

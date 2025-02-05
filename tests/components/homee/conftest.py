@@ -67,5 +67,6 @@ def mock_homee() -> Generator[AsyncMock]:
         homee.connected = True
 
         homee.get_access_token.return_value = "test_token"
+        homee.get_node_by_id.return_value = None
 
         yield homee
