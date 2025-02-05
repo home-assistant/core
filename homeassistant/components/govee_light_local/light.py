@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from govee_local_api import GoveeDevice, GoveeLightCapability
+from govee_local_api import GoveeDevice, GoveeLightFeatures
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -71,13 +71,13 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         capabilities = device.capabilities
         color_modes = {ColorMode.ONOFF}
         if capabilities:
-            if GoveeLightCapability.COLOR_RGB in capabilities:
+            if GoveeLightFeatures.COLOR_RGB & capabilities.features:
                 color_modes.add(ColorMode.RGB)
-            if GoveeLightCapability.COLOR_KELVIN_TEMPERATURE in capabilities:
+            if GoveeLightFeatures.COLOR_KELVIN_TEMPERATURE & capabilities.features:
                 color_modes.add(ColorMode.COLOR_TEMP)
                 self._attr_max_color_temp_kelvin = 9000
                 self._attr_min_color_temp_kelvin = 2000
-            if GoveeLightCapability.BRIGHTNESS in capabilities:
+            if GoveeLightFeatures.BRIGHTNESS & capabilities.features:
                 color_modes.add(ColorMode.BRIGHTNESS)
 
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)
