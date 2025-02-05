@@ -16,7 +16,7 @@ from evohomeasync2.schema.const import (
 
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import EvoBroker, EvoService
 from .const import DOMAIN

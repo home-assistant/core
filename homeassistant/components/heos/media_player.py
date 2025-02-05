@@ -135,7 +135,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     def __init__(self, coordinator: HeosCoordinator, player: HeosPlayer) -> None:
         """Initialize."""
-        self._media_position_updated_at = None
+        self._media_position_updated_at: datetime | None = None
         self._player: HeosPlayer = player
         self._attr_unique_id = str(player.player_id)
         model_parts = player.model.split(maxsplit=1)
@@ -151,7 +151,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         )
         super().__init__(coordinator, context=player.player_id)
 
-    async def _player_update(self, event):
+    async def _player_update(self, event: str) -> None:
         """Handle player attribute updated."""
         if event == heos_const.EVENT_PLAYER_NOW_PLAYING_PROGRESS:
             self._media_position_updated_at = utcnow()

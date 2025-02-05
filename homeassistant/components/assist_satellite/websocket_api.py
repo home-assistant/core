@@ -10,7 +10,6 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.util import uuid as uuid_util
 
 from .connection_test import CONNECTION_TEST_URL_BASE
@@ -20,7 +19,6 @@ from .const import (
     DOMAIN,
     AssistSatelliteEntityFeature,
 )
-from .entity import AssistSatelliteEntity
 
 CONNECTION_TEST_TIMEOUT = 30
 
@@ -167,7 +165,7 @@ async def websocket_test_connection(
 
     Send an announcement to the device with a special media id.
     """
-    component: EntityComponent[AssistSatelliteEntity] = hass.data[DOMAIN]
+    component = hass.data[DATA_COMPONENT]
     satellite = component.get_entity(msg["entity_id"])
     if satellite is None:
         connection.send_error(

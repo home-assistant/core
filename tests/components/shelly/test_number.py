@@ -18,7 +18,7 @@ from homeassistant.components.number import (
     SERVICE_SET_VALUE,
     NumberMode,
 )
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import BLU_TRV_TIMEOUT, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
@@ -415,3 +415,39 @@ async def test_blu_trv_number_entity(
 
         entry = entity_registry.async_get(entity_id)
         assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+async def test_blu_trv_set_value(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the set value action for BLU TRV number entity."""
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+
+    entity_id = f"{NUMBER_DOMAIN}.trv_name_external_temperature"
+
+    assert hass.states.get(entity_id).state == "15.2"
+
+    monkeypatch.setitem(mock_blu_trv.status["blutrv:200"], "current_C", 22.2)
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {
+            ATTR_ENTITY_ID: f"{NUMBER_DOMAIN}.trv_name_external_temperature",
+            ATTR_VALUE: 22.2,
+        },
+        blocking=True,
+    )
+    mock_blu_trv.mock_update()
+    mock_blu_trv.call_rpc.assert_called_once_with(
+        "BluTRV.Call",
+        {
+            "id": 200,
+            "method": "Trv.SetExternalTemperature",
+            "params": {"id": 0, "t_C": 22.2},
+        },
+        BLU_TRV_TIMEOUT,
+    )
+
+    assert hass.states.get(entity_id).state == "22.2"

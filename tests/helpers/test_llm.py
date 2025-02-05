@@ -745,7 +745,7 @@ async def test_script_tool(
     area = area_registry.async_create("Living room")
     floor = floor_registry.async_create("2")
 
-    assert llm.SCRIPT_PARAMETERS_CACHE not in hass.data
+    assert llm.ACTION_PARAMETERS_CACHE not in hass.data
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
@@ -769,7 +769,7 @@ async def test_script_tool(
     }
     assert tool.parameters.schema == schema
 
-    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
             "This is a test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
@@ -866,7 +866,7 @@ async def test_script_tool(
     ):
         await hass.services.async_call("script", "reload", blocking=True)
 
-    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {}
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
@@ -882,7 +882,7 @@ async def test_script_tool(
     schema = {vol.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
-    assert hass.data[llm.SCRIPT_PARAMETERS_CACHE] == {
+    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
             "This is a new test script. Aliases: ['script name', 'script alias']",
             vol.Schema(schema),
@@ -1170,7 +1170,9 @@ async def test_selector_serializer(
 async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     """Test the calendar get events tool."""
     assert await async_setup_component(hass, "homeassistant", {})
-    hass.states.async_set("calendar.test_calendar", "on", {"friendly_name": "Test"})
+    hass.states.async_set(
+        "calendar.test_calendar", "on", {"friendly_name": "Mock Calendar Name"}
+    )
     async_expose_entity(hass, "conversation", "calendar.test_calendar", True)
     context = Context()
     llm_context = llm.LLMContext(
@@ -1182,7 +1184,11 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool for tool in api.tools if tool.name == "calendar_get_events"]
+    tool = next(
+        (tool for tool in api.tools if tool.name == "calendar_get_events"), None
+    )
+    assert tool is not None
+    assert tool.parameters.schema["calendar"].container == ["Mock Calendar Name"]
 
     calls = async_mock_service(
         hass,
@@ -1212,7 +1218,10 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
 
     tool_input = llm.ToolInput(
         tool_name="calendar_get_events",
-        tool_args={"calendar": "calendar.test_calendar", "range": "today"},
+        tool_args={
+            "calendar": "Mock Calendar Name",
+            "range": "today",
+        },
     )
     now = dt_util.now()
     with patch("homeassistant.util.dt.now", return_value=now):

@@ -51,13 +51,13 @@ class FritzboxSwitch(FritzBoxDeviceEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.check_lock_state()
-        await self.hass.async_add_executor_job(self.data.set_switch_state_on)
+        await self.hass.async_add_executor_job(self.data.set_switch_state_on, True)
         await self.coordinator.async_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.check_lock_state()
-        await self.hass.async_add_executor_job(self.data.set_switch_state_off)
+        await self.hass.async_add_executor_job(self.data.set_switch_state_off, True)
         await self.coordinator.async_refresh()
 
     def check_lock_state(self) -> None:

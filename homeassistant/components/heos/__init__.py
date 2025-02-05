@@ -6,8 +6,7 @@ from datetime import timedelta
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from . import services
@@ -40,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
     ):
         for domain, player_id in device.identifiers:
             if domain == DOMAIN and not isinstance(player_id, str):
-                device_registry.async_update_device(
+                device_registry.async_update_device(  # type: ignore[unreachable]
                     device.id, new_identifiers={(DOMAIN, str(player_id))}
                 )
             break
