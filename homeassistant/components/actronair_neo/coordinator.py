@@ -5,8 +5,11 @@ import logging
 
 from actron_neo_api import ActronNeoAPI
 
+from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from . import ActronConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -16,9 +19,7 @@ SCAN_INTERVAL = timedelta(seconds=15)
 class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Custom coordinator for Actron Air Neo integration."""
 
-    def __init__(
-        self, hass: HomeAssistant, api: ActronNeoAPI, serial_number: str
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ActronConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -26,6 +27,13 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             name="Actron Neo Status",
             update_interval=SCAN_INTERVAL,
         )
+
+        pairing_token = entry.data[CONF_API_TOKEN]
+        serial_number = entry.data[CONF_DEVICE_ID]
+
+        api = ActronNeoAPI(pairing_token=pairing_token)
+        api.refresh_token()
+
         self.api = api
         self.serial_number = serial_number
         self.system = None
