@@ -89,7 +89,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self.maps: dict[int, RoborockMapInfo] = {}
         self._home_data_rooms = {str(room.id): room.name for room in home_data_rooms}
         self.map_storage = RoborockMapStorage(
-            hass, self.config_entry.entry_id, slugify(self.duid)
+            hass, self.config_entry.entry_id, self.duid_slug
         )
         self._user_data = user_data
         self._api_client = api_client
