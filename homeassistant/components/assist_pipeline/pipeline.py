@@ -1106,13 +1106,12 @@ class PipelineRun:
                     speech: str = intent_response.speech.get("plain", {}).get(
                         "speech", ""
                     )
-                    async for _ in chat_log.async_add_assistant_content(
+                    chat_log.async_add_assistant_content_without_tools(
                         conversation.AssistantContent(
                             agent_id=agent_id,
                             content=speech,
                         )
-                    ):
-                        pass
+                    )
                     conversation_result = conversation.ConversationResult(
                         response=intent_response,
                         conversation_id=session.conversation_id,

@@ -265,12 +265,11 @@ class AssistSatelliteEntity(entity.Entity):
             self._conversation_id = session.conversation_id
 
             if start_message:
-                async for _tool_response in chat_log.async_add_assistant_content(
+                chat_log.async_add_assistant_content_without_tools(
                     conversation.AssistantContent(
                         agent_id=self.entity_id, content=start_message
                     )
-                ):
-                    pass  # no tool responses.
+                )
 
         try:
             await self.async_start_conversation(announcement)
