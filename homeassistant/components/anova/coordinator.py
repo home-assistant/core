@@ -4,12 +4,12 @@ import logging
 
 from anova_wifi import APCUpdate, APCWifiDevice
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
+from .models import AnovaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -17,12 +17,18 @@ _LOGGER = logging.getLogger(__name__)
 class AnovaCoordinator(DataUpdateCoordinator[APCUpdate]):
     """Anova custom coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: AnovaConfigEntry
 
-    def __init__(self, hass: HomeAssistant, anova_device: APCWifiDevice) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AnovaConfigEntry,
+        anova_device: APCWifiDevice,
+    ) -> None:
         """Set up Anova Coordinator."""
         super().__init__(
             hass,
+            config_entry=config_entry,
             name="Anova Precision Cooker",
             logger=_LOGGER,
         )
