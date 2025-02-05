@@ -20,13 +20,13 @@ from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_ACCESSORY_FAN, CONF_ACCESSORY_SALT_BATH, DOMAIN
 from .coordinator import ToloSaunaUpdateCoordinator
-from .entity import ToloSaunaCoordinatorEntity
+from .entity import ToloEntityDescription, ToloSaunaCoordinatorEntity, has_accessory
 
 
 @dataclass(frozen=True, kw_only=True)
-class ToloNumberEntityDescription(NumberEntityDescription):
+class ToloNumberEntityDescription(ToloEntityDescription, NumberEntityDescription):
     """Class describing TOLO Number entities."""
 
     getter: Callable[[ToloSettings], int | None]
@@ -53,6 +53,7 @@ NUMBERS = (
         native_max_value=SALT_BATH_TIMER_MAX,
         getter=lambda settings: settings.salt_bath_timer,
         setter=lambda client, value: client.set_salt_bath_timer(value),
+        accessory_required=CONF_ACCESSORY_SALT_BATH,
     ),
     ToloNumberEntityDescription(
         key="fan_timer",
@@ -61,6 +62,7 @@ NUMBERS = (
         native_max_value=FAN_TIMER_MAX,
         getter=lambda settings: settings.fan_timer,
         setter=lambda client, value: client.set_fan_timer(value),
+        accessory_required=CONF_ACCESSORY_FAN,
     ),
 )
 
@@ -73,7 +75,9 @@ async def async_setup_entry(
     """Set up number controls for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        ToloNumberEntity(coordinator, entry, description) for description in NUMBERS
+        ToloNumberEntity(coordinator, entry, description)
+        for description in NUMBERS
+        if has_accessory(entry, description.accessory_required)
     )
 
 

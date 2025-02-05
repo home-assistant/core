@@ -23,13 +23,13 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_ACCESSORY_FAN, CONF_ACCESSORY_SALT_BATH, DOMAIN
 from .coordinator import ToloSaunaUpdateCoordinator
-from .entity import ToloSaunaCoordinatorEntity
+from .entity import ToloEntityDescription, ToloSaunaCoordinatorEntity, has_accessory
 
 
 @dataclass(frozen=True, kw_only=True)
-class ToloSensorEntityDescription(SensorEntityDescription):
+class ToloSensorEntityDescription(ToloEntityDescription, SensorEntityDescription):
     """Class describing TOLO Sensor entities."""
 
     getter: Callable[[ToloStatus], int | None]
@@ -73,6 +73,7 @@ SENSORS = (
         getter=lambda status: status.salt_bath_timer,
         availability_checker=lambda settings, status: status.salt_bath_on
         and settings.salt_bath_timer is not None,
+        accessory_required=CONF_ACCESSORY_SALT_BATH,
     ),
     ToloSensorEntityDescription(
         key="fan_timer_remaining",
@@ -82,6 +83,7 @@ SENSORS = (
         getter=lambda status: status.fan_timer,
         availability_checker=lambda settings, status: status.fan_on
         and settings.fan_timer is not None,
+        accessory_required=CONF_ACCESSORY_FAN,
     ),
 )
 
@@ -94,7 +96,9 @@ async def async_setup_entry(
     """Set up (non-binary, general) sensors for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        ToloSensorEntity(coordinator, entry, description) for description in SENSORS
+        ToloSensorEntity(coordinator, entry, description)
+        for description in SENSORS
+        if has_accessory(entry, description.accessory_required)
     )
 
 

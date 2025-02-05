@@ -13,13 +13,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_ACCESSORY_AROMA_THERAPY, CONF_ACCESSORY_SALT_BATH, DOMAIN
 from .coordinator import ToloSaunaUpdateCoordinator
-from .entity import ToloSaunaCoordinatorEntity
+from .entity import ToloEntityDescription, ToloSaunaCoordinatorEntity, has_accessory
 
 
 @dataclass(frozen=True, kw_only=True)
-class ToloSwitchEntityDescription(SwitchEntityDescription):
+class ToloSwitchEntityDescription(ToloEntityDescription, SwitchEntityDescription):
     """Class describing TOLO switch entities."""
 
     getter: Callable[[ToloStatus], bool]
@@ -32,12 +32,14 @@ SWITCHES = (
         translation_key="aroma_therapy_on",
         getter=lambda status: status.aroma_therapy_on,
         setter=lambda client, value: client.set_aroma_therapy_on(value),
+        accessory_required=CONF_ACCESSORY_AROMA_THERAPY,
     ),
     ToloSwitchEntityDescription(
         key="salt_bath_on",
         translation_key="salt_bath_on",
         getter=lambda status: status.salt_bath_on,
         setter=lambda client, value: client.set_salt_bath_on(value),
+        accessory_required=CONF_ACCESSORY_SALT_BATH,
     ),
 )
 
@@ -50,7 +52,9 @@ async def async_setup_entry(
     """Set up switch controls for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        ToloSwitchEntity(coordinator, entry, description) for description in SWITCHES
+        ToloSwitchEntity(coordinator, entry, description)
+        for description in SWITCHES
+        if has_accessory(entry, description.accessory_required)
     )
 
 

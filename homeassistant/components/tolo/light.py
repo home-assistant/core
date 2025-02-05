@@ -9,9 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_ACCESSORY_LIGHT, DOMAIN
 from .coordinator import ToloSaunaUpdateCoordinator
-from .entity import ToloSaunaCoordinatorEntity
+from .entity import ToloSaunaCoordinatorEntity, has_accessory
 
 
 async def async_setup_entry(
@@ -21,7 +21,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up light controls for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([ToloLight(coordinator, entry)])
+
+    entities = []
+
+    if has_accessory(entry, CONF_ACCESSORY_LIGHT):
+        entities.append(ToloLight(coordinator, entry))
+
+    async_add_entities(entities)
 
 
 class ToloLight(ToloSaunaCoordinatorEntity, LightEntity):
@@ -42,7 +48,7 @@ class ToloLight(ToloSaunaCoordinatorEntity, LightEntity):
     @property
     def is_on(self) -> bool:
         """Return current lamp status."""
-        return self.coordinator.data.status.lamp_on
+        return bool(self.coordinator.data.status.lamp_on)
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on TOLO Sauna lamp."""

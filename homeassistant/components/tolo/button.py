@@ -8,9 +8,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_ACCESSORY_LIGHT, DOMAIN
 from .coordinator import ToloSaunaUpdateCoordinator
-from .entity import ToloSaunaCoordinatorEntity
+from .entity import ToloSaunaCoordinatorEntity, has_accessory
 
 
 async def async_setup_entry(
@@ -20,11 +20,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up buttons for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities(
-        [
+
+    entities = []
+    if has_accessory(entry, CONF_ACCESSORY_LIGHT):
+        entities.append(
             ToloLampNextColorButton(coordinator, entry),
-        ]
-    )
+        )
+
+    async_add_entities(entities)
 
 
 class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
@@ -44,7 +47,7 @@ class ToloLampNextColorButton(ToloSaunaCoordinatorEntity, ButtonEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
+        return bool(
             self.coordinator.data.status.lamp_on
             and self.coordinator.data.settings.lamp_mode == LampMode.MANUAL
         )

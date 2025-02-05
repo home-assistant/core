@@ -13,7 +13,13 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_RETRY_COUNT, DEFAULT_RETRY_TIMEOUT
+from . import CONF_EXPERT
+from .const import (
+    CONF_RETRY_COUNT,
+    CONF_RETRY_TIMEOUT,
+    DEFAULT_RETRY_COUNT,
+    DEFAULT_RETRY_TIMEOUT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +38,12 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
         """Initialize ToloSaunaUpdateCoordinator."""
         self.client = ToloClient(
             address=entry.data[CONF_HOST],
-            retry_timeout=DEFAULT_RETRY_TIMEOUT,
-            retry_count=DEFAULT_RETRY_COUNT,
+            retry_timeout=entry.data[CONF_EXPERT].get(
+                CONF_RETRY_TIMEOUT, DEFAULT_RETRY_TIMEOUT
+            ),
+            retry_count=entry.data[CONF_EXPERT].get(
+                CONF_RETRY_COUNT, DEFAULT_RETRY_COUNT
+            ),
         )
         super().__init__(
             hass=hass,

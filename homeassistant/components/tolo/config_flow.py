@@ -109,9 +109,7 @@ class ToloConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_update_reload_and_abort(
                         self._get_reconfigure_entry(), data_updates=user_input
                     )
-                return self.async_create_entry(
-                    title=DEFAULT_NAME, data={CONF_HOST: user_input[CONF_HOST]}
-                )
+                return self.async_create_entry(title=DEFAULT_NAME, data=user_input)
 
             errors["base"] = "cannot_connect"
 

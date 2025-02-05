@@ -9,9 +9,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from .const import CONF_ACCESSORY_FAN, DOMAIN
 from .coordinator import ToloSaunaUpdateCoordinator
-from .entity import ToloSaunaCoordinatorEntity
+from .entity import ToloSaunaCoordinatorEntity, has_accessory
 
 
 async def async_setup_entry(
@@ -21,7 +21,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up fan controls for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
-    async_add_entities([ToloFan(coordinator, entry)])
+
+    entities = []
+
+    if has_accessory(entry, CONF_ACCESSORY_FAN):
+        entities.append(ToloFan(coordinator, entry))
+
+    async_add_entities(entities)
 
 
 class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
@@ -41,7 +47,7 @@ class ToloFan(ToloSaunaCoordinatorEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return if sauna fan is running."""
-        return self.coordinator.data.status.fan_on
+        return bool(self.coordinator.data.status.fan_on)
 
     def turn_on(
         self,

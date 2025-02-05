@@ -13,13 +13,19 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, AromaTherapySlot, LampMode
+from .const import (
+    CONF_ACCESSORY_AROMA_THERAPY,
+    CONF_ACCESSORY_LIGHT,
+    DOMAIN,
+    AromaTherapySlot,
+    LampMode,
+)
 from .coordinator import ToloSaunaUpdateCoordinator
-from .entity import ToloSaunaCoordinatorEntity
+from .entity import ToloEntityDescription, ToloSaunaCoordinatorEntity, has_accessory
 
 
 @dataclass(frozen=True, kw_only=True)
-class ToloSelectEntityDescription(SelectEntityDescription):
+class ToloSelectEntityDescription(ToloEntityDescription, SelectEntityDescription):
     """Class describing TOLO select entities."""
 
     options: list[str]
@@ -36,6 +42,7 @@ SELECTS = (
         setter=lambda client, option: client.set_lamp_mode(
             LampMode[option.upper()].value
         ),
+        accessory_required=CONF_ACCESSORY_LIGHT,
     ),
     ToloSelectEntityDescription(
         key="aroma_therapy_slot",
@@ -47,6 +54,7 @@ SELECTS = (
         setter=lambda client, option: client.set_aroma_therapy_slot(
             AromaTherapySlot[option.upper()].value
         ),
+        accessory_required=CONF_ACCESSORY_AROMA_THERAPY,
     ),
 )
 
@@ -59,7 +67,9 @@ async def async_setup_entry(
     """Set up select entities for TOLO Sauna."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        ToloSelectEntity(coordinator, entry, description) for description in SELECTS
+        ToloSelectEntity(coordinator, entry, description)
+        for description in SELECTS
+        if has_accessory(entry, description.accessory_required)
     )
 
 
