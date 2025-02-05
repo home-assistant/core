@@ -109,7 +109,7 @@ class CloudBackupAgent(BackupAgent):
                 filename=self._get_backup_filename(),
             )
         except CloudError as err:
-            raise BackupAgentError("Failed to download backup") from err
+            raise BackupAgentError(f"Failed to download backup: {err}") from err
 
         return ChunkAsyncStreamIterator(content)
 
