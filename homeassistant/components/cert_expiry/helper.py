@@ -25,12 +25,17 @@ async def async_get_cert(
     port: int,
 ) -> dict[str, Any]:
     """Get the certificate for the host and port combination."""
+
+    context = get_default_context()
+    context.check_hostname = False
+    context.verify_mode = ssl.CERT_NONE
+    
     async with asyncio.timeout(TIMEOUT):
         transport, _ = await hass.loop.create_connection(
             asyncio.Protocol,
             host,
             port,
-            ssl=get_default_context(),
+            ssl=context,
             happy_eyeballs_delay=0.25,
             server_hostname=host,
         )
