@@ -423,8 +423,6 @@ class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
         target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
         target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
 
-        if target_hvac_mode is not None:
-            await self.async_set_hvac_mode(target_hvac_mode)
 
         if target_temperature is not None:
             # single setpoint control
