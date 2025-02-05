@@ -230,6 +230,9 @@ async def async_setup_entry(
     async_add_entities(
         EnergyFlipSensor(coordinator, user_id, description)
         for description in SENSORS_INFO
+        if description.key in coordinator.data
+        and description.sensor_type in coordinator.data[description.key]
+        and coordinator.data[description.key][description.sensor_type] is not None
     )
 
 
@@ -274,5 +277,6 @@ class EnergyFlipSensor(
             super().available
             and self.coordinator.data
             and self._source_type in self.coordinator.data
-            and self.coordinator.data[self._source_type]
+            and self._sensor_type in self.coordinator.data[self._source_type]
+            and self.coordinator.data[self._source_type][self._sensor_type] is not None
         )
