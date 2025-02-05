@@ -30,6 +30,10 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator for evohome integration/client."""
 
+    # These will not be None after _async_setup())
+    loc: ec2.Location = None  # type: ignore[assignment]
+    tcs: ec2.ControlSystem = None  # type: ignore[assignment]
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -55,10 +59,6 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         self.client_v1 = client_v1
 
         self.loc_idx = location_idx
-
-        # These will not be None after _async_setup())
-        self.loc: ec2.Location = None  # type: ignore[assignment]
-        self.tcs: ec2.ControlSystem = None  # type: ignore[assignment]
 
         self.data: EvoLocStatusResponseT = None  # type: ignore[assignment]
         self.temps: dict[str, float | None] = {}
