@@ -315,7 +315,7 @@ aionanoleaf==0.2.1
 aionotion==2024.03.0
 
 # homeassistant.components.nut
-aionut==4.3.3
+aionut==4.3.4
 
 # homeassistant.components.oncue
 aiooncue==0.3.7
