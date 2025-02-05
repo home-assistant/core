@@ -1,28 +1,110 @@
 """Tests for the OpenAI integration."""
 
+from collections.abc import Generator
+from dataclasses import dataclass, field
 from unittest.mock import AsyncMock, patch
 
 from freezegun import freeze_time
 from httpx import Response
 from openai import RateLimitError
-from openai.types.chat.chat_completion import ChatCompletion, Choice
-from openai.types.chat.chat_completion_message import ChatCompletionMessage
-from openai.types.chat.chat_completion_message_tool_call import (
-    ChatCompletionMessageToolCall,
-    Function,
+from openai.types.chat.chat_completion_chunk import (
+    ChatCompletionChunk,
+    Choice,
+    ChoiceDelta,
+    ChoiceDeltaToolCall,
+    ChoiceDeltaToolCallFunction,
 )
-from openai.types.completion_usage import CompletionUsage
-import voluptuous as vol
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import trace
+from homeassistant.components.conversation import chat_log
+from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import intent, llm
+from homeassistant.helpers import chat_session, intent
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture
+def mock_create_stream() -> Generator[AsyncMock]:
+    """Mock stream response."""
+
+    async def mock_generator(stream):
+        for value in stream:
+            yield value
+
+    with patch(
+        "openai.resources.chat.completions.AsyncCompletions.create",
+        AsyncMock(),
+    ) as mock_create:
+        mock_create.side_effect = lambda **kwargs: mock_generator(
+            mock_create.return_value.pop(0)
+        )
+
+        yield mock_create
+
+
+@dataclass
+class MockChatLog(chat_log.ChatLog):
+    """Mock chat log."""
+
+    _mock_tool_results: dict = field(default_factory=dict)
+
+    def mock_tool_results(self, results: dict) -> None:
+        """Set tool results."""
+        self._mock_tool_results = results
+
+    @property
+    def llm_api(self):
+        """Return LLM API."""
+        return self._llm_api
+
+    @llm_api.setter
+    def llm_api(self, value):
+        """Set LLM API."""
+        self._llm_api = value
+
+        if not value:
+            return
+
+        async def async_call_tool(tool_input):
+            """Call tool."""
+            if tool_input.id not in self._mock_tool_results:
+                raise ValueError(f"Tool {tool_input.id} not found")
+            return self._mock_tool_results[tool_input.id]
+
+        self._llm_api.async_call_tool = async_call_tool
+
+    def latest_content(self) -> list[conversation.Content]:
+        """Return content from latest version chat log.
+
+        The chat log makes copies until it's committed. Helper to get latest content.
+        """
+        with (
+            chat_session.async_get_chat_session(
+                self.hass, self.conversation_id
+            ) as session,
+            conversation.async_get_chat_log(self.hass, session) as chat_log,
+        ):
+            return chat_log.content
+
+
+@pytest.fixture
+async def mock_chat_log(hass: HomeAssistant) -> MockChatLog:
+    """Return mock chat logs."""
+    with (
+        patch(
+            "homeassistant.components.conversation.chat_log.ChatLog",
+            MockChatLog,
+        ),
+        chat_session.async_get_chat_session(hass, "mock-conversation-id") as session,
+        conversation.async_get_chat_log(hass, session) as chat_log,
+    ):
+        chat_log.async_add_user_content(conversation.UserContent("hello"))
+        return chat_log
 
 
 async def test_entity(
@@ -83,348 +165,177 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
-@patch(
-    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
-)
 async def test_function_call(
-    mock_get_tools,
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
+    mock_create_stream: AsyncMock,
+    mock_chat_log: MockChatLog,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test function call from the assistant."""
-    agent_id = mock_config_entry_with_assist.entry_id
-    context = Context()
-
-    mock_tool = AsyncMock()
-    mock_tool.name = "test_tool"
-    mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
-    )
-    mock_tool.async_call.return_value = "Test response"
-
-    mock_get_tools.return_value = [mock_tool]
-
-    def completion_result(*args, messages, **kwargs):
-        for message in messages:
-            role = message["role"] if isinstance(message, dict) else message.role
-            if role == "tool":
-                return ChatCompletion(
-                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
-                    choices=[
-                        Choice(
-                            finish_reason="stop",
-                            index=0,
-                            message=ChatCompletionMessage(
-                                content="I have successfully called the function",
-                                role="assistant",
-                                function_call=None,
-                                tool_calls=None,
-                            ),
-                        )
-                    ],
-                    created=1700000000,
-                    model="gpt-4-1106-preview",
-                    object="chat.completion",
-                    system_fingerprint=None,
-                    usage=CompletionUsage(
-                        completion_tokens=9, prompt_tokens=8, total_tokens=17
-                    ),
-                )
-
-        return ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="tool_calls",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content=None,
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=[
-                            ChatCompletionMessageToolCall(
-                                id="call_AbCdEfGhIjKlMnOpQrStUvWx",
-                                function=Function(
-                                    arguments='{"param1":"test_value"}',
-                                    name="test_tool",
-                                ),
-                                type="function",
-                            )
-                        ],
-                    ),
-                )
-            ],
-            created=1700000000,
-            model="gpt-4-1106-preview",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
+    mock_create_stream.return_value = [
+        # Initial conversation
+        (
+            ChatCompletionChunk(
+                id="chatcmpl-A",
+                created=1700000000,
+                model="gpt-4-1106-preview",
+                object="chat.completion.chunk",
+                choices=[
+                    Choice(
+                        index=0,
+                        delta=ChoiceDelta(
+                            tool_calls=[
+                                ChoiceDeltaToolCall(
+                                    id="call_AbCdEfGhIjKlMnOpQrStUvWx",
+                                    index=0,
+                                    function=ChoiceDeltaToolCallFunction(
+                                        name="test_tool",
+                                        arguments=None,
+                                    ),
+                                )
+                            ]
+                        ),
+                    )
+                ],
             ),
-        )
-
-    with (
-        patch(
-            "openai.resources.chat.completions.AsyncCompletions.create",
-            new_callable=AsyncMock,
-            side_effect=completion_result,
-        ) as mock_create,
-        freeze_time("2024-06-03 23:00:00"),
-    ):
-        result = await conversation.async_converse(
-            hass,
-            "Please call the test function",
-            None,
-            context,
-            agent_id=agent_id,
-        )
-
-    assert (
-        "Today's date is 2024-06-03."
-        in mock_create.mock_calls[1][2]["messages"][0]["content"]
-    )
-
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert mock_create.mock_calls[1][2]["messages"][3] == {
-        "role": "tool",
-        "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
-        "content": '"Test response"',
-    }
-    mock_tool.async_call.assert_awaited_once_with(
-        hass,
-        llm.ToolInput(
-            id="call_AbCdEfGhIjKlMnOpQrStUvWx",
-            tool_name="test_tool",
-            tool_args={"param1": "test_value"},
+            ChatCompletionChunk(
+                id="chatcmpl-A",
+                created=1700000000,
+                model="gpt-4-1106-preview",
+                object="chat.completion.chunk",
+                choices=[
+                    Choice(
+                        index=0,
+                        delta=ChoiceDelta(
+                            tool_calls=[
+                                ChoiceDeltaToolCall(
+                                    index=0,
+                                    function=ChoiceDeltaToolCallFunction(
+                                        name=None,
+                                        arguments='{"para',
+                                    ),
+                                )
+                            ]
+                        ),
+                    )
+                ],
+            ),
+            ChatCompletionChunk(
+                id="chatcmpl-A",
+                created=1700000000,
+                model="gpt-4-1106-preview",
+                object="chat.completion.chunk",
+                choices=[
+                    Choice(
+                        index=0,
+                        delta=ChoiceDelta(
+                            tool_calls=[
+                                ChoiceDeltaToolCall(
+                                    index=0,
+                                    function=ChoiceDeltaToolCallFunction(
+                                        name=None,
+                                        arguments='m1":"test_value"}',
+                                    ),
+                                )
+                            ]
+                        ),
+                    )
+                ],
+            ),
+            ChatCompletionChunk(
+                id="chatcmpl-A",
+                created=1700000000,
+                model="gpt-4-1106-preview",
+                object="chat.completion.chunk",
+                choices=[
+                    Choice(index=0, finish_reason="tool_calls", delta=ChoiceDelta())
+                ],
+            ),
         ),
-        llm.LLMContext(
-            platform="openai_conversation",
-            context=context,
-            user_prompt="Please call the test function",
-            language="en",
-            assistant="conversation",
-            device_id=None,
+        # Response after tool responses
+        (
+            ChatCompletionChunk(
+                id="chatcmpl-B",
+                created=1700000000,
+                model="gpt-4-1106-preview",
+                object="chat.completion.chunk",
+                choices=[
+                    Choice(
+                        index=0,
+                        delta=ChoiceDelta(content="Cool"),
+                        stop_reason="stop",
+                    )
+                ],
+            ),
         ),
-    )
-
-    # Test Conversation tracing
-    traces = trace.async_get_traces()
-    assert traces
-    last_trace = traces[-1].as_dict()
-    trace_events = last_trace.get("events", [])
-    assert [event["event_type"] for event in trace_events] == [
-        trace.ConversationTraceEventType.ASYNC_PROCESS,
-        trace.ConversationTraceEventType.AGENT_DETAIL,
-        trace.ConversationTraceEventType.TOOL_CALL,
     ]
-    # AGENT_DETAIL event contains the raw prompt passed to the model
-    detail_event = trace_events[1]
-    assert "Answer in plain text" in detail_event["data"]["messages"][0]["content"]
-    assert (
-        "Today's date is 2024-06-03."
-        in trace_events[1]["data"]["messages"][0]["content"]
+    mock_chat_log.mock_tool_results(
+        {
+            "call_AbCdEfGhIjKlMnOpQrStUvWx": "Test response",
+        }
     )
-    assert [t.name for t in detail_event["data"]["tools"]] == ["test_tool"]
 
-    # Call it again, make sure we have updated prompt
-    with (
-        patch(
-            "openai.resources.chat.completions.AsyncCompletions.create",
-            new_callable=AsyncMock,
-            side_effect=completion_result,
-        ) as mock_create,
-        freeze_time("2024-06-04 23:00:00"),
-    ):
+    with freeze_time("2024-06-03 23:00:00"):
         result = await conversation.async_converse(
             hass,
             "Please call the test function",
-            None,
-            context,
-            agent_id=agent_id,
-        )
-
-    assert (
-        "Today's date is 2024-06-04."
-        in mock_create.mock_calls[1][2]["messages"][0]["content"]
-    )
-    # Test old assert message not updated
-    assert (
-        "Today's date is 2024-06-03."
-        in trace_events[1]["data"]["messages"][0]["content"]
-    )
-
-
-@patch(
-    "homeassistant.components.openai_conversation.conversation.llm.AssistAPI._async_get_tools"
-)
-async def test_function_exception(
-    mock_get_tools,
-    hass: HomeAssistant,
-    mock_config_entry_with_assist: MockConfigEntry,
-    mock_init_component,
-) -> None:
-    """Test function call with exception."""
-    agent_id = mock_config_entry_with_assist.entry_id
-    context = Context()
-
-    mock_tool = AsyncMock()
-    mock_tool.name = "test_tool"
-    mock_tool.description = "Test function"
-    mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
-    )
-    mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
-
-    mock_get_tools.return_value = [mock_tool]
-
-    def completion_result(*args, messages, **kwargs):
-        for message in messages:
-            role = message["role"] if isinstance(message, dict) else message.role
-            if role == "tool":
-                return ChatCompletion(
-                    id="chatcmpl-1234567890ZYXWVUTSRQPONMLKJIH",
-                    choices=[
-                        Choice(
-                            finish_reason="stop",
-                            index=0,
-                            message=ChatCompletionMessage(
-                                content="There was an error calling the function",
-                                role="assistant",
-                                function_call=None,
-                                tool_calls=None,
-                            ),
-                        )
-                    ],
-                    created=1700000000,
-                    model="gpt-4-1106-preview",
-                    object="chat.completion",
-                    system_fingerprint=None,
-                    usage=CompletionUsage(
-                        completion_tokens=9, prompt_tokens=8, total_tokens=17
-                    ),
-                )
-
-        return ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="tool_calls",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content=None,
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=[
-                            ChatCompletionMessageToolCall(
-                                id="call_AbCdEfGhIjKlMnOpQrStUvWx",
-                                function=Function(
-                                    arguments='{"param1":"test_value"}',
-                                    name="test_tool",
-                                ),
-                                type="function",
-                            )
-                        ],
-                    ),
-                )
-            ],
-            created=1700000000,
-            model="gpt-4-1106-preview",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
-            ),
-        )
-
-    with patch(
-        "openai.resources.chat.completions.AsyncCompletions.create",
-        new_callable=AsyncMock,
-        side_effect=completion_result,
-    ) as mock_create:
-        result = await conversation.async_converse(
-            hass,
-            "Please call the test function",
-            None,
-            context,
-            agent_id=agent_id,
+            "mock-conversation-id",
+            Context(),
+            agent_id="conversation.openai",
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    assert mock_create.mock_calls[1][2]["messages"][3] == {
-        "role": "tool",
-        "tool_call_id": "call_AbCdEfGhIjKlMnOpQrStUvWx",
-        "content": '{"error": "HomeAssistantError", "error_text": "Test tool exception"}',
-    }
-    mock_tool.async_call.assert_awaited_once_with(
-        hass,
-        llm.ToolInput(
-            id="call_AbCdEfGhIjKlMnOpQrStUvWx",
-            tool_name="test_tool",
-            tool_args={"param1": "test_value"},
-        ),
-        llm.LLMContext(
-            platform="openai_conversation",
-            context=context,
-            user_prompt="Please call the test function",
-            language="en",
-            assistant="conversation",
-            device_id=None,
-        ),
-    )
+    assert mock_chat_log.latest_content() == snapshot
 
 
 async def test_assist_api_tools_conversion(
     hass: HomeAssistant,
     mock_config_entry_with_assist: MockConfigEntry,
     mock_init_component,
+    mock_create_stream,
 ) -> None:
     """Test that we are able to convert actual tools from Assist API."""
     for component in (
-        "intent",
-        "todo",
-        "light",
-        "shopping_list",
-        "humidifier",
+        "calendar",
         "climate",
-        "media_player",
-        "vacuum",
         "cover",
+        "humidifier",
+        "intent",
+        "light",
+        "media_player",
+        "script",
+        "shopping_list",
+        "todo",
+        "vacuum",
         "weather",
     ):
         assert await async_setup_component(hass, component, {})
+        hass.states.async_set(f"{component}.test", "on")
+        async_expose_entity(hass, "conversation", f"{component}.test", True)
 
-    agent_id = mock_config_entry_with_assist.entry_id
-    with patch(
-        "openai.resources.chat.completions.AsyncCompletions.create",
-        new_callable=AsyncMock,
-        return_value=ChatCompletion(
-            id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
-            choices=[
-                Choice(
-                    finish_reason="stop",
-                    index=0,
-                    message=ChatCompletionMessage(
-                        content="Hello, how can I help you?",
-                        role="assistant",
-                        function_call=None,
-                        tool_calls=None,
-                    ),
-                )
-            ],
-            created=1700000000,
-            model="gpt-3.5-turbo-0613",
-            object="chat.completion",
-            system_fingerprint=None,
-            usage=CompletionUsage(
-                completion_tokens=9, prompt_tokens=8, total_tokens=17
+    mock_create_stream.return_value = [
+        (
+            ChatCompletionChunk(
+                id="chatcmpl-B",
+                created=1700000000,
+                model="gpt-4-1106-preview",
+                object="chat.completion.chunk",
+                choices=[
+                    Choice(
+                        index=0,
+                        delta=ChoiceDelta(content="Cool"),
+                        stop_reason="stop",
+                    )
+                ],
             ),
         ),
-    ) as mock_create:
-        await conversation.async_converse(
-            hass, "hello", None, Context(), agent_id=agent_id
-        )
+    ]
 
-    tools = mock_create.mock_calls[0][2]["tools"]
+    await conversation.async_converse(
+        hass, "hello", None, Context(), agent_id="conversation.openai"
+    )
+
+    tools = mock_create_stream.mock_calls[0][2]["tools"]
     assert tools
