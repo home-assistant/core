@@ -77,10 +77,12 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
 
-        self._device_state_attrs = {self._evo_id_attr: self._evo_device.id}
+        self._device_state_attrs[self._evo_id_attr] = self._evo_device.id
 
         for attr in self._evo_state_attr_names:
             self._device_state_attrs[attr] = getattr(self._evo_device, attr)
+
+        super()._handle_coordinator_update()
 
 
 class EvoChild(EvoEntity):
@@ -172,12 +174,13 @@ class EvoChild(EvoEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+
+        self._device_state_attrs = {
+            "activeFaults": self._evo_device.active_faults,
+            "setpoints": self._setpoints,
+        }
+
         super()._handle_coordinator_update()
-
-        self._device_state_attrs["activeFaults"] = self._evo_device.active_faults
-        self._device_state_attrs["setpoints"] = self._setpoints
-
-        super().async_write_ha_state()
 
     async def update_attrs(self) -> None:
         """Update the entity's extra state attrs."""

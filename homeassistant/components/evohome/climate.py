@@ -432,13 +432,13 @@ class EvoController(EvoClimateEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
+
+        self._device_state_attrs = {
+            "activeSystemFaults": self._evo_device.active_faults
+            + self._evo_device.gateway.active_faults
+        }
+
         super()._handle_coordinator_update()
-
-        self._device_state_attrs["activeSystemFaults"] = (
-            self._evo_device.active_faults + self._evo_device.gateway.active_faults
-        )
-
-        super().async_write_ha_state()
 
     async def update_attrs(self) -> None:
         """Update the entity's extra state attrs."""
