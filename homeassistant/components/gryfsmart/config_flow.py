@@ -10,10 +10,12 @@ from serial import SerialException
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from .const import (
+    BINARY_SENSOR_DEVICE_CLASS,
     CONF_COMMUNICATION,
     CONF_DEVICES,
     CONF_EXTRA,
@@ -112,6 +114,8 @@ class GryfSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Add new device."""
+
+        errors = {}
         if user_input:
             new_device = {
                 CONF_TYPE: user_input[CONF_TYPE],
@@ -120,7 +124,15 @@ class GryfSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 CONF_EXTRA: user_input.get(CONF_EXTRA),
             }
             self._config_data[CONF_DEVICES].append(new_device)
-            return await self.async_step_device_menu()
+
+            if (
+                check_extra_parameter(
+                    user_input.get(CONF_EXTRA), user_input.get(CONF_TYPE)
+                )
+                is None
+            ):
+                return await self.async_step_device_menu()
+            errors[CONF_TYPE] = "Bad binary sensor extra parameter!"
 
         return self.async_show_form(
             step_id="add_device",
@@ -129,9 +141,10 @@ class GryfSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_TYPE): vol.In(DEVICE_TYPES),
                     vol.Required(CONF_NAME): str,
                     vol.Required(CONF_ID): int,
-                    vol.Optional(CONF_EXTRA): int,
+                    vol.Optional(CONF_EXTRA): str,
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_edit_device(
@@ -170,10 +183,23 @@ class GryfSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Edit device parameters."""
+
+        errors = {}
+
         if user_input:
-            self._config_data[CONF_DEVICES][self._edit_index] = user_input
-            self._edit_index = None
-            return await self.async_step_device_menu()
+            if (
+                check_extra_parameter(
+                    user_input.get(CONF_EXTRA), user_input.get(CONF_TYPE)
+                )
+                is None
+            ):
+                self._config_data[CONF_DEVICES][self._edit_index] = user_input
+                self._config_data[CONF_DEVICES][self._edit_index][CONF_EXTRA] = (
+                    user_input.get(CONF_EXTRA)
+                )
+                self._edit_index = None
+                return await self.async_step_device_menu()
+            errors[CONF_TYPE] = "Bad binary sensor extra parameter!"
 
         return self.async_show_form(
             step_id="edit_device_details",
@@ -188,9 +214,10 @@ class GryfSmartConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_ID, default=self._current_device[CONF_ID]): int,
                     vol.Optional(
                         CONF_EXTRA, default=self._current_device.get(CONF_EXTRA)
-                    ): int,
+                    ): str,
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_finish(
@@ -244,6 +271,9 @@ class GryfSmartOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Add new device."""
+
+        errors = {}
+
         if user_input:
             new_device = {
                 CONF_TYPE: user_input[CONF_TYPE],
@@ -251,8 +281,15 @@ class GryfSmartOptionsFlow(config_entries.OptionsFlow):
                 CONF_ID: user_input[CONF_ID],
                 CONF_EXTRA: user_input.get(CONF_EXTRA),
             }
-            self.data["devices"].append(new_device)
-            return await self.async_step_main_menu()
+            if (
+                check_extra_parameter(
+                    user_input.get(CONF_EXTRA), user_input.get(CONF_TYPE)
+                )
+                is None
+            ):
+                self.data["devices"].append(new_device)
+                return await self.async_step_main_menu()
+            errors[CONF_TYPE] = "Bad binary sensor extra parameter!"
 
         return self.async_show_form(
             step_id="add_device",
@@ -261,9 +298,10 @@ class GryfSmartOptionsFlow(config_entries.OptionsFlow):
                     vol.Required(CONF_TYPE): vol.In(DEVICE_TYPES),
                     vol.Required(CONF_NAME): str,
                     vol.Required(CONF_ID): int,
-                    vol.Optional(CONF_EXTRA): int,
+                    vol.Optional(CONF_EXTRA): str,
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_edit_device(
@@ -300,10 +338,21 @@ class GryfSmartOptionsFlow(config_entries.OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Edit device parameters."""
+
+        errors = {}
+
         if user_input:
-            self.data[CONF_DEVICES][self._edit_index] = user_input
-            self._edit_index = 0
-            return await self.async_step_main_menu()
+            if (
+                check_extra_parameter(
+                    user_input.get(CONF_EXTRA), user_input.get(CONF_TYPE)
+                )
+                is None
+            ):
+                self.data[CONF_DEVICES][self._edit_index] = user_input
+                _LOGGER.debug("%s", user_input)
+                self._edit_index = 0
+                return await self.async_step_main_menu()
+            errors[CONF_TYPE] = "Bad binary sensor extra parameter!"
 
         if self._current_device.get(CONF_EXTRA) is not None:
             return self.async_show_form(
@@ -321,9 +370,10 @@ class GryfSmartOptionsFlow(config_entries.OptionsFlow):
                         ): int,
                         vol.Optional(
                             CONF_EXTRA, default=self._current_device.get(CONF_EXTRA)
-                        ): int,
+                        ): str,
                     }
                 ),
+                errors=errors,
             )
         return self.async_show_form(
             step_id="edit_device_details",
@@ -336,9 +386,10 @@ class GryfSmartOptionsFlow(config_entries.OptionsFlow):
                         CONF_NAME, default=self._current_device[CONF_NAME]
                     ): str,
                     vol.Required(CONF_ID, default=self._current_device[CONF_ID]): int,
-                    vol.Optional(CONF_EXTRA): int,
+                    vol.Optional(CONF_EXTRA): str,
                 }
             ),
+            errors=errors,
         )
 
     async def async_step_finish(
@@ -380,3 +431,16 @@ class GryfSmartOptionsFlow(config_entries.OptionsFlow):
             ),
             errors=errors,
         )
+
+
+def check_extra_parameter(
+    extra_parameter: Any | None,
+    device_type: Any | None,
+) -> str | None:
+    """Check extra parameter."""
+
+    if device_type == Platform.BINARY_SENSOR:
+        if extra_parameter in BINARY_SENSOR_DEVICE_CLASS:
+            return None
+        return "Bad binary sensor extra parameter!"
+    return None
