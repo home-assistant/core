@@ -205,7 +205,7 @@ async def test_discovery_update(
         assert not state.attributes.get(ATTR_ASSUMED_STATE)
 
     # prepare a new message ... the same device but renamed
-    # and with differente relay configuration
+    # and with different relay configuration
     topic = "pglab/discovery/E-Board-DD53AC85/config"
     payload = {
         "ip": "192.168.1.16",
