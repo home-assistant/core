@@ -79,8 +79,6 @@ class BluesoundCoordinator(DataUpdateCoordinator[BluesoundData]):
         )
 
     async def _async_setup(self) -> None:
-        assert self.config_entry is not None
-
         preset = await self.player.presets()
         inputs = await self.player.inputs()
         status = await self.player.status()
