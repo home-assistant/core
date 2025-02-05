@@ -1,15 +1,16 @@
 """Helper functions for the Cert Expiry platform."""
 
-import asyncio
 import datetime
+import logging
 import socket
 import ssl
-from typing import Any
+from typing import Optional
+
+import OpenSSL.crypto
+import pytz
 
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import get_default_context
-
 from .const import TIMEOUT
 from .errors import (
     ConnectionRefused,
@@ -18,32 +19,29 @@ from .errors import (
     ValidationFailure,
 )
 
+_LOGGER = logging.getLogger(__name__)
 
 async def async_get_cert(
     hass: HomeAssistant,
     host: str,
     port: int,
-) -> dict[str, Any]:
+) -> Optional[OpenSSL.crypto.X509]:
     """Get the certificate for the host and port combination."""
 
     context = get_default_context()
     context.check_hostname = False
     context.verify_mode = ssl.CERT_NONE
+    context.verify_flags = context.verify_flags | ssl.VERIFY_CRL_CHECK_CHAIN
     
-    async with asyncio.timeout(TIMEOUT):
-        transport, _ = await hass.loop.create_connection(
-            asyncio.Protocol,
-            host,
-            port,
-            ssl=context,
-            happy_eyeballs_delay=0.25,
-            server_hostname=host,
-        )
+    conn = socket.create_connection((host, port), timeout=TIMEOUT)
+    sock = context.wrap_socket(conn, server_hostname=host)
     try:
-        return transport.get_extra_info("peercert")  # type: ignore[no-any-return]
+        der_cert = sock.getpeercert(True)
     finally:
-        transport.close()
-
+        sock.close()
+    if der_cert is None:
+        return None
+    return OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, der_cert)
 
 async def get_cert_expiry_timestamp(
     hass: HomeAssistant,
@@ -68,5 +66,10 @@ async def get_cert_expiry_timestamp(
     except ssl.SSLError as err:
         raise ValidationFailure(err.args[0]) from err
 
-    ts_seconds = ssl.cert_time_to_seconds(cert["notAfter"])
-    return dt_util.utc_from_timestamp(ts_seconds)
+    if cert is None:
+        raise ValidationFailure(f"No certificate received from server: {hostname}:{port}")
+
+    not_after = cert.get_notAfter()
+    if not_after is None:
+        raise ValidationFailure(f"No expiry date in certificate from server: {hostname}:{port}")
+    return datetime.datetime.strptime(not_after.decode(encoding="ascii"), "%Y%m%d%H%M%SZ").replace(tzinfo=pytz.UTC)
