@@ -425,7 +425,6 @@ class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
 
 
         if target_temperature is not None:
-            # single setpoint control
             if self.target_temperature != target_temperature:
                 await self.matter_client.send_device_command(
                     node_id=self._endpoint.node.node_id,
