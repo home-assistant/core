@@ -177,9 +177,6 @@ async def async_setup_entry(
                 _LOGGER.warning(message)
                 continue
 
-            if sensor.data is None:
-                continue
-
             # if the API returns a different unit of measurement from the description, update it
             if sensor.data is not None and sensor.data.get(field) is not None:
                 native_unit_of_measurement = UNIT_OF_MEASUREMENT_MAP.get(
