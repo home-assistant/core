@@ -32,13 +32,13 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._errors: dict[str, str] = {}
 
-    async def _test_connection(
+    def _test_connection(
         self,
         user_input: Mapping[str, Any],
     ) -> bool:
         """Test connection to the server and try to get the certificate."""
         try:
-            await get_cert_expiry_timestamp(
+            get_cert_expiry_timestamp(
                 user_input[CONF_HOST],
                 user_input.get(CONF_PORT, DEFAULT_PORT),
             )
@@ -66,7 +66,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(f"{host}:{port}")
             self._abort_if_unique_id_configured()
 
-            if await self._test_connection(user_input):
+            if self._test_connection(user_input):
                 title_port = f":{port}" if port != DEFAULT_PORT else ""
                 title = f"{host}{title_port}"
                 return self.async_create_entry(
@@ -77,9 +77,7 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Config import failed for %s", user_input[CONF_HOST])
                 return self.async_abort(reason="import_failed")
         else:
-            user_input = {}
-            user_input[CONF_HOST] = ""
-            user_input[CONF_PORT] = DEFAULT_PORT
+            user_input = {CONF_HOST: "", CONF_PORT: DEFAULT_PORT}
 
         return self.async_show_form(
             step_id="user",

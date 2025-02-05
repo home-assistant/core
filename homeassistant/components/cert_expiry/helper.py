@@ -4,13 +4,12 @@ import datetime
 import logging
 import socket
 import ssl
-from typing import Optional
+import zoneinfo
 
 import OpenSSL.crypto
-import pytz
 
-from homeassistant.core import HomeAssistant
 from homeassistant.util.ssl import get_default_context
+
 from .const import TIMEOUT
 from .errors import (
     ConnectionRefused,
@@ -22,10 +21,10 @@ from .errors import (
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_cert(
+def async_get_cert(
     host: str,
     port: int,
-) -> Optional[OpenSSL.crypto.X509]:
+) -> OpenSSL.crypto.X509 | None:
     """Get the certificate for the host and port combination."""
 
     context = get_default_context()
@@ -44,13 +43,13 @@ async def async_get_cert(
     return OpenSSL.crypto.load_certificate(OpenSSL.crypto.FILETYPE_ASN1, der_cert)
 
 
-async def get_cert_expiry_timestamp(
+def get_cert_expiry_timestamp(
     hostname: str,
     port: int,
 ) -> datetime.datetime:
     """Return the certificate's expiration timestamp."""
     try:
-        cert = await async_get_cert(hostname, port)
+        cert = async_get_cert(hostname, port)
     except socket.gaierror as err:
         raise ResolveFailed(f"Cannot resolve hostname: {hostname}") from err
     except TimeoutError as err:
@@ -78,4 +77,4 @@ async def get_cert_expiry_timestamp(
         )
     return datetime.datetime.strptime(
         not_after.decode(encoding="ascii"), "%Y%m%d%H%M%SZ"
-    ).replace(tzinfo=pytz.UTC)
+    ).replace(tzinfo=zoneinfo.ZoneInfo("UTC"))

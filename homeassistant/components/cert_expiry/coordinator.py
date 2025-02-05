@@ -39,7 +39,7 @@ class CertExpiryDataUpdateCoordinator(DataUpdateCoordinator[datetime | None]):
     async def _async_update_data(self) -> datetime | None:
         """Fetch certificate."""
         try:
-            timestamp = await get_cert_expiry_timestamp(self.host, self.port)
+            timestamp = get_cert_expiry_timestamp(self.host, self.port)
         except TemporaryFailure as err:
             raise UpdateFailed(err.args[0]) from err
         except ValidationFailure as err:
