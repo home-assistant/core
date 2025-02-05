@@ -8,9 +8,14 @@ from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError, Smlig
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.smlight.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.smlight.const import (
+    DOMAIN,
+    SCAN_FIRMWARE_INTERVAL,
+    SCAN_INTERVAL,
+)
+from homeassistant.components.update import ATTR_INSTALLED_VERSION
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.issue_registry import IssueRegistry
@@ -71,6 +76,41 @@ async def test_async_setup_missing_credentials(
     assert len(progress) == 1
     assert progress[0]["step_id"] == "reauth_confirm"
     assert progress[0]["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+
+
+async def test_async_setup_no_internet(
+    hass: HomeAssistant,
+    mock_config_entry_host: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test we still load integration when no internet is available."""
+    mock_smlight_client.get_firmware_version.side_effect = SmlightConnectionError
+
+    await setup_integration(hass, mock_config_entry_host)
+
+    entity = hass.states.get("update.mock_title_core_firmware")
+    assert entity is not None
+    assert entity.state == STATE_UNKNOWN
+
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("update.mock_title_core_firmware")
+    assert entity is not None
+    assert entity.state == STATE_UNKNOWN
+
+    mock_smlight_client.get_firmware_version.side_effect = None
+
+    freezer.tick(SCAN_FIRMWARE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity = hass.states.get("update.mock_title_core_firmware")
+    assert entity is not None
+    assert entity.state == STATE_ON
+    assert entity.attributes[ATTR_INSTALLED_VERSION] == "v2.3.6"
 
 
 @pytest.mark.parametrize("error", [SmlightConnectionError, SmlightAuthError])

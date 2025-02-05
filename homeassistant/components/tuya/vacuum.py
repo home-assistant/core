@@ -89,9 +89,8 @@ class TuyaVacuumEntity(TuyaEntity, StateVacuumEntity):
         if self.find_dpcode(DPCode.PAUSE, prefer_function=True):
             self._attr_supported_features |= VacuumEntityFeature.PAUSE
 
-        if (
-            self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True)
-            or (
+        if self.find_dpcode(DPCode.SWITCH_CHARGE, prefer_function=True) or (
+            (
                 enum_type := self.find_dpcode(
                     DPCode.MODE, dptype=DPType.ENUM, prefer_function=True
                 )

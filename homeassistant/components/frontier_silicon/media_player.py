@@ -244,7 +244,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         """Send volume up command."""
         volume = await self.fs_device.get_volume()
         volume = int(volume or 0) + 1
-        await self.fs_device.set_volume(min(volume, self._max_volume))
+        await self.fs_device.set_volume(min(volume, self._max_volume or 1))
 
     async def async_volume_down(self) -> None:
         """Send volume down command."""

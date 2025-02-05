@@ -1,17 +1,16 @@
 """Support for MotionMount sensors."""
 
 import logging
-import socket
 from typing import TYPE_CHECKING
 
 import motionmount
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS
+from homeassistant.const import ATTR_CONNECTIONS, ATTR_IDENTIFIERS, CONF_PIN
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
 
+from . import MotionMountConfigEntry
 from .const import DOMAIN, EMPTY_MAC
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,9 +22,16 @@ class MotionMountEntity(Entity):
     _attr_should_poll = False
     _attr_has_entity_name = True
 
-    def __init__(self, mm: motionmount.MotionMount, config_entry: ConfigEntry) -> None:
+    def __init__(
+        self, mm: motionmount.MotionMount, config_entry: MotionMountConfigEntry
+    ) -> None:
         """Initialize general MotionMount entity."""
         self.mm = mm
+        self.config_entry = config_entry
+
+        # We store the pin, as we might need it during reconnect
+        self.pin = config_entry.data.get(CONF_PIN)
+
         mac = format_mac(mm.mac.hex())
 
         # Create a base unique id
@@ -74,23 +80,3 @@ class MotionMountEntity(Entity):
         self.mm.remove_listener(self.async_write_ha_state)
         self.mm.remove_listener(self.update_name)
         await super().async_will_remove_from_hass()
-
-    async def _ensure_connected(self) -> bool:
-        """Make sure there is a connection with the MotionMount.
-
-        Returns false if the connection failed to be ensured.
-        """
-
-        if self.mm.is_connected:
-            return True
-        try:
-            await self.mm.connect()
-        except (ConnectionError, TimeoutError, socket.gaierror):
-            # We're not interested in exceptions here. In case of a failed connection
-            # the try/except from the caller will report it.
-            # The purpose of `_ensure_connected()` is only to make sure we try to
-            # reconnect, where failures should not be logged each time
-            return False
-        else:
-            _LOGGER.warning("Successfully reconnected to MotionMount")
-            return True

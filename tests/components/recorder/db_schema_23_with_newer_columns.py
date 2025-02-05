@@ -49,7 +49,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers.json import JSONEncoder
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 # SQLAlchemy Schema
 Base = declarative_base()
@@ -593,11 +593,11 @@ class LazyState(State):
     """A lazy version of core State."""
 
     __slots__ = [
-        "_row",
         "_attributes",
+        "_context",
         "_last_changed",
         "_last_updated",
-        "_context",
+        "_row",
     ]
 
     def __init__(self, row) -> None:  # pylint: disable=super-init-not-called

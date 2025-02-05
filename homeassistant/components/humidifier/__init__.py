@@ -7,7 +7,7 @@ from enum import StrEnum
 import logging
 from typing import Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
