@@ -1,28 +1,14 @@
 """API for OneDrive bound to Home Assistant OAuth."""
 
-from typing import Any, cast
+from typing import cast
 
-from kiota_abstractions.authentication import AccessTokenProvider, AllowedHostsValidator
+from onedrive_personal_sdk import TokenProvider
 
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
-class OneDriveAccessTokenProvider(AccessTokenProvider):
-    """Provide OneDrive authentication tied to an OAuth2 based config entry."""
-
-    def __init__(self) -> None:
-        """Initialize OneDrive auth."""
-        super().__init__()
-        # currently allowing all hosts
-        self._allowed_hosts_validator = AllowedHostsValidator(allowed_hosts=[])
-
-    def get_allowed_hosts_validator(self) -> AllowedHostsValidator:
-        """Retrieve the allowed hosts validator."""
-        return self._allowed_hosts_validator
-
-
-class OneDriveConfigFlowAccessTokenProvider(OneDriveAccessTokenProvider):
+class OneDriveConfigFlowAccessTokenProvider(TokenProvider):
     """Provide OneDrive authentication tied to an OAuth2 based config entry."""
 
     def __init__(self, token: str) -> None:
@@ -30,14 +16,12 @@ class OneDriveConfigFlowAccessTokenProvider(OneDriveAccessTokenProvider):
         super().__init__()
         self._token = token
 
-    async def get_authorization_token(  # pylint: disable=dangerous-default-value
-        self, uri: str, additional_authentication_context: dict[str, Any] = {}
-    ) -> str:
-        """Return a valid authorization token."""
+    def async_get_access_token(self) -> str:
+        """Return a valid access token."""
         return self._token
 
 
-class OneDriveConfigEntryAccessTokenProvider(OneDriveAccessTokenProvider):
+class OneDriveConfigEntryAccessTokenProvider(TokenProvider):
     """Provide OneDrive authentication tied to an OAuth2 based config entry."""
 
     def __init__(self, oauth_session: config_entry_oauth2_flow.OAuth2Session) -> None:
@@ -45,9 +29,6 @@ class OneDriveConfigEntryAccessTokenProvider(OneDriveAccessTokenProvider):
         super().__init__()
         self._oauth_session = oauth_session
 
-    async def get_authorization_token(  # pylint: disable=dangerous-default-value
-        self, uri: str, additional_authentication_context: dict[str, Any] = {}
-    ) -> str:
-        """Return a valid authorization token."""
-        await self._oauth_session.async_ensure_token_valid()
+    def async_get_access_token(self) -> str:
+        """Return a valid access token."""
         return cast(str, self._oauth_session.token[CONF_ACCESS_TOKEN])

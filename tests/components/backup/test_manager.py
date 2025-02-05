@@ -21,6 +21,7 @@ from unittest.mock import (
     patch,
 )
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.backup import (
@@ -54,6 +55,8 @@ from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
+    TEST_BACKUP_PATH_ABC123,
+    TEST_BACKUP_PATH_DEF456,
     BackupAgentTest,
     setup_backup_platform,
 )
@@ -87,6 +90,15 @@ def generate_backup_id_fixture() -> Generator[MagicMock]:
     with patch("homeassistant.components.backup.manager._generate_backup_id") as mock:
         mock.return_value = "abc123"
         yield mock
+
+
+def mock_read_backup(backup_path: Path) -> AgentBackup:
+    """Mock read backup."""
+    mock_backups = {
+        "abc123": TEST_BACKUP_ABC123,
+        "custom_def456": TEST_BACKUP_DEF456,
+    }
+    return mock_backups[backup_path.stem]
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -124,7 +136,7 @@ async def test_create_backup_service(
         agent_ids=["backup.local"],
         backup_name="Custom backup 2025.1.0",
         extra_metadata={
-            "instance_id": hass.data["core.uuid"],
+            "instance_id": "our_uuid",
             "with_automatic_settings": False,
         },
         include_addons=None,
@@ -206,6 +218,64 @@ async def test_create_backup_service(
                 "include_folders": None,
                 "include_homeassistant": True,
                 "name": None,
+                "password": None,
+            },
+            {
+                "agent_ids": ["backup.local"],
+                "backup_name": "Custom backup 2025.1.0",
+                "extra_metadata": {
+                    "custom": "data",
+                    "instance_id": ANY,
+                    "with_automatic_settings": False,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+        ),
+        (
+            {
+                "agent_ids": ["backup.local"],
+                "extra_metadata": {"custom": "data"},
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": "user defined name",
+                "password": None,
+            },
+            {
+                "agent_ids": ["backup.local"],
+                "backup_name": "user defined name",
+                "extra_metadata": {
+                    "custom": "data",
+                    "instance_id": ANY,
+                    "with_automatic_settings": False,
+                },
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "on_progress": ANY,
+                "password": None,
+            },
+        ),
+        (
+            {
+                "agent_ids": ["backup.local"],
+                "extra_metadata": {"custom": "data"},
+                "include_addons": None,
+                "include_all_addons": False,
+                "include_database": True,
+                "include_folders": None,
+                "include_homeassistant": True,
+                "name": "  ",  # Name which is just whitespace
                 "password": None,
             },
             {
@@ -334,18 +404,70 @@ async def test_create_backup_wrong_parameters(
 
 @pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
-    ("agent_ids", "backup_directory", "temp_file_unlink_call_count"),
+    (
+        "agent_ids",
+        "backup_directory",
+        "name",
+        "expected_name",
+        "expected_filename",
+        "temp_file_unlink_call_count",
+    ),
     [
-        ([LOCAL_AGENT_ID], "backups", 0),
-        (["test.remote"], "tmp_backups", 1),
-        ([LOCAL_AGENT_ID, "test.remote"], "backups", 0),
+        (
+            [LOCAL_AGENT_ID],
+            "backups",
+            None,
+            "Custom backup 2025.1.0",
+            "Custom_backup_2025.1.0_-_2025-01-30_05.42_12345678.tar",
+            0,
+        ),
+        (
+            ["test.remote"],
+            "tmp_backups",
+            None,
+            "Custom backup 2025.1.0",
+            "abc123.tar",  # We don't use friendly name for temporary backups
+            1,
+        ),
+        (
+            [LOCAL_AGENT_ID, "test.remote"],
+            "backups",
+            None,
+            "Custom backup 2025.1.0",
+            "Custom_backup_2025.1.0_-_2025-01-30_05.42_12345678.tar",
+            0,
+        ),
+        (
+            [LOCAL_AGENT_ID],
+            "backups",
+            "custom_name",
+            "custom_name",
+            "custom_name_-_2025-01-30_05.42_12345678.tar",
+            0,
+        ),
+        (
+            ["test.remote"],
+            "tmp_backups",
+            "custom_name",
+            "custom_name",
+            "abc123.tar",  # We don't use friendly name for temporary backups
+            1,
+        ),
+        (
+            [LOCAL_AGENT_ID, "test.remote"],
+            "backups",
+            "custom_name",
+            "custom_name",
+            "custom_name_-_2025-01-30_05.42_12345678.tar",
+            0,
+        ),
     ],
 )
 @pytest.mark.parametrize(
     "params",
     [
         {},
-        {"include_database": True, "name": "abc123"},
+        {"include_database": True},
         {"include_database": False},
         {"password": "pass123"},
     ],
@@ -353,6 +475,7 @@ async def test_create_backup_wrong_parameters(
 async def test_initiate_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    freezer: FrozenDateTimeFactory,
     mocked_json_bytes: Mock,
     mocked_tarfile: Mock,
     generate_backup_id: MagicMock,
@@ -360,6 +483,9 @@ async def test_initiate_backup(
     params: dict[str, Any],
     agent_ids: list[str],
     backup_directory: str,
+    name: str | None,
+    expected_name: str,
+    expected_filename: str,
     temp_file_unlink_call_count: int,
 ) -> None:
     """Test generate backup."""
@@ -382,9 +508,9 @@ async def test_initiate_backup(
         )
 
     ws_client = await hass_ws_client(hass)
+    freezer.move_to("2025-01-30 13:42:12.345678")
 
     include_database = params.get("include_database", True)
-    name = params.get("name", "Custom backup 2025.1.0")
     password = params.get("password")
     path_glob.return_value = []
 
@@ -416,7 +542,7 @@ async def test_initiate_backup(
         patch("pathlib.Path.unlink") as unlink_mock,
     ):
         await ws_client.send_json_auto_id(
-            {"type": "backup/generate", "agent_ids": agent_ids} | params
+            {"type": "backup/generate", "agent_ids": agent_ids, "name": name} | params
         )
         result = await ws_client.receive_json()
         assert result["event"] == {
@@ -469,14 +595,14 @@ async def test_initiate_backup(
         "compressed": True,
         "date": ANY,
         "extra": {
-            "instance_id": hass.data["core.uuid"],
+            "instance_id": "our_uuid",
             "with_automatic_settings": False,
         },
         "homeassistant": {
             "exclude_database": not include_database,
             "version": "2025.1.0",
         },
-        "name": name,
+        "name": expected_name,
         "protected": bool(password),
         "slug": backup_id,
         "type": "partial",
@@ -499,11 +625,12 @@ async def test_initiate_backup(
         "backup_id": backup_id,
         "database_included": include_database,
         "date": ANY,
+        "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
         "failed_agent_ids": [],
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2025.1.0",
-        "name": name,
+        "name": expected_name,
         "with_automatic_settings": False,
     }
 
@@ -517,7 +644,7 @@ async def test_initiate_backup(
 
     tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
     backup_directory = hass.config.path(backup_directory)
-    assert tar_file_path == f"{backup_directory}/{backup_id}.tar"
+    assert tar_file_path == f"{backup_directory}/{expected_filename}"
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
@@ -549,6 +676,10 @@ async def test_initiate_backup_with_agent_error(
             "backup_id": "backup1",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -565,6 +696,10 @@ async def test_initiate_backup_with_agent_error(
             "backup_id": "backup2",
             "database_included": False,
             "date": "1980-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "unknown_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -587,6 +722,10 @@ async def test_initiate_backup_with_agent_error(
             "backup_id": "backup3",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -710,6 +849,7 @@ async def test_initiate_backup_with_agent_error(
         "backup_id": "abc123",
         "database_included": True,
         "date": ANY,
+        "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
         "failed_agent_ids": ["test.remote"],
         "folders": [],
         "homeassistant_included": True,
@@ -897,7 +1037,7 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             {
                 (DOMAIN, "automatic_backup_failed"): {
                     "translation_key": "automatic_backup_failed_upload_agents",
-                    "translation_placeholders": {"failed_agents": "test.remote"},
+                    "translation_placeholders": {"failed_agents": "remote"},
                 }
             },
         ),
@@ -1311,7 +1451,11 @@ class LocalBackupAgentTest(BackupAgentTest, LocalBackupAgent):
     """Local backup agent."""
 
     def get_backup_path(self, backup_id: str) -> Path:
-        """Return the local path to a backup."""
+        """Return the local path to an existing backup."""
+        return Path("test.tar")
+
+    def get_new_backup_path(self, backup: AgentBackup) -> Path:
+        """Return the local path to a new backup."""
         return Path("test.tar")
 
 
@@ -1467,7 +1611,7 @@ async def test_exception_platform_post(hass: HomeAssistant) -> None:
             "agent_id=backup.local&agent_id=test.remote",
             2,
             1,
-            ["abc123.tar"],
+            ["Test_-_1970-01-01_00.00_00000000.tar"],
             {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123},
             b"test",
             0,
@@ -1476,7 +1620,7 @@ async def test_exception_platform_post(hass: HomeAssistant) -> None:
             "agent_id=backup.local",
             1,
             1,
-            ["abc123.tar"],
+            ["Test_-_1970-01-01_00.00_00000000.tar"],
             {},
             None,
             0,
@@ -1640,6 +1784,10 @@ async def test_receive_backup_agent_error(
             "backup_id": "backup1",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -1656,6 +1804,10 @@ async def test_receive_backup_agent_error(
             "backup_id": "backup2",
             "database_included": False,
             "date": "1980-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "unknown_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -1678,6 +1830,10 @@ async def test_receive_backup_agent_error(
             "backup_id": "backup3",
             "database_included": True,
             "date": "1970-01-01T00:00:00.000Z",
+            "extra_metadata": {
+                "instance_id": "our_uuid",
+                "with_automatic_settings": True,
+            },
             "failed_agent_ids": [],
             "folders": [
                 "media",
@@ -2023,10 +2179,6 @@ async def test_receive_backup_file_write_error(
 
     with (
         patch("pathlib.Path.open", open_mock),
-        patch(
-            "homeassistant.components.backup.manager.read_backup",
-            return_value=TEST_BACKUP_ABC123,
-        ),
     ):
         resp = await client.post(
             "/api/backup/upload?agent_id=test.remote",
@@ -2375,18 +2527,61 @@ async def test_receive_backup_file_read_error(
 
 @pytest.mark.usefixtures("path_glob")
 @pytest.mark.parametrize(
-    ("agent_id", "password_param", "restore_database", "restore_homeassistant", "dir"),
+    (
+        "agent_id",
+        "backup_id",
+        "password_param",
+        "backup_path",
+        "restore_database",
+        "restore_homeassistant",
+        "dir",
+    ),
     [
-        (LOCAL_AGENT_ID, {}, True, False, "backups"),
-        (LOCAL_AGENT_ID, {"password": "abc123"}, False, True, "backups"),
-        ("test.remote", {}, True, True, "tmp_backups"),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_ABC123.backup_id,
+            {},
+            TEST_BACKUP_PATH_ABC123,
+            True,
+            False,
+            "backups",
+        ),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_DEF456.backup_id,
+            {},
+            TEST_BACKUP_PATH_DEF456,
+            True,
+            False,
+            "backups",
+        ),
+        (
+            LOCAL_AGENT_ID,
+            TEST_BACKUP_ABC123.backup_id,
+            {"password": "abc123"},
+            TEST_BACKUP_PATH_ABC123,
+            False,
+            True,
+            "backups",
+        ),
+        (
+            "test.remote",
+            TEST_BACKUP_ABC123.backup_id,
+            {},
+            TEST_BACKUP_PATH_ABC123,
+            True,
+            True,
+            "tmp_backups",
+        ),
     ],
 )
 async def test_restore_backup(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     agent_id: str,
+    backup_id: str,
     password_param: dict[str, str],
+    backup_path: Path,
     restore_database: bool,
     restore_homeassistant: bool,
     dir: str,
@@ -2426,14 +2621,14 @@ async def test_restore_backup(
         patch.object(remote_agent, "async_download_backup") as download_mock,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
         await ws_client.send_json_auto_id(
             {
                 "type": "backup/restore",
-                "backup_id": TEST_BACKUP_ABC123.backup_id,
+                "backup_id": backup_id,
                 "agent_id": agent_id,
                 "restore_database": restore_database,
                 "restore_homeassistant": restore_homeassistant,
@@ -2473,17 +2668,17 @@ async def test_restore_backup(
         result = await ws_client.receive_json()
         assert result["success"] is True
 
-    backup_path = f"{hass.config.path()}/{dir}/abc123.tar"
+    full_backup_path = f"{hass.config.path()}/{dir}/{backup_path.name}"
     expected_restore_file = json.dumps(
         {
-            "path": backup_path,
+            "path": full_backup_path,
             "password": password,
             "remove_after_restore": agent_id != LOCAL_AGENT_ID,
             "restore_database": restore_database,
             "restore_homeassistant": restore_homeassistant,
         }
     )
-    validate_password_mock.assert_called_once_with(Path(backup_path), password)
+    validate_password_mock.assert_called_once_with(Path(full_backup_path), password)
     assert mocked_write_text.call_args[0][0] == expected_restore_file
     assert mocked_service_call.called
 
@@ -2533,7 +2728,7 @@ async def test_restore_backup_wrong_password(
         patch.object(remote_agent, "async_download_backup") as download_mock,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
@@ -2581,8 +2776,8 @@ async def test_restore_backup_wrong_password(
     ("parameters", "expected_error", "expected_reason"),
     [
         (
-            {"backup_id": TEST_BACKUP_DEF456.backup_id},
-            f"Backup def456 not found in agent {LOCAL_AGENT_ID}",
+            {"backup_id": "no_such_backup"},
+            f"Backup no_such_backup not found in agent {LOCAL_AGENT_ID}",
             "backup_manager_error",
         ),
         (
@@ -2629,7 +2824,7 @@ async def test_restore_backup_wrong_parameters(
         patch("homeassistant.core.ServiceRegistry.async_call") as mocked_service_call,
         patch(
             "homeassistant.components.backup.backup.read_backup",
-            return_value=TEST_BACKUP_ABC123,
+            side_effect=mock_read_backup,
         ),
     ):
         await ws_client.send_json_auto_id(
@@ -3156,6 +3351,7 @@ async def test_initiate_backup_per_agent_encryption(
         "backup_id": backup_id,
         "database_included": True,
         "date": ANY,
+        "extra_metadata": {"instance_id": "our_uuid", "with_automatic_settings": False},
         "failed_agent_ids": [],
         "folders": [],
         "homeassistant_included": True,

@@ -157,13 +157,9 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
                 )
             if self.cached_map != content:
                 self.cached_map = content
-                self.config_entry.async_create_task(
-                    self.hass,
-                    self.coordinator.map_storage.async_save_map(
-                        self.map_flag,
-                        content,
-                    ),
-                    f"{self.unique_id} map",
+                await self.coordinator.map_storage.async_save_map(
+                    self.map_flag,
+                    content,
                 )
         return self.cached_map
 

@@ -186,7 +186,7 @@ RPC_NUMBERS: Final = {
         mode_fn=lambda config: VIRTUAL_NUMBER_MODE_MAP.get(
             config["meta"]["ui"]["view"], NumberMode.BOX
         ),
-        step_fn=lambda config: config["meta"]["ui"]["step"],
+        step_fn=lambda config: config["meta"]["ui"].get("step"),
         # If the unit is not set, the device sends an empty string
         unit=lambda config: config["meta"]["ui"]["unit"]
         if config["meta"]["ui"]["unit"]
@@ -208,7 +208,7 @@ RPC_NUMBERS: Final = {
         method_params_fn=lambda idx, value: {
             "id": idx,
             "method": "Trv.SetPosition",
-            "params": {"id": 0, "pos": value},
+            "params": {"id": 0, "pos": int(value)},
         },
         removal_condition=lambda config, _status, key: config[key].get("enable", True)
         is True,

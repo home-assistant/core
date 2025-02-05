@@ -161,6 +161,16 @@ FRONTEND_INTEGRATIONS = {
     # integrations can be removed and database migration status is
     # visible in frontend
     "frontend",
+    # Hassio is an after dependency of backup, after dependencies
+    # are not promoted from stage 2 to earlier stages, so we need to
+    # add it here. Hassio needs to be setup before backup, otherwise
+    # the backup integration will think we are a container/core install
+    # when using HAOS or Supervised install.
+    "hassio",
+    # Backup is an after dependency of frontend, after dependencies
+    # are not promoted from stage 2 to earlier stages, so we need to
+    # add it here.
+    "backup",
 }
 RECORDER_INTEGRATIONS = {
     # Setup after frontend
