@@ -28,6 +28,8 @@ from . import DiscovergyConfigEntry
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import DiscovergyUpdateCoordinator
 
+PARALLEL_UPDATES = 0
+
 
 def _get_and_scale(reading: Reading, key: str, scale: int) -> datetime | float | None:
     """Get a value from a Reading and divide with scale it."""

@@ -64,7 +64,10 @@ from homeassistant.util.dt import now
 # config_flow, diagnostics, system_health, and entity platforms are imported to
 # ensure other dependencies that wait for hassio are not waiting
 # for hassio to import its platforms
+# backup is pre-imported to ensure that the backup integration does not load
+# it from the event loop
 from . import (  # noqa: F401
+    backup,
     binary_sensor,
     config_flow,
     diagnostics,
@@ -87,6 +90,7 @@ from .const import (
     ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_SLUG,
+    DATA_COMPONENT,
     DATA_CORE_INFO,
     DATA_HOST_INFO,
     DATA_INFO,
@@ -112,7 +116,7 @@ from .coordinator import (
     get_supervisor_info,  # noqa: F401
     get_supervisor_stats,  # noqa: F401
 )
-from .discovery import async_setup_discovery_view  # noqa: F401
+from .discovery import async_setup_discovery_view
 from .handler import (  # noqa: F401
     HassIO,
     HassioAPIError,
@@ -323,7 +327,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)
-    hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
+    hass.data[DATA_COMPONENT] = hassio = HassIO(hass.loop, websession, host)
     supervisor_client = get_supervisor_client(hass)
 
     try:

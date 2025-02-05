@@ -8,17 +8,20 @@ from dataclasses import dataclass
 from imgw_pib.model import HydrologicalData
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_PLATFORM,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfLength, UnitOfTemperature
+from homeassistant.const import UnitOfLength, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import ImgwPibConfigEntry
+from .const import DOMAIN
 from .coordinator import ImgwPibDataUpdateCoordinator
 from .entity import ImgwPibEntity
 
@@ -33,26 +36,6 @@ class ImgwPibSensorEntityDescription(SensorEntityDescription):
 
 
 SENSOR_TYPES: tuple[ImgwPibSensorEntityDescription, ...] = (
-    ImgwPibSensorEntityDescription(
-        key="flood_alarm_level",
-        translation_key="flood_alarm_level",
-        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        suggested_display_precision=0,
-        entity_registry_enabled_default=False,
-        value=lambda data: data.flood_alarm_level.value,
-    ),
-    ImgwPibSensorEntityDescription(
-        key="flood_warning_level",
-        translation_key="flood_warning_level",
-        native_unit_of_measurement=UnitOfLength.CENTIMETERS,
-        device_class=SensorDeviceClass.DISTANCE,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        suggested_display_precision=0,
-        entity_registry_enabled_default=False,
-        value=lambda data: data.flood_warning_level.value,
-    ),
     ImgwPibSensorEntityDescription(
         key="water_level",
         translation_key="water_level",
@@ -81,6 +64,14 @@ async def async_setup_entry(
 ) -> None:
     """Add a IMGW-PIB sensor entity from a config_entry."""
     coordinator = entry.runtime_data.coordinator
+
+    # Remove entities for which the endpoint has been blocked by IMGW-PIB API
+    entity_reg = er.async_get(hass)
+    for key in ("flood_warning_level", "flood_alarm_level"):
+        if entity_id := entity_reg.async_get_entity_id(
+            SENSOR_PLATFORM, DOMAIN, f"{coordinator.station_id}_{key}"
+        ):
+            entity_reg.async_remove(entity_id)
 
     async_add_entities(
         ImgwPibSensorEntity(coordinator, description)

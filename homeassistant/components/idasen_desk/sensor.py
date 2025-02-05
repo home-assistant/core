@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfLength
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import IdasenDeskConfigEntry, IdasenDeskCoordinator
@@ -68,17 +67,7 @@ class IdasenDeskSensor(IdasenDeskEntity, SensorEntity):
         super().__init__(f"{description.key}-{coordinator.address}", coordinator)
         self.entity_description = description
 
-    async def async_added_to_hass(self) -> None:
-        """When entity is added to hass."""
-        await super().async_added_to_hass()
-        self._update_native_value()
-
-    @callback
-    def _handle_coordinator_update(self, *args: Any) -> None:
-        """Handle data update."""
-        self._update_native_value()
-        super()._handle_coordinator_update()
-
-    def _update_native_value(self) -> None:
-        """Update the native value attribute."""
-        self._attr_native_value = self.entity_description.value_fn(self.coordinator)
+    @property
+    def native_value(self) -> float | None:
+        """Return the value reported by the sensor."""
+        return self.entity_description.value_fn(self.coordinator)

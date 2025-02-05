@@ -16,6 +16,8 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ENTITY_ID_FORMAT,
     PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
@@ -278,7 +280,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if self._max_mireds is not None:
             return color_util.color_temperature_mired_to_kelvin(self._max_mireds)
 
-        return super().min_color_temp_kelvin
+        return DEFAULT_MIN_KELVIN
 
     @property
     def max_color_temp_kelvin(self) -> int:
@@ -286,7 +288,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         if self._min_mireds is not None:
             return color_util.color_temperature_mired_to_kelvin(self._min_mireds)
 
-        return super().max_color_temp_kelvin
+        return DEFAULT_MAX_KELVIN
 
     @property
     def hs_color(self) -> tuple[float, float] | None:

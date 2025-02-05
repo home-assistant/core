@@ -30,7 +30,7 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
-    coordinator: TotalConnectDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     code_required = entry.options.get(CODE_REQUIRED, False)
 
     async_add_entities(
@@ -73,7 +73,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     ) -> None:
         """Initialize the TotalConnect status."""
         super().__init__(coordinator, location)
-        self._partition_id = partition_id
+        self._partition_id = int(partition_id)
         self._partition = self._location.partitions[partition_id]
 
         """
@@ -81,7 +81,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         for most users with new support for partitions.
         Add _# for partition 2 and beyond.
         """
-        if partition_id == 1:
+        if int(partition_id) == 1:
             self._attr_name = None
             self._attr_unique_id = str(location.location_id)
         else:

@@ -50,6 +50,28 @@
       "next_price": {
         "name": "Next price"
       },
+      "lowest_price": {
+        "name": "Lowest price",
+        "state_attributes": {
+          "start": {
+            "name": "Start time"
+          },
+          "end": {
+            "name": "End time"
+          }
+        }
+      },
+      "highest_price": {
+        "name": "Highest price",
+        "state_attributes": {
+          "start": {
+            "name": "[%key:component::nordpool::entity::sensor::lowest_price::state_attributes::start::name%]"
+          },
+          "end": {
+            "name": "[%key:component::nordpool::entity::sensor::lowest_price::state_attributes::end::name%]"
+          }
+        }
+      },
       "block_average": {
         "name": "{block} average"
       },

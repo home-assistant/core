@@ -7,6 +7,7 @@ from powerfox import (
     Powerfox,
     PowerfoxAuthenticationError,
     PowerfoxConnectionError,
+    PowerfoxNoDataError,
     Poweropti,
 )
 
@@ -45,5 +46,5 @@ class PowerfoxDataUpdateCoordinator(DataUpdateCoordinator[Poweropti]):
             return await self.client.device(device_id=self.device.id)
         except PowerfoxAuthenticationError as err:
             raise ConfigEntryAuthFailed(err) from err
-        except PowerfoxConnectionError as err:
+        except (PowerfoxConnectionError, PowerfoxNoDataError) as err:
             raise UpdateFailed(err) from err

@@ -7,6 +7,7 @@ from ccm15 import CCM15Device, CCM15DeviceState, CCM15SlaveDevice
 import httpx
 
 from homeassistant.components.climate import HVACMode
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -19,15 +20,20 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type CCM15ConfigEntry = ConfigEntry[CCM15Coordinator]
+
 
 class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     """Class to coordinate multiple CCM15Climate devices."""
 
-    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: CCM15ConfigEntry, host: str, port: int
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=host,
             update_interval=datetime.timedelta(seconds=DEFAULT_INTERVAL),
         )

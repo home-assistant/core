@@ -30,14 +30,10 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'subentries': list([
-      ]),
       'title': 'Example.com',
       'unique_id': 'example.com',
       'version': 1,
     }),
-    'subentries': tuple(
-    ),
     'title': 'Example.com',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -74,14 +70,10 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'subentries': list([
-      ]),
       'title': 'Example.com',
       'unique_id': 'example.com',
       'version': 1,
     }),
-    'subentries': tuple(
-    ),
     'title': 'Example.com',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -118,14 +110,10 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'subentries': list([
-      ]),
       'title': 'Example.com',
       'unique_id': 'example.com',
       'version': 1,
     }),
-    'subentries': tuple(
-    ),
     'title': 'Example.com',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -162,14 +150,10 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'subentries': list([
-      ]),
       'title': 'Example.com',
       'unique_id': 'example.com',
       'version': 1,
     }),
-    'subentries': tuple(
-    ),
     'title': 'Example.com',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,
@@ -206,14 +190,10 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
-      'subentries': list([
-      ]),
       'title': 'Example.com',
       'unique_id': 'example.com',
       'version': 1,
     }),
-    'subentries': tuple(
-    ),
     'title': 'Example.com',
     'type': <FlowResultType.CREATE_ENTRY: 'create_entry'>,
     'version': 1,

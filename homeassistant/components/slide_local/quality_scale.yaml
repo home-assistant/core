@@ -25,31 +25,40 @@ rules:
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions:
+  action-exceptions: done
+  reauthentication-flow:
     status: exempt
-    comment: No custom action.
-  reauthentication-flow: todo
+    comment: |
+      The password used is the device code and can't change. No reauth required.
   parallel-updates: done
-  test-coverage: todo
+  test-coverage: done
   integration-owner: done
   docs-installation-parameters: done
   docs-configuration-parameters: done
 
   # Gold
-  entity-translations: todo
+  entity-translations: done
   entity-device-class: done
   devices: done
   entity-category: done
   entity-disabled-by-default: done
   discovery: done
-  stale-devices: todo
-  diagnostics: todo
+  stale-devices:
+    status: done
+    comment: |
+      Slide_local represents a single physical device, no removal stale devices required (besides removal of instance itself).
+  diagnostics: done
   exception-translations: done
-  icon-translations: todo
-  reconfiguration-flow: todo
-  dynamic-devices: todo
-  discovery-update-info: todo
-  repair-issues: todo
+  icon-translations: done
+  reconfiguration-flow: done
+  dynamic-devices:
+    status: exempt
+    comment: |
+      Slide_local represents a single physical device, no dynamic changes of devices possible (besides removal of instance itself).
+  discovery-update-info: done
+  repair-issues:
+    status: exempt
+    comment: No issues/repairs.
   docs-use-cases: done
   docs-supported-devices: done
   docs-supported-functions: done

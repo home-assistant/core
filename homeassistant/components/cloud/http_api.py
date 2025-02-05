@@ -29,11 +29,13 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.system_health import get_info as get_system_health_info
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.location import async_detect_location_info
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
@@ -41,6 +43,7 @@ from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
+    EVENT_CLOUD_EVENT,
     LOGIN_MFA_TIMEOUT,
     PREF_ALEXA_REPORT_STATE,
     PREF_DISABLE_2FA,
@@ -105,6 +108,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.http.register_view(CloudRegisterView)
     hass.http.register_view(CloudResendConfirmView)
     hass.http.register_view(CloudForgotPasswordView)
+    hass.http.register_view(DownloadSupportPackageView)
 
     _CLOUD_ERRORS.update(
         {
@@ -278,6 +282,8 @@ class CloudLoginView(HomeAssistantView):
             new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
         else:
             new_cloud_pipeline_id = None
+
+        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
         return self.json({"success": True, "cloud_pipeline": new_cloud_pipeline_id})
 
 
@@ -297,6 +303,7 @@ class CloudLogoutView(HomeAssistantView):
         async with asyncio.timeout(REQUEST_TIMEOUT):
             await cloud.logout()
 
+        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "logout"})
         return self.json_message("ok")
 
 
@@ -382,6 +389,59 @@ class CloudForgotPasswordView(HomeAssistantView):
             await cloud.auth.async_forgot_password(data["email"])
 
         return self.json_message("ok")
+
+
+class DownloadSupportPackageView(HomeAssistantView):
+    """Download support package view."""
+
+    url = "/api/cloud/support_package"
+    name = "api:cloud:support_package"
+
+    def _generate_markdown(
+        self, hass_info: dict[str, Any], domains_info: dict[str, dict[str, str]]
+    ) -> str:
+        def get_domain_table_markdown(domain_info: dict[str, Any]) -> str:
+            if len(domain_info) == 0:
+                return "No information available\n"
+
+            markdown = ""
+            first = True
+            for key, value in domain_info.items():
+                markdown += f"{key} | {value}\n"
+                if first:
+                    markdown += "--- | ---\n"
+                    first = False
+            return markdown + "\n"
+
+        markdown = "## System Information\n\n"
+        markdown += get_domain_table_markdown(hass_info)
+
+        for domain, domain_info in domains_info.items():
+            domain_info_md = get_domain_table_markdown(domain_info)
+            markdown += (
+                f"<details><summary>{domain}</summary>\n\n"
+                f"{domain_info_md}"
+                "</details>\n\n"
+            )
+
+        return markdown
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Download support package file."""
+
+        hass = request.app[KEY_HASS]
+        domain_health = await get_system_health_info(hass)
+
+        hass_info = domain_health.pop("homeassistant", {})
+        markdown = self._generate_markdown(hass_info, domain_health)
+
+        return web.Response(
+            body=markdown,
+            content_type="text/markdown",
+            headers={
+                "Content-Disposition": 'attachment; filename="support_package.md"'
+            },
+        )
 
 
 @websocket_api.require_admin

@@ -4,9 +4,11 @@
   "codeowners": ["@andrewsayre"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/heos",
+  "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["pyheos"],
-  "requirements": ["pyheos==0.7.2"],
+  "quality_scale": "silver",
+  "requirements": ["pyheos==1.0.1"],
   "single_config_entry": true,
   "ssdp": [
     {

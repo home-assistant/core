@@ -92,7 +92,7 @@ def seen_all_fields(
 class IntegrationMatcher:
     """Integration matcher for the bluetooth integration."""
 
-    __slots__ = ("_integration_matchers", "_matched", "_matched_connectable", "_index")
+    __slots__ = ("_index", "_integration_matchers", "_matched", "_matched_connectable")
 
     def __init__(self, integration_matchers: list[BluetoothMatcher]) -> None:
         """Initialize the matcher."""
@@ -164,12 +164,12 @@ class BluetoothMatcherIndexBase[
 
     __slots__ = (
         "local_name",
-        "service_uuid",
-        "service_data_uuid",
         "manufacturer_id",
-        "service_uuid_set",
-        "service_data_uuid_set",
         "manufacturer_id_set",
+        "service_data_uuid",
+        "service_data_uuid_set",
+        "service_uuid",
+        "service_uuid_set",
     )
 
     def __init__(self) -> None:

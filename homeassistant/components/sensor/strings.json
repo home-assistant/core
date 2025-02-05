@@ -17,13 +17,14 @@
       "is_distance": "Current {entity_name} distance",
       "is_duration": "Current {entity_name} duration",
       "is_energy": "Current {entity_name} energy",
+      "is_energy_distance": "Current {entity_name} energy per distance",
       "is_frequency": "Current {entity_name} frequency",
       "is_gas": "Current {entity_name} gas",
       "is_humidity": "Current {entity_name} humidity",
       "is_illuminance": "Current {entity_name} illuminance",
       "is_irradiance": "Current {entity_name} irradiance",
       "is_moisture": "Current {entity_name} moisture",
-      "is_monetary": "Current {entity_name} money",
+      "is_monetary": "Current {entity_name} balance",
       "is_nitrogen_dioxide": "Current {entity_name} nitrogen dioxide concentration level",
       "is_nitrogen_monoxide": "Current {entity_name} nitrogen monoxide concentration level",
       "is_nitrous_oxide": "Current {entity_name} nitrous oxide concentration level",
@@ -69,13 +70,14 @@
       "distance": "{entity_name} distance changes",
       "duration": "{entity_name} duration changes",
       "energy": "{entity_name} energy changes",
+      "energy_distance": "{entity_name} energy per distance changes",
       "frequency": "{entity_name} frequency changes",
       "gas": "{entity_name} gas changes",
       "humidity": "{entity_name} humidity changes",
       "illuminance": "{entity_name} illuminance changes",
       "irradiance": "{entity_name} irradiance changes",
       "moisture": "{entity_name} moisture changes",
-      "monetary": "{entity_name} money changes",
+      "monetary": "{entity_name} balance changes",
       "nitrogen_dioxide": "{entity_name} nitrogen dioxide concentration changes",
       "nitrogen_monoxide": "{entity_name} nitrogen monoxide concentration changes",
       "nitrous_oxide": "{entity_name} nitrous oxide concentration changes",
@@ -182,6 +184,9 @@
     },
     "energy": {
       "name": "Energy"
+    },
+    "energy_distance": {
+      "name": "Energy per distance"
     },
     "energy_storage": {
       "name": "Stored energy"

@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -
     """Set up IKEA Idasen from a config entry."""
     address: str = entry.data[CONF_ADDRESS].upper()
 
-    coordinator = IdasenDeskCoordinator(hass, _LOGGER, entry.title, address)
+    coordinator = IdasenDeskCoordinator(hass, entry.title, address)
     entry.runtime_data = coordinator
 
     try:

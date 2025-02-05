@@ -23,7 +23,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
@@ -94,7 +94,11 @@ def _get_obj_holidays(
         language=language,
         categories=set_categories,
     )
-    if (supported_languages := obj_holidays.supported_languages) and language == "en":
+    if (
+        (supported_languages := obj_holidays.supported_languages)
+        and language
+        and language.startswith("en")
+    ):
         for lang in supported_languages:
             if lang.startswith("en"):
                 obj_holidays = country_holidays(

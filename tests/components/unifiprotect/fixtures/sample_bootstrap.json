@@ -564,6 +564,24 @@
   "legacyUFVs": [],
   "lastUpdateId": "ebf25bac-d5a1-4f1d-a0ee-74c15981eb70",
   "displays": [],
+  "ringtones": [
+    {
+      "id": "66a14fa502d44203e40003eb",
+      "name": "Default",
+      "size": 208,
+      "isDefault": true,
+      "nvrMac": "A1E00C826924",
+      "modelKey": "ringtone"
+    },
+    {
+      "id": "66a14fa502da4203e40003ec",
+      "name": "Traditional",
+      "size": 180,
+      "isDefault": false,
+      "nvrMac": "A1E00C826924",
+      "modelKey": "ringtone"
+    }
+  ],
   "bridges": [
     {
       "mac": "A28D0DB15AE1",

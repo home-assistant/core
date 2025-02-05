@@ -48,7 +48,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LOCATION,
     CONF_LONGITUDE,
-    CONF_NAME,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -60,7 +59,7 @@ from homeassistant.helpers import aiohttp_client, sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
-from homeassistant.util import Throttle, dt as dt_util, slugify
+from homeassistant.util import Throttle, dt as dt_util
 
 from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
 
@@ -103,17 +102,15 @@ async def async_setup_entry(
 ) -> None:
     """Add a weather entity from map location."""
     location = config_entry.data
-    name = slugify(location[CONF_NAME])
 
     session = aiohttp_client.async_get_clientsession(hass)
 
     entity = SmhiWeather(
-        location[CONF_NAME],
         location[CONF_LOCATION][CONF_LATITUDE],
         location[CONF_LOCATION][CONF_LONGITUDE],
         session=session,
     )
-    entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(name)
+    entity.entity_id = ENTITY_ID_SENSOR_FORMAT.format(config_entry.title)
 
     async_add_entities([entity], True)
 
@@ -136,7 +133,6 @@ class SmhiWeather(WeatherEntity):
 
     def __init__(
         self,
-        name: str,
         latitude: str,
         longitude: str,
         session: aiohttp.ClientSession,
@@ -152,7 +148,6 @@ class SmhiWeather(WeatherEntity):
             identifiers={(DOMAIN, f"{latitude}, {longitude}")},
             manufacturer="SMHI",
             model="v2",
-            name=name,
             configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
         )
 

@@ -13,7 +13,7 @@ from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 
 from tests.typing import ClientSessionGenerator
 
@@ -226,7 +226,7 @@ async def test_update_script_config_with_blueprint_substitution_error(
 
     with patch(
         "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
-        side_effect=yaml.UndefinedSubstitution("blah"),
+        side_effect=yaml_util.UndefinedSubstitution("blah"),
     ):
         resp = await client.post(
             "/api/config/script/config/moon",

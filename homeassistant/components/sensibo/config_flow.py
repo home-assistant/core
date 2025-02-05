@@ -13,7 +13,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import TextSelector
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import DOMAIN
 from .util import NoDevicesError, NoUsernameError, async_validate_api
 
 DATA_SCHEMA = vol.Schema(
@@ -77,6 +77,9 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=DATA_SCHEMA,
             errors=errors,
+            description_placeholders={
+                "url": "https://www.home-assistant.io/integrations/sensibo/#prerequisites"
+            },
         )
 
     async def async_step_reconfigure(
@@ -103,6 +106,9 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=DATA_SCHEMA,
             errors=errors,
+            description_placeholders={
+                "url": "https://www.home-assistant.io/integrations/sensibo/#prerequisites"
+            },
         )
 
     async def async_step_user(
@@ -120,7 +126,7 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=DEFAULT_NAME,
+                    title=username,
                     data={CONF_API_KEY: api_key},
                 )
 
@@ -128,4 +134,7 @@ class SensiboConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=DATA_SCHEMA,
             errors=errors,
+            description_placeholders={
+                "url": "https://www.home-assistant.io/integrations/sensibo/#prerequisites"
+            },
         )
