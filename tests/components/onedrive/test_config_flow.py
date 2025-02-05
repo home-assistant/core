@@ -70,6 +70,7 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
+    mock_onedrive_client_init: MagicMock,
 ) -> None:
     """Check full flow."""
 
@@ -78,6 +79,10 @@ async def test_full_flow(
     )
     await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Ensure the token callback is set up correctly
+    token_callback = mock_onedrive_client_init.call_args[0][0]
+    assert await token_callback() == "mock-access-token"
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
