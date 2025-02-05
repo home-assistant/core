@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from pysmlight import Api2, Info, Sensors
 from pysmlight.const import Settings, SettingsProp
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
-from pysmlight.web import Firmware
+from pysmlight.models import FirmwareList
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -38,8 +38,8 @@ class SmFwData:
     """SMLIGHT firmware data stored in the FirmwareUpdateCoordinator."""
 
     info: Info
-    esp_firmware: list[Firmware] | None
-    zb_firmware: list[Firmware] | None
+    esp_firmware: FirmwareList
+    zb_firmware: list[FirmwareList]
 
 
 class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
@@ -144,15 +144,30 @@ class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
     async def _internal_update_data(self) -> SmFwData:
         """Fetch data from the SMLIGHT device."""
         info = await self.client.get_info()
+        assert info.radios is not None
         esp_firmware = None
-        zb_firmware = None
+        zb_firmware: list[FirmwareList] = []
 
         try:
             esp_firmware = await self.client.get_firmware_version(info.fw_channel)
-            zb_firmware = await self.client.get_firmware_version(
-                info.fw_channel, device=info.model, mode="zigbee"
+            zb_firmware.extend(
+                [
+                    await self.client.get_firmware_version(
+                        info.fw_channel,
+                        device=info.model,
+                        mode="zigbee",
+                        zb_type=r.zb_type,
+                        idx=idx,
+                    )
+                    for idx, r in enumerate(info.radios)
+                ]
             )
+
         except SmlightConnectionError as err:
             self.async_set_update_error(err)
 
-        return SmFwData(info=info, esp_firmware=esp_firmware, zb_firmware=zb_firmware)
+        return SmFwData(
+            info=info,
+            esp_firmware=esp_firmware,
+            zb_firmware=zb_firmware,
+        )
