@@ -413,6 +413,7 @@ class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
     """Representation of a climate entity from the Matter TemperatureControl cluster."""
 
     _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
+    # We can't set the mode for a TemperatureControl cluster but only set the target temperature.
     _attr_hvac_mode: HVACMode = HVACMode.HEAT_COOL
     _feature_map: int | None = None
 
@@ -421,7 +422,6 @@ class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
-
 
         if target_temperature is not None:
             if self.target_temperature != target_temperature:
