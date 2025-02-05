@@ -26,6 +26,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type BringConfigEntry = ConfigEntry[BringDataUpdateCoordinator]
+
 
 @dataclass(frozen=True)
 class BringData(DataClassORJSONMixin):
@@ -38,15 +40,18 @@ class BringData(DataClassORJSONMixin):
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
     """A Bring Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: BringConfigEntry
     user_settings: BringUserSettingsResponse
     lists: list[BringList]
 
-    def __init__(self, hass: HomeAssistant, bring: Bring) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: BringConfigEntry, bring: Bring
+    ) -> None:
         """Initialize the Bring data coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=90),
         )

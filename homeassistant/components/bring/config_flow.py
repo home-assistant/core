@@ -23,8 +23,8 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import BringConfigEntry
 from .const import DOMAIN
+from .coordinator import BringConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
