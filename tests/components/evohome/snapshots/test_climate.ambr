@@ -137,7 +137,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -184,7 +184,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -230,7 +230,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
           dict({
             'fault_type': 'TempZoneActuatorLowBattery',
             'since': '2022-03-02T04:50:20+00:00',
@@ -282,7 +282,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -329,7 +329,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -376,7 +376,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -423,7 +423,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
           dict({
             'fault_type': 'TempZoneActuatorCommunicationLost',
             'since': '2022-03-02T15:56:01+00:00',
@@ -477,7 +477,7 @@
         'Custom',
       ]),
       'status': dict({
-        'active_system_faults': tuple(
+        'activeSystemFaults': tuple(
         ),
         'system_id': '3432522',
         'system_mode_status': dict({
@@ -513,7 +513,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -560,7 +560,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -606,7 +606,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'TemporaryOverride',
@@ -654,7 +654,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -701,7 +701,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -748,7 +748,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -795,7 +795,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'PermanentOverride',
@@ -845,7 +845,7 @@
         'Custom',
       ]),
       'status': dict({
-        'active_system_faults': tuple(
+        'activeSystemFaults': tuple(
         ),
         'system_id': '3432522',
         'system_mode_status': dict({
@@ -881,7 +881,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'PermanentOverride',
@@ -923,7 +923,7 @@
       'max_temp': 35,
       'min_temp': 7,
       'status': dict({
-        'active_system_faults': tuple(
+        'activeSystemFaults': tuple(
         ),
         'system_id': '416856',
         'system_mode_status': dict({
@@ -959,7 +959,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -1006,7 +1006,7 @@
         'away',
       ]),
       'status': dict({
-        'active_system_faults': tuple(
+        'activeSystemFaults': tuple(
         ),
         'system_id': '8557535',
         'system_mode_status': dict({
@@ -1042,7 +1042,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -1089,7 +1089,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -1136,7 +1136,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
@@ -1186,7 +1186,7 @@
         'Custom',
       ]),
       'status': dict({
-        'active_system_faults': tuple(
+        'activeSystemFaults': tuple(
         ),
         'system_id': '3432522',
         'system_mode_status': dict({
@@ -1222,7 +1222,7 @@
         'away',
       ]),
       'status': dict({
-        'active_system_faults': tuple(
+        'activeSystemFaults': tuple(
           dict({
             'fault_type': 'GatewayCommunicationLost',
             'since': '2023-05-04T18:47:36.772704+02:00',
@@ -1262,7 +1262,7 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': tuple(
+        'activeFaults': tuple(
         ),
         'setpoint_status': dict({
           'setpoint_mode': 'PermanentOverride',

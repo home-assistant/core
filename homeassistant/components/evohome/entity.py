@@ -6,7 +6,6 @@ import logging
 from typing import Any
 
 import evohomeasync2 as evo
-from evohomeasync2.const import SZ_ACTIVE_FAULTS
 
 from homeassistant.core import callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -175,7 +174,7 @@ class EvoChild(EvoEntity):
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()
 
-        self._device_state_attrs[SZ_ACTIVE_FAULTS] = self._evo_device.active_faults
+        self._device_state_attrs["activeFaults"] = self._evo_device.active_faults
         self._device_state_attrs["setpoints"] = self._setpoints
 
         super().async_write_ha_state()

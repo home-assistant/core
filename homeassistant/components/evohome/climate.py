@@ -434,7 +434,7 @@ class EvoController(EvoClimateEntity):
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()
 
-        self._device_state_attrs["active_system_faults"] = (
+        self._device_state_attrs["activeSystemFaults"] = (
             self._evo_device.active_faults + self._evo_device.gateway.active_faults
         )
 
