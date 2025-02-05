@@ -564,7 +564,7 @@ class TeslaFleetEnergyLiveSensorEntity(TeslaFleetEnergyLiveEntity, SensorEntity)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
-        self._attr_native_value = self._value
+        self._attr_native_value = self.entity_description.value_fn(self._value)
 
 
 class TeslaFleetEnergyHistorySensorEntity(TeslaFleetEnergyHistoryEntity, SensorEntity):
