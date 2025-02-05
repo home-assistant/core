@@ -21,7 +21,7 @@ from typing import Any, Final, TypedDict, final
 from aiohttp import web
 import mutagen
 from mutagen.id3 import ID3, TextFrame as ID3Text
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
@@ -43,7 +43,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
@@ -73,23 +73,23 @@ from .media_source import generate_media_source_id, media_source_id_to_kwargs
 from .models import Voice
 
 __all__ = [
+    "ATTR_AUDIO_OUTPUT",
+    "ATTR_PREFERRED_FORMAT",
+    "ATTR_PREFERRED_SAMPLE_BYTES",
+    "ATTR_PREFERRED_SAMPLE_CHANNELS",
+    "ATTR_PREFERRED_SAMPLE_RATE",
+    "CONF_LANG",
+    "DEFAULT_CACHE_DIR",
+    "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
+    "Provider",
+    "SampleFormat",
+    "TtsAudioType",
+    "Voice",
     "async_default_engine",
     "async_get_media_source_audio",
     "async_support_options",
-    "ATTR_AUDIO_OUTPUT",
-    "ATTR_PREFERRED_FORMAT",
-    "ATTR_PREFERRED_SAMPLE_RATE",
-    "ATTR_PREFERRED_SAMPLE_CHANNELS",
-    "ATTR_PREFERRED_SAMPLE_BYTES",
-    "CONF_LANG",
-    "DEFAULT_CACHE_DIR",
     "generate_media_source_id",
-    "PLATFORM_SCHEMA_BASE",
-    "PLATFORM_SCHEMA",
-    "SampleFormat",
-    "Provider",
-    "TtsAudioType",
-    "Voice",
 ]
 
 _LOGGER = logging.getLogger(__name__)
@@ -1052,10 +1052,8 @@ class TextToSpeechUrlView(HomeAssistantView):
             data = await request.json()
         except ValueError:
             return self.json_message("Invalid JSON specified", HTTPStatus.BAD_REQUEST)
-        if (
-            not data.get("engine_id")
-            and not data.get(ATTR_PLATFORM)
-            or not data.get(ATTR_MESSAGE)
+        if (not data.get("engine_id") and not data.get(ATTR_PLATFORM)) or not data.get(
+            ATTR_MESSAGE
         ):
             return self.json_message(
                 "Must specify platform and message", HTTPStatus.BAD_REQUEST

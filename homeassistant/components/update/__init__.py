@@ -9,7 +9,7 @@ import logging
 from typing import Any, Final, final
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
@@ -68,8 +68,8 @@ __all__ = [
     "ATTR_VERSION",
     "DEVICE_CLASSES_SCHEMA",
     "DOMAIN",
-    "PLATFORM_SCHEMA_BASE",
     "PLATFORM_SCHEMA",
+    "PLATFORM_SCHEMA_BASE",
     "SERVICE_INSTALL",
     "SERVICE_SKIP",
     "UpdateDeviceClass",

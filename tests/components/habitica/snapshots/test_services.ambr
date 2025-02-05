@@ -764,7 +764,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('88de7cd9-af2b-49ce-9afd-bf941d87336b'),
         'isDue': None,
         'nextDue': list([
@@ -837,7 +838,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('2f6fcabc-f670-4ec3-ba65-817e8deea490'),
         'isDue': None,
         'nextDue': list([
@@ -913,7 +915,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('1aa3137e-ef72-4d1f-91ee-41933602f438'),
         'isDue': None,
         'nextDue': list([
@@ -984,7 +987,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('86ea2475-d1b5-4020-bdcc-c188c7996afa'),
         'isDue': None,
         'nextDue': list([
@@ -1056,7 +1060,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b'),
         'isDue': None,
         'nextDue': list([
@@ -1167,6 +1172,84 @@
         'yesterDaily': True,
       }),
       dict({
+        'Type': <TaskType.DAILY: 'daily'>,
+        'alias': None,
+        'attribute': <Attributes.STR: 'str'>,
+        'byHabitica': False,
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'checklist': list([
+        ]),
+        'collapseChecklist': False,
+        'completed': False,
+        'counterDown': None,
+        'counterUp': None,
+        'createdAt': datetime.datetime(2024, 10, 10, 15, 57, 14, 304000, tzinfo=datetime.timezone.utc),
+        'date': None,
+        'daysOfMonth': list([
+        ]),
+        'down': None,
+        'everyX': 1,
+        'frequency': <Frequency.WEEKLY: 'weekly'>,
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'history': list([
+        ]),
+        'id': UUID('7d92278b-9361-4854-83b6-0a66b57dce20'),
+        'isDue': False,
+        'nextDue': list([
+          datetime.datetime(2024, 12, 14, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 2, 15, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 3, 15, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 4, 19, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 5, 17, 23, 0, tzinfo=datetime.timezone.utc),
+        ]),
+        'notes': 'Wähle eine Programmiersprache aus, die du noch nicht kennst, und lerne die Grundlagen.',
+        'priority': <TaskPriority.EASY: 1>,
+        'reminders': list([
+        ]),
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': False,
+          'su': False,
+          't': False,
+          'th': False,
+          'w': False,
+        }),
+        'startDate': datetime.datetime(2024, 9, 20, 23, 0, tzinfo=datetime.timezone.utc),
+        'streak': 1,
+        'tags': list([
+        ]),
+        'text': 'Lerne eine neue Programmiersprache',
+        'up': None,
+        'updatedAt': datetime.datetime(2024, 11, 27, 23, 47, 29, 986000, tzinfo=datetime.timezone.utc),
+        'userId': UUID('5f359083-ef78-4af0-985a-0b2c6d05797c'),
+        'value': -0.9215181434950852,
+        'weeksOfMonth': list([
+        ]),
+        'yesterDaily': True,
+      }),
+      dict({
         'Type': <TaskType.TODO: 'todo'>,
         'alias': None,
         'attribute': <Attributes.STR: 'str'>,
@@ -1206,7 +1289,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('162f0bbe-a097-4a06-b4f4-8fbeed85d2ba'),
         'isDue': None,
         'nextDue': list([
@@ -1278,7 +1362,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('3fa06743-aa0f-472b-af1a-f27c755e329c'),
         'isDue': None,
         'nextDue': list([
@@ -1775,7 +1860,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('88de7cd9-af2b-49ce-9afd-bf941d87336b'),
         'isDue': None,
         'nextDue': list([
@@ -2918,7 +3004,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('88de7cd9-af2b-49ce-9afd-bf941d87336b'),
         'isDue': None,
         'nextDue': list([
@@ -2991,7 +3078,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('2f6fcabc-f670-4ec3-ba65-817e8deea490'),
         'isDue': None,
         'nextDue': list([
@@ -3067,7 +3155,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('1aa3137e-ef72-4d1f-91ee-41933602f438'),
         'isDue': None,
         'nextDue': list([
@@ -3138,7 +3227,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('86ea2475-d1b5-4020-bdcc-c188c7996afa'),
         'isDue': None,
         'nextDue': list([
@@ -3210,7 +3300,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b'),
         'isDue': None,
         'nextDue': list([
@@ -3317,6 +3408,84 @@
         'value': -0.9215181434950852,
         'weeksOfMonth': list([
           3,
+        ]),
+        'yesterDaily': True,
+      }),
+      dict({
+        'Type': <TaskType.DAILY: 'daily'>,
+        'alias': None,
+        'attribute': <Attributes.STR: 'str'>,
+        'byHabitica': False,
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'checklist': list([
+        ]),
+        'collapseChecklist': False,
+        'completed': False,
+        'counterDown': None,
+        'counterUp': None,
+        'createdAt': datetime.datetime(2024, 10, 10, 15, 57, 14, 304000, tzinfo=datetime.timezone.utc),
+        'date': None,
+        'daysOfMonth': list([
+        ]),
+        'down': None,
+        'everyX': 1,
+        'frequency': <Frequency.WEEKLY: 'weekly'>,
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'history': list([
+        ]),
+        'id': UUID('7d92278b-9361-4854-83b6-0a66b57dce20'),
+        'isDue': False,
+        'nextDue': list([
+          datetime.datetime(2024, 12, 14, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 2, 15, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 3, 15, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 4, 19, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 5, 17, 23, 0, tzinfo=datetime.timezone.utc),
+        ]),
+        'notes': 'Wähle eine Programmiersprache aus, die du noch nicht kennst, und lerne die Grundlagen.',
+        'priority': <TaskPriority.EASY: 1>,
+        'reminders': list([
+        ]),
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': False,
+          'su': False,
+          't': False,
+          'th': False,
+          'w': False,
+        }),
+        'startDate': datetime.datetime(2024, 9, 20, 23, 0, tzinfo=datetime.timezone.utc),
+        'streak': 1,
+        'tags': list([
+        ]),
+        'text': 'Lerne eine neue Programmiersprache',
+        'up': None,
+        'updatedAt': datetime.datetime(2024, 11, 27, 23, 47, 29, 986000, tzinfo=datetime.timezone.utc),
+        'userId': UUID('5f359083-ef78-4af0-985a-0b2c6d05797c'),
+        'value': -0.9215181434950852,
+        'weeksOfMonth': list([
         ]),
         'yesterDaily': True,
       }),
@@ -3456,7 +3625,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('3fa06743-aa0f-472b-af1a-f27c755e329c'),
         'isDue': None,
         'nextDue': list([
@@ -3534,7 +3704,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('162f0bbe-a097-4a06-b4f4-8fbeed85d2ba'),
         'isDue': None,
         'nextDue': list([
@@ -4373,6 +4544,84 @@
         ]),
         'yesterDaily': True,
       }),
+      dict({
+        'Type': <TaskType.DAILY: 'daily'>,
+        'alias': None,
+        'attribute': <Attributes.STR: 'str'>,
+        'byHabitica': False,
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'checklist': list([
+        ]),
+        'collapseChecklist': False,
+        'completed': False,
+        'counterDown': None,
+        'counterUp': None,
+        'createdAt': datetime.datetime(2024, 10, 10, 15, 57, 14, 304000, tzinfo=datetime.timezone.utc),
+        'date': None,
+        'daysOfMonth': list([
+        ]),
+        'down': None,
+        'everyX': 1,
+        'frequency': <Frequency.WEEKLY: 'weekly'>,
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'history': list([
+        ]),
+        'id': UUID('7d92278b-9361-4854-83b6-0a66b57dce20'),
+        'isDue': False,
+        'nextDue': list([
+          datetime.datetime(2024, 12, 14, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 2, 15, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 3, 15, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 4, 19, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 5, 17, 23, 0, tzinfo=datetime.timezone.utc),
+        ]),
+        'notes': 'Wähle eine Programmiersprache aus, die du noch nicht kennst, und lerne die Grundlagen.',
+        'priority': <TaskPriority.EASY: 1>,
+        'reminders': list([
+        ]),
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': False,
+          'su': False,
+          't': False,
+          'th': False,
+          'w': False,
+        }),
+        'startDate': datetime.datetime(2024, 9, 20, 23, 0, tzinfo=datetime.timezone.utc),
+        'streak': 1,
+        'tags': list([
+        ]),
+        'text': 'Lerne eine neue Programmiersprache',
+        'up': None,
+        'updatedAt': datetime.datetime(2024, 11, 27, 23, 47, 29, 986000, tzinfo=datetime.timezone.utc),
+        'userId': UUID('5f359083-ef78-4af0-985a-0b2c6d05797c'),
+        'value': -0.9215181434950852,
+        'weeksOfMonth': list([
+        ]),
+        'yesterDaily': True,
+      }),
     ]),
   })
 # ---
@@ -4876,6 +5125,84 @@
         ]),
         'yesterDaily': True,
       }),
+      dict({
+        'Type': <TaskType.DAILY: 'daily'>,
+        'alias': None,
+        'attribute': <Attributes.STR: 'str'>,
+        'byHabitica': False,
+        'challenge': dict({
+          'broken': None,
+          'id': None,
+          'shortName': None,
+          'taskId': None,
+          'winner': None,
+        }),
+        'checklist': list([
+        ]),
+        'collapseChecklist': False,
+        'completed': False,
+        'counterDown': None,
+        'counterUp': None,
+        'createdAt': datetime.datetime(2024, 10, 10, 15, 57, 14, 304000, tzinfo=datetime.timezone.utc),
+        'date': None,
+        'daysOfMonth': list([
+        ]),
+        'down': None,
+        'everyX': 1,
+        'frequency': <Frequency.WEEKLY: 'weekly'>,
+        'group': dict({
+          'assignedDate': None,
+          'assignedUsers': list([
+          ]),
+          'assignedUsersDetail': dict({
+          }),
+          'assigningUsername': None,
+          'completedBy': dict({
+            'date': None,
+            'userId': None,
+          }),
+          'id': None,
+          'managerNotes': None,
+          'taskId': None,
+        }),
+        'history': list([
+        ]),
+        'id': UUID('7d92278b-9361-4854-83b6-0a66b57dce20'),
+        'isDue': False,
+        'nextDue': list([
+          datetime.datetime(2024, 12, 14, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 1, 18, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 2, 15, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 3, 15, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 4, 19, 23, 0, tzinfo=datetime.timezone.utc),
+          datetime.datetime(2025, 5, 17, 23, 0, tzinfo=datetime.timezone.utc),
+        ]),
+        'notes': 'Wähle eine Programmiersprache aus, die du noch nicht kennst, und lerne die Grundlagen.',
+        'priority': <TaskPriority.EASY: 1>,
+        'reminders': list([
+        ]),
+        'repeat': dict({
+          'f': False,
+          'm': False,
+          's': False,
+          'su': False,
+          't': False,
+          'th': False,
+          'w': False,
+        }),
+        'startDate': datetime.datetime(2024, 9, 20, 23, 0, tzinfo=datetime.timezone.utc),
+        'streak': 1,
+        'tags': list([
+        ]),
+        'text': 'Lerne eine neue Programmiersprache',
+        'up': None,
+        'updatedAt': datetime.datetime(2024, 11, 27, 23, 47, 29, 986000, tzinfo=datetime.timezone.utc),
+        'userId': UUID('5f359083-ef78-4af0-985a-0b2c6d05797c'),
+        'value': -0.9215181434950852,
+        'weeksOfMonth': list([
+        ]),
+        'yesterDaily': True,
+      }),
     ]),
   })
 # ---
@@ -5232,7 +5559,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b'),
         'isDue': None,
         'nextDue': list([
@@ -5309,7 +5637,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('88de7cd9-af2b-49ce-9afd-bf941d87336b'),
         'isDue': None,
         'nextDue': list([
@@ -5382,7 +5711,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('2f6fcabc-f670-4ec3-ba65-817e8deea490'),
         'isDue': None,
         'nextDue': list([
@@ -5458,7 +5788,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('1aa3137e-ef72-4d1f-91ee-41933602f438'),
         'isDue': None,
         'nextDue': list([
@@ -5529,7 +5860,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('86ea2475-d1b5-4020-bdcc-c188c7996afa'),
         'isDue': None,
         'nextDue': list([
@@ -5601,7 +5933,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b'),
         'isDue': None,
         'nextDue': list([
@@ -5672,7 +6005,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('162f0bbe-a097-4a06-b4f4-8fbeed85d2ba'),
         'isDue': None,
         'nextDue': list([
@@ -5744,7 +6078,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('3fa06743-aa0f-472b-af1a-f27c755e329c'),
         'isDue': None,
         'nextDue': list([
@@ -5822,7 +6157,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('88de7cd9-af2b-49ce-9afd-bf941d87336b'),
         'isDue': None,
         'nextDue': list([
@@ -5895,7 +6231,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('2f6fcabc-f670-4ec3-ba65-817e8deea490'),
         'isDue': None,
         'nextDue': list([
@@ -5971,7 +6308,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('1aa3137e-ef72-4d1f-91ee-41933602f438'),
         'isDue': None,
         'nextDue': list([
@@ -6042,7 +6380,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('86ea2475-d1b5-4020-bdcc-c188c7996afa'),
         'isDue': None,
         'nextDue': list([
@@ -6114,7 +6453,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('162f0bbe-a097-4a06-b4f4-8fbeed85d2ba'),
         'isDue': None,
         'nextDue': list([
@@ -6186,7 +6526,8 @@
           'managerNotes': None,
           'taskId': None,
         }),
-        'history': None,
+        'history': list([
+        ]),
         'id': UUID('3fa06743-aa0f-472b-af1a-f27c755e329c'),
         'isDue': None,
         'nextDue': list([

@@ -3,7 +3,7 @@
 Data is fetched from DWD:
 https://rcccm.dwd.de/DE/wetter/warnungen_aktuell/objekt_einbindung/objekteinbindung.html
 
-Warnungen vor extremem Unwetter (Stufe 4)  # codespell:ignore vor
+Warnungen vor extremem Unwetter (Stufe 4)  # codespell:ignore vor,extremem
 Unwetterwarnungen (Stufe 3)
 Warnungen vor markantem Wetter (Stufe 2)  # codespell:ignore vor
 Wetterwarnungen (Stufe 1)

@@ -14,7 +14,7 @@ from spotifyaio import (
     SpotifyClient,
     Track,
 )
-from spotifyaio.models import ItemType, SimplifiedEpisode
+from spotifyaio.models import Episode, ItemType, SimplifiedEpisode
 import yarl
 
 from homeassistant.components.media_player import (
@@ -363,7 +363,7 @@ async def build_item_response(  # noqa: C901
                     items.append(_get_track_item_payload(playlist_item.track))
                 elif playlist_item.track.type is ItemType.EPISODE:
                     if TYPE_CHECKING:
-                        assert isinstance(playlist_item.track, SimplifiedEpisode)
+                        assert isinstance(playlist_item.track, Episode)
                     items.append(_get_episode_item_payload(playlist_item.track))
     elif media_content_type == MediaType.ALBUM:
         if album := await spotify.get_album(media_content_id):

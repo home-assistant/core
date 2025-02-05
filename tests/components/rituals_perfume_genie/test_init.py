@@ -46,6 +46,7 @@ async def test_entity_id_migration(
 ) -> None:
     """Test the migration of unique IDs on config entry setup."""
     config_entry = mock_config_entry(unique_id="binary_sensor_test_diffuser_v1")
+    config_entry.add_to_hass(hass)
 
     # Pre-create old style unique IDs
     charging = entity_registry.async_get_or_create(

@@ -5,11 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from aiohasupervisor import SupervisorError
-from aiohasupervisor.models import (
-    HomeAssistantUpdateOptions,
-    OSUpdate,
-    StoreAddonUpdate,
-)
+from aiohasupervisor.models import OSUpdate
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
 from homeassistant.components.update import (
@@ -40,6 +36,7 @@ from .entity import (
     HassioOSEntity,
     HassioSupervisorEntity,
 )
+from .update_helper import update_addon, update_core
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
     name="Update",
@@ -163,13 +160,9 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
         **kwargs: Any,
     ) -> None:
         """Install an update."""
-        try:
-            await self.coordinator.supervisor_client.store.update_addon(
-                self._addon_slug, StoreAddonUpdate(backup=backup)
-            )
-        except SupervisorError as err:
-            raise HomeAssistantError(f"Error updating {self.title}: {err}") from err
-
+        await update_addon(
+            self.hass, self._addon_slug, backup, self.title, self.installed_version
+        )
         await self.coordinator.force_info_update_supervisor()
 
 
@@ -303,11 +296,4 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        try:
-            await self.coordinator.supervisor_client.homeassistant.update(
-                HomeAssistantUpdateOptions(version=version, backup=backup)
-            )
-        except SupervisorError as err:
-            raise HomeAssistantError(
-                f"Error updating Home Assistant Core: {err}"
-            ) from err
+        await update_core(self.hass, version, backup)

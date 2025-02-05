@@ -8,7 +8,7 @@ from typing import Any
 from incomfortclient import Heater as InComfortHeater
 
 from homeassistant.components.water_heater import WaterHeaterEntity
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -37,6 +37,7 @@ async def async_setup_entry(
 class IncomfortWaterHeater(IncomfortBoilerEntity, WaterHeaterEntity):
     """Representation of an InComfort/Intouch water_heater device."""
 
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_min_temp = 30.0
     _attr_max_temp = 80.0
     _attr_name = None

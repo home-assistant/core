@@ -19,6 +19,8 @@ from .const import ASSETS_URL
 from .entity import HabiticaBase
 from .types import HabiticaConfigEntry
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(kw_only=True, frozen=True)
 class HabiticaBinarySensorEntityDescription(BinarySensorEntityDescription):

@@ -4,7 +4,10 @@
     "step": {
       "user": {
         "data": {
-          "address": "Device address"
+          "address": "MAC address"
+        },
+        "data_description": {
+          "address": "The Bluetooth MAC address of your SwitchBot device"
         }
       },
       "confirm": {
@@ -14,6 +17,9 @@
         "description": "The {name} device requires a password",
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password required for the Bot device access"
         }
       },
       "encrypted_key": {
@@ -21,6 +27,10 @@
         "data": {
           "key_id": "Key ID",
           "encryption_key": "Encryption key"
+        },
+        "data_description": {
+          "key_id": "The ID of the encryption key",
+          "encryption_key": "The encryption key for the device"
         }
       },
       "encrypted_auth": {
@@ -28,6 +38,10 @@
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "username": "The username of your SwitchBot account",
+          "password": "The password of your SwitchBot account"
         }
       },
       "encrypted_choose_method": {

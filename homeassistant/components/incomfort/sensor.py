@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfPressure, UnitOfTemperature
+from homeassistant.const import EntityCategory, UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -31,6 +31,7 @@ class IncomfortSensorEntityDescription(SensorEntityDescription):
 
     value_key: str
     extra_key: str | None = None
+    entity_category = EntityCategory.DIAGNOSTIC
 
 
 SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
@@ -40,6 +41,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
         value_key="pressure",
+        entity_registry_enabled_default=False,
     ),
     IncomfortSensorEntityDescription(
         key="cv_temp",
@@ -48,6 +50,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_pumping",
         value_key="heater_temp",
+        entity_registry_enabled_default=False,
     ),
     IncomfortSensorEntityDescription(
         key="tap_temp",
@@ -57,6 +60,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         extra_key="is_tapping",
         value_key="tap_temp",
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -95,7 +99,7 @@ class IncomfortSensor(IncomfortBoilerEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self._heater.status[self.entity_description.value_key]
+        return self._heater.status[self.entity_description.value_key]  # type: ignore [no-any-return]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

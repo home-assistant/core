@@ -71,11 +71,23 @@ async def async_setup_entry(
 
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        SensiboNumber(coordinator, device_id, description)
-        for device_id, device_data in coordinator.data.parsed.items()
-        for description in DEVICE_NUMBER_TYPES
-    )
+    added_devices: set[str] = set()
+
+    def _add_remove_devices() -> None:
+        """Handle additions of devices and sensors."""
+        nonlocal added_devices
+        new_devices, _, added_devices = coordinator.get_devices(added_devices)
+
+        if new_devices:
+            async_add_entities(
+                SensiboNumber(coordinator, device_id, description)
+                for device_id in coordinator.data.parsed
+                for description in DEVICE_NUMBER_TYPES
+                if device_id in new_devices
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
+    _add_remove_devices()
 
 
 class SensiboNumber(SensiboDeviceBaseEntity, NumberEntity):

@@ -47,7 +47,7 @@ class SlideSwitch(SlideEntity, SwitchEntity):
     def __init__(self, coordinator: SlideCoordinator) -> None:
         """Initialize the slide switch."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.data["mac"]}-touchgo"
+        self._attr_unique_id = f"{coordinator.data['mac']}-touchgo"
 
     @property
     def is_on(self) -> bool:

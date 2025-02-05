@@ -67,7 +67,6 @@ ENPOWER_SENSORS = (
     EnvoyEnpowerBinarySensorEntityDescription(
         key="mains_oper_state",
         translation_key="grid_status",
-        icon="mdi:transmission-tower",
         value_fn=lambda enpower: enpower.mains_oper_state == "closed",
     ),
 )

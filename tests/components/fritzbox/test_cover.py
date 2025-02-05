@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import (
     FritzDeviceCoverMock,
@@ -99,7 +99,7 @@ async def test_set_position_cover(hass: HomeAssistant, fritz: Mock) -> None:
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_POSITION: 50},
         True,
     )
-    assert device.set_level_percentage.call_args_list == [call(50)]
+    assert device.set_level_percentage.call_args_list == [call(50, True)]
 
 
 async def test_stop_cover(hass: HomeAssistant, fritz: Mock) -> None:

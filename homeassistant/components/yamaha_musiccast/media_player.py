@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util import uuid
+from homeassistant.util import uuid as uuid_util
 
 from .const import (
     ATTR_MAIN_SYNC,
@@ -735,7 +735,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         group = (
             self.coordinator.data.group_id
             if self.is_server
-            else uuid.random_uuid_hex().upper()
+            else uuid_util.random_uuid_hex().upper()
         )
 
         ip_addresses = set()

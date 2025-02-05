@@ -16,7 +16,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import PalazzettiConfigEntry
-from .const import DOMAIN, FAN_AUTO, FAN_HIGH, FAN_MODES, FAN_SILENT
+from .const import DOMAIN, FAN_AUTO, FAN_HIGH, FAN_MODES
 from .coordinator import PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
 
@@ -57,8 +57,6 @@ class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
         self._attr_fan_modes = list(
             map(str, range(client.fan_speed_min, client.fan_speed_max + 1))
         )
-        if client.has_fan_silent:
-            self._attr_fan_modes.insert(0, FAN_SILENT)
         if client.has_fan_high:
             self._attr_fan_modes.append(FAN_HIGH)
         if client.has_fan_auto:
@@ -124,15 +122,13 @@ class PalazzettiClimateEntity(PalazzettiEntity, ClimateEntity):
     @property
     def fan_mode(self) -> str | None:
         """Return the fan mode."""
-        api_state = self.coordinator.client.fan_speed
+        api_state = self.coordinator.client.current_fan_speed()
         return FAN_MODES[api_state]
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         try:
-            if fan_mode == FAN_SILENT:
-                await self.coordinator.client.set_fan_silent()
-            elif fan_mode == FAN_HIGH:
+            if fan_mode == FAN_HIGH:
                 await self.coordinator.client.set_fan_high()
             elif fan_mode == FAN_AUTO:
                 await self.coordinator.client.set_fan_auto()
