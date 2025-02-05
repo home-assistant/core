@@ -420,7 +420,6 @@ class MatterTemperatureControlClimate(MatterEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        target_hvac_mode: HVACMode | None = kwargs.get(ATTR_HVAC_MODE)
         target_temperature: float | None = kwargs.get(ATTR_TEMPERATURE)
 
 
