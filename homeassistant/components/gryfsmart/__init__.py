@@ -20,7 +20,7 @@ CONFIG_SCHEMA = SCHEMA
 
 _PLATFORMS: list[Platform] = [
     Platform.LIGHT,
-    # Platform.BINARY_SENSOR,
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
     # Platform.CLIMATE,
     # Platform.COVER,
