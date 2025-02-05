@@ -329,7 +329,7 @@ class AssistAPI(API):
     def _async_get_api_prompt(
         self, llm_context: LLMContext, exposed_entities: dict | None
     ) -> str:
-        if not exposed_entities:
+        if not exposed_entities or not exposed_entities["entities"]:
             return (
                 "Only if the user wants to control a device, tell them to expose entities "
                 "to their voice assistant in Home Assistant."
@@ -392,11 +392,11 @@ class AssistAPI(API):
         """Return the prompt for the API for exposed entities."""
         prompt = []
 
-        if exposed_entities:
+        if exposed_entities and exposed_entities["entities"]:
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
             )
-            prompt.append(yaml_util.dump(list(exposed_entities.values())))
+            prompt.append(yaml_util.dump(list(exposed_entities["entities"].values())))
 
         return prompt
 
@@ -426,22 +426,10 @@ class AssistAPI(API):
         ]
 
         exposed_domains: set[str] | None = None
-        exposed_calendars: list[str] = []
         if exposed_entities is not None:
-            exposed_domains = set()
-            for entity_id in exposed_entities:
-                domain = split_entity_id(entity_id)[0]
-
-                if domain == CALENDAR_DOMAIN:
-                    name = (
-                        state.name
-                        if (state := self.hass.states.get(entity_id))
-                        else entity_id
-                    )
-                    exposed_calendars.append(name)
-
-                else:
-                    exposed_domains.add(domain)
+            exposed_domains = {
+                info["domain"] for info in exposed_entities["entities"].values()
+            }
 
             intent_handlers = [
                 intent_handler
@@ -454,25 +442,29 @@ class AssistAPI(API):
             IntentTool(self.cached_slugify(intent_handler.intent_type), intent_handler)
             for intent_handler in intent_handlers
         ]
-        if exposed_calendars:
-            tools.append(CalendarGetEventsTool(exposed_calendars))
 
-        if llm_context.assistant is not None:
-            for state in self.hass.states.async_all(SCRIPT_DOMAIN):
-                if not async_should_expose(
-                    self.hass, llm_context.assistant, state.entity_id
-                ):
-                    continue
+        if exposed_entities:
+            if exposed_entities[CALENDAR_DOMAIN]:
+                names = []
+                for info in exposed_entities[CALENDAR_DOMAIN].values():
+                    names.extend(info["names"].split(", "))
+                tools.append(CalendarGetEventsTool(names))
 
-                tools.append(ScriptTool(self.hass, state.entity_id))
+            tools.extend(
+                ScriptTool(self.hass, script_entity_id)
+                for script_entity_id in exposed_entities[SCRIPT_DOMAIN]
+            )
 
         return tools
 
 
 def _get_exposed_entities(
     hass: HomeAssistant, assistant: str
-) -> dict[str, dict[str, Any]]:
-    """Get exposed entities."""
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Get exposed entities.
+
+    Splits out calendars and scripts.
+    """
     area_registry = ar.async_get(hass)
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -493,12 +485,13 @@ def _get_exposed_entities(
     }
 
     entities = {}
+    data: dict[str, dict[str, Any]] = {
+        SCRIPT_DOMAIN: {},
+        CALENDAR_DOMAIN: {},
+    }
 
     for state in hass.states.async_all():
-        if (
-            not async_should_expose(hass, assistant, state.entity_id)
-            or state.domain == SCRIPT_DOMAIN
-        ):
+        if not async_should_expose(hass, assistant, state.entity_id):
             continue
 
         description: str | None = None
@@ -545,9 +538,13 @@ def _get_exposed_entities(
         }:
             info["attributes"] = attributes
 
-        entities[state.entity_id] = info
+        if state.domain in data:
+            data[state.domain][state.entity_id] = info
+        else:
+            entities[state.entity_id] = info
 
-    return entities
+    data["entities"] = entities
+    return data
 
 
 def _selector_serializer(schema: Any) -> Any:  # noqa: C901
