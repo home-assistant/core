@@ -1241,7 +1241,7 @@ iperf3==0.1.11
 isal==1.7.1
 
 # homeassistant.components.gogogate2
-ismartgate==5.0.1
+ismartgate==5.0.2
 
 # homeassistant.components.israel_rail
 israel-rail-api==0.1.2
