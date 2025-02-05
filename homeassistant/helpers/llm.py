@@ -426,10 +426,23 @@ class AssistAPI(API):
         ]
 
         exposed_domains: set[str] | None = None
+        exposed_calendars: list[str] = []
         if exposed_entities is not None:
-            exposed_domains = {
-                split_entity_id(entity_id)[0] for entity_id in exposed_entities
-            }
+            exposed_domains = set()
+            for entity_id in exposed_entities:
+                domain = split_entity_id(entity_id)[0]
+
+                if domain == CALENDAR_DOMAIN:
+                    name = (
+                        state.name
+                        if (state := self.hass.states.get(entity_id))
+                        else entity_id
+                    )
+                    exposed_calendars.append(name)
+
+                else:
+                    exposed_domains.add(domain)
+
             intent_handlers = [
                 intent_handler
                 for intent_handler in intent_handlers
@@ -441,8 +454,8 @@ class AssistAPI(API):
             IntentTool(self.cached_slugify(intent_handler.intent_type), intent_handler)
             for intent_handler in intent_handlers
         ]
-        if exposed_domains and CALENDAR_DOMAIN in exposed_domains:
-            tools.append(CalendarGetEventsTool())
+        if exposed_calendars:
+            tools.append(CalendarGetEventsTool(exposed_calendars))
 
         if llm_context.assistant is not None:
             for state in self.hass.states.async_all(SCRIPT_DOMAIN):
@@ -816,15 +829,18 @@ class CalendarGetEventsTool(Tool):
     name = "calendar_get_events"
     description = (
         "Get events from a calendar. "
-        "When asked when something happens, search the whole week. "
+        "When asked if something happens, search the whole week. "
         "Results are RFC 5545 which means 'end' is exclusive."
     )
-    parameters = vol.Schema(
-        {
-            vol.Required("calendar"): cv.string,
-            vol.Required("range"): vol.In(["today", "week"]),
-        }
-    )
+
+    def __init__(self, calendars: list[str]) -> None:
+        """Init the get events tool."""
+        self.parameters = vol.Schema(
+            {
+                vol.Required("calendar"): vol.In(calendars),
+                vol.Required("range"): vol.In(["today", "week"]),
+            }
+        )
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
