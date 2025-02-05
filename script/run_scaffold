@@ -1,0 +1,26 @@
+#!/bin/sh
+# Add new functionality to a integration using a scaffold.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+read -p "For which integration should the task run? " integrationName
+cat << EOF
+
+Which scaffold should be run?
+Options:
+- backup
+- config_flow
+- config_flow_discovery
+- config_flow_helper
+- config_flow_oauth2
+- device_action
+- device_condition
+- device_trigger
+- reproduce_state
+- significant_change
+EOF
+read -p "Choice: " integrationName
+
+python -m script.install_integration_requirements "${integrationName}"

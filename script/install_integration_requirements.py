@@ -31,11 +31,15 @@ def main() -> int | None:
 
     requirements = gather_recursive_requirements(args.integration)
 
+    if len(requirements) == 0:
+        print("No requirements to install")
+        return 0
+
     cmd = [
         "uv",
         "pip",
         "install",
-        "-c",
+        "--constraints",
         "homeassistant/package_constraints.txt",
         "-U",
         *requirements,

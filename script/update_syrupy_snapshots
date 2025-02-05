@@ -1,0 +1,10 @@
+#!/bin/sh
+# Update syrupy snapshots for a given integration."
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+read -p "For which integration should the task run? " integrationName
+
+python -m pytest ""./tests/components/${integrationName}" --snapshot-update

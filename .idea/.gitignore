@@ -1,0 +1,24 @@
+# User-specific stuff
+workspace.xml
+tasks.xml
+misc.xml
+modules.xml
+usage.statistics.xml
+dictionaries
+shelf
+*.iml
+
+# Generated files
+contentModel.xml
+
+# Sensitive or high-churn files
+dataSources/
+dataSources.ids
+dataSources.local.xml
+sqlDataSources.xml
+dynamic.xml
+uiDesigner.xml
+dbnavigator.xml
+
+# Editor-based Rest Client
+httpRequests

@@ -24,10 +24,6 @@ Icon
 # Thumbnails
 ._*
 
-# IntelliJ IDEA
-.idea
-*.iml
-
 # pytest
 .pytest_cache
 .cache

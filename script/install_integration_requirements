@@ -1,0 +1,10 @@
+#!/bin/sh
+# Install all requirements of a given integration.
+
+set -e
+
+cd "$(dirname "$0")/.."
+
+read -p "For which integration should the task run? " integrationName
+
+python -m script.install_integration_requirements "${integrationName}"
