@@ -37,7 +37,7 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_user(
-        self, user_input: Mapping[str, Any] | None = None
+        self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow start."""
         if self._async_current_entries():
