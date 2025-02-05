@@ -1,17 +1,30 @@
 """Support for Anova Coordinators."""
 
+from dataclasses import dataclass
 import logging
 
-from anova_wifi import APCUpdate, APCWifiDevice
+from anova_wifi import AnovaApi, APCUpdate, APCWifiDevice
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .models import AnovaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class AnovaData:
+    """Data for the Anova integration."""
+
+    api_jwt: str
+    coordinators: list["AnovaCoordinator"]
+    api: AnovaApi
+
+
+type AnovaConfigEntry = ConfigEntry[AnovaData]
 
 
 class AnovaCoordinator(DataUpdateCoordinator[APCUpdate]):
