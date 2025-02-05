@@ -111,7 +111,7 @@
       "fields": {
         "device_id": {
           "name": "[%key:common::config_flow::data::device%]",
-          "description": "Try reconnect client to wireless network."
+          "description": "The device that should be forced to reconnect to the wireless network."
         }
       }
     },

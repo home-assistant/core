@@ -16,8 +16,7 @@ from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import PegelOnlineConfigEntry
-from .coordinator import PegelOnlineDataUpdateCoordinator
+from .coordinator import PegelOnlineConfigEntry, PegelOnlineDataUpdateCoordinator
 from .entity import PegelOnlineEntity
 
 

@@ -61,6 +61,9 @@
       "traffic_rule_control": {
         "default": "mdi:security-network"
       },
+      "traffic_route_control": {
+        "default": "mdi:routes"
+      },
       "poe_port_control": {
         "default": "mdi:ethernet",
         "state": {

@@ -444,6 +444,7 @@ async def test_no_listen_start(
         version=1,
         data={"username": "foo", "token": {}},
     )
+    mock_entry.add_to_hass(hass)
     # Create a binary sensor entity so it is not ignored by the deprecation check
     # and the listener will start
     entity_registry.async_get_or_create(
@@ -457,7 +458,6 @@ async def test_no_listen_start(
 
     mock_ring_event_listener_class.return_value.started = False
 
-    mock_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 

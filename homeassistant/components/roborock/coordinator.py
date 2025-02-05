@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 from datetime import timedelta
 import logging
 
-from propcache import cached_property
+from propcache.api import cached_property
 from roborock import HomeDataRoom
 from roborock.code_mappings import RoborockCategory
 from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
@@ -16,6 +17,7 @@ from roborock.version_1_apis.roborock_local_client_v1 import RoborockLocalClient
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockClientA01
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -26,6 +28,7 @@ from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .models import RoborockA01HassDeviceInfo, RoborockHassDeviceInfo, RoborockMapInfo
+from .roborock_storage import RoborockMapStorage
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -34,6 +37,8 @@ _LOGGER = logging.getLogger(__name__)
 
 class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     """Class to manage fetching data from the API."""
+
+    config_entry: ConfigEntry
 
     def __init__(
         self,
@@ -72,8 +77,31 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         # Maps from map flag to map name
         self.maps: dict[int, RoborockMapInfo] = {}
         self._home_data_rooms = {str(room.id): room.name for room in home_data_rooms}
+        self.map_storage = RoborockMapStorage(
+            hass, self.config_entry.entry_id, slugify(self.duid)
+        )
 
-    async def verify_api(self) -> None:
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+        # Verify we can communicate locally - if we can't, switch to cloud api
+        await self._verify_api()
+        self.api.is_available = True
+
+        try:
+            maps = await self.api.get_multi_maps_list()
+        except RoborockException as err:
+            raise UpdateFailed("Failed to get map data: {err}") from err
+        # Rooms names populated later with calls to `set_current_map_rooms` for each map
+        self.maps = {
+            roborock_map.mapFlag: RoborockMapInfo(
+                flag=roborock_map.mapFlag,
+                name=roborock_map.name or f"Map {roborock_map.mapFlag}",
+                rooms={},
+            )
+            for roborock_map in (maps.map_info if (maps and maps.map_info) else ())
+        }
+
+    async def _verify_api(self) -> None:
         """Verify that the api is reachable. If it is not, switch clients."""
         if isinstance(self.api, RoborockLocalClientV1):
             try:
@@ -89,19 +117,19 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 # Right now this should never be called if the cloud api is the primary api,
                 # but in the future if it is, a new else should be added.
 
-    async def release(self) -> None:
-        """Disconnect from API."""
-        await self.api.async_release()
-        await self.cloud_api.async_release()
+    async def async_shutdown(self) -> None:
+        """Shutdown the coordinator."""
+        await super().async_shutdown()
+        await asyncio.gather(
+            self.map_storage.flush(),
+            self.api.async_release(),
+            self.cloud_api.async_release(),
+        )
 
     async def _update_device_prop(self) -> None:
         """Update device properties."""
-        device_prop = await self.api.get_prop()
-        if device_prop:
-            if self.roborock_device_info.props:
-                self.roborock_device_info.props.update(device_prop)
-            else:
-                self.roborock_device_info.props = device_prop
+        if (device_prop := await self.api.get_prop()) is not None:
+            self.roborock_device_info.props.update(device_prop)
 
     async def _async_update_data(self) -> DeviceProp:
         """Update data via library."""
@@ -111,7 +139,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             # Set the new map id from the updated device props
             self._set_current_map()
             # Get the rooms for that map id.
-            await self.get_rooms()
+            await self.set_current_map_rooms()
         except RoborockException as ex:
             raise UpdateFailed(ex) from ex
         return self.roborock_device_info.props
@@ -127,27 +155,18 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
                 self.roborock_device_info.props.status.map_status - 3
             ) // 4
 
-    async def get_maps(self) -> None:
-        """Add a map to the coordinators mapping."""
-        maps = await self.api.get_multi_maps_list()
-        if maps and maps.map_info:
-            for roborock_map in maps.map_info:
-                self.maps[roborock_map.mapFlag] = RoborockMapInfo(
-                    flag=roborock_map.mapFlag, name=roborock_map.name, rooms={}
-                )
-
-    async def get_rooms(self) -> None:
-        """Get all of the rooms for the current map."""
+    async def set_current_map_rooms(self) -> None:
+        """Fetch all of the rooms for the current map and set on RoborockMapInfo."""
         # The api is only able to access rooms for the currently selected map
         # So it is important this is only called when you have the map you care
         # about selected.
-        if self.current_map in self.maps:
-            iot_rooms = await self.api.get_room_mapping()
-            if iot_rooms is not None:
-                for room in iot_rooms:
-                    self.maps[self.current_map].rooms[room.segment_id] = (
-                        self._home_data_rooms.get(room.iot_id, "Unknown")
-                    )
+        if self.current_map is None or self.current_map not in self.maps:
+            return
+        room_mapping = await self.api.get_room_mapping()
+        self.maps[self.current_map].rooms = {
+            room.segment_id: self._home_data_rooms.get(room.iot_id, "Unknown")
+            for room in room_mapping or ()
+        }
 
     @cached_property
     def duid(self) -> str:
@@ -212,8 +231,9 @@ class RoborockDataUpdateCoordinatorA01(
     ) -> dict[RoborockDyadDataProtocol | RoborockZeoProtocol, StateType]:
         return await self.api.update_values(self.request_protocols)
 
-    async def release(self) -> None:
-        """Disconnect from API."""
+    async def async_shutdown(self) -> None:
+        """Shutdown the coordinator on config entry unload."""
+        await super().async_shutdown()
         await self.api.async_release()
 
     @cached_property

@@ -13,7 +13,6 @@ from homeassistant.components.home_connect.const import (
     ATTR_CONSTRAINTS,
     BSH_ACTIVE_PROGRAM,
     BSH_CHILD_LOCK_STATE,
-    BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_ON,
     BSH_POWER_STANDBY,
@@ -34,7 +33,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.issue_registry as ir
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .conftest import get_all_appliances
@@ -373,32 +372,6 @@ async def test_ent_desc_switch_exception_handling(
             {BSH_POWER_STATE: {"value": BSH_POWER_OFF}},
             [BSH_POWER_ON, BSH_POWER_OFF],
             SERVICE_TURN_OFF,
-            STATE_OFF,
-            "Dishwasher",
-        ),
-        (
-            "switch.dishwasher_power",
-            {
-                BSH_POWER_STATE: {"value": ""},
-                BSH_OPERATION_STATE: {
-                    "value": "BSH.Common.EnumType.OperationState.Run"
-                },
-            },
-            [BSH_POWER_ON],
-            SERVICE_TURN_ON,
-            STATE_ON,
-            "Dishwasher",
-        ),
-        (
-            "switch.dishwasher_power",
-            {
-                BSH_POWER_STATE: {"value": ""},
-                BSH_OPERATION_STATE: {
-                    "value": "BSH.Common.EnumType.OperationState.Inactive"
-                },
-            },
-            [BSH_POWER_ON],
-            SERVICE_TURN_ON,
             STATE_OFF,
             "Dishwasher",
         ),

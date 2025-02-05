@@ -27,7 +27,6 @@ from .const import (
     ATTR_VALUE,
     BSH_ACTIVE_PROGRAM,
     BSH_CHILD_LOCK_STATE,
-    BSH_OPERATION_STATE,
     BSH_POWER_OFF,
     BSH_POWER_ON,
     BSH_POWER_STANDBY,
@@ -98,6 +97,12 @@ SWITCHES = (
 )
 
 
+POWER_SWITCH_DESCRIPTION = SwitchEntityDescription(
+    key=BSH_POWER_STATE,
+    translation_key="power",
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
@@ -117,7 +122,8 @@ async def async_setup_entry(
                             HomeConnectProgramSwitch(device, program)
                             for program in programs
                         )
-            entities.append(HomeConnectPowerSwitch(device))
+            if BSH_POWER_STATE in device.appliance.status:
+                entities.append(HomeConnectPowerSwitch(device))
             entities.extend(
                 HomeConnectSwitch(device, description)
                 for description in SWITCHES
@@ -310,7 +316,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
         """Initialize the entity."""
         super().__init__(
             device,
-            SwitchEntityDescription(key=BSH_POWER_STATE, translation_key="power"),
+            POWER_SWITCH_DESCRIPTION,
         )
         if (
             power_state := device.appliance.status.get(BSH_POWER_STATE, {}).get(
@@ -394,23 +400,6 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
             hasattr(self, "power_off_state")
             and self.device.appliance.status.get(BSH_POWER_STATE, {}).get(ATTR_VALUE)
             == self.power_off_state
-        ):
-            self._attr_is_on = False
-        elif self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get(
-            ATTR_VALUE, None
-        ) in [
-            "BSH.Common.EnumType.OperationState.Ready",
-            "BSH.Common.EnumType.OperationState.DelayedStart",
-            "BSH.Common.EnumType.OperationState.Run",
-            "BSH.Common.EnumType.OperationState.Pause",
-            "BSH.Common.EnumType.OperationState.ActionRequired",
-            "BSH.Common.EnumType.OperationState.Aborting",
-            "BSH.Common.EnumType.OperationState.Finished",
-        ]:
-            self._attr_is_on = True
-        elif (
-            self.device.appliance.status.get(BSH_OPERATION_STATE, {}).get(ATTR_VALUE)
-            == "BSH.Common.EnumType.OperationState.Inactive"
         ):
             self._attr_is_on = False
         else:

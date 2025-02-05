@@ -19,6 +19,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.collection import (
     CollectionEntity,
     DictStorageCollection,
@@ -28,7 +29,6 @@ from homeassistant.helpers.collection import (
     YamlCollection,
     sync_entity_lifecycle,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.service import async_register_admin_service
@@ -73,7 +73,7 @@ def valid_schedule(schedule: list[dict[str, str]]) -> list[dict[str, str]]:
             )
 
         # Check if the from time of the event is after the to time of the previous event
-        if previous_to is not None and previous_to > time_range[CONF_FROM]:  # type: ignore[unreachable]
+        if previous_to is not None and previous_to > time_range[CONF_FROM]:
             raise vol.Invalid("Overlapping times found in schedule")
 
         previous_to = time_range[CONF_TO]

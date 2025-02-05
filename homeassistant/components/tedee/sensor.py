@@ -58,20 +58,15 @@ async def async_setup_entry(
     """Set up the Tedee sensor entity."""
     coordinator = entry.runtime_data
 
-    async_add_entities(
-        TedeeSensorEntity(lock, coordinator, entity_description)
-        for lock in coordinator.data.values()
-        for entity_description in ENTITIES
-    )
-
-    def _async_add_new_lock(lock_id: int) -> None:
-        lock = coordinator.data[lock_id]
+    def _async_add_new_lock(locks: list[TedeeLock]) -> None:
         async_add_entities(
             TedeeSensorEntity(lock, coordinator, entity_description)
             for entity_description in ENTITIES
+            for lock in locks
         )
 
     coordinator.new_lock_callbacks.append(_async_add_new_lock)
+    _async_add_new_lock(list(coordinator.data.values()))
 
 
 class TedeeSensorEntity(TedeeDescriptionEntity, SensorEntity):

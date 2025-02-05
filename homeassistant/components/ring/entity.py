@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Concatenate, Generic, cast
+from typing import Any, Concatenate, Generic, TypeVar, cast
 
 from ring_doorbell import (
     AuthenticationError,
@@ -11,7 +11,6 @@ from ring_doorbell import (
     RingGeneric,
     RingTimeout,
 )
-from typing_extensions import TypeVar
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity

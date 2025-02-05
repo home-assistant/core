@@ -22,8 +22,8 @@ from homeassistant.components.script import scripts_with_entity
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.entity_component import async_update_entity
-import homeassistant.helpers.issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_json_object_fixture

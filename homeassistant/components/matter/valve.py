@@ -42,17 +42,6 @@ class MatterValve(MatterEntity, ValveEntity):
     entity_description: ValveEntityDescription
     _platform_translation_key = "valve"
 
-    async def send_device_command(
-        self,
-        command: clusters.ClusterCommand,
-    ) -> None:
-        """Send a command to the device."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-        )
-
     async def async_open_valve(self) -> None:
         """Open the valve."""
         await self.send_device_command(ValveConfigurationAndControl.Commands.Open())

@@ -101,8 +101,8 @@ class Plenticore:
             model=f"{prod1} {prod2}",
             name=settings["scb:network"][hostname_id],
             sw_version=(
-                f'IOC: {device_local["Properties:VersionIOC"]}'
-                f' MC: {device_local["Properties:VersionMC"]}'
+                f"IOC: {device_local['Properties:VersionIOC']}"
+                f" MC: {device_local['Properties:VersionMC']}"
             ),
         )
 

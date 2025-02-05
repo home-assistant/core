@@ -1,7 +1,7 @@
 """Tests for La Marzocco binary sensors."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pylamarzocco.const import MachineModel
@@ -10,19 +10,13 @@ from pylamarzocco.models import LaMarzoccoScale
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import async_init_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
-
-BINARY_SENSORS = (
-    "brewing_active",
-    "backflush_active",
-    "water_tank_empty",
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 async def test_binary_sensors(
@@ -34,19 +28,11 @@ async def test_binary_sensors(
 ) -> None:
     """Test the La Marzocco binary sensors."""
 
-    await async_init_integration(hass, mock_config_entry)
-
-    serial_number = mock_lamarzocco.serial_number
-
-    for binary_sensor in BINARY_SENSORS:
-        state = hass.states.get(f"binary_sensor.{serial_number}_{binary_sensor}")
-        assert state
-        assert state == snapshot(name=f"{serial_number}_{binary_sensor}-binary_sensor")
-
-        entry = entity_registry.async_get(state.entity_id)
-        assert entry
-        assert entry.device_id
-        assert entry == snapshot(name=f"{serial_number}_{binary_sensor}-entry")
+    with patch(
+        "homeassistant.components.lamarzocco.PLATFORMS", [Platform.BINARY_SENSOR]
+    ):
+        await async_init_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_brew_active_does_not_exists(

@@ -21,7 +21,7 @@ from homeassistant.components.stream.fmp4utils import find_box
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     DefaultSegment as Segment,
