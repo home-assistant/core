@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import cast
 
 from onedrive_personal_sdk import OneDriveClient
 from onedrive_personal_sdk.exceptions import (
@@ -13,6 +15,7 @@ from onedrive_personal_sdk.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -22,7 +25,6 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
-from .api import OneDriveConfigEntryAccessTokenProvider
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 
@@ -31,7 +33,7 @@ class OneDriveRuntimeData:
     """Runtime data for the OneDrive integration."""
 
     client: OneDriveClient
-    token_provider: OneDriveConfigEntryAccessTokenProvider
+    token_function: Callable[[], Awaitable[str]]
     backup_folder_id: str
 
 
@@ -46,9 +48,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
 
     session = OAuth2Session(hass, entry, implementation)
 
-    token_provider = OneDriveConfigEntryAccessTokenProvider(session)
+    async def get_access_token() -> str:
+        await session.async_ensure_token_valid()
+        return cast(str, session.token[CONF_ACCESS_TOKEN])
 
-    client = OneDriveClient(token_provider, async_get_clientsession(hass))
+    client = OneDriveClient(get_access_token, async_get_clientsession(hass))
 
     # get approot, will be created automatically if it does not exist
     try:
@@ -81,7 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
 
     entry.runtime_data = OneDriveRuntimeData(
         client=client,
-        token_provider=token_provider,
+        token_function=get_access_token,
         backup_folder_id=backup_folder.id,
     )
 
