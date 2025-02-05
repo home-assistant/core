@@ -1439,7 +1439,11 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         manager = self._hass.data[DATA_MANAGER]
 
         agent_config = manager.config.data.agents.get(self._local_agent_id)
-        if agent_config and not agent_config.protected:
+        if (
+            self._local_agent_id in agent_ids
+            and agent_config
+            and not agent_config.protected
+        ):
             password = None
 
         backup = AgentBackup(
