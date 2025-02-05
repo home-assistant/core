@@ -41,22 +41,10 @@ async def async_setup_entry(
             _get_device_scenes(coordinator)
             for coordinator in config_entry.runtime_data.v1
         ],
-        return_exceptions=True,
     )
-    gather_exception = next(
-        (
-            device_scene_entities
-            for device_scene_entities in devices_scene_entities
-            if not isinstance(device_scene_entities, list)
-        ),
-        None,
-    )
-    if gather_exception is not None:
-        raise gather_exception
     async_add_entities(
         entity
         for device_scene_entities in devices_scene_entities
-        if isinstance(device_scene_entities, list)
         for entity in device_scene_entities
     )
 
