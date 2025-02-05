@@ -56,6 +56,11 @@
         "name": "Mist level"
       }
     },
+    "switch": {
+      "screen": {
+        "name": "Screen"
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {
