@@ -11,7 +11,6 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -95,11 +94,7 @@ class ActronSystemClimate(
         self._model_name: str = self._status.get("AirconSystem", {}).get(
             "MasterWCModel"
         )
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information."""
-        return {
+        self.attr_device_info = {
             "identifiers": {(DOMAIN, self._serial_number)},
             "name": self._name,
             "manufacturer": self._manufacturer,
