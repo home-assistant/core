@@ -185,14 +185,8 @@ class BackupConfig:
         if automatic_backups_configured is not UNDEFINED:
             self.data.automatic_backups_configured = automatic_backups_configured
         if create_backup is not UNDEFINED:
-            if (new_agent_ids := create_backup.get("agent_ids", [])) and (
-                discarded_agent_ids := set(self.data.create_backup.agent_ids)
-                - set(new_agent_ids)
-            ):
-                for agent_id in discarded_agent_ids:
-                    delete_automatic_backup_agents_unavailable_issue(
-                        self._hass, agent_id
-                    )
+            if new_agent_ids := create_backup.get("agent_ids"):
+                check_unavailable_agents(self._hass, self._manager, new_agent_ids)
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
         if retention is not UNDEFINED:
             new_retention = RetentionConfig(**retention)
@@ -574,6 +568,35 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
     await manager.async_delete_filtered_backups(
         include_filter=_automatic_backups_filter, delete_filter=_delete_filter
     )
+
+
+@callback
+def check_unavailable_agents(
+    hass: HomeAssistant, manager: BackupManager, new_agent_ids: list[str] | None = None
+) -> None:
+    """Check for unavailable agents."""
+    if missing_agent_ids := set(manager.config.data.create_backup.agent_ids) - set(
+        manager.backup_agents
+    ):
+        LOGGER.debug(
+            "Agents %s are configured for automatic backup but are not loaded",
+            missing_agent_ids,
+        )
+        for agent_id in missing_agent_ids:
+            create_automatic_backup_agents_unavailable_issue(hass, agent_id)
+
+    # Remove any issues for agents that are now loaded
+    for agent_id in manager.backup_agents:
+        delete_automatic_backup_agents_unavailable_issue(hass, agent_id)
+
+    if new_agent_ids is None:
+        return
+
+    # Remove issues for agents that are no longer configured
+    for agent_id in set(manager.config.data.create_backup.agent_ids) - set(
+        new_agent_ids
+    ):
+        delete_automatic_backup_agents_unavailable_issue(hass, agent_id)
 
 
 @callback
