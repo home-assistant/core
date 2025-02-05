@@ -76,7 +76,7 @@ REFOSS_SENSORS: Final = {
         value=lambda status, _: None if status is None else float(status),
         suggested_display_precision=2,
         device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     "temperature": RefossSensorDescription(
         key="sys",
