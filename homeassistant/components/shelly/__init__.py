@@ -240,13 +240,6 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         port=get_http_port(entry.data),
     )
 
-    if entry.data.get(CONF_MODEL) == MODEL_WALL_DISPLAY and not entry.data.get(
-        CONF_SCRIPT
-    ):
-        data = {**entry.data}
-        data[CONF_SCRIPT] = False
-        hass.config_entries.async_update_entry(entry, data=data)
-
     ws_context = await get_ws_context(hass)
 
     device = await RpcDevice.create(
@@ -354,3 +347,21 @@ async def async_remove_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> N
         mac_address := entry.unique_id
     ):
         async_remove_scanner(hass, mac_address)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: ShellyConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    if config_entry.data.get(
+        CONF_MODEL
+    ) == MODEL_WALL_DISPLAY and not config_entry.data.get(CONF_SCRIPT):
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                **config_entry.data,
+                CONF_SCRIPT: False,
+            },
+        )
+        return True
+    return False
