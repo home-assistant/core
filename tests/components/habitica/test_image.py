@@ -4,6 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
 from io import BytesIO
+import sys
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -30,6 +31,9 @@ def image_only() -> Generator[None]:
         yield
 
 
+@pytest.mark.skipif(
+    sys.platform != "linux", reason="linux only"
+)  # Pillow output on win/mac is different
 async def test_image_platform(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
