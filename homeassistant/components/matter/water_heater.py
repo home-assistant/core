@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from chip.clusters import Objects as clusters
+from homeassistant.exceptions import ServiceValidationError
 from matter_server.client.models import device_types
 from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
