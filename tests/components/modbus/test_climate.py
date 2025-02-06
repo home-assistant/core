@@ -62,6 +62,7 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
+    CONF_SCALE,
     CONF_SWING_MODE_REGISTER,
     CONF_SWING_MODE_SWING_BOTH,
     CONF_SWING_MODE_SWING_HORIZ,
@@ -592,6 +593,7 @@ async def test_service_climate_update(
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
                         CONF_CURRENT_TEMP_SCALE: 0.1,
+                        CONF_SCALE: 10,
                     },
                 ]
             },

@@ -433,7 +433,10 @@ class ModbusThermostat(BaseStructPlatform, RestoreEntity, ClimateEntity):
             self._input_type, self._address
         )
         self._attr_current_temperature = (
-            int(register_value * self._current_temperature_scale)
+            int(
+                register_value * self._current_temperature_scale / self._scale
+                - self._offset
+            )
             if register_value
             else None
         )
