@@ -5,14 +5,14 @@ from __future__ import annotations
 from dataclasses import asdict
 from datetime import datetime
 
-from bring_api.types import ActivityType
+from bring_api import ActivityType, BringList
 
 from homeassistant.components.event import EventEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import BringConfigEntry
-from .coordinator import BringData, BringDataUpdateCoordinator
+from .coordinator import BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 
 PARALLEL_UPDATES = 0
@@ -25,14 +25,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up the event platform."""
     coordinator = config_entry.runtime_data
+    lists_added: set[str] = set()
 
-    async_add_entities(
-        BringEventEntity(
-            coordinator,
-            bring_list,
-        )
-        for bring_list in coordinator.data.values()
-    )
+    @callback
+    def add_entities() -> None:
+        """Add event entities."""
+        nonlocal lists_added
+
+        if new_lists := {lst.listUuid for lst in coordinator.lists} - lists_added:
+            async_add_entities(
+                BringEventEntity(
+                    coordinator,
+                    bring_list,
+                )
+                for bring_list in coordinator.lists
+                if bring_list.listUuid in new_lists
+            )
+            lists_added |= new_lists
+
+    coordinator.async_add_listener(add_entities)
+    add_entities()
 
 
 class BringEventEntity(BringBaseEntity, EventEntity):
@@ -43,7 +55,7 @@ class BringEventEntity(BringBaseEntity, EventEntity):
     def __init__(
         self,
         coordinator: BringDataUpdateCoordinator,
-        bring_list: BringData,
+        bring_list: BringList,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, bring_list)

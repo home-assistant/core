@@ -8,12 +8,14 @@ import logging
 
 from bring_api import (
     Bring,
+    BringActivityResponse,
     BringAuthException,
     BringItemsResponse,
     BringList,
     BringParseException,
     BringRequestException,
     BringUserSettingsResponse,
+    BringUsersResponse,
 )
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
