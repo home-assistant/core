@@ -33,6 +33,7 @@ from homeassistant.helpers.typing import StateType
 from .const import (
     DEVICE_KEYS_0_3,
     DEVICE_KEYS_A_B,
+    DEVICE_KEYS_A_D,
     OPTION_ENTRY_DEVICE_OPTIONS,
     OPTION_ENTRY_SENSOR_PRECISION,
     PRECISION_MAPPING_FAMILY_28,
@@ -107,6 +108,33 @@ DEVICE_SENSORS: dict[str, tuple[OneWireSensorEntityDescription, ...]] = {
             read_mode=READ_MODE_FLOAT,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+    ),
+    "20": tuple(
+        [
+            OneWireSensorEntityDescription(
+                key=f"latestvolt.{device_key}",
+                device_class=SensorDeviceClass.VOLTAGE,
+                entity_registry_enabled_default=False,
+                native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+                read_mode=READ_MODE_FLOAT,
+                state_class=SensorStateClass.MEASUREMENT,
+                translation_key="latest_voltage_id",
+                translation_placeholders={"id": str(device_key)},
+            )
+            for device_key in DEVICE_KEYS_A_D
+        ]
+        + [
+            OneWireSensorEntityDescription(
+                key=f"volt.{device_key}",
+                device_class=SensorDeviceClass.VOLTAGE,
+                native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+                read_mode=READ_MODE_FLOAT,
+                state_class=SensorStateClass.MEASUREMENT,
+                translation_key="voltage_id",
+                translation_placeholders={"id": str(device_key)},
+            )
+            for device_key in DEVICE_KEYS_A_D
+        ]
     ),
     "22": (SIMPLE_TEMPERATURE_SENSOR_DESCRIPTION,),
     "26": (

@@ -48,8 +48,7 @@ from homeassistant.core import Event as core_Event, HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 
 from . import UnifiConfigEntry
 from .const import DEVICE_STATES

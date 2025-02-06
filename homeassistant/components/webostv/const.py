@@ -1,4 +1,4 @@
-"""Constants used for LG webOS Smart TV."""
+"""Constants for the LG webOS TV integration."""
 
 import asyncio
 

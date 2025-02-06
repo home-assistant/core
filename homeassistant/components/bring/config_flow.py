@@ -63,11 +63,18 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=self.info.get("name") or user_input[CONF_EMAIL], data=user_input
+                title=self.info.name or user_input[CONF_EMAIL],
+                data=user_input,
             )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "google_play": "https://play.google.com/store/apps/details?id=ch.publisheria.bring",
+                "app_store": "https://itunes.apple.com/app/apple-store/id580669177",
+            },
         )
 
     async def async_step_reauth(

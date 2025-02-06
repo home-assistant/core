@@ -13,18 +13,18 @@ from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _RobotT
+from .entity import LitterRobotEntity, _WhiskerEntityT
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotTimeEntityDescription(TimeEntityDescription, Generic[_RobotT]):
+class RobotTimeEntityDescription(TimeEntityDescription, Generic[_WhiskerEntityT]):
     """A class that describes robot time entities."""
 
-    value_fn: Callable[[_RobotT], time | None]
-    set_fn: Callable[[_RobotT, time], Coroutine[Any, Any, bool]]
+    value_fn: Callable[[_WhiskerEntityT], time | None]
+    set_fn: Callable[[_WhiskerEntityT, time], Coroutine[Any, Any, bool]]
 
 
 def _as_local_time(start: datetime | None) -> time | None:
@@ -64,10 +64,10 @@ async def async_setup_entry(
     )
 
 
-class LitterRobotTimeEntity(LitterRobotEntity[_RobotT], TimeEntity):
+class LitterRobotTimeEntity(LitterRobotEntity[_WhiskerEntityT], TimeEntity):
     """Litter-Robot time entity."""
 
-    entity_description: RobotTimeEntityDescription[_RobotT]
+    entity_description: RobotTimeEntityDescription[_WhiskerEntityT]
 
     @property
     def native_value(self) -> time | None:

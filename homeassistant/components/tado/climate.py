@@ -506,7 +506,7 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             offset,
         )
 
-        self._tado.set_temperature_offset(self._device_id, offset)
+        await self._tado.set_temperature_offset(self._device_id, offset)
         await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:

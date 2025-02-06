@@ -1,4 +1,4 @@
-"""Support for LG WebOS TV notification service."""
+"""Support for LG webOS TV notification service."""
 
 from __future__ import annotations
 
@@ -37,7 +37,7 @@ async def async_get_service(
 
 
 class LgWebOSNotificationService(BaseNotificationService):
-    """Implement the notification service for LG WebOS TV."""
+    """Implement the notification service for LG webOS TV."""
 
     def __init__(self, entry: WebOsTvConfigEntry) -> None:
         """Initialize the service."""

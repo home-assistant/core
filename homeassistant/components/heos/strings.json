@@ -94,8 +94,23 @@
     "action_error": {
       "message": "Unable to {action}: {error}"
     },
+    "entity_not_found": {
+      "message": "Entity {entity_id} was not found"
+    },
     "integration_not_loaded": {
       "message": "The HEOS integration is not loaded"
+    },
+    "sign_in_auth_error": {
+      "message": "Failed to sign in: Invalid username and/or password"
+    },
+    "sign_in_error": {
+      "message": "Unable to sign in: {error}"
+    },
+    "sign_out_error": {
+      "message": "Unable to sign out: {error}"
+    },
+    "not_heos_media_player": {
+      "message": "Entity {entity_id} is not a HEOS media player entity"
     },
     "unknown_source": {
       "message": "Unknown source: {source}"

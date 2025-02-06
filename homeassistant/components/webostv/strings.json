@@ -12,7 +12,7 @@
         }
       },
       "pairing": {
-        "title": "webOS TV Pairing",
+        "title": "LG webOS TV Pairing",
         "description": "Select **Submit** and accept the pairing request on your TV.\n\n![Image](/static/images/config_webos.png)"
       },
       "reauth_confirm": {
@@ -43,7 +43,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Options for webOS Smart TV",
+        "title": "Options for LG webOS TV",
         "description": "Select enabled sources",
         "data": {
           "sources": "Sources list"
@@ -129,6 +129,15 @@
     },
     "unhandled_trigger_type": {
       "message": "Unhandled trigger type: {trigger_type}"
+    },
+    "unknown_trigger_platform": {
+      "message": "Unknown trigger platform: {platform}"
+    },
+    "invalid_entity_id": {
+      "message": "Entity {entity_id} is not a valid webostv entity."
+    },
+    "source_not_found": {
+      "message": "Source {source} not found in the sources list for {name}."
     }
   }
 }

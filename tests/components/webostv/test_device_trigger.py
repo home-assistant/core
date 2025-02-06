@@ -1,4 +1,4 @@
-"""The tests for WebOS TV device triggers."""
+"""The tests for LG webOS TV device triggers."""
 
 import pytest
 
@@ -140,7 +140,6 @@ async def test_invalid_entry_raises(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client,
-    caplog: pytest.LogCaptureFixture,
     domain: str,
     entry_state: ConfigEntryState,
 ) -> None:

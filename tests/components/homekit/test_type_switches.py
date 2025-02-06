@@ -42,7 +42,7 @@ from homeassistant.const import (
     STATE_OPEN,
 )
 from homeassistant.core import Event, HomeAssistant, split_entity_id
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, async_mock_service
 

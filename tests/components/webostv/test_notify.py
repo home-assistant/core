@@ -1,4 +1,4 @@
-"""The tests for the WebOS TV notify platform."""
+"""The tests for the LG webOS TV notify platform."""
 
 from unittest.mock import call
 
