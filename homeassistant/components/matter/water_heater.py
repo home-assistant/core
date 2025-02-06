@@ -109,7 +109,8 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         if system_mode_value is None:
             raise ServiceValidationError(
                 f"Unsupported hvac mode {operation_mode} in Matter"
-            )        await self.write_attribute(
+            )
+        await self.write_attribute(
             value=system_mode_value,
             matter_attribute=clusters.Thermostat.Attributes.SystemMode,
         )
