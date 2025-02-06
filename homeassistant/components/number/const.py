@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
+    UnitOfEnergyDistance,
     UnitOfFrequency,
     UnitOfInformation,
     UnitOfIrradiance,
@@ -164,6 +165,15 @@ class NumberDeviceClass(StrEnum):
     """Energy.
 
     Unit of measurement: `J`, `kJ`, `MJ`, `GJ`, `mWh`, `Wh`, `kWh`, `MWh`, `GWh`, `TWh`, `cal`, `kcal`, `Mcal`, `Gcal`
+    """
+
+    ENERGY_DISTANCE = "energy_distance"
+    """Energy distance.
+
+    Use this device class for sensors measuring energy by distance, for example the amount
+    of electric energy consumed by an electric car.
+
+    Unit of measurement: `kWh/100km`, `mi/kWh`, `km/kWh`
     """
 
     ENERGY_STORAGE = "energy_storage"
@@ -447,6 +457,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfTime.MILLISECONDS,
     },
     NumberDeviceClass.ENERGY: set(UnitOfEnergy),
+    NumberDeviceClass.ENERGY_DISTANCE: set(UnitOfEnergyDistance),
     NumberDeviceClass.ENERGY_STORAGE: set(UnitOfEnergy),
     NumberDeviceClass.FREQUENCY: set(UnitOfFrequency),
     NumberDeviceClass.GAS: {

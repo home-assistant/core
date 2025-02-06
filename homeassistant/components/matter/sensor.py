@@ -815,6 +815,8 @@ DISCOVERY_SCHEMAS = [
             clusters.OperationalState.Attributes.OperationalState,
             clusters.OperationalState.Attributes.OperationalStateList,
         ),
+        # don't discover this entry if the supported state list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -828,6 +830,8 @@ DISCOVERY_SCHEMAS = [
             clusters.OperationalState.Attributes.CurrentPhase,
             clusters.OperationalState.Attributes.PhaseList,
         ),
+        # don't discover this entry if the supported state list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -841,6 +845,8 @@ DISCOVERY_SCHEMAS = [
             clusters.RvcOperationalState.Attributes.CurrentPhase,
             clusters.RvcOperationalState.Attributes.PhaseList,
         ),
+        # don't discover this entry if the supported state list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -854,6 +860,8 @@ DISCOVERY_SCHEMAS = [
             clusters.OvenCavityOperationalState.Attributes.CurrentPhase,
             clusters.OvenCavityOperationalState.Attributes.PhaseList,
         ),
+        # don't discover this entry if the supported state list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -883,6 +891,8 @@ DISCOVERY_SCHEMAS = [
             clusters.RvcOperationalState.Attributes.OperationalStateList,
         ),
         allow_multi=True,  # also used for vacuum entity
+        # don't discover this entry if the supported state list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,
@@ -897,6 +907,8 @@ DISCOVERY_SCHEMAS = [
             clusters.OvenCavityOperationalState.Attributes.OperationalState,
             clusters.OvenCavityOperationalState.Attributes.OperationalStateList,
         ),
+        # don't discover this entry if the supported state list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SENSOR,

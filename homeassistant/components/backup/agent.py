@@ -11,13 +11,7 @@ from propcache.api import cached_property
 
 from homeassistant.core import HomeAssistant, callback
 
-from .models import AgentBackup, BackupError
-
-
-class BackupAgentError(BackupError):
-    """Base class for backup agent errors."""
-
-    error_code = "backup_agent_error"
+from .models import AgentBackup, BackupAgentError
 
 
 class BackupAgentUnreachableError(BackupAgentError):
@@ -94,10 +88,15 @@ class LocalBackupAgent(BackupAgent):
 
     @abc.abstractmethod
     def get_backup_path(self, backup_id: str) -> Path:
-        """Return the local path to a backup.
+        """Return the local path to an existing backup.
 
         The method should return the path to the backup file with the specified id.
+        Raises BackupAgentError if the backup does not exist.
         """
+
+    @abc.abstractmethod
+    def get_new_backup_path(self, backup: AgentBackup) -> Path:
+        """Return the local path to a new backup."""
 
 
 class BackupAgentPlatformProtocol(Protocol):

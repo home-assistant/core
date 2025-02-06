@@ -798,6 +798,9 @@ async def test_onboarding_backup_info(
     backups = {
         "abc123": backup.ManagerBackup(
             addons=[backup.AddonInfo(name="Test", slug="test", version="1.0.0")],
+            agents={
+                "backup.local": backup.manager.AgentBackupStatus(protected=True, size=0)
+            },
             backup_id="abc123",
             date="1970-01-01T00:00:00.000Z",
             database_included=True,
@@ -806,14 +809,14 @@ async def test_onboarding_backup_info(
             homeassistant_included=True,
             homeassistant_version="2024.12.0",
             name="Test",
-            protected=False,
-            size=0,
-            agent_ids=["backup.local"],
             failed_agent_ids=[],
             with_automatic_settings=True,
         ),
         "def456": backup.ManagerBackup(
             addons=[],
+            agents={
+                "test.remote": backup.manager.AgentBackupStatus(protected=True, size=0)
+            },
             backup_id="def456",
             date="1980-01-01T00:00:00.000Z",
             database_included=False,
@@ -825,9 +828,6 @@ async def test_onboarding_backup_info(
             homeassistant_included=True,
             homeassistant_version="2024.12.0",
             name="Test 2",
-            protected=False,
-            size=1,
-            agent_ids=["test.remote"],
             failed_agent_ids=[],
             with_automatic_settings=None,
         ),

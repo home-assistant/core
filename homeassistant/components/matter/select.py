@@ -218,6 +218,8 @@ DISCOVERY_SCHEMAS = [
             clusters.ModeSelect.Attributes.CurrentMode,
             clusters.ModeSelect.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -230,6 +232,8 @@ DISCOVERY_SCHEMAS = [
             clusters.OvenMode.Attributes.CurrentMode,
             clusters.OvenMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -242,6 +246,8 @@ DISCOVERY_SCHEMAS = [
             clusters.LaundryWasherMode.Attributes.CurrentMode,
             clusters.LaundryWasherMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -254,6 +260,8 @@ DISCOVERY_SCHEMAS = [
             clusters.RefrigeratorAndTemperatureControlledCabinetMode.Attributes.CurrentMode,
             clusters.RefrigeratorAndTemperatureControlledCabinetMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -266,6 +274,8 @@ DISCOVERY_SCHEMAS = [
             clusters.RvcCleanMode.Attributes.CurrentMode,
             clusters.RvcCleanMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -278,6 +288,8 @@ DISCOVERY_SCHEMAS = [
             clusters.DishwasherMode.Attributes.CurrentMode,
             clusters.DishwasherMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -290,18 +302,22 @@ DISCOVERY_SCHEMAS = [
             clusters.EnergyEvseMode.Attributes.CurrentMode,
             clusters.EnergyEvseMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="MatterDeviceEnergyManagementMode",
-            translation_key="mode",
+            translation_key="device_energy_management_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(
             clusters.DeviceEnergyManagementMode.Attributes.CurrentMode,
             clusters.DeviceEnergyManagementMode.Attributes.SupportedModes,
         ),
+        # don't discover this entry if the supported modes list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -397,6 +413,8 @@ DISCOVERY_SCHEMAS = [
             clusters.TemperatureControl.Attributes.SelectedTemperatureLevel,
             clusters.TemperatureControl.Attributes.SupportedTemperatureLevels,
         ),
+        # don't discover this entry if the supported levels list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -410,6 +428,8 @@ DISCOVERY_SCHEMAS = [
             clusters.LaundryWasherControls.Attributes.SpinSpeedCurrent,
             clusters.LaundryWasherControls.Attributes.SpinSpeeds,
         ),
+        # don't discover this entry if the spinspeeds list is empty
+        secondary_value_is_not=[],
     ),
     MatterDiscoverySchema(
         platform=Platform.SELECT,
@@ -425,5 +445,7 @@ DISCOVERY_SCHEMAS = [
             clusters.LaundryWasherControls.Attributes.NumberOfRinses,
             clusters.LaundryWasherControls.Attributes.SupportedRinses,
         ),
+        # don't discover this entry if the supported rinses list is empty
+        secondary_value_is_not=[],
     ),
 ]

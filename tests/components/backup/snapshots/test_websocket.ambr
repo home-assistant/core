@@ -229,6 +229,28 @@
     'type': 'result',
   })
 # ---
+# name: test_can_decrypt_on_download_with_agent_error[BackupAgentError]
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Unknown error',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download_with_agent_error[BackupNotFound]
+  dict({
+    'error': dict({
+      'code': 'backup_not_found',
+      'message': 'Backup not found',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
 # name: test_config_info[storage_data0]
   dict({
     'id': 1,
@@ -664,7 +686,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -778,7 +800,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -892,7 +914,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -1016,7 +1038,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -1183,7 +1205,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -1297,7 +1319,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -1413,7 +1435,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -1527,7 +1549,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -1645,7 +1667,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -1767,7 +1789,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -1881,7 +1903,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -1995,7 +2017,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -2109,7 +2131,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -2223,7 +2245,7 @@
       }),
     }),
     'key': 'backup',
-    'minor_version': 2,
+    'minor_version': 3,
     'version': 1,
   })
 # ---
@@ -2977,8 +2999,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3005,8 +3029,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3036,6 +3062,10 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -3050,8 +3080,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3078,8 +3110,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3109,6 +3143,10 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -3123,8 +3161,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3165,6 +3205,10 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -3179,8 +3223,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3205,6 +3251,10 @@
           'backup_id': 'def456',
           'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'unknown_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -3219,8 +3269,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3256,6 +3308,10 @@
           'backup_id': 'def456',
           'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'unknown_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -3270,8 +3326,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3305,6 +3363,10 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -3319,8 +3381,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3361,6 +3425,10 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -3375,8 +3443,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3418,6 +3488,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
+          'extra_metadata': dict({
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -3432,8 +3504,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3475,6 +3549,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
+          'extra_metadata': dict({
+          }),
           'failed_agent_ids': list([
             'test.remote',
           ]),
@@ -3490,8 +3566,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3532,6 +3610,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
+          'extra_metadata': dict({
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -3546,8 +3626,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3588,6 +3670,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
+          'extra_metadata': dict({
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -3602,8 +3686,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3644,6 +3730,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
+          'extra_metadata': dict({
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -3658,8 +3746,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3700,6 +3790,8 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00Z',
+          'extra_metadata': dict({
+          }),
           'failed_agent_ids': list([
             'test.remote',
           ]),
@@ -3715,8 +3807,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -3757,6 +3851,10 @@
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'extra_metadata': dict({
+          'instance_id': 'our_uuid',
+          'with_automatic_settings': True,
+        }),
         'failed_agent_ids': list([
         ]),
         'folders': list([
@@ -3796,6 +3894,10 @@
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'extra_metadata': dict({
+          'instance_id': 'our_uuid',
+          'with_automatic_settings': True,
+        }),
         'failed_agent_ids': list([
         ]),
         'folders': list([
@@ -3851,6 +3953,10 @@
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'extra_metadata': dict({
+          'instance_id': 'our_uuid',
+          'with_automatic_settings': True,
+        }),
         'failed_agent_ids': list([
         ]),
         'folders': list([
@@ -3891,6 +3997,10 @@
         'backup_id': 'abc123',
         'database_included': True,
         'date': '1970-01-01T00:00:00.000Z',
+        'extra_metadata': dict({
+          'instance_id': 'our_uuid',
+          'with_automatic_settings': True,
+        }),
         'failed_agent_ids': list([
         ]),
         'folders': list([
@@ -4167,6 +4277,10 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -4181,8 +4295,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -4212,6 +4328,10 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -4226,8 +4346,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -4261,6 +4383,10 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -4275,8 +4401,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -4301,6 +4429,10 @@
           'backup_id': 'def456',
           'database_included': False,
           'date': '1980-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'unknown_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -4329,6 +4461,10 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -4343,8 +4479,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',
@@ -4375,6 +4513,10 @@
           'backup_id': 'abc123',
           'database_included': True,
           'date': '1970-01-01T00:00:00.000Z',
+          'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
+          }),
           'failed_agent_ids': list([
           ]),
           'folders': list([
@@ -4389,8 +4531,10 @@
       ]),
       'last_attempted_automatic_backup': None,
       'last_completed_automatic_backup': None,
+      'last_non_idle_event': None,
       'next_automatic_backup': None,
       'next_automatic_backup_additional': False,
+      'state': 'idle',
     }),
     'success': True,
     'type': 'result',

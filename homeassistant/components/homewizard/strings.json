@@ -174,8 +174,7 @@
           }
         },
         "error": {
-          "authorization_failed": "[%key:component::homewizard::config::error::authorization_failed%]",
-          "unknown_error": "[%key:common::config_flow::error::unknown%]"
+          "authorization_failed": "[%key:component::homewizard::config::error::authorization_failed%]"
         }
       }
     }

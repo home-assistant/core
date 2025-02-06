@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
+from concurrent.futures import CancelledError, Future
 import copy
 from dataclasses import dataclass, replace
 from io import BytesIO
@@ -21,6 +22,7 @@ from securetar import SecureTarError, SecureTarFile, SecureTarReadError
 from homeassistant.backup_restore import password_to_key
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import BUF_SIZE, LOGGER
@@ -55,6 +57,12 @@ class BackupEmpty(DecryptError):
     """No tar files found in the backup."""
 
     _message = "No tar files found in the backup."
+
+
+class AbortCipher(HomeAssistantError):
+    """Abort the cipher operation."""
+
+    _message = "Abort cipher operation."
 
 
 def make_backup_dir(path: Path) -> None:
@@ -111,6 +119,17 @@ def read_backup(backup_path: Path) -> AgentBackup:
         )
 
 
+def suggested_filename_from_name_date(name: str, date_str: str) -> str:
+    """Suggest a filename for the backup."""
+    date = dt_util.parse_datetime(date_str, raise_on_error=True)
+    return "_".join(f"{name} {date.strftime('%Y-%m-%d %H.%M %S%f')}.tar".split())
+
+
+def suggested_filename(backup: AgentBackup) -> str:
+    """Suggest a filename for the backup."""
+    return suggested_filename_from_name_date(backup.name, backup.date)
+
+
 def validate_password(path: Path, password: str | None) -> bool:
     """Validate the password."""
     with tarfile.open(path, "r:", bufsize=BUF_SIZE) as backup_file:
@@ -149,23 +168,38 @@ class AsyncIteratorReader:
 
     def __init__(self, hass: HomeAssistant, stream: AsyncIterator[bytes]) -> None:
         """Initialize the wrapper."""
+        self._aborted = False
         self._hass = hass
         self._stream = stream
         self._buffer: bytes | None = None
+        self._next_future: Future[bytes | None] | None = None
         self._pos: int = 0
 
     async def _next(self) -> bytes | None:
         """Get the next chunk from the iterator."""
         return await anext(self._stream, None)
 
+    def abort(self) -> None:
+        """Abort the reader."""
+        self._aborted = True
+        if self._next_future is not None:
+            self._next_future.cancel()
+
     def read(self, n: int = -1, /) -> bytes:
         """Read data from the iterator."""
         result = bytearray()
         while n < 0 or len(result) < n:
             if not self._buffer:
-                self._buffer = asyncio.run_coroutine_threadsafe(
+                self._next_future = asyncio.run_coroutine_threadsafe(
                     self._next(), self._hass.loop
-                ).result()
+                )
+                if self._aborted:
+                    self._next_future.cancel()
+                    raise AbortCipher
+                try:
+                    self._buffer = self._next_future.result()
+                except CancelledError as err:
+                    raise AbortCipher from err
                 self._pos = 0
             if not self._buffer:
                 # The stream is exhausted
@@ -187,9 +221,11 @@ class AsyncIteratorWriter:
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the wrapper."""
+        self._aborted = False
         self._hass = hass
         self._pos: int = 0
         self._queue: asyncio.Queue[bytes | None] = asyncio.Queue(maxsize=1)
+        self._write_future: Future[bytes | None] | None = None
 
     def __aiter__(self) -> Self:
         """Return the iterator."""
@@ -201,13 +237,28 @@ class AsyncIteratorWriter:
             return data
         raise StopAsyncIteration
 
+    def abort(self) -> None:
+        """Abort the writer."""
+        self._aborted = True
+        if self._write_future is not None:
+            self._write_future.cancel()
+
     def tell(self) -> int:
         """Return the current position in the iterator."""
         return self._pos
 
     def write(self, s: bytes, /) -> int:
         """Write data to the iterator."""
-        asyncio.run_coroutine_threadsafe(self._queue.put(s), self._hass.loop).result()
+        self._write_future = asyncio.run_coroutine_threadsafe(
+            self._queue.put(s), self._hass.loop
+        )
+        if self._aborted:
+            self._write_future.cancel()
+            raise AbortCipher
+        try:
+            self._write_future.result()
+        except CancelledError as err:
+            raise AbortCipher from err
         self._pos += len(s)
         return len(s)
 
@@ -252,24 +303,29 @@ def decrypt_backup(
     """Decrypt a backup."""
     error: Exception | None = None
     try:
-        with (
-            tarfile.open(
-                fileobj=input_stream, mode="r|", bufsize=BUF_SIZE
-            ) as input_tar,
-            tarfile.open(
-                fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
-            ) as output_tar,
-        ):
-            _decrypt_backup(input_tar, output_tar, password)
-    except (DecryptError, SecureTarError, tarfile.TarError) as err:
-        LOGGER.warning("Error decrypting backup: %s", err)
-        error = err
-    else:
-        # Pad the output stream to the requested minimum size
-        padding = max(minimum_size - output_stream.tell(), 0)
-        output_stream.write(b"\0" * padding)
+        try:
+            with (
+                tarfile.open(
+                    fileobj=input_stream, mode="r|", bufsize=BUF_SIZE
+                ) as input_tar,
+                tarfile.open(
+                    fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
+                ) as output_tar,
+            ):
+                _decrypt_backup(input_tar, output_tar, password)
+        except (DecryptError, SecureTarError, tarfile.TarError) as err:
+            LOGGER.warning("Error decrypting backup: %s", err)
+            error = err
+        else:
+            # Pad the output stream to the requested minimum size
+            padding = max(minimum_size - output_stream.tell(), 0)
+            output_stream.write(b"\0" * padding)
+        finally:
+            # Write an empty chunk to signal the end of the stream
+            output_stream.write(b"")
+    except AbortCipher:
+        LOGGER.debug("Cipher operation aborted")
     finally:
-        output_stream.write(b"")  # Write an empty chunk to signal the end of the stream
         on_done(error)
 
 
@@ -322,24 +378,29 @@ def encrypt_backup(
     """Encrypt a backup."""
     error: Exception | None = None
     try:
-        with (
-            tarfile.open(
-                fileobj=input_stream, mode="r|", bufsize=BUF_SIZE
-            ) as input_tar,
-            tarfile.open(
-                fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
-            ) as output_tar,
-        ):
-            _encrypt_backup(input_tar, output_tar, password, nonces)
-    except (EncryptError, SecureTarError, tarfile.TarError) as err:
-        LOGGER.warning("Error encrypting backup: %s", err)
-        error = err
-    else:
-        # Pad the output stream to the requested minimum size
-        padding = max(minimum_size - output_stream.tell(), 0)
-        output_stream.write(b"\0" * padding)
+        try:
+            with (
+                tarfile.open(
+                    fileobj=input_stream, mode="r|", bufsize=BUF_SIZE
+                ) as input_tar,
+                tarfile.open(
+                    fileobj=output_stream, mode="w|", bufsize=BUF_SIZE
+                ) as output_tar,
+            ):
+                _encrypt_backup(input_tar, output_tar, password, nonces)
+        except (EncryptError, SecureTarError, tarfile.TarError) as err:
+            LOGGER.warning("Error encrypting backup: %s", err)
+            error = err
+        else:
+            # Pad the output stream to the requested minimum size
+            padding = max(minimum_size - output_stream.tell(), 0)
+            output_stream.write(b"\0" * padding)
+        finally:
+            # Write an empty chunk to signal the end of the stream
+            output_stream.write(b"")
+    except AbortCipher:
+        LOGGER.debug("Cipher operation aborted")
     finally:
-        output_stream.write(b"")  # Write an empty chunk to signal the end of the stream
         on_done(error)
 
 
@@ -387,7 +448,9 @@ def _encrypt_backup(
 class _CipherWorkerStatus:
     done: asyncio.Event
     error: Exception | None = None
+    reader: AsyncIteratorReader
     thread: threading.Thread
+    writer: AsyncIteratorWriter
 
 
 class _CipherBackupStreamer:
@@ -444,13 +507,18 @@ class _CipherBackupStreamer:
             target=self._cipher_func,
             args=[reader, writer, self._password, on_done, self.size(), self._nonces],
         )
-        worker_status = _CipherWorkerStatus(done=asyncio.Event(), thread=worker)
+        worker_status = _CipherWorkerStatus(
+            done=asyncio.Event(), reader=reader, thread=worker, writer=writer
+        )
         self._workers.append(worker_status)
         worker.start()
         return writer
 
     async def wait(self) -> None:
         """Wait for the worker threads to finish."""
+        for worker in self._workers:
+            worker.reader.abort()
+            worker.writer.abort()
         await asyncio.gather(*(worker.done.wait() for worker in self._workers))
 
 

@@ -75,7 +75,7 @@
     'platform': 'ring',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'motion',
+    'translation_key': None,
     'unique_id': '987654-motion',
     'unit_of_measurement': None,
   })
@@ -123,7 +123,7 @@
     'platform': 'ring',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'motion',
+    'translation_key': None,
     'unique_id': '765432-motion',
     'unit_of_measurement': None,
   })
@@ -219,7 +219,7 @@
     'platform': 'ring',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'motion',
+    'translation_key': None,
     'unique_id': '345678-motion',
     'unit_of_measurement': None,
   })
