@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.motionmount.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT
 
-from . import HOST, PORT, ZEROCONF_MAC, ZEROCONF_NAME
+from . import HOST, MAC, PORT, ZEROCONF_MAC, ZEROCONF_NAME
 
 from tests.common import MockConfigEntry
 
@@ -53,4 +53,6 @@ def mock_motionmount() -> Generator[MagicMock]:
         autospec=True,
     ) as motionmount_mock:
         client = motionmount_mock.return_value
+        client.name = ZEROCONF_NAME
+        client.mac = MAC
         yield client

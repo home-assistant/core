@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import format_mac
 
-from . import MAC, ZEROCONF_NAME
+from . import ZEROCONF_NAME
 
 from tests.common import MockConfigEntry
 
@@ -19,8 +19,6 @@ async def test_entity(
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount.name = ZEROCONF_NAME
-    mock_motionmount.mac = MAC
     mock_motionmount.is_authenticated = True
     mock_motionmount.error_status = 0
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -36,7 +34,6 @@ async def test_entity_no_mac(
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount.name = ZEROCONF_NAME
     mock_motionmount.mac = b"\x00\x00\x00\x00\x00\x00"
     mock_motionmount.is_authenticated = True
     mock_motionmount.error_status = 0
@@ -55,8 +52,6 @@ async def test_entity_rename(
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount.name = ZEROCONF_NAME
-    mock_motionmount.mac = MAC
     mock_motionmount.is_authenticated = True
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
