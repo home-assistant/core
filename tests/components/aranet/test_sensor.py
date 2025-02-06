@@ -251,7 +251,7 @@ async def test_sensors_aranetrn(
     assert len(hass.states.async_all("sensor")) == 0
     inject_bluetooth_service_info(hass, VALID_ARANET_RADON_DATA_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all("sensor")) == 6
+    assert len(hass.states.async_all("sensor")) == 7
 
     batt_sensor = hass.states.get("sensor.aranetrn_12345_battery")
     batt_sensor_attrs = batt_sensor.attributes
