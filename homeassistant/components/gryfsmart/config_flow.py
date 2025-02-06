@@ -28,6 +28,7 @@ from .const import (
     DEFAULT_PORT,
     DEVICE_TYPES,
     DOMAIN,
+    SWITCH_DEVICE_CLASS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -440,7 +441,10 @@ def check_extra_parameter(
     """Check extra parameter."""
 
     if device_type == Platform.BINARY_SENSOR:
-        if extra_parameter in BINARY_SENSOR_DEVICE_CLASS:
-            return None
-        return "Bad binary sensor extra parameter!"
+        if extra_parameter not in BINARY_SENSOR_DEVICE_CLASS:
+            return "Bad binary sensor extra parameter!"
+    if device_type == Platform.SWITCH:
+        if extra_parameter not in SWITCH_DEVICE_CLASS:
+            return "Bad Output extra parameter!"
+
     return None

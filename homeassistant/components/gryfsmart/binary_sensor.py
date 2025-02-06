@@ -14,14 +14,16 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .const import (
     CONF_API,
+    CONF_DEVICE_CLASS,
     CONF_DEVICES,
     CONF_EXTRA,
     CONF_ID,
     CONF_NAME,
     CONF_TYPE,
     DOMAIN,
+    PLATFORM_BINARY_SENSOR,
 )
-from .entity import GryfConfigFlowEntity
+from .entity import GryfConfigFlowEntity, GryfYamlEntity
 
 
 async def async_setup_platform(
@@ -34,14 +36,14 @@ async def async_setup_platform(
 
     binary_sensors = []
 
-    for conf in hass.data[DOMAIN].get(Platform.BINARY_SENSOR, {}):
+    for conf in hass.data[DOMAIN].get(PLATFORM_BINARY_SENSOR, {}):
         device = _GryfInput(
             conf.get(CONF_NAME),
             conf.get(CONF_ID) // 10,
             conf.get(CONF_ID) % 10,
             hass.data[DOMAIN][CONF_API],
         )
-        binary_sensors.append(device)
+        binary_sensors.append(GryfYamlBinarySensor(device, conf.get(CONF_DEVICE_CLASS)))
 
     async_add_entities(binary_sensors)
 
@@ -102,6 +104,23 @@ class GryfConfigFlowBinarySensor(GryfConfigFlowEntity, _GryfBinarySensorBase):
         """Init the gryf binary sensor."""
 
         super().__init__(config_entry, device)
+        device.subscribe(self.async_update)
+
+        if device_class:
+            self._attr_device_class = device_class
+
+
+class GryfYamlBinarySensor(GryfYamlEntity, _GryfBinarySensorBase):
+    """Gryf Smart yaml input line class."""
+
+    def __init__(
+        self,
+        device: _GryfDevice,
+        device_class: BinarySensorDeviceClass | None,
+    ) -> None:
+        """Init the gryf input line."""
+
+        super().__init__(device)
         device.subscribe(self.async_update)
 
         if device_class:
