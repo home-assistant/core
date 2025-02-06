@@ -19,6 +19,11 @@ from homeassistant.helpers import config_validation as cv
 from .const import CONF_SIP_PORT, CONF_SIP_USER, DOMAIN
 
 
+def is_none_or_empty(value: str | None) -> bool:
+    """Return whether or not a string is None or empty."""
+    return value is None or value.strip() == ""
+
+
 class VoIPConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for VoIP integration."""
 
@@ -36,6 +41,10 @@ class VoIPConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user",
             )
 
+        if CONF_SIP_USER in user_input and is_none_or_empty(
+            user_input.get(CONF_SIP_USER, "")
+        ):
+            del user_input[CONF_SIP_USER]
         return self.async_create_entry(
             title="Voice over IP",
             data=user_input,
@@ -58,7 +67,17 @@ class VoipOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            if CONF_SIP_USER in user_input and is_none_or_empty(
+                user_input.get(CONF_SIP_USER, "")
+            ):
+                del user_input[CONF_SIP_USER]
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, options=user_input
+            )
+            return self.async_create_entry(
+                title="",
+                data=user_input,
+            )
 
         return self.async_show_form(
             step_id="init",
@@ -73,9 +92,11 @@ class VoipOptionsFlowHandler(OptionsFlow):
                     ): cv.port,
                     vol.Optional(
                         CONF_SIP_USER,
-                        default=self.config_entry.options.get(
-                            CONF_SIP_USER,
-                        ),
+                        description={
+                            "suggested_value": self.config_entry.options.get(
+                                CONF_SIP_USER, None
+                            )
+                        },
                     ): vol.Any(None, cv.string),
                 }
             ),
