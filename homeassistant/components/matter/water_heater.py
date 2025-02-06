@@ -144,7 +144,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         BoostState = self.get_matter_attribute_value(
             clusters.WaterHeaterManagement.Attributes.BoostState
         )
-        if (BoostState) == clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive:
+        if BoostState == clusters.WaterHeaterManagement.Enums.BoostStateEnum.kActive:
             self._attr_current_operation = STATE_HIGH_DEMAND
         else:
             self._attr_current_operation = STATE_ECO
