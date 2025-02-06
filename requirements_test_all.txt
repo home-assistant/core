@@ -696,7 +696,7 @@ eagle100==0.1.1
 easyenergy==2.1.2
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.0.5
+eheimdigital==1.0.6
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.12
