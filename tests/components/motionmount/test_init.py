@@ -1,6 +1,6 @@
 """Tests for the MotionMount init."""
 
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -33,8 +33,8 @@ async def test_setup_entry_failed_connect(
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount.name = PropertyMock(return_value=ZEROCONF_NAME)
-    mock_motionmount.mac = PropertyMock(return_value=MAC)
+    mock_motionmount.name = ZEROCONF_NAME
+    mock_motionmount.mac = MAC
     mock_motionmount.connect.side_effect = TimeoutError()
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
