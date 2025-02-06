@@ -204,13 +204,11 @@ class OneDriveBackupAgent(BackupAgent):
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         items = await self._client.list_drive_items(self._folder_id)
-        backups: list[AgentBackup] = []
-        for item in items:
-            if item.description and "backup_id" in item.description:
-                metadata = await self._client.download_drive_item(item.id)
-                metadata_json = loads(await metadata.read())
-                backups.append(AgentBackup.from_dict(metadata_json))
-        return backups
+        return [
+            await self._download_backup_metadata(item.id)
+            for item in items
+            if item.description and "backup_id" in item.description
+        ]
 
     @handle_backup_errors
     async def async_get_backup(
@@ -220,9 +218,8 @@ class OneDriveBackupAgent(BackupAgent):
         metadata_file = await self._find_item_by_backup_id(backup_id)
         if metadata_file is None or metadata_file.description is None:
             return None
-        metadata_stream = await self._client.download_drive_item(metadata_file.id)
-        metadata = loads(await metadata_stream.read())
-        return AgentBackup.from_dict(metadata)
+
+        return await self._download_backup_metadata(metadata_file.id)
 
     async def _find_item_by_backup_id(self, backup_id: str) -> File | Folder | None:
         """Find an item by backup ID."""
@@ -234,3 +231,8 @@ class OneDriveBackupAgent(BackupAgent):
             ),
             None,
         )
+
+    async def _download_backup_metadata(self, item_id: str) -> AgentBackup:
+        metadata_stream = await self._client.download_drive_item(item_id)
+        metadata_json = loads(await metadata_stream.read())
+        return AgentBackup.from_dict(metadata_json)
