@@ -7,6 +7,7 @@ from unittest.mock import Mock, PropertyMock, patch
 
 from aiohttp import ClientError
 from hass_nabucasa import CloudError
+from hass_nabucasa.api import CloudApiNonRetryableError
 from hass_nabucasa.files import FilesError
 import pytest
 
@@ -375,6 +376,77 @@ async def test_agents_upload_fail(
 
     assert "Failed to upload backup, retrying (2/2) in 60s" in caplog.text
     assert resp.status == 201
+    assert cloud.files.upload.call_count == 2
+    store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
+    assert len(store_backups) == 1
+    stored_backup = store_backups[0]
+    assert stored_backup["backup_id"] == backup_id
+    assert stored_backup["failed_agent_ids"] == ["cloud.cloud"]
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "logmsg"),
+    [
+        (
+            CloudApiNonRetryableError("Boom!", code="NC-SH-FH-03"),
+            "The backup size of 13.37GB is too large to be uploaded to Home Assistant Cloud",
+        ),
+        (
+            CloudApiNonRetryableError("Boom!", code="NC-CE-01"),
+            "Failed to upload backup Boom!",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_upload_fail_non_retryable(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_storage: dict[str, Any],
+    side_effect: Exception,
+    logmsg: str,
+    cloud: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test agent upload backup fails with non-retryable error."""
+    client = await hass_client()
+    backup_id = "test-backup"
+    test_backup = AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
+        backup_id=backup_id,
+        database_included=True,
+        date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
+        folders=[Folder.MEDIA, Folder.SHARE],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=True,
+        size=14358124749,
+    )
+
+    cloud.files.upload.side_effect = side_effect
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            "/api/backup/upload?agent_id=cloud.cloud",
+            data={"file": StringIO("test")},
+        )
+        await hass.async_block_till_done()
+
+    assert logmsg in caplog.text
+    assert resp.status == 201
+    assert cloud.files.upload.call_count == 1
     store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
     assert len(store_backups) == 1
     stored_backup = store_backups[0]
