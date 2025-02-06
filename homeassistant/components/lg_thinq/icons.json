@@ -7,8 +7,11 @@
       "express_mode": {
         "default": "mdi:snowflake-variant"
       },
+      "express_fridge": {
+        "default": "mdi:snowflake"
+      },
       "hot_water_mode": {
-        "default": "mdi:list-status"
+        "default": "mdi:heat-wave"
       },
       "humidity_warm_mode": {
         "default": "mdi:heat-wave"
@@ -39,6 +42,9 @@
       },
       "warm_mode": {
         "default": "mdi:heat-wave"
+      },
+      "display_light": {
+        "default": "mdi:lightbulb-on-outline"
       }
     },
     "binary_sensor": {
@@ -70,6 +76,9 @@
         "default": "mdi:tune-vertical-variant"
       },
       "operation_mode": {
+        "default": "mdi:power"
+      },
+      "operation_mode_water_heater": {
         "default": "mdi:power"
       },
       "one_touch_filter": {
@@ -312,10 +321,16 @@
       "yeast_info": {
         "default": "mdi:information-box-outline"
       },
-      "hop_oil_info": {
+      "hop_oil_capsule_1": {
         "default": "mdi:information-box-outline"
       },
-      "flavor_info": {
+      "hop_oil_capsule_2": {
+        "default": "mdi:information-box-outline"
+      },
+      "flavor_capsule_1": {
+        "default": "mdi:information-box-outline"
+      },
+      "flavor_capsule_2": {
         "default": "mdi:information-box-outline"
       },
       "beer_remain": {
@@ -401,6 +416,12 @@
       },
       "power_level_for_location": {
         "default": "mdi:radiator"
+      },
+      "cycle_count": {
+        "default": "mdi:counter"
+      },
+      "cycle_count_for_location": {
+        "default": "mdi:counter"
       }
     }
   }

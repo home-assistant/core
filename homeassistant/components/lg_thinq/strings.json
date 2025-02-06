@@ -30,10 +30,13 @@
         "name": "Auto mode"
       },
       "express_mode": {
-        "name": "Ice plus"
+        "name": "Express mode"
+      },
+      "express_fridge": {
+        "name": "Express cool"
       },
       "hot_water_mode": {
-        "name": "Hot water"
+        "name": "Heating water"
       },
       "humidity_warm_mode": {
         "name": "Warm mist"
@@ -64,6 +67,9 @@
       },
       "warm_mode": {
         "name": "Heating"
+      },
+      "display_light": {
+        "name": "Lighting"
       }
     },
     "binary_sensor": {
@@ -96,6 +102,12 @@
       },
       "operation_mode": {
         "name": "[%key:component::binary_sensor::entity_component::power::name%]"
+      },
+      "operation_mode_water_heater": {
+        "name": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "state": {
+          "off": "[%key:common::state::standby%]"
+        }
       },
       "one_touch_filter": {
         "name": "Fresh air filter"
@@ -298,6 +310,15 @@
       },
       "current_temperature": {
         "name": "Current temperature"
+      },
+      "room_air_current_temperature": {
+        "name": "Indoor temperature"
+      },
+      "room_in_water_current_temperature": {
+        "name": "Inlet temperature"
+      },
+      "room_out_water_current_temperature": {
+        "name": "Outlet temperature"
       },
       "temperature": {
         "name": "Temperature"
@@ -747,11 +768,43 @@
           "weizen": "Weizen"
         }
       },
-      "hop_oil_info": {
-        "name": "Hops"
+      "hop_oil_capsule1": {
+        "name": "Hops1",
+        "state": {
+          "cascade": "Cascade",
+          "chinook": "Chinook",
+          "goldings": "Goldings",
+          "fuggles": "Fuggles",
+          "hallertau": "Hallertau",
+          "citrussy": "Citrussy"
+        }
       },
-      "flavor_info": {
-        "name": "Flavor"
+      "hop_oil_capsule_2": {
+        "name": "Hops2",
+        "state": {
+          "cascade": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::cascade%]",
+          "chinook": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::chinook%]",
+          "goldings": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::goldings%]",
+          "fuggles": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::fuggles%]",
+          "hallertau": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::hallertau%]",
+          "citrussy": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::citrussy%]"
+        }
+      },
+      "flavor_capsule_1": {
+        "name": "Flavor1",
+        "state": {
+          "coriander": "Coriander",
+          "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "orange": "Orange"
+        }
+      },
+      "flavor_capsule_2": {
+        "name": "Flavor2",
+        "state": {
+          "coriander": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "orange": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::orange%]"
+        }
       },
       "beer_remain": {
         "name": "Recipe progress"
@@ -842,6 +895,12 @@
       },
       "power_level_for_location": {
         "name": "{location} power level"
+      },
+      "cycle_count": {
+        "name": "Cycles"
+      },
+      "cycle_count_for_location": {
+        "name": "{location} cycles"
       }
     },
     "select": {
@@ -882,6 +941,7 @@
           "baby_care": "[%key:component::lg_thinq::entity::sensor::personalization_mode::state::baby%]",
           "circulator": "Booster",
           "clean": "Single",
+          "clothes_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::clothes_dry%]",
           "direct_clean": "Direct mode",
           "dual_clean": "Dual",
           "fast": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
@@ -889,11 +949,15 @@
           "humidify": "Mist",
           "humidify_and_air_clean": "Mist & purifying",
           "humidity": "Humid",
+          "intensive_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::intensive_dry%]",
           "nature_clean": "Natural mode",
           "pet_clean": "[%key:component::lg_thinq::entity::sensor::personalization_mode::state::pet%]",
+          "quiet_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::quiet_humidity%]",
+          "rapid_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::rapid_humidity%]",
           "silent": "Silent",
           "sleep": "Sleep",
           "smart": "Smart mode",
+          "smart_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::smart_humidity%]",
           "space_clean": "Diffusion mode",
           "spot_clean": "Wide mode",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
