@@ -185,6 +185,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.WATER_HEATER,
         entity_description=WaterHeaterEntityDescription(
             key="MatterWaterHeater",
+            name=None,
         ),
         entity_class=MatterWaterHeater,
         required_attributes=(
