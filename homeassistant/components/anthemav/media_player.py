@@ -91,7 +91,7 @@ class AnthemAVR(MediaPlayerEntity):
         self._entry_id = entry_id
         self._zone_number = zone_number
         self._zone = avr.zones[zone_number]
-        self._volume_step = volume_step
+        self._attr_volume_step = volume_step
         if zone_number > 1:
             unique_id = f"{mac_address}_{zone_number}"
             self._attr_unique_id = unique_id
@@ -160,13 +160,13 @@ class AnthemAVR(MediaPlayerEntity):
         """Turn volume up for media player."""
         volume = self.volume_level
         if volume and volume < 1:
-            await self.async_set_volume_level(min(1, volume + self._volume_step))
+            await self.async_set_volume_level(min(1, volume + self.volume_step))
 
     async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
         volume = self.volume_level
         if volume and volume > 0:
-            await self.async_set_volume_level(max(0, volume - self._volume_step))
+            await self.async_set_volume_level(max(0, volume - self.volume_step))
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Engage AVR mute."""
