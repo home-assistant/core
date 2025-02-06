@@ -1,14 +1,14 @@
 """Tests for the MotionMount Entity base."""
 
-from unittest.mock import MagicMock, PropertyMock
+from unittest.mock import MagicMock
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.device_registry import format_mac
 
-from . import ZEROCONF_NAME
+from . import MAC, ZEROCONF_NAME
 
 from tests.common import MockConfigEntry
-
-MAC = bytes.fromhex("c4dd57f8a55f")
 
 
 async def test_entity(
@@ -19,12 +19,10 @@ async def test_entity(
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
-    type(mock_motionmount_config_flow).mac = PropertyMock(return_value=MAC)
-    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
-        return_value=True
-    )
-    type(mock_motionmount_config_flow).error_status = PropertyMock(return_value=0)
+    mock_motionmount_config_flow.name = ZEROCONF_NAME
+    mock_motionmount_config_flow.mac = MAC
+    mock_motionmount_config_flow.is_authenticated = True
+    mock_motionmount_config_flow.error_status = 0
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert hass.states.get("sensor.my_motionmount_error_status").state == "none"
@@ -38,14 +36,52 @@ async def test_entity_no_mac(
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    type(mock_motionmount_config_flow).name = PropertyMock(return_value=ZEROCONF_NAME)
-    type(mock_motionmount_config_flow).mac = PropertyMock(
-        return_value=b"\x00\x00\x00\x00\x00\x00"
-    )
-    type(mock_motionmount_config_flow).is_authenticated = PropertyMock(
-        return_value=True
-    )
-    type(mock_motionmount_config_flow).error_status = PropertyMock(return_value=0)
+    mock_motionmount_config_flow.name = ZEROCONF_NAME
+    mock_motionmount_config_flow.mac = b"\x00\x00\x00\x00\x00\x00"
+    mock_motionmount_config_flow.is_authenticated = True
+    mock_motionmount_config_flow.error_status = 0
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert hass.states.get("sensor.my_motionmount_error_status").state == "none"
+
+
+async def test_entity_rename(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_motionmount_config_flow: MagicMock,
+) -> None:
+    """Tests the state attributes."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_motionmount_config_flow.name = ZEROCONF_NAME
+    mock_motionmount_config_flow.mac = MAC
+    mock_motionmount_config_flow.is_authenticated = True
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    await hass.async_block_till_done()
+
+    mac = format_mac(mock_motionmount_config_flow.mac.hex())
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert device
+    assert device.name == ZEROCONF_NAME
+
+    entity = hass.data["entity_components"]["sensor"].get_entity(
+        "sensor.my_motionmount_error_status"
+    )
+    assert entity
+
+    # Simulate the user changed the name of the device
+    mock_motionmount_config_flow.name = "Blub"
+    entity.update_name()
+
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    )
+    assert device
+    assert device.name == "Blub"

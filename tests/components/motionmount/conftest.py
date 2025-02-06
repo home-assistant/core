@@ -49,7 +49,7 @@ def mock_motionmount_config_flow() -> Generator[MagicMock]:
     """Return a mocked MotionMount config flow."""
 
     with patch(
-        "homeassistant.components.motionmount.config_flow.motionmount.MotionMount",
+        "homeassistant.components.motionmount.motionmount.MotionMount",
         autospec=True,
     ) as motionmount_mock:
         client = motionmount_mock.return_value

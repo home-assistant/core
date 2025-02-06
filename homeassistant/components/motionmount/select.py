@@ -45,6 +45,7 @@ class MotionMountPresets(MotionMountEntity, SelectEntity):
         super().__init__(mm, config_entry)
         self._attr_unique_id = f"{self._base_unique_id}-preset"
         self._presets: list[motionmount.Preset] = []
+        self._attr_current_option = None
 
     def _update_options(self, presets: list[motionmount.Preset]) -> None:
         """Convert presets to select options."""
