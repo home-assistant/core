@@ -46,7 +46,7 @@
       'disabled_by': None,
       'domain': 'switch',
       'entity_category': None,
-      'entity_id': 'switch.air_purifier_131s_screen',
+      'entity_id': 'switch.air_purifier_131s_display',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -58,23 +58,23 @@
       }),
       'original_device_class': None,
       'original_icon': None,
-      'original_name': 'Screen',
+      'original_name': 'Display',
       'platform': 'vesync',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'screen',
-      'unique_id': 'air-purifier-screen',
+      'translation_key': 'display',
+      'unique_id': 'air-purifier-display',
       'unit_of_measurement': None,
     }),
   ])
 # ---
-# name: test_switch_state[Air Purifier 131s][switch.air_purifier_131s_screen]
+# name: test_switch_state[Air Purifier 131s][switch.air_purifier_131s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 131s Screen',
+      'friendly_name': 'Air Purifier 131s Display',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.air_purifier_131s_screen',
+    'entity_id': 'switch.air_purifier_131s_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -128,7 +128,7 @@
       'disabled_by': None,
       'domain': 'switch',
       'entity_category': None,
-      'entity_id': 'switch.air_purifier_200s_screen',
+      'entity_id': 'switch.air_purifier_200s_display',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -140,23 +140,23 @@
       }),
       'original_device_class': None,
       'original_icon': None,
-      'original_name': 'Screen',
+      'original_name': 'Display',
       'platform': 'vesync',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'screen',
-      'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-screen',
+      'translation_key': 'display',
+      'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-display',
       'unit_of_measurement': None,
     }),
   ])
 # ---
-# name: test_switch_state[Air Purifier 200s][switch.air_purifier_200s_screen]
+# name: test_switch_state[Air Purifier 200s][switch.air_purifier_200s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 200s Screen',
+      'friendly_name': 'Air Purifier 200s Display',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.air_purifier_200s_screen',
+    'entity_id': 'switch.air_purifier_200s_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -210,7 +210,7 @@
       'disabled_by': None,
       'domain': 'switch',
       'entity_category': None,
-      'entity_id': 'switch.air_purifier_400s_screen',
+      'entity_id': 'switch.air_purifier_400s_display',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -222,23 +222,23 @@
       }),
       'original_device_class': None,
       'original_icon': None,
-      'original_name': 'Screen',
+      'original_name': 'Display',
       'platform': 'vesync',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'screen',
-      'unique_id': '400s-purifier-screen',
+      'translation_key': 'display',
+      'unique_id': '400s-purifier-display',
       'unit_of_measurement': None,
     }),
   ])
 # ---
-# name: test_switch_state[Air Purifier 400s][switch.air_purifier_400s_screen]
+# name: test_switch_state[Air Purifier 400s][switch.air_purifier_400s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 400s Screen',
+      'friendly_name': 'Air Purifier 400s Display',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.air_purifier_400s_screen',
+    'entity_id': 'switch.air_purifier_400s_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -292,7 +292,7 @@
       'disabled_by': None,
       'domain': 'switch',
       'entity_category': None,
-      'entity_id': 'switch.air_purifier_600s_screen',
+      'entity_id': 'switch.air_purifier_600s_display',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -304,23 +304,23 @@
       }),
       'original_device_class': None,
       'original_icon': None,
-      'original_name': 'Screen',
+      'original_name': 'Display',
       'platform': 'vesync',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'screen',
-      'unique_id': '600s-purifier-screen',
+      'translation_key': 'display',
+      'unique_id': '600s-purifier-display',
       'unit_of_measurement': None,
     }),
   ])
 # ---
-# name: test_switch_state[Air Purifier 600s][switch.air_purifier_600s_screen]
+# name: test_switch_state[Air Purifier 600s][switch.air_purifier_600s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air Purifier 600s Screen',
+      'friendly_name': 'Air Purifier 600s Display',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.air_purifier_600s_screen',
+    'entity_id': 'switch.air_purifier_600s_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -450,7 +450,7 @@
       'disabled_by': None,
       'domain': 'switch',
       'entity_category': None,
-      'entity_id': 'switch.humidifier_200s_screen',
+      'entity_id': 'switch.humidifier_200s_display',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -462,23 +462,23 @@
       }),
       'original_device_class': None,
       'original_icon': None,
-      'original_name': 'Screen',
+      'original_name': 'Display',
       'platform': 'vesync',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'screen',
-      'unique_id': '200s-humidifier4321-screen',
+      'translation_key': 'display',
+      'unique_id': '200s-humidifier4321-display',
       'unit_of_measurement': None,
     }),
   ])
 # ---
-# name: test_switch_state[Humidifier 200s][switch.humidifier_200s_screen]
+# name: test_switch_state[Humidifier 200s][switch.humidifier_200s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 200s Screen',
+      'friendly_name': 'Humidifier 200s Display',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.humidifier_200s_screen',
+    'entity_id': 'switch.humidifier_200s_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -532,7 +532,7 @@
       'disabled_by': None,
       'domain': 'switch',
       'entity_category': None,
-      'entity_id': 'switch.humidifier_600s_screen',
+      'entity_id': 'switch.humidifier_600s_display',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -544,23 +544,23 @@
       }),
       'original_device_class': None,
       'original_icon': None,
-      'original_name': 'Screen',
+      'original_name': 'Display',
       'platform': 'vesync',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'screen',
-      'unique_id': '600s-humidifier-screen',
+      'translation_key': 'display',
+      'unique_id': '600s-humidifier-display',
       'unit_of_measurement': None,
     }),
   ])
 # ---
-# name: test_switch_state[Humidifier 600S][switch.humidifier_600s_screen]
+# name: test_switch_state[Humidifier 600S][switch.humidifier_600s_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Humidifier 600S Screen',
+      'friendly_name': 'Humidifier 600S Display',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.humidifier_600s_screen',
+    'entity_id': 'switch.humidifier_600s_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -697,7 +697,7 @@
       'disabled_by': None,
       'domain': 'switch',
       'entity_category': None,
-      'entity_id': 'switch.smarttowerfan_screen',
+      'entity_id': 'switch.smarttowerfan_display',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -709,23 +709,23 @@
       }),
       'original_device_class': None,
       'original_icon': None,
-      'original_name': 'Screen',
+      'original_name': 'Display',
       'platform': 'vesync',
       'previous_unique_id': None,
       'supported_features': 0,
-      'translation_key': 'screen',
-      'unique_id': 'smarttowerfan-screen',
+      'translation_key': 'display',
+      'unique_id': 'smarttowerfan-display',
       'unit_of_measurement': None,
     }),
   ])
 # ---
-# name: test_switch_state[SmartTowerFan][switch.smarttowerfan_screen]
+# name: test_switch_state[SmartTowerFan][switch.smarttowerfan_display]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SmartTowerFan Screen',
+      'friendly_name': 'SmartTowerFan Display',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.smarttowerfan_screen',
+    'entity_id': 'switch.smarttowerfan_display',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

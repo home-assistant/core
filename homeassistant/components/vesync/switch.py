@@ -47,21 +47,21 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
     ),
     VeSyncSwitchEntityDescription(
         # Screen for fan
-        key="screen",
+        key="display",
         is_on=lambda device: device.screen_status == "on",
         exists_fn=lambda device: rgetattr(device, "screen_status") is not None,
-        name="Screen",
-        translation_key="screen",
+        name="Display",
+        translation_key="display",
         on_fn=lambda device: device.turn_on_display(),
         off_fn=lambda device: device.turn_off_display(),
     ),
     VeSyncSwitchEntityDescription(
         # Screen for humidifer
-        key="screen",
+        key="display",
         is_on=lambda device: device.details["display"],
         exists_fn=lambda device: rgetattr(device, "details.display") is not None,
-        name="Screen",
-        translation_key="screen",
+        name="Display",
+        translation_key="display",
         on_fn=lambda device: device.turn_on_display(),
         off_fn=lambda device: device.turn_off_display(),
     ),
