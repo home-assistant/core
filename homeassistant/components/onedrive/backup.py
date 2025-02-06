@@ -170,8 +170,9 @@ class OneDriveBackupAgent(BackupAgent):
             description,  # type: ignore[arg-type]
         )
         metadata_description = {
+            "metadata_version": 2,
             "backup_id": backup.backup_id,
-            "file_id": backup_file.id,
+            "backup_file_id": backup_file.id,
         }
         await self._client.update_drive_item(
             path_or_id=item.id,
