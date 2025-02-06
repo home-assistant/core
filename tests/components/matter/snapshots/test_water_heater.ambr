@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[silabs_water_heater][water_heater.water_heater-entry]
+# name: test_water_heaters[silabs_water_heater][water_heater.water_heater-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -40,11 +40,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[silabs_water_heater][water_heater.water_heater-state]
+# name: test_water_heaters[silabs_water_heater][water_heater.water_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 50,
-      'friendly_name': 'Water Heater None',
+      'friendly_name': 'Water Heater',
       'max_temp': 65,
       'min_temp': 40,
       'operation_list': list([
