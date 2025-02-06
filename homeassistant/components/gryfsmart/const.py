@@ -1,6 +1,7 @@
 """Define constants used throughout the Gryf Smart integration."""
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import Platform
 
 DOMAIN = "gryfsmart"
@@ -18,11 +19,14 @@ CONF_COMMUNICATION = "communication"
 CONF_API = "api"
 CONF_DEVICE_DATA = "device_data"
 CONF_INPUTS = "input"
+CONF_DEVICE_CLASS = "device_class"
 
 PLATFORM_PWM = "pwm"
 PLATFORM_TEMPERATURE = "temperature"
 PLATFORM_INPUT = "input"
 PLATFORM_LIGHT = "light"
+PLATFORM_BINARY_SENSOR = "binary_sensor"
+PLATFORM_SWITCH = "output"
 
 DEFAULT_PORT = "/dev/ttyUSB0"
 GRYF_IN_NAME = "Gryf IN"
@@ -38,7 +42,7 @@ CONFIG_FLOW_MENU_OPTIONS = {
 DEVICE_TYPES = {
     # Platform.COVER: "Shutter",
     Platform.LIGHT: "Lights",
-    # Platform.SWITCH: "Outputs",
+    Platform.SWITCH: "Output",
     # Platform.SENSOR: "Input",
     Platform.BINARY_SENSOR: "Binary input",
     # Platform.LOCK: "Lock",
@@ -64,4 +68,10 @@ BINARY_SENSOR_DEVICE_CLASS = {
     "sound": BinarySensorDeviceClass.SOUND,
     "power": BinarySensorDeviceClass.POWER,
     None: BinarySensorDeviceClass.OPENING,
+}
+
+SWITCH_DEVICE_CLASS = {
+    None: SwitchDeviceClass.SWITCH,
+    "switch": SwitchDeviceClass.SWITCH,
+    "outlet": SwitchDeviceClass.OUTLET,
 }
