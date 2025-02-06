@@ -14,15 +14,15 @@ from tests.common import MockConfigEntry
 async def test_entity(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_motionmount_config_flow: MagicMock,
+    mock_motionmount: MagicMock,
 ) -> None:
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount_config_flow.name = ZEROCONF_NAME
-    mock_motionmount_config_flow.mac = MAC
-    mock_motionmount_config_flow.is_authenticated = True
-    mock_motionmount_config_flow.error_status = 0
+    mock_motionmount.name = ZEROCONF_NAME
+    mock_motionmount.mac = MAC
+    mock_motionmount.is_authenticated = True
+    mock_motionmount.error_status = 0
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert hass.states.get("sensor.my_motionmount_error_status").state == "none"
@@ -31,15 +31,15 @@ async def test_entity(
 async def test_entity_no_mac(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_motionmount_config_flow: MagicMock,
+    mock_motionmount: MagicMock,
 ) -> None:
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount_config_flow.name = ZEROCONF_NAME
-    mock_motionmount_config_flow.mac = b"\x00\x00\x00\x00\x00\x00"
-    mock_motionmount_config_flow.is_authenticated = True
-    mock_motionmount_config_flow.error_status = 0
+    mock_motionmount.name = ZEROCONF_NAME
+    mock_motionmount.mac = b"\x00\x00\x00\x00\x00\x00"
+    mock_motionmount.is_authenticated = True
+    mock_motionmount.error_status = 0
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert hass.states.get("sensor.my_motionmount_error_status").state == "none"
@@ -50,19 +50,19 @@ async def test_entity_rename(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    mock_motionmount_config_flow: MagicMock,
+    mock_motionmount: MagicMock,
 ) -> None:
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount_config_flow.name = ZEROCONF_NAME
-    mock_motionmount_config_flow.mac = MAC
-    mock_motionmount_config_flow.is_authenticated = True
+    mock_motionmount.name = ZEROCONF_NAME
+    mock_motionmount.mac = MAC
+    mock_motionmount.is_authenticated = True
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     await hass.async_block_till_done()
 
-    mac = format_mac(mock_motionmount_config_flow.mac.hex())
+    mac = format_mac(mock_motionmount.mac.hex())
     device = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, mac)}
     )
@@ -75,7 +75,7 @@ async def test_entity_rename(
     assert entity
 
     # Simulate the user changed the name of the device
-    mock_motionmount_config_flow.name = "Blub"
+    mock_motionmount.name = "Blub"
     entity.update_name()
 
     await hass.async_block_till_done()

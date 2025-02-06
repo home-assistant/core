@@ -13,13 +13,13 @@ from tests.common import MockConfigEntry
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_motionmount_config_flow: MagicMock,
+    mock_motionmount: MagicMock,
 ) -> None:
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount_config_flow.name = ZEROCONF_NAME
-    mock_motionmount_config_flow.mac = MAC
+    mock_motionmount.name = ZEROCONF_NAME
+    mock_motionmount.mac = MAC
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
@@ -28,14 +28,14 @@ async def test_setup_entry(
 async def test_setup_entry_failed_connect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_motionmount_config_flow: MagicMock,
+    mock_motionmount: MagicMock,
 ) -> None:
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount_config_flow.name = PropertyMock(return_value=ZEROCONF_NAME)
-    mock_motionmount_config_flow.mac = PropertyMock(return_value=MAC)
-    mock_motionmount_config_flow.connect.side_effect = TimeoutError()
+    mock_motionmount.name = PropertyMock(return_value=ZEROCONF_NAME)
+    mock_motionmount.mac = PropertyMock(return_value=MAC)
+    mock_motionmount.connect.side_effect = TimeoutError()
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -44,12 +44,12 @@ async def test_setup_entry_failed_connect(
 async def test_setup_entry_wrong_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_motionmount_config_flow: MagicMock,
+    mock_motionmount: MagicMock,
 ) -> None:
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount_config_flow.name = ZEROCONF_NAME
+    mock_motionmount.name = ZEROCONF_NAME
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -58,14 +58,14 @@ async def test_setup_entry_wrong_device(
 async def test_setup_entry_no_pin(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_motionmount_config_flow: MagicMock,
+    mock_motionmount: MagicMock,
 ) -> None:
     """Tests the state attributes."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount_config_flow.name = ZEROCONF_NAME
-    mock_motionmount_config_flow.mac = MAC
-    mock_motionmount_config_flow.is_authenticated = False
+    mock_motionmount.name = ZEROCONF_NAME
+    mock_motionmount.mac = MAC
+    mock_motionmount.is_authenticated = False
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
@@ -75,14 +75,14 @@ async def test_setup_entry_no_pin(
 async def test_setup_entry_wrong_pin(
     hass: HomeAssistant,
     mock_config_entry_with_pin: MockConfigEntry,
-    mock_motionmount_config_flow: MagicMock,
+    mock_motionmount: MagicMock,
 ) -> None:
     """Tests the state attributes."""
     mock_config_entry_with_pin.add_to_hass(hass)
 
-    mock_motionmount_config_flow.name = ZEROCONF_NAME
-    mock_motionmount_config_flow.mac = MAC
-    mock_motionmount_config_flow.is_authenticated = False
+    mock_motionmount.name = ZEROCONF_NAME
+    mock_motionmount.mac = MAC
+    mock_motionmount.is_authenticated = False
     assert not await hass.config_entries.async_setup(
         mock_config_entry_with_pin.entry_id
     )
@@ -96,13 +96,13 @@ async def test_setup_entry_wrong_pin(
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_motionmount_config_flow: MagicMock,
+    mock_motionmount: MagicMock,
 ) -> None:
     """Test entries are unloaded correctly."""
     mock_config_entry.add_to_hass(hass)
 
-    mock_motionmount_config_flow.name = ZEROCONF_NAME
-    mock_motionmount_config_flow.mac = MAC
+    mock_motionmount.name = ZEROCONF_NAME
+    mock_motionmount.mac = MAC
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    assert mock_motionmount_config_flow.disconnect.call_count == 1
+    assert mock_motionmount.disconnect.call_count == 1

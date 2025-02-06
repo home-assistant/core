@@ -45,7 +45,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_motionmount_config_flow() -> Generator[MagicMock]:
+def mock_motionmount() -> Generator[MagicMock]:
     """Return a mocked MotionMount config flow."""
 
     with patch(
