@@ -153,3 +153,25 @@ async def humidifier_config_entry(
     await hass.async_block_till_done()
 
     return entry
+
+
+@pytest.fixture(name="switch_old_id_config_entry")
+async def switch_old_id_config_entry(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
+) -> MockConfigEntry:
+    """Create a mock VeSync config entry for `switch` with the old unique ID approach."""
+    entry = MockConfigEntry(
+        title="VeSync",
+        domain=DOMAIN,
+        data=config[DOMAIN],
+        version=1,
+        minor_version=1,
+    )
+    entry.add_to_hass(hass)
+
+    wall_switch = "Wall Switch"
+    humidifer = "Humidifier 200s"
+
+    mock_multiple_device_responses(requests_mock, [wall_switch, humidifer])
+
+    return entry

@@ -624,7 +624,7 @@ class PipelineRun:
             return
         pipeline_data.pipeline_debug[self.pipeline.id][self.id].events.append(event)
 
-    def start(self, device_id: str | None) -> None:
+    def start(self, conversation_id: str, device_id: str | None) -> None:
         """Emit run start event."""
         self._device_id = device_id
         self._start_debug_recording_thread()
@@ -632,6 +632,7 @@ class PipelineRun:
         data = {
             "pipeline": self.pipeline.id,
             "language": self.language,
+            "conversation_id": conversation_id,
         }
         if self.runner_data is not None:
             data["runner_data"] = self.runner_data
@@ -1015,7 +1016,7 @@ class PipelineRun:
     async def recognize_intent(
         self,
         intent_input: str,
-        conversation_id: str | None,
+        conversation_id: str,
         device_id: str | None,
         conversation_extra_system_prompt: str | None,
     ) -> str:
@@ -1063,11 +1064,11 @@ class PipelineRun:
                 agent_id=self.intent_agent,
                 extra_system_prompt=conversation_extra_system_prompt,
             )
-            processed_locally = self.intent_agent == conversation.HOME_ASSISTANT_AGENT
 
-            agent_id = user_input.agent_id
+            agent_id = self.intent_agent
+            processed_locally = agent_id == conversation.HOME_ASSISTANT_AGENT
             intent_response: intent.IntentResponse | None = None
-            if user_input.agent_id != conversation.HOME_ASSISTANT_AGENT:
+            if not processed_locally:
                 # Sentence triggers override conversation agent
                 if (
                     trigger_response_text
@@ -1105,9 +1106,8 @@ class PipelineRun:
                     speech: str = intent_response.speech.get("plain", {}).get(
                         "speech", ""
                     )
-                    chat_log.async_add_message(
-                        conversation.Content(
-                            role="assistant",
+                    chat_log.async_add_assistant_content_without_tools(
+                        conversation.AssistantContent(
                             agent_id=agent_id,
                             content=speech,
                         )
@@ -1409,11 +1409,14 @@ def _pipeline_debug_recording_thread_proc(
             wav_writer.close()
 
 
-@dataclass
+@dataclass(kw_only=True)
 class PipelineInput:
     """Input to a pipeline run."""
 
     run: PipelineRun
+
+    conversation_id: str
+    """Identifier for the conversation."""
 
     stt_metadata: stt.SpeechMetadata | None = None
     """Metadata of stt input audio. Required when start_stage = stt."""
@@ -1430,9 +1433,6 @@ class PipelineInput:
     tts_input: str | None = None
     """Input for text-to-speech. Required when start_stage = tts."""
 
-    conversation_id: str | None = None
-    """Identifier for the conversation."""
-
     conversation_extra_system_prompt: str | None = None
     """Extra prompt information for the conversation agent."""
 
@@ -1441,7 +1441,7 @@ class PipelineInput:
 
     async def execute(self) -> None:
         """Run pipeline."""
-        self.run.start(device_id=self.device_id)
+        self.run.start(conversation_id=self.conversation_id, device_id=self.device_id)
         current_stage: PipelineStage | None = self.run.start_stage
         stt_audio_buffer: list[EnhancedAudioChunk] = []
         stt_processed_stream: AsyncIterable[EnhancedAudioChunk] | None = None

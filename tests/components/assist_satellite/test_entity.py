@@ -1,7 +1,8 @@
 """Test the Assist Satellite entity."""
 
 import asyncio
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -29,6 +30,14 @@ from homeassistant.exceptions import HomeAssistantError
 
 from . import ENTITY_ID
 from .conftest import MockAssistSatellite
+
+
+@pytest.fixture
+def mock_chat_session_conversation_id() -> Generator[Mock]:
+    """Mock the ulid library."""
+    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
+        mock_ulid_now.return_value = "mock-conversation-id"
+        yield mock_ulid_now
 
 
 @pytest.fixture(autouse=True)
@@ -487,6 +496,7 @@ async def test_vad_sensitivity_entity_not_found(
                 "extra_system_prompt": "Better system prompt",
             },
             (
+                "mock-conversation-id",
                 "Better system prompt",
                 AssistSatelliteAnnouncement(
                     message="Hello",
@@ -502,6 +512,7 @@ async def test_vad_sensitivity_entity_not_found(
                 "start_media_id": "media-source://given",
             },
             (
+                "mock-conversation-id",
                 "Hello",
                 AssistSatelliteAnnouncement(
                     message="Hello",
@@ -514,6 +525,7 @@ async def test_vad_sensitivity_entity_not_found(
         (
             {"start_media_id": "http://example.com/given.mp3"},
             (
+                "mock-conversation-id",
                 None,
                 AssistSatelliteAnnouncement(
                     message="",
@@ -525,6 +537,7 @@ async def test_vad_sensitivity_entity_not_found(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_chat_session_conversation_id")
 async def test_start_conversation(
     hass: HomeAssistant,
     init_components: ConfigEntry,
