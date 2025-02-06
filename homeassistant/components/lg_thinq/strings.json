@@ -299,6 +299,15 @@
       "current_temperature": {
         "name": "Current temperature"
       },
+      "room_air_current_temperature": {
+        "name": "Indoor temperature"
+      },
+      "room_in_water_current_temperature": {
+        "name": "Inlet temperature"
+      },
+      "room_out_water_current_temperature": {
+        "name": "Outlet temperature"
+      },
       "temperature": {
         "name": "Temperature"
       },
@@ -747,11 +756,43 @@
           "weizen": "Weizen"
         }
       },
-      "hop_oil_info": {
-        "name": "Hops"
+      "hop_oil_capsule1": {
+        "name": "Hops1",
+        "state": {
+          "cascade": "Cascade",
+          "chinook": "Chinook",
+          "goldings": "Goldings",
+          "fuggles": "Fuggles",
+          "hallertau": "Hallertau",
+          "citrussy": "Citrussy"
+        }
       },
-      "flavor_info": {
-        "name": "Flavor"
+      "hop_oil_capsule_2": {
+        "name": "Hops2",
+        "state": {
+          "cascade": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::cascade%]",
+          "chinook": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::chinook%]",
+          "goldings": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::goldings%]",
+          "fuggles": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::fuggles%]",
+          "hallertau": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::hallertau%]",
+          "citrussy": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::citrussy%]"
+        }
+      },
+      "flavor_capsule_1": {
+        "name": "Flavor1",
+        "state": {
+          "coriander": "Coriander",
+          "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "orange": "Orange"
+        }
+      },
+      "flavor_capsule_2": {
+        "name": "Flavor2",
+        "state": {
+          "coriander": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
+          "orange": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::orange%]"
+        }
       },
       "beer_remain": {
         "name": "Recipe progress"
@@ -842,6 +883,12 @@
       },
       "power_level_for_location": {
         "name": "{location} power level"
+      },
+      "cycle_count": {
+        "name": "Cycles"
+      },
+      "cycle_count_for_location": {
+        "name": "{location} cycles"
       }
     },
     "select": {
