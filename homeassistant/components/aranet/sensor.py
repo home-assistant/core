@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from aranet4.client import Aranet4Advertisement
+from aranet4.client import Aranet4Advertisement, AranetType, Color
 from bleak.backends.device import BLEDevice
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -167,7 +167,7 @@ def sensor_update_to_bluetooth_data_update(
         if val == -1:
             continue
         val = (
-            get_friendly_status(val.name, adv.readings.type.name)
+            get_friendly_status(val.name, adv.readings.type)
             if key == "status"
             else val * desc.scale
         )
@@ -224,24 +224,15 @@ class Aranet4BluetoothSensorEntity(
         return self.processor.entity_data.get(self.entity_key)
 
 
-def get_friendly_status(status: str, device_type: str) -> str:
-    """Convert device status color code to a more human-friendly status based on device type."""
-    base_status_map = {
+def get_friendly_status(status: Color, device_type: AranetType) -> str:
+    """Map status code to human-readable status based on device type."""
+    status_map = {
         "ERROR": "Error",
         "RED": "Unhealthy",
+        (device_type.ARANET4, "GREEN"): "Good",
+        (device_type.ARANET4, "YELLOW"): "Average",
+        (device_type.ARANET_RADON, "GREEN"): "Normal",
+        (device_type.ARANET_RADON, "YELLOW"): "Elevated",
     }
 
-    device_status_map = {
-        "ARANET4": {
-            **base_status_map,
-            "GREEN": "Good",
-            "YELLOW": "Average",
-        },
-        "ARANET_RADON": {
-            **base_status_map,
-            "GREEN": "Normal",
-            "YELLOW": "Elevated",
-        },
-    }
-
-    return device_status_map.get(device_type, {}).get(status, status)
+    return status_map.get((device_type, status), status_map.get(status, status))
