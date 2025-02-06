@@ -198,8 +198,26 @@ class ViCareFan(ViCareEntity, FanEntity):
         """Return true if the entity is on."""
         return self.percentage is not None and self.percentage > 0
 
+    def turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Turn on the fan."""
+
+        if percentage is not None and percentage > 0:
+            self.set_percentage(int(percentage))
+
+        if preset_mode is not None:
+            if self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+                self._api.deactivateVentilationQuickmode(
+                    str(VentilationQuickmode.STANDBY)
+                )
+            self.set_preset_mode(str(preset_mode))
+
     def turn_off(self, **kwargs: Any) -> None:
-        """Turn the entity off."""
+        """Turn off the fan."""
 
         self._api.activateVentilationQuickmode(str(VentilationQuickmode.STANDBY))
 
