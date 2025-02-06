@@ -23,8 +23,8 @@
       "invalid_email": "There is no account associated with the email you entered, please try again.",
       "invalid_email_format": "There is an issue with the formatting of your email - please try again.",
       "too_frequent_code_requests": "You have attempted to request too many codes. Try again later.",
-      "unknown_roborock": "There was an unknown roborock exception - please check your logs.",
-      "unknown_url": "There was an issue determining the correct url for your roborock account - please check your logs.",
+      "unknown_roborock": "There was an unknown Roborock exception - please check your logs.",
+      "unknown_url": "There was an issue determining the correct URL for your Roborock account - please check your logs.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -436,11 +436,11 @@
   "services": {
     "get_maps": {
       "name": "Get maps",
-      "description": "Get the map and room information of your device."
+      "description": "Retrieves the map and room information of your device."
     },
     "set_vacuum_goto_position": {
       "name": "Go to position",
-      "description": "Send the vacuum to a specific position.",
+      "description": "Sends the vacuum to a specific position.",
       "fields": {
         "x": {
           "name": "X-coordinate",
@@ -454,7 +454,7 @@
     },
     "get_vacuum_current_position": {
       "name": "Get current position",
-      "description": "Get the current position of the vacuum."
+      "description": "Retrieves the current position of the vacuum."
     }
   }
 }
