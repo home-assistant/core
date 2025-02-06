@@ -353,7 +353,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.3.2
+aioshelly==12.4.1
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -699,7 +699,7 @@ eagle100==0.1.1
 easyenergy==2.1.2
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.0.5
+eheimdigital==1.0.6
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.12
@@ -1595,7 +1595,7 @@ pyfibaro==0.8.0
 pyfido==2.1.2
 
 # homeassistant.components.fireservicerota
-pyfireservicerota==0.0.43
+pyfireservicerota==0.0.46
 
 # homeassistant.components.flic
 pyflic==2.0.4
@@ -1979,7 +1979,7 @@ python-opensky==1.0.1
 python-otbr-api==2.7.0
 
 # homeassistant.components.overseerr
-python-overseerr==0.6.0
+python-overseerr==0.7.0
 
 # homeassistant.components.picnic
 python-picnic-api==1.1.0
@@ -2112,7 +2112,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.11.9
+reolink-aio==0.11.10
 
 # homeassistant.components.rflink
 rflink==0.0.66
