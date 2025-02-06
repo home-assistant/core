@@ -100,11 +100,7 @@ async def async_setup_entry(
         async_add_entities(
             PlugwiseBinarySensorEntity(coordinator, device_id, description)
             for device_id in coordinator.new_devices
-            if (
-                binary_sensors := coordinator.data[device_id].get(
-                    "binary_sensors"
-                )
-            )
+            if (binary_sensors := coordinator.data[device_id].get("binary_sensors"))
             for description in BINARY_SENSORS
             if description.key in binary_sensors
         )

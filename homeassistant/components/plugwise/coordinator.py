@@ -120,8 +120,7 @@ class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData
             device_reg, self.config_entry.entry_id
         )
         # First find the Plugwise via_device
-        gateway_device = device_reg.async_get_device({(DOMAIN, self.api.gateway_id)}
-        )
+        gateway_device = device_reg.async_get_device({(DOMAIN, self.api.gateway_id)})
         assert gateway_device is not None
         via_device_id = gateway_device.id
 

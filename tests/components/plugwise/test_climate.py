@@ -127,18 +127,10 @@ async def test_adam_3_climate_entity_attributes(
         HVACMode.COOL,
     ]
     data = mock_smile_adam_heat_cool.async_update.return_value
-    data["da224107914542988a88561b4452b0f6"]["select_regulation_mode"] = (
-        "heating"
-    )
-    data["f2bf9048bef64cc5b6d5110154e33c81"]["control_state"] = (
-        HVACAction.HEATING
-    )
-    data["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"][
-        "cooling_state"
-    ] = False
-    data["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"][
-        "heating_state"
-    ] = True
+    data["da224107914542988a88561b4452b0f6"]["select_regulation_mode"] = "heating"
+    data["f2bf9048bef64cc5b6d5110154e33c81"]["control_state"] = HVACAction.HEATING
+    data["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"]["cooling_state"] = False
+    data["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"]["heating_state"] = True
     with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)
@@ -155,18 +147,10 @@ async def test_adam_3_climate_entity_attributes(
         ]
 
     data = mock_smile_adam_heat_cool.async_update.return_value
-    data["da224107914542988a88561b4452b0f6"]["select_regulation_mode"] = (
-        "cooling"
-    )
-    data["f2bf9048bef64cc5b6d5110154e33c81"]["control_state"] = (
-        HVACAction.COOLING
-    )
-    data["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"][
-        "cooling_state"
-    ] = True
-    data["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"][
-        "heating_state"
-    ] = False
+    data["da224107914542988a88561b4452b0f6"]["select_regulation_mode"] = "cooling"
+    data["f2bf9048bef64cc5b6d5110154e33c81"]["control_state"] = HVACAction.COOLING
+    data["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"]["cooling_state"] = True
+    data["056ee145a816487eaa69243c3280f8bf"]["binary_sensors"]["heating_state"] = False
     with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)

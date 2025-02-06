@@ -51,8 +51,7 @@ async def async_setup_entry(
             async_add_entities(
                 PlugwiseClimateEntity(coordinator, device_id)
                 for device_id in coordinator.new_devices
-                if coordinator.data[device_id]["dev_class"]
-                in MASTER_THERMOSTATS
+                if coordinator.data[device_id]["dev_class"] in MASTER_THERMOSTATS
             )
 
     _add_entities()
@@ -86,7 +85,10 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
 
         # Determine supported features
         self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        if self.coordinator.api.cooling_present and coordinator.api.smile_name != "Adam":
+        if (
+            self.coordinator.api.cooling_present
+            and coordinator.api.smile_name != "Adam"
+        ):
             self._attr_supported_features = (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )

@@ -28,12 +28,14 @@ def _read_json(environment: str, call: str) -> dict[str, Any]:
     fixture = load_fixture(f"plugwise/{environment}/{call}.json")
     return json.loads(fixture)
 
+
 @pytest.fixture
 def cooling_present(request: pytest.FixtureRequest) -> str:
     """Pass the cooling_present boolean.
     Used with fixtures that require parametrization of the cooling capability.
     """
     return request.param
+
 
 @pytest.fixture
 def chosen_env(request: pytest.FixtureRequest) -> str:
@@ -43,6 +45,7 @@ def chosen_env(request: pytest.FixtureRequest) -> str:
     """
     return request.param
 
+
 @pytest.fixture
 def gateway_id(request: pytest.FixtureRequest) -> str:
     """Pass the gateway_id string.
@@ -51,6 +54,7 @@ def gateway_id(request: pytest.FixtureRequest) -> str:
     """
     return request.param
 
+
 @pytest.fixture
 def heater_id(request: pytest.FixtureRequest) -> str:
     """Pass the heater_idstring.
@@ -58,12 +62,14 @@ def heater_id(request: pytest.FixtureRequest) -> str:
     """
     return request.param
 
+
 @pytest.fixture
 def reboot(request: pytest.FixtureRequest) -> str:
     """Pass the reboot boolean.
     Used with fixtures that require parametrization of the reboot capability.
     """
     return request.param
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
@@ -81,6 +87,7 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id="smile98765",
     )
 
+
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
@@ -88,6 +95,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         "homeassistant.components.plugwise.async_setup_entry", return_value=True
     ) as mock_setup:
         yield mock_setup
+
 
 @pytest.fixture
 def mock_smile_config_flow() -> Generator[MagicMock]:
@@ -106,6 +114,7 @@ def mock_smile_config_flow() -> Generator[MagicMock]:
         smile.smile_version = "4.3.2"
 
         yield smile
+
 
 @pytest.fixture
 def mock_smile_adam() -> Generator[MagicMock]:
@@ -136,12 +145,13 @@ def mock_smile_adam() -> Generator[MagicMock]:
         smile.smile_type = "thermostat"
         smile.smile_version = "3.0.15"
 
-
         yield smile
 
 
 @pytest.fixture
-def mock_smile_adam_heat_cool(chosen_env: str, cooling_present: bool) -> Generator[MagicMock]:
+def mock_smile_adam_heat_cool(
+    chosen_env: str, cooling_present: bool
+) -> Generator[MagicMock]:
     """Create a special base Mock Adam type for testing with different datasets."""
     data = _read_json(chosen_env, "data")
     with patch(
@@ -192,7 +202,7 @@ def mock_smile_adam_jip() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_smile_anna(chosen_env: str,  cooling_present: bool) -> Generator[MagicMock]:
+def mock_smile_anna(chosen_env: str, cooling_present: bool) -> Generator[MagicMock]:
     """Create a Mock Anna type for testing."""
     data = _read_json(chosen_env, "data")
     with patch(
