@@ -246,11 +246,7 @@
         },
         "payload": {
           "name": "Payload",
-          "description": "The payload to publish."
-        },
-        "payload_template": {
-          "name": "Payload template",
-          "description": "Template to render as a payload value. If a payload is provided, the template is ignored."
+          "description": "The payload to publish. Publishes an empty message if not provided."
         },
         "qos": {
           "name": "QoS",
