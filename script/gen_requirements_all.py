@@ -50,6 +50,12 @@ INCLUDED_REQUIREMENTS_WHEELS = {
     "pyuserinput",
 }
 
+EXCLUDED_REQUIREMENTS_WHEELS = {
+    # Exclude 'electrickiwi-api' temporarily, until <3.13 pin is removed upstream.
+    # https://github.com/mikey0000/EK-API/pull/1
+    "electrickiwi-api",
+}
+
 
 # Requirements to exclude or include when running github actions.
 # Requirements listed in "exclude" will be commented-out in
@@ -64,7 +70,7 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
         "markers": {},
     },
     "wheels_aarch64": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
@@ -73,22 +79,23 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     # "flimsy" on 386). The following packages depend on pandas,
     # so we comment them out.
     "wheels_armhf": {
-        "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS
+        | {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
     "wheels_armv7": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
     "wheels_amd64": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
     "wheels_i386": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
