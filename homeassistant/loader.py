@@ -40,6 +40,8 @@ from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .helpers.json import json_bytes, json_fragment
+from .helpers.typing import UNDEFINED, UndefinedType
+from .util.async_ import create_eager_task
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -758,10 +760,8 @@ class Integration:
         manifest["overwrites_built_in"] = self.overwrites_built_in
 
         if self.dependencies:
-            self._all_dependencies_resolved: bool | None = None
-            self._all_dependencies: set[str] | None = None
+            self._all_dependencies: set[str] | Exception | None = None
         else:
-            self._all_dependencies_resolved = True
             self._all_dependencies = set()
 
         self._platforms_to_preload = hass.data[DATA_PRELOAD_PLATFORMS]
@@ -933,22 +933,170 @@ class Integration:
         """Return all dependencies including sub-dependencies."""
         if self._all_dependencies is None:
             raise RuntimeError("Dependencies not resolved!")
+        if isinstance(self._all_dependencies, Exception):
+            raise self._all_dependencies
 
         return self._all_dependencies
 
     @property
     def all_dependencies_resolved(self) -> bool:
         """Return if all dependencies have been resolved."""
-        return self._all_dependencies_resolved is not None
+        return self._all_dependencies is not None
 
-    async def resolve_dependencies(self) -> bool:
+    async def resolve_dependencies(self) -> set[str] | None:
         """Resolve all dependencies."""
-        if self._all_dependencies_resolved is not None:
-            return self._all_dependencies_resolved
+        if self._all_dependencies is not None:
+            if isinstance(self._all_dependencies, Exception):
+                return None
+            return self._all_dependencies
 
-        self._all_dependencies_resolved = False
+        result = await self.resolve_multiple_dependencies(self.hass, (self,))
+        return result.get(self.domain)
+
+    @staticmethod
+    async def resolve_multiple_dependencies(
+        hass: HomeAssistant, integrations: Iterable[Integration]
+    ) -> dict[str, set[str]]:
+        """Resolve all dependencies for integrations.
+
+        Detects circular dependencies and missing integrations.
+        """
+        resolve_dependencies_tasks = {
+            itg.domain: create_eager_task(
+                itg._do_resolve_dependencies(cache_key="_all_dependencies"),  # noqa: SLF001
+                name=f"resolve dependencies {itg.domain}",
+                loop=hass.loop,
+            )
+            for itg in integrations
+        }
+
+        result = await asyncio.gather(*resolve_dependencies_tasks.values())
+
+        return {
+            domain: deps
+            for domain, deps in zip(resolve_dependencies_tasks, result, strict=True)
+            if deps is not None
+        }
+
+    @staticmethod
+    async def resolve_multiple_after_dependencies(
+        hass: HomeAssistant,
+        integrations: Iterable[Integration],
+        possible_after_dependencies: set[str] | None = None,
+        *,
+        ignore_exceptions: bool | None = None,
+    ) -> dict[str, set[str]]:
+        """Resolve all dependencies, including after_dependencies, for integrations.
+
+        Detects circular dependencies and missing integrations.
+        Should preferably only be used on already loaded integrations.
+        """
+        resolved: dict[str, set[str] | Exception] = {}
+        result: dict[str, set[str]] = {}
+
+        # All integrations are already loaded, so we can do it synchronously
+        for itg in integrations:
+            deps = await itg._do_resolve_dependencies(  # noqa: SLF001
+                cache=resolved,
+                possible_after_dependencies=possible_after_dependencies,
+                ignore_exceptions=ignore_exceptions,
+            )
+            if deps is not None:
+                result[itg.domain] = deps
+
+        return result
+
+    async def _do_resolve_dependencies(
+        self,
+        *,
+        cache: dict[str, set[str] | Exception] | None = None,
+        cache_key: str | None = None,
+        possible_after_dependencies: set[str] | None | UndefinedType = UNDEFINED,
+        ignore_exceptions: bool | None = None,
+    ) -> set[str] | None:
+        """Recursively resolve all dependencies.
+
+        Also considers after dependencies, if `include_after_dependencies` is not None.
+        """
+        resolved = cache if cache is not None else {}
+        resolving: set[str] = set()
+
+        def cache_result(itg: Integration, result: set[str] | Exception) -> None:
+            if cache_key is not None:
+                setattr(itg, cache_key, result)
+            else:
+                resolved[itg.domain] = result
+
+        async def do_resolve_dependencies_impl(itg: Integration) -> set[str]:
+            domain = itg.domain
+            # If it's already resolved, no point doing it again.
+            if cache_key is not None:
+                result = cast(
+                    set[str] | Exception | None, getattr(itg, cache_key, None)
+                )
+            else:
+                result = resolved.get(domain)
+            if result is not None:
+                if isinstance(result, Exception):
+                    raise result
+                return result
+
+            # If we are already resolving it, we have a circular dependency.
+            if domain in resolving:
+                if ignore_exceptions:
+                    cache_result(itg, set())
+                    return set()
+                exc = CircularDependency([domain])
+                cache_result(itg, exc)
+                raise exc
+
+            resolving.add(domain)
+
+            dependencies_domains = set(itg.dependencies)
+            if possible_after_dependencies is not UNDEFINED:
+                if possible_after_dependencies is None:
+                    after_dependencies: Iterable[str] = itg.after_dependencies
+                else:
+                    after_dependencies = (
+                        set(itg.after_dependencies) & possible_after_dependencies
+                    )
+                dependencies_domains.update(after_dependencies)
+            dependencies = await async_get_integrations(itg.hass, dependencies_domains)
+
+            all_dependencies = set()
+            for dep_domain, dep_integration in dependencies.items():
+                if isinstance(dep_integration, Exception):
+                    if ignore_exceptions:
+                        continue
+                    cache_result(itg, dep_integration)
+                    raise dep_integration
+
+                all_dependencies.add(dep_domain)
+
+                try:
+                    dep_dependencies = await do_resolve_dependencies_impl(
+                        dep_integration
+                    )
+                except CircularDependency as exc:
+                    exc.domain_cycle = [domain, *exc.domain_cycle]
+                    cache_result(itg, exc)
+                    raise
+                except Exception as exc:
+                    cache_result(itg, exc)
+                    raise
+
+                all_dependencies.update(dep_dependencies)
+
+            resolving.remove(domain)
+
+            cache_result(itg, all_dependencies)
+            return all_dependencies
+
+        if ignore_exceptions is not None:
+            return await do_resolve_dependencies_impl(self)
+
         try:
-            dependencies = await _async_component_dependencies(self.hass, self)
+            return await do_resolve_dependencies_impl(self)
         except IntegrationNotFound as err:
             _LOGGER.error(
                 (
@@ -962,18 +1110,12 @@ class Integration:
             _LOGGER.error(
                 (
                     "Unable to resolve dependencies for %s: it contains a circular"
-                    " dependency: %s -> %s"
+                    " dependency: %s"
                 ),
                 self.domain,
-                err.from_domain,
-                err.to_domain,
+                err.domain_cycle,
             )
-        else:
-            dependencies.discard(self.domain)
-            self._all_dependencies = dependencies
-            self._all_dependencies_resolved = True
-
-        return self._all_dependencies_resolved
+        return None
 
     async def async_get_component(self) -> ComponentProtocol:
         """Return the component.
@@ -1466,11 +1608,10 @@ class IntegrationNotLoaded(LoaderError):
 class CircularDependency(LoaderError):
     """Raised when a circular dependency is found when resolving components."""
 
-    def __init__(self, from_domain: str | set[str], to_domain: str) -> None:
+    def __init__(self, domain_cycle: list[str]) -> None:
         """Initialize circular dependency error."""
-        super().__init__(f"Circular dependency detected: {from_domain} -> {to_domain}.")
-        self.from_domain = from_domain
-        self.to_domain = to_domain
+        super().__init__(f"Circular dependency detected: {domain_cycle}.")
+        self.domain_cycle = domain_cycle
 
 
 def _load_file(
@@ -1622,50 +1763,6 @@ def bind_hass[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """
     setattr(func, "__bind_hass", True)
     return func
-
-
-async def _async_component_dependencies(
-    hass: HomeAssistant,
-    integration: Integration,
-) -> set[str]:
-    """Get component dependencies."""
-    loading: set[str] = set()
-    loaded: set[str] = set()
-
-    async def component_dependencies_impl(integration: Integration) -> None:
-        """Recursively get component dependencies."""
-        domain = integration.domain
-        if not (dependencies := integration.dependencies):
-            loaded.add(domain)
-            return
-
-        loading.add(domain)
-        dep_integrations = await async_get_integrations(hass, dependencies)
-        for dependency_domain, dep_integration in dep_integrations.items():
-            if isinstance(dep_integration, Exception):
-                raise dep_integration
-
-            # If we are already loading it, we have a circular dependency.
-            # We have to check it here to make sure that every integration that
-            # depends on us, does not appear in our own after_dependencies.
-            if conflict := loading.intersection(dep_integration.after_dependencies):
-                raise CircularDependency(conflict, dependency_domain)
-
-            # If we have already loaded it, no point doing it again.
-            if dependency_domain in loaded:
-                continue
-
-            # If we are already loading it, we have a circular dependency.
-            if dependency_domain in loading:
-                raise CircularDependency(dependency_domain, domain)
-
-            await component_dependencies_impl(dep_integration)
-        loading.remove(domain)
-        loaded.add(domain)
-
-    await component_dependencies_impl(integration)
-
-    return loaded
 
 
 def _async_mount_config_dir(hass: HomeAssistant) -> None:
