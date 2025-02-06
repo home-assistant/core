@@ -43,13 +43,6 @@ def async_get_chat_log(
     else:
         history = ChatLog(hass, session.conversation_id)
 
-        @callback
-        def do_cleanup() -> None:
-            """Handle cleanup."""
-            all_history.pop(session.conversation_id)
-
-        session.async_on_cleanup(do_cleanup)
-
     if user_input is not None:
         history.async_add_user_content(UserContent(content=user_input.text))
 
@@ -62,6 +55,15 @@ def async_get_chat_log(
             "History opened but no assistant message was added, ignoring update"
         )
         return
+
+    if session.conversation_id not in all_history:
+
+        @callback
+        def do_cleanup() -> None:
+            """Handle cleanup."""
+            all_history.pop(session.conversation_id)
+
+        session.async_on_cleanup(do_cleanup)
 
     all_history[session.conversation_id] = history
 
@@ -141,6 +143,15 @@ class ChatLog:
     @callback
     def async_add_user_content(self, content: UserContent) -> None:
         """Add user content to the log."""
+        self.content.append(content)
+
+    @callback
+    def async_add_assistant_content_without_tools(
+        self, content: AssistantContent
+    ) -> None:
+        """Add assistant content to the log."""
+        if content.tool_calls is not None:
+            raise ValueError("Tool calls not allowed")
         self.content.append(content)
 
     async def async_add_assistant_content(

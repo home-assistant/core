@@ -1,7 +1,7 @@
 {
   "domain": "jellyfin",
   "name": "Jellyfin",
-  "codeowners": ["@j-stienstra", "@ctalkington"],
+  "codeowners": ["@RunC0deRun", "@ctalkington"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/jellyfin",
   "integration_type": "service",
