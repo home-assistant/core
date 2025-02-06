@@ -31,13 +31,11 @@ _LOGGER = logging.getLogger(__name__)
 
 
 type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
-type HandlerResponseType = web.StreamResponse | bytes | str | None
-type HandlerResponseTupleType = tuple[HandlerResponseType, HTTPStatus]
+type HandlerResponseInnerType = web.StreamResponse | bytes | str | None
+type HandlerResponseTupleType = tuple[HandlerResponseInnerType, HTTPStatus]
+type HandlerResponseType = HandlerResponseInnerType | HandlerResponseTupleType
 type HandlerType = Callable[
-    [web.Request],
-    Awaitable[HandlerResponseType | HandlerResponseTupleType]
-    | HandlerResponseType
-    | HandlerResponseTupleType,
+    [web.Request], Awaitable[HandlerResponseType] | HandlerResponseType
 ]
 KEY_AUTHENTICATED: Final = "ha_authenticated"
 KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
