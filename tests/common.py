@@ -407,6 +407,25 @@ def async_mock_intent(hass: HomeAssistant, intent_typ: str) -> list[intent.Inten
     return intents
 
 
+class MockMqttReasonCode:
+    """Class to fake a MQTT ReasonCode."""
+
+    value: int
+    is_failure: bool
+
+    def __init__(
+        self, value: int = 0, is_failure: bool = False, name: str = "Success"
+    ) -> None:
+        """Initialize the mock reason code."""
+        self.value = value
+        self.is_failure = is_failure
+        self._name = name
+
+    def getName(self) -> str:
+        """Return the name of the reason code."""
+        return self._name
+
+
 @callback
 def async_fire_mqtt_message(
     hass: HomeAssistant,
