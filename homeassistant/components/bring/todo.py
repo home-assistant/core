@@ -9,10 +9,10 @@ import uuid
 from bring_api import (
     BringItem,
     BringItemOperation,
+    BringList,
     BringNotificationType,
     BringRequestException,
 )
-from bring_api.types import BringList
 import voluptuous as vol
 
 from homeassistant.components.todo import (
