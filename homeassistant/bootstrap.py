@@ -139,9 +139,6 @@ STAGE_2_TIMEOUT = 300
 WRAP_UP_TIMEOUT = 300
 COOLDOWN_TIME = 60
 
-
-DEBUGGER_INTEGRATIONS = {"debugpy"}
-
 # Core integrations are unconditionally loaded
 CORE_INTEGRATIONS = {"homeassistant", "persistent_notification"}
 
@@ -172,12 +169,21 @@ FRONTEND_INTEGRATIONS = {
     # add it here.
     "backup",
 }
-RECORDER_INTEGRATIONS = {
-    # Setup after frontend
-    # To record data
-    "recorder",
-}
-DISCOVERY_INTEGRATIONS = ("bluetooth", "dhcp", "ssdp", "usb", "zeroconf")
+# Stage 0 is divided into substages. Each substage has a name and a set of integrations.
+STAGE_0_INTEGRATIONS = (
+    # Load logging and http deps as soon as possible
+    ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS),
+    # Setup frontend
+    ("frontend", FRONTEND_INTEGRATIONS),
+    # Setup recorder
+    ("recorder", {"recorder"}),
+    # Start up debuggers. Start these first in case they want to wait.
+    ("debugger", {"debugpy"}),
+    # Zeroconf is used for mdns resolution in aiohttp client helper.
+    ("zeroconf", {"zeroconf"}),
+)
+DISCOVERY_INTEGRATIONS = ("bluetooth", "dhcp", "ssdp", "usb")
+# Stage 1 integrations are not to be preloaded in bootstrap.
 STAGE_1_INTEGRATIONS = {
     # We need to make sure discovery integrations
     # update their deps before stage 2 integrations
@@ -189,8 +195,6 @@ STAGE_1_INTEGRATIONS = {
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
-    # Ensure supervisor is available
-    "hassio",
 }
 DEFAULT_INTEGRATIONS = {
     # These integrations are set up unless recovery mode is activated.
@@ -236,17 +240,6 @@ CRITICAL_INTEGRATIONS = {
     # Recovery mode is activated if these integrations fail to set up
     "frontend",
 }
-
-SETUP_ORDER = (
-    # Load logging and http deps as soon as possible
-    ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS),
-    # Setup frontend
-    ("frontend", FRONTEND_INTEGRATIONS),
-    # Setup recorder
-    ("recorder", RECORDER_INTEGRATIONS),
-    # Start up debuggers. Start these first in case they want to wait.
-    ("debugger", DEBUGGER_INTEGRATIONS),
-)
 
 #
 # Storage keys we are likely to load during startup
@@ -694,7 +687,6 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
     return deps_dir
 
 
-@core.callback
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
     # Filter out the repeating and common config section [homeassistant]
@@ -890,69 +882,47 @@ async def _async_set_up_integrations(
     domains_to_setup, integration_cache = await _async_resolve_domains_to_setup(
         hass, config
     )
+    stage_2_domains = domains_to_setup.copy()
 
     # Initialize recorder
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
 
-    pre_stage_domains = [
-        (name, domains_to_setup & domain_group) for name, domain_group in SETUP_ORDER
+    stage_0_and_1_domains: list[tuple[str, set[str], int | None]] = [
+        *(
+            (name, domain_group & domains_to_setup, None)
+            for name, domain_group in STAGE_0_INTEGRATIONS
+        ),
+        ("stage 1", STAGE_1_INTEGRATIONS & domains_to_setup, STAGE_1_TIMEOUT),
     ]
 
-    # calculate what components to setup in what stage
-    stage_1_domains: set[str] = set()
+    _LOGGER.info("Setting up stage 0 and 1")
+    for name, domain_group, timeout in stage_0_and_1_domains:
+        if not domain_group:
+            continue
 
-    # Find all dependencies of any dependency of any stage 1 integration that
-    # we plan on loading and promote them to stage 1. This is done only to not
-    # get misleading log messages
-    deps_promotion: set[str] = STAGE_1_INTEGRATIONS
-    while deps_promotion:
-        old_deps_promotion = deps_promotion
-        deps_promotion = set()
+        _LOGGER.info("Setting up %s: %s", name, domain_group)
+        to_be_loaded = domain_group.copy()
+        to_be_loaded.update(
+            dep
+            for domain in domain_group
+            if (integration := integration_cache.get(domain)) is not None
+            for dep in integration.all_dependencies
+        )
+        async_set_domains_to_be_loaded(hass, to_be_loaded)
+        stage_2_domains -= to_be_loaded
 
-        for domain in old_deps_promotion:
-            if domain not in domains_to_setup or domain in stage_1_domains:
-                continue
-
-            stage_1_domains.add(domain)
-
-            if (dep_itg := integration_cache.get(domain)) is None:
-                continue
-
-            deps_promotion.update(dep_itg.all_dependencies)
-
-    stage_2_domains = domains_to_setup - stage_1_domains
-
-    for name, domain_group in pre_stage_domains:
-        if domain_group:
-            stage_2_domains -= domain_group
-            _LOGGER.info("Setting up %s: %s", name, domain_group)
-            to_be_loaded = domain_group.copy()
-            to_be_loaded.update(
-                dep
-                for domain in domain_group
-                if (integration := integration_cache.get(domain)) is not None
-                for dep in integration.all_dependencies
-            )
-            async_set_domains_to_be_loaded(hass, to_be_loaded)
+        if timeout is None:
             await _async_setup_multi_components(hass, domain_group, config)
-
-    # Enables after dependencies when setting up stage 1 domains
-    async_set_domains_to_be_loaded(hass, stage_1_domains)
-
-    # Start setup
-    if stage_1_domains:
-        _LOGGER.info("Setting up stage 1: %s", stage_1_domains)
-        try:
-            async with hass.timeout.async_timeout(
-                STAGE_1_TIMEOUT, cool_down=COOLDOWN_TIME
-            ):
-                await _async_setup_multi_components(hass, stage_1_domains, config)
-        except TimeoutError:
-            _LOGGER.warning(
-                "Setup timed out for stage 1 waiting on %s - moving forward",
-                hass._active_tasks,  # noqa: SLF001
-            )
+        else:
+            try:
+                async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
+                    await _async_setup_multi_components(hass, domain_group, config)
+            except TimeoutError:
+                _LOGGER.warning(
+                    "Setup timed out for stage 1 waiting on %s - moving forward",
+                    hass._active_tasks,  # noqa: SLF001
+                )
 
     # Add after dependencies when setting up stage 2 domains
     async_set_domains_to_be_loaded(hass, stage_2_domains)
