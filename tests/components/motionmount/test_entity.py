@@ -33,15 +33,11 @@ async def test_entity_rename(
     assert device
     assert device.name == ZEROCONF_NAME
 
-    entity = hass.data["entity_components"]["sensor"].get_entity(
-        "sensor.my_motionmount_error_status"
-    )
-    assert entity
-
     # Simulate the user changed the name of the device
     mock_motionmount.name = "Blub"
-    entity.update_name()
 
+    for callback in mock_motionmount.add_listener.call_args_list:
+        callback[0][0]()
     await hass.async_block_till_done()
 
     device = device_registry.async_get_device(
