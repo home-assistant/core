@@ -24,7 +24,7 @@ _PLATFORMS: list[Platform] = [
     Platform.SENSOR,
     # Platform.CLIMATE,
     # Platform.COVER,
-    # Platform.SWITCH,
+    Platform.SWITCH,
     # Platform.LOCK
 ]
 
@@ -43,6 +43,7 @@ async def async_setup(
     try:
         api = GryfApi(config[DOMAIN][CONF_PORT])
         await api.start_connection()
+        api.start_update_interval(1)
     except ConnectionError:
         _LOGGER.error("Unable to connect: %s", ConnectionError)
         return False
@@ -50,8 +51,8 @@ async def async_setup(
     hass.data[DOMAIN] = config.get(DOMAIN)
     hass.data[DOMAIN][CONF_API] = api
 
-    await async_load_platform(hass, Platform.LIGHT, DOMAIN, None, config)
-    await async_load_platform(hass, Platform.SENSOR, DOMAIN, None, config)
+    for PLATFORM in _PLATFORMS:
+        await async_load_platform(hass, PLATFORM, DOMAIN, None, config)
 
     return True
 
@@ -65,6 +66,7 @@ async def async_setup_entry(
     try:
         api = GryfApi(entry.data[CONF_COMMUNICATION][CONF_PORT])
         await api.start_connection()
+        api.start_update_interval(1)
     except ConnectionError:
         raise ConfigEntryNotReady("Unable to connect with device") from ConnectionError
 
