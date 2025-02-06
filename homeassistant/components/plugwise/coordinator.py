@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from packaging.version import Version
-from plugwise import GwEntity, Smile
+from plugwise import GwEntityData, Smile
 from plugwise.exceptions import (
     ConnectionFailedError,
     InvalidAuthentication,

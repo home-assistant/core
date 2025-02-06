@@ -97,11 +97,14 @@ def mock_smile_config_flow() -> Generator[MagicMock]:
         autospec=True,
     ) as smile_mock:
         smile = smile_mock.return_value
+
+        smile.connect.return_value = Version("4.3.2")
         smile.smile_hostname = "smile12345"
         smile.smile_model = "Test Model"
         smile.smile_model_id = "Test Model ID"
         smile.smile_name = "Test Smile Name"
-        smile.connect.return_value = Version("4.3.2")
+        smile.smile_version = "4.3.2"
+
         yield smile
 
 @pytest.fixture
@@ -118,6 +121,8 @@ def mock_smile_adam() -> Generator[MagicMock]:
             new=smile_mock,
         ),
     ):
+        smile = smile_mock.return_value
+
         smile.async_update.return_value = data
         smile.cooling_present = False
         smile.connect.return_value = Version("3.0.15")
@@ -128,7 +133,9 @@ def mock_smile_adam() -> Generator[MagicMock]:
         smile.smile_model = "Gateway"
         smile.smile_model_id = "smile_open_therm"
         smile.smile_name = "Adam"
-        smile.connect.return_value = Version("3.0.15")
+        smile.smile_type = "thermostat"
+        smile.smile_version = "3.0.15"
+
 
         yield smile
 
@@ -148,12 +155,12 @@ def mock_smile_adam_heat_cool(chosen_env: str, cooling_present: bool) -> Generat
         smile.gateway_id = "da224107914542988a88561b4452b0f6"
         smile.heater_id = "056ee145a816487eaa69243c3280f8bf"
         smile.reboot = True
-        smile.smile_version = "3.6.4"
-        smile.smile_type = "thermostat"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_model_id = "smile_open_therm"
         smile.smile_name = "Adam"
+        smile.smile_type = "thermostat"
+        smile.smile_version = "3.6.4"
 
         yield smile
 
@@ -178,6 +185,8 @@ def mock_smile_adam_jip() -> Generator[MagicMock]:
         smile.smile_model = "Gateway"
         smile.smile_model_id = "smile_open_therm"
         smile.smile_name = "Adam"
+        smile.smile_type = "thermostat"
+        smile.smile_version = "3.2.8"
 
         yield smile
 
@@ -197,12 +206,12 @@ def mock_smile_anna(chosen_env: str,  cooling_present: bool) -> Generator[MagicM
         smile.gateway_id = "015ae9ea3f964e668e490fa39da3870b"
         smile.heater_id = "1cbf783bb11e4a7c8a6843dee3a86927"
         smile.reboot = True
-        smile.smile_version = "4.0.15"
-        smile.smile_type = "thermostat"
         smile.smile_hostname = "smile98765"
         smile.smile_model = "Gateway"
         smile.smile_model_id = "smile_thermo"
         smile.smile_name = "Smile Anna"
+        smile.smile_type = "thermostat"
+        smile.smile_version = "4.0.15"
 
         yield smile
 
@@ -250,6 +259,8 @@ def mock_smile_legacy_anna() -> Generator[MagicMock]:
         smile.smile_model = "Gateway"
         smile.smile_model_id = None
         smile.smile_name = "Smile Anna"
+        smile.smile_type = "thermostat"
+        smile.smile_version = "1.8.22"
 
         yield smile
 
@@ -273,6 +284,8 @@ def mock_stretch() -> Generator[MagicMock]:
         smile.smile_model = "Gateway"
         smile.smile_model_id = None
         smile.smile_name = "Stretch"
+        smile.smile_type = "stretch"
+        smile.smile_version = "3.1.11"
 
         yield smile
 

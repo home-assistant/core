@@ -77,8 +77,6 @@ class PlugwiseClimateEntity(PlugwiseEntity, ClimateEntity):
         super().__init__(coordinator, device_id)
         self._attr_unique_id = f"{device_id}-climate"
 
-        self._devices = coordinator.data.devices
-        self._gateway = coordinator.data.gateway
         gateway_id: str = coordinator.api.gateway_id
         self._gateway_data = coordinator.data[gateway_id]
 
