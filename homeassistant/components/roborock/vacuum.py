@@ -20,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import RoborockConfigEntry
 from .const import (
+    CLEAN_ROOMS_SERVICE_NAME,
     DOMAIN,
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
@@ -93,6 +94,20 @@ async def async_setup_entry(
             },
         ),
         RoborockVacuum.async_set_vacuum_goto_position.__name__,
+        supports_response=SupportsResponse.NONE,
+    )
+
+    platform.async_register_entity_service(
+        CLEAN_ROOMS_SERVICE_NAME,
+        cv.make_entity_service_schema(
+            {
+                vol.Required("rooms"): vol.All(cv.ensure_list, [vol.Coerce(str)]),
+                vol.Optional("repeat"): vol.All(
+                    vol.Coerce(int), vol.Clamp(min=1, max=3)
+                ),
+            },
+        ),
+        RoborockVacuum.clean_rooms.__name__,
         supports_response=SupportsResponse.NONE,
     )
 
@@ -223,3 +238,33 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             "x": robot_position.x,
             "y": robot_position.y,
         }
+
+    async def clean_rooms(self, rooms: list[str], repeat: int = 1) -> None:
+        """Clean specific rooms."""
+
+        segment_ids = await self._convert_to_segment_ids(rooms)
+
+        await self.send(
+            RoborockCommand.APP_SEGMENT_CLEAN,
+            [{"segments": segment_ids, "repeat": repeat}],
+        )
+
+    async def _convert_to_segment_ids(self, rooms: list[str]) -> list[int]:
+        """Parse room IDs from various formats to a list of integers."""
+
+        map_info = self.coordinator.get_current_map_info()
+        if map_info is None:
+            raise HomeAssistantError("No map information available")
+
+        section_id_by_lower_room_name = {
+            room_name.lower(): room_id for room_id, room_name in map_info.rooms.items()
+        }
+
+        def map_room_id(room_id: str) -> int:
+            room_name_stripped = room_id.strip().lower()
+            mapped_id = section_id_by_lower_room_name.get(room_name_stripped)
+            if mapped_id is not None:
+                return mapped_id
+            raise HomeAssistantError(f"Room name '{room_name_stripped}' not found")
+
+        return [map_room_id(room_id) for room_id in rooms]

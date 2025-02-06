@@ -12,10 +12,12 @@ from vacuum_map_parser_base.map_data import Point
 
 from homeassistant.components.roborock import DOMAIN
 from homeassistant.components.roborock.const import (
+    CLEAN_ROOMS_SERVICE_NAME,
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
 )
+from homeassistant.components.roborock.models import RoborockMapInfo
 from homeassistant.components.vacuum import (
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
@@ -303,4 +305,108 @@ async def test_get_current_position_no_robot_position(
             {ATTR_ENTITY_ID: ENTITY_ID},
             blocking=True,
             return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("rooms", "repeat", "expected_room_ids"),
+    [
+        (["Living Room"], 1, [10]),
+        (["kitchen"], 2, [11]),
+        (["Living Room", "Kitchen"], 1, [10, 11]),
+        (["Living room ", "kitchen"], 1, [10, 11]),
+    ],
+)
+async def test_vacuum_clean_rooms(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+    rooms: list[str],
+    repeat: int,
+    expected_room_ids: list[int],
+) -> None:
+    """Test cleaning specific rooms."""
+    vacuum = hass.states.get(ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "rooms": rooms, "repeat": repeat}
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockDataUpdateCoordinator.get_current_map_info",
+            return_value=RoborockMapInfo(
+                flag=1, name="Test Map", rooms={10: "Living Room", 11: "Kitchen"}
+            ),
+        ),
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
+        ) as mock_send_command,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            CLEAN_ROOMS_SERVICE_NAME,
+            data,
+            blocking=True,
+        )
+        assert mock_send_command.call_count == 1
+        assert mock_send_command.call_args[0][0] == RoborockCommand.APP_SEGMENT_CLEAN
+        assert mock_send_command.call_args[0][1] == [
+            {"repeat": repeat, "segments": expected_room_ids}
+        ]
+
+
+async def test_vacuum_clean_rooms_invalid_room_name(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test cleaning specific rooms with invalid room names raises HomeAssistantError."""
+    vacuum = hass.states.get(ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "rooms": "NonExistentRoom", "repeat": 1}
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockDataUpdateCoordinator.get_current_map_info",
+            return_value=RoborockMapInfo(
+                flag=1, name="Test Map", rooms={10: "Living Room", 11: "Kitchen"}
+            ),
+        ),
+        pytest.raises(
+            HomeAssistantError,
+            match="Room name 'nonexistentroom' not found",
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            CLEAN_ROOMS_SERVICE_NAME,
+            data,
+            blocking=True,
+        )
+
+
+async def test_vacuum_clean_rooms_no_map_info(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test cleaning specific rooms raises HomeAssistantError when no map information is available."""
+    vacuum = hass.states.get(ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "rooms": "Living Room", "repeat": 1}
+    with (
+        patch(
+            "homeassistant.components.roborock.coordinator.RoborockDataUpdateCoordinator.get_current_map_info",
+            return_value=None,
+        ),
+        pytest.raises(
+            HomeAssistantError,
+            match="No map information available",
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            CLEAN_ROOMS_SERVICE_NAME,
+            data,
+            blocking=True,
         )
