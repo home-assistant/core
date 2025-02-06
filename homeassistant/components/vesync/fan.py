@@ -142,11 +142,6 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
         return None
 
     @property
-    def unique_info(self):
-        """Return the ID of this fan."""
-        return self.device.uuid
-
-    @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the fan."""
         attr = {}
