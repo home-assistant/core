@@ -39,7 +39,7 @@ async def test_water_heater(
     matter_node: MatterNode,
 ) -> None:
     """Test water heater sensor."""
-    state = hass.states.get("water_heater.water_heater_none")
+    state = hass.states.get("water_heater.water_heater")
     assert state
     assert state.attributes["min_temp"] == 40
     assert state.attributes["max_temp"] == 65
@@ -58,5 +58,5 @@ async def test_water_heater(
     # test BoostState update from device
     set_node_attribute(matter_node, 2, 148, 5, 1)
     await trigger_subscription_callback(hass, matter_client)
-    state = hass.states.get("water_heater.water_heater_none")
+    state = hass.states.get("water_heater.water_heater")
     assert state.state == STATE_HIGH_DEMAND
