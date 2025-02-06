@@ -66,9 +66,15 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
         try:
             self.lists = (await self.bring.load_lists()).lists
         except BringRequestException as e:
-            raise UpdateFailed("Unable to connect and retrieve data from bring") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
         except BringParseException as e:
-            raise UpdateFailed("Unable to parse response from bring") from e
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_parse_exception",
+            ) from e
         except BringAuthException as e:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -90,10 +96,14 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                 items = await self.bring.get_list(lst.listUuid)
             except BringRequestException as e:
                 raise UpdateFailed(
-                    "Unable to connect and retrieve data from bring"
+                    translation_domain=DOMAIN,
+                    translation_key="setup_request_exception",
                 ) from e
             except BringParseException as e:
-                raise UpdateFailed("Unable to parse response from bring") from e
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_parse_exception",
+                ) from e
             else:
                 list_dict[lst.listUuid] = BringData(lst, items)
 
