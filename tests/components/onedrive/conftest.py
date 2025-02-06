@@ -67,6 +67,7 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
             },
         },
         unique_id="mock_drive_id",
+        version=2,
     )
 
 

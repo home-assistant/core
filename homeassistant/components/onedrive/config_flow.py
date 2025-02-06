@@ -19,6 +19,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle OneDrive OAuth2 authentication."""
 
     DOMAIN = DOMAIN
+    VERSION = 2
 
     @property
     def logger(self) -> logging.Logger:

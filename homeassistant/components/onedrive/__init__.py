@@ -85,13 +85,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
             translation_placeholders={"folder": backup_folder_name},
         ) from err
 
-    try:
-        await _migrate_backup_files(client, backup_folder.id)
-    except OneDriveException as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN, translation_key="metadata_migration_failed"
-        ) from err
-
     entry.runtime_data = OneDriveRuntimeData(
         client=client,
         token_function=get_access_token,
@@ -119,32 +112,61 @@ def _async_notify_backup_listeners_soon(hass: HomeAssistant) -> None:
     hass.loop.call_soon(_async_notify_backup_listeners, hass)
 
 
-async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -> None:
-    """Migrate backup files to the new metadata format."""
-    files = await client.list_drive_items(backup_folder_id)
-    for file in files:
-        if file.description and "homeassistant_version" in file.description:
-            metadata = loads(unescape(file.description))
-            if metadata["metadata_version"] != 1:
-                continue
-            del metadata["metadata_version"]
-            metadata_filename = file.name.rsplit(".", 1)[0] + ".metadata.json"
-            metadata_file = await client.upload_file(
-                backup_folder_id,
-                metadata_filename,
-                dumps(metadata),  # type: ignore[arg-type]
+async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
+    """Migrate config entry."""
+    if entry.version > 2:
+        # guard against downgrade from a future version
+        return False
+
+    if entry.version == 1:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+        session = OAuth2Session(hass, entry, implementation)
+
+        async def get_access_token() -> str:
+            await session.async_ensure_token_valid()
+            return cast(str, session.token[CONF_ACCESS_TOKEN])
+
+        client = OneDriveClient(get_access_token, async_get_clientsession(hass))
+
+        async def migrate_backup_files(backup_folder_id: str) -> None:
+            files = await client.list_drive_items(backup_folder_id)
+            for file in files:
+                if file.description and "homeassistant_version" in file.description:
+                    metadata = loads(unescape(file.description))
+                    del metadata["metadata_version"]
+                    metadata_filename = file.name.rsplit(".", 1)[0] + ".metadata.json"
+                    metadata_file = await client.upload_file(
+                        backup_folder_id,
+                        metadata_filename,
+                        dumps(metadata),  # type: ignore[arg-type]
+                    )
+                    metadata_description = {
+                        "metadata_version": 2,
+                        "backup_id": metadata["backup_id"],
+                        "backup_file_id": file.id,
+                    }
+                    await client.update_drive_item(
+                        path_or_id=metadata_file.id,
+                        data=ItemUpdate(description=dumps(metadata_description)),
+                    )
+                    await client.update_drive_item(
+                        path_or_id=file.id,
+                        data=ItemUpdate(description=""),
+                    )
+                    _LOGGER.debug("Migrated backup file %s", file.name)
+
+        instance_id = await async_get_instance_id(hass)
+        backup_folder_name = f"backups_{instance_id[:8]}"
+        try:
+            approot = await client.get_approot()
+            backup_folder = await client.create_folder(
+                parent_id=approot.id, name=backup_folder_name
             )
-            metadata_description = {
-                "metadata_version": 2,
-                "backup_id": metadata["backup_id"],
-                "backup_file_id": file.id,
-            }
-            await client.update_drive_item(
-                path_or_id=metadata_file.id,
-                data=ItemUpdate(description=dumps(metadata_description)),
-            )
-            await client.update_drive_item(
-                path_or_id=file.id,
-                data=ItemUpdate(description=""),
-            )
-            _LOGGER.debug("Migrated backup file %s", file.name)
+            await migrate_backup_files(backup_folder.id)
+        except OneDriveException as err:
+            _LOGGER.error("Migration failed with error %s", err)
+            return False
+
+        hass.config_entries.async_update_entry(entry, version=2)
+        _LOGGER.debug("Migrated OneDrive config entry to version 2")
+    return True
