@@ -132,9 +132,9 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if self.entity_description.off_fn(self.device):
-            self.schedule_update_ha_state(force_refresh=True)
+            self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if self.entity_description.on_fn(self.device):
-            self.schedule_update_ha_state(force_refresh=True)
+            self.schedule_update_ha_state()
