@@ -261,5 +261,6 @@ DISCOVERY_SCHEMAS = [
             clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateState,
             clusters.OtaSoftwareUpdateRequestor.Attributes.UpdateStateProgress,
         ),
+        allow_none_value=True,
     ),
 ]

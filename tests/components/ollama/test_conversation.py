@@ -18,6 +18,13 @@ from homeassistant.helpers import intent, llm
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def mock_ulid_tools():
+    """Mock generated ULIDs for tool calls."""
+    with patch("homeassistant.helpers.llm.ulid_now", return_value="mock-tool-call"):
+        yield
+
+
 @pytest.mark.parametrize("agent_id", [None, "conversation.mock_title"])
 async def test_chat(
     hass: HomeAssistant,
@@ -205,6 +212,7 @@ async def test_function_call(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="mock-tool-call",
             tool_name="test_tool",
             tool_args=expected_tool_args,
         ),
@@ -285,6 +293,7 @@ async def test_function_exception(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="mock-tool-call",
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
         ),

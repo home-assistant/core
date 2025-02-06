@@ -2,11 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from bring_api.exceptions import (
-    BringAuthException,
-    BringParseException,
-    BringRequestException,
-)
+from bring_api import BringAuthException, BringParseException, BringRequestException
 import pytest
 
 from homeassistant.components.bring.const import DOMAIN

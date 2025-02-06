@@ -10,8 +10,7 @@ from homeassistant.components.remote import RemoteEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MadVRConfigEntry
-from .coordinator import MadVRCoordinator
+from .coordinator import MadVRConfigEntry, MadVRCoordinator
 from .entity import MadVREntity
 
 _LOGGER = logging.getLogger(__name__)
