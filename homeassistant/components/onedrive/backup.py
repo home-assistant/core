@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
-import html
-import json
+from html import unescape
+from json import dumps, loads
 import logging
 from typing import Any, Concatenate
 
@@ -128,7 +128,7 @@ class OneDriveBackupAgent(BackupAgent):
         ):
             raise BackupAgentError("Backup not found")
 
-        metadata_info = json.loads(html.unescape(metadata_item.description))
+        metadata_info = loads(unescape(metadata_item.description))
 
         stream = await self._client.download_drive_item(
             metadata_info["backup_file_id"], timeout=TIMEOUT
@@ -161,7 +161,7 @@ class OneDriveBackupAgent(BackupAgent):
             ) from err
 
         # store metadata in metadata file
-        description = json.dumps(backup.as_dict())
+        description = dumps(backup.as_dict())
         _LOGGER.debug("Creating metadata: %s", description)
         metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
         metadata_file = await self._client.upload_file(
@@ -178,7 +178,7 @@ class OneDriveBackupAgent(BackupAgent):
         }
         await self._client.update_drive_item(
             path_or_id=metadata_file.id,
-            data=ItemUpdate(description=json.dumps(metadata_description)),
+            data=ItemUpdate(description=dumps(metadata_description)),
         )
 
     @handle_backup_errors
@@ -195,7 +195,7 @@ class OneDriveBackupAgent(BackupAgent):
             or "backup_file_id" not in metadata_item.description
         ):
             return
-        metadata_info = json.loads(html.unescape(metadata_item.description))
+        metadata_info = loads(unescape(metadata_item.description))
 
         await self._client.delete_drive_item(metadata_info["backup_file_id"])
         await self._client.delete_drive_item(metadata_item.id)
@@ -208,7 +208,7 @@ class OneDriveBackupAgent(BackupAgent):
         for item in items:
             if item.description and "backup_id" in item.description:
                 metadata = await self._client.download_drive_item(item.id)
-                metadata_json = json.loads(await metadata.read())
+                metadata_json = loads(await metadata.read())
                 backups.append(AgentBackup.from_dict(metadata_json))
         return backups
 
@@ -221,7 +221,7 @@ class OneDriveBackupAgent(BackupAgent):
         if metadata_file is None or metadata_file.description is None:
             return None
         metadata_stream = await self._client.download_drive_item(metadata_file.id)
-        metadata = json.loads(await metadata_stream.read())
+        metadata = loads(await metadata_stream.read())
         return AgentBackup.from_dict(metadata)
 
     async def _find_item_by_backup_id(self, backup_id: str) -> File | Folder | None:

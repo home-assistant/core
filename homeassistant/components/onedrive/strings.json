@@ -35,9 +35,6 @@
     },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
-    },
-    "metadata_migration_failed": {
-      "message": "Failed to migrate metadata from backup file to metadata file"
     }
   }
 }
