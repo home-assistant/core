@@ -97,6 +97,12 @@
       "operation_mode": {
         "name": "[%key:component::binary_sensor::entity_component::power::name%]"
       },
+      "operation_mode_water_heater": {
+        "name": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "state": {
+          "off": "[%key:common::state::standby%]"
+        }
+      },
       "one_touch_filter": {
         "name": "Fresh air filter"
       }
@@ -882,6 +888,7 @@
           "baby_care": "[%key:component::lg_thinq::entity::sensor::personalization_mode::state::baby%]",
           "circulator": "Booster",
           "clean": "Single",
+          "clothes_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::clothes_dry%]",
           "direct_clean": "Direct mode",
           "dual_clean": "Dual",
           "fast": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",
@@ -889,11 +896,15 @@
           "humidify": "Mist",
           "humidify_and_air_clean": "Mist & purifying",
           "humidity": "Humid",
+          "intensive_dry": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::intensive_dry%]",
           "nature_clean": "Natural mode",
           "pet_clean": "[%key:component::lg_thinq::entity::sensor::personalization_mode::state::pet%]",
+          "quiet_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::quiet_humidity%]",
+          "rapid_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::rapid_humidity%]",
           "silent": "Silent",
           "sleep": "Sleep",
           "smart": "Smart mode",
+          "smart_humidity": "[%key:component::lg_thinq::entity::sensor::current_job_mode::state::smart_humidity%]",
           "space_clean": "Diffusion mode",
           "spot_clean": "Wide mode",
           "turbo": "[%key:component::lg_thinq::entity::select::wind_strength::state::power%]",

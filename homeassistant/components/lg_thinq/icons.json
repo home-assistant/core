@@ -72,6 +72,9 @@
       "operation_mode": {
         "default": "mdi:power"
       },
+      "operation_mode_water_heater": {
+        "default": "mdi:power"
+      },
       "one_touch_filter": {
         "default": "mdi:air-filter"
       }

@@ -98,7 +98,10 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
         AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
         SELECT_DESC[ThinQProperty.CURRENT_JOB_MODE],
     ),
-    DeviceType.DEHUMIDIFIER: (AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],),
+    DeviceType.DEHUMIDIFIER: (
+        AIR_FLOW_SELECT_DESC[ThinQProperty.WIND_STRENGTH],
+        SELECT_DESC[ThinQProperty.CURRENT_JOB_MODE],
+    ),
     DeviceType.DISH_WASHER: (
         OPERATION_SELECT_DESC[ThinQProperty.DISH_WASHER_OPERATION_MODE],
     ),

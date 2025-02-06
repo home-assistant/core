@@ -123,7 +123,7 @@ class ThinQStateVacuumEntity(ThinQEntity, StateVacuumEntity):
             self.coordinator.device_name,
             self.property_id,
             self.data.current_state,
-            self.state,
+            self.activity,
             self.battery_level,
         )
 
