@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from decimal import Decimal
 import logging
 from typing import Any
 
@@ -292,6 +293,20 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
         if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
             return HVACMode.HEAT_COOL
         return HVACMode.OFF
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the HVAC action, inheriting from master AC if zone is open but idle if air is <= 5%."""
+        master_action = HVAC_ACTIONS.get(self._ac["mode"], HVACAction.OFF)
+        if self._ac["mode"] == "myauto":
+            master_action = HVAC_ACTIONS.get(
+                str(self._ac.get(ADVANTAGE_AIR_MYAUTO_MODE_SET)), HVACAction.OFF
+            )
+        if self._zone["state"] == ADVANTAGE_AIR_STATE_OPEN:
+            if self._zone["value"] <= Decimal(5):
+                return HVACAction.IDLE
+            return master_action
+        return HVACAction.OFF
 
     @property
     def current_temperature(self) -> float | None:
