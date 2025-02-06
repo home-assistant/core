@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from http import HTTPStatus
 import logging
-from typing import Any, Final
+from typing import TYPE_CHECKING, Any, Final
 
 from aiohttp import web
 from aiohttp.typedefs import LooseHeaders
@@ -31,6 +31,8 @@ _LOGGER = logging.getLogger(__name__)
 
 
 type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
+type HandlerResponseType = web.StreamResponse | bytes | str | None
+type HandlerResponseTupleType = tuple[HandlerResponseType, HTTPStatus]
 KEY_AUTHENTICATED: Final = "ha_authenticated"
 KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
 KEY_ALLOW_CONFIGURED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
@@ -42,7 +44,14 @@ current_request: ContextVar[Request | None] = ContextVar(
 
 
 def request_handler_factory(
-    hass: HomeAssistant, view: HomeAssistantView, handler: Callable
+    hass: HomeAssistant,
+    view: HomeAssistantView,
+    handler: Callable[
+        [web.Request],
+        Awaitable[HandlerResponseType | HandlerResponseTupleType]
+        | HandlerResponseType
+        | HandlerResponseTupleType,
+    ],
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
     """Wrap the handler classes."""
     is_coroutinefunction = asyncio.iscoroutinefunction(handler)
@@ -69,10 +78,13 @@ def request_handler_factory(
             )
 
         try:
+            result = handler(request, **request.match_info)
             if is_coroutinefunction:
-                result = await handler(request, **request.match_info)
-            else:
-                result = handler(request, **request.match_info)
+                if TYPE_CHECKING:
+                    assert isinstance(result, Awaitable)
+                result = await result
+            elif TYPE_CHECKING:
+                assert not isinstance(result, Awaitable)
         except vol.Invalid as err:
             raise HTTPBadRequest from err
         except exceptions.ServiceNotFound as err:
