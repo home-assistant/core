@@ -323,7 +323,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="MatterWaterHeaterMode",
-            translation_key="water_heater_mode",
+            translation_key="mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(
