@@ -19,7 +19,13 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AnthemavConfigEntry
-from .const import ANTHEMAV_UPDATE_SIGNAL, DOMAIN, MANUFACTURER
+from .const import (
+    ANTHEMAV_UPDATE_SIGNAL,
+    CONF_VOLUME_STEP,
+    DEFAULT_VOLUME_STEP,
+    DOMAIN,
+    MANUFACTURER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,6 +39,7 @@ async def async_setup_entry(
     name = config_entry.title
     mac_address = config_entry.data[CONF_MAC]
     model = config_entry.data[CONF_MODEL]
+    volume_step = config_entry.data.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP)
 
     avr = config_entry.runtime_data
 
@@ -40,7 +47,13 @@ async def async_setup_entry(
 
     async_add_entities(
         AnthemAVR(
-            avr.protocol, name, mac_address, model, zone_number, config_entry.entry_id
+            avr.protocol,
+            name,
+            mac_address,
+            model,
+            zone_number,
+            config_entry.entry_id,
+            volume_step=volume_step,
         )
         for zone_number in avr.protocol.zones
     )
@@ -55,6 +68,7 @@ class AnthemAVR(MediaPlayerEntity):
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.TURN_ON
         | MediaPlayerEntityFeature.TURN_OFF
@@ -69,6 +83,7 @@ class AnthemAVR(MediaPlayerEntity):
         model: str,
         zone_number: int,
         entry_id: str,
+        volume_step: float,
     ) -> None:
         """Initialize entity with transport."""
         super().__init__()
@@ -76,6 +91,7 @@ class AnthemAVR(MediaPlayerEntity):
         self._entry_id = entry_id
         self._zone_number = zone_number
         self._zone = avr.zones[zone_number]
+        self._volume_step = volume_step
         if zone_number > 1:
             unique_id = f"{mac_address}_{zone_number}"
             self._attr_unique_id = unique_id
@@ -139,6 +155,18 @@ class AnthemAVR(MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set AVR volume (0 to 1)."""
         self._zone.volume_as_percentage = volume
+
+    async def async_volume_up(self) -> None:
+        """Turn volume up for media player."""
+        volume = self.volume_level
+        if volume and volume < 1:
+            await self.async_set_volume_level(min(1, volume + self._volume_step))
+
+    async def async_volume_down(self) -> None:
+        """Turn volume down for media player."""
+        volume = self.volume_level
+        if volume and volume > 0:
+            await self.async_set_volume_level(max(0, volume - self._volume_step))
 
     async def async_mute_volume(self, mute: bool) -> None:
         """Engage AVR mute."""
