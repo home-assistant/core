@@ -1,0 +1,9 @@
+{
+  "version": "V3.3",
+  "temperature": 21.8,
+  "battery": 100,
+  "humidity": 32,
+  "deviceId": "meter-id-1",
+  "deviceType": "Meter",
+  "hubDeviceId": "test-hub-id"
+}

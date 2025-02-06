@@ -142,7 +142,6 @@ async def test_config_entry_not_ready_udpdate_failed(
 @pytest.mark.parametrize(
     ("exception", "state"),
     [
-        (None, ConfigEntryState.LOADED),
         (BringAuthException, ConfigEntryState.SETUP_ERROR),
         (BringRequestException, ConfigEntryState.SETUP_RETRY),
         (BringParseException, ConfigEntryState.SETUP_RETRY),
@@ -159,9 +158,8 @@ async def test_config_entry_not_ready_auth_error(
 
     mock_bring_client.load_lists.side_effect = [
         mock_bring_client.load_lists.return_value,
-        BringAuthException,
+        exception,
     ]
-    mock_bring_client.retrieve_new_access_token.side_effect = exception
 
     bring_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(bring_config_entry.entry_id)

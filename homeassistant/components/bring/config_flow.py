@@ -68,7 +68,13 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "google_play": "https://play.google.com/store/apps/details?id=ch.publisheria.bring",
+                "app_store": "https://itunes.apple.com/app/apple-store/id580669177",
+            },
         )
 
     async def async_step_reauth(

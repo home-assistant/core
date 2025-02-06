@@ -16,9 +16,14 @@ from tests.common import MockConfigEntry
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_onedrive_client_init: MagicMock,
 ) -> None:
     """Test loading and unloading the integration."""
     await setup_integration(hass, mock_config_entry)
+
+    # Ensure the token callback is set up correctly
+    token_callback = mock_onedrive_client_init.call_args[0][0]
+    assert await token_callback() == "mock-access-token"
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 

@@ -229,6 +229,28 @@
     'type': 'result',
   })
 # ---
+# name: test_can_decrypt_on_download_with_agent_error[BackupAgentError]
+  dict({
+    'error': dict({
+      'code': 'home_assistant_error',
+      'message': 'Unknown error',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
+# name: test_can_decrypt_on_download_with_agent_error[BackupNotFound]
+  dict({
+    'error': dict({
+      'code': 'backup_not_found',
+      'message': 'Backup not found',
+    }),
+    'id': 1,
+    'success': False,
+    'type': 'result',
+  })
+# ---
 # name: test_config_info[storage_data0]
   dict({
     'id': 1,
