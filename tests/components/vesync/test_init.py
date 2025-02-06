@@ -179,4 +179,4 @@ async def test_migrate_config_entry(
     humidifer_entities = [
         e for e in entity_registry.entities.values() if e.domain == "humidifer"
     ]
-    assert len(humidifer_entities) == 2
+    assert len(humidifer_entities) == 1
