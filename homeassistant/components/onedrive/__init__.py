@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-import html
-import json
+from html import unescape
+from json import dumps, loads
 import logging
 from typing import cast
 
@@ -88,7 +88,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
     try:
         await _migrate_backup_files(client, backup_folder.id)
     except OneDriveException as err:
-        raise ConfigEntryNotReady("Failed to migrate backup files") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="metadata_migration_failed"
+        ) from err
 
     entry.runtime_data = OneDriveRuntimeData(
         client=client,
@@ -122,7 +124,7 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
     files = await client.list_drive_items(backup_folder_id)
     for file in files:
         if file.description and "homeassistant_version" in file.description:
-            metadata = json.loads(html.unescape(file.description))
+            metadata = loads(unescape(file.description))
             if metadata["metadata_version"] != 1:
                 continue
             del metadata["metadata_version"]
@@ -130,7 +132,7 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
             metadata_file = await client.upload_file(
                 backup_folder_id,
                 metadata_filename,
-                json.dumps(metadata),  # type: ignore[arg-type]
+                dumps(metadata),  # type: ignore[arg-type]
             )
             metadata_description = {
                 "metadata_version": 2,
@@ -139,7 +141,7 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
             }
             await client.update_drive_item(
                 path_or_id=metadata_file.id,
-                data=ItemUpdate(description=json.dumps(metadata_description)),
+                data=ItemUpdate(description=dumps(metadata_description)),
             )
             await client.update_drive_item(
                 path_or_id=file.id,

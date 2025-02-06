@@ -124,14 +124,14 @@ class OneDriveBackupAgent(BackupAgent):
         if (
             metadata_item is None
             or metadata_item.description is None
-            or "file_id" not in metadata_item.description
+            or "backup_file_id" not in metadata_item.description
         ):
             raise BackupAgentError("Backup not found")
 
         metadata_info = json.loads(html.unescape(metadata_item.description))
 
         stream = await self._client.download_drive_item(
-            metadata_info["file_id"], timeout=TIMEOUT
+            metadata_info["backup_file_id"], timeout=TIMEOUT
         )
         return stream.iter_chunked(1024)
 
@@ -192,12 +192,12 @@ class OneDriveBackupAgent(BackupAgent):
         if (
             metadata_item is None
             or metadata_item.description is None
-            or "file_id" not in metadata_item.description
+            or "backup_file_id" not in metadata_item.description
         ):
             return
         metadata_info = json.loads(html.unescape(metadata_item.description))
 
-        await self._client.delete_drive_item(metadata_info["file_id"])
+        await self._client.delete_drive_item(metadata_info["backup_file_id"])
         await self._client.delete_drive_item(metadata_item.id)
 
     @handle_backup_errors
@@ -223,13 +223,6 @@ class OneDriveBackupAgent(BackupAgent):
         metadata_stream = await self._client.download_drive_item(metadata_file.id)
         metadata = json.loads(await metadata_stream.read())
         return AgentBackup.from_dict(metadata)
-
-    def _backup_from_description(self, description: str) -> AgentBackup:
-        """Create a backup object from a description."""
-        description = html.unescape(
-            description
-        )  # OneDrive encodes the description on save automatically
-        return AgentBackup.from_dict(json.loads(description))
 
     async def _find_item_by_backup_id(self, backup_id: str) -> File | Folder | None:
         """Find an item by backup ID."""
