@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from mill import MillDevice
+from mill import Heater, MillDevice
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.config_entries import ConfigEntry
@@ -27,6 +27,7 @@ async def async_setup_entry(
         async_add_entities(
             MillNumber(mill_data_coordinator, mill_device)
             for mill_device in mill_data_coordinator.data.values()
+            if isinstance(mill_device, Heater)
         )
 
 
@@ -45,9 +46,8 @@ class MillNumber(MillBaseEntity, NumberEntity):
         mill_device: MillDevice,
     ) -> None:
         """Initialize the number."""
-        super().__init__(coordinator, mill_device)
         self._attr_unique_id = f"{mill_device.device_id}_max_heating_power"
-        self._update_attr(mill_device)
+        super().__init__(coordinator, mill_device)
 
     @callback
     def _update_attr(self, device: MillDevice) -> None:
