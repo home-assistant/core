@@ -297,6 +297,8 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the HVAC action, inheriting from master AC if zone is open but idle if air is <= 5%."""
+        if self._ac["state"] == ADVANTAGE_AIR_STATE_OFF:
+            return HVACAction.OFF
         master_action = HVAC_ACTIONS.get(self._ac["mode"], HVACAction.OFF)
         if self._ac["mode"] == "myauto":
             master_action = HVAC_ACTIONS.get(
