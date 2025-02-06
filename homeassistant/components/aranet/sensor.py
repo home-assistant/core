@@ -74,8 +74,8 @@ SENSOR_DESCRIPTIONS = {
         native_unit_of_measurement=UnitOfPressure.HPA,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    "threshold_level": AranetSensorEntityDescription(
-        key="status",
+    "status": AranetSensorEntityDescription(
+        key="threshold_level",
         name="Threshold Level",
         device_class=SensorDeviceClass.ENUM,
         options=[status.name for status in Color],
