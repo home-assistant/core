@@ -2,7 +2,20 @@
   "config": {
     "step": {
       "user": {
+        "description": "Select the service you want to use for the LLM.",
+        "menu_options": {
+          "openai": "OpenAI",
+          "azure_openai": "Azure OpenAI"
+        }
+      },
+      "openai": {
         "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        }
+      },
+      "azure_openai": {
+        "data": {
+          "azure_endpoint": "Azure endpoint",
           "api_key": "[%key:common::config_flow::data::api_key%]"
         }
       }

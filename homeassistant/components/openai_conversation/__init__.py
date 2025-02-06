@@ -22,7 +22,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_AZURE_API_VERSION, CONF_AZURE_ENDPOINT, DOMAIN, LOGGER
 
 SERVICE_GENERATE_IMAGE = "generate_image"
 PLATFORMS = (Platform.CONVERSATION,)
@@ -89,10 +89,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: OpenAIConfigEntry) -> bool:
     """Set up OpenAI Conversation from a config entry."""
-    client = openai.AsyncOpenAI(
-        api_key=entry.data[CONF_API_KEY],
-        http_client=get_async_client(hass),
-    )
+
+    if CONF_AZURE_ENDPOINT in entry.data:
+        client = openai.AsyncAzureOpenAI(
+            azure_endpoint=entry.data[CONF_AZURE_ENDPOINT],
+            api_key=entry.data[CONF_API_KEY],
+            api_version=CONF_AZURE_API_VERSION,
+            http_client=get_async_client(hass),
+        )
+    else:
+        client = openai.AsyncOpenAI(
+            api_key=entry.data[CONF_API_KEY],
+            http_client=get_async_client(hass),
+        )
 
     # Cache current platform data which gets added to each request (caching done by library)
     _ = await hass.async_add_executor_job(client.platform_headers)

@@ -30,14 +30,20 @@ from homeassistant.helpers.selector import (
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
+    CONF_AZURE_API_VERSION,
+    CONF_AZURE_ENDPOINT,
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_PROVIDER,
     CONF_REASONING_EFFORT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DOMAIN,
+    LOGGER,
+    PROVIDER_AZURE_OPENAI,
+    PROVIDER_OPENAI,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
     RECOMMENDED_REASONING_EFFORT,
@@ -48,8 +54,21 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_USER_DATA_SCHEMA = vol.Schema(
+STEP_PROVIDER_SELECTION_SCHEMA = vol.Schema(
     {
+        vol.Required(CONF_PROVIDER): vol.In([PROVIDER_OPENAI, PROVIDER_AZURE_OPENAI]),
+    }
+)
+
+STEP_OPENAI_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): str,
+    }
+)
+
+STEP_AZURE_OPENAI_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_AZURE_ENDPOINT): str,
         vol.Required(CONF_API_KEY): str,
     }
 )
@@ -61,13 +80,31 @@ RECOMMENDED_OPTIONS = {
 }
 
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
+async def check_openai_connection(hass: HomeAssistant, data: dict[str, Any]) -> None:
+    """Validate the user input allows us to connect."""
     client = openai.AsyncOpenAI(api_key=data[CONF_API_KEY])
-    await hass.async_add_executor_job(client.with_options(timeout=10.0).models.list)
+    result = await hass.async_add_executor_job(
+        client.with_options(timeout=10.0).models.list
+    )
+    LOGGER.info("OpenAI models: %s", result)
+
+
+async def check_azure_openai_connection(
+    hass: HomeAssistant, data: dict[str, Any]
+) -> None:
+    """Validate the user input allows us to connect."""
+    client = openai.AsyncAzureOpenAI(
+        azure_endpoint=data[CONF_AZURE_ENDPOINT],
+        api_key=data[CONF_API_KEY],
+        api_version=CONF_AZURE_API_VERSION,
+    )
+    result = await hass.async_add_executor_job(
+        client.with_options(timeout=10.0).models.list
+    )
+
+    models = [model async for model in result]
+
+    LOGGER.info("Azure OpenAI models: %s", models)
 
 
 class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -79,15 +116,24 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
+        return self.async_show_menu(
+            step_id="user", menu_options=["openai", "azure_openai"]
+        )
+
+    async def async_step_openai(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the OpenAI step."""
         if user_input is None:
             return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
+                step_id="openai",
+                data_schema=STEP_OPENAI_USER_DATA_SCHEMA,
             )
 
         errors: dict[str, str] = {}
 
         try:
-            await validate_input(self.hass, user_input)
+            await check_openai_connection(self.hass, user_input)
         except openai.APIConnectionError:
             errors["base"] = "cannot_connect"
         except openai.AuthenticationError:
@@ -103,7 +149,40 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="openai", data_schema=STEP_OPENAI_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_azure_openai(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the Azure OpenAI step."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="azure_openai",
+                data_schema=STEP_AZURE_OPENAI_USER_DATA_SCHEMA,
+            )
+
+        errors = {}
+        try:
+            await check_azure_openai_connection(self.hass, user_input)
+        except openai.APIConnectionError:
+            errors["base"] = "cannot_connect"
+        except openai.AuthenticationError:
+            errors["base"] = "invalid_auth"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        else:
+            return self.async_create_entry(
+                title="Azure ChatGPT",
+                data=user_input,
+                options=RECOMMENDED_OPTIONS,
+            )
+
+        return self.async_show_form(
+            step_id="azure_openai",
+            data_schema=STEP_AZURE_OPENAI_USER_DATA_SCHEMA,
+            errors=errors,
         )
 
     @staticmethod
