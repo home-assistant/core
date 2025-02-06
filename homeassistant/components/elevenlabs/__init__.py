@@ -19,8 +19,9 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import CONF_MODEL
+from .coordinator import ElevenLabsDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.TTS]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.TTS]
 
 
 async def get_model_by_id(client: AsyncElevenLabs, model_id: str) -> Model | None:
@@ -37,6 +38,7 @@ class ElevenLabsData:
     """ElevenLabs data type."""
 
     client: AsyncElevenLabs
+    coordinator: ElevenLabsDataUpdateCoordinator
     model: Model
 
 
@@ -61,7 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElevenLabsConfigEntry) -
     if model is None or (not model.languages):
         raise ConfigEntryError("Model could not be resolved")
 
-    entry.runtime_data = ElevenLabsData(client=client, model=model)
+    coordinator = ElevenLabsDataUpdateCoordinator(hass, client)
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = ElevenLabsData(
+        client=client, model=model, coordinator=coordinator
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
