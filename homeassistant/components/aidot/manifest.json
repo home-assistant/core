@@ -1,7 +1,7 @@
 {
   "domain": "aidot",
   "name": "AiDot Lights Local",
-  "codeowners": ["@s1eedz"],
+  "codeowners": ["@s1eedz", "@HongBryan"],
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/aidot",
