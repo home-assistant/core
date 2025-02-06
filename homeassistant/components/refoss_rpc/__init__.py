@@ -35,19 +35,14 @@ from .coordinator import (
 )
 
 PLATFORMS: Final = [
-    Platform.BINARY_SENSOR,
-    Platform.BUTTON,
-    Platform.EVENT,
     Platform.SENSOR,
-    Platform.SWITCH,
-    Platform.UPDATE,
 ]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: RefossConfigEntry) -> bool:
     """Set up Refoss RPC from a config entry."""
     if not entry.data.get(CONF_HOST):
-        raise ConfigEntryError("Invalid Host, please try again")
+        raise ConfigEntryError("Invalid Host, please remove and try again")
 
     options = ConnectionOptions(
         entry.data.get(CONF_HOST),
