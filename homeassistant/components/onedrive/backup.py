@@ -160,22 +160,24 @@ class OneDriveBackupAgent(BackupAgent):
                 "Hash validation failed, backup file might be corrupt"
             ) from err
 
-        # store metadata in description
+        # store metadata in metadata file
         description = json.dumps(backup.as_dict())
         _LOGGER.debug("Creating metadata: %s", description)
         metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
-        item = await self._client.upload_file(
+        metadata_file = await self._client.upload_file(
             self._folder_id,
             metadata_filename,
             description,  # type: ignore[arg-type]
         )
+
+        # add metadata to the metadata file
         metadata_description = {
             "metadata_version": 2,
             "backup_id": backup.backup_id,
             "backup_file_id": backup_file.id,
         }
         await self._client.update_drive_item(
-            path_or_id=item.id,
+            path_or_id=metadata_file.id,
             data=ItemUpdate(description=json.dumps(metadata_description)),
         )
 
