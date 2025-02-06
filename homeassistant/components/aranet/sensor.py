@@ -166,10 +166,11 @@ def sensor_update_to_bluetooth_data_update(
         val = getattr(adv.readings, key)
         if val == -1:
             continue
-        if key == "status":
-            val = get_friendly_status(val.name, adv.readings.type.name)
-        else:
-            val *= desc.scale
+        val = (
+            get_friendly_status(val.name, adv.readings.type.name)
+            if key == "status"
+            else val * desc.scale
+        )
         data[tag] = val
         names[tag] = desc.name
         descs[tag] = desc
@@ -224,22 +225,7 @@ class Aranet4BluetoothSensorEntity(
 
 
 def get_friendly_status(status: str, device_type: str) -> str:
-    """Convert device status to a human-readable string based on device type.
-
-    Args:
-        status: Raw status string from device (e.g., "GREEN", "RED")
-        device_type: Aranet device type (e.g., "ARANET4", "ARANET_RADON")
-
-    Returns:
-        Friendly status string (e.g., "Good", "Unhealthy")
-
-    Example:
-        >>> get_friendly_status("GREEN", "ARANET4")
-        'Good'
-        >>> get_friendly_status("GREEN", "ARANET_RADON")
-        'Normal'
-
-    """
+    """Convert device status color code to a more human-friendly status based on device type."""
     base_status_map = {
         "ERROR": "Error",
         "RED": "Unhealthy",
