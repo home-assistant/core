@@ -120,11 +120,19 @@ class OneDriveBackupAgent(BackupAgent):
         self, backup_id: str, **kwargs: Any
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        item = await self._find_item_by_backup_id(backup_id)
-        if item is None:
+        metadata_item = await self._find_item_by_backup_id(backup_id)
+        if (
+            metadata_item is None
+            or metadata_item.description is None
+            or "file_id" not in metadata_item.description
+        ):
             raise BackupAgentError("Backup not found")
 
-        stream = await self._client.download_drive_item(item.id, timeout=TIMEOUT)
+        metadata_info = json.loads(html.unescape(metadata_item.description))
+
+        stream = await self._client.download_drive_item(
+            metadata_info["file_id"], timeout=TIMEOUT
+        )
         return stream.iter_chunked(1024)
 
     @handle_backup_errors
@@ -136,15 +144,15 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-
+        filename = suggested_filename(backup)
         file = FileInfo(
-            suggested_filename(backup),
+            filename,
             backup.size,
             self._folder_id,
             await open_stream(),
         )
         try:
-            item = await LargeFileUploadClient.upload(
+            backup_file = await LargeFileUploadClient.upload(
                 self._token_function, file, session=async_get_clientsession(self._hass)
             )
         except HashMismatchError as err:
@@ -153,14 +161,21 @@ class OneDriveBackupAgent(BackupAgent):
             ) from err
 
         # store metadata in description
-        backup_dict = backup.as_dict()
-        backup_dict["metadata_version"] = 1  # version of the backup metadata
-        description = json.dumps(backup_dict)
+        description = json.dumps(backup.as_dict())
         _LOGGER.debug("Creating metadata: %s", description)
-
+        metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
+        item = await self._client.upload_file(
+            self._folder_id,
+            metadata_filename,
+            description,  # type: ignore[arg-type]
+        )
+        metadata_description = {
+            "backup_id": backup.backup_id,
+            "file_id": backup_file.id,
+        }
         await self._client.update_drive_item(
             path_or_id=item.id,
-            data=ItemUpdate(description=description),
+            data=ItemUpdate(description=json.dumps(metadata_description)),
         )
 
     @handle_backup_errors
@@ -170,31 +185,41 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        item = await self._find_item_by_backup_id(backup_id)
-        if item is None:
+        metadata_item = await self._find_item_by_backup_id(backup_id)
+        if (
+            metadata_item is None
+            or metadata_item.description is None
+            or "file_id" not in metadata_item.description
+        ):
             return
-        await self._client.delete_drive_item(item.id)
+        metadata_info = json.loads(html.unescape(metadata_item.description))
+
+        await self._client.delete_drive_item(metadata_info["file_id"])
+        await self._client.delete_drive_item(metadata_item.id)
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
-        return [
-            self._backup_from_description(item.description)
-            for item in await self._client.list_drive_items(self._folder_id)
-            if item.description and "homeassistant_version" in item.description
-        ]
+        items = await self._client.list_drive_items(self._folder_id)
+        backups: list[AgentBackup] = []
+        for item in items:
+            if item.description and "backup_id" in item.description:
+                metadata = await self._client.download_drive_item(item.id)
+                metadata_json = json.loads(await metadata.read())
+                backups.append(AgentBackup.from_dict(metadata_json))
+        return backups
 
     @handle_backup_errors
     async def async_get_backup(
         self, backup_id: str, **kwargs: Any
     ) -> AgentBackup | None:
         """Return a backup."""
-        item = await self._find_item_by_backup_id(backup_id)
-        return (
-            self._backup_from_description(item.description)
-            if item and item.description
-            else None
-        )
+        metadata_file = await self._find_item_by_backup_id(backup_id)
+        if metadata_file is None or metadata_file.description is None:
+            return None
+        metadata_stream = await self._client.download_drive_item(metadata_file.id)
+        metadata = json.loads(await metadata_stream.read())
+        return AgentBackup.from_dict(metadata)
 
     def _backup_from_description(self, description: str) -> AgentBackup:
         """Create a backup object from a description."""
