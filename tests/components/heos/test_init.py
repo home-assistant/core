@@ -200,6 +200,7 @@ async def test_device_id_migration(
         identifiers={("Other", 1)},  # type: ignore[arg-type]
     )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert device_registry.async_get_device({("Other", 1)}) is not None  # type: ignore[arg-type]
     assert device_registry.async_get_device({(DOMAIN, 1)}) is None  # type: ignore[arg-type]
     assert device_registry.async_get_device({(DOMAIN, "1")}) is not None
@@ -222,5 +223,6 @@ async def test_device_id_migration_both_present(
         config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, "1")}
     )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert device_registry.async_get_device({(DOMAIN, 1)}) is None  # type: ignore[arg-type]
     assert device_registry.async_get_device({(DOMAIN, "1")}) is not None
