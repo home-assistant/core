@@ -23,12 +23,12 @@ from .common import (
 
 
 @pytest.mark.usefixtures("matter_devices")
-async def test_sensors(
+async def test_water_heaters(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test sensors."""
+    """Test water heaters."""
     snapshot_matter_entities(hass, entity_registry, snapshot, Platform.WATER_HEATER)
 
 
