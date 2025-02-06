@@ -19,8 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import BringConfigEntry
-from .coordinator import BringData, BringDataUpdateCoordinator
+from .coordinator import BringConfigEntry, BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 from .util import list_language, sum_attributes
 
