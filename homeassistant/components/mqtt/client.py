@@ -984,7 +984,7 @@ class MQTT:
         _mqttc: mqtt.Client,
         _userdata: None,
         _connect_flags: mqtt.ConnectFlags,
-        result_code: mqtt.ReasonCode,
+        reason_code: mqtt.ReasonCode,
         _properties: mqtt.Properties | None = None,
     ) -> None:
         """On connect callback.
@@ -993,19 +993,20 @@ class MQTT:
         message.
         """
         # pylint: disable-next=import-outside-toplevel
-        import paho.mqtt.client as mqtt
 
-        if result_code != mqtt.CONNACK_ACCEPTED:
-            if result_code in (
-                mqtt.CONNACK_REFUSED_BAD_USERNAME_PASSWORD,
-                mqtt.CONNACK_REFUSED_NOT_AUTHORIZED,
-            ):
+        if reason_code.is_failure:
+            # 24: Continue authentication
+            # 25: Re-authenticate
+            # 134: Bad user name or password
+            # 135: Not authorized
+            # 140: Bad authentication method
+            if reason_code.value in (24, 25, 134, 135, 140):
                 self._should_reconnect = False
                 self.hass.async_create_task(self.async_disconnect())
                 self.config_entry.async_start_reauth(self.hass)
             _LOGGER.error(
                 "Unable to connect to the MQTT broker: %s",
-                mqtt.connack_string(result_code),
+                reason_code.getName(),  # type: ignore[no-untyped-call]
             )
             self._async_connection_result(False)
             return
@@ -1016,7 +1017,7 @@ class MQTT:
             "Connected to MQTT server %s:%s (%s)",
             self.conf[CONF_BROKER],
             self.conf.get(CONF_PORT, DEFAULT_PORT),
-            result_code,
+            reason_code,
         )
 
         birth: dict[str, Any]
@@ -1202,7 +1203,7 @@ class MQTT:
         import paho.mqtt.client as mqtt  # pylint: disable=import-outside-toplevel
 
         _LOGGER.warning(
-            "Error return from MQTT server: %s",
+            "Error returned from MQTT server: %s",
             mqtt.error_string(status),
         )
 
