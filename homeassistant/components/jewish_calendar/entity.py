@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 
 from hdate import Location
+from hdate.translator import Language
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -17,7 +18,7 @@ type JewishCalendarConfigEntry = ConfigEntry[JewishCalendarData]
 class JewishCalendarData:
     """Jewish Calendar runtime dataclass."""
 
-    language: str
+    language: Language
     diaspora: bool
     location: Location
     candle_lighting_offset: int

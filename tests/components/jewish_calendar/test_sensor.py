@@ -93,7 +93,7 @@ TEST_PARAMS = [
             "icon": "mdi:calendar-star",
             "id": "rosh_hashana_i",
             "type": "YOM_TOV",
-            "options": list(HolidayDatabase.get_all_holiday_names("english")),
+            "options": HolidayDatabase.get_all_names("english", False),
         },
     ),
     (
@@ -111,7 +111,7 @@ TEST_PARAMS = [
             "icon": "mdi:calendar-star",
             "id": "chanukah, rosh_chodesh",
             "type": "MELACHA_PERMITTED_HOLIDAY, ROSH_CHODESH",
-            "options": list(HolidayDatabase.get_all_holiday_names("english")),
+            "options": HolidayDatabase.get_all_names("english", False),
         },
     ),
     (

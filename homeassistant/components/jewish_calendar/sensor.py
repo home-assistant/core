@@ -6,7 +6,7 @@ import datetime as dt
 import logging
 from typing import Any
 
-from hdate import HDate, Zmanim
+from hdate import HDateInfo, Zmanim
 from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 
@@ -213,7 +213,9 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
 
         _LOGGER.debug("Now: %s Sunset: %s", now, sunset)
 
-        daytime_date = HDate(today, diaspora=self._diaspora, language=self._language)
+        daytime_date = HDateInfo(
+            today, diaspora=self._diaspora, language=self._language
+        )
 
         # The Jewish day starts after darkness (called "tzais") and finishes at
         # sunset ("shkia"). The time in between is a gray area
@@ -255,7 +257,10 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         return self._attrs
 
     def get_state(
-        self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate
+        self,
+        daytime_date: HDateInfo,
+        after_shkia_date: HDateInfo,
+        after_tzais_date: HDateInfo,
     ) -> Any | None:
         """For a given type of sensor, return the state."""
         # Terminology note: by convention in py-libhdate library, "upcoming"
@@ -278,8 +283,8 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             _id = ", ".join(holiday.name for holiday in _holidays)
             _type = ", ".join({_holiday.type.name for _holiday in _holidays})
             self._attrs = {"id": _id, "type": _type}
-            self._attr_options = list(
-                HolidayDatabase.get_all_holiday_names(self._language)
+            self._attr_options = HolidayDatabase.get_all_names(
+                self._language, self._diaspora
             )
             return ", ".join(str(holiday) for holiday in _holidays) if _holidays else ""
         if self.entity_description.key == "omer_count":
@@ -296,7 +301,10 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def get_state(
-        self, daytime_date: HDate, after_shkia_date: HDate, after_tzais_date: HDate
+        self,
+        daytime_date: HDateInfo,
+        after_shkia_date: HDateInfo,
+        after_tzais_date: HDateInfo,
     ) -> Any | None:
         """For a given type of sensor, return the state."""
         if self.entity_description.key == "upcoming_shabbat_candle_lighting":
