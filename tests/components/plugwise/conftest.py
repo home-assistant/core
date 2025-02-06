@@ -32,6 +32,7 @@ def _read_json(environment: str, call: str) -> dict[str, Any]:
 @pytest.fixture
 def cooling_present(request: pytest.FixtureRequest) -> str:
     """Pass the cooling_present boolean.
+
     Used with fixtures that require parametrization of the cooling capability.
     """
     return request.param
@@ -58,6 +59,7 @@ def gateway_id(request: pytest.FixtureRequest) -> str:
 @pytest.fixture
 def heater_id(request: pytest.FixtureRequest) -> str:
     """Pass the heater_idstring.
+
     Used with fixtures that require parametrization of the heater_id.
     """
     return request.param
@@ -66,6 +68,7 @@ def heater_id(request: pytest.FixtureRequest) -> str:
 @pytest.fixture
 def reboot(request: pytest.FixtureRequest) -> str:
     """Pass the reboot boolean.
+
     Used with fixtures that require parametrization of the reboot capability.
     """
     return request.param
