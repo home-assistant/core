@@ -46,6 +46,13 @@ current_request: ContextVar[Request | None] = ContextVar(
     "current_request", default=None
 )
 
+_COMMON_RESPONSE_TYPES = {
+    web.StreamResponse,
+    web.FileResponse,
+    web.Response,
+    web.WebSocketResponse,
+}
+
 
 def request_handler_factory(
     hass: HomeAssistant,
@@ -91,13 +98,17 @@ def request_handler_factory(
         except exceptions.Unauthorized as err:
             raise HTTPUnauthorized from err
 
-        if isinstance(result, web.StreamResponse):
+        # Fast path for common types since its almost always web.Response
+        if type(result) in _COMMON_RESPONSE_TYPES or isinstance(
+            result, web.StreamResponse
+        ):
             # The method handler returned a ready-made Response, how nice of it
-            return result
+            return result  # type: ignore[return-value]
 
-        status_code = HTTPStatus.OK
         if isinstance(result, tuple):
             result, status_code = result
+        else:
+            status_code = HTTPStatus.OK
 
         if isinstance(result, bytes):
             return web.Response(body=result, status=status_code)
@@ -118,6 +129,13 @@ def request_handler_factory(
 class HomeAssistantView:
     """Base view for all views."""
 
+    get: HandlerType | None
+    post: HandlerType | None
+    delete: HandlerType | None
+    put: HandlerType | None
+    patch: HandlerType | None
+    head: HandlerType | None
+    options: HandlerType | None
     url: str | None = None
     extra_urls: list[str] = []
     # Views inheriting from this class can override this
