@@ -38,7 +38,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, CONF_BC_PORT, DOMAIN
+from .const import CONF_BC_PORT, CONF_SUPPORTS_PRIVACY_MODE, CONF_USE_HTTPS, DOMAIN
 from .exceptions import (
     PasswordIncompatible,
     ReolinkException,
@@ -330,7 +330,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Optional(CONF_PORT): cv.positive_int,
                     vol.Required(CONF_USE_HTTPS, default=False): bool,
-                    vol.Required(CONF_BC_PORT, default=DEFAULT_BC_PORT): cv.positive_int,
+                    vol.Required(
+                        CONF_BC_PORT, default=DEFAULT_BC_PORT
+                    ): cv.positive_int,
                 }
             )
 
