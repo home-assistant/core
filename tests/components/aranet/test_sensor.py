@@ -3,7 +3,7 @@
 import pytest
 
 from homeassistant.components.aranet.const import DOMAIN
-from homeassistant.components.sensor import ATTR_OPTIONS, ATTR_STATE_CLASS
+from homeassistant.components.sensor import ATTR_STATE_CLASS
 from homeassistant.const import ATTR_FRIENDLY_NAME, ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -216,9 +216,8 @@ async def test_sensors_aranet4(
 
     status_sensor = hass.states.get("sensor.aranet4_12345_threshold_level")
     status_sensor_attrs = status_sensor.attributes
-    assert status_sensor.state == "GREEN"
+    assert status_sensor.state == "Good"
     assert status_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Threshold Level"
-    assert set(status_sensor_attrs[ATTR_OPTIONS]) == {"ERROR", "GREEN", "YELLOW", "RED"}
 
     # Check device context for the battery sensor
     entity = entity_registry.async_get("sensor.aranet4_12345_battery")
@@ -299,9 +298,8 @@ async def test_sensors_aranetrn(
 
     status_sensor = hass.states.get("sensor.aranetrn_12345_threshold_level")
     status_sensor_attrs = status_sensor.attributes
-    assert status_sensor.state == "GREEN"
+    assert status_sensor.state == "Normal"
     assert status_sensor_attrs[ATTR_FRIENDLY_NAME] == "AranetRn+ 12345 Threshold Level"
-    assert set(status_sensor_attrs[ATTR_OPTIONS]) == {"ERROR", "GREEN", "YELLOW", "RED"}
 
     # Check device context for the battery sensor
     entity = entity_registry.async_get("sensor.aranetrn_12345_battery")

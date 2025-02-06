@@ -5,7 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from aranet4.client import Aranet4Advertisement, Color
+from aranet4.client import Aranet4Advertisement
 from bleak.backends.device import BLEDevice
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -78,7 +78,6 @@ SENSOR_DESCRIPTIONS = {
         key="threshold_level",
         name="Threshold Level",
         device_class=SensorDeviceClass.ENUM,
-        options=[status.name for status in Color],
     ),
     "co2": AranetSensorEntityDescription(
         key="co2",
@@ -168,7 +167,7 @@ def sensor_update_to_bluetooth_data_update(
         if val == -1:
             continue
         if key == "status":
-            val = val.name  # Use the name of the status
+            val = get_friendly_status(val.name, adv.readings.type.name)
         else:
             val *= desc.scale
         data[tag] = val
@@ -222,3 +221,41 @@ class Aranet4BluetoothSensorEntity(
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
+
+
+def get_friendly_status(status: str, device_type: str) -> str:
+    """Convert device status to a human-readable string based on device type.
+
+    Args:
+        status: Raw status string from device (e.g., "GREEN", "RED")
+        device_type: Aranet device type (e.g., "ARANET4", "ARANET_RADON")
+
+    Returns:
+        Friendly status string (e.g., "Good", "Unhealthy")
+
+    Example:
+        >>> get_friendly_status("GREEN", "ARANET4")
+        'Good'
+        >>> get_friendly_status("GREEN", "ARANET_RADON")
+        'Normal'
+
+    """
+    base_status_map = {
+        "ERROR": "Error",
+        "RED": "Unhealthy",
+    }
+
+    device_status_map = {
+        "ARANET4": {
+            **base_status_map,
+            "GREEN": "Good",
+            "YELLOW": "Average",
+        },
+        "ARANET_RADON": {
+            **base_status_map,
+            "GREEN": "Normal",
+            "YELLOW": "Elevated",
+        },
+    }
+
+    return device_status_map.get(device_type, {}).get(status, status)
