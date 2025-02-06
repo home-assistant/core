@@ -6,18 +6,15 @@ import logging
 
 from bring_api import Bring
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import BringDataUpdateCoordinator
+from .coordinator import BringConfigEntry, BringDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.TODO]
 
 _LOGGER = logging.getLogger(__name__)
-
-type BringConfigEntry = ConfigEntry[BringDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BringConfigEntry) -> bool:
@@ -26,7 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BringConfigEntry) -> boo
     session = async_get_clientsession(hass)
     bring = Bring(session, entry.data[CONF_EMAIL], entry.data[CONF_PASSWORD])
 
-    coordinator = BringDataUpdateCoordinator(hass, bring)
+    coordinator = BringDataUpdateCoordinator(hass, entry, bring)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
