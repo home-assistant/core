@@ -75,8 +75,8 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
     ),
     "status": AranetSensorEntityDescription(
-        key="threshold_level",
-        name="Threshold Level",
+        key="concentration_status",
+        name="Concentration Status",
         device_class=SensorDeviceClass.ENUM,
     ),
     "co2": AranetSensorEntityDescription(
