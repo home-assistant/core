@@ -6,9 +6,8 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from bring_api import BringUserSettingsResponse
+from bring_api import BringList, BringUserSettingsResponse
 from bring_api.const import BRING_SUPPORTED_LOCALES
-from bring_api.types import BringList
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
