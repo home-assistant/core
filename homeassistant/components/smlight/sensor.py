@@ -105,7 +105,7 @@ SENSORS: list[SmSensorEntityDescription] = [
 ]
 
 EXTRA_SENSOR = SmSensorEntityDescription(
-    key="zigbee_temperature2",
+    key="zigbee_temperature_2",
     translation_key="zigbee_temperature",
     device_class=SensorDeviceClass.TEMPERATURE,
     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -177,10 +177,7 @@ class SmSensorEntity(SmEntity, SensorEntity):
         super().__init__(coordinator)
 
         self.entity_description = description
-        sensor = description.key
-        if description.key.endswith("2"):
-            sensor = f"{sensor.replace('2', '_2')}"
-        self._attr_unique_id = f"{coordinator.unique_id}_{sensor}"
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
 
     @property
     def native_value(self) -> datetime | str | float | None:
