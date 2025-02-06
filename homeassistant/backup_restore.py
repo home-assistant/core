@@ -146,6 +146,7 @@ def _extract_backup(
                     config_dir,
                     dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns(*(keep)),
+                    ignore_dangling_symlinks=True,
                 )
             elif restore_content.restore_database:
                 for entry in KEEP_DATABASE:

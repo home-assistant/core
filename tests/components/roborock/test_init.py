@@ -183,6 +183,10 @@ async def test_remove_from_hass(
     resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
     assert resp.status == HTTPStatus.OK
 
+    assert not cleanup_map_storage.exists()
+
+    # Flush to disk
+    await hass.config_entries.async_unload(setup_entry.entry_id)
     assert cleanup_map_storage.exists()
     paths = list(cleanup_map_storage.walk())
     assert len(paths) == 3  # One map image and two directories
@@ -208,6 +212,10 @@ async def test_oserror_remove_image(
     client = await hass_client()
     resp = await client.get("/api/image_proxy/image.roborock_s7_maxv_upstairs")
     assert resp.status == HTTPStatus.OK
+
+    # Image content is saved when unloading
+    assert not cleanup_map_storage.exists()
+    await hass.config_entries.async_unload(setup_entry.entry_id)
 
     assert cleanup_map_storage.exists()
     paths = list(cleanup_map_storage.walk())

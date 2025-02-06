@@ -70,7 +70,13 @@
         "data": {
           "scan_interval": "Minutes between scans",
           "timeout": "Timeout (seconds)",
-          "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)"
+          "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)",
+          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]",
+          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]"
+        },
+        "data_description": {
+          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]",
+          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_path%]"
         }
       }
     }

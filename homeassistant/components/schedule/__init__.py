@@ -18,7 +18,13 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.collection import (
     CollectionEntity,
@@ -44,6 +50,7 @@ from .const import (
     CONF_TO,
     DOMAIN,
     LOGGER,
+    SERVICE_GET,
     WEEKDAY_TO_CONF,
 )
 
@@ -205,6 +212,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         reload_service_handler,
     )
 
+    component.async_register_entity_service(
+        SERVICE_GET,
+        {},
+        async_get_schedule_service,
+        supports_response=SupportsResponse.ONLY,
+    )
+    await component.async_setup(config)
+
     return True
 
 
@@ -295,6 +310,10 @@ class Schedule(CollectionEntity):
         """Run when entity about to be added to hass."""
         self.async_on_remove(self._clean_up_listener)
         self._update()
+
+    def get_schedule(self) -> ConfigType:
+        """Return the schedule."""
+        return {d: self._config[d] for d in WEEKDAY_TO_CONF.values()}
 
     @callback
     def _update(self, _: datetime | None = None) -> None:
@@ -390,3 +409,10 @@ class Schedule(CollectionEntity):
                 data_keys.update(time_range_custom_data.keys())
 
         return frozenset(data_keys)
+
+
+async def async_get_schedule_service(
+    schedule: Schedule, service_call: ServiceCall
+) -> ServiceResponse:
+    """Return the schedule configuration."""
+    return schedule.get_schedule()
