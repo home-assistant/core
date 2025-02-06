@@ -74,12 +74,12 @@
       }
     },
     "generate_content": {
-      "name": "Prompt service",
-      "description": "Send a prompt to ChatGPT",
+      "name": "Generate content",
+      "description": "Sends a conversational query to ChatGPT including any attached image files",
       "fields": {
         "config_entry": {
-          "name": "Config Entry",
-          "description": "The config entry to use for this service"
+          "name": "Config entry",
+          "description": "The config entry to use for this action"
         },
         "prompt": {
           "name": "Prompt",
