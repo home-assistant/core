@@ -10,7 +10,7 @@ from aioshelly.common import ConnectionOptions, get_info
 from aioshelly.const import (
     BLOCK_GENERATIONS,
     DEFAULT_HTTP_PORT,
-    MODELS_NOT_SUPPORTING_BT_PROXY,
+    MODEL_WALL_DISPLAY,
     RPC_GENERATIONS,
 )
 from aioshelly.exceptions import (
@@ -464,7 +464,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return (
             get_device_entry_gen(config_entry) in RPC_GENERATIONS
             and not config_entry.data.get(CONF_SLEEP_PERIOD)
-            and config_entry.data.get("model") not in MODELS_NOT_SUPPORTING_BT_PROXY
+            and config_entry.data.get("model") != MODEL_WALL_DISPLAY
         )
 
 
