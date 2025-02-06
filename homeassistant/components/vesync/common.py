@@ -57,15 +57,18 @@ def is_humidifier(device: VeSyncBaseDevice) -> bool:
 
     return isinstance(device, VeSyncHumidifierDevice)
 
+
 def is_fan(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents a fan."""
 
     return isinstance(device, VeSyncFanDevice)
-  
+
+
 def is_outlet(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents an outlet."""
 
     return isinstance(device, VeSyncOutlet)
+
 
 def is_wall_switch(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents a wall switch, note this doessn't include dimming switches."""
