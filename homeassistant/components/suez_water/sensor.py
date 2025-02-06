@@ -15,11 +15,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CURRENCY_EURO, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONF_COUNTER_ID, DOMAIN
 from .coordinator import SuezWaterConfigEntry, SuezWaterCoordinator, SuezWaterData
 
 
@@ -57,11 +56,20 @@ async def async_setup_entry(
 ) -> None:
     """Set up Suez Water sensor from a config entry."""
     coordinator = entry.runtime_data
-    counter_id = entry.data[CONF_COUNTER_ID]
 
-    async_add_entities(
-        SuezWaterSensor(coordinator, counter_id, description) for description in SENSORS
-    )
+    def _check_device(known_device_id: None | str = None) -> None:
+        current_device_id = coordinator.data.current_device_id
+        if coordinator.data.new_device and (
+            known_device_id is None or current_device_id != known_device_id
+        ):
+            known_device_id = current_device_id
+            async_add_entities(
+                SuezWaterSensor(coordinator, coordinator.data.new_device, description)
+                for description in SENSORS
+            )
+
+    _check_device()
+    entry.async_on_unload(coordinator.async_add_listener(_check_device))
 
 
 class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
@@ -74,17 +82,13 @@ class SuezWaterSensor(CoordinatorEntity[SuezWaterCoordinator], SensorEntity):
     def __init__(
         self,
         coordinator: SuezWaterCoordinator,
-        counter_id: int,
+        device: DeviceInfo,
         entity_description: SuezWaterSensorEntityDescription,
     ) -> None:
         """Initialize the suez water sensor entity."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{counter_id}_{entity_description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, str(counter_id))},
-            entry_type=DeviceEntryType.SERVICE,
-            manufacturer="Suez",
-        )
+        self._attr_unique_id = f"{device['serial_number']}_{entity_description.key}"
+        self._attr_device_info = device
         self.entity_description = entity_description
 
     @property

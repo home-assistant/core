@@ -8,22 +8,37 @@ from pysuez import AggregatedData, PriceResult
 from pysuez.const import ATTRIBUTION
 import pytest
 
-from homeassistant.components.suez_water.const import CONF_COUNTER_ID, DOMAIN
+from homeassistant.components.suez_water.config_flow import ContractResult
+from homeassistant.components.suez_water.const import DOMAIN
 
 from tests.common import MockConfigEntry
 
 MOCK_DATA = {
     "username": "test-username",
     "password": "test-password",
-    CONF_COUNTER_ID: "test-counter",
 }
+MOCK_CONTRACT = ContractResult(
+    {
+        "name": "client-name",
+        "inseeCode": "45678",
+        "brandCode": "SUEZ",
+        "fullRefFormat": "ref-client-1234",
+        "fullRef": "refclient1234",
+        "addrServed": "somewhere in the world",
+        "isActif": True,
+        "website-link": "http://test.should-not-work.com",
+        "searchData": "to search",
+        "isCurrentContract": True,
+        "codeSituation": "1234",
+    }
+)
 
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Create mock config_entry needed by suez_water integration."""
     return MockConfigEntry(
-        unique_id=MOCK_DATA[CONF_COUNTER_ID],
+        unique_id=MOCK_CONTRACT.fullRefFormat,
         domain=DOMAIN,
         title="Suez mock device",
         data=MOCK_DATA,
@@ -79,4 +94,8 @@ def mock_suez_client() -> Generator[AsyncMock]:
 
         suez_client.fetch_aggregated_data.return_value = result
         suez_client.get_price.return_value = PriceResult("4.74")
+
+        suez_client.find_counter.return_value = "test-counter"
+
+        suez_client.contract_data.return_value = MOCK_CONTRACT
         yield suez_client
