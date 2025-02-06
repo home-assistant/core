@@ -7,7 +7,7 @@ from collections.abc import Awaitable, Callable
 from contextvars import ContextVar
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, Protocol
 
 from aiohttp import web
 from aiohttp.typedefs import LooseHeaders
@@ -30,13 +30,18 @@ from .json import find_paths_unserializable_data, json_bytes, json_dumps
 _LOGGER = logging.getLogger(__name__)
 
 
+class HandlerProtocol(Protocol):
+    """Define a handler protocol."""
+
+    def __call__(  # noqa: D102
+        self, request: web.Request, *args: Any, **kwds: Any
+    ) -> Awaitable[HandlerResponseType] | HandlerResponseType: ...
+
+
 type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
 type HandlerResponseInnerType = web.StreamResponse | bytes | str | None
 type HandlerResponseTupleType = tuple[HandlerResponseInnerType, HTTPStatus]
 type HandlerResponseType = HandlerResponseInnerType | HandlerResponseTupleType
-type HandlerType = Callable[
-    [web.Request], Awaitable[HandlerResponseType] | HandlerResponseType
-]
 KEY_AUTHENTICATED: Final = "ha_authenticated"
 KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
 KEY_ALLOW_CONFIGURED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
@@ -57,7 +62,7 @@ _COMMON_RESPONSE_TYPES = {
 def request_handler_factory(
     hass: HomeAssistant,
     view: HomeAssistantView,
-    handler: HandlerType,
+    handler: HandlerProtocol,
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
     """Wrap the handler classes."""
     is_coroutinefunction = asyncio.iscoroutinefunction(handler)
@@ -129,13 +134,13 @@ def request_handler_factory(
 class HomeAssistantView:
     """Base view for all views."""
 
-    get: HandlerType | None
-    post: HandlerType | None
-    delete: HandlerType | None
-    put: HandlerType | None
-    patch: HandlerType | None
-    head: HandlerType | None
-    options: HandlerType | None
+    get: HandlerProtocol | None
+    post: HandlerProtocol | None
+    delete: HandlerProtocol | None
+    put: HandlerProtocol | None
+    patch: HandlerProtocol | None
+    head: HandlerProtocol | None
+    options: HandlerProtocol | None
     url: str | None = None
     extra_urls: list[str] = []
     # Views inheriting from this class can override this
@@ -197,7 +202,7 @@ class HomeAssistantView:
         assert self.url is not None, "No url set for view"
         urls = [self.url, *self.extra_urls]
         routes: list[AbstractRoute] = []
-        handler: HandlerType | None
+        handler: HandlerProtocol | None
 
         for method in ("get", "post", "delete", "put", "patch", "head", "options"):
             if not (handler := getattr(self, method, None)):
