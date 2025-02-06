@@ -11,37 +11,6 @@ from . import ZEROCONF_NAME
 from tests.common import MockConfigEntry
 
 
-async def test_entity(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_motionmount: MagicMock,
-) -> None:
-    """Tests the state attributes."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_motionmount.is_authenticated = True
-    mock_motionmount.error_status = 0
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert hass.states.get("sensor.my_motionmount_error_status").state == "none"
-
-
-async def test_entity_no_mac(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_motionmount: MagicMock,
-) -> None:
-    """Tests the state attributes."""
-    mock_config_entry.add_to_hass(hass)
-
-    mock_motionmount.mac = b"\x00\x00\x00\x00\x00\x00"
-    mock_motionmount.is_authenticated = True
-    mock_motionmount.error_status = 0
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert hass.states.get("sensor.my_motionmount_error_status").state == "none"
-
-
 async def test_entity_rename(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
