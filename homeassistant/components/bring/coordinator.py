@@ -9,10 +9,12 @@ import logging
 from bring_api import (
     Bring,
     BringAuthException,
+    BringItemsResponse,
+    BringList,
     BringParseException,
     BringRequestException,
+    BringUserSettingsResponse,
 )
-from bring_api.types import BringItemsResponse, BringList, BringUserSettingsResponse
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
 from homeassistant.config_entries import ConfigEntry
@@ -26,6 +28,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type BringConfigEntry = ConfigEntry[BringDataUpdateCoordinator]
+
 
 @dataclass(frozen=True)
 class BringData(DataClassORJSONMixin):
@@ -38,15 +42,18 @@ class BringData(DataClassORJSONMixin):
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
     """A Bring Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: BringConfigEntry
     user_settings: BringUserSettingsResponse
     lists: list[BringList]
 
-    def __init__(self, hass: HomeAssistant, bring: Bring) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: BringConfigEntry, bring: Bring
+    ) -> None:
         """Initialize the Bring data coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=90),
         )
@@ -62,20 +69,12 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
             raise UpdateFailed("Unable to connect and retrieve data from bring") from e
         except BringParseException as e:
             raise UpdateFailed("Unable to parse response from bring") from e
-        except BringAuthException:
-            # try to recover by refreshing access token, otherwise
-            # initiate reauth flow
-            try:
-                await self.bring.retrieve_new_access_token()
-            except (BringRequestException, BringParseException) as exc:
-                raise UpdateFailed("Refreshing authentication token failed") from exc
-            except BringAuthException as exc:
-                raise ConfigEntryAuthFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="setup_authentication_exception",
-                    translation_placeholders={CONF_EMAIL: self.bring.mail},
-                ) from exc
-            return self.data
+        except BringAuthException as e:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+                translation_placeholders={CONF_EMAIL: self.bring.mail},
+            ) from e
 
         if self.previous_lists - (
             current_lists := {lst.listUuid for lst in self.lists}

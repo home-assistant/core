@@ -8,16 +8,12 @@ from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 import hashlib
 import logging
 import random
-from typing import Any
+from typing import Any, Literal
 
-from aiohttp import ClientError, ClientTimeout
+from aiohttp import ClientError
 from hass_nabucasa import Cloud, CloudError
-from hass_nabucasa.cloud_api import (
-    async_files_delete_file,
-    async_files_download_details,
-    async_files_list,
-    async_files_upload_details,
-)
+from hass_nabucasa.api import CloudApiNonRetryableError
+from hass_nabucasa.cloud_api import async_files_delete_file, async_files_list
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -28,7 +24,7 @@ from .client import CloudClient
 from .const import DATA_CLOUD, DOMAIN, EVENT_CLOUD_EVENT
 
 _LOGGER = logging.getLogger(__name__)
-_STORAGE_BACKUP = "backup"
+_STORAGE_BACKUP: Literal["backup"] = "backup"
 _RETRY_LIMIT = 5
 _RETRY_SECONDS_MIN = 60
 _RETRY_SECONDS_MAX = 600
@@ -109,63 +105,14 @@ class CloudBackupAgent(BackupAgent):
             raise BackupAgentError("Backup not found")
 
         try:
-            details = await async_files_download_details(
-                self._cloud,
+            content = await self._cloud.files.download(
                 storage_type=_STORAGE_BACKUP,
                 filename=self._get_backup_filename(),
             )
-        except (ClientError, CloudError) as err:
-            raise BackupAgentError("Failed to get download details") from err
+        except CloudError as err:
+            raise BackupAgentError(f"Failed to download backup: {err}") from err
 
-        try:
-            resp = await self._cloud.websession.get(
-                details["url"],
-                timeout=ClientTimeout(connect=10.0, total=43200.0),  # 43200s == 12h
-            )
-
-            resp.raise_for_status()
-        except ClientError as err:
-            raise BackupAgentError("Failed to download backup") from err
-
-        return ChunkAsyncStreamIterator(resp.content)
-
-    async def _async_do_upload_backup(
-        self,
-        *,
-        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
-        filename: str,
-        base64md5hash: str,
-        metadata: dict[str, Any],
-        size: int,
-    ) -> None:
-        """Upload a backup."""
-        try:
-            details = await async_files_upload_details(
-                self._cloud,
-                storage_type=_STORAGE_BACKUP,
-                filename=filename,
-                metadata=metadata,
-                size=size,
-                base64md5hash=base64md5hash,
-            )
-        except (ClientError, CloudError) as err:
-            raise BackupAgentError("Failed to get upload details") from err
-
-        try:
-            upload_status = await self._cloud.websession.put(
-                details["url"],
-                data=await open_stream(),
-                headers=details["headers"] | {"content-length": str(size)},
-                timeout=ClientTimeout(connect=10.0, total=43200.0),  # 43200s == 12h
-            )
-            _LOGGER.log(
-                logging.DEBUG if upload_status.status < 400 else logging.WARNING,
-                "Backup upload status: %s",
-                upload_status.status,
-            )
-            upload_status.raise_for_status()
-        except (TimeoutError, ClientError) as err:
-            raise BackupAgentError("Failed to upload backup") from err
+        return ChunkAsyncStreamIterator(content)
 
     async def async_upload_backup(
         self,
@@ -190,7 +137,8 @@ class CloudBackupAgent(BackupAgent):
         tries = 1
         while tries <= _RETRY_LIMIT:
             try:
-                await self._async_do_upload_backup(
+                await self._cloud.files.upload(
+                    storage_type=_STORAGE_BACKUP,
                     open_stream=open_stream,
                     filename=filename,
                     base64md5hash=base64md5hash,
@@ -198,9 +146,19 @@ class CloudBackupAgent(BackupAgent):
                     size=size,
                 )
                 break
-            except BackupAgentError as err:
+            except CloudApiNonRetryableError as err:
+                if err.code == "NC-SH-FH-03":
+                    raise BackupAgentError(
+                        translation_domain=DOMAIN,
+                        translation_key="backup_size_too_large",
+                        translation_placeholders={
+                            "size": str(round(size / (1024**3), 2))
+                        },
+                    ) from err
+                raise BackupAgentError(f"Failed to upload backup {err}") from err
+            except CloudError as err:
                 if tries == _RETRY_LIMIT:
-                    raise
+                    raise BackupAgentError(f"Failed to upload backup {err}") from err
                 tries += 1
                 retry_timer = random.randint(_RETRY_SECONDS_MIN, _RETRY_SECONDS_MAX)
                 _LOGGER.info(
