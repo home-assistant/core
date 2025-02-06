@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 import uuid
 
-from bring_api.types import (
+from bring_api import (
     BringAuthResponse,
     BringItemsResponse,
     BringListResponse,

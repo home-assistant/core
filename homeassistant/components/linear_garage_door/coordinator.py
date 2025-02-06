@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, cast
 
 from linear_garage_door import Linear
 from linear_garage_door.errors import InvalidLoginError
@@ -56,7 +56,7 @@ class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, LinearDevice]]):
             for device in self._devices:
                 device_id = str(device["id"])
                 state = await linear.get_device_state(device_id)
-                data[device_id] = LinearDevice(device["name"], state)
+                data[device_id] = LinearDevice(cast(str, device["name"]), state)
             return data
 
         return await self.execute(update_data)

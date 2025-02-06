@@ -68,6 +68,7 @@ def get_device_class(node: HomeeNode) -> CoverDeviceClass | None:
     """Determine the device class a homee node based on the node profile."""
     COVER_DEVICE_PROFILES = {
         NodeProfile.GARAGE_DOOR_OPERATOR: CoverDeviceClass.GARAGE,
+        NodeProfile.ENTRANCE_GATE_OPERATOR: CoverDeviceClass.GATE,
         NodeProfile.SHUTTER_POSITION_SWITCH: CoverDeviceClass.SHUTTER,
     }
 
@@ -93,6 +94,7 @@ def is_cover_node(node: HomeeNode) -> bool:
     return node.profile in [
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH,
         NodeProfile.ELECTRIC_MOTOR_METERING_SWITCH_WITHOUT_SLAT_POSITION,
+        NodeProfile.ENTRANCE_GATE_OPERATOR,
         NodeProfile.GARAGE_DOOR_OPERATOR,
         NodeProfile.SHUTTER_POSITION_SWITCH,
     ]

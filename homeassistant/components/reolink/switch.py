@@ -206,11 +206,9 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.pir_reduce_alarm(ch) is True,
         method=lambda api, ch, value: api.set_pir(ch, reduce_alarm=value),
     ),
-)
-
-AVAILABILITY_SWITCH_ENTITIES = (
     ReolinkSwitchEntityDescription(
         key="privacy_mode",
+        always_available=True,
         translation_key="privacy_mode",
         entity_category=EntityCategory.CONFIG,
         supported=lambda api, ch: api.supported(ch, "privacy_mode"),
@@ -355,12 +353,6 @@ async def async_setup_entry(
         for entity_description in CHIME_SWITCH_ENTITIES
         for chime in reolink_data.host.api.chime_list
     )
-    entities.extend(
-        ReolinkAvailabilitySwitchEntity(reolink_data, channel, entity_description)
-        for entity_description in AVAILABILITY_SWITCH_ENTITIES
-        for channel in reolink_data.host.api.channels
-        if entity_description.supported(reolink_data.host.api, channel)
-    )
 
     # Can be removed in HA 2025.4.0
     depricated_dict = {}
@@ -424,15 +416,6 @@ class ReolinkSwitchEntity(ReolinkChannelCoordinatorEntity, SwitchEntity):
         """Turn the entity off."""
         await self.entity_description.method(self._host.api, self._channel, False)
         self.async_write_ha_state()
-
-
-class ReolinkAvailabilitySwitchEntity(ReolinkSwitchEntity):
-    """Switch entity class for Reolink IP cameras which will be available even if API is unavailable."""
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self._host.api.camera_online(self._channel)
 
 
 class ReolinkNVRSwitchEntity(ReolinkHostCoordinatorEntity, SwitchEntity):

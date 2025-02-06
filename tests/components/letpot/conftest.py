@@ -1,6 +1,6 @@
 """Common fixtures for the LetPot tests."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, patch
 
 from letpot.models import LetPotDevice
@@ -67,8 +67,23 @@ def mock_device_client() -> Generator[AsyncMock]:
         device_client = mock_device_client.return_value
         device_client.device_model_code = "LPH21"
         device_client.device_model_name = "LetPot Air"
+
+        subscribe_callbacks: list[Callable] = []
+
+        def subscribe_side_effect(callback: Callable) -> None:
+            subscribe_callbacks.append(callback)
+
+        def status_side_effect() -> None:
+            # Deliver a status update to any subscribers, like the real client
+            for callback in subscribe_callbacks:
+                callback(STATUS)
+
+        device_client.get_current_status.side_effect = status_side_effect
         device_client.get_current_status.return_value = STATUS
         device_client.last_status.return_value = STATUS
+        device_client.request_status_update.side_effect = status_side_effect
+        device_client.subscribe.side_effect = subscribe_side_effect
+
         yield device_client
 
 

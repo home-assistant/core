@@ -55,7 +55,6 @@ BINARY_SENSOR_TYPES: tuple[RingBinarySensorEntityDescription, ...] = (
     ),
     RingBinarySensorEntityDescription(
         key=KIND_MOTION,
-        translation_key=KIND_MOTION,
         device_class=BinarySensorDeviceClass.MOTION,
         capability=RingCapability.MOTION_DETECTION,
         deprecated_info=DeprecatedInfo(
