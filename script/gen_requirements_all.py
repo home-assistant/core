@@ -50,6 +50,12 @@ INCLUDED_REQUIREMENTS_WHEELS = {
     "pyuserinput",
 }
 
+EXCLUDED_REQUIREMENTS_WHEELS = {
+    # Exclude 'electrickiwi-api' temporarily, until <3.13 pin is removed upstream.
+    # https://github.com/mikey0000/EK-API/pull/1
+    "electrickiwi-api",
+}
+
 
 # Requirements to exclude or include when running github actions.
 # Requirements listed in "exclude" will be commented-out in
@@ -64,7 +70,7 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
         "markers": {},
     },
     "wheels_aarch64": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
@@ -73,22 +79,23 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     # "flimsy" on 386). The following packages depend on pandas,
     # so we comment them out.
     "wheels_armhf": {
-        "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS
+        | {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
     "wheels_armv7": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
     "wheels_amd64": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
     "wheels_i386": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
@@ -139,16 +146,16 @@ uuid==1000000000.0.0
 # these requirements are quite loose. As the entire stack has some outstanding issues, and
 # even newer versions seem to introduce new issues, it's useful for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.7.0
+anyio==4.8.0
 h11==0.14.0
-httpcore==1.0.5
+httpcore==1.0.7
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.2.1
+numpy==2.2.2
 pandas~=2.2.3
 
 # Constrain multidict to avoid typing issues
@@ -159,7 +166,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.10.4
+pydantic==2.10.6
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -198,6 +205,10 @@ pysnmplib==1000000000.0.0
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
 get-mac==1000000000.0.0
+
+# Poetry is a build dependency. Installing it as a runtime dependency almost
+# always indicates an issue with library requirements.
+poetry==1000000000.0.0
 
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.

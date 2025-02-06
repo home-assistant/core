@@ -16,7 +16,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant, ServiceCall, callback
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, mock_component
 

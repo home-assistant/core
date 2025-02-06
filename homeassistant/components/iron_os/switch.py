@@ -39,7 +39,6 @@ class IronOSSwitch(StrEnum):
     INVERT_BUTTONS = "invert_buttons"
     DISPLAY_INVERT = "display_invert"
     CALIBRATE_CJC = "calibrate_cjc"
-    USB_PD_MODE = "usb_pd_mode"
 
 
 SWITCH_DESCRIPTIONS: tuple[IronOSSwitchEntityDescription, ...] = (
@@ -92,14 +91,6 @@ SWITCH_DESCRIPTIONS: tuple[IronOSSwitchEntityDescription, ...] = (
         translation_key=IronOSSwitch.CALIBRATE_CJC,
         characteristic=CharSetting.CALIBRATE_CJC,
         is_on_fn=lambda x: x.get("calibrate_cjc"),
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.CONFIG,
-    ),
-    IronOSSwitchEntityDescription(
-        key=IronOSSwitch.USB_PD_MODE,
-        translation_key=IronOSSwitch.USB_PD_MODE,
-        characteristic=CharSetting.USB_PD_MODE,
-        is_on_fn=lambda x: x.get("usb_pd_mode"),
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),

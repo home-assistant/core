@@ -166,6 +166,13 @@
           "seconds_5": "5 second",
           "loop": "Loop"
         }
+      },
+      "usb_pd_mode": {
+        "name": "Power Delivery 3.1 EPR",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
       }
     },
     "sensor": {
@@ -244,9 +251,6 @@
       },
       "calibrate_cjc": {
         "name": "Calibrate CJC"
-      },
-      "usb_pd_mode": {
-        "name": "Power Delivery 3.1 EPR"
       }
     }
   },

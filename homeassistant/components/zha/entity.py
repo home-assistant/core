@@ -8,7 +8,7 @@ from functools import partial
 import logging
 from typing import Any
 
-from propcache import cached_property
+from propcache.api import cached_property
 from zha.mixins import LogMixin
 
 from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
@@ -87,7 +87,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
             manufacturer=zha_device_info[ATTR_MANUFACTURER],
             model=zha_device_info[ATTR_MODEL],
             name=zha_device_info[ATTR_NAME],
-            via_device=(DOMAIN, zha_gateway.state.node_info.ieee),
+            via_device=(DOMAIN, str(zha_gateway.state.node_info.ieee)),
         )
 
     @callback

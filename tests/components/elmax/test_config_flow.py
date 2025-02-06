@@ -5,7 +5,6 @@ from unittest.mock import patch
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.elmax.const import (
     CONF_ELMAX_MODE,
     CONF_ELMAX_MODE_CLOUD,
@@ -23,6 +22,7 @@ from homeassistant.components.elmax.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import (
     MOCK_DIRECT_CERT,
@@ -40,7 +40,7 @@ from . import (
 
 from tests.common import MockConfigEntry
 
-MOCK_ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=MOCK_DIRECT_HOST,
     ip_addresses=[MOCK_DIRECT_HOST],
     hostname="VideoBox.local",
@@ -54,7 +54,7 @@ MOCK_ZEROCONF_DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
     },
     type="_elmax-ssl._tcp",
 )
-MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = zeroconf.ZeroconfServiceInfo(
+MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = ZeroconfServiceInfo(
     ip_address=MOCK_DIRECT_HOST_CHANGED,
     ip_addresses=[MOCK_DIRECT_HOST_CHANGED],
     hostname="VideoBox.local",
@@ -68,7 +68,7 @@ MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = zeroconf.ZeroconfServiceInfo(
     },
     type="_elmax-ssl._tcp",
 )
-MOCK_ZEROCONF_DISCOVERY_INFO_NOT_SUPPORTED = zeroconf.ZeroconfServiceInfo(
+MOCK_ZEROCONF_DISCOVERY_INFO_NOT_SUPPORTED = ZeroconfServiceInfo(
     ip_address=MOCK_DIRECT_HOST,
     ip_addresses=[MOCK_DIRECT_HOST],
     hostname="VideoBox.local",

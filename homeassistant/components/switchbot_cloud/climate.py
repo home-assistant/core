@@ -4,7 +4,7 @@ from typing import Any
 
 from switchbot_api import AirConditionerCommands
 
-import homeassistant.components.climate as FanState
+from homeassistant.components import climate as FanState
 from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityFeature,

@@ -155,8 +155,7 @@ class AirthingsHeaterEnergySensor(
         self._id = airthings_device.device_id
         self._attr_device_info = DeviceInfo(
             configuration_url=(
-                "https://dashboard.airthings.com/devices/"
-                f"{airthings_device.device_id}"
+                f"https://dashboard.airthings.com/devices/{airthings_device.device_id}"
             ),
             identifiers={(DOMAIN, airthings_device.device_id)},
             name=airthings_device.name,

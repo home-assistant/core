@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Objects import uint
@@ -55,6 +56,8 @@ class MatterBinarySensor(MatterEntity, BinarySensorEntity):
             value = None
         elif value_convert := self.entity_description.measurement_to_ha:
             value = value_convert(value)
+        if TYPE_CHECKING:
+            value = cast(bool | None, value)
         self._attr_is_on = value
 
 

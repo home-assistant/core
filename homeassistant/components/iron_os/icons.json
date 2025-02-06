@@ -102,6 +102,9 @@
       },
       "logo_duration": {
         "default": "mdi:clock-digital"
+      },
+      "usb_pd_mode": {
+        "default": "mdi:meter-electric-outline"
       }
     },
     "sensor": {
@@ -179,9 +182,6 @@
       },
       "invert_buttons": {
         "default": "mdi:plus-minus-variant"
-      },
-      "usb_pd_mode": {
-        "default": "mdi:meter-electric-outline"
       },
       "idle_screen_details": {
         "default": "mdi:card-bulleted-outline",

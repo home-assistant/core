@@ -7,7 +7,7 @@
   "documentation": "https://www.home-assistant.io/integrations/synology_dsm",
   "iot_class": "local_polling",
   "loggers": ["synology_dsm"],
-  "requirements": ["py-synologydsm-api==2.5.3"],
+  "requirements": ["py-synologydsm-api==2.6.0"],
   "ssdp": [
     {
       "manufacturer": "Synology",
