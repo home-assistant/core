@@ -100,7 +100,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         """Set new operation mode."""
         self._attr_current_operation = operation_mode
         # Boost 1h (3600s)
-        boostInfo: type[
+        boost_info: type[
             clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct
         ] = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
             duration=3600
@@ -123,7 +123,7 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         # Trigger Boost command
         if operation_mode == STATE_HIGH_DEMAND:
             await self.send_device_command(
-                clusters.WaterHeaterManagement.Commands.Boost(boostInfo=boostInfo)
+                clusters.WaterHeaterManagement.Commands.Boost(boostInfo=boost_info)
             )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
