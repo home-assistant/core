@@ -1990,7 +1990,7 @@ async def test_reader_writer_restore(
     assert response["result"] is None
 
 
-@pytest.mark.usefixtures("hassio_client", "setup_integration")
+@pytest.mark.usefixtures("hassio_client", "setup_backup_integration")
 async def test_reader_writer_restore_report_progress(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
