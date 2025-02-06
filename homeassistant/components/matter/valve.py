@@ -40,17 +40,7 @@ class MatterValve(MatterEntity, ValveEntity):
 
     _feature_map: int | None = None
     entity_description: ValveEntityDescription
-
-    async def send_device_command(
-        self,
-        command: clusters.ClusterCommand,
-    ) -> None:
-        """Send a command to the device."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-        )
+    _platform_translation_key = "valve"
 
     async def async_open_valve(self) -> None:
         """Open the valve."""
@@ -139,7 +129,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=ValveEntityDescription(
             key="MatterValve",
             device_class=ValveDeviceClass.WATER,
-            translation_key="valve",
+            name=None,
         ),
         entity_class=MatterValve,
         required_attributes=(

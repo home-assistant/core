@@ -1,0 +1,67 @@
+# serializer version: 1
+# name: test_async_get_config_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'host': '192.168.0.1',
+        'jid': '1111.1111111.11111111@products.bang-olufsen.com',
+        'model': 'Beosound Balance',
+        'name': 'Beosound Balance-11111111',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'bang_olufsen',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'Beosound Balance-11111111',
+      'unique_id': '11111111',
+      'version': 1,
+    }),
+    'media_player': dict({
+      'attributes': dict({
+        'beolink': dict({
+          'listeners': dict({
+            'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+            'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          }),
+          'peers': dict({
+            'Lego room Balance': '1111.1111111.33333333@products.bang-olufsen.com',
+            'Lounge room Balance': '1111.1111111.44444444@products.bang-olufsen.com',
+          }),
+          'self': dict({
+            'Living room Balance': '1111.1111111.11111111@products.bang-olufsen.com',
+          }),
+        }),
+        'device_class': 'speaker',
+        'entity_picture_local': None,
+        'friendly_name': 'Living room Balance',
+        'group_members': list([
+          'media_player.beosound_balance_11111111',
+          'listener_not_in_hass-1111.1111111.33333333@products.bang-olufsen.com',
+          'listener_not_in_hass-1111.1111111.44444444@products.bang-olufsen.com',
+        ]),
+        'media_content_type': 'music',
+        'sound_mode': 'Test Listening Mode (123)',
+        'sound_mode_list': list([
+          'Test Listening Mode (123)',
+          'Test Listening Mode (234)',
+          'Test Listening Mode 2 (345)',
+        ]),
+        'source_list': list([
+          'Tidal',
+          'Line-In',
+          'HDMI A',
+        ]),
+        'supported_features': 2095933,
+      }),
+      'entity_id': 'media_player.beosound_balance_11111111',
+      'state': 'playing',
+    }),
+    'websocket_connected': False,
+  })
+# ---

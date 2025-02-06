@@ -7,7 +7,6 @@ from typing import Final
 from canary.model import Device, Location, SensorType
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -18,8 +17,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DATA_COORDINATOR, DOMAIN, MANUFACTURER
-from .coordinator import CanaryDataUpdateCoordinator
+from .const import DOMAIN, MANUFACTURER
+from .coordinator import CanaryConfigEntry, CanaryDataUpdateCoordinator
 
 type SensorTypeItem = tuple[
     str, str | None, str | None, SensorDeviceClass | None, list[str]
@@ -64,13 +63,11 @@ STATE_AIR_QUALITY_VERY_ABNORMAL: Final = "very_abnormal"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: CanaryConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Canary sensors based on a config entry."""
-    coordinator: CanaryDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        DATA_COORDINATOR
-    ]
+    coordinator = entry.runtime_data
     sensors: list[CanarySensor] = []
 
     for location in coordinator.data["locations"].values():

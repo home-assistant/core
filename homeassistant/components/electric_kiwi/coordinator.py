@@ -1,7 +1,10 @@
 """Electric Kiwi coordinators."""
 
+from __future__ import annotations
+
 import asyncio
 from collections import OrderedDict
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -9,6 +12,7 @@ from electrickiwi_api import ElectricKiwiApi
 from electrickiwi_api.exceptions import ApiException, AuthException
 from electrickiwi_api.model import AccountBalance, Hop, HopIntervals
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -19,14 +23,31 @@ ACCOUNT_SCAN_INTERVAL = timedelta(hours=6)
 HOP_SCAN_INTERVAL = timedelta(minutes=20)
 
 
+@dataclass
+class ElectricKiwiRuntimeData:
+    """ElectricKiwi runtime data."""
+
+    hop: ElectricKiwiHOPDataCoordinator
+    account: ElectricKiwiAccountDataCoordinator
+
+
+type ElectricKiwiConfigEntry = ConfigEntry[ElectricKiwiRuntimeData]
+
+
 class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator[AccountBalance]):
     """ElectricKiwi Account Data object."""
 
-    def __init__(self, hass: HomeAssistant, ek_api: ElectricKiwiApi) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ElectricKiwiConfigEntry,
+        ek_api: ElectricKiwiApi,
+    ) -> None:
         """Initialize ElectricKiwiAccountDataCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name="Electric Kiwi Account Data",
             update_interval=ACCOUNT_SCAN_INTERVAL,
         )
@@ -48,11 +69,17 @@ class ElectricKiwiAccountDataCoordinator(DataUpdateCoordinator[AccountBalance]):
 class ElectricKiwiHOPDataCoordinator(DataUpdateCoordinator[Hop]):
     """ElectricKiwi HOP Data object."""
 
-    def __init__(self, hass: HomeAssistant, ek_api: ElectricKiwiApi) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        entry: ElectricKiwiConfigEntry,
+        ek_api: ElectricKiwiApi,
+    ) -> None:
         """Initialize ElectricKiwiAccountDataCoordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             # Name of the data. For logging purposes.
             name="Electric Kiwi HOP Data",
             # Polling interval. Will only be polled if there are subscribers.

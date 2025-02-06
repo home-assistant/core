@@ -24,12 +24,13 @@ import logging
 from rtsp_to_webrtc.client import get_adaptive_client
 from rtsp_to_webrtc.exceptions import ClientError, ResponseError
 from rtsp_to_webrtc.interface import WebRTCClientInterface
+from webrtc_models import RTCIceServer
 
 from homeassistant.components import camera
-from homeassistant.components.camera.webrtc import RTCIceServer, register_ice_server
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,10 +41,24 @@ DATA_UNSUB = "unsub"
 TIMEOUT = 10
 CONF_STUN_SERVER = "stun_server"
 
+_DEPRECATED = "deprecated"
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up RTSPtoWebRTC from a config entry."""
     hass.data.setdefault(DOMAIN, {})
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        _DEPRECATED,
+        breaks_in_ha_version="2025.6.0",
+        is_fixable=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=_DEPRECATED,
+        translation_placeholders={
+            "go2rtc": "[go2rtc](https://www.home-assistant.io/integrations/go2rtc/)",
+        },
+    )
 
     client: WebRTCClientInterface
     try:
@@ -59,10 +74,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data[DOMAIN][CONF_STUN_SERVER] = entry.options.get(CONF_STUN_SERVER)
     if server := entry.options.get(CONF_STUN_SERVER):
 
-        async def get_server() -> RTCIceServer:
-            return RTCIceServer(urls=[server])
+        @callback
+        def get_servers() -> list[RTCIceServer]:
+            return [RTCIceServer(urls=[server])]
 
-        entry.async_on_unload(register_ice_server(hass, get_server))
+        entry.async_on_unload(camera.async_register_ice_servers(hass, get_servers))
 
     async def async_offer_for_stream_source(
         stream_source: str,
@@ -97,6 +113,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if DOMAIN in hass.data:
         del hass.data[DOMAIN]
+    ir.async_delete_issue(hass, DOMAIN, _DEPRECATED)
     return True
 
 

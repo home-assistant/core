@@ -37,6 +37,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/smlight/icon.png',
       'friendly_name': 'Mock Title Core firmware',
       'in_progress': False,
@@ -47,6 +48,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 21>,
       'title': None,
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.mock_title_core_firmware',
@@ -94,6 +96,7 @@
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
+      'display_precision': 0,
       'entity_picture': 'https://brands.home-assistant.io/_/smlight/icon.png',
       'friendly_name': 'Mock Title Zigbee firmware',
       'in_progress': False,
@@ -104,6 +107,7 @@
       'skipped_version': None,
       'supported_features': <UpdateEntityFeature: 21>,
       'title': None,
+      'update_percentage': None,
     }),
     'context': <ANY>,
     'entity_id': 'update.mock_title_zigbee_firmware',

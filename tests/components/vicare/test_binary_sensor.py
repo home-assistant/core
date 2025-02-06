@@ -43,7 +43,7 @@ async def test_all_entities(
     """Test all entities."""
     fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with (
-        patch(f"{MODULE}.vicare_login", return_value=MockPyViCare(fixtures)),
+        patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.BINARY_SENSOR]),
     ):
         await setup_integration(hass, mock_config_entry)

@@ -19,6 +19,13 @@
               "auto": "mdi:arrow-oscillating",
               "off": "mdi:arrow-oscillating-off"
             }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "rangefull": "mdi:pan-horizontal",
+              "auto": "mdi:compare-horizontal",
+              "off": "mdi:arrow-oscillating-off"
+            }
           }
         }
       }

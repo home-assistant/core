@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -21,6 +20,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import OpowerConfigEntry
 from .const import DOMAIN
 from .coordinator import OpowerCoordinator
 
@@ -183,11 +183,13 @@ GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: OpowerConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Opower sensor."""
 
-    coordinator: OpowerCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities: list[OpowerSensor] = []
     forecasts = coordinator.data.values()
     for forecast in forecasts:

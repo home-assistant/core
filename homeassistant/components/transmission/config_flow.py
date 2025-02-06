@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PATH,
     CONF_PORT,
@@ -62,7 +63,7 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> TransmissionOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return TransmissionOptionsFlowHandler(config_entry)
+        return TransmissionOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -120,7 +121,10 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_update_reload_and_abort(reauth_entry, data=user_input)
 
         return self.async_show_form(
-            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            description_placeholders={
+                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
+                CONF_NAME: reauth_entry.title,
+            },
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
@@ -133,10 +137,6 @@ class TransmissionFlowHandler(ConfigFlow, domain=DOMAIN):
 
 class TransmissionOptionsFlowHandler(OptionsFlow):
     """Handle Transmission client options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Transmission options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

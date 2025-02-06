@@ -29,16 +29,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ACCESS_TOKEN,
@@ -176,7 +175,7 @@ class EvoSession:
         ):
             app_storage[ACCESS_TOKEN_EXPIRES] = dt_aware_to_naive(expires)
 
-        user_data: dict[str, str] = app_storage.pop(USER_DATA, {})
+        user_data: dict[str, str] = app_storage.pop(USER_DATA, {}) or {}
 
         self.session_id = user_data.get(SZ_SESSION_ID)
         self._tokens = app_storage
@@ -223,7 +222,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             config[DOMAIN][CONF_PASSWORD],
         )
 
-    except evo.AuthenticationFailed as err:
+    except (evo.AuthenticationFailed, evo.RequestFailed) as err:
         handle_evo_exception(err)
         return False
 
@@ -240,6 +239,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name=f"{DOMAIN}_coordinator",
         update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
         update_method=broker.async_update,

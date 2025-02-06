@@ -15,7 +15,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
 from .const import CONF_ALLOW_NAMELESS_UUIDS, DOMAIN
@@ -44,15 +44,11 @@ class IBeaconConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> OptionsFlow:
         """Get the options flow for this handler."""
-        return IBeaconOptionsFlow(config_entry)
+        return IBeaconOptionsFlow()
 
 
 class IBeaconOptionsFlow(OptionsFlow):
     """Handle options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""

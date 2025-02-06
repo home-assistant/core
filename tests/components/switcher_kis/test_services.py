@@ -16,6 +16,7 @@ from homeassistant.components.switcher_kis.const import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.config_validation import time_period_str
 from homeassistant.util import slugify
 
@@ -48,7 +49,7 @@ async def test_turn_on_with_timer_service(
     assert state.state == STATE_OFF
 
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.control_device"
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device"
     ) as mock_control_device:
         await hass.services.async_call(
             DOMAIN,
@@ -78,7 +79,7 @@ async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) 
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.set_auto_shutdown"
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_auto_shutdown"
     ) as mock_set_auto_shutdown:
         await hass.services.async_call(
             DOMAIN,
@@ -95,7 +96,7 @@ async def test_set_auto_off_service(hass: HomeAssistant, mock_bridge, mock_api) 
 
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
 async def test_set_auto_off_service_fail(
-    hass: HomeAssistant, mock_bridge, mock_api, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant, mock_bridge, mock_api
 ) -> None:
     """Test set auto off service failed."""
     await init_integration(hass)
@@ -105,23 +106,20 @@ async def test_set_auto_off_service_fail(
     entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
 
     with patch(
-        "homeassistant.components.switcher_kis.switch.SwitcherType1Api.set_auto_shutdown",
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.set_auto_shutdown",
         return_value=None,
     ) as mock_set_auto_shutdown:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_SET_AUTO_OFF_NAME,
-            {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
-            blocking=True,
-        )
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                DOMAIN,
+                SERVICE_SET_AUTO_OFF_NAME,
+                {ATTR_ENTITY_ID: entity_id, CONF_AUTO_OFF: DUMMY_AUTO_OFF_SET},
+                blocking=True,
+            )
 
         assert mock_api.call_count == 2
         mock_set_auto_shutdown.assert_called_once_with(
             time_period_str(DUMMY_AUTO_OFF_SET)
-        )
-        assert (
-            f"Call api for {device.name} failed, api: 'set_auto_shutdown'"
-            in caplog.text
         )
         state = hass.states.get(entity_id)
         assert state.state == STATE_UNAVAILABLE

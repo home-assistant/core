@@ -192,10 +192,6 @@ async def test_two_factor_request_success(
     assert len(mock_two_factor_request.mock_calls) == 1
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.subaru.config.abort.two_factor_request_failed"],
-)
 async def test_two_factor_request_fail(
     hass: HomeAssistant, two_factor_start_form
 ) -> None:

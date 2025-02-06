@@ -19,10 +19,16 @@ MOCK_ENVIRON = {"SUPERVISOR": "127.0.0.1", "SUPERVISOR_TOKEN": "abcdefgh"}
 
 
 @pytest.fixture(autouse=True)
-def mock_all(aioclient_mock: AiohttpClientMocker, addon_installed, store_info) -> None:
+def mock_all(
+    aioclient_mock: AiohttpClientMocker,
+    addon_installed: AsyncMock,
+    store_info: AsyncMock,
+    addon_changelog: AsyncMock,
+    addon_stats: AsyncMock,
+    resolution_info: AsyncMock,
+) -> None:
     """Mock all setup requests."""
     aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.get("http://127.0.0.1/supervisor/ping", json={"result": "ok"})
     aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
     aioclient_mock.get(
         "http://127.0.0.1/info",
@@ -101,22 +107,6 @@ def mock_all(aioclient_mock: AiohttpClientMocker, addon_installed, store_info) -
         },
     )
     aioclient_mock.get(
-        "http://127.0.0.1/addons/test/stats",
-        json={
-            "result": "ok",
-            "data": {
-                "cpu_percent": 0.99,
-                "memory_usage": 182611968,
-                "memory_limit": 3977146368,
-                "memory_percent": 4.59,
-                "network_rx": 362570232,
-                "network_tx": 82374138,
-                "blk_read": 46010945536,
-                "blk_write": 15051526144,
-            },
-        },
-    )
-    aioclient_mock.get(
         "http://127.0.0.1/core/stats",
         json={
             "result": "ok",
@@ -148,24 +138,8 @@ def mock_all(aioclient_mock: AiohttpClientMocker, addon_installed, store_info) -
             },
         },
     )
-    aioclient_mock.get("http://127.0.0.1/addons/test/changelog", text="")
-    aioclient_mock.get("http://127.0.0.1/addons/test2/changelog", text="")
     aioclient_mock.get(
         "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.post("http://127.0.0.1/refresh_updates", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/resolution/info",
-        json={
-            "result": "ok",
-            "data": {
-                "unsupported": [],
-                "unhealthy": [],
-                "suggestions": [],
-                "issues": [],
-                "checks": [],
-            },
-        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/network/info",

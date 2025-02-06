@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -109,7 +109,11 @@ def ids_from_device_description(
     """Return expected unique_id and entity_id for a give platform/device/description combination."""
 
     entity_name = normalize_name(device.display_name)
-    description_entity_name = normalize_name(str(description.name))
+
+    if description.name and isinstance(description.name, str):
+        description_entity_name = normalize_name(description.name)
+    else:
+        description_entity_name = normalize_name(description.key)
 
     unique_id = f"{device.mac}_{description.key}"
     entity_id = f"{platform.value}.{entity_name}_{description_entity_name}"

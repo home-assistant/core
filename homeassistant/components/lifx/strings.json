@@ -209,7 +209,7 @@
         },
         "palette": {
           "name": "Palette",
-          "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-900) values to use for this effect. Overrides the theme attribute."
+          "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-9000) values to use for this effect. Overrides the theme attribute."
         },
         "theme": {
           "name": "[%key:component::lifx::entity::select::theme::name%]",
@@ -254,6 +254,28 @@
     "effect_stop": {
       "name": "Stop effect",
       "description": "Stops a running effect."
+    },
+    "paint_theme": {
+      "name": "Paint Theme",
+      "description": "Paint either a provided theme or custom palette across one or more LIFX lights.",
+      "fields": {
+        "palette": {
+          "name": "Palette",
+          "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-9000) values to paint across the target lights. Overrides the theme attribute."
+        },
+        "theme": {
+          "name": "[%key:component::lifx::entity::select::theme::name%]",
+          "description": "Predefined color theme to paint. Overridden by the palette attribute."
+        },
+        "transition": {
+          "name": "Transition",
+          "description": "Duration in seconds to paint the theme."
+        },
+        "power_on": {
+          "name": "Power on",
+          "description": "Powered off lights will be turned on before painting the theme."
+        }
+      }
     }
   }
 }

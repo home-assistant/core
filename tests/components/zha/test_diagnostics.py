@@ -69,10 +69,11 @@ async def test_diagnostics_for_config_entry(
 
     scan = {c: c for c in range(11, 26 + 1)}
 
-    with patch.object(gateway.application_controller, "energy_scan", return_value=scan):
-        diagnostics_data = await get_diagnostics_for_config_entry(
-            hass, hass_client, config_entry
-        )
+    gateway.application_controller.energy_scan.side_effect = None
+    gateway.application_controller.energy_scan.return_value = scan
+    diagnostics_data = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    )
 
     assert diagnostics_data == snapshot(
         exclude=props("created_at", "modified_at", "entry_id", "versions")

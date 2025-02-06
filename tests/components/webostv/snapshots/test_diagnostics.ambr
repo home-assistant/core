@@ -1,0 +1,66 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'client': dict({
+      'apps': dict({
+        'com.webos.app.livetv': dict({
+          'icon': '**REDACTED**',
+          'id': 'com.webos.app.livetv',
+          'largeIcon': '**REDACTED**',
+          'title': 'Live TV',
+        }),
+      }),
+      'current_app_id': 'com.webos.app.livetv',
+      'current_channel': dict({
+        'channelId': 'ch1id',
+        'channelName': 'Channel 1',
+        'channelNumber': '1',
+      }),
+      'hello_info': dict({
+        'deviceUUID': '**REDACTED**',
+      }),
+      'inputs': dict({
+        'in1': dict({
+          'appId': 'app0',
+          'id': 'in1',
+          'label': 'Input01',
+        }),
+        'in2': dict({
+          'appId': 'app1',
+          'id': 'in2',
+          'label': 'Input02',
+        }),
+      }),
+      'is_connected': True,
+      'is_on': True,
+      'is_registered': True,
+      'software_info': dict({
+        'major_ver': 'major',
+        'minor_ver': 'minor',
+      }),
+      'sound_output': 'speaker',
+      'system_info': dict({
+        'modelName': 'MODEL',
+      }),
+    }),
+    'entry': dict({
+      'data': dict({
+        'client_secret': '**REDACTED**',
+        'host': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'webostv',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'title': 'LG webOS TV MODEL',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---

@@ -119,6 +119,9 @@
       }
     },
     "number": {
+      "alarm_duration": {
+        "name": "Alarm duration"
+      },
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },

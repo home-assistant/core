@@ -538,7 +538,7 @@ async def test_sensor_no_lower_upper(
     await async_setup_component(hass, Platform.BINARY_SENSOR, config)
     await hass.async_block_till_done()
 
-    assert "Lower or Upper thresholds not provided" in caplog.text
+    assert "Lower or Upper thresholds are not provided" in caplog.text
 
 
 async def test_device_id(

@@ -49,7 +49,7 @@ class SentryConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> SentryOptionsFlow:
         """Get the options flow for this handler."""
-        return SentryOptionsFlow(config_entry)
+        return SentryOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -77,10 +77,6 @@ class SentryConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class SentryOptionsFlow(OptionsFlow):
     """Handle Sentry options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize Sentry options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

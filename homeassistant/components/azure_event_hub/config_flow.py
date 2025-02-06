@@ -102,8 +102,6 @@ class AEHConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial user step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         if user_input is None:
             return self.async_show_form(step_id=STEP_USER, data_schema=BASE_SCHEMA)
 
@@ -124,7 +122,9 @@ class AEHConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id=STEP_CONN_STRING,
                 data_schema=CONN_STRING_SCHEMA,
                 errors=errors,
-                description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
+                description_placeholders={
+                    "event_hub_instance_name": self._data[CONF_EVENT_HUB_INSTANCE_NAME]
+                },
                 last_step=True,
             )
 
@@ -144,7 +144,9 @@ class AEHConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id=STEP_SAS,
                 data_schema=SAS_SCHEMA,
                 errors=errors,
-                description_placeholders=self._data[CONF_EVENT_HUB_INSTANCE_NAME],
+                description_placeholders={
+                    "event_hub_instance_name": self._data[CONF_EVENT_HUB_INSTANCE_NAME]
+                },
                 last_step=True,
             )
 
@@ -156,8 +158,6 @@ class AEHConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import config from configuration.yaml."""
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
         if CONF_SEND_INTERVAL in import_data:
             self._options[CONF_SEND_INTERVAL] = import_data.pop(CONF_SEND_INTERVAL)
         if CONF_MAX_DELAY in import_data:

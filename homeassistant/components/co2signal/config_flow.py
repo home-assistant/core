@@ -20,8 +20,8 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -168,7 +168,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
                 return self.async_create_entry(
-                    title=get_extra_name(data) or "CO2 Signal",
+                    title=get_extra_name(data) or "Electricity Maps",
                     data=data,
                 )
 

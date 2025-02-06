@@ -13,7 +13,6 @@ from intellifire4py.local_api import IntelliFireAPILocal
 from intellifire4py.model import IntelliFireCommonFireplaceData
 import voluptuous as vol
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
@@ -22,6 +21,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_USERNAME,
 )
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import (
     API_MODE_LOCAL,
@@ -145,13 +145,13 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         errors: dict[str, str] = {}
         LOGGER.debug(
-            f"STEP: pick_cloud_device: {user_input} - DHCP_MODE[{self._dhcp_mode}"
+            "STEP: pick_cloud_device: %s - DHCP_MODE[%s]", user_input, self._dhcp_mode
         )
 
         if self._dhcp_mode or user_input is not None:
             if self._dhcp_mode:
                 serial = self._dhcp_discovered_serial
-                LOGGER.debug(f"DHCP Mode detected for serial [{serial}]")
+                LOGGER.debug("DHCP Mode detected for serial [%s]", serial)
             if user_input is not None:
                 serial = user_input[CONF_SERIAL]
 

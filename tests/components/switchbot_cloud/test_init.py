@@ -50,6 +50,18 @@ async def test_setup_entry_success(
             remoteType="DIY Plug",
             hubDeviceId="test-hub-id",
         ),
+        Remote(
+            deviceId="meter-pro-1",
+            deviceName="meter-pro-name-1",
+            deviceType="MeterPro(CO2)",
+            hubDeviceId="test-hub-id",
+        ),
+        Remote(
+            deviceId="hub2-1",
+            deviceName="hub2-name-1",
+            deviceType="Hub 2",
+            hubDeviceId="test-hub-id",
+        ),
     ]
     mock_get_status.return_value = {"power": PowerState.ON.value}
     entry = configure_integration(hass)
@@ -104,7 +116,7 @@ async def test_setup_entry_fails_when_refreshing(
     mock_get_status.side_effect = CannotConnect
     entry = configure_integration(hass)
     await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.SETUP_RETRY
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
     await hass.async_block_till_done()

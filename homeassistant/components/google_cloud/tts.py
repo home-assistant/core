@@ -35,7 +35,10 @@ from .const import (
     CONF_SPEED,
     CONF_TEXT_TYPE,
     CONF_VOICE,
+    DEFAULT_GAIN,
     DEFAULT_LANG,
+    DEFAULT_PITCH,
+    DEFAULT_SPEED,
     DOMAIN,
 )
 from .helpers import async_tts_voices, tts_options_schema, tts_platform_schema
@@ -191,11 +194,23 @@ class BaseGoogleCloudProvider:
                 ssml_gender=gender,
                 name=voice,
             ),
+            # Avoid: "This voice does not support speaking rate or pitch parameters at this time."
+            # by not specifying the fields unless they differ from the defaults
             audio_config=texttospeech.AudioConfig(
                 audio_encoding=encoding,
-                speaking_rate=options[CONF_SPEED],
-                pitch=options[CONF_PITCH],
-                volume_gain_db=options[CONF_GAIN],
+                speaking_rate=(
+                    options[CONF_SPEED]
+                    if options[CONF_SPEED] != DEFAULT_SPEED
+                    else None
+                ),
+                pitch=(
+                    options[CONF_PITCH]
+                    if options[CONF_PITCH] != DEFAULT_PITCH
+                    else None
+                ),
+                volume_gain_db=(
+                    options[CONF_GAIN] if options[CONF_GAIN] != DEFAULT_GAIN else None
+                ),
                 effects_profile_id=options[CONF_PROFILES],
             ),
         )

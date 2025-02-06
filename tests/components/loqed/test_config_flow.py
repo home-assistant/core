@@ -8,16 +8,16 @@ import aiohttp
 from loqedAPI import loqed
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.loqed.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_NAME, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-zeroconf_data = zeroconf.ZeroconfServiceInfo(
+zeroconf_data = ZeroconfServiceInfo(
     ip_address=ip_address("192.168.12.34"),
     ip_addresses=[ip_address("192.168.12.34")],
     hostname="LOQED-ffeeddccbbaa.local",

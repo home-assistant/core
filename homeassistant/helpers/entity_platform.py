@@ -145,6 +145,7 @@ class EntityPlatform:
         self.platform_translations: dict[str, str] = {}
         self.object_id_component_translations: dict[str, str] = {}
         self.object_id_platform_translations: dict[str, str] = {}
+        self.default_language_platform_translations: dict[str, str] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -425,11 +426,12 @@ class EntityPlatform:
                 type(exc).__name__,
             )
             return False
-        except Exception:
+        except Exception as exc:
             logger.exception(
-                "Error while setting up %s platform for %s",
+                "Error while setting up %s platform for %s: %s",
                 self.platform_name,
                 self.domain,
+                exc,  # noqa: TRY401
             )
             return False
         else:
@@ -479,6 +481,14 @@ class EntityPlatform:
             )
             self.object_id_platform_translations = await self._async_get_translations(
                 object_id_language, "entity", self.platform_name
+            )
+        if config_language == languages.DEFAULT_LANGUAGE:
+            self.default_language_platform_translations = self.platform_translations
+        else:
+            self.default_language_platform_translations = (
+                await self._async_get_translations(
+                    languages.DEFAULT_LANGUAGE, "entity", self.platform_name
+                )
             )
 
     def _schedule_add_entities(

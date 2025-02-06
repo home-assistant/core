@@ -13,8 +13,7 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["demetriek"],
-  "quality_scale": "platinum",
-  "requirements": ["demetriek==0.4.0"],
+  "requirements": ["demetriek==1.2.0"],
   "ssdp": [
     {
       "deviceType": "urn:schemas-upnp-org:device:LaMetric:1"

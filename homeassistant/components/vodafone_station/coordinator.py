@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from json.decoder import JSONDecodeError
 from typing import Any
 
 from aiovodafone import VodafoneStationDevice, VodafoneStationSercommApi, exceptions
@@ -13,7 +14,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER, DOMAIN, SCAN_INTERVAL
 
 CONSIDER_HOME_SECONDS = DEFAULT_CONSIDER_HOME.total_seconds()
 
@@ -58,7 +59,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             hass=hass,
             logger=_LOGGER,
             name=f"{DOMAIN}-{host}-coordinator",
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
 
     def _calculate_update_time_and_consider_home(
@@ -107,6 +108,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 exceptions.CannotConnect,
                 exceptions.AlreadyLogged,
                 exceptions.GenericLoginError,
+                JSONDecodeError,
             ) as err:
                 raise UpdateFailed(f"Error fetching data: {err!r}") from err
         except (ConfigEntryAuthFailed, UpdateFailed):

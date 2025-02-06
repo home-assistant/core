@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import NexiaDataUpdateCoordinator
-from .entity import NexiaThermostatZoneEntity
+from .entity import NexiaThermostatEntity, NexiaThermostatZoneEntity
 from .types import NexiaConfigEntry
 
 
@@ -28,11 +28,11 @@ async def async_setup_entry(
     entities: list[NexiaHoldSwitch | NexiaEmergencyHeatSwitch] = []
     for thermostat_id in nexia_home.get_thermostat_ids():
         thermostat: NexiaThermostat = nexia_home.get_thermostat_by_id(thermostat_id)
+        if thermostat.has_emergency_heat():
+            entities.append(NexiaEmergencyHeatSwitch(coordinator, thermostat))
         for zone_id in thermostat.get_zone_ids():
             zone: NexiaThermostatZone = thermostat.get_zone_by_id(zone_id)
             entities.append(NexiaHoldSwitch(coordinator, zone))
-            if thermostat.has_emergency_heat():
-                entities.append(NexiaEmergencyHeatSwitch(coordinator, zone))
 
     async_add_entities(entities)
 
@@ -68,17 +68,20 @@ class NexiaHoldSwitch(NexiaThermostatZoneEntity, SwitchEntity):
         self._signal_zone_update()
 
 
-class NexiaEmergencyHeatSwitch(NexiaThermostatZoneEntity, SwitchEntity):
+class NexiaEmergencyHeatSwitch(NexiaThermostatEntity, SwitchEntity):
     """Provides Nexia emergency heat switch support."""
 
     _attr_translation_key = "emergency_heat"
 
     def __init__(
-        self, coordinator: NexiaDataUpdateCoordinator, zone: NexiaThermostatZone
+        self, coordinator: NexiaDataUpdateCoordinator, thermostat: NexiaThermostat
     ) -> None:
         """Initialize the emergency heat mode switch."""
-        zone_id = zone.zone_id
-        super().__init__(coordinator, zone, zone_id)
+        super().__init__(
+            coordinator,
+            thermostat,
+            unique_id=f"{thermostat.thermostat_id}_emergency_heat",
+        )
 
     @property
     def is_on(self) -> bool:

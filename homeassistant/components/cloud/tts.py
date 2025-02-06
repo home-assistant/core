@@ -22,7 +22,7 @@ from homeassistant.components.tts import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, async_get_hass, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType

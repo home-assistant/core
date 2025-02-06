@@ -49,7 +49,7 @@ class ElkBinarySensor(ElkAttachedEntity, BinarySensorEntity):
     _element: Zone
     _attr_entity_registry_enabled_default = False
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         # Zone in NORMAL state is OFF; any other state is ON
         self._attr_is_on = bool(
             self._element.logical_status != ZoneLogicalStatus.NORMAL

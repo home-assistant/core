@@ -34,6 +34,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
@@ -98,7 +99,6 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     scan_filter: str | None = None
-    all_identifiers: set[str]
     atv: BaseConfig | None = None
     atv_identifiers: list[str] | None = None
     _host: str  # host in zeroconf discovery info, should not be accessed by other flows
@@ -118,6 +118,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize a new AppleTVConfigFlow."""
         self.credentials: dict[int, str | None] = {}  # Protocol -> credentials
+        self.all_identifiers: set[str] = set()
 
     @property
     def device_identifier(self) -> str | None:
@@ -204,7 +205,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle device found via zeroconf."""
         if discovery_info.ip_address.version == 6:

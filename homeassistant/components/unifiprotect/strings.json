@@ -137,10 +137,32 @@
     },
     "event": {
       "doorbell": {
+        "name": "Doorbell",
         "state_attributes": {
           "event_type": {
             "state": {
               "ring": "Ring"
+            }
+          }
+        }
+      },
+      "nfc": {
+        "name": "NFC",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "scanned": "Scanned"
+            }
+          }
+        }
+      },
+      "fingerprint": {
+        "name": "Fingerprint",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "identified": "Identified",
+              "not_identified": "Not identified"
             }
           }
         }
@@ -182,7 +204,7 @@
       "fields": {
         "device_id": {
           "name": "Chime",
-          "description": "The chimes to link to the doorbells to."
+          "description": "The chimes to link to the doorbells."
         },
         "doorbells": {
           "name": "Doorbells",
@@ -201,6 +223,16 @@
         "name": {
           "name": "Privacy Zone Name",
           "description": "The name of the zone to remove."
+        }
+      }
+    },
+    "get_user_keyring_info": {
+      "name": "Retrieve Keyring Details for Users",
+      "description": "Fetch a detailed list of users with NFC and fingerprint associations for automations.",
+      "fields": {
+        "device_id": {
+          "name": "UniFi Protect NVR",
+          "description": "Any device from the UniFi Protect instance you want to retrieve keyring details. This is useful for systems with multiple Protect instances."
         }
       }
     }

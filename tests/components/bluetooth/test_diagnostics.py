@@ -133,6 +133,7 @@ async def test_diagnostics(
                 }
             },
             "manager": {
+                "allocations": {},
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",
@@ -291,6 +292,7 @@ async def test_diagnostics_macos(
                 }
             },
             "manager": {
+                "allocations": {},
                 "adapters": {
                     "Core Bluetooth": {
                         "address": "00:00:00:00:00:00",
@@ -484,6 +486,7 @@ async def test_diagnostics_remote_adapter(
             },
             "dbus": {},
             "manager": {
+                "allocations": {},
                 "adapters": {
                     "hci0": {
                         "address": "00:00:00:00:00:01",

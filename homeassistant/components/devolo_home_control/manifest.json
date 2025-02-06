@@ -8,7 +8,6 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["devolo_home_control_api"],
-  "quality_scale": "gold",
   "requirements": ["devolo-home-control-api==0.18.3"],
   "zeroconf": ["_dvl-deviceapi._tcp.local."]
 }
