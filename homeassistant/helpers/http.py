@@ -33,6 +33,12 @@ _LOGGER = logging.getLogger(__name__)
 type AllowCorsType = Callable[[AbstractRoute | AbstractResource], None]
 type HandlerResponseType = web.StreamResponse | bytes | str | None
 type HandlerResponseTupleType = tuple[HandlerResponseType, HTTPStatus]
+type HandlerType = Callable[
+    [web.Request],
+    Awaitable[HandlerResponseType | HandlerResponseTupleType]
+    | HandlerResponseType
+    | HandlerResponseTupleType,
+]
 KEY_AUTHENTICATED: Final = "ha_authenticated"
 KEY_ALLOW_ALL_CORS = AppKey[AllowCorsType]("allow_all_cors")
 KEY_ALLOW_CONFIGURED_CORS = AppKey[AllowCorsType]("allow_configured_cors")
@@ -46,12 +52,7 @@ current_request: ContextVar[Request | None] = ContextVar(
 def request_handler_factory(
     hass: HomeAssistant,
     view: HomeAssistantView,
-    handler: Callable[
-        [web.Request],
-        Awaitable[HandlerResponseType | HandlerResponseTupleType]
-        | HandlerResponseType
-        | HandlerResponseTupleType,
-    ],
+    handler: HandlerType,
 ) -> Callable[[web.Request], Awaitable[web.StreamResponse]]:
     """Wrap the handler classes."""
     is_coroutinefunction = asyncio.iscoroutinefunction(handler)
@@ -180,14 +181,17 @@ class HomeAssistantView:
         assert self.url is not None, "No url set for view"
         urls = [self.url, *self.extra_urls]
         routes: list[AbstractRoute] = []
+        handler: HandlerType | None
 
         for method in ("get", "post", "delete", "put", "patch", "head", "options"):
             if not (handler := getattr(self, method, None)):
                 continue
 
-            handler = request_handler_factory(hass, self, handler)
+            wrapped_handler = request_handler_factory(hass, self, handler)
 
-            routes.extend(router.add_route(method, url, handler) for url in urls)
+            routes.extend(
+                router.add_route(method, url, wrapped_handler) for url in urls
+            )
 
         # Use `get` because CORS middleware is not be loaded in emulated_hue
         if self.cors_allowed:
