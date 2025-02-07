@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from http import HTTPStatus
 
 import aiohttp
-from microBeesPy import MicroBees
+from microBeesPy import MicroBees, MicrobeesMqtt
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -23,10 +23,23 @@ class HomeAssistantMicroBeesData:
     connector: MicroBees
     coordinator: MicroBeesUpdateCoordinator
     session: config_entry_oauth2_flow.OAuth2Session
+    mqtt_client: MicrobeesMqtt
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up microBees from a config entry."""
+    hass.data.setdefault(DOMAIN, {})
+
+    current_user = entry.data.get("current_user", {})
+    mqtt_param = entry.data.get("mqtt", {})
+
+    if isinstance(current_user, dict):
+        gateSerial = current_user.get("gateSerial")
+    elif hasattr(current_user, "gateSerial"):
+        gateSerial = getattr(current_user, "gateSerial")
+
+    gate = f"app{mqtt_param.get('client_id')}_{gateSerial}"
+
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -44,14 +57,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ):
             raise ConfigEntryAuthFailed("Token not valid, trigger renewal") from ex
         raise ConfigEntryNotReady from ex
+
     microbees = MicroBees(token=session.token[CONF_ACCESS_TOKEN])
-    coordinator = MicroBeesUpdateCoordinator(hass, microbees)
+
+    mqtt_client = MicrobeesMqtt(
+        broker=mqtt_param.get("host"),
+        port=mqtt_param.get("port", 1883),
+        username=mqtt_param.get("username"),
+        password=mqtt_param.get("password"),
+        client_id=gate,
+    )
+
+    coordinator = MicroBeesUpdateCoordinator(hass, microbees, mqtt_client)
+    await coordinator.async_start()
+    mqtt_client.subscribe(gate)
+
     await coordinator.async_config_entry_first_refresh()
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = HomeAssistantMicroBeesData(
+    hass.data[DOMAIN][entry.entry_id] = HomeAssistantMicroBeesData(
         connector=microbees,
         coordinator=coordinator,
         session=session,
+        mqtt_client=mqtt_client,
     )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
