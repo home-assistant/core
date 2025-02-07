@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import logging
 from typing import Any
 
@@ -10,6 +9,7 @@ from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
 
 from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
@@ -26,31 +26,19 @@ from . import ThinqConfigEntry
 from .coordinator import DeviceDataUpdateCoordinator
 from .entity import ThinQEntity
 
-
-@dataclass(frozen=True, kw_only=True)
-class ThinQClimateEntityDescription(ClimateEntityDescription):
-    """Describes ThinQ climate entity."""
-
-    min_temp: float | None = None
-    max_temp: float | None = None
-    step: float | None = None
-
-
-DEVICE_TYPE_CLIMATE_MAP: dict[DeviceType, tuple[ThinQClimateEntityDescription, ...]] = {
+DEVICE_TYPE_CLIMATE_MAP: dict[DeviceType, tuple[ClimateEntityDescription, ...]] = {
     DeviceType.AIR_CONDITIONER: (
-        ThinQClimateEntityDescription(
+        ClimateEntityDescription(
             key=ExtendedProperty.CLIMATE_AIR_CONDITIONER,
             name=None,
             translation_key=ExtendedProperty.CLIMATE_AIR_CONDITIONER,
         ),
     ),
     DeviceType.SYSTEM_BOILER: (
-        ThinQClimateEntityDescription(
+        ClimateEntityDescription(
             key=ExtendedProperty.CLIMATE_SYSTEM_BOILER,
             name=None,
-            min_temp=16,
-            max_temp=30,
-            step=1,
+            translation_key=ExtendedProperty.CLIMATE_SYSTEM_BOILER,
         ),
     ),
 }
@@ -63,13 +51,7 @@ STR_TO_HVAC: dict[str, HVACMode] = {
     "heat": HVACMode.HEAT,
 }
 
-HVAC_TO_STR: dict[HVACMode, str] = {
-    HVACMode.AUTO: "auto",
-    HVACMode.COOL: "cool",
-    HVACMode.DRY: "air_dry",
-    HVACMode.FAN_ONLY: "fan",
-    HVACMode.HEAT: "heat",
-}
+HVAC_TO_STR = {v: k for k, v in STR_TO_HVAC.items()}
 
 THINQ_PRESET_MODE: list[str] = ["air_clean", "aroma", "energy_saving"]
 
@@ -102,12 +84,12 @@ async def async_setup_entry(
 class ThinQClimateEntity(ThinQEntity, ClimateEntity):
     """Represent a thinq climate platform."""
 
-    entity_description: ThinQClimateEntityDescription
+    entity_description: ClimateEntityDescription
 
     def __init__(
         self,
         coordinator: DeviceDataUpdateCoordinator,
-        entity_description: ThinQClimateEntityDescription,
+        entity_description: ClimateEntityDescription,
         property_id: str,
     ) -> None:
         """Initialize a climate entity."""
@@ -166,18 +148,12 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         self._attr_current_temperature = self.data.current_temp
 
         # Update min, max and step.
-        if (max_temp := self.entity_description.max_temp) is not None or (
-            max_temp := self.data.max
-        ) is not None:
-            self._attr_max_temp = max_temp
-        if (min_temp := self.entity_description.min_temp) is not None or (
-            min_temp := self.data.min
-        ) is not None:
-            self._attr_min_temp = min_temp
-        if (step := self.entity_description.step) is not None or (
-            step := self.data.step
-        ) is not None:
-            self._attr_target_temperature_step = step
+        if self.data.max is not None:
+            self._attr_max_temp = self.data.max
+        if self.data.min is not None:
+            self._attr_min_temp = self.data.min
+
+        self._attr_target_temperature_step = self.data.step
 
         # Update target temperatures.
         self._attr_target_temperature = self.data.target_temp
@@ -290,6 +266,10 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self.property_id,
             kwargs,
         )
+        if hvac_mode := kwargs.get(ATTR_HVAC_MODE):
+            await self.async_set_hvac_mode(HVACMode(hvac_mode))
+            if hvac_mode == HVACMode.OFF:
+                return
 
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is not None:
             if (
