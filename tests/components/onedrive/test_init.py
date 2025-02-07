@@ -69,50 +69,30 @@ async def test_get_integration_folder_error(
     assert "Failed to get backups_9f86d081 folder" in caplog.text
 
 
-async def test_v1_v2_migration(
+async def test_migrate_metadata_files(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
 ) -> None:
-    """Test migration from v1 to v2."""
+    """Test migration of metadata files."""
     MOCK_BACKUP_FILE.description = escape(
         dumps({**BACKUP_METADATA, "metadata_version": 1})
     )
-    v1_config_entry = MockConfigEntry(
-        data=mock_config_entry.data,
-        version=1,
-        title=mock_config_entry.title,
-        domain=mock_config_entry.domain,
-        unique_id=mock_config_entry.unique_id,
-    )
-    await setup_integration(hass, v1_config_entry)
+    await setup_integration(hass, mock_config_entry)
     await hass.async_block_till_done()
 
     mock_onedrive_client.upload_file.assert_called_once()
     assert mock_onedrive_client.update_drive_item.call_count == 2
     assert mock_onedrive_client.update_drive_item.call_args[1]["data"].description == ""
-    assert v1_config_entry.version == 2
 
 
-async def test_v1_v2_migration_errors(
+async def test_migrate_metadata_files_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
-    mock_onedrive_client_init: MagicMock,
 ) -> None:
-    """Test errors during v1 to v2 migration."""
-    v1_config_entry = MockConfigEntry(
-        data=mock_config_entry.data,
-        version=1,
-        title=mock_config_entry.title,
-        domain=mock_config_entry.domain,
-        unique_id=mock_config_entry.unique_id,
-    )
+    """Test migration of metadata files errors."""
     mock_onedrive_client.list_drive_items.side_effect = OneDriveException()
-    await setup_integration(hass, v1_config_entry)
+    await setup_integration(hass, mock_config_entry)
 
-    # Ensure the token callback is set up correctly
-    token_callback = mock_onedrive_client_init.call_args[0][0]
-    assert await token_callback() == "mock-access-token"
-
-    assert v1_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
