@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import frame
 from homeassistant.setup import async_setup_component
 
 from tests.typing import WebSocketGenerator
@@ -40,6 +41,8 @@ async def test_create_dashboards_when_onboarded(
     assert response["result"] == []
 
 
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
 async def test_hass_data_compatibility(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
@@ -50,32 +53,24 @@ async def test_hass_data_compatibility(
     https://github.com/hacs/integration/blob/4a820e8b1b066bc54a1c9c61102038af6c030603
     /custom_components/hacs/repositories/plugin.py#L173
     """
-    expected = (
-        "Detected that integration 'lovelace' accessed lovelace_data.get('resources')"
-        " instead of lovelace_data.resources at"
+    expected_prefix = (
+        "Detected that custom integration 'my_integration' accessed lovelace_data"
     )
 
     assert await async_setup_component(hass, "lovelace", {})
 
     assert (lovelace_data := hass.data.get("lovelace")) is not None
-    assert expected not in caplog.text
 
     # Direct access to resources is fine
     assert lovelace_data.resources is not None
-    assert (
-        "Detected that integration 'lovelace' accessed lovelace_data" not in caplog.text
-    )
+    assert expected_prefix not in caplog.text
 
     # Dict compatibility logs warning
-    assert lovelace_data["resources"] is not None
-    assert (
-        "Detected that integration 'lovelace' accessed lovelace_data['resources']"
-        in caplog.text
-    )
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        assert lovelace_data["resources"] is not None
+    assert f"{expected_prefix}['resources']" in caplog.text
 
     # Dict get compatibility logs warning
-    assert lovelace_data.get("resources") is not None
-    assert (
-        "Detected that integration 'lovelace' accessed lovelace_data.get('resources')"
-        in caplog.text
-    )
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        assert lovelace_data.get("resources") is not None
+    assert f"{expected_prefix}.get('resources')" in caplog.text

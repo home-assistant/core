@@ -42,6 +42,10 @@
             'parts': 'Ok',
             'role': 'model',
           }),
+          dict({
+            'parts': '1st user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -102,6 +106,10 @@
             'parts': '1st model response',
             'role': 'model',
           }),
+          dict({
+            'parts': '2nd user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -150,6 +158,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': '1st user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -202,6 +214,10 @@
             'parts': '1st model response',
             'role': 'model',
           }),
+          dict({
+            'parts': '2nd user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -228,7 +244,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -250,6 +266,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -276,7 +296,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -298,6 +318,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -324,7 +348,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -347,6 +371,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -373,7 +401,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -396,6 +424,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -422,7 +454,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -482,6 +514,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'Please call the test function',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -529,7 +565,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -558,6 +594,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'Please call the test function',
+            'role': 'user',
+          }),
         ]),
       }),
     ),

@@ -12,7 +12,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import FritzEntityBaseMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG

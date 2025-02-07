@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import ATTR_SNOOZE, DOMAIN, SLACK_DATA
 from .entity import SlackEntity

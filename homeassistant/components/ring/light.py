@@ -10,7 +10,7 @@ from ring_doorbell import RingStickUpCam
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator

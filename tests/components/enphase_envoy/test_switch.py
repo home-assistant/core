@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyenphase.exceptions import EnvoyError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,6 +17,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -112,6 +114,46 @@ async def test_switch_grid_operation(
     mock_envoy.go_off_grid.reset_mock()
 
 
+@pytest.mark.parametrize("mock_envoy", ["envoy_metered_batt_relay"], indirect=True)
+async def test_switch_grid_operation_with_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test switch platform operation for grid switches when error occurs."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry)
+
+    sn = mock_envoy.data.enpower.serial_number
+    test_entity = f"{Platform.SWITCH}.enpower_{sn}_grid_enabled"
+
+    mock_envoy.go_off_grid.side_effect = EnvoyError("Test")
+    mock_envoy.go_on_grid.side_effect = EnvoyError("Test")
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute async_turn_off for {test_entity}, host",
+    ):
+        # test grid status switch operation
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: test_entity},
+            blocking=True,
+        )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute async_turn_on for {test_entity}, host",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: test_entity},
+            blocking=True,
+        )
+
+
 @pytest.mark.parametrize(
     ("mock_envoy", "use_serial"),
     [
@@ -163,6 +205,53 @@ async def test_switch_charge_from_grid_operation(
     )
     mock_envoy.disable_charge_from_grid.assert_awaited_once_with()
     mock_envoy.disable_charge_from_grid.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "use_serial"),
+    [
+        ("envoy_metered_batt_relay", "enpower_654321"),
+        ("envoy_eu_batt", "envoy_1234"),
+    ],
+    indirect=["mock_envoy"],
+)
+async def test_switch_charge_from_grid_operation_with_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    use_serial: str,
+) -> None:
+    """Test switch platform operation for charge from grid switches."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry)
+
+    test_entity = f"{Platform.SWITCH}.{use_serial}_charge_from_grid"
+
+    mock_envoy.disable_charge_from_grid.side_effect = EnvoyError("Test")
+    mock_envoy.enable_charge_from_grid.side_effect = EnvoyError("Test")
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute async_turn_off for {test_entity}, host",
+    ):
+        # test grid status switch operation
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: test_entity},
+            blocking=True,
+        )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute async_turn_on for {test_entity}, host",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: test_entity},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
@@ -232,3 +321,51 @@ async def test_switch_relay_operation(
         assert mock_envoy.close_dry_contact.await_count == close_count
         mock_envoy.open_dry_contact.reset_mock()
         mock_envoy.close_dry_contact.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "relay"),
+    [("envoy_metered_batt_relay", "NC1")],
+    indirect=["mock_envoy"],
+)
+async def test_switch_relay_operation_with_error(
+    hass: HomeAssistant,
+    mock_envoy: AsyncMock,
+    config_entry: MockConfigEntry,
+    relay: str,
+) -> None:
+    """Test enphase_envoy switch relay entities operation."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry)
+
+    entity_base = f"{Platform.SWITCH}."
+
+    assert (dry_contact := mock_envoy.data.dry_contact_settings[relay])
+    assert (name := dry_contact.load_name.lower().replace(" ", "_"))
+
+    test_entity = f"{entity_base}{name}"
+
+    mock_envoy.close_dry_contact.side_effect = EnvoyError("Test")
+    mock_envoy.open_dry_contact.side_effect = EnvoyError("Test")
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute async_turn_off for {test_entity}, host",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: test_entity},
+            blocking=True,
+        )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Failed to execute async_turn_on for {test_entity}, host",
+    ):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: test_entity},
+            blocking=True,
+        )

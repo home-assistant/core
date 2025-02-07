@@ -15,7 +15,7 @@ from xknx.telegram.apci import GroupValueResponse, GroupValueWrite
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.signal_type import SignalType
 
 from .const import DOMAIN
