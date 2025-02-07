@@ -930,7 +930,7 @@ fixerio==1.0.0a0
 fjaraskupan==2.3.2
 
 # homeassistant.components.flexit_bacnet
-flexit_bacnet==2.2.1
+flexit_bacnet==2.2.3
 
 # homeassistant.components.flipr
 flipr-api==1.6.1
