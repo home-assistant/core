@@ -23,11 +23,7 @@ async def async_setup_entry(
     devices_data = await api.async_get_devices()
     devices = devices_data["devices"]
 
-    buttons = [
-        FlussButton(api, device) for device in devices if isinstance(device, dict)
-    ]
-    LOGGER.debug("Adding entities: %s", buttons)
-    async_add_entities(buttons)
+    async_add_entities(FlussButton(api, device) for device in devices if isinstance(device, dict))
 
 
 def validate_device(device):
