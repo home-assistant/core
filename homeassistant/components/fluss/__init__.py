@@ -45,10 +45,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady from e
 
     entry.runtime_data = api
-    if DOMAIN not in hass.data:
-        hass.data[DOMAIN] = {}
-
-    hass.data[DOMAIN][entry.entry_id] = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
