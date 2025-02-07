@@ -1,6 +1,5 @@
 """Climate platform for Actron Air Neo integration."""
 
-import logging
 from typing import Any
 
 from actron_neo_api import ActronNeoAPI
@@ -19,8 +18,6 @@ from . import ActronConfigEntry
 from .const import DOMAIN
 from .coordinator import ActronNeoDataUpdateCoordinator
 
-DEFAULT_TEMP_MIN = 16.0
-DEFAULT_TEMP_MAX = 32.0
 FAN_MODE_MAPPING = {
     "auto": "AUTO",
     "low": "LOW",
@@ -36,19 +33,6 @@ HVAC_MODE_MAPPING = {
     "OFF": HVACMode.OFF,
 }
 HVAC_MODE_MAPPING_REVERSE = {v: k for k, v in HVAC_MODE_MAPPING.items()}
-AC_UNIT_SUPPORTED_FEATURES = (
-    ClimateEntityFeature.TARGET_TEMPERATURE
-    | ClimateEntityFeature.FAN_MODE
-    | ClimateEntityFeature.TURN_ON
-    | ClimateEntityFeature.TURN_OFF
-)
-AC_ZONE_SUPPORTED_FEATURES = (
-    ClimateEntityFeature.TARGET_TEMPERATURE
-    | ClimateEntityFeature.TURN_ON
-    | ClimateEntityFeature.TURN_OFF
-)
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -161,7 +145,12 @@ class ActronSystemClimate(
     @property
     def supported_features(self) -> ClimateEntityFeature:
         """Return supported features."""
-        return AC_UNIT_SUPPORTED_FEATURES
+        return (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TURN_ON
+            | ClimateEntityFeature.TURN_OFF
+        )
 
     @property
     def min_temp(self) -> float:
@@ -169,7 +158,7 @@ class ActronSystemClimate(
         return (
             self._status.get("NV_Limits", {})
             .get("UserSetpoint_oC", {})
-            .get("setCool_Min", DEFAULT_TEMP_MIN)
+            .get("setCool_Min", 16.0)
         )
 
     @property
@@ -178,7 +167,7 @@ class ActronSystemClimate(
         return (
             self._status.get("NV_Limits", {})
             .get("UserSetpoint_oC", {})
-            .get("setCool_Max", DEFAULT_TEMP_MAX)
+            .get("setCool_Max", 32.0)
         )
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
