@@ -51,9 +51,9 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 _PIPELINE_TIMEOUT_SEC: Final = 30
+_HANGUP_SEC: Final = 0.5
 _ANNOUNCEMENT_BEFORE_DELAY: Final = 0.5
 _ANNOUNCEMENT_AFTER_DELAY: Final = 1.0
-_ANNOUNCEMENT_HANGUP_SEC: Final = 0.5
 _ANNOUNCEMENT_RING_TIMEOUT: Final = 30
 
 
@@ -130,10 +130,12 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._tones = tones
         self._processing_tone_done = asyncio.Event()
 
+        _LOGGER.debug("Initializing assist satellite")
         self._announcement: AssistSatelliteAnnouncement | None = None
-        self._announcement_future: asyncio.Future[Any] = asyncio.Future()
         self._announcment_start_time: float = 0.0
-        self._check_announcement_ended_task: asyncio.Task | None = None
+        self._check_announcement_pickup_task: asyncio.Task | None = None
+        self._check_hangup_task: asyncio.Task | None = None
+        self._call_end_future: asyncio.Future[Any] = asyncio.Future()
         self._last_chunk_time: float | None = None
         self._rtp_port: int | None = None
         self._run_pipeline_after_announce: bool = False
@@ -232,9 +234,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 translation_key="non_tts_announcement",
             )
 
-        self._announcement_future = asyncio.Future()
+        self._call_end_future = asyncio.Future()
         self._run_pipeline_after_announce = run_pipeline_after
 
+        _LOGGER.debug("Announce %s", self)
         if self._rtp_port is None:
             # Choose random port for RTP
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -264,6 +267,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._last_chunk_time = None
         self._announcment_start_time = time.monotonic()
         self._announcement = announcement
+        _LOGGER.debug("announcement: %s", self._announcement)
 
         # Make the call
         sip_protocol: SipDatagramProtocol = self.hass.data[DOMAIN].protocol
@@ -273,53 +277,72 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             rtp_port=self._rtp_port,
         )
 
-        # Check if caller hung up or didn't pick up
-        self._check_announcement_ended_task = (
+        # Check if caller didn't pick up
+        self._check_announcement_pickup_task = (
             self.config_entry.async_create_background_task(
                 self.hass,
-                self._check_announcement_ended(),
-                "voip_announcement_ended",
+                self._check_announcement_pickup(),
+                "voip_announcement_pickup",
             )
         )
 
         try:
-            await self._announcement_future
+            await self._call_end_future
         except TimeoutError:
             # Stop ringing
+            _LOGGER.debug("Caller did not pick up in time")
             sip_protocol.cancel_call(call_info)
             raise
 
-    async def _check_announcement_ended(self) -> None:
+    async def _check_announcement_pickup(self) -> None:
         """Continuously checks if an audio chunk was received within a time limit.
 
         If not, the caller is presumed to have hung up and the announcement is ended.
         """
-        while self._announcement is not None:
+        while True:
             current_time = time.monotonic()
             if (self._last_chunk_time is None) and (
                 (current_time - self._announcment_start_time)
                 > _ANNOUNCEMENT_RING_TIMEOUT
             ):
                 # Ring timeout
+                _LOGGER.debug("Ring timeout")
                 self._announcement = None
-                self._check_announcement_ended_task = None
-                self._announcement_future.set_exception(
+                self._check_announcement_pickup_task = None
+                self._call_end_future.set_exception(
                     TimeoutError("User did not pick up in time")
                 )
                 _LOGGER.debug("Timed out waiting for the user to pick up the phone")
                 break
-
-            if (self._last_chunk_time is not None) and (
-                (current_time - self._last_chunk_time) > _ANNOUNCEMENT_HANGUP_SEC
-            ):
-                # Caller hung up
-                self._announcement = None
-                self._announcement_future.set_result(None)
-                self._check_announcement_ended_task = None
-                _LOGGER.debug("Announcement ended")
+            if self._last_chunk_time is not None:
+                _LOGGER.debug("Picked up the phone")
+                self._check_announcement_pickup_task = None
                 break
 
-            await asyncio.sleep(_ANNOUNCEMENT_HANGUP_SEC / 2)
+            await asyncio.sleep(_HANGUP_SEC / 2)
+
+    async def _check_hangup(self) -> None:
+        """Continuously checks if an audio chunk was received within a time limit.
+
+        If not, the caller is presumed to have hung up and the call is ended.
+        """
+        try:
+            while True:
+                current_time = time.monotonic()
+                if (self._last_chunk_time is not None) and (
+                    (current_time - self._last_chunk_time) > _HANGUP_SEC
+                ):
+                    # Caller hung up
+                    _LOGGER.debug("Hang up")
+                    self._announcement = None
+                    self._run_pipeline_task = None
+                    self._call_end_future.set_result(None)
+                    self.disconnect()
+                    break
+
+                await asyncio.sleep(_HANGUP_SEC / 2)
+        except asyncio.CancelledError:
+            _LOGGER.debug("Check hangup cancelled")
 
     async def async_start_conversation(
         self, start_announcement: AssistSatelliteAnnouncement
@@ -331,6 +354,23 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     # VoIP
     # -------------------------------------------------------------------------
 
+    def disconnect(self):
+        """Server disconnected."""
+        super().disconnect()
+        if self._check_hangup_task is not None:
+            self._check_hangup_task = None
+
+    def connection_made(self, transport):
+        """Server is ready."""
+        super().connection_made(transport)
+        self._last_chunk_time = time.monotonic()
+        # Check if caller hung up
+        self._check_hangup_task = self.config_entry.async_create_background_task(
+            self.hass,
+            self._check_hangup(),
+            "voip_hangup",
+        )
+
     def on_chunk(self, audio_bytes: bytes) -> None:
         """Handle raw audio chunk."""
         self._last_chunk_time = time.monotonic()
@@ -338,6 +378,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         if self._announcement is None:
             # Pipeline with STT
             if self._run_pipeline_task is None:
+                _LOGGER.debug("Running pipeline %s", self)
                 # Run pipeline until voice command finishes, then start over
                 self._clear_audio_queue()
                 self._tts_done.clear()
@@ -368,12 +409,15 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
         async def stt_stream():
             while True:
-                async with asyncio.timeout(self._audio_chunk_timeout):
-                    chunk = await self._audio_queue.get()
-                    if not chunk:
-                        break
+                try:
+                    async with asyncio.timeout(self._audio_chunk_timeout):
+                        chunk = await self._audio_queue.get()
+                        if not chunk:
+                            break
 
-                    yield chunk
+                        yield chunk
+                except TimeoutError:
+                    _LOGGER.debug("STT Stream timed out")
 
         # Play listening tone at the start of each cycle
         await self._play_tone(Tones.LISTENING, silence_before=0.2)
@@ -384,6 +428,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             )
 
             if self._pipeline_had_error:
+                _LOGGER.debug("Pipeline error")
                 self._pipeline_had_error = False
                 await self._play_tone(Tones.ERROR)
             else:
@@ -393,7 +438,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 # length of the TTS audio.
                 await self._tts_done.wait()
         except TimeoutError:
+            # This shouldn't happen anymore, we are detecting hang ups with a separate task
             self.disconnect()  # caller hung up
+        except asyncio.CancelledError:
+            _LOGGER.exception("Pipeline cancelled unexpectedly")
         finally:
             # Stop audio stream
             await self._audio_queue.put(None)
@@ -424,8 +472,8 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
             if self._run_pipeline_after_announce:
                 # Clear announcement to allow pipeline to run
+                _LOGGER.debug("Clearing announcement")
                 self._announcement = None
-                self._announcement_future.set_result(None)
 
     def _clear_audio_queue(self) -> None:
         """Ensure audio queue is empty."""
@@ -444,6 +492,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             # Send TTS audio to caller over RTP
             if event.data and (tts_output := event.data["tts_output"]):
                 media_id = tts_output["media_id"]
+                _LOGGER.debug("Sending TTS response")
                 self.config_entry.async_create_background_task(
                     self.hass,
                     self._send_tts(media_id),
@@ -451,6 +500,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 )
             else:
                 # Empty TTS response
+                _LOGGER.debug("Empty TTS response")
                 self._tts_done.set()
         elif event.type == PipelineEventType.ERROR:
             # Play error tone instead of wait for TTS when pipeline is finished.
