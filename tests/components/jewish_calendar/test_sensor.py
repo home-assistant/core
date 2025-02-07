@@ -488,7 +488,7 @@ SHABBAT_PARAMS = [
         {
             "english_upcoming_candle_lighting": dt(2017, 9, 20, 18, 20),
             "english_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
-            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 19, 12),
+            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 18, 18),
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",
@@ -501,7 +501,7 @@ SHABBAT_PARAMS = [
         {
             "english_upcoming_candle_lighting": dt(2017, 9, 20, 18, 20),
             "english_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
-            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 19, 12),
+            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 18, 18),
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",
@@ -514,7 +514,7 @@ SHABBAT_PARAMS = [
         {
             "english_upcoming_candle_lighting": dt(2017, 9, 20, 18, 20),
             "english_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
-            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 19, 12),
+            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 18, 18),
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",
