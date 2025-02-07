@@ -103,6 +103,6 @@ class BringEventEntity(BringBaseEntity, EventEntity):
         await super().async_added_to_hass()
         self._async_handle_event()
 
-    def _handle_coordinator_update(self):
+    def _handle_coordinator_update(self) -> None:
         self._async_handle_event()
         return super()._handle_coordinator_update()
