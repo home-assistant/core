@@ -16,8 +16,8 @@ from homeassistant.components.siren import (
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import event as evt
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.event as evt
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .coordinator import EzvizConfigEntry, EzvizDataUpdateCoordinator

@@ -3,8 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
-from httpx import Response
-from kiota_abstractions.api_error import APIError
+from onedrive_personal_sdk.exceptions import OneDriveException
 import pytest
 
 from homeassistant import config_entries
@@ -20,7 +19,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
-from .const import CLIENT_ID
+from .const import CLIENT_ID, MOCK_APPROOT
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -71,6 +70,7 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
+    mock_onedrive_client_init: MagicMock,
 ) -> None:
     """Check full flow."""
 
@@ -79,6 +79,10 @@ async def test_full_flow(
     )
     await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Ensure the token callback is set up correctly
+    token_callback = mock_onedrive_client_init.call_args[0][0]
+    assert await token_callback() == "mock-access-token"
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -90,24 +94,51 @@ async def test_full_flow(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+async def test_full_flow_with_owner_not_found(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry: AsyncMock,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Ensure we get a default title if the drive's owner can't be read."""
+
+    mock_onedrive_client.get_approot.return_value.created_by.user = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert result["title"] == "OneDrive"
+    assert result["result"].unique_id == "mock_drive_id"
+    assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
+    assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.parametrize(
     ("exception", "error"),
     [
         (Exception, "unknown"),
-        (APIError, "connection_error"),
+        (OneDriveException, "connection_error"),
     ],
 )
 async def test_flow_errors(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_adapter: MagicMock,
+    mock_onedrive_client: MagicMock,
     exception: Exception,
     error: str,
 ) -> None:
     """Test errors during flow."""
 
-    mock_adapter.get_http_response_message.side_effect = exception
+    mock_onedrive_client.get_approot.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -172,15 +203,12 @@ async def test_reauth_flow_id_changed(
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    mock_adapter: MagicMock,
+    mock_onedrive_client: MagicMock,
 ) -> None:
     """Test that the reauth flow fails on a different drive id."""
-    mock_adapter.get_http_response_message.return_value = Response(
-        status_code=200,
-        json={
-            "parentReference": {"driveId": "other_drive_id"},
-        },
-    )
+    app_root = MOCK_APPROOT
+    app_root.parent_reference.drive_id = "other_drive_id"
+    mock_onedrive_client.get_approot.return_value = app_root
 
     await setup_integration(hass, mock_config_entry)
 

@@ -510,7 +510,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 or (task.notes and keyword in task.notes.lower())
                 or any(keyword in item.text.lower() for item in task.checklist)
             ]
-        result: dict[str, Any] = {"tasks": response}
+        result: dict[str, Any] = {"tasks": [task.to_dict() for task in response]}
+
         return result
 
     hass.services.async_register(

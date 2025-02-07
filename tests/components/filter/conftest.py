@@ -24,7 +24,7 @@ from homeassistant.components.filter.const import (
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_ENTITY_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, State
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 

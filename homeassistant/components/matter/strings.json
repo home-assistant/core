@@ -183,6 +183,9 @@
       "mode": {
         "name": "Mode"
       },
+      "device_energy_management_mode": {
+        "name": "Energy management mode"
+      },
       "sensitivity_level": {
         "name": "Sensitivity",
         "state": {
@@ -205,6 +208,18 @@
       },
       "temperature_display_mode": {
         "name": "Temperature display mode"
+      },
+      "laundry_washer_number_of_rinses": {
+        "name": "Number of rinses",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "normal": "Normal",
+          "extra": "Extra",
+          "max": "Max"
+        }
+      },
+      "laundry_washer_spin_speed": {
+        "name": "Spin speed"
       }
     },
     "sensor": {

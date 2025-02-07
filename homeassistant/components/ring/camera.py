@@ -31,6 +31,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import RingConfigEntry
+from .const import DOMAIN
 from .coordinator import RingDataCoordinator
 from .entity import RingDeviceT, RingEntity, exception_wrap
 
@@ -218,8 +219,13 @@ class RingCam(RingEntity[RingDoorBell], Camera):
     ) -> None:
         """Handle a WebRTC candidate."""
         if candidate.sdp_m_line_index is None:
-            msg = "The sdp_m_line_index is required for ring webrtc streaming"
-            raise HomeAssistantError(msg)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sdp_m_line_index_required",
+                translation_placeholders={
+                    "device": self._device.name,
+                },
+            )
         await self._device.on_webrtc_candidate(
             session_id, candidate.candidate, candidate.sdp_m_line_index
         )

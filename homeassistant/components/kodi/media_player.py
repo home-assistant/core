@@ -50,7 +50,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .browse_media import (
     build_item_response,

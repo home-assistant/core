@@ -1,10 +1,11 @@
 """Tests for the HTTP API for the cloud component."""
 
+from collections.abc import Callable, Coroutine
 from copy import deepcopy
 from http import HTTPStatus
 import json
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
 from hass_nabucasa import thingtalk
@@ -15,9 +16,12 @@ from hass_nabucasa.auth import (
     UnknownError,
 )
 from hass_nabucasa.const import STATE_CONNECTED
+from hass_nabucasa.remote import CertificateStatus
 from hass_nabucasa.voice import TTS_VOICES
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import system_health
 from homeassistant.components.alexa import errors as alexa_errors
 
 # pylint: disable-next=hass-component-root-import
@@ -30,8 +34,10 @@ from homeassistant.components.websocket_api import ERR_INVALID_FORMAT
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.location import LocationInfo
 
+from tests.common import mock_platform
 from tests.components.google_assistant import MockConfig
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -113,6 +119,7 @@ async def setup_cloud_fixture(hass: HomeAssistant, cloud: MagicMock) -> None:
                 "user_pool_id": "user_pool_id",
                 "region": "region",
                 "relayer_server": "relayer",
+                "acme_server": "cert-server",
                 "accounts_server": "api-test.hass.io",
                 "google_actions": {"filter": {"include_domains": "light"}},
                 "alexa": {
@@ -1860,3 +1867,96 @@ async def test_logout_view_dispatch_event(
     assert async_dispatcher_send_mock.call_count == 1
     assert async_dispatcher_send_mock.mock_calls[0][1][1] == "cloud_event"
     assert async_dispatcher_send_mock.mock_calls[0][1][2] == {"type": "logout"}
+
+
+async def test_download_support_package(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    hass_client: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test downloading a support package file."""
+    aioclient_mock.get("https://cloud.bla.com/status", text="")
+    aioclient_mock.get(
+        "https://cert-server/directory", exc=Exception("Unexpected exception")
+    )
+    aioclient_mock.get(
+        "https://cognito-idp.us-east-1.amazonaws.com/AAAA/.well-known/jwks.json",
+        exc=aiohttp.ClientError,
+    )
+
+    def async_register_mock_platform(
+        hass: HomeAssistant, register: system_health.SystemHealthRegistration
+    ) -> None:
+        async def mock_empty_info(hass: HomeAssistant) -> dict[str, Any]:
+            return {}
+
+        register.async_register_info(mock_empty_info, "/config/mock_integration")
+
+    mock_platform(
+        hass,
+        "mock_no_info_integration.system_health",
+        MagicMock(async_register=async_register_mock_platform),
+    )
+    hass.config.components.add("mock_no_info_integration")
+
+    assert await async_setup_component(hass, "system_health", {})
+
+    with patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock:
+        hexmock.return_value = "12345678901234567890"
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: {
+                    "user_pool_id": "AAAA",
+                    "region": "us-east-1",
+                    "acme_server": "cert-server",
+                    "relayer_server": "cloud.bla.com",
+                },
+            },
+        )
+        await hass.async_block_till_done()
+
+    await cloud.login("test-user", "test-pass")
+
+    cloud.remote.snitun_server = "us-west-1"
+    cloud.remote.certificate_status = CertificateStatus.READY
+    cloud.expiration_date = dt_util.parse_datetime("2025-01-17T11:19:31.0+00:00")
+
+    await cloud.client.async_system_message({"region": "xx-earth-616"})
+    await set_cloud_prefs(
+        {
+            "alexa_enabled": True,
+            "google_enabled": False,
+            "remote_enabled": True,
+            "cloud_ice_servers_enabled": True,
+        }
+    )
+
+    cloud_client = await hass_client()
+    with (
+        patch.object(hass.config, "config_dir", new="config"),
+        patch(
+            "homeassistant.components.homeassistant.system_health.system_info.async_get_system_info",
+            return_value={
+                "installation_type": "Home Assistant Core",
+                "version": "2025.2.0",
+                "dev": False,
+                "hassio": False,
+                "virtualenv": False,
+                "python_version": "3.13.1",
+                "docker": False,
+                "arch": "x86_64",
+                "timezone": "US/Pacific",
+                "os_name": "Linux",
+                "os_version": "6.12.9",
+                "user": "hass",
+            },
+        ),
+    ):
+        req = await cloud_client.get("/api/cloud/support_package")
+    assert req.status == HTTPStatus.OK
+    assert await req.text() == snapshot

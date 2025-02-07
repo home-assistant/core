@@ -19,6 +19,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 type ECConfigEntry = ConfigEntry[ECRuntimeData]
+type ECDataType = ECAirQuality | ECRadar | ECWeather
 
 
 @dataclass
@@ -30,16 +31,16 @@ class ECRuntimeData:
     weather_coordinator: ECDataUpdateCoordinator[ECWeather]
 
 
-class ECDataUpdateCoordinator[_ECDataTypeT: ECAirQuality | ECRadar | ECWeather](
-    DataUpdateCoordinator[_ECDataTypeT]
-):
+class ECDataUpdateCoordinator[DataT: ECDataType](DataUpdateCoordinator[DataT]):
     """Class to manage fetching EC data."""
+
+    config_entry: ECConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: ECConfigEntry,
-        ec_data: _ECDataTypeT,
+        ec_data: DataT,
         name: str,
         update_interval: timedelta,
     ) -> None:
@@ -60,7 +61,7 @@ class ECDataUpdateCoordinator[_ECDataTypeT: ECAirQuality | ECRadar | ECWeather](
             configuration_url="https://weather.gc.ca/",
         )
 
-    async def _async_update_data(self) -> _ECDataTypeT:
+    async def _async_update_data(self) -> DataT:
         """Fetch data from EC."""
         try:
             await self.ec_data.update()
