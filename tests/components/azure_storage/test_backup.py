@@ -6,7 +6,7 @@ from collections.abc import AsyncGenerator
 from io import StringIO
 from unittest.mock import ANY, Mock, patch
 
-from azure.core.exceptions import HttpResponseError, ResourceNotFoundError
+from azure.core.exceptions import HttpResponseError
 import pytest
 
 from homeassistant.components.azure_storage.const import DOMAIN
@@ -128,24 +128,6 @@ async def test_agents_get_backup(
         "failed_agent_ids": [],
         "with_automatic_settings": None,
     }
-
-
-async def test_agents_get_backup_not_found_error(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    mock_blob_client: MagicMock,
-) -> None:
-    """Test agent get backup not found with error."""
-
-    mock_blob_client.get_blob_properties.side_effect = ResourceNotFoundError()
-    backup_id = TEST_BACKUP.backup_id
-    client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
-    response = await client.receive_json()
-
-    assert response["success"]
-    assert response["result"]["agent_errors"] == {}
-    assert response["result"]["backup"] is None
 
 
 async def test_agents_delete(

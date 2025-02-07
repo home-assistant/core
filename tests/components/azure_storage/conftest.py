@@ -1,7 +1,7 @@
 """Fixtures for Azure Storage tests."""
 
 from collections.abc import AsyncIterator, Generator
-from unittest.mock import AsyncMock, MagicMock, Mock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from azure.storage.blob import BlobProperties
 import pytest
@@ -22,18 +22,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
-@pytest.fixture
-def mock_blob_client() -> Mock:
-    """Mock the Azure Storage blob client."""
-    blob_client = Mock()
-    blob_client.get_blob_properties = AsyncMock(
-        return_value=BlobProperties(metadata=BACKUP_METADATA)
-    )
-    return blob_client
-
-
 @pytest.fixture(autouse=True)
-def mock_client(mock_blob_client: Mock) -> Generator[MagicMock]:
+def mock_client() -> Generator[MagicMock]:
     """Mock the Azure Storage client."""
     with (
         patch(
@@ -53,8 +43,6 @@ def mock_client(mock_blob_client: Mock) -> Generator[MagicMock]:
             yield BlobProperties(metadata=BACKUP_METADATA)
 
         client.list_blobs.return_value = async_list_blobs()
-
-        client.get_blob_client.return_value = mock_blob_client
 
         class MockStream:
             async def chunks(self) -> AsyncIterator[bytes]:
