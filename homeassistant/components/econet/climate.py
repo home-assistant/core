@@ -35,6 +35,7 @@ ECONET_STATE_TO_HA = {
     ThermostatOperationMode.OFF: HVACMode.OFF,
     ThermostatOperationMode.AUTO: HVACMode.HEAT_COOL,
     ThermostatOperationMode.FAN_ONLY: HVACMode.FAN_ONLY,
+    ThermostatOperationMode.EMERGENCY_HEAT: HVACMode.HEAT,
 }
 HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
 
