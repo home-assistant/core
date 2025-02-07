@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from dataclasses import dataclass
+import json
 
 from tuya_sharing import CustomerDevice, Manager
 
@@ -17,8 +19,21 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TuyaConfigEntry
-from .const import TUYA_DISCOVERY_NEW, DPCode
+from .const import LOGGER, TUYA_DISCOVERY_NEW, DPCode
 from .entity import TuyaEntity
+
+
+@dataclass(frozen=True)
+class BitTest:
+    """BitTest is used to encode the "on_value" for one bit in a bitmask.
+
+    The mask is used to isolate the bit that should be
+    tested. By default 1 means "on" and 0 means "off", but setting the
+    bit in xmask flips it so that 1 means "off" and 0 means "on".
+    """
+
+    mask: int = 0
+    xmask: int = 0
 
 
 @dataclass(frozen=True)
@@ -29,7 +44,7 @@ class TuyaBinarySensorEntityDescription(BinarySensorEntityDescription):
     dpcode: DPCode | None = None
 
     # Value or values to consider binary sensor to be "on"
-    on_value: bool | float | int | str | set[bool | float | int | str] = True
+    on_value: bool | float | int | str | BitTest | set[bool | float | int | str] = True
 
 
 # Commonly used sensors
@@ -340,6 +355,78 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
 }
 
 
+# Sometimes bitmaps are used to pack the status of several binary sensors
+# into one integer. In the home assistant interface, it is more convenient
+# to represent each bit of the bitmap as a separate binary sensor. So
+# each TuyaBitmapSensorEntityDescription gets converted into several
+# TuyaBinarySensorEntityDescription's during async_discover_device.
+@dataclass(frozen=True)
+class TuyaBitmapSensorEntityDescription(TuyaBinarySensorEntityDescription):
+    """Describes a Tuya bitmap sensor."""
+
+    # Which bits to convert into binary sensors
+    mask: int = 0
+
+    # By default, if a bit is 1 it means "on" and 0 means "off". But
+    # sometimes the meaning might be inverted, so 1 means "off" and 0
+    # means "on". Setting a bit in xmask inverts the meaning of that
+    # bit.
+    xmask: int = 0
+
+
+BITMAP_SENSORS: dict[str, tuple[TuyaBitmapSensorEntityDescription, ...]] = {
+    # Dehumidifier (however, these bitmap values are currently undocumented)
+    # https://developer.tuya.com/en/docs/iot/s?id=K9gf48r6jke8e
+    "cs": (
+        TuyaBitmapSensorEntityDescription(
+            key=DPCode.FAULT,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            mask=0x83,  # tankfull, defrost, wet
+            xmask=0x0,
+        ),
+    ),
+}
+
+
+def generate_binary_sensor_entities(
+    device: CustomerDevice, manager: Manager
+) -> Generator[TuyaBinarySensorEntity]:
+    """Generate a list of binary sensors for the device."""
+    for description in BINARY_SENSORS.get(device.category, []):
+        dpcode = description.dpcode or description.key
+        if dpcode in device.status:
+            yield TuyaBinarySensorEntity(device, manager, description)
+
+    for description in BITMAP_SENSORS.get(device.category, []):
+        dpcode = DPCode(description.dpcode or description.key)
+        if dpcode not in device.status:
+            continue
+        try:
+            status_range = device.status_range[dpcode]
+            labels = json.loads(status_range.values)["label"]
+            assert status_range.type == "Bitmap"
+            for i, label in enumerate(labels):
+                xi = 1 << i
+                if (xi & description.mask) == 0:
+                    continue
+                yield TuyaBinarySensorEntity(
+                    device,
+                    manager,
+                    TuyaBinarySensorEntityDescription(
+                        key=f"{dpcode}_{label}",
+                        dpcode=dpcode,
+                        translation_key=label,
+                        device_class=description.device_class,
+                        entity_category=description.entity_category,
+                        on_value=BitTest(mask=xi, xmask=description.xmask & xi),
+                        name=label,
+                    ),
+                )
+        except (AssertionError, IndexError, ValueError):
+            LOGGER.exception("Invalid Bitmap device: %s", str(device))
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -352,15 +439,7 @@ async def async_setup_entry(
         entities: list[TuyaBinarySensorEntity] = []
         for device_id in device_ids:
             device = hass_data.manager.device_map[device_id]
-            if descriptions := BINARY_SENSORS.get(device.category):
-                for description in descriptions:
-                    dpcode = description.dpcode or description.key
-                    if dpcode in device.status:
-                        entities.append(
-                            TuyaBinarySensorEntity(
-                                device, hass_data.manager, description
-                            )
-                        )
+            entities.extend(generate_binary_sensor_entities(device, hass_data.manager))
 
         async_add_entities(entities)
 
@@ -396,5 +475,11 @@ class TuyaBinarySensorEntity(TuyaEntity, BinarySensorEntity):
 
         if isinstance(self.entity_description.on_value, set):
             return self.device.status[dpcode] in self.entity_description.on_value
+
+        if isinstance(self.entity_description.on_value, BitTest):
+            bitmap = self.device.status[dpcode]
+            mask = self.entity_description.on_value.mask
+            xmask = self.entity_description.on_value.xmask
+            return ((bitmap ^ xmask) & mask) != 0
 
         return self.device.status[dpcode] == self.entity_description.on_value

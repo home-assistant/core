@@ -56,6 +56,15 @@
       },
       "tilt": {
         "name": "Tilt"
+      },
+      "tankfull": {
+        "name": "Tank full"
+      },
+      "defrost": {
+        "name": "Defrost"
+      },
+      "wet": {
+        "name": "Wet"
       }
     },
     "button": {
