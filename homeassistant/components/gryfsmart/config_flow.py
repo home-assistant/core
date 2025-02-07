@@ -435,7 +435,7 @@ class GryfSmartOptionsFlow(config_entries.OptionsFlow):
 
 
 def check_extra_parameter(
-    extra_parameter: Any | None,
+    extra_parameter: Any,
     device_type: Any | None,
 ) -> str | None:
     """Check extra parameter."""
@@ -443,8 +443,14 @@ def check_extra_parameter(
     if device_type == Platform.BINARY_SENSOR:
         if extra_parameter not in BINARY_SENSOR_DEVICE_CLASS:
             return "Bad binary sensor extra parameter!"
-    if device_type == Platform.SWITCH:
+    elif device_type == Platform.SWITCH:
         if extra_parameter not in SWITCH_DEVICE_CLASS:
             return "Bad Output extra parameter!"
+    elif device_type == Platform.CLIMATE:
+        try:
+            if int(extra_parameter) > 10:
+                return None
+        except ValueError:
+            return "Bad Thermostate extra parameter!"
 
     return None
