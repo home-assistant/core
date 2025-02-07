@@ -99,12 +99,16 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
         """Initialize a Homee switch entity."""
         super().__init__(attribute, entry)
         self.entity_description = description
-        self._attr_is_on = bool(attribute.current_value)
         if not ((attribute.type == AttributeType.ON_OFF) and (attribute.instance == 0)):
             self._attr_translation_key = description.key
         if attribute.instance > 0:
             self._attr_translation_key = f"{description.key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        return bool(self._attribute.current_value)
 
     @property
     def device_class(self) -> SwitchDeviceClass:
