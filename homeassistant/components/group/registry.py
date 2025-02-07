@@ -8,8 +8,10 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from homeassistant.components.alarm_control_panel import AlarmControlPanelState
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.vacuum import STATE_CLEANING, STATE_ERROR, STATE_RETURNING
+from homeassistant.components.lock import LockState
+from homeassistant.components.vacuum import VacuumActivity
 from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_ELECTRIC,
@@ -19,28 +21,17 @@ from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
 )
 from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_TRIGGERED,
     STATE_CLOSED,
     STATE_HOME,
     STATE_IDLE,
-    STATE_LOCKED,
-    STATE_LOCKING,
     STATE_NOT_HOME,
     STATE_OFF,
     STATE_OK,
     STATE_ON,
     STATE_OPEN,
-    STATE_OPENING,
     STATE_PAUSED,
     STATE_PLAYING,
     STATE_PROBLEM,
-    STATE_UNLOCKED,
-    STATE_UNLOCKING,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -64,12 +55,12 @@ ON_OFF_STATES: dict[Platform | str, tuple[set[str], str, str]] = {
     Platform.ALARM_CONTROL_PANEL: (
         {
             STATE_ON,
-            STATE_ALARM_ARMED_AWAY,
-            STATE_ALARM_ARMED_CUSTOM_BYPASS,
-            STATE_ALARM_ARMED_HOME,
-            STATE_ALARM_ARMED_NIGHT,
-            STATE_ALARM_ARMED_VACATION,
-            STATE_ALARM_TRIGGERED,
+            AlarmControlPanelState.ARMED_AWAY,
+            AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+            AlarmControlPanelState.ARMED_HOME,
+            AlarmControlPanelState.ARMED_NIGHT,
+            AlarmControlPanelState.ARMED_VACATION,
+            AlarmControlPanelState.TRIGGERED,
         },
         STATE_ON,
         STATE_OFF,
@@ -90,14 +81,14 @@ ON_OFF_STATES: dict[Platform | str, tuple[set[str], str, str]] = {
     Platform.DEVICE_TRACKER: ({STATE_HOME}, STATE_HOME, STATE_NOT_HOME),
     Platform.LOCK: (
         {
-            STATE_LOCKING,
-            STATE_OPEN,
-            STATE_OPENING,
-            STATE_UNLOCKED,
-            STATE_UNLOCKING,
+            LockState.LOCKING,
+            LockState.OPEN,
+            LockState.OPENING,
+            LockState.UNLOCKED,
+            LockState.UNLOCKING,
         },
-        STATE_UNLOCKED,
-        STATE_LOCKED,
+        LockState.UNLOCKED,
+        LockState.LOCKED,
     ),
     Platform.MEDIA_PLAYER: (
         {
@@ -114,9 +105,9 @@ ON_OFF_STATES: dict[Platform | str, tuple[set[str], str, str]] = {
     Platform.VACUUM: (
         {
             STATE_ON,
-            STATE_CLEANING,
-            STATE_RETURNING,
-            STATE_ERROR,
+            VacuumActivity.CLEANING,
+            VacuumActivity.RETURNING,
+            VacuumActivity.ERROR,
         },
         STATE_ON,
         STATE_OFF,
@@ -160,8 +151,7 @@ def _process_group_platform(
     hass: HomeAssistant, domain: str, platform: GroupProtocol
 ) -> None:
     """Process a group platform."""
-    registry: GroupIntegrationRegistry = hass.data[REG_KEY]
-    platform.async_describe_on_off_states(hass, registry)
+    platform.async_describe_on_off_states(hass, hass.data[REG_KEY])
 
 
 @dataclass(frozen=True, slots=True)

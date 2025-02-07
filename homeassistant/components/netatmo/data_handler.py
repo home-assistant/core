@@ -33,6 +33,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     NETATMO_CREATE_BATTERY,
+    NETATMO_CREATE_BUTTON,
     NETATMO_CREATE_CAMERA,
     NETATMO_CREATE_CAMERA_LIGHT,
     NETATMO_CREATE_CLIMATE,
@@ -215,11 +216,11 @@ class NetatmoDataHandler:
     async def handle_event(self, event: dict) -> None:
         """Handle webhook events."""
         if event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_ACTIVATION:
-            _LOGGER.info("%s webhook successfully registered", MANUFACTURER)
+            _LOGGER.debug("%s webhook successfully registered", MANUFACTURER)
             self._webhook = True
 
         elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_DEACTIVATION:
-            _LOGGER.info("%s webhook unregistered", MANUFACTURER)
+            _LOGGER.debug("%s webhook unregistered", MANUFACTURER)
             self._webhook = False
 
         elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_NACAMERA_CONNECTION:
@@ -350,7 +351,10 @@ class NetatmoDataHandler:
                 NETATMO_CREATE_CAMERA_LIGHT,
             ],
             NetatmoDeviceCategory.dimmer: [NETATMO_CREATE_LIGHT],
-            NetatmoDeviceCategory.shutter: [NETATMO_CREATE_COVER],
+            NetatmoDeviceCategory.shutter: [
+                NETATMO_CREATE_COVER,
+                NETATMO_CREATE_BUTTON,
+            ],
             NetatmoDeviceCategory.switch: [
                 NETATMO_CREATE_LIGHT,
                 NETATMO_CREATE_SWITCH,

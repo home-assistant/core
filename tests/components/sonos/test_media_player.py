@@ -1,29 +1,66 @@
 """Tests for the Sonos Media Player platform."""
 
-import logging
 from typing import Any
+from unittest.mock import patch
 
 import pytest
+from soco.data_structures import SearchResult
+from sonos_websocket.exception import SonosWebsocketError
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.media_player import (
+    ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_ANNOUNCE,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
+    ATTR_MEDIA_REPEAT,
+    ATTR_MEDIA_SHUFFLE,
+    ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
+    SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
+    RepeatMode,
 )
-from homeassistant.components.sonos.const import SOURCE_LINEIN, SOURCE_TV
-from homeassistant.components.sonos.media_player import LONG_SERVICE_TIMEOUT
-from homeassistant.const import STATE_IDLE
+from homeassistant.components.sonos.const import (
+    DOMAIN as SONOS_DOMAIN,
+    SOURCE_LINEIN,
+    SOURCE_TV,
+)
+from homeassistant.components.sonos.media_player import (
+    LONG_SERVICE_TIMEOUT,
+    SERVICE_GET_QUEUE,
+    SERVICE_RESTORE,
+    SERVICE_SNAPSHOT,
+    VOLUME_INCREMENT,
+)
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_MEDIA_NEXT_TRACK,
+    SERVICE_MEDIA_PAUSE,
+    SERVICE_MEDIA_PLAY,
+    SERVICE_MEDIA_PREVIOUS_TRACK,
+    SERVICE_MEDIA_STOP,
+    SERVICE_REPEAT_SET,
+    SERVICE_SHUFFLE_SET,
+    SERVICE_VOLUME_DOWN,
+    SERVICE_VOLUME_SET,
+    SERVICE_VOLUME_UP,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     CONNECTION_UPNP,
     DeviceRegistry,
 )
+from homeassistant.setup import async_setup_component
 
-from .conftest import MockMusicServiceItem, SoCoMockFactory
+from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
 
 
 async def test_device_registry(
@@ -35,6 +72,7 @@ async def test_device_registry(
     )
     assert reg_device is not None
     assert reg_device.model == "Model Name"
+    assert reg_device.model_id == "S12"
     assert reg_device.sw_version == "13.1"
     assert reg_device.connections == {
         (CONNECTION_NETWORK_MAC, "00:11:22:33:44:55"),
@@ -61,15 +99,18 @@ async def test_device_registry_not_portable(
 
 
 async def test_entity_basic(
-    hass: HomeAssistant, async_autosetup_sonos, discover
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    discover,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test basic state and attributes."""
-    state = hass.states.get("media_player.zone_a")
-    assert state.state == STATE_IDLE
-    attributes = state.attributes
-    assert attributes["friendly_name"] == "Zone A"
-    assert attributes["is_volume_muted"] is False
-    assert attributes["volume_level"] == 0.19
+    entity_id = "media_player.zone_a"
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
+    state = hass.states.get(entity_entry.entity_id)
+    assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
 @pytest.mark.parametrize(
@@ -157,9 +198,9 @@ async def test_play_media_library(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": media_content_type,
-            "media_content_id": media_content_id,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+            ATTR_MEDIA_CONTENT_ID: media_content_id,
             ATTR_MEDIA_ENQUEUE: enqueue,
         },
         blocking=True,
@@ -192,6 +233,45 @@ async def test_play_media_library(
         )
 
 
+@pytest.mark.parametrize(
+    ("media_content_type", "media_content_id", "message"),
+    [
+        (
+            "artist",
+            "A:ALBUM/UnknowAlbum",
+            "Could not find media in library: A:ALBUM/UnknowAlbum",
+        ),
+        (
+            "UnknownContent",
+            "A:ALBUM/UnknowAlbum",
+            "Sonos does not support media content type: UnknownContent",
+        ),
+    ],
+)
+async def test_play_media_library_content_error(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    media_content_type,
+    media_content_id,
+    message,
+) -> None:
+    """Test playing local library errors on content and content type."""
+    with pytest.raises(
+        ServiceValidationError,
+        match=message,
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: media_content_type,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+        )
+
+
 _track_url = "S://192.168.42.100/music/iTunes/The%20Beatles/A%20Hard%20Day%2fs%I%20Should%20Have%20Known%20Better.mp3"
 
 
@@ -206,9 +286,9 @@ async def test_play_media_lib_track_play(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "track",
-            "media_content_id": _track_url,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "track",
+            ATTR_MEDIA_CONTENT_ID: _track_url,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
         },
         blocking=True,
@@ -235,9 +315,9 @@ async def test_play_media_lib_track_next(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "track",
-            "media_content_id": _track_url,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "track",
+            ATTR_MEDIA_CONTENT_ID: _track_url,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
         },
         blocking=True,
@@ -263,9 +343,9 @@ async def test_play_media_lib_track_replace(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "track",
-            "media_content_id": _track_url,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "track",
+            ATTR_MEDIA_CONTENT_ID: _track_url,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
         },
         blocking=True,
@@ -286,9 +366,9 @@ async def test_play_media_lib_track_add(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "track",
-            "media_content_id": _track_url,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "track",
+            ATTR_MEDIA_CONTENT_ID: _track_url,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
         },
         blocking=True,
@@ -316,9 +396,9 @@ async def test_play_media_share_link_add(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "playlist",
-            "media_content_id": _share_link,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.ADD,
         },
         blocking=True,
@@ -344,9 +424,9 @@ async def test_play_media_share_link_next(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "playlist",
-            "media_content_id": _share_link,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.NEXT,
         },
         blocking=True,
@@ -376,9 +456,9 @@ async def test_play_media_share_link_play(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "playlist",
-            "media_content_id": _share_link,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.PLAY,
         },
         blocking=True,
@@ -410,9 +490,9 @@ async def test_play_media_share_link_replace(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "playlist",
-            "media_content_id": _share_link,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: _share_link,
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
         },
         blocking=True,
@@ -475,9 +555,9 @@ async def test_play_media_music_library_playlist(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "playlist",
-            "media_content_id": media_content_id,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: media_content_id,
         },
         blocking=True,
     )
@@ -499,21 +579,68 @@ async def test_play_media_music_library_playlist_dne(
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
     soco_mock.music_library.get_playlists.return_value = _mock_playlists
 
-    with caplog.at_level(logging.ERROR):
-        caplog.clear()
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Could not find Sonos playlist: {media_content_id}",
+    ):
         await hass.services.async_call(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                "entity_id": "media_player.zone_a",
-                "media_content_type": "playlist",
-                "media_content_id": media_content_id,
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "playlist",
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
             },
             blocking=True,
         )
     assert soco_mock.play_uri.call_count == 0
-    assert media_content_id in caplog.text
-    assert "playlist" in caplog.text
+
+
+async def test_play_sonos_playlist(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+    soco: MockSoCo,
+    sonos_playlists: SearchResult,
+) -> None:
+    """Test that sonos playlists can be played."""
+
+    # Test a successful call
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "playlist",
+            ATTR_MEDIA_CONTENT_ID: "sample playlist",
+        },
+        blocking=True,
+    )
+    assert soco.clear_queue.call_count == 1
+    assert soco.add_to_queue.call_count == 1
+    soco.add_to_queue.asset_called_with(
+        sonos_playlists[0], timeout=LONG_SERVICE_TIMEOUT
+    )
+
+    # Test playing a non-existent playlist
+    soco.clear_queue.reset_mock()
+    soco.add_to_queue.reset_mock()
+    media_content_id: str = "bad playlist"
+    with pytest.raises(
+        ServiceValidationError,
+        match=f"Could not find Sonos playlist: {media_content_id}",
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "playlist",
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+        )
+    assert soco.clear_queue.call_count == 0
+    assert soco.add_to_queue.call_count == 0
 
 
 @pytest.mark.parametrize(
@@ -546,8 +673,8 @@ async def test_select_source_line_in_tv(
         MP_DOMAIN,
         SERVICE_SELECT_SOURCE,
         {
-            "entity_id": "media_player.zone_a",
-            "source": source,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_INPUT_SOURCE: source,
         },
         blocking=True,
     )
@@ -589,8 +716,8 @@ async def test_select_source_play_uri(
         MP_DOMAIN,
         SERVICE_SELECT_SOURCE,
         {
-            "entity_id": "media_player.zone_a",
-            "source": source,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_INPUT_SOURCE: source,
         },
         blocking=True,
     )
@@ -629,8 +756,8 @@ async def test_select_source_play_queue(
         MP_DOMAIN,
         SERVICE_SELECT_SOURCE,
         {
-            "entity_id": "media_player.zone_a",
-            "source": source,
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_INPUT_SOURCE: source,
         },
         blocking=True,
     )
@@ -658,13 +785,154 @@ async def test_select_source_error(
             MP_DOMAIN,
             SERVICE_SELECT_SOURCE,
             {
-                "entity_id": "media_player.zone_a",
-                "source": "invalid_source",
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_INPUT_SOURCE: "invalid_source",
             },
             blocking=True,
         )
     assert "invalid_source" in str(sve.value)
     assert "Could not find a Sonos favorite" in str(sve.value)
+
+
+async def test_shuffle_set(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test the set shuffle method."""
+    assert soco.play_mode == "NORMAL"
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SHUFFLE_SET,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_SHUFFLE: True,
+        },
+        blocking=True,
+    )
+    assert soco.play_mode == "SHUFFLE_NOREPEAT"
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_SHUFFLE_SET,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_SHUFFLE: False,
+        },
+        blocking=True,
+    )
+    assert soco.play_mode == "NORMAL"
+
+
+async def test_shuffle_get(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    no_media_event: SonosMockEvent,
+) -> None:
+    """Test the get shuffle attribute by simulating a Sonos Event."""
+    subscription = soco.avTransport.subscribe.return_value
+    sub_callback = subscription.callback
+
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes[ATTR_MEDIA_SHUFFLE] is False
+
+    no_media_event.variables["current_play_mode"] = "SHUFFLE_NOREPEAT"
+    sub_callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes[ATTR_MEDIA_SHUFFLE] is True
+
+    # The integration keeps a copy of the last event to check for
+    # changes, so we create a new event.
+    no_media_event = SonosMockEvent(
+        soco, soco.avTransport, no_media_event.variables.copy()
+    )
+    no_media_event.variables["current_play_mode"] = "NORMAL"
+    sub_callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes[ATTR_MEDIA_SHUFFLE] is False
+
+
+async def test_repeat_set(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test the set repeat method."""
+    assert soco.play_mode == "NORMAL"
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_REPEAT: RepeatMode.ALL,
+        },
+        blocking=True,
+    )
+    assert soco.play_mode == "REPEAT_ALL"
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_REPEAT: RepeatMode.ONE,
+        },
+        blocking=True,
+    )
+    assert soco.play_mode == "REPEAT_ONE"
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_REPEAT_SET,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_REPEAT: RepeatMode.OFF,
+        },
+        blocking=True,
+    )
+    assert soco.play_mode == "NORMAL"
+
+
+async def test_repeat_get(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    no_media_event: SonosMockEvent,
+) -> None:
+    """Test the get repeat attribute by simulating a Sonos Event."""
+    subscription = soco.avTransport.subscribe.return_value
+    sub_callback = subscription.callback
+
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.OFF
+
+    no_media_event.variables["current_play_mode"] = "REPEAT_ALL"
+    sub_callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.ALL
+
+    no_media_event = SonosMockEvent(
+        soco, soco.avTransport, no_media_event.variables.copy()
+    )
+    no_media_event.variables["current_play_mode"] = "REPEAT_ONE"
+    sub_callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.ONE
+
+    no_media_event = SonosMockEvent(
+        soco, soco.avTransport, no_media_event.variables.copy()
+    )
+    no_media_event.variables["current_play_mode"] = "NORMAL"
+    sub_callback(no_media_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    state = hass.states.get("media_player.zone_a")
+    assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.OFF
 
 
 async def test_play_media_favorite_item_id(
@@ -678,9 +946,9 @@ async def test_play_media_favorite_item_id(
         MP_DOMAIN,
         SERVICE_PLAY_MEDIA,
         {
-            "entity_id": "media_player.zone_a",
-            "media_content_type": "favorite_item_id",
-            "media_content_id": "FV:2/4",
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "favorite_item_id",
+            ATTR_MEDIA_CONTENT_ID: "FV:2/4",
         },
         blocking=True,
     )
@@ -700,10 +968,240 @@ async def test_play_media_favorite_item_id(
             MP_DOMAIN,
             SERVICE_PLAY_MEDIA,
             {
-                "entity_id": "media_player.zone_a",
-                "media_content_type": "favorite_item_id",
-                "media_content_id": "UNKNOWN_ID",
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "favorite_item_id",
+                ATTR_MEDIA_CONTENT_ID: "UNKNOWN_ID",
             },
             blocking=True,
         )
     assert "UNKNOWN_ID" in str(sve.value)
+
+
+async def _setup_hass(hass: HomeAssistant):
+    await async_setup_component(
+        hass,
+        SONOS_DOMAIN,
+        {
+            "sonos": {
+                "media_player": {
+                    "interface_addr": "127.0.0.1",
+                    "hosts": ["10.10.10.1", "10.10.10.2"],
+                }
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+
+async def test_service_snapshot_restore(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+) -> None:
+    """Test the snapshot and restore services."""
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.1", "Living Room")
+    soco_factory.cache_mock(MockSoCo(), "10.10.10.2", "Bedroom")
+    await _setup_hass(hass)
+    with patch(
+        "homeassistant.components.sonos.speaker.Snapshot.snapshot"
+    ) as mock_snapshot:
+        await hass.services.async_call(
+            SONOS_DOMAIN,
+            SERVICE_SNAPSHOT,
+            {
+                ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
+            },
+            blocking=True,
+        )
+    assert mock_snapshot.call_count == 2
+
+    with patch(
+        "homeassistant.components.sonos.speaker.Snapshot.restore"
+    ) as mock_restore:
+        await hass.services.async_call(
+            SONOS_DOMAIN,
+            SERVICE_RESTORE,
+            {
+                ATTR_ENTITY_ID: ["media_player.living_room", "media_player.bedroom"],
+            },
+            blocking=True,
+        )
+    assert mock_restore.call_count == 2
+
+
+async def test_volume(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+) -> None:
+    """Test the media player volume services."""
+    initial_volume = soco.volume
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_UP,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert soco.volume == initial_volume + VOLUME_INCREMENT
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_DOWN,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert soco.volume == initial_volume
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_VOLUME_SET,
+        {ATTR_ENTITY_ID: "media_player.zone_a", ATTR_MEDIA_VOLUME_LEVEL: 0.30},
+        blocking=True,
+    )
+    # SoCo uses 0..100 for its range.
+    assert soco.volume == 30
+
+
+@pytest.mark.parametrize(
+    ("service", "client_call"),
+    [
+        (SERVICE_MEDIA_PLAY, "play"),
+        (SERVICE_MEDIA_PAUSE, "pause"),
+        (SERVICE_MEDIA_STOP, "stop"),
+        (SERVICE_MEDIA_NEXT_TRACK, "next"),
+        (SERVICE_MEDIA_PREVIOUS_TRACK, "previous"),
+        (SERVICE_CLEAR_PLAYLIST, "clear_queue"),
+    ],
+)
+async def test_media_transport(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    service: str,
+    client_call: str,
+) -> None:
+    """Test the media player transport services."""
+    await hass.services.async_call(
+        MP_DOMAIN,
+        service,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+    )
+    assert getattr(soco, client_call).call_count == 1
+
+
+async def test_play_media_announce(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    sonos_websocket,
+) -> None:
+    """Test playing media with the announce."""
+    content_id: str = "http://10.0.0.1:8123/local/sounds/doorbell.mp3"
+    volume: float = 0.30
+
+    # Test the success path
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+            ATTR_MEDIA_EXTRA: {"volume": volume},
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    sonos_websocket.play_clip.assert_called_with(content_id, volume=volume)
+
+    # Test receiving a websocket exception
+    sonos_websocket.play_clip.reset_mock()
+    sonos_websocket.play_clip.side_effect = SonosWebsocketError("Error Message")
+    with pytest.raises(
+        HomeAssistantError, match="Error when calling Sonos websocket: Error Message"
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: content_id,
+                ATTR_MEDIA_ANNOUNCE: True,
+            },
+            blocking=True,
+        )
+    assert sonos_websocket.play_clip.call_count == 1
+    sonos_websocket.play_clip.assert_called_with(content_id, volume=None)
+
+    # Test receiving a non success result
+    sonos_websocket.play_clip.reset_mock()
+    sonos_websocket.play_clip.side_effect = None
+    retval = {"success": 0}
+    sonos_websocket.play_clip.return_value = [retval, {}]
+    with pytest.raises(
+        HomeAssistantError, match=f"Announcing clip {content_id} failed {retval}"
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: "music",
+                ATTR_MEDIA_CONTENT_ID: content_id,
+                ATTR_MEDIA_ANNOUNCE: True,
+            },
+            blocking=True,
+        )
+    assert sonos_websocket.play_clip.call_count == 1
+
+    # Test speakers that do not support announce. This
+    # will result in playing the clip directly via play_uri
+    sonos_websocket.play_clip.reset_mock()
+    sonos_websocket.play_clip.side_effect = None
+    retval = {"success": 0, "type": "globalError"}
+    sonos_websocket.play_clip.return_value = [retval, {}]
+
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    soco.play_uri.assert_called_with(content_id, force_radio=False)
+
+
+async def test_media_get_queue(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    soco_factory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test getting the media queue."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    result = await hass.services.async_call(
+        SONOS_DOMAIN,
+        SERVICE_GET_QUEUE,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+        },
+        blocking=True,
+        return_response=True,
+    )
+    soco_mock.get_queue.assert_called_with(max_items=0)
+    assert result == snapshot

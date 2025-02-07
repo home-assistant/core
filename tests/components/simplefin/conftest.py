@@ -16,7 +16,7 @@ MOCK_ACCESS_URL = "https://i:am@yomama.house.com"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Mock setting up a config entry."""
     with patch(
         "homeassistant.components.simplefin.async_setup_entry", return_value=True

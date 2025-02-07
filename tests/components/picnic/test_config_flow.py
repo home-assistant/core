@@ -170,16 +170,15 @@ async def test_step_reauth(hass: HomeAssistant, picnic_api) -> None:
     # Create a mocked config entry
     conf = {CONF_ACCESS_TOKEN: "a3p98fsen.a39p3fap", CONF_COUNTRY_CODE: "NL"}
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=picnic_api().get_user()["user_id"],
         data=conf,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Init a re-auth flow
-    result_init = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=conf
-    )
+    result_init = await entry.start_reauth_flow(hass)
     assert result_init["type"] is FlowResultType.FORM
     assert result_init["step_id"] == "user"
 
@@ -210,16 +209,15 @@ async def test_step_reauth_failed(hass: HomeAssistant) -> None:
     user_id = "f29-2a6-o32n"
     conf = {CONF_ACCESS_TOKEN: "a3p98fsen.a39p3fap", CONF_COUNTRY_CODE: "NL"}
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=user_id,
         data=conf,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Init a re-auth flow
-    result_init = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=conf
-    )
+    result_init = await entry.start_reauth_flow(hass)
     assert result_init["type"] is FlowResultType.FORM
     assert result_init["step_id"] == "user"
 
@@ -249,16 +247,15 @@ async def test_step_reauth_different_account(hass: HomeAssistant, picnic_api) ->
     # Create a mocked config entry, unique_id should be different that the user id in the api response
     conf = {CONF_ACCESS_TOKEN: "a3p98fsen.a39p3fap", CONF_COUNTRY_CODE: "NL"}
 
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="3fpawh-ues-af3ho",
         data=conf,
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     # Init a re-auth flow
-    result_init = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_REAUTH}, data=conf
-    )
+    result_init = await entry.start_reauth_flow(hass)
     assert result_init["type"] is FlowResultType.FORM
     assert result_init["step_id"] == "user"
 

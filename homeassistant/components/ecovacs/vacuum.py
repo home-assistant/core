@@ -13,14 +13,9 @@ from deebot_client.models import CleanAction, CleanMode, Room, State
 import sucks
 
 from homeassistant.components.vacuum import (
-    STATE_CLEANING,
-    STATE_DOCKED,
-    STATE_ERROR,
-    STATE_IDLE,
-    STATE_PAUSED,
-    STATE_RETURNING,
     StateVacuumEntity,
     StateVacuumEntityDescription,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.core import HomeAssistant, SupportsResponse
@@ -32,7 +27,7 @@ from homeassistant.util import slugify
 
 from . import EcovacsConfigEntry
 from .const import DOMAIN
-from .entity import EcovacsEntity
+from .entity import EcovacsEntity, EcovacsLegacyEntity
 from .util import get_name_key
 
 _LOGGER = logging.getLogger(__name__)
@@ -56,26 +51,25 @@ async def async_setup_entry(
         for device in controller.devices
         if device.capabilities.device_type is DeviceType.VACUUM
     ]
-    for device in controller.legacy_devices:
-        await hass.async_add_executor_job(device.connect_and_wait_until_ready)
-        vacuums.append(EcovacsLegacyVacuum(device))
+    vacuums.extend(
+        [EcovacsLegacyVacuum(device) for device in controller.legacy_devices]
+    )
     _LOGGER.debug("Adding Ecovacs Vacuums to Home Assistant: %s", vacuums)
     async_add_entities(vacuums)
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_RAW_GET_POSITIONS,
-        {},
+        None,
         "async_raw_get_positions",
         supports_response=SupportsResponse.ONLY,
     )
 
 
-class EcovacsLegacyVacuum(StateVacuumEntity):
+class EcovacsLegacyVacuum(EcovacsLegacyEntity, StateVacuumEntity):
     """Legacy Ecovacs vacuums."""
 
     _attr_fan_speed_list = [sucks.FAN_SPEED_NORMAL, sucks.FAN_SPEED_HIGH]
-    _attr_should_poll = False
     _attr_supported_features = (
         VacuumEntityFeature.BATTERY
         | VacuumEntityFeature.RETURN_HOME
@@ -88,21 +82,24 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         | VacuumEntityFeature.FAN_SPEED
     )
 
-    def __init__(self, device: sucks.VacBot) -> None:
-        """Initialize the Ecovacs Vacuum."""
-        self.device = device
-        vacuum = self.device.vacuum
-
-        self.error: str | None = None
-        self._attr_unique_id = vacuum["did"]
-        self._attr_name = vacuum.get("nick", vacuum["did"])
-
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
-        self.device.statusEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.batteryEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.lifespanEvents.subscribe(lambda _: self.schedule_update_ha_state())
-        self.device.errorEvents.subscribe(self.on_error)
+        self._event_listeners.append(
+            self.device.statusEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(
+            self.device.batteryEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(
+            self.device.lifespanEvents.subscribe(
+                lambda _: self.schedule_update_ha_state()
+            )
+        )
+        self._event_listeners.append(self.device.errorEvents.subscribe(self.on_error))
 
     def on_error(self, error: str) -> None:
         """Handle an error event from the robot.
@@ -121,22 +118,22 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         self.schedule_update_ha_state()
 
     @property
-    def state(self) -> str | None:
+    def activity(self) -> VacuumActivity | None:
         """Return the state of the vacuum cleaner."""
         if self.error is not None:
-            return STATE_ERROR
+            return VacuumActivity.ERROR
 
         if self.device.is_cleaning:
-            return STATE_CLEANING
+            return VacuumActivity.CLEANING
 
         if self.device.is_charging:
-            return STATE_DOCKED
+            return VacuumActivity.DOCKED
 
         if self.device.vacuum_status == sucks.CLEAN_MODE_STOP:
-            return STATE_IDLE
+            return VacuumActivity.IDLE
 
         if self.device.vacuum_status == sucks.CHARGE_MODE_RETURNING:
-            return STATE_RETURNING
+            return VacuumActivity.RETURNING
 
         return None
 
@@ -165,10 +162,6 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
         """Return the device-specific state attributes of this vacuum."""
         data: dict[str, Any] = {}
         data[ATTR_ERROR] = self.error
-
-        for key, val in self.device.components.items():
-            attr_name = ATTR_COMPONENT_PREFIX + key
-            data[attr_name] = int(val * 100)
 
         return data
 
@@ -199,7 +192,7 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
 
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set fan speed."""
-        if self.state == STATE_CLEANING:
+        if self.state == VacuumActivity.CLEANING:
             self.device.run(sucks.Clean(mode=self.device.clean_status, speed=fan_speed))
 
     def send_command(
@@ -222,12 +215,12 @@ class EcovacsLegacyVacuum(StateVacuumEntity):
 
 
 _STATE_TO_VACUUM_STATE = {
-    State.IDLE: STATE_IDLE,
-    State.CLEANING: STATE_CLEANING,
-    State.RETURNING: STATE_RETURNING,
-    State.DOCKED: STATE_DOCKED,
-    State.ERROR: STATE_ERROR,
-    State.PAUSED: STATE_PAUSED,
+    State.IDLE: VacuumActivity.IDLE,
+    State.CLEANING: VacuumActivity.CLEANING,
+    State.RETURNING: VacuumActivity.RETURNING,
+    State.DOCKED: VacuumActivity.DOCKED,
+    State.ERROR: VacuumActivity.ERROR,
+    State.PAUSED: VacuumActivity.PAUSED,
 }
 
 _ATTR_ROOMS = "rooms"
@@ -281,7 +274,7 @@ class EcovacsVacuum(
             self.async_write_ha_state()
 
         async def on_status(event: StateEvent) -> None:
-            self._attr_state = _STATE_TO_VACUUM_STATE[event.state]
+            self._attr_activity = _STATE_TO_VACUUM_STATE[event.state]
             self.async_write_ha_state()
 
         self._subscribe(self._capability.battery.event, on_battery)

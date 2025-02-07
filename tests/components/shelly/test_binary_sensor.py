@@ -3,15 +3,15 @@
 from copy import deepcopy
 from unittest.mock import Mock
 
-from aioshelly.const import MODEL_MOTION
+from aioshelly.const import MODEL_BLU_GATEWAY_GEN3, MODEL_MOTION
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.shelly.const import UPDATE_PERIOD_MULTIPLIER
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -169,9 +169,14 @@ async def test_block_restored_sleeping_binary_sensor(
 ) -> None:
     """Test block restored sleeping binary sensor."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, BINARY_SENSOR_DOMAIN, "test_name_motion", "sensor_0-motion", entry
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "test_name_motion",
+        "sensor_0-motion",
+        entry,
+        device_id=device.id,
     )
     mock_restore_cache(hass, [State(entity_id, STATE_ON)])
     monkeypatch.setattr(mock_block_device, "initialized", False)
@@ -196,9 +201,14 @@ async def test_block_restored_sleeping_binary_sensor_no_last_state(
 ) -> None:
     """Test block restored sleeping binary sensor missing last state."""
     entry = await init_integration(hass, 1, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, BINARY_SENSOR_DOMAIN, "test_name_motion", "sensor_0-motion", entry
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "test_name_motion",
+        "sensor_0-motion",
+        entry,
+        device_id=device.id,
     )
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -265,6 +275,7 @@ async def test_rpc_sleeping_binary_sensor(
 ) -> None:
     """Test RPC online sleeping binary sensor."""
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_cloud"
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     config_entry = await init_integration(hass, 2, sleep_period=1000)
 
@@ -304,9 +315,14 @@ async def test_rpc_restored_sleeping_binary_sensor(
 ) -> None:
     """Test RPC restored binary sensor."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "test_name_cloud",
+        "cloud-cloud",
+        entry,
+        device_id=device.id,
     )
 
     mock_restore_cache(hass, [State(entity_id, STATE_ON)])
@@ -333,9 +349,14 @@ async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
 ) -> None:
     """Test RPC restored sleeping binary sensor missing last state."""
     entry = await init_integration(hass, 2, sleep_period=1000, skip_setup=True)
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
-        hass, BINARY_SENSOR_DOMAIN, "test_name_cloud", "cloud-cloud", entry
+        hass,
+        BINARY_SENSOR_DOMAIN,
+        "test_name_cloud",
+        "cloud-cloud",
+        entry,
+        device_id=device.id,
     )
 
     monkeypatch.setattr(mock_rpc_device, "initialized", False)
@@ -366,7 +387,7 @@ async def test_rpc_restored_sleeping_binary_sensor_no_last_state(
 )
 async def test_rpc_device_virtual_binary_sensor(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     name: str | None,
@@ -401,7 +422,7 @@ async def test_rpc_device_virtual_binary_sensor(
 
 async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
@@ -435,7 +456,7 @@ async def test_rpc_remove_virtual_binary_sensor_when_mode_toggle(
 
 async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
@@ -456,3 +477,41 @@ async def test_rpc_remove_virtual_binary_sensor_when_orphaned(
 
     entry = entity_registry.async_get(entity_id)
     assert not entry
+
+
+async def test_blu_trv_binary_sensor_entity(
+    hass: HomeAssistant,
+    mock_blu_trv: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test BLU TRV binary sensor entity."""
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+
+    for entity in ("calibration",):
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.trv_name_{entity}"
+
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+async def test_rpc_flood_entities(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test RPC flood sensor entities."""
+    await init_integration(hass, 4)
+
+    for entity in ("flood", "mute"):
+        entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_{entity}"
+
+        state = hass.states.get(entity_id)
+        assert state == snapshot(name=f"{entity_id}-state")
+
+        entry = entity_registry.async_get(entity_id)
+        assert entry == snapshot(name=f"{entity_id}-entry")

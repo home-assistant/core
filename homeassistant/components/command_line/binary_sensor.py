@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import cast
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
@@ -40,10 +39,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Command line Binary Sensor."""
+    if not discovery_info:
+        return
 
-    discovery_info = cast(DiscoveryInfoType, discovery_info)
     binary_sensor_config = discovery_info
-
     command: str = binary_sensor_config[CONF_COMMAND]
     payload_off: str = binary_sensor_config[CONF_PAYLOAD_OFF]
     payload_on: str = binary_sensor_config[CONF_PAYLOAD_ON]
@@ -51,9 +50,7 @@ async def async_setup_platform(
     scan_interval: timedelta = binary_sensor_config.get(
         CONF_SCAN_INTERVAL, SCAN_INTERVAL
     )
-
-    if value_template := binary_sensor_config.get(CONF_VALUE_TEMPLATE):
-        value_template.hass = hass
+    value_template: Template | None = binary_sensor_config.get(CONF_VALUE_TEMPLATE)
 
     data = CommandSensorData(hass, command, command_timeout)
 

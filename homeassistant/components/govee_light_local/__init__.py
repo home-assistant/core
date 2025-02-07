@@ -9,23 +9,21 @@ import logging
 
 from govee_local_api.controller import LISTENING_PORT
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DISCOVERY_TIMEOUT, DOMAIN
-from .coordinator import GoveeLocalApiCoordinator
+from .const import DISCOVERY_TIMEOUT
+from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> bool:
     """Set up Govee light local from a config entry."""
-
-    coordinator: GoveeLocalApiCoordinator = GoveeLocalApiCoordinator(hass=hass)
+    coordinator = GoveeLocalApiCoordinator(hass=hass)
 
     async def await_cleanup():
         cleanup_complete: asyncio.Event = coordinator.cleanup()
@@ -52,14 +50,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except TimeoutError as ex:
         raise ConfigEntryNotReady from ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GoveeLocalConfigEntry) -> bool:
     """Unload a config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

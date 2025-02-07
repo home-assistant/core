@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import functools
 import logging
-import math
 from typing import Any
 
 from zha.exceptions import ZHAException
@@ -37,6 +36,18 @@ from .helpers import (
 
 _LOGGER = logging.getLogger(__name__)
 
+OTA_MESSAGE_BATTERY_POWERED = (
+    "Battery powered devices can sometimes take multiple hours to update and you may"
+    " need to wake the device for the update to begin."
+)
+
+ZHA_DOCS_NETWORK_RELIABILITY = "https://www.home-assistant.io/integrations/zha/#zigbee-interference-avoidance-and-network-rangecoverage-optimization"
+OTA_MESSAGE_RELIABILITY = (
+    "If you are having issues updating a specific device, make sure that you've"
+    f" eliminated [common environmental issues]({ZHA_DOCS_NETWORK_RELIABILITY}) that"
+    " could be affecting network reliability. OTA updates require a reliable network."
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -64,7 +75,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-coordinator-module
+class ZHAFirmwareUpdateCoordinator(DataUpdateCoordinator[None]):  # pylint: disable=hass-enforce-class-module
     """Firmware update coordinator that broadcasts updates network-wide."""
 
     def __init__(
@@ -95,7 +106,9 @@ class ZHAFirmwareUpdateEntity(
         UpdateEntityFeature.INSTALL
         | UpdateEntityFeature.PROGRESS
         | UpdateEntityFeature.SPECIFIC_VERSION
+        | UpdateEntityFeature.RELEASE_NOTES
     )
+    _attr_display_precision = 2  # 40 byte chunks with ~200KB files increments by 0.02%
 
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA siren."""
@@ -111,23 +124,22 @@ class ZHAFirmwareUpdateEntity(
         return self.entity_data.entity.installed_version
 
     @property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool | None:
+        """Update installation progress.
+
+        Should return a boolean (True if in progress, False if not).
+        """
+        return self.entity_data.entity.in_progress
+
+    @property
+    def update_percentage(self) -> int | float | None:
         """Update installation progress.
 
         Needs UpdateEntityFeature.PROGRESS flag to be set for it to be used.
 
-        Can either return a boolean (True if in progress, False if not)
-        or an integer to indicate the progress in from 0 to 100%.
+        Can either return a number to indicate the progress from 0 to 100% or None.
         """
-        if not self.entity_data.entity.in_progress:
-            return self.entity_data.entity.in_progress
-
-        # Stay in an indeterminate state until we actually send something
-        if self.entity_data.entity.progress == 0:
-            return True
-
-        # Rescale 0-100% to 2-100% to avoid 0 and 1 colliding with None, False, and True
-        return int(math.ceil(2 + 98 * self.entity_data.entity.progress / 100))
+        return self.entity_data.entity.update_percentage
 
     @property
     def latest_version(self) -> str | None:
@@ -143,6 +155,24 @@ class ZHAFirmwareUpdateEntity(
         """
         return self.entity_data.entity.release_summary
 
+    async def async_release_notes(self) -> str | None:
+        """Return full release notes.
+
+        This is suitable for a long changelog that does not fit in the release_summary
+        property. The returned string can contain markdown.
+        """
+
+        if self.entity_data.device_proxy.device.is_mains_powered:
+            header = f"<ha-alert alert-type='info'>{OTA_MESSAGE_RELIABILITY}</ha-alert>"
+        else:
+            header = (
+                "<ha-alert alert-type='info'>"
+                f"{OTA_MESSAGE_BATTERY_POWERED} {OTA_MESSAGE_RELIABILITY}"
+                "</ha-alert>"
+            )
+
+        return f"{header}\n\n{self.entity_data.entity.release_notes or ''}"
+
     @property
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
@@ -155,7 +185,7 @@ class ZHAFirmwareUpdateEntity(
     ) -> None:
         """Install an update."""
         try:
-            await self.entity_data.entity.async_install(version=version, backup=backup)
+            await self.entity_data.entity.async_install(version=version)
         except ZHAException as exc:
             raise HomeAssistantError(exc) from exc
         finally:

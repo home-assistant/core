@@ -14,8 +14,6 @@ import sys
 import time
 from typing import Any, Literal
 
-from psutil import NoSuchProcess
-
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
@@ -25,8 +23,6 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     PERCENTAGE,
-    STATE_OFF,
-    STATE_ON,
     EntityCategory,
     UnitOfDataRate,
     UnitOfInformation,
@@ -36,13 +32,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from . import SystemMonitorConfigEntry
-from .const import CONF_PROCESS, DOMAIN, NET_IO_TYPES
+from .const import DOMAIN, NET_IO_TYPES
 from .coordinator import SystemMonitorCoordinator
 from .util import get_all_disk_mounts, get_all_network_interfaces, read_cpu_temperature
 
@@ -66,24 +61,6 @@ def get_cpu_icon() -> Literal["mdi:cpu-64-bit", "mdi:cpu-32-bit"]:
     if sys.maxsize > 2**32:
         return "mdi:cpu-64-bit"
     return "mdi:cpu-32-bit"
-
-
-def get_process(entity: SystemMonitorSensor) -> str:
-    """Return process."""
-    state = STATE_OFF
-    for proc in entity.coordinator.data.processes:
-        try:
-            _LOGGER.debug("process %s for argument %s", proc.name(), entity.argument)
-            if entity.argument == proc.name():
-                state = STATE_ON
-                break
-        except NoSuchProcess as err:
-            _LOGGER.warning(
-                "Failed to load process with ID: %s, old name: %s",
-                err.pid,
-                err.name,
-            )
-    return state
 
 
 def get_network(entity: SystemMonitorSensor) -> float | None:
@@ -341,15 +318,6 @@ SENSOR_TYPES: dict[str, SysMonitorSensorEntityDescription] = {
         value_fn=get_throughput,
         add_to_update=lambda entity: ("io_counters", ""),
     ),
-    "process": SysMonitorSensorEntityDescription(
-        key="process",
-        translation_key="process",
-        placeholder="process",
-        icon=get_cpu_icon(),
-        mandatory_arg=True,
-        value_fn=get_process,
-        add_to_update=lambda entity: ("processes", ""),
-    ),
     "processor_use": SysMonitorSensorEntityDescription(
         key="processor_use",
         translation_key="processor_use",
@@ -461,16 +429,17 @@ async def async_setup_entry(
                 is_enabled = check_legacy_resource(
                     f"{_type}_{argument}", legacy_resources
                 )
-                loaded_resources.add(slugify(f"{_type}_{argument}"))
-                entities.append(
-                    SystemMonitorSensor(
-                        coordinator,
-                        sensor_description,
-                        entry.entry_id,
-                        argument,
-                        is_enabled,
+                if (_add := slugify(f"{_type}_{argument}")) not in loaded_resources:
+                    loaded_resources.add(_add)
+                    entities.append(
+                        SystemMonitorSensor(
+                            coordinator,
+                            sensor_description,
+                            entry.entry_id,
+                            argument,
+                            is_enabled,
+                        )
                     )
-                )
             continue
 
         if _type.startswith("ipv"):
@@ -548,35 +517,6 @@ async def async_setup_entry(
                         argument,
                         is_enabled,
                     )
-                )
-            continue
-
-        if _type == "process":
-            _entry = entry.options.get(SENSOR_DOMAIN, {})
-            for argument in _entry.get(CONF_PROCESS, []):
-                loaded_resources.add(slugify(f"{_type}_{argument}"))
-                entities.append(
-                    SystemMonitorSensor(
-                        coordinator,
-                        sensor_description,
-                        entry.entry_id,
-                        argument,
-                        True,
-                    )
-                )
-                async_create_issue(
-                    hass,
-                    DOMAIN,
-                    "process_sensor",
-                    breaks_in_ha_version="2024.9.0",
-                    is_fixable=True,
-                    is_persistent=False,
-                    severity=IssueSeverity.WARNING,
-                    translation_key="process_sensor",
-                    data={
-                        "entry_id": entry.entry_id,
-                        "processes": _entry[CONF_PROCESS],
-                    },
                 )
             continue
 

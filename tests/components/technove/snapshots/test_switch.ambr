@@ -42,6 +42,52 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_switches[switch.technove_station_charging_enabled-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.technove_station_charging_enabled',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Charging Enabled',
+    'platform': 'technove',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'session_active',
+    'unique_id': 'AA:AA:AA:AA:AA:BB_session_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switches[switch.technove_station_charging_enabled-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'TechnoVE Station Charging Enabled',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.technove_station_charging_enabled',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
     'state': 'on',
   })
 # ---

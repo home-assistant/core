@@ -8,7 +8,10 @@ from __future__ import annotations
 
 import dataclasses
 import sys
-from typing import Any, dataclass_transform
+from typing import TYPE_CHECKING, Any, cast, dataclass_transform
+
+if TYPE_CHECKING:
+    from _typeshed import DataclassInstance
 
 
 def _class_fields(cls: type, kw_only: bool) -> list[tuple[str, Any, Any]]:
@@ -111,6 +114,8 @@ class FrozenOrThawed(type):
             """
             cls, *_args = args
             if dataclasses.is_dataclass(cls):
+                if TYPE_CHECKING:
+                    cls = cast(type[DataclassInstance], cls)
                 return object.__new__(cls)
             return cls._dataclass(*_args, **kwargs)
 

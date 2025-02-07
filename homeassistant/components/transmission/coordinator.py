@@ -55,12 +55,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
     @property
     def limit(self) -> int:
         """Return limit."""
-        return self.config_entry.data.get(CONF_LIMIT, DEFAULT_LIMIT)
+        return self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT)
 
     @property
     def order(self) -> str:
         """Return order."""
-        return self.config_entry.data.get(CONF_ORDER, DEFAULT_ORDER)
+        return self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER)
 
     async def _async_update_data(self) -> SessionStats:
         """Update transmission data."""
@@ -102,7 +102,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         for torrent in current_completed_torrents:
             if torrent.id not in old_completed_torrents:
                 self.hass.bus.fire(
-                    EVENT_DOWNLOADED_TORRENT, {"name": torrent.name, "id": torrent.id}
+                    EVENT_DOWNLOADED_TORRENT,
+                    {
+                        "name": torrent.name,
+                        "id": torrent.id,
+                        "download_path": torrent.download_dir,
+                    },
                 )
 
         self._completed_torrents = current_completed_torrents
@@ -118,7 +123,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         for torrent in current_started_torrents:
             if torrent.id not in old_started_torrents:
                 self.hass.bus.fire(
-                    EVENT_STARTED_TORRENT, {"name": torrent.name, "id": torrent.id}
+                    EVENT_STARTED_TORRENT,
+                    {
+                        "name": torrent.name,
+                        "id": torrent.id,
+                        "download_path": torrent.download_dir,
+                    },
                 )
 
         self._started_torrents = current_started_torrents
@@ -130,7 +140,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         for torrent in self._all_torrents:
             if torrent.id not in current_torrents:
                 self.hass.bus.fire(
-                    EVENT_REMOVED_TORRENT, {"name": torrent.name, "id": torrent.id}
+                    EVENT_REMOVED_TORRENT,
+                    {
+                        "name": torrent.name,
+                        "id": torrent.id,
+                        "download_path": torrent.download_dir,
+                    },
                 )
 
         self._all_torrents = self.torrents.copy()

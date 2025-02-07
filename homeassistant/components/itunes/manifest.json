@@ -3,5 +3,6 @@
   "name": "Apple iTunes",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/itunes",
-  "iot_class": "local_polling"
+  "iot_class": "local_polling",
+  "quality_scale": "legacy"
 }

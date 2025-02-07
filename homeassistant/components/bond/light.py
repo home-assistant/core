@@ -52,7 +52,7 @@ async def async_setup_entry(
     for service in ENTITY_SERVICES:
         platform.async_register_entity_service(
             service,
-            {},
+            None,
             f"async_{service}",
         )
 

@@ -6,21 +6,14 @@ import pytest
 from pytest_unordered import unordered
 
 from homeassistant.components import automation
-from homeassistant.components.cover import DOMAIN, CoverEntityFeature
+from homeassistant.components.cover import DOMAIN, CoverEntityFeature, CoverState
 from homeassistant.components.device_automation import DeviceAutomationType
-from homeassistant.const import (
-    CONF_PLATFORM,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-    EntityCategory,
-)
+from homeassistant.const import CONF_PLATFORM, EntityCategory
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryHider
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import MockCover
 
@@ -387,7 +380,7 @@ async def test_if_fires_on_state_change(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_CLOSED)
+    hass.states.async_set(entry.entity_id, CoverState.CLOSED)
 
     assert await async_setup_component(
         hass,
@@ -487,7 +480,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is opened.
-    hass.states.async_set(entry.entity_id, STATE_OPEN)
+    hass.states.async_set(entry.entity_id, CoverState.OPEN)
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert (
@@ -496,7 +489,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is closed.
-    hass.states.async_set(entry.entity_id, STATE_CLOSED)
+    hass.states.async_set(entry.entity_id, CoverState.CLOSED)
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert (
@@ -505,7 +498,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is opening.
-    hass.states.async_set(entry.entity_id, STATE_OPENING)
+    hass.states.async_set(entry.entity_id, CoverState.OPENING)
     await hass.async_block_till_done()
     assert len(service_calls) == 3
     assert (
@@ -514,7 +507,7 @@ async def test_if_fires_on_state_change(
     )
 
     # Fake that the entity is closing.
-    hass.states.async_set(entry.entity_id, STATE_CLOSING)
+    hass.states.async_set(entry.entity_id, CoverState.CLOSING)
     await hass.async_block_till_done()
     assert len(service_calls) == 4
     assert (
@@ -540,7 +533,7 @@ async def test_if_fires_on_state_change_legacy(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_CLOSED)
+    hass.states.async_set(entry.entity_id, CoverState.CLOSED)
 
     assert await async_setup_component(
         hass,
@@ -574,7 +567,7 @@ async def test_if_fires_on_state_change_legacy(
     )
 
     # Fake that the entity is opened.
-    hass.states.async_set(entry.entity_id, STATE_OPEN)
+    hass.states.async_set(entry.entity_id, CoverState.OPEN)
     await hass.async_block_till_done()
     assert len(service_calls) == 1
     assert (
@@ -600,7 +593,7 @@ async def test_if_fires_on_state_change_with_for(
         DOMAIN, "test", "5678", device_id=device_entry.id
     )
 
-    hass.states.async_set(entry.entity_id, STATE_CLOSED)
+    hass.states.async_set(entry.entity_id, CoverState.CLOSED)
 
     assert await async_setup_component(
         hass,
@@ -635,7 +628,7 @@ async def test_if_fires_on_state_change_with_for(
     await hass.async_block_till_done()
     assert len(service_calls) == 0
 
-    hass.states.async_set(entry.entity_id, STATE_OPEN)
+    hass.states.async_set(entry.entity_id, CoverState.OPEN)
     await hass.async_block_till_done()
     assert len(service_calls) == 0
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=10))
@@ -754,12 +747,14 @@ async def test_if_fires_on_position(
             ]
         },
     )
-    hass.states.async_set(ent.entity_id, STATE_OPEN, attributes={"current_position": 1})
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_position": 95}
+        ent.entity_id, CoverState.OPEN, attributes={"current_position": 1}
     )
     hass.states.async_set(
-        ent.entity_id, STATE_OPEN, attributes={"current_position": 50}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_position": 95}
+    )
+    hass.states.async_set(
+        ent.entity_id, CoverState.OPEN, attributes={"current_position": 50}
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 3
@@ -771,21 +766,18 @@ async def test_if_fires_on_position(
         ]
     ) == sorted(
         [
-            (
-                f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open"
-                " - None"
-            ),
+            f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_gt_45 - device - {entry.entity_id} - open - closed - None",
         ]
     )
 
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_position": 95}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_position": 95}
     )
     await hass.async_block_till_done()
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_position": 45}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_position": 45}
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 4
@@ -795,7 +787,7 @@ async def test_if_fires_on_position(
     )
 
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_position": 90}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_position": 90}
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 5
@@ -912,13 +904,13 @@ async def test_if_fires_on_tilt_position(
         },
     )
     hass.states.async_set(
-        ent.entity_id, STATE_OPEN, attributes={"current_tilt_position": 1}
+        ent.entity_id, CoverState.OPEN, attributes={"current_tilt_position": 1}
     )
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 95}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_tilt_position": 95}
     )
     hass.states.async_set(
-        ent.entity_id, STATE_OPEN, attributes={"current_tilt_position": 50}
+        ent.entity_id, CoverState.OPEN, attributes={"current_tilt_position": 50}
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 3
@@ -930,21 +922,18 @@ async def test_if_fires_on_tilt_position(
         ]
     ) == sorted(
         [
-            (
-                f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open"
-                " - None"
-            ),
+            f"is_pos_gt_45_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_lt_90 - device - {entry.entity_id} - closed - open - None",
             f"is_pos_gt_45 - device - {entry.entity_id} - open - closed - None",
         ]
     )
 
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 95}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_tilt_position": 95}
     )
     await hass.async_block_till_done()
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 45}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_tilt_position": 45}
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 4
@@ -954,7 +943,7 @@ async def test_if_fires_on_tilt_position(
     )
 
     hass.states.async_set(
-        ent.entity_id, STATE_CLOSED, attributes={"current_tilt_position": 90}
+        ent.entity_id, CoverState.CLOSED, attributes={"current_tilt_position": 90}
     )
     await hass.async_block_till_done()
     assert len(service_calls) == 5

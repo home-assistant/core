@@ -48,12 +48,6 @@ BINARY_SENSORS = [
         value_fn=lambda station: station.info.is_battery_protected,
     ),
     TechnoVEBinarySensorDescription(
-        key="is_session_active",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        value_fn=lambda station: station.info.is_session_active,
-    ),
-    TechnoVEBinarySensorDescription(
         key="is_static_ip",
         translation_key="is_static_ip",
         entity_category=EntityCategory.DIAGNOSTIC,

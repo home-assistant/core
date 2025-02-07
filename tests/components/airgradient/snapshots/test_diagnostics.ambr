@@ -1,0 +1,42 @@
+# serializer version: 1
+# name: test_diagnostics_polling_instance
+  dict({
+    'config': dict({
+      'co2_automatic_baseline_calibration_days': 8,
+      'configuration_control': 'local',
+      'country': 'DE',
+      'display_brightness': 0,
+      'led_bar_brightness': 100,
+      'led_bar_mode': 'co2',
+      'nox_learning_offset': 12,
+      'pm_standard': 'ugm3',
+      'post_data_to_airgradient': True,
+      'temperature_unit': 'c',
+      'tvoc_learning_offset': 12,
+    }),
+    'measures': dict({
+      'ambient_temperature': 22.17,
+      'boot_time': 28,
+      'compensated_ambient_temperature': 22.17,
+      'compensated_pm02': None,
+      'compensated_relative_humidity': 47.0,
+      'firmware_version': '3.1.1',
+      'model': 'I-9PSL',
+      'nitrogen_index': 1,
+      'pm003_count': 270,
+      'pm01': 22,
+      'pm02': 34,
+      'pm10': 41,
+      'raw_ambient_temperature': 27.96,
+      'raw_nitrogen': 16931,
+      'raw_pm02': 34,
+      'raw_relative_humidity': 48.0,
+      'raw_total_volatile_organic_component': 31792,
+      'rco2': 778,
+      'relative_humidity': 47.0,
+      'serial_number': '84fce612f5b8',
+      'signal_strength': -52,
+      'total_volatile_organic_component_index': 99,
+    }),
+  })
+# ---

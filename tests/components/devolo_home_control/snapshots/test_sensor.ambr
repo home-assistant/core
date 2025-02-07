@@ -3,12 +3,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
-      'friendly_name': 'Test Battery level',
+      'friendly_name': 'Test Battery',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_battery_level',
+    'entity_id': 'sensor.test_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -29,7 +29,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_battery_level',
+    'entity_id': 'sensor.test_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,7 +41,7 @@
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
     'original_icon': None,
-    'original_name': 'Battery level',
+    'original_name': 'Battery',
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -50,16 +50,66 @@
     'unit_of_measurement': '%',
   })
 # ---
+# name: test_brightness_sensor
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Brightness',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_brightness',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '20',
+  })
+# ---
+# name: test_brightness_sensor.1
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.test_brightness',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Brightness',
+    'platform': 'devolo_home_control',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'brightness',
+    'unique_id': 'devolo.MultiLevelSensor:Test',
+    'unit_of_measurement': '%',
+  })
+# ---
 # name: test_consumption_sensor
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'Test Current consumption',
+      'friendly_name': 'Test Power',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'W',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_current_consumption',
+    'entity_id': 'sensor.test_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -80,7 +130,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_current_consumption',
+    'entity_id': 'sensor.test_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -92,7 +142,7 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'Current consumption',
+    'original_name': 'Power',
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -105,12 +155,12 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'Test Total consumption',
+      'friendly_name': 'Test Energy',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'kWh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_total_consumption',
+    'entity_id': 'sensor.test_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -131,7 +181,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_total_consumption',
+    'entity_id': 'sensor.test_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -143,7 +193,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'Total consumption',
+    'original_name': 'Energy',
     'platform': 'devolo_home_control',
     'previous_unique_id': None,
     'supported_features': 0,

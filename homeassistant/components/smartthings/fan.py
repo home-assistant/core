@@ -18,8 +18,8 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
+from .entity import SmartThingsEntity
 
 SPEED_RANGE = (1, 3)  # off is not included
 
@@ -77,7 +77,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         self._attr_supported_features = self._determine_features()
 
     def _determine_features(self):
-        flags = FanEntityFeature(0)
+        flags = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
 
         if self._device.get_capability(Capability.fan_speed):
             flags |= FanEntityFeature.SET_SPEED

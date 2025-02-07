@@ -35,7 +35,7 @@ async def async_setup_entry(
     @callback
     def _create_entity(netatmo_device: NetatmoDevice) -> None:
         entity = NetatmoFan(netatmo_device)
-        _LOGGER.debug("Adding cover %s", entity)
+        _LOGGER.debug("Adding fan %s", entity)
         async_add_entities([entity])
 
     entry.async_on_unload(

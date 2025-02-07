@@ -1,15 +1,20 @@
 """deCONZ button platform tests."""
 
 from collections.abc import Callable
+from typing import Any
+from unittest.mock import patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, EntityCategory
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
+from .conftest import ConfigEntryFactoryType
+
+from tests.common import snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 TEST_DATA = [
@@ -28,15 +33,7 @@ TEST_DATA = [
             }
         },
         {
-            "entity_count": 2,
-            "device_count": 3,
             "entity_id": "button.light_group_scene_store_current_scene",
-            "unique_id": "01234E56789A/groups/1/scenes/1-store",
-            "entity_category": EntityCategory.CONFIG,
-            "attributes": {
-                "icon": "mdi:inbox-arrow-down",
-                "friendly_name": "Light group Scene Store Current Scene",
-            },
             "request": "/groups/1/scenes/1/store",
             "request_data": {},
         },
@@ -70,15 +67,7 @@ TEST_DATA = [
             }
         },
         {
-            "entity_count": 5,
-            "device_count": 3,
             "entity_id": "button.aqara_fp1_reset_presence",
-            "unique_id": "xx:xx:xx:xx:xx:xx:xx:xx-01-0406-reset_presence",
-            "entity_category": EntityCategory.CONFIG,
-            "attributes": {
-                "device_class": "restart",
-                "friendly_name": "Aqara FP1 Reset Presence",
-            },
             "request": "/sensors/1/config",
             "request_data": {"resetpresence": True},
         },
@@ -90,36 +79,16 @@ TEST_DATA = [
 async def test_button(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
     aioclient_mock: AiohttpClientMocker,
-    config_entry_setup: ConfigEntry,
+    config_entry_factory: ConfigEntryFactoryType,
     mock_put_request: Callable[[str, str], AiohttpClientMocker],
-    expected,
+    expected: dict[str, Any],
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test successful creation of button entities."""
-    assert len(hass.states.async_all()) == expected["entity_count"]
-
-    # Verify state data
-
-    button = hass.states.get(expected["entity_id"])
-    assert button.attributes == expected["attributes"]
-
-    # Verify entity registry data
-
-    ent_reg_entry = entity_registry.async_get(expected["entity_id"])
-    assert ent_reg_entry.entity_category is expected["entity_category"]
-    assert ent_reg_entry.unique_id == expected["unique_id"]
-
-    # Verify device registry data
-
-    assert (
-        len(
-            dr.async_entries_for_config_entry(
-                device_registry, config_entry_setup.entry_id
-            )
-        )
-        == expected["device_count"]
-    )
+    with patch("homeassistant.components.deconz.PLATFORMS", [Platform.BUTTON]):
+        config_entry = await config_entry_factory()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Verify button press
 
@@ -132,14 +101,3 @@ async def test_button(
         blocking=True,
     )
     assert aioclient_mock.mock_calls[1][2] == expected["request_data"]
-
-    # Unload entry
-
-    await hass.config_entries.async_unload(config_entry_setup.entry_id)
-    assert hass.states.get(expected["entity_id"]).state == STATE_UNAVAILABLE
-
-    # Remove entry
-
-    await hass.config_entries.async_remove(config_entry_setup.entry_id)
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0

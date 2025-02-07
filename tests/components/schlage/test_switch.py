@@ -3,27 +3,16 @@
 from unittest.mock import Mock
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 
-
-async def test_switch_device_registry(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_added_config_entry: ConfigEntry,
-) -> None:
-    """Test switch is added to device registry."""
-    device = device_registry.async_get_device(identifiers={("schlage", "test")})
-    assert device.model == "<model-name>"
-    assert device.sw_version == "1.0"
-    assert device.name == "Vault Door"
-    assert device.manufacturer == "Schlage"
+from . import MockSchlageConfigEntry
 
 
 async def test_beeper_services(
-    hass: HomeAssistant, mock_lock: Mock, mock_added_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
 ) -> None:
     """Test BeeperSwitch services."""
     await hass.services.async_call(
@@ -49,7 +38,9 @@ async def test_beeper_services(
 
 
 async def test_lock_and_leave_services(
-    hass: HomeAssistant, mock_lock: Mock, mock_added_config_entry: ConfigEntry
+    hass: HomeAssistant,
+    mock_lock: Mock,
+    mock_added_config_entry: MockSchlageConfigEntry,
 ) -> None:
     """Test LockAndLeaveSwitch services."""
     await hass.services.async_call(

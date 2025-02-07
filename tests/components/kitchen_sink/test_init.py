@@ -5,6 +5,7 @@ from http import HTTPStatus
 from unittest.mock import ANY
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.kitchen_sink import DOMAIN
 from homeassistant.components.recorder import get_instance
@@ -16,7 +17,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
@@ -324,3 +325,24 @@ async def test_issues_created(
             },
         ]
     }
+
+
+async def test_service(
+    hass: HomeAssistant,
+) -> None:
+    """Test we can call the service."""
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+
+    with pytest.raises(vol.error.MultipleInvalid):
+        await hass.services.async_call(DOMAIN, "test_service_1", blocking=True)
+
+    await hass.services.async_call(
+        DOMAIN, "test_service_1", {"field_1": 1, "field_2": "auto"}, blocking=True
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        "test_service_1",
+        {"field_1": 1, "field_2": "auto", "field_3": 1, "field_4": "forwards"},
+        blocking=True,
+    )

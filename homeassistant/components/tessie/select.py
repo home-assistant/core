@@ -32,6 +32,8 @@ SEAT_COOLERS = {
     "climate_state_seat_fan_front_right": "front_right",
 }
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

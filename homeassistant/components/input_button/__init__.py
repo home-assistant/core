@@ -16,8 +16,7 @@ from homeassistant.const import (
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import collection
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import collection, config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.restore_state import RestoreEntity
 import homeassistant.helpers.service
@@ -123,11 +122,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         schema=RELOAD_SERVICE_SCHEMA,
     )
 
-    component.async_register_entity_service(SERVICE_PRESS, {}, "_async_press_action")
+    component.async_register_entity_service(SERVICE_PRESS, None, "_async_press_action")
 
     return True
 
 
+# pylint: disable-next=hass-enforce-class-module
 class InputButton(collection.CollectionEntity, ButtonEntity, RestoreEntity):
     """Representation of a button."""
 

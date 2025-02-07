@@ -27,7 +27,7 @@ _LOGGER = logging.getLogger(__name__)
 _STATE_TO_MOWER_STATE = {
     State.IDLE: LawnMowerActivity.PAUSED,
     State.CLEANING: LawnMowerActivity.MOWING,
-    State.RETURNING: LawnMowerActivity.MOWING,
+    State.RETURNING: LawnMowerActivity.RETURNING,
     State.DOCKED: LawnMowerActivity.DOCKED,
     State.ERROR: LawnMowerActivity.ERROR,
     State.PAUSED: LawnMowerActivity.PAUSED,

@@ -585,7 +585,8 @@ async def test_discovery_requirements_mqtt(hass: HomeAssistant) -> None:
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "mqtt_comp")
 
-    assert len(mock_process.mock_calls) == 1
+    assert len(mock_process.mock_calls) == 2
+    # one for mqtt and one for hassio
     assert mock_process.mock_calls[0][1][1] == mqtt.requirements
 
 
@@ -602,12 +603,12 @@ async def test_discovery_requirements_ssdp(hass: HomeAssistant) -> None:
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "ssdp_comp")
 
-    assert len(mock_process.mock_calls) == 3
+    assert len(mock_process.mock_calls) == 2
     assert mock_process.mock_calls[0][1][1] == ssdp.requirements
     assert {
+        mock_process.mock_calls[0][1][0],
         mock_process.mock_calls[1][1][0],
-        mock_process.mock_calls[2][1][0],
-    } == {"network", "recorder"}
+    } == {"network", "ssdp"}
 
 
 @pytest.mark.parametrize(
@@ -631,7 +632,7 @@ async def test_discovery_requirements_zeroconf(
     ) as mock_process:
         await async_get_integration_with_requirements(hass, "comp")
 
-    assert len(mock_process.mock_calls) == 3
+    assert len(mock_process.mock_calls) == 2
     assert mock_process.mock_calls[0][1][1] == zeroconf.requirements
 
 

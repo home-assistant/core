@@ -196,10 +196,16 @@ def async_setup_rpc_attribute_entities(
             elif description.use_polling_coordinator:
                 if not sleep_period:
                     entities.append(
-                        sensor_class(polling_coordinator, key, sensor_id, description)
+                        get_entity_class(sensor_class, description)(
+                            polling_coordinator, key, sensor_id, description
+                        )
                     )
             else:
-                entities.append(sensor_class(coordinator, key, sensor_id, description))
+                entities.append(
+                    get_entity_class(sensor_class, description)(
+                        coordinator, key, sensor_id, description
+                    )
+                )
     if not entities:
         return
 
@@ -232,7 +238,9 @@ def async_restore_rpc_attribute_entities(
 
         if description := sensors.get(attribute):
             entities.append(
-                sensor_class(coordinator, key, attribute, description, entry)
+                get_entity_class(sensor_class, description)(
+                    coordinator, key, attribute, description, entry
+                )
             )
 
     if not entities:
@@ -292,6 +300,8 @@ class RpcEntityDescription(EntityDescription):
     use_polling_coordinator: bool = False
     supported: Callable = lambda _: False
     unit: Callable[[dict], str | None] | None = None
+    options_fn: Callable[[dict], list[str]] | None = None
+    entity_class: Callable | None = None
 
 
 @dataclass(frozen=True)
@@ -358,6 +368,14 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         self._attr_name = get_rpc_entity_name(coordinator.device, key)
 
     @property
+    def available(self) -> bool:
+        """Check if device is available and initialized or sleepy."""
+        coordinator = self.coordinator
+        return super().available and (
+            coordinator.device.initialized or bool(coordinator.sleep_period)
+        )
+
+    @property
     def status(self) -> dict:
         """Device status by entity key."""
         return cast(dict, self.coordinator.device.status[self.key])
@@ -372,15 +390,20 @@ class ShellyRpcEntity(CoordinatorEntity[ShellyRpcCoordinator]):
         """Handle device update."""
         self.async_write_ha_state()
 
-    async def call_rpc(self, method: str, params: Any) -> Any:
+    async def call_rpc(
+        self, method: str, params: Any, timeout: float | None = None
+    ) -> Any:
         """Call RPC method."""
         LOGGER.debug(
-            "Call RPC for entity %s, method: %s, params: %s",
+            "Call RPC for entity %s, method: %s, params: %s, timeout: %s",
             self.name,
             method,
             params,
+            timeout,
         )
         try:
+            if timeout:
+                return await self.coordinator.device.call_rpc(method, params, timeout)
             return await self.coordinator.device.call_rpc(method, params)
         except DeviceConnectionError as err:
             self.coordinator.last_update_success = False
@@ -479,7 +502,7 @@ class ShellyRestAttributeEntity(CoordinatorEntity[ShellyBlockCoordinator]):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        if callable(self.entity_description.value):
+        if self.entity_description.value is not None:
             self._last_value = self.entity_description.value(
                 self.block_coordinator.device.status, self._last_value
             )
@@ -509,10 +532,23 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
         id_key = key.split(":")[-1]
         self._id = int(id_key) if id_key.isnumeric() else None
 
-        if callable(description.unit):
+        if description.unit is not None:
             self._attr_native_unit_of_measurement = description.unit(
                 coordinator.device.config[key]
             )
+
+        self.option_map: dict[str, str] = {}
+        self.reversed_option_map: dict[str, str] = {}
+        if "enum" in key:
+            titles = self.coordinator.device.config[key]["meta"]["ui"]["titles"]
+            options = self.coordinator.device.config[key]["options"]
+            self.option_map = {
+                opt: (titles[opt] if titles.get(opt) is not None else opt)
+                for opt in options
+            }
+            self.reversed_option_map = {
+                tit: opt for opt, tit in self.option_map.items()
+            }
 
     @property
     def sub_status(self) -> Any:
@@ -522,7 +558,7 @@ class ShellyRpcAttributeEntity(ShellyRpcEntity, Entity):
     @property
     def attribute_value(self) -> StateType:
         """Value of sensor."""
-        if callable(self.entity_description.value):
+        if self.entity_description.value is not None:
             # using "get" here since subkey might not exist (e.g. "errors" sub_key)
             self._last_value = self.entity_description.value(
                 self.status.get(self.entity_description.sub_key), self._last_value
@@ -651,3 +687,13 @@ class ShellySleepingRpcAttributeEntity(ShellyRpcAttributeEntity):
             "Entity %s comes from a sleeping device, update is not possible",
             self.entity_id,
         )
+
+
+def get_entity_class(
+    sensor_class: Callable, description: RpcEntityDescription
+) -> Callable:
+    """Return entity class."""
+    if description.entity_class is not None:
+        return description.entity_class
+
+    return sensor_class

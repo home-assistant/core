@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/openweathermap",
   "iot_class": "cloud_polling",
   "loggers": ["pyopenweathermap"],
-  "requirements": ["pyopenweathermap==0.0.9"]
+  "requirements": ["pyopenweathermap==0.2.1"]
 }

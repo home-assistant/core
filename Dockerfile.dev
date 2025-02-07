@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/devcontainers/python:1-3.12
+FROM mcr.microsoft.com/devcontainers/python:1-3.13
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 
@@ -35,6 +35,9 @@ RUN \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
+# Add go2rtc binary
+COPY --from=ghcr.io/alexxit/go2rtc:latest /usr/local/bin/go2rtc /bin/go2rtc
+
 # Install uv
 RUN pip3 install uv
 
@@ -42,7 +45,8 @@ WORKDIR /usr/src
 
 # Setup hass-release
 RUN git clone --depth 1 https://github.com/home-assistant/hass-release \
-    && uv pip install --system -e hass-release/
+    && uv pip install --system -e hass-release/ \
+    && chown -R vscode /usr/src/hass-release/data
 
 USER vscode
 ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"

@@ -1,23 +1,16 @@
 """Test the Teslemetry switch platform."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
-from syrupy import SnapshotAssertion
-from tesla_fleet_api.exceptions import VehicleOffline
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    STATE_OFF,
-    STATE_ON,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -40,25 +33,13 @@ async def test_switch_alt(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mock_vehicle_data,
+    mock_vehicle_data: AsyncMock,
 ) -> None:
     """Tests that the switch entities are correct."""
 
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
     entry = await setup_platform(hass, [Platform.SWITCH])
     assert_entities_alt(hass, entry.entry_id, entity_registry, snapshot)
-
-
-async def test_switch_offline(
-    hass: HomeAssistant,
-    mock_vehicle_data,
-) -> None:
-    """Tests that the switch entities are correct when offline."""
-
-    mock_vehicle_data.side_effect = VehicleOffline
-    await setup_platform(hass, [Platform.SWITCH])
-    state = hass.states.get("switch.test_auto_seat_climate_left")
-    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

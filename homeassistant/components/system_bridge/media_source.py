@@ -4,10 +4,12 @@ from __future__ import annotations
 
 from systembridgemodels.media_directories import MediaDirectory
 from systembridgemodels.media_files import MediaFile, MediaFiles
+from systembridgemodels.media_get_files import MediaGetFiles
 
 from homeassistant.components.media_player import MediaClass
-from homeassistant.components.media_source import MEDIA_CLASS_MAP, MEDIA_MIME_TYPES
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
+    MEDIA_CLASS_MAP,
+    MEDIA_MIME_TYPES,
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
@@ -68,7 +70,7 @@ class SystemBridgeSource(MediaSource):
             coordinator: SystemBridgeDataUpdateCoordinator = self.hass.data[DOMAIN].get(
                 entry.entry_id
             )
-            directories = await coordinator.async_get_media_directories()
+            directories = await coordinator.websocket_client.get_directories()
             return _build_root_paths(entry, directories)
 
         entry_id, path = item.identifier.split("~~", 1)
@@ -80,8 +82,11 @@ class SystemBridgeSource(MediaSource):
 
         path_split = path.split("/", 1)
 
-        files = await coordinator.async_get_media_files(
-            path_split[0], path_split[1] if len(path_split) > 1 else None
+        files = await coordinator.websocket_client.get_files(
+            MediaGetFiles(
+                base=path_split[0],
+                path=path_split[1] if len(path_split) > 1 else None,
+            )
         )
 
         return _build_media_items(entry, files, path, item.identifier)

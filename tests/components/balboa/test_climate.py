@@ -85,6 +85,8 @@ async def test_spa_temperature(
     hass: HomeAssistant, client: MagicMock, integration: MockConfigEntry
 ) -> None:
     """Test spa temperature settings."""
+    client.temperature_minimum = 110
+    client.temperature_maximum = 250
     # flip the spa into F
     # set temp to a valid number
     state = await _patch_spa_settemp(hass, client, 0, 100)

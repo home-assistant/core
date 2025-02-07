@@ -33,7 +33,7 @@
       }
     },
     "error": {
-      "error_auth_app": "Incorrect application id or secret",
+      "error_auth_app": "Incorrect application ID or secret",
       "error_auth_user": "Incorrect username or password",
       "error_auth_mfa": "Incorrect code"
     }
@@ -63,6 +63,12 @@
       },
       "moving_ban": {
         "name": "Moving ban"
+      },
+      "ignition": {
+        "name": "Ignition"
+      },
+      "autostart": {
+        "name": "Autostart"
       }
     },
     "device_tracker": {
@@ -114,9 +120,6 @@
       "additional_channel": {
         "name": "Additional channel"
       },
-      "horn": {
-        "name": "Horn"
-      },
       "service_mode": {
         "name": "Service mode"
       }
@@ -124,23 +127,23 @@
     "button": {
       "horn": {
         "name": "Horn"
+      },
+      "flex": {
+        "name": "Flex logic {num}"
+      },
+      "panic": {
+        "name": "Panic mode"
       }
-    }
-  },
-  "issues": {
-    "deprecated_horn_switch": {
-      "title": "The Starline Horn switch entity is being removed",
-      "description": "Using the Horn switch is now deprecated and will be removed in a future version of Home Assistant.\n\nPlease adjust any automations or scripts that use Horn switch entity to instead use the Horn button entity."
     }
   },
   "services": {
     "update_state": {
       "name": "Update state",
-      "description": "Fetches the last state of the devices from the StarLine server.\n."
+      "description": "Fetches the last state of the devices from the StarLine server."
     },
     "set_scan_interval": {
       "name": "Set scan interval",
-      "description": "Sets update frequency.",
+      "description": "Sets the update frequency for entities.",
       "fields": {
         "scan_interval": {
           "name": "Scan interval",
@@ -150,7 +153,7 @@
     },
     "set_scan_obd_interval": {
       "name": "Set scan OBD interval",
-      "description": "Sets OBD info update frequency.",
+      "description": "Sets the update frequency for OBD information.",
       "fields": {
         "scan_interval": {
           "name": "Scan interval",

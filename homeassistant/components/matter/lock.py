@@ -38,8 +38,9 @@ async def async_setup_entry(
 class MatterLock(MatterEntity, LockEntity):
     """Representation of a Matter lock."""
 
-    features: int | None = None
+    _feature_map: int | None = None
     _optimistic_timer: asyncio.TimerHandle | None = None
+    _platform_translation_key = "lock"
 
     @property
     def code_format(self) -> str | None:
@@ -61,35 +62,6 @@ class MatterLock(MatterEntity, LockEntity):
 
         return None
 
-    @property
-    def supports_door_position_sensor(self) -> bool:
-        """Return True if the lock supports door position sensor."""
-        if self.features is None:
-            return False
-
-        return bool(self.features & DoorLockFeature.kDoorPositionSensor)
-
-    @property
-    def supports_unbolt(self) -> bool:
-        """Return True if the lock supports unbolt."""
-        if self.features is None:
-            return False
-
-        return bool(self.features & DoorLockFeature.kUnbolt)
-
-    async def send_device_command(
-        self,
-        command: clusters.ClusterCommand,
-        timed_request_timeout_ms: int = 1000,
-    ) -> None:
-        """Send a command to the device."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-            timed_request_timeout_ms=timed_request_timeout_ms,
-        )
-
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock with pin if needed."""
         if not self._attr_is_locked:
@@ -104,7 +76,8 @@ class MatterLock(MatterEntity, LockEntity):
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
-            command=clusters.DoorLock.Commands.LockDoor(code_bytes)
+            command=clusters.DoorLock.Commands.LockDoor(code_bytes),
+            timed_request_timeout_ms=1000,
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
@@ -120,16 +93,18 @@ class MatterLock(MatterEntity, LockEntity):
             )
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
-        if self.supports_unbolt:
+        if self._attr_supported_features & LockEntityFeature.OPEN:
             # if the lock reports it has separate unbolt support,
             # the unlock command should unbolt only on the unlock command
             # and unlatch on the HA 'open' command.
             await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnboltDoor(code_bytes)
+                command=clusters.DoorLock.Commands.UnboltDoor(code_bytes),
+                timed_request_timeout_ms=1000,
             )
         else:
             await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnlockDoor(code_bytes)
+                command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+                timed_request_timeout_ms=1000,
             )
 
     async def async_open(self, **kwargs: Any) -> None:
@@ -145,19 +120,15 @@ class MatterLock(MatterEntity, LockEntity):
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
-            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes)
+            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+            timed_request_timeout_ms=1000,
         )
 
     @callback
     def _update_from_device(self) -> None:
         """Update the entity from the device."""
-
-        if self.features is None:
-            self.features = int(
-                self.get_matter_attribute_value(clusters.DoorLock.Attributes.FeatureMap)
-            )
-            if self.supports_unbolt:
-                self._attr_supported_features = LockEntityFeature.OPEN
+        # always calculate the features as they can dynamically change
+        self._calculate_features()
 
         lock_state = self.get_matter_attribute_value(
             clusters.DoorLock.Attributes.LockState
@@ -168,10 +139,10 @@ class MatterLock(MatterEntity, LockEntity):
 
         LOGGER.debug("Lock state: %s for %s", lock_state, self.entity_id)
 
-        if lock_state is clusters.DoorLock.Enums.DlLockState.kUnlatched:
+        if lock_state == clusters.DoorLock.Enums.DlLockState.kUnlatched:
             self._attr_is_locked = False
             self._attr_is_open = True
-        if lock_state is clusters.DoorLock.Enums.DlLockState.kLocked:
+        elif lock_state == clusters.DoorLock.Enums.DlLockState.kLocked:
             self._attr_is_locked = True
             self._attr_is_open = False
         elif lock_state in (
@@ -197,15 +168,34 @@ class MatterLock(MatterEntity, LockEntity):
         if write_state:
             self.async_write_ha_state()
 
+    @callback
+    def _calculate_features(
+        self,
+    ) -> None:
+        """Calculate features for HA Lock platform from Matter FeatureMap."""
+        feature_map = int(
+            self.get_matter_attribute_value(clusters.DoorLock.Attributes.FeatureMap)
+        )
+        # NOTE: the featuremap can dynamically change, so we need to update the
+        # supported features if the featuremap changes.
+        if self._feature_map == feature_map:
+            return
+        self._feature_map = feature_map
+        supported_features = LockEntityFeature(0)
+        # determine if lock supports optional open/unbolt feature
+        if bool(feature_map & DoorLockFeature.kUnbolt):
+            supported_features |= LockEntityFeature.OPEN
+        self._attr_supported_features = supported_features
+
 
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LOCK,
         entity_description=LockEntityDescription(
-            key="MatterLock", translation_key="lock"
+            key="MatterLock",
+            name=None,
         ),
         entity_class=MatterLock,
         required_attributes=(clusters.DoorLock.Attributes.LockState,),
-        optional_attributes=(clusters.DoorLock.Attributes.DoorState,),
     ),
 ]

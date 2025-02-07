@@ -1,0 +1,80 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Provide information to connect to the Slide device",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your local Slide",
+          "password": "The device code of your Slide (inside of the Slide or in the box, length is 8 characters). If your Slide runs firmware version 2 this is optional, as it is not used by the local API."
+        }
+      },
+      "reconfigure": {
+        "description": "Reconfigure the information for your Slide device",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "host": "[%key:component::slide_local::config::step::user::data_description::host%]",
+          "password": "[%key:component::slide_local::config::step::user::data_description::password%]"
+        }
+      },
+      "zeroconf_confirm": {
+        "title": "Confirm setup for Slide",
+        "description": "Do you want to setup {host}?"
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "discovery_connection_failed": "The setup of the discovered device failed with the following error: {error}. Please try to set it up manually.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The MAC address of the device ({mac}) does not match the previous MAC address."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Configure Slide",
+        "description": "Reconfigure the Slide device",
+        "data": {
+          "invert_position": "Invert position"
+        },
+        "data_description": {
+          "invert_position": "Inverts the position of your Slide cover."
+        }
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "calibrate": {
+        "name": "Calibrate"
+      }
+    },
+    "switch": {
+      "touchgo": {
+        "name": "TouchGo"
+      }
+    }
+  },
+  "exceptions": {
+    "calibration_error": {
+      "message": "Error while sending the calibration request to the device."
+    },
+    "touchgo_error": {
+      "message": "Error while sending the request setting Touch&Go to {state} to the device."
+    },
+    "update_error": {
+      "message": "Error while updating data from the API."
+    }
+  }
+}

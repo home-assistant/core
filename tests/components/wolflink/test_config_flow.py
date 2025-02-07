@@ -17,15 +17,9 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from .const import CONFIG
 
-CONFIG = {
-    DEVICE_NAME: "test-device",
-    DEVICE_ID: 1234,
-    DEVICE_GATEWAY: 5678,
-    CONF_USERNAME: "test-username",
-    CONF_PASSWORD: "test-password",
-}
+from tests.common import MockConfigEntry
 
 INPUT_CONFIG = {
     CONF_USERNAME: CONFIG[CONF_USERNAME],
@@ -134,7 +128,7 @@ async def test_already_configured_error(hass: HomeAssistant) -> None:
         patch("homeassistant.components.wolflink.async_setup_entry", return_value=True),
     ):
         MockConfigEntry(
-            domain=DOMAIN, unique_id=CONFIG[DEVICE_ID], data=CONFIG
+            domain=DOMAIN, unique_id=str(CONFIG[DEVICE_ID]), data=CONFIG
         ).add_to_hass(hass)
 
         result = await hass.config_entries.flow.async_init(

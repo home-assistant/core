@@ -12,7 +12,8 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry
+from . import ElkM1ConfigEntry
+from .entity import ElkAttachedEntity, ElkEntity
 
 
 async def async_setup_entry(
@@ -48,7 +49,7 @@ class ElkBinarySensor(ElkAttachedEntity, BinarySensorEntity):
     _element: Zone
     _attr_entity_registry_enabled_default = False
 
-    def _element_changed(self, _: Element, changeset: Any) -> None:
+    def _element_changed(self, element: Element, changeset: dict[str, Any]) -> None:
         # Zone in NORMAL state is OFF; any other state is ON
         self._attr_is_on = bool(
             self._element.logical_status != ZoneLogicalStatus.NORMAL

@@ -43,13 +43,13 @@
         },
         "parameters": {
           "name": "Parameters",
-          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation).\n."
+          "description": "Array of additional parameters to pass to Lyrion Music Server (p1, ..., pN in the CLI documentation)."
         }
       }
     },
     "call_query": {
       "name": "Call query",
-      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.\n.",
+      "description": "Calls a custom Squeezebox JSONRPC API. Result will be stored in 'query_result' attribute of the Squeezebox entity.",
       "fields": {
         "command": {
           "name": "Command",
@@ -60,20 +60,48 @@
           "description": "[%key:component::squeezebox::services::call_method::fields::parameters::description%]"
         }
       }
-    },
-    "sync": {
-      "name": "Sync",
-      "description": "Adds another player to this player's sync group. If the other player is already in a sync group, it will leave it.\n.",
-      "fields": {
-        "other_player": {
-          "name": "Other player",
-          "description": "Name of the other Squeezebox player to link."
-        }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "rescan": {
+        "name": "Library rescan"
+      },
+      "needsrestart": {
+        "name": "Needs restart"
       }
     },
-    "unsync": {
-      "name": "Unsync",
-      "description": "Removes this player from its sync group."
+    "sensor": {
+      "lastscan": {
+        "name": "Last scan"
+      },
+      "info_total_albums": {
+        "name": "Total albums",
+        "unit_of_measurement": "albums"
+      },
+      "info_total_artists": {
+        "name": "Total artists",
+        "unit_of_measurement": "artists"
+      },
+      "info_total_duration": {
+        "name": "Total duration"
+      },
+      "info_total_genres": {
+        "name": "Total genres",
+        "unit_of_measurement": "genres"
+      },
+      "info_total_songs": {
+        "name": "Total songs",
+        "unit_of_measurement": "songs"
+      },
+      "player_count": {
+        "name": "Player count",
+        "unit_of_measurement": "players"
+      },
+      "other_player_count": {
+        "name": "Player count off service",
+        "unit_of_measurement": "[%key:component::squeezebox::entity::sensor::player_count::unit_of_measurement%]"
+      }
     }
   }
 }

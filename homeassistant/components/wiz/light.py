@@ -10,7 +10,7 @@ from pywizlight.scenes import get_id_from_scene_name
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
@@ -19,15 +19,10 @@ from homeassistant.components.light import (
     LightEntityFeature,
     filter_supported_color_modes,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.util.color import (
-    color_temperature_kelvin_to_mired,
-    color_temperature_mired_to_kelvin,
-)
 
-from .const import DOMAIN
+from . import WizConfigEntry
 from .entity import WizToggleEntity
 from .models import WizData
 
@@ -44,10 +39,10 @@ def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
     if ATTR_RGBW_COLOR in kwargs:
         return PilotBuilder(brightness=brightness, rgbw=kwargs[ATTR_RGBW_COLOR])
 
-    if ATTR_COLOR_TEMP in kwargs:
+    if ATTR_COLOR_TEMP_KELVIN in kwargs:
         return PilotBuilder(
             brightness=brightness,
-            colortemp=color_temperature_mired_to_kelvin(kwargs[ATTR_COLOR_TEMP]),
+            colortemp=kwargs[ATTR_COLOR_TEMP_KELVIN],
         )
 
     if ATTR_EFFECT in kwargs:
@@ -61,13 +56,12 @@ def _async_pilot_builder(**kwargs: Any) -> PilotBuilder:
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WizConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the WiZ Platform from config_flow."""
-    wiz_data: WizData = hass.data[DOMAIN][entry.entry_id]
-    if wiz_data.bulb.bulbtype.bulb_type != BulbClass.SOCKET:
-        async_add_entities([WizBulbEntity(wiz_data, entry.title)])
+    if entry.runtime_data.bulb.bulbtype.bulb_type != BulbClass.SOCKET:
+        async_add_entities([WizBulbEntity(entry.runtime_data, entry.title)])
 
 
 class WizBulbEntity(WizToggleEntity, LightEntity):
@@ -95,8 +89,8 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
         self._attr_effect_list = wiz_data.scenes
         if bulb_type.bulb_type != BulbClass.DW:
             kelvin = bulb_type.kelvin_range
-            self._attr_min_mireds = color_temperature_kelvin_to_mired(kelvin.max)
-            self._attr_max_mireds = color_temperature_kelvin_to_mired(kelvin.min)
+            self._attr_max_color_temp_kelvin = kelvin.max
+            self._attr_min_color_temp_kelvin = kelvin.min
         if bulb_type.features.effect:
             self._attr_supported_features = LightEntityFeature.EFFECT
         self._async_update_attrs()
@@ -113,7 +107,7 @@ class WizBulbEntity(WizToggleEntity, LightEntity):
             color_temp := state.get_colortemp()
         ):
             self._attr_color_mode = ColorMode.COLOR_TEMP
-            self._attr_color_temp = color_temperature_kelvin_to_mired(color_temp)
+            self._attr_color_temp_kelvin = color_temp
         elif (
             ColorMode.RGBWW in color_modes and (rgbww := state.get_rgbww()) is not None
         ):

@@ -69,7 +69,7 @@ class BondFan(BondEntity, FanEntity):
         super().__init__(data, device)
         if self._device.has_action(Action.BREEZE_ON):
             self._attr_preset_modes = [PRESET_MODE_BREEZE]
-        features = FanEntityFeature(0)
+        features = FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
         if self._device.supports_speed():
             features |= FanEntityFeature.SET_SPEED
         if self._device.supports_direction():

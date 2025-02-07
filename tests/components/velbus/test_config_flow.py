@@ -7,18 +7,18 @@ import pytest
 import serial.tools.list_ports
 from velbusaio.exceptions import VelbusConnectionFailed
 
-from homeassistant.components import usb
 from homeassistant.components.velbus.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USB, SOURCE_USER
 from homeassistant.const import CONF_NAME, CONF_PORT, CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import PORT_SERIAL, PORT_TCP
 
 from tests.common import MockConfigEntry
 
-DISCOVERY_INFO = usb.UsbServiceInfo(
+DISCOVERY_INFO = UsbServiceInfo(
     device=PORT_SERIAL,
     pid="10CF",
     vid="0B1B",
@@ -156,12 +156,18 @@ async def test_flow_usb(hass: HomeAssistant) -> None:
         user_input={},
     )
     assert result
+    assert result["result"].unique_id == "0B1B:10CF_1234_Velleman_Velbus VMB1USB"
     assert result.get("type") is FlowResultType.CREATE_ENTRY
 
-    # test an already configured discovery
+
+@pytest.mark.usefixtures("controller")
+@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+async def test_flow_usb_if_already_setup(hass: HomeAssistant) -> None:
+    """Test we abort if Velbus USB discovbery aborts in case it is already setup."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_PORT: PORT_SERIAL},
+        unique_id="0B1B:10CF_1234_Velleman_Velbus VMB1USB",
     )
     entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(

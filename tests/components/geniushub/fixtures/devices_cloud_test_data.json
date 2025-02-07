@@ -1,0 +1,151 @@
+[
+  {
+    "id": "4",
+    "type": "Smart Plug",
+    "assignedZones": [{ "name": "Bedroom Socket" }],
+    "state": { "outputOnOff": "True" }
+  },
+  {
+    "id": "6",
+    "type": "Smart Plug",
+    "assignedZones": [{ "name": "Kitchen Socket" }],
+    "state": { "outputOnOff": "True" }
+  },
+  {
+    "id": "11",
+    "type": "Radiator Valve",
+    "assignedZones": [{ "name": "Lounge" }],
+    "state": { "batteryLevel": 43, "setTemperature": 4 }
+  },
+  {
+    "id": "16",
+    "type": "Room Sensor",
+    "assignedZones": [{ "name": "Guest room" }],
+    "state": {
+      "batteryLevel": 100,
+      "measuredTemperature": 21,
+      "luminance": 29,
+      "occupancyTrigger": 255
+    }
+  },
+  {
+    "id": "17",
+    "type": "Room Sensor",
+    "assignedZones": [{ "name": "Ensuite" }],
+    "state": {
+      "batteryLevel": 100,
+      "measuredTemperature": 21,
+      "luminance": 32,
+      "occupancyTrigger": 0
+    }
+  },
+  {
+    "id": "18",
+    "type": "Room Sensor",
+    "assignedZones": [{ "name": "Bedroom" }],
+    "state": {
+      "batteryLevel": 36,
+      "measuredTemperature": 21.5,
+      "luminance": 1,
+      "occupancyTrigger": 0
+    }
+  },
+  {
+    "id": "20",
+    "type": "Room Sensor",
+    "assignedZones": [{ "name": "Kitchen" }],
+    "state": {
+      "batteryLevel": 100,
+      "measuredTemperature": 21.5,
+      "luminance": 1,
+      "occupancyTrigger": 0
+    }
+  },
+  {
+    "id": "21",
+    "type": "Room Sensor",
+    "assignedZones": [{ "name": "Hall" }],
+    "state": {
+      "batteryLevel": 100,
+      "measuredTemperature": 21,
+      "luminance": 33,
+      "occupancyTrigger": 0
+    }
+  },
+  {
+    "id": "22",
+    "type": "Single Channel Receiver",
+    "assignedZones": [{ "name": "East Berlin" }],
+    "state": { "outputOnOff": "False" }
+  },
+  {
+    "id": "50",
+    "type": "Room Sensor",
+    "assignedZones": [{ "name": "Study" }],
+    "state": {
+      "batteryLevel": 100,
+      "measuredTemperature": 22,
+      "luminance": 34,
+      "occupancyTrigger": 0
+    }
+  },
+  {
+    "id": "53",
+    "type": "Room Sensor",
+    "assignedZones": [{ "name": "Lounge" }],
+    "state": {
+      "batteryLevel": 28,
+      "measuredTemperature": 0,
+      "luminance": 0,
+      "occupancyTrigger": 0
+    }
+  },
+  {
+    "id": "56",
+    "type": "Radiator Valve",
+    "assignedZones": [{ "name": "Kitchen" }],
+    "state": { "batteryLevel": 55, "setTemperature": 4 }
+  },
+  {
+    "id": "68",
+    "type": "Radiator Valve",
+    "assignedZones": [{ "name": "Hall" }],
+    "state": { "batteryLevel": 92, "setTemperature": 4 }
+  },
+  {
+    "id": "78",
+    "type": "Radiator Valve",
+    "assignedZones": [{ "name": "Bedroom" }],
+    "state": { "batteryLevel": 42, "setTemperature": 4 }
+  },
+  {
+    "id": "85",
+    "type": "Radiator Valve",
+    "assignedZones": [{ "name": "Study" }],
+    "state": { "batteryLevel": 61, "setTemperature": 4 }
+  },
+  {
+    "id": "86",
+    "type": "Smart Plug",
+    "assignedZones": [{ "name": "Study Socket" }],
+    "state": { "outputOnOff": "False" }
+  },
+  {
+    "id": "88",
+    "type": "Radiator Valve",
+    "assignedZones": [{ "name": "Ensuite" }],
+    "state": { "batteryLevel": 49, "setTemperature": 4 }
+  },
+  {
+    "id": "89",
+    "type": "Radiator Valve",
+    "assignedZones": [{ "name": "Kitchen" }],
+    "state": { "batteryLevel": 48, "setTemperature": 4 }
+  },
+  {
+    "id": "90",
+    "type": "Radiator Valve",
+    "assignedZones": [{ "name": "Guest room" }],
+    "state": { "batteryLevel": 92, "setTemperature": 4 }
+  }
+]

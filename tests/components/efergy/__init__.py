@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 from pyefergy import exceptions
 
-from homeassistant.components.efergy import DOMAIN
+from homeassistant.components.efergy.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

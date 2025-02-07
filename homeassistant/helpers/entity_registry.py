@@ -14,7 +14,6 @@ from collections import defaultdict
 from collections.abc import Callable, Container, Hashable, KeysView, Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum
-from functools import cached_property
 import logging
 import time
 from typing import TYPE_CHECKING, Any, Literal, NotRequired, TypedDict
@@ -48,6 +47,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import MaxLengthExceeded
 from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util import slugify, uuid as uuid_util
+from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
@@ -64,7 +64,12 @@ from .singleton import singleton
 from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
+    # mypy cannot workout _cache Protocol with attrs
+    from propcache.api import cached_property as under_cached_property
+
     from homeassistant.config_entries import ConfigEntry
+else:
+    from propcache.api import under_cached_property
 
 DATA_REGISTRY: HassKey[EntityRegistry] = HassKey("entity_registry")
 EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = EventType(
@@ -74,16 +79,14 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 14
+STORAGE_VERSION_MINOR = 15
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
 ORPHANED_ENTITY_KEEP_SECONDS = 3600 * 24 * 30
 
 ENTITY_CATEGORY_VALUE_TO_INDEX: dict[EntityCategory | None, int] = {
-    # mypy does not understand strenum
-    val: idx  # type: ignore[misc]
-    for idx, val in enumerate(EntityCategory)
+    val: idx for idx, val in enumerate(EntityCategory)
 }
 ENTITY_CATEGORY_INDEX_TO_VALUE = dict(enumerate(EntityCategory))
 
@@ -161,7 +164,7 @@ def _protect_entity_options(
     return ReadOnlyDict({key: ReadOnlyDict(val) for key, val in data.items()})
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class RegistryEntry:
     """Entity Registry Entry."""
 
@@ -174,6 +177,7 @@ class RegistryEntry:
     categories: dict[str, str] = attr.ib(factory=dict)
     capabilities: Mapping[str, Any] | None = attr.ib(default=None)
     config_entry_id: str | None = attr.ib(default=None)
+    created_at: datetime = attr.ib(factory=utcnow)
     device_class: str | None = attr.ib(default=None)
     device_id: str | None = attr.ib(default=None)
     domain: str = attr.ib(init=False, repr=False)
@@ -187,6 +191,7 @@ class RegistryEntry:
     )
     has_entity_name: bool = attr.ib(default=False)
     labels: set[str] = attr.ib(factory=set)
+    modified_at: datetime = attr.ib(factory=utcnow)
     name: str | None = attr.ib(default=None)
     options: ReadOnlyEntityOptionsType = attr.ib(
         default=None, converter=_protect_entity_options
@@ -198,6 +203,7 @@ class RegistryEntry:
     supported_features: int = attr.ib(default=0)
     translation_key: str | None = attr.ib(default=None)
     unit_of_measurement: str | None = attr.ib(default=None)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
     def _domain_default(self) -> str:
@@ -232,8 +238,11 @@ class RegistryEntry:
             display_dict["ec"] = ENTITY_CATEGORY_VALUE_TO_INDEX[category]
         if self.hidden_by is not None:
             display_dict["hb"] = True
-        if not self.name and self.has_entity_name:
-            display_dict["en"] = self.original_name
+        if self.has_entity_name:
+            display_dict["hn"] = True
+        name = self.name or self.original_name
+        if name is not None:
+            display_dict["en"] = name
         if self.domain == "sensor" and (sensor_options := self.options.get("sensor")):
             if (precision := sensor_options.get("display_precision")) is not None or (
                 precision := sensor_options.get("suggested_display_precision")
@@ -241,7 +250,7 @@ class RegistryEntry:
                 display_dict["dp"] = precision
         return display_dict
 
-    @cached_property
+    @under_cached_property
     def display_json_repr(self) -> bytes | None:
         """Return a cached partial JSON representation of the entry.
 
@@ -261,7 +270,7 @@ class RegistryEntry:
             return None
         return json_repr
 
-    @cached_property
+    @under_cached_property
     def as_partial_dict(self) -> dict[str, Any]:
         """Return a partial dict representation of the entry."""
         # Convert sets and tuples to lists
@@ -271,6 +280,7 @@ class RegistryEntry:
             "area_id": self.area_id,
             "categories": self.categories,
             "config_entry_id": self.config_entry_id,
+            "created_at": self.created_at.timestamp(),
             "device_id": self.device_id,
             "disabled_by": self.disabled_by,
             "entity_category": self.entity_category,
@@ -280,6 +290,7 @@ class RegistryEntry:
             "icon": self.icon,
             "id": self.id,
             "labels": list(self.labels),
+            "modified_at": self.modified_at.timestamp(),
             "name": self.name,
             "options": self.options,
             "original_name": self.original_name,
@@ -288,7 +299,7 @@ class RegistryEntry:
             "unique_id": self.unique_id,
         }
 
-    @cached_property
+    @under_cached_property
     def extended_dict(self) -> dict[str, Any]:
         """Return a extended dict representation of the entry."""
         # Convert sets and tuples to lists
@@ -303,7 +314,7 @@ class RegistryEntry:
             "original_icon": self.original_icon,
         }
 
-    @cached_property
+    @under_cached_property
     def partial_json_repr(self) -> bytes | None:
         """Return a cached partial JSON representation of the entry."""
         try:
@@ -319,7 +330,7 @@ class RegistryEntry:
             )
         return None
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(
@@ -330,6 +341,7 @@ class RegistryEntry:
                     "categories": self.categories,
                     "capabilities": self.capabilities,
                     "config_entry_id": self.config_entry_id,
+                    "created_at": self.created_at,
                     "device_class": self.device_class,
                     "device_id": self.device_id,
                     "disabled_by": self.disabled_by,
@@ -340,6 +352,7 @@ class RegistryEntry:
                     "id": self.id,
                     "has_entity_name": self.has_entity_name,
                     "labels": list(self.labels),
+                    "modified_at": self.modified_at,
                     "name": self.name,
                     "options": self.options,
                     "original_device_class": self.original_device_class,
@@ -384,7 +397,7 @@ class RegistryEntry:
         hass.states.async_set(self.entity_id, STATE_UNAVAILABLE, attrs)
 
 
-@attr.s(frozen=True)
+@attr.s(frozen=True, slots=True)
 class DeletedRegistryEntry:
     """Deleted Entity Registry Entry."""
 
@@ -395,21 +408,26 @@ class DeletedRegistryEntry:
     domain: str = attr.ib(init=False, repr=False)
     id: str = attr.ib()
     orphaned_timestamp: float | None = attr.ib()
+    created_at: datetime = attr.ib(factory=utcnow)
+    modified_at: datetime = attr.ib(factory=utcnow)
+    _cache: dict[str, Any] = attr.ib(factory=dict, eq=False, init=False)
 
     @domain.default
     def _domain_default(self) -> str:
         """Compute domain value."""
         return split_entity_id(self.entity_id)[0]
 
-    @cached_property
+    @under_cached_property
     def as_storage_fragment(self) -> json_fragment:
         """Return a json fragment for storage."""
         return json_fragment(
             json_bytes(
                 {
                     "config_entry_id": self.config_entry_id,
+                    "created_at": self.created_at,
                     "entity_id": self.entity_id,
                     "id": self.id,
+                    "modified_at": self.modified_at,
                     "orphaned_timestamp": self.orphaned_timestamp,
                     "platform": self.platform,
                     "unique_id": self.unique_id,
@@ -429,88 +447,97 @@ class EntityRegistryStore(storage.Store[dict[str, list[dict[str, Any]]]]):
     ) -> dict:
         """Migrate to the new version."""
         data = old_data
-        if old_major_version == 1 and old_minor_version < 2:
-            # Version 1.2 implements migration and freezes the available keys
-            for entity in data["entities"]:
-                # Populate keys which were introduced before version 1.2
-                entity.setdefault("area_id", None)
-                entity.setdefault("capabilities", {})
-                entity.setdefault("config_entry_id", None)
-                entity.setdefault("device_class", None)
-                entity.setdefault("device_id", None)
-                entity.setdefault("disabled_by", None)
-                entity.setdefault("entity_category", None)
-                entity.setdefault("icon", None)
-                entity.setdefault("name", None)
-                entity.setdefault("original_icon", None)
-                entity.setdefault("original_name", None)
-                entity.setdefault("supported_features", 0)
-                entity.setdefault("unit_of_measurement", None)
+        if old_major_version == 1:
+            if old_minor_version < 2:
+                # Version 1.2 implements migration and freezes the available keys
+                for entity in data["entities"]:
+                    # Populate keys which were introduced before version 1.2
+                    entity.setdefault("area_id", None)
+                    entity.setdefault("capabilities", {})
+                    entity.setdefault("config_entry_id", None)
+                    entity.setdefault("device_class", None)
+                    entity.setdefault("device_id", None)
+                    entity.setdefault("disabled_by", None)
+                    entity.setdefault("entity_category", None)
+                    entity.setdefault("icon", None)
+                    entity.setdefault("name", None)
+                    entity.setdefault("original_icon", None)
+                    entity.setdefault("original_name", None)
+                    entity.setdefault("supported_features", 0)
+                    entity.setdefault("unit_of_measurement", None)
 
-        if old_major_version == 1 and old_minor_version < 3:
-            # Version 1.3 adds original_device_class
-            for entity in data["entities"]:
-                # Move device_class to original_device_class
-                entity["original_device_class"] = entity["device_class"]
-                entity["device_class"] = None
+            if old_minor_version < 3:
+                # Version 1.3 adds original_device_class
+                for entity in data["entities"]:
+                    # Move device_class to original_device_class
+                    entity["original_device_class"] = entity["device_class"]
+                    entity["device_class"] = None
 
-        if old_major_version == 1 and old_minor_version < 4:
-            # Version 1.4 adds id
-            for entity in data["entities"]:
-                entity["id"] = uuid_util.random_uuid_hex()
+            if old_minor_version < 4:
+                # Version 1.4 adds id
+                for entity in data["entities"]:
+                    entity["id"] = uuid_util.random_uuid_hex()
 
-        if old_major_version == 1 and old_minor_version < 5:
-            # Version 1.5 adds entity options
-            for entity in data["entities"]:
-                entity["options"] = {}
+            if old_minor_version < 5:
+                # Version 1.5 adds entity options
+                for entity in data["entities"]:
+                    entity["options"] = {}
 
-        if old_major_version == 1 and old_minor_version < 6:
-            # Version 1.6 adds hidden_by
-            for entity in data["entities"]:
-                entity["hidden_by"] = None
+            if old_minor_version < 6:
+                # Version 1.6 adds hidden_by
+                for entity in data["entities"]:
+                    entity["hidden_by"] = None
 
-        if old_major_version == 1 and old_minor_version < 7:
-            # Version 1.7 adds has_entity_name
-            for entity in data["entities"]:
-                entity["has_entity_name"] = False
+            if old_minor_version < 7:
+                # Version 1.7 adds has_entity_name
+                for entity in data["entities"]:
+                    entity["has_entity_name"] = False
 
-        if old_major_version == 1 and old_minor_version < 8:
-            # Cleanup after frontend bug which incorrectly updated device_class
-            # Fixed by frontend PR #13551
-            for entity in data["entities"]:
-                domain = split_entity_id(entity["entity_id"])[0]
-                if domain in [Platform.BINARY_SENSOR, Platform.COVER]:
-                    continue
-                entity["device_class"] = None
+            if old_minor_version < 8:
+                # Cleanup after frontend bug which incorrectly updated device_class
+                # Fixed by frontend PR #13551
+                for entity in data["entities"]:
+                    domain = split_entity_id(entity["entity_id"])[0]
+                    if domain in [Platform.BINARY_SENSOR, Platform.COVER]:
+                        continue
+                    entity["device_class"] = None
 
-        if old_major_version == 1 and old_minor_version < 9:
-            # Version 1.9 adds translation_key
-            for entity in data["entities"]:
-                entity["translation_key"] = None
+            if old_minor_version < 9:
+                # Version 1.9 adds translation_key
+                for entity in data["entities"]:
+                    entity["translation_key"] = None
 
-        if old_major_version == 1 and old_minor_version < 10:
-            # Version 1.10 adds aliases
-            for entity in data["entities"]:
-                entity["aliases"] = []
+            if old_minor_version < 10:
+                # Version 1.10 adds aliases
+                for entity in data["entities"]:
+                    entity["aliases"] = []
 
-        if old_major_version == 1 and old_minor_version < 11:
-            # Version 1.11 adds deleted_entities
-            data["deleted_entities"] = data.get("deleted_entities", [])
+            if old_minor_version < 11:
+                # Version 1.11 adds deleted_entities
+                data["deleted_entities"] = data.get("deleted_entities", [])
 
-        if old_major_version == 1 and old_minor_version < 12:
-            # Version 1.12 adds previous_unique_id
-            for entity in data["entities"]:
-                entity["previous_unique_id"] = None
+            if old_minor_version < 12:
+                # Version 1.12 adds previous_unique_id
+                for entity in data["entities"]:
+                    entity["previous_unique_id"] = None
 
-        if old_major_version == 1 and old_minor_version < 13:
-            # Version 1.13 adds labels
-            for entity in data["entities"]:
-                entity["labels"] = []
+            if old_minor_version < 13:
+                # Version 1.13 adds labels
+                for entity in data["entities"]:
+                    entity["labels"] = []
 
-        if old_major_version == 1 and old_minor_version < 14:
-            # Version 1.14 adds categories
-            for entity in data["entities"]:
-                entity["categories"] = {}
+            if old_minor_version < 14:
+                # Version 1.14 adds categories
+                for entity in data["entities"]:
+                    entity["categories"] = {}
+
+            if old_minor_version < 15:
+                # Version 1.15 adds created_at and modified_at
+                created_at = utc_from_timestamp(0).isoformat()
+                for entity in data["entities"]:
+                    entity["created_at"] = entity["modified_at"] = created_at
+                for entity in data["deleted_entities"]:
+                    entity["created_at"] = entity["modified_at"] = created_at
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -619,6 +646,8 @@ def _validate_item(
     domain: str,
     platform: str,
     *,
+    config_entry_id: str | None | UndefinedType = None,
+    device_id: str | None | UndefinedType = None,
     disabled_by: RegistryEntryDisabler | None | UndefinedType = None,
     entity_category: EntityCategory | None | UndefinedType = None,
     hidden_by: RegistryEntryHider | None | UndefinedType = None,
@@ -636,12 +665,21 @@ def _validate_item(
         # In HA Core 2025.10, we should fail if unique_id is not a string
         report_issue = async_suggest_report_issue(hass, integration_domain=platform)
         _LOGGER.error(
-            ("'%s' from integration %s has a non string unique_id" " '%s', please %s"),
+            "'%s' from integration %s has a non string unique_id '%s', please %s",
             domain,
             platform,
             unique_id,
             report_issue,
         )
+    if config_entry_id and config_entry_id is not UNDEFINED:
+        if not hass.config_entries.async_get_entry(config_entry_id):
+            raise ValueError(
+                f"Can't link entity to unknown config entry {config_entry_id}"
+            )
+    if device_id and device_id is not UNDEFINED:
+        device_registry = dr.async_get(hass)
+        if not device_registry.async_get(device_id):
+            raise ValueError(f"Device {device_id} does not exist")
     if (
         disabled_by
         and disabled_by is not UNDEFINED
@@ -765,7 +803,7 @@ class EntityRegistry(BaseRegistry):
             tries += 1
             len_suffix = len(str(tries)) + 1
             test_string = (
-                f"{preferred_string[:MAX_LENGTH_STATE_ENTITY_ID-len_suffix]}_{tries}"
+                f"{preferred_string[: MAX_LENGTH_STATE_ENTITY_ID - len_suffix]}_{tries}"
             )
 
         return test_string
@@ -830,6 +868,8 @@ class EntityRegistry(BaseRegistry):
             self.hass,
             domain,
             platform,
+            config_entry_id=config_entry_id,
+            device_id=device_id,
             disabled_by=disabled_by,
             entity_category=entity_category,
             hidden_by=hidden_by,
@@ -837,10 +877,12 @@ class EntityRegistry(BaseRegistry):
         )
 
         entity_registry_id: str | None = None
+        created_at = utcnow()
         deleted_entity = self.deleted_entities.pop((domain, platform, unique_id), None)
         if deleted_entity is not None:
             # Restore id
             entity_registry_id = deleted_entity.id
+            created_at = deleted_entity.created_at
 
         entity_id = self.async_generate_entity_id(
             domain,
@@ -865,6 +907,7 @@ class EntityRegistry(BaseRegistry):
         entry = RegistryEntry(
             capabilities=none_if_undefined(capabilities),
             config_entry_id=none_if_undefined(config_entry_id),
+            created_at=created_at,
             device_id=none_if_undefined(device_id),
             disabled_by=disabled_by,
             entity_category=none_if_undefined(entity_category),
@@ -906,6 +949,7 @@ class EntityRegistry(BaseRegistry):
         orphaned_timestamp = None if config_entry_id else time.time()
         self.deleted_entities[key] = DeletedRegistryEntry(
             config_entry_id=config_entry_id,
+            created_at=entity.created_at,
             entity_id=entity_id,
             id=entity.id,
             orphaned_timestamp=orphaned_timestamp,
@@ -1057,6 +1101,8 @@ class EntityRegistry(BaseRegistry):
                 self.hass,
                 old.domain,
                 old.platform,
+                config_entry_id=config_entry_id,
+                device_id=device_id,
                 disabled_by=disabled_by,
                 entity_category=entity_category,
                 hidden_by=hidden_by,
@@ -1092,6 +1138,8 @@ class EntityRegistry(BaseRegistry):
 
         if not new_values:
             return old
+
+        new_values["modified_at"] = utcnow()
 
         self.hass.verify_event_loop_thread("entity_registry.async_update_entity")
 
@@ -1260,6 +1308,7 @@ class EntityRegistry(BaseRegistry):
                     categories=entity["categories"],
                     capabilities=entity["capabilities"],
                     config_entry_id=entity["config_entry_id"],
+                    created_at=datetime.fromisoformat(entity["created_at"]),
                     device_class=entity["device_class"],
                     device_id=entity["device_id"],
                     disabled_by=RegistryEntryDisabler(entity["disabled_by"])
@@ -1276,6 +1325,7 @@ class EntityRegistry(BaseRegistry):
                     id=entity["id"],
                     has_entity_name=entity["has_entity_name"],
                     labels=set(entity["labels"]),
+                    modified_at=datetime.fromisoformat(entity["modified_at"]),
                     name=entity["name"],
                     options=entity["options"],
                     original_device_class=entity["original_device_class"],
@@ -1307,8 +1357,10 @@ class EntityRegistry(BaseRegistry):
                 )
                 deleted_entities[key] = DeletedRegistryEntry(
                     config_entry_id=entity["config_entry_id"],
+                    created_at=datetime.fromisoformat(entity["created_at"]),
                     entity_id=entity["entity_id"],
                     id=entity["id"],
+                    modified_at=datetime.fromisoformat(entity["modified_at"]),
                     orphaned_timestamp=entity["orphaned_timestamp"],
                     platform=entity["platform"],
                     unique_id=entity["unique_id"],

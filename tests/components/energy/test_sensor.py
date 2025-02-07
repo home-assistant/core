@@ -1,5 +1,6 @@
 """Test the Energy sensors."""
 
+from collections.abc import Callable, Coroutine
 import copy
 from datetime import timedelta
 from typing import Any
@@ -27,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from tests.components.recorder.common import async_wait_recording_done
@@ -37,10 +38,12 @@ TEST_TIME_ADVANCE_INTERVAL = timedelta(milliseconds=10)
 
 
 @pytest.fixture
-async def setup_integration(recorder_mock: Recorder):
+async def setup_integration(
+    recorder_mock: Recorder,
+) -> Callable[[HomeAssistant], Coroutine[Any, Any, None]]:
     """Set up the integration."""
 
-    async def setup_integration(hass):
+    async def setup_integration(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, "energy", {})
         await hass.async_block_till_done()
 

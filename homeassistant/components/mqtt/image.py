@@ -25,7 +25,7 @@ from homeassistant.util import dt as dt_util
 
 from . import subscription
 from .config import MQTT_BASE_SCHEMA
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     DATA_MQTT,
     MqttValueTemplate,
@@ -36,6 +36,8 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_subscribe_topic
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_CONTENT_TYPE = "content_type"
 CONF_IMAGE_ENCODING = "image_encoding"

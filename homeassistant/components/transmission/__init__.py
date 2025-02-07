@@ -5,7 +5,7 @@ from __future__ import annotations
 from functools import partial
 import logging
 import re
-from typing import Any, Literal
+from typing import Any, Final
 
 import transmission_rpc
 from transmission_rpc.error import (
@@ -42,6 +42,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DELETE_DATA,
+    ATTR_DOWNLOAD_PATH,
     ATTR_TORRENT,
     CONF_ENTRY_ID,
     DEFAULT_DELETE_DATA,
@@ -82,7 +83,12 @@ SERVICE_BASE_SCHEMA = vol.Schema(
 )
 
 SERVICE_ADD_TORRENT_SCHEMA = vol.All(
-    SERVICE_BASE_SCHEMA.extend({vol.Required(ATTR_TORRENT): cv.string}),
+    SERVICE_BASE_SCHEMA.extend(
+        {
+            vol.Required(ATTR_TORRENT): cv.string,
+            vol.Optional(ATTR_DOWNLOAD_PATH, default=None): cv.string,
+        }
+    ),
 )
 
 
@@ -213,10 +219,18 @@ def setup_hass_services(hass: HomeAssistant) -> None:
         entry_id: str = service.data[CONF_ENTRY_ID]
         coordinator = _get_coordinator_from_service_data(hass, entry_id)
         torrent: str = service.data[ATTR_TORRENT]
+        download_path: str | None = service.data.get(ATTR_DOWNLOAD_PATH)
         if torrent.startswith(
             ("http", "ftp:", "magnet:")
         ) or hass.config.is_allowed_path(torrent):
-            await hass.async_add_executor_job(coordinator.api.add_torrent, torrent)
+            if download_path:
+                await hass.async_add_executor_job(
+                    partial(
+                        coordinator.api.add_torrent, torrent, download_dir=download_path
+                    )
+                )
+            else:
+                await hass.async_add_executor_job(coordinator.api.add_torrent, torrent)
             await coordinator.async_request_refresh()
         else:
             _LOGGER.warning("Could not add torrent: unsupported type or no permission")
@@ -278,8 +292,7 @@ async def get_api(
     hass: HomeAssistant, entry: dict[str, Any]
 ) -> transmission_rpc.Client:
     """Get Transmission client."""
-    protocol: Literal["http", "https"]
-    protocol = "https" if entry[CONF_SSL] else "http"
+    protocol: Final = "https" if entry[CONF_SSL] else "http"
     host = entry[CONF_HOST]
     port = entry[CONF_PORT]
     path = entry[CONF_PATH]

@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.reload import async_setup_reload_service
@@ -103,12 +103,8 @@ async def async_setup_platform(
     name: str = config[CONF_NAME]
     unique_id: str | None = config.get(CONF_UNIQUE_ID)
 
-    for template in (start, end):
-        if template is not None:
-            template.hass = hass
-
     history_stats = HistoryStats(hass, entity_id, entity_states, start, end, duration)
-    coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, name)
+    coordinator = HistoryStatsUpdateCoordinator(hass, history_stats, None, name)
     await coordinator.async_refresh()
     if not coordinator.last_update_success:
         raise PlatformNotReady from coordinator.last_exception

@@ -31,6 +31,7 @@ class ESPHomeDashboardCoordinator(DataUpdateCoordinator[dict[str, ConfiguredDevi
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=None,
             name="ESPHome Dashboard",
             update_interval=timedelta(minutes=5),
             always_update=False,

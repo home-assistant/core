@@ -9,7 +9,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
-import time
 from typing import Any, Self, TypedDict, cast, overload
 
 import ciso8601
@@ -51,7 +50,7 @@ from homeassistant.const import (
 from homeassistant.core import Context, Event, EventOrigin, State, split_entity_id
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.json import JSON_DUMP, json_bytes
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
 ALL_DOMAIN_EXCLUDE_ATTRS = {ATTR_ATTRIBUTION, ATTR_RESTORED, ATTR_SUPPORTED_FEATURES}
@@ -381,7 +380,7 @@ class States(Base):  # type: ignore[misc,valid-type]
     )  # *** Not originally in v30, only added for recorder to startup ok
     last_updated = Column(DATETIME_TYPE, default=dt_util.utcnow, index=True)
     last_updated_ts = Column(
-        TIMESTAMP_TYPE, default=time.time, index=True
+        TIMESTAMP_TYPE, index=True
     )  # *** Not originally in v30, only added for recorder to startup ok
     old_state_id = Column(Integer, ForeignKey("states.state_id"), index=True)
     attributes_id = Column(

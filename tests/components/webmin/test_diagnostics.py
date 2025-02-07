@@ -1,6 +1,7 @@
 """Tests for the diagnostics data provided by the Webmin integration."""
 
 from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 
 from homeassistant.core import HomeAssistant
 
@@ -16,9 +17,6 @@ async def test_diagnostics(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics."""
-    assert (
-        await get_diagnostics_for_config_entry(
-            hass, hass_client, await async_init_integration(hass)
-        )
-        == snapshot
-    )
+    assert await get_diagnostics_for_config_entry(
+        hass, hass_client, await async_init_integration(hass)
+    ) == snapshot(exclude=props("created_at", "modified_at"))

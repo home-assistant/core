@@ -4,14 +4,16 @@ from dataclasses import asdict
 from datetime import date
 from typing import cast
 
-from aiomealie.exceptions import (
+from aiomealie import (
     MealieConnectionError,
     MealieNotFoundError,
     MealieValidationError,
+    MealplanEntryType,
 )
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_DATE
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -24,7 +26,10 @@ from homeassistant.helpers import config_validation as cv
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_END_DATE,
+    ATTR_ENTRY_TYPE,
     ATTR_INCLUDE_TAGS,
+    ATTR_NOTE_TEXT,
+    ATTR_NOTE_TITLE,
     ATTR_RECIPE_ID,
     ATTR_START_DATE,
     ATTR_URL,
@@ -58,6 +63,40 @@ SERVICE_IMPORT_RECIPE_SCHEMA = vol.Schema(
     }
 )
 
+SERVICE_SET_RANDOM_MEALPLAN = "set_random_mealplan"
+SERVICE_SET_RANDOM_MEALPLAN_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+        vol.Required(ATTR_DATE): cv.date,
+        vol.Required(ATTR_ENTRY_TYPE): vol.In([x.lower() for x in MealplanEntryType]),
+    }
+)
+
+SERVICE_SET_MEALPLAN = "set_mealplan"
+SERVICE_SET_MEALPLAN_SCHEMA = vol.Any(
+    vol.Schema(
+        {
+            vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+            vol.Required(ATTR_DATE): cv.date,
+            vol.Required(ATTR_ENTRY_TYPE): vol.In(
+                [x.lower() for x in MealplanEntryType]
+            ),
+            vol.Required(ATTR_RECIPE_ID): str,
+        }
+    ),
+    vol.Schema(
+        {
+            vol.Required(ATTR_CONFIG_ENTRY_ID): str,
+            vol.Required(ATTR_DATE): cv.date,
+            vol.Required(ATTR_ENTRY_TYPE): vol.In(
+                [x.lower() for x in MealplanEntryType]
+            ),
+            vol.Required(ATTR_NOTE_TITLE): str,
+            vol.Optional(ATTR_NOTE_TEXT): str,
+        }
+    ),
+)
+
 
 def async_get_entry(hass: HomeAssistant, config_entry_id: str) -> MealieConfigEntry:
     """Get the Mealie config entry."""
@@ -89,7 +128,7 @@ def setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="end_date_before_start_date",
             )
-        client = cast(MealieConfigEntry, entry).runtime_data.client
+        client = entry.runtime_data.client
         try:
             mealplans = await client.get_mealplans(start_date, end_date)
         except MealieConnectionError as err:
@@ -141,6 +180,46 @@ def setup_services(hass: HomeAssistant) -> None:
             return {"recipe": asdict(recipe)}
         return None
 
+    async def async_set_random_mealplan(call: ServiceCall) -> ServiceResponse:
+        """Set a random mealplan."""
+        entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+        mealplan_date = call.data[ATTR_DATE]
+        entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
+        client = entry.runtime_data.client
+        try:
+            mealplan = await client.random_mealplan(mealplan_date, entry_type)
+        except MealieConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from err
+        if call.return_response:
+            return {"mealplan": asdict(mealplan)}
+        return None
+
+    async def async_set_mealplan(call: ServiceCall) -> ServiceResponse:
+        """Set a mealplan."""
+        entry = async_get_entry(hass, call.data[ATTR_CONFIG_ENTRY_ID])
+        mealplan_date = call.data[ATTR_DATE]
+        entry_type = MealplanEntryType(call.data[ATTR_ENTRY_TYPE])
+        client = entry.runtime_data.client
+        try:
+            mealplan = await client.set_mealplan(
+                mealplan_date,
+                entry_type,
+                recipe_id=call.data.get(ATTR_RECIPE_ID),
+                note_title=call.data.get(ATTR_NOTE_TITLE),
+                note_text=call.data.get(ATTR_NOTE_TEXT),
+            )
+        except MealieConnectionError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from err
+        if call.return_response:
+            return {"mealplan": asdict(mealplan)}
+        return None
+
     hass.services.async_register(
         DOMAIN,
         SERVICE_GET_MEALPLAN,
@@ -160,5 +239,19 @@ def setup_services(hass: HomeAssistant) -> None:
         SERVICE_IMPORT_RECIPE,
         async_import_recipe,
         schema=SERVICE_IMPORT_RECIPE_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_RANDOM_MEALPLAN,
+        async_set_random_mealplan,
+        schema=SERVICE_SET_RANDOM_MEALPLAN_SCHEMA,
+        supports_response=SupportsResponse.OPTIONAL,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_MEALPLAN,
+        async_set_mealplan,
+        schema=SERVICE_SET_MEALPLAN_SCHEMA,
         supports_response=SupportsResponse.OPTIONAL,
     )

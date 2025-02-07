@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import trigger_plex_update, wait_for_debouncer
@@ -209,7 +209,7 @@ async def test_setup_when_certificate_changed(
     class WrongCertHostnameException(requests.exceptions.SSLError):
         """Mock the exception showing a mismatched hostname."""
 
-        def __init__(self):  # pylint: disable=super-init-not-called
+        def __init__(self) -> None:  # pylint: disable=super-init-not-called
             self.__context__ = ssl.SSLCertVerificationError(
                 f"hostname '{old_domain}' doesn't match"
             )

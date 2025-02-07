@@ -64,8 +64,8 @@ SWITCH_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.template,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TURN_ON): selector.ActionSelector(),
-        vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
+        vol.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
 )
@@ -76,7 +76,7 @@ async def _async_create_entities(hass, config):
     switches = []
 
     for object_id, entity_config in config[CONF_SWITCHES].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
         switches.append(

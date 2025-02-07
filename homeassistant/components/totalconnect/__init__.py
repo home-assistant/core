@@ -7,17 +7,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-import homeassistant.helpers.config_validation as cv
 
-from .const import AUTO_BYPASS, CONF_USERCODES, DOMAIN
+from .const import AUTO_BYPASS, CONF_USERCODES
 from .coordinator import TotalConnectDataUpdateCoordinator
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.BUTTON]
 
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+type TotalConnectConfigEntry = ConfigEntry[TotalConnectDataUpdateCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: TotalConnectConfigEntry
+) -> bool:
     """Set up upon config entry in user interface."""
     conf = entry.data
     username = conf[CONF_USERNAME]
@@ -43,8 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = TotalConnectDataUpdateCoordinator(hass, client)
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     entry.async_on_unload(entry.add_update_listener(update_listener))
@@ -52,18 +52,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: TotalConnectConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: TotalConnectConfigEntry) -> None:
     """Update listener."""
     bypass = entry.options.get(AUTO_BYPASS, False)
-    client = hass.data[DOMAIN][entry.entry_id].client
+    client = entry.runtime_data.client
     for location_id in client.locations:
         client.locations[location_id].auto_bypass_low_battery = bypass

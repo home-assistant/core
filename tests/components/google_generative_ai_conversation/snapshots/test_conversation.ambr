@@ -42,6 +42,10 @@
             'parts': 'Ok',
             'role': 'model',
           }),
+          dict({
+            'parts': '1st user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -102,6 +106,10 @@
             'parts': '1st model response',
             'role': 'model',
           }),
+          dict({
+            'parts': '2nd user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -150,6 +158,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': '1st user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -202,6 +214,10 @@
             'parts': '1st model response',
             'role': 'model',
           }),
+          dict({
+            'parts': '2nd user request',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -215,7 +231,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[config_entry_options0-None]
+# name: test_default_prompt[config_entry_options0-0-None]
   list([
     tuple(
       '',
@@ -228,7 +244,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -250,6 +266,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -263,7 +283,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[config_entry_options0-conversation.google_generative_ai_conversation]
+# name: test_default_prompt[config_entry_options0-0-conversation.google_generative_ai_conversation]
   list([
     tuple(
       '',
@@ -276,7 +296,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -298,6 +318,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -311,7 +335,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[config_entry_options1-None]
+# name: test_default_prompt[config_entry_options1-1-None]
   list([
     tuple(
       '',
@@ -324,7 +348,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -347,6 +371,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -360,7 +388,7 @@
     ),
   ])
 # ---
-# name: test_default_prompt[config_entry_options1-conversation.google_generative_ai_conversation]
+# name: test_default_prompt[config_entry_options1-1-conversation.google_generative_ai_conversation]
   list([
     tuple(
       '',
@@ -373,7 +401,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -396,6 +424,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'hello',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -422,7 +454,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -443,13 +475,30 @@
     parameters {
       type_: OBJECT
       properties {
+        key: "param3"
+        value {
+          type_: OBJECT
+          properties {
+            key: "json"
+            value {
+              type_: STRING
+            }
+          }
+        }
+      }
+      properties {
+        key: "param2"
+        value {
+          type_: NUMBER
+        }
+      }
+      properties {
         key: "param1"
         value {
           type_: ARRAY
           description: "Test parameters"
           items {
             type_: STRING
-            format_: "lower"
           }
         }
       }
@@ -465,6 +514,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'Please call the test function',
+            'role': 'user',
+          }),
         ]),
       }),
     ),
@@ -512,7 +565,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -541,6 +594,10 @@
       ),
       dict({
         'history': list([
+          dict({
+            'parts': 'Please call the test function',
+            'role': 'user',
+          }),
         ]),
       }),
     ),

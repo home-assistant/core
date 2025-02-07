@@ -21,8 +21,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED
 
-from . import HuaweiLteBaseEntityWithDevice, Router
+from . import Router
 from .const import DOMAIN, KEY_NET_NET_MODE
+from .entity import HuaweiLteBaseEntityWithDevice
 
 _LOGGER = logging.getLogger(__name__)
 

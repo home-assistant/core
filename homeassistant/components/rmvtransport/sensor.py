@@ -20,7 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_NAME, CONF_TIMEOUT, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import Throttle
@@ -271,11 +271,9 @@ class RMVDepartureData:
                 if not dest_found:
                     continue
 
-            elif (
-                self._lines
-                and journey["number"] not in self._lines
-                or journey["minutes"] < self._time_offset
-            ):
+            if (self._lines and journey["number"] not in self._lines) or journey[
+                "minutes"
+            ] < self._time_offset:
                 continue
 
             for attr in ("direction", "departure_time", "product", "minutes"):
@@ -289,6 +287,6 @@ class RMVDepartureData:
 
         if not self._error_notification and _deps_not_found:
             self._error_notification = True
-            _LOGGER.info("Destination(s) %s not found", ", ".join(_deps_not_found))
+            _LOGGER.warning("Destination(s) %s not found", ", ".join(_deps_not_found))
 
         self.departures = _deps

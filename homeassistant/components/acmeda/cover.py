@@ -14,8 +14,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AcmedaConfigEntry
-from .base import AcmedaBase
 from .const import ACMEDA_HUB_UPDATE
+from .entity import AcmedaEntity
 from .helpers import async_add_acmeda_entities
 
 
@@ -44,7 +44,7 @@ async def async_setup_entry(
     )
 
 
-class AcmedaCover(AcmedaBase, CoverEntity):
+class AcmedaCover(AcmedaEntity, CoverEntity):
     """Representation of an Acmeda cover device."""
 
     _attr_name = None

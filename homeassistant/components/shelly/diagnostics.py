@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
 
 from .coordinator import ShellyConfigEntry
+from .utils import get_rpc_ws_url
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
@@ -73,6 +74,12 @@ async def async_get_config_entry_diagnostics(
             device_settings = {
                 k: v for k, v in rpc_coordinator.device.config.items() if k in ["cloud"]
             }
+            ws_config = rpc_coordinator.device.config["ws"]
+            device_settings["ws_outbound_enabled"] = ws_config["enable"]
+            if ws_config["enable"]:
+                device_settings["ws_outbound_server_valid"] = bool(
+                    ws_config["server"] == get_rpc_ws_url(hass)
+                )
             device_status = {
                 k: v
                 for k, v in rpc_coordinator.device.status.items()

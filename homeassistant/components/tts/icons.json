@@ -5,8 +5,14 @@
     }
   },
   "services": {
-    "clear_cache": "mdi:delete",
-    "say": "mdi:speaker-message",
-    "speak": "mdi:speaker-message"
+    "clear_cache": {
+      "service": "mdi:delete"
+    },
+    "say": {
+      "service": "mdi:speaker-message"
+    },
+    "speak": {
+      "service": "mdi:speaker-message"
+    }
   }
 }

@@ -19,7 +19,7 @@
           "country_code": "Country code"
         }
       },
-      "reauth": {
+      "reauth_confirm": {
         "data": {
           "api_key": "[%key:common::config_flow::data::access_token%]"
         }

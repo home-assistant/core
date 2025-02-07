@@ -10,9 +10,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_sensor import XboxBaseSensorEntity
 from .const import DOMAIN
 from .coordinator import XboxUpdateCoordinator
+from .entity import XboxBaseEntity
 
 SENSOR_ATTRIBUTES = ["status", "gamer_score", "account_tier", "gold_tenure"]
 
@@ -34,7 +34,7 @@ async def async_setup_entry(
     update_friends()
 
 
-class XboxSensorEntity(XboxBaseSensorEntity, SensorEntity):
+class XboxSensorEntity(XboxBaseEntity, SensorEntity):
     """Representation of a Xbox presence state."""
 
     @property

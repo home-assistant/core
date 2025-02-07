@@ -26,6 +26,8 @@ from .const import TessieClimateKeeper
 from .entity import TessieEntity
 from .models import TessieVehicleData
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -58,7 +60,6 @@ class TessieClimateEntity(TessieEntity, ClimateEntity):
         TessieClimateKeeper.DOG,
         TessieClimateKeeper.CAMP,
     ]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

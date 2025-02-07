@@ -95,7 +95,6 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, ac_number, info):
         """Initialize the climate device."""
@@ -156,7 +155,8 @@ class AirtouchAC(CoordinatorEntity, ClimateEntity):
             raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
 
         if hvac_mode == HVACMode.OFF:
-            return await self.async_turn_off()
+            await self.async_turn_off()
+            return
         await self._airtouch.SetCoolingModeForAc(
             self._ac_number, HA_STATE_TO_AT[hvac_mode]
         )
@@ -204,7 +204,6 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = AT_GROUP_MODES
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator, group_number, info):
         """Initialize the climate device."""
@@ -262,7 +261,8 @@ class AirtouchGroup(CoordinatorEntity, ClimateEntity):
             raise ValueError(f"Unsupported HVAC mode: {hvac_mode}")
 
         if hvac_mode == HVACMode.OFF:
-            return await self.async_turn_off()
+            await self.async_turn_off()
+            return
         if self.hvac_mode == HVACMode.OFF:
             await self.async_turn_on()
         self._unit = self._airtouch.GetGroups()[self._group_number]

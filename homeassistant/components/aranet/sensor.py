@@ -8,12 +8,10 @@ from typing import Any
 from aranet4.client import Aranet4Advertisement
 from bleak.backends.device import BLEDevice
 
-from homeassistant import config_entries
 from homeassistant.components.bluetooth.passive_update_processor import (
     PassiveBluetoothDataProcessor,
     PassiveBluetoothDataUpdate,
     PassiveBluetoothEntityKey,
-    PassiveBluetoothProcessorCoordinator,
     PassiveBluetoothProcessorEntity,
 )
 from homeassistant.components.sensor import (
@@ -24,6 +22,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NAME,
     ATTR_SW_VERSION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -38,7 +37,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import ARANET_MANUFACTURER_NAME, DOMAIN
+from . import AranetConfigEntry
+from .const import ARANET_MANUFACTURER_NAME
 
 
 @dataclass(frozen=True)
@@ -99,6 +99,13 @@ SENSOR_DESCRIPTIONS = {
         suggested_display_precision=4,
         scale=0.000001,
     ),
+    "radon_concentration": AranetSensorEntityDescription(
+        key="radon_concentration",
+        translation_key="radon_concentration",
+        name="Radon Concentration",
+        native_unit_of_measurement="Bq/m³",
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     "battery": AranetSensorEntityDescription(
         key="battery",
         name="Battery",
@@ -136,6 +143,7 @@ def _sensor_device_info_to_hass(
     if adv.readings and adv.readings.name:
         hass_device_info[ATTR_NAME] = adv.readings.name
         hass_device_info[ATTR_MANUFACTURER] = ARANET_MANUFACTURER_NAME
+        hass_device_info[ATTR_MODEL] = adv.readings.type.model
     if adv.manufacturer_data:
         hass_device_info[ATTR_SW_VERSION] = str(adv.manufacturer_data.version)
     return hass_device_info
@@ -167,20 +175,17 @@ def sensor_update_to_bluetooth_data_update(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
+    entry: AranetConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Aranet sensors."""
-    coordinator: PassiveBluetoothProcessorCoordinator[Aranet4Advertisement] = hass.data[
-        DOMAIN
-    ][entry.entry_id]
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)
     entry.async_on_unload(
         processor.async_add_entities_listener(
             Aranet4BluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(coordinator.async_register_processor(processor))
+    entry.async_on_unload(entry.runtime_data.async_register_processor(processor))
 
 
 class Aranet4BluetoothSensorEntity(

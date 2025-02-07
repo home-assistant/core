@@ -8,14 +8,15 @@ from io import BytesIO
 import logging
 from typing import TYPE_CHECKING
 
-from pytrafikverket.exceptions import (
+import aiohttp
+from pytrafikverket import (
+    CameraInfoModel,
     InvalidAuthentication,
     MultipleCamerasFound,
     NoCameraFound,
+    TrafikverketCamera,
     UnknownError,
 )
-from pytrafikverket.models import CameraInfoModel
-from pytrafikverket.trafikverket_camera import TrafikverketCamera
 
 from homeassistant.const import CONF_API_KEY, CONF_ID
 from homeassistant.core import HomeAssistant
@@ -43,21 +44,20 @@ class CameraData:
 class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
     """A Trafikverket Data Update Coordinator."""
 
-    config_entry: TVCameraConfigEntry
-
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: TVCameraConfigEntry) -> None:
         """Initialize the Trafikverket coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=TIME_BETWEEN_UPDATES,
         )
         self.session = async_get_clientsession(hass)
         self._camera_api = TrafikverketCamera(
-            self.session, self.config_entry.data[CONF_API_KEY]
+            self.session, config_entry.data[CONF_API_KEY]
         )
-        self._id = self.config_entry.data[CONF_ID]
+        self._id = config_entry.data[CONF_ID]
 
     async def _async_update_data(self) -> CameraData:
         """Fetch data from Trafikverket."""
@@ -77,7 +77,9 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
         if camera_data.fullsizephoto:
             image_url = f"{camera_data.photourl}?type=fullsize"
 
-        async with self.session.get(image_url, timeout=10) as get_image:
+        async with self.session.get(
+            image_url, timeout=aiohttp.ClientTimeout(total=10)
+        ) as get_image:
             if get_image.status not in range(200, 299):
                 raise UpdateFailed("Could not retrieve image")
             image = BytesIO(await get_image.read()).getvalue()

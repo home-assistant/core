@@ -37,6 +37,7 @@ from zha.application.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
     ZHA_CLUSTER_HANDLER_MSG,
+    ZHA_GW_MSG,
 )
 from zha.application.gateway import Gateway
 from zha.application.helpers import (
@@ -59,8 +60,7 @@ from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import VolDictType, VolSchemaType
@@ -94,7 +94,7 @@ from .helpers import (
 )
 
 if TYPE_CHECKING:
-    from homeassistant.components.websocket_api.connection import ActiveConnection
+    from homeassistant.components.websocket_api import ActiveConnection
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -331,7 +331,7 @@ async def websocket_permit_devices(
         connection.send_message(websocket_api.event_message(msg["id"], data))
 
     remove_dispatcher_function = async_dispatcher_connect(
-        hass, "zha_gateway_message", forward_messages
+        hass, ZHA_GW_MSG, forward_messages
     )
 
     @callback
@@ -1311,12 +1311,8 @@ def async_load_api(hass: HomeAssistant) -> None:
         """Remove a node from the network."""
         zha_gateway = get_zha_gateway(hass)
         ieee: EUI64 = service.data[ATTR_IEEE]
-        zha_device: Device | None = zha_gateway.get_device(ieee)
-        if zha_device is not None and zha_device.is_active_coordinator:
-            _LOGGER.info("Removing the coordinator (%s) is not allowed", ieee)
-            return
         _LOGGER.info("Removing node %s", ieee)
-        await application_controller.remove(ieee)
+        await zha_gateway.async_remove_device(ieee)
 
     async_register_admin_service(
         hass, DOMAIN, SERVICE_REMOVE, remove, schema=SERVICE_SCHEMAS[IEEE_SERVICE]

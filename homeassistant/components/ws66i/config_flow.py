@@ -8,7 +8,12 @@ from typing import Any
 from pyws66i import WS66i, get_ws66i
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -44,7 +49,7 @@ FIRST_ZONE = 11
 
 
 @callback
-def _sources_from_config(data):
+def _sources_from_config(data: dict[str, str]) -> dict[str, str]:
     sources_config = {
         str(idx + 1): data.get(source) for idx, source in enumerate(SOURCES)
     }
@@ -94,7 +99,9 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
@@ -123,11 +130,13 @@ class WS66iConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> Ws66iOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return Ws66iOptionsFlowHandler(config_entry)
+        return Ws66iOptionsFlowHandler()
 
 
 @callback
-def _key_for_source(index, source, previous_sources):
+def _key_for_source(
+    index: int, source: str, previous_sources: dict[str, str]
+) -> vol.Required:
     return vol.Required(
         source, description={"suggested_value": previous_sources[str(index)]}
     )
@@ -136,11 +145,9 @@ def _key_for_source(index, source, previous_sources):
 class Ws66iOptionsFlowHandler(OptionsFlow):
     """Handle a WS66i options flow."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize."""
-        self.config_entry = config_entry
-
-    async def async_step_init(self, user_input=None):
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(

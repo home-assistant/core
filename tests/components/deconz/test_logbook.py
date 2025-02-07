@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_ID,
     CONF_UNIQUE_ID,
-    STATE_ALARM_ARMED_AWAY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -30,30 +29,28 @@ from tests.components.logbook.common import MockRow, mock_humanify
     "sensor_payload",
     [
         {
-            "1": {
-                "config": {
-                    "armed": "disarmed",
-                    "enrolled": 0,
-                    "on": True,
-                    "panel": "disarmed",
-                    "pending": [],
-                    "reachable": True,
-                },
-                "ep": 1,
-                "etag": "3c4008d74035dfaa1f0bb30d24468b12",
-                "lastseen": "2021-04-02T13:07Z",
-                "manufacturername": "Universal Electronics Inc",
-                "modelid": "URC4450BC0-X-R",
-                "name": "Keypad",
-                "state": {
-                    "action": "armed_away,1111,55",
-                    "lastupdated": "2021-04-02T13:08:18.937",
-                    "lowbattery": False,
-                    "tampered": True,
-                },
-                "type": "ZHAAncillaryControl",
-                "uniqueid": "00:0d:6f:00:13:4f:61:39-01-0501",
-            }
+            "config": {
+                "armed": "disarmed",
+                "enrolled": 0,
+                "on": True,
+                "panel": "disarmed",
+                "pending": [],
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "3c4008d74035dfaa1f0bb30d24468b12",
+            "lastseen": "2021-04-02T13:07Z",
+            "manufacturername": "Universal Electronics Inc",
+            "modelid": "URC4450BC0-X-R",
+            "name": "Keypad",
+            "state": {
+                "action": "armed_away,1111,55",
+                "lastupdated": "2021-04-02T13:08:18.937",
+                "lowbattery": False,
+                "tampered": True,
+            },
+            "type": "ZHAAncillaryControl",
+            "uniqueid": "00:0d:6f:00:13:4f:61:39-01-0501",
         }
     ],
 )
@@ -64,8 +61,8 @@ async def test_humanifying_deconz_alarm_event(
     sensor_payload: dict[str, Any],
 ) -> None:
     """Test humanifying deCONZ alarm event."""
-    keypad_event_id = slugify(sensor_payload["1"]["name"])
-    keypad_serial = serial_from_unique_id(sensor_payload["1"]["uniqueid"])
+    keypad_event_id = slugify(sensor_payload["name"])
+    keypad_serial = serial_from_unique_id(sensor_payload["uniqueid"])
     keypad_entry = device_registry.async_get_device(
         identifiers={(DECONZ_DOMAIN, keypad_serial)}
     )
@@ -85,7 +82,7 @@ async def test_humanifying_deconz_alarm_event(
                 {
                     CONF_CODE: 1234,
                     CONF_DEVICE_ID: keypad_entry.id,
-                    CONF_EVENT: STATE_ALARM_ARMED_AWAY,
+                    CONF_EVENT: "armed_away",
                     CONF_ID: keypad_event_id,
                     CONF_UNIQUE_ID: keypad_serial,
                 },
@@ -96,7 +93,7 @@ async def test_humanifying_deconz_alarm_event(
                 {
                     CONF_CODE: 1234,
                     CONF_DEVICE_ID: "ff99ff99ff99ff99ff99ff99ff99ff99",
-                    CONF_EVENT: STATE_ALARM_ARMED_AWAY,
+                    CONF_EVENT: "armed_away",
                     CONF_ID: removed_device_event_id,
                     CONF_UNIQUE_ID: removed_device_serial,
                 },

@@ -98,7 +98,7 @@ MOCK_BUTTON_DEVICES = [
 ]
 
 
-async def _async_setup_lutron_with_picos(hass):
+async def _async_setup_lutron_with_picos(hass: HomeAssistant) -> str:
     """Setups a lutron bridge with picos."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -487,8 +487,9 @@ async def test_if_fires_on_button_event_late_setup(
         },
     )
 
-    await hass.config_entries.async_setup(config_entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.lutron_caseta.Smartbridge.create_tls"):
+        await hass.config_entries.async_setup(config_entry_id)
+        await hass.async_block_till_done()
 
     message = {
         ATTR_SERIAL: device.get("serial"),

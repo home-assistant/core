@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AugustConfigEntry, AugustData
 from .const import DEFAULT_NAME, DEFAULT_TIMEOUT
-from .entity import AugustEntityMixin
+from .entity import AugustEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,7 +38,7 @@ async def async_setup_entry(
     )
 
 
-class AugustCamera(AugustEntityMixin, Camera):
+class AugustCamera(AugustEntity, Camera):
     """An implementation of an August security camera."""
 
     _attr_translation_key = "camera"

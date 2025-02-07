@@ -54,8 +54,14 @@
     }
   },
   "services": {
-    "set_custom_effect": "mdi:creation",
-    "set_zones": "mdi:texture-box",
-    "set_music_mode": "mdi:music"
+    "set_custom_effect": {
+      "service": "mdi:creation"
+    },
+    "set_zones": {
+      "service": "mdi:texture-box"
+    },
+    "set_music_mode": {
+      "service": "mdi:music"
+    }
   }
 }

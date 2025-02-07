@@ -18,8 +18,7 @@ import voluptuous as vol
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.percentage import (
@@ -122,7 +121,11 @@ class RensonFan(RensonEntity, FanEntity):
     _attr_has_entity_name = True
     _attr_name = None
     _attr_translation_key = "fan"
-    _attr_supported_features = FanEntityFeature.SET_SPEED
+    _attr_supported_features = (
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
+    )
 
     def __init__(self, api: RensonVentilation, coordinator: RensonCoordinator) -> None:
         """Initialize the Renson fan."""
@@ -137,7 +140,7 @@ class RensonFan(RensonEntity, FanEntity):
             DataType.LEVEL,
         )
 
-        if level == Level.BREEZE:
+        if level == Level.BREEZE.value:
             level = self.api.parse_value(
                 self.api.get_field_value(
                     self.coordinator.data, BREEZE_LEVEL_FIELD.name

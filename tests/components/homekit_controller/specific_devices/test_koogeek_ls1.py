@@ -5,14 +5,14 @@ from unittest import mock
 
 from aiohomekit.exceptions import AccessoryDisconnectedError, EncryptionError
 from aiohomekit.model import CharacteristicsTypes, ServicesTypes
-from aiohomekit.testing import FakePairing
+from aiohomekit.testing import FakeController, FakePairing
 import pytest
 
 from homeassistant.components.homekit_controller.connection import (
     MAX_POLL_FAILURES_TO_DECLARE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from ..common import Helper, setup_accessories_from_file, setup_test_accessories
 
@@ -48,7 +48,14 @@ async def test_recover_from_failure(hass: HomeAssistant, failure_cls) -> None:
 
     # Test that entity remains in the same state if there is a network error
     next_update = dt_util.utcnow() + timedelta(seconds=60)
-    with mock.patch.object(FakePairing, "get_characteristics") as get_char:
+    with (
+        mock.patch.object(FakePairing, "get_characteristics") as get_char,
+        mock.patch.object(
+            FakeController,
+            "async_reachable",
+            return_value=False,
+        ),
+    ):
         get_char.side_effect = failure_cls("Disconnected")
 
         # Test that a poll triggers unavailable

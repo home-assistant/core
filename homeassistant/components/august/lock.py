@@ -16,10 +16,10 @@ from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import AugustConfigEntry, AugustData
-from .entity import AugustEntityMixin
+from .entity import AugustEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ async def async_setup_entry(
     async_add_entities(AugustLock(data, lock) for lock in data.locks)
 
 
-class AugustLock(AugustEntityMixin, RestoreEntity, LockEntity):
+class AugustLock(AugustEntity, RestoreEntity, LockEntity):
     """Representation of an August lock."""
 
     _attr_name = None

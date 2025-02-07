@@ -1,5 +1,7 @@
 {
   "services": {
-    "send": "mdi:send"
+    "send": {
+      "service": "mdi:send"
+    }
   }
 }

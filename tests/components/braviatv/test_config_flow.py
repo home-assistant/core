@@ -10,18 +10,23 @@ from pybravia import (
 )
 import pytest
 
-from homeassistant.components import ssdp
 from homeassistant.components.braviatv.const import (
     CONF_NICKNAME,
     CONF_USE_PSK,
     DOMAIN,
     NICKNAME_PREFIX,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import instance_id
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 
@@ -46,14 +51,14 @@ BRAVIA_SOURCES = [
     {"title": "AV/Component", "uri": "extInput:component?port=1"},
 ]
 
-BRAVIA_SSDP = ssdp.SsdpServiceInfo(
+BRAVIA_SSDP = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location="http://bravia-host:52323/dmr.xml",
     upnp={
-        ssdp.ATTR_UPNP_UDN: "uuid:1234",
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: "Living TV",
-        ssdp.ATTR_UPNP_MODEL_NAME: "KE-55XH9096",
+        ATTR_UPNP_UDN: "uuid:1234",
+        ATTR_UPNP_FRIENDLY_NAME: "Living TV",
+        ATTR_UPNP_MODEL_NAME: "KE-55XH9096",
         "X_ScalarWebAPI_DeviceInfo": {
             "X_ScalarWebAPI_ServiceList": {
                 "X_ScalarWebAPI_ServiceType": [
@@ -68,14 +73,14 @@ BRAVIA_SSDP = ssdp.SsdpServiceInfo(
     },
 )
 
-FAKE_BRAVIA_SSDP = ssdp.SsdpServiceInfo(
+FAKE_BRAVIA_SSDP = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location="http://soundbar-host:52323/dmr.xml",
     upnp={
-        ssdp.ATTR_UPNP_UDN: "uuid:1234",
-        ssdp.ATTR_UPNP_FRIENDLY_NAME: "Sony Audio Device",
-        ssdp.ATTR_UPNP_MODEL_NAME: "HT-S700RF",
+        ATTR_UPNP_UDN: "uuid:1234",
+        ATTR_UPNP_FRIENDLY_NAME: "Sony Audio Device",
+        ATTR_UPNP_MODEL_NAME: "HT-S700RF",
         "X_ScalarWebAPI_DeviceInfo": {
             "X_ScalarWebAPI_ServiceList": {
                 "X_ScalarWebAPI_ServiceType": ["guide", "system", "audio", "avContent"],
@@ -405,6 +410,9 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
         title="TV-Model",
     )
     config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authorize"
 
     with (
         patch("pybravia.BraviaClient.connect"),
@@ -421,15 +429,6 @@ async def test_reauth_successful(hass: HomeAssistant, use_psk, new_pin) -> None:
             return_value={},
         ),
     ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_REAUTH, "entry_id": config_entry.entry_id},
-            data=config_entry.data,
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "authorize"
-
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], user_input={CONF_USE_PSK: use_psk}
         )

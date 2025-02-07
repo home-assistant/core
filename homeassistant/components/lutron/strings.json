@@ -17,9 +17,6 @@
         "description": "Please enter the main repeater login information",
         "title": "Main repeater setup"
       }
-    },
-    "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     }
   },
   "entity": {
@@ -35,20 +32,6 @@
           }
         }
       }
-    }
-  },
-  "issues": {
-    "deprecated_light_fan_entity": {
-      "title": "Detected Lutron fan entity created as a light",
-      "description": "Fan entities have been added to the Lutron integration.\nWe detected that entity `{entity}` is being used in `{info}`\n\nWe have created a new fan entity and you should migrate `{info}` to use this new entity.\n\nWhen you are done migrating `{info}` and are ready to have the deprecated light entity removed, disable the entity and restart Home Assistant."
-    },
-    "deprecated_light_fan_on": {
-      "title": "The Lutron integration deprecated fan turned on",
-      "description": "Fan entities have been added to the Lutron integration.\nPreviously fans were created as lights; this behavior is now deprecated.\n\nYour configuration just turned on a fan created as a light. You should migrate your scenes and automations to use the new fan entity.\n\nWhen you are done migrating your automations and are ready to have the deprecated light entity removed, disable the entity and restart Home Assistant.\n\nAn issue will be created each time the incorrect entity is used to remind you to migrate."
-    },
-    "deprecated_light_fan_off": {
-      "title": "The Lutron integration deprecated fan turned off",
-      "description": "Fan entities have been added to the Lutron integration.\nPreviously fans were created as lights; this behavior is now deprecated.\n\nYour configuration just turned off a fan created as a light. You should migrate your scenes and automations to use the new fan entity.\n\nWhen you are done migrating your automations and are ready to have the deprecated light entity removed, disable the entity and restart Home Assistant.\n\nAn issue will be created each time the incorrect entity is used to remind you to migrate."
     }
   }
 }

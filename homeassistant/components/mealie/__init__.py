@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from aiomealie import MealieAuthenticationError, MealieClient, MealieConnectionError
+from aiomealie import MealieAuthenticationError, MealieClient, MealieError
 
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
@@ -16,17 +16,18 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, MIN_REQUIRED_MEALIE_VERSION
+from .const import DOMAIN, LOGGER, MIN_REQUIRED_MEALIE_VERSION
 from .coordinator import (
     MealieConfigEntry,
     MealieData,
     MealieMealplanCoordinator,
     MealieShoppingListCoordinator,
+    MealieStatisticsCoordinator,
 )
 from .services import setup_services
 from .utils import create_version
 
-PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
+PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.SENSOR, Platform.TODO]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -47,14 +48,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
         ),
     )
     try:
+        await client.define_household_support()
         about = await client.get_about()
         version = create_version(about.version)
     except MealieAuthenticationError as error:
-        raise ConfigEntryAuthFailed from error
-    except MealieConnectionError as error:
-        raise ConfigEntryNotReady(error) from error
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
+        ) from error
+    except MealieError as error:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="setup_failed",
+        ) from error
 
-    if not version.valid or version < MIN_REQUIRED_MEALIE_VERSION:
+    if not version.valid:
+        LOGGER.warning(
+            "It seems like you are using the nightly version of Mealie, nightly"
+            " versions could have changes that stop this integration working"
+        )
+    if version.valid and version < MIN_REQUIRED_MEALIE_VERSION:
         raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="version_error",
@@ -75,12 +88,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: MealieConfigEntry) -> bo
 
     mealplan_coordinator = MealieMealplanCoordinator(hass, client)
     shoppinglist_coordinator = MealieShoppingListCoordinator(hass, client)
+    statistics_coordinator = MealieStatisticsCoordinator(hass, client)
 
     await mealplan_coordinator.async_config_entry_first_refresh()
     await shoppinglist_coordinator.async_config_entry_first_refresh()
+    await statistics_coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = MealieData(
-        client, mealplan_coordinator, shoppinglist_coordinator
+        client, mealplan_coordinator, shoppinglist_coordinator, statistics_coordinator
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

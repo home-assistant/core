@@ -5,10 +5,20 @@
     }
   },
   "services": {
-    "add_item": "mdi:clipboard-plus",
-    "get_items": "mdi:clipboard-arrow-down",
-    "remove_completed_items": "mdi:clipboard-remove",
-    "remove_item": "mdi:clipboard-minus",
-    "update_item": "mdi:clipboard-edit"
+    "add_item": {
+      "service": "mdi:clipboard-plus"
+    },
+    "get_items": {
+      "service": "mdi:clipboard-arrow-down"
+    },
+    "remove_completed_items": {
+      "service": "mdi:clipboard-remove"
+    },
+    "remove_item": {
+      "service": "mdi:clipboard-minus"
+    },
+    "update_item": {
+      "service": "mdi:clipboard-edit"
+    }
   }
 }

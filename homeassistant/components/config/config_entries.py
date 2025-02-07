@@ -17,7 +17,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_a
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, Unauthorized
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -302,7 +302,8 @@ def config_entries_progress(
         [
             flw
             for flw in hass.config_entries.flow.async_progress()
-            if flw["context"]["source"] != config_entries.SOURCE_USER
+            if flw["context"]["source"]
+            not in (config_entries.SOURCE_RECONFIGURE, config_entries.SOURCE_USER)
         ],
     )
 
@@ -463,9 +464,12 @@ async def ignore_config_flow(
         )
         return
 
+    context = config_entries.ConfigFlowContext(source=config_entries.SOURCE_IGNORE)
+    if "discovery_key" in flow["context"]:
+        context["discovery_key"] = flow["context"]["discovery_key"]
     await hass.config_entries.flow.async_init(
         flow["handler"],
-        context={"source": config_entries.SOURCE_IGNORE},
+        context=context,
         data={"unique_id": flow["context"]["unique_id"], "title": msg["title"]},
     )
     connection.send_result(msg["id"])

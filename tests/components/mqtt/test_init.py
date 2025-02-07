@@ -13,6 +13,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.models import (
@@ -30,9 +31,8 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, entity_registry as er, template
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import async_get_platforms
@@ -44,6 +44,7 @@ from homeassistant.util.dt import utcnow
 from tests.common import (
     MockConfigEntry,
     MockEntity,
+    MockEntityPlatform,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
@@ -77,11 +78,6 @@ class _DebugInfo(TypedDict):
     config: _DebugDeviceInfo
 
 
-@pytest.fixture(autouse=True)
-def mock_storage(hass_storage: dict[str, Any]) -> None:
-    """Autouse hass_storage for the TestCase tests."""
-
-
 async def test_command_template_value(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT command template."""
 
@@ -89,12 +85,12 @@ async def test_command_template_value(hass: HomeAssistant) -> None:
 
     # test rendering value
     tpl = template.Template("{{ value + 1 }}", hass=hass)
-    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl)
     assert cmd_tpl.async_render(4321) == "4322"
 
     # test variables at rendering
     tpl = template.Template("{{ some_var }}", hass=hass)
-    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl)
     assert cmd_tpl.async_render(None, variables=variables) == "beer"
 
 
@@ -161,8 +157,8 @@ async def test_command_template_variables(
 
 async def test_command_template_fails(hass: HomeAssistant) -> None:
     """Test the exception handling of an MQTT command template."""
-    tpl = template.Template("{{ value * 2 }}")
-    cmd_tpl = mqtt.MqttCommandTemplate(tpl, hass=hass)
+    tpl = template.Template("{{ value * 2 }}", hass=hass)
+    cmd_tpl = mqtt.MqttCommandTemplate(tpl)
     with pytest.raises(MqttCommandTemplateException) as exc:
         cmd_tpl.async_render(None)
     assert "unsupported operand type(s) for *: 'NoneType' and 'int'" in str(exc.value)
@@ -174,13 +170,13 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     variables = {"id": 1234, "some_var": "beer"}
 
     # test rendering value
-    tpl = template.Template("{{ value_json.id }}")
-    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    tpl = template.Template("{{ value_json.id }}", hass=hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl)
     assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
 
     # test variables at rendering
-    tpl = template.Template("{{ value_json.id }} {{ some_var }} {{ code }}")
-    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass, config_attributes={"code": 1234})
+    tpl = template.Template("{{ value_json.id }} {{ some_var }} {{ code }}", hass=hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl, config_attributes={"code": 1234})
     assert (
         val_tpl.async_render_with_possible_json_value(
             '{"id": 4321}', variables=variables
@@ -189,8 +185,8 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     )
 
     # test with default value if an error occurs due to an invalid template
-    tpl = template.Template("{{ value_json.id | as_datetime }}")
-    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass)
+    tpl = template.Template("{{ value_json.id | as_datetime }}", hass=hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl)
     assert (
         val_tpl.async_render_with_possible_json_value('{"otherid": 4321}', "my default")
         == "my default"
@@ -199,20 +195,21 @@ async def test_value_template_value(hass: HomeAssistant) -> None:
     # test value template with entity
     entity = Entity()
     entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
     entity.entity_id = "select.test"
-    tpl = template.Template("{{ value_json.id }}")
+    tpl = template.Template("{{ value_json.id }}", hass=hass)
     val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
     assert val_tpl.async_render_with_possible_json_value('{"id": 4321}') == "4321"
 
     # test this object in a template
-    tpl2 = template.Template("{{ this.entity_id }}")
+    tpl2 = template.Template("{{ this.entity_id }}", hass=hass)
     val_tpl2 = mqtt.MqttValueTemplate(tpl2, entity=entity)
     assert val_tpl2.async_render_with_possible_json_value("bla") == "select.test"
 
     with patch(
         "homeassistant.helpers.template.TemplateStateFromEntityId", MagicMock()
     ) as template_state_calls:
-        tpl3 = template.Template("{{ this.entity_id }}")
+        tpl3 = template.Template("{{ this.entity_id }}", hass=hass)
         val_tpl3 = mqtt.MqttValueTemplate(tpl3, entity=entity)
         val_tpl3.async_render_with_possible_json_value("call1")
         val_tpl3.async_render_with_possible_json_value("call2")
@@ -223,8 +220,9 @@ async def test_value_template_fails(hass: HomeAssistant) -> None:
     """Test the rendering of MQTT value template fails."""
     entity = MockEntity(entity_id="sensor.test")
     entity.hass = hass
-    tpl = template.Template("{{ value_json.some_var * 2 }}")
-    val_tpl = mqtt.MqttValueTemplate(tpl, hass=hass, entity=entity)
+    entity.platform = MockEntityPlatform(hass)
+    tpl = template.Template("{{ value_json.some_var * 2 }}", hass=hass)
+    val_tpl = mqtt.MqttValueTemplate(tpl, entity=entity)
     with pytest.raises(MqttValueTemplateException) as exc:
         val_tpl.async_render_with_possible_json_value('{"some_var": null }')
     assert str(exc.value) == (
@@ -235,7 +233,7 @@ async def test_value_template_fails(hass: HomeAssistant) -> None:
     )
     with pytest.raises(MqttValueTemplateException) as exc:
         val_tpl.async_render_with_possible_json_value(
-            '{"some_var": null }', default=100
+            '{"some_var": null }', default="100"
         )
     assert str(exc.value) == (
         "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' "
@@ -260,106 +258,117 @@ async def test_service_call_without_topic_does_not_publish(
     assert not mqtt_mock.async_publish.called
 
 
-async def test_service_call_with_invalid_rendered_template_topic_doesnt_render_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+async def test_service_call_mqtt_entry_does_not_publish(
+    hass: HomeAssistant, mqtt_client_mock: MqttMockPahoClient
 ) -> None:
-    """Test the service call with unrendered template.
-
-    If both 'payload' and 'payload_template' are provided then fail.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    payload = "not a template"
-    payload_template = "a template"
-    with pytest.raises(vol.Invalid):
+    """Test the service call if topic is missing."""
+    assert await async_setup_component(hass, mqtt.DOMAIN, {})
+    with pytest.raises(
+        ServiceValidationError,
+        match='Cannot publish to topic "test_topic", make sure MQTT is set up correctly',
+    ):
         await hass.services.async_call(
             mqtt.DOMAIN,
             mqtt.SERVICE_PUBLISH,
             {
-                mqtt.ATTR_TOPIC: "test/topic",
-                mqtt.ATTR_PAYLOAD: payload,
-                mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template,
+                mqtt.ATTR_TOPIC: "test_topic",
+                mqtt.ATTR_PAYLOAD: "payload",
             },
             blocking=True,
         )
+
+
+async def test_service_call_with_template_topic_renders_invalid_topic(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the action call with rendered, invalid topic template.
+
+    If a wildcard topic is rendered, then fail.
+    """
+    mqtt_mock = await mqtt_mock_entry()
+    with pytest.raises(vol.Invalid) as exc:
+        await hass.services.async_call(
+            mqtt.DOMAIN,
+            mqtt.SERVICE_PUBLISH,
+            {
+                mqtt.ATTR_TOPIC: "test/{{ '+' if True else 'topic' }}/topic",
+                mqtt.ATTR_PAYLOAD: "payload",
+            },
+            blocking=True,
+        )
+    assert (
+        str(exc.value) == "Wildcards cannot be used in topic names "
+        "for dictionary value @ data['topic']"
+    )
     assert not mqtt_mock.async_publish.called
 
 
-async def test_service_call_with_template_payload_renders_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+@pytest.mark.parametrize(
+    ("attr_payload", "payload", "evaluate_payload", "literal_eval_calls"),
+    [
+        ("b'\\xde\\xad\\xbe\\xef'", b"\xde\xad\xbe\xef", True, 1),
+        ("b'\\xde\\xad\\xbe\\xef'", "b'\\xde\\xad\\xbe\\xef'", False, 0),
+        ("DEADBEEF", "DEADBEEF", False, 0),
+        (
+            "b'\\xde",
+            "b'\\xde",
+            True,
+            1,
+        ),  # Bytes literal is invalid, fall back to string
+    ],
+)
+async def test_mqtt_publish_action_call_with_raw_data(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    attr_payload: str,
+    payload: str | bytes,
+    evaluate_payload: bool,
+    literal_eval_calls: int,
 ) -> None:
-    """Test the service call with rendered template.
+    """Test the mqtt publish action call raw data.
 
-    If 'payload_template' is provided and 'payload' is not, then render it.
+    When `payload` represents a `bytes` object, it should be published
+    as raw data if `evaluate_payload` is set.
     """
     mqtt_mock = await mqtt_mock_entry()
-    await hass.services.async_call(
-        mqtt.DOMAIN,
-        mqtt.SERVICE_PUBLISH,
-        {mqtt.ATTR_TOPIC: "test/topic", mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 4+4 }}"},
-        blocking=True,
-    )
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == "8"
-    mqtt_mock.reset_mock()
-
     await hass.services.async_call(
         mqtt.DOMAIN,
         mqtt.SERVICE_PUBLISH,
         {
             mqtt.ATTR_TOPIC: "test/topic",
-            mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ (4+4) | pack('B') }}",
+            mqtt.ATTR_PAYLOAD: attr_payload,
+            mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
         },
         blocking=True,
     )
     assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == b"\x08"
-    mqtt_mock.reset_mock()
+    assert mqtt_mock.async_publish.call_args[0][1] == payload
 
-
-async def test_service_call_with_bad_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the service call with a bad template does not publish."""
-    mqtt_mock = await mqtt_mock_entry()
-    with pytest.raises(MqttCommandTemplateException) as exc:
+    with patch(
+        "homeassistant.components.mqtt.models.literal_eval"
+    ) as literal_eval_mock:
         await hass.services.async_call(
             mqtt.DOMAIN,
             mqtt.SERVICE_PUBLISH,
             {
                 mqtt.ATTR_TOPIC: "test/topic",
-                mqtt.ATTR_PAYLOAD_TEMPLATE: "{{ 1 | bad }}",
+                mqtt.ATTR_PAYLOAD: attr_payload,
             },
             blocking=True,
         )
-    assert not mqtt_mock.async_publish.called
-    assert str(exc.value) == (
-        "TemplateError: TemplateAssertionError: No filter named 'bad'. "
-        "rendering template, template: '{{ 1 | bad }}' and payload: None"
-    )
+        literal_eval_mock.assert_not_called()
 
-
-async def test_service_call_with_payload_doesnt_render_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the service call with unrendered template.
-
-    If both 'payload' and 'payload_template' are provided then fail.
-    """
-    mqtt_mock = await mqtt_mock_entry()
-    payload = "not a template"
-    payload_template = "a template"
-    with pytest.raises(vol.Invalid):
         await hass.services.async_call(
             mqtt.DOMAIN,
             mqtt.SERVICE_PUBLISH,
             {
                 mqtt.ATTR_TOPIC: "test/topic",
-                mqtt.ATTR_PAYLOAD: payload,
-                mqtt.ATTR_PAYLOAD_TEMPLATE: payload_template,
+                mqtt.ATTR_PAYLOAD: attr_payload,
+                mqtt.ATTR_EVALUATE_PAYLOAD: evaluate_payload,
             },
             blocking=True,
         )
-    assert not mqtt_mock.async_publish.called
+        assert len(literal_eval_mock.mock_calls) == literal_eval_calls
 
 
 async def test_service_call_with_ascii_qos_retain_flags(
@@ -382,6 +391,25 @@ async def test_service_call_with_ascii_qos_retain_flags(
         blocking=True,
     )
     assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] == ""
+    assert mqtt_mock.async_publish.call_args[0][2] == 2
+    assert not mqtt_mock.async_publish.call_args[0][3]
+
+    mqtt_mock.reset_mock()
+
+    # Test service call without payload
+    await hass.services.async_call(
+        mqtt.DOMAIN,
+        mqtt.SERVICE_PUBLISH,
+        {
+            mqtt.ATTR_TOPIC: "test/topic",
+            mqtt.ATTR_QOS: "2",
+            mqtt.ATTR_RETAIN: "no",
+        },
+        blocking=True,
+    )
+    assert mqtt_mock.async_publish.called
+    assert mqtt_mock.async_publish.call_args[0][1] is None
     assert mqtt_mock.async_publish.call_args[0][2] == 2
     assert not mqtt_mock.async_publish.call_args[0][3]
 
@@ -664,7 +692,7 @@ async def test_receiving_message_with_non_utf8_topic_gets_logged(
     msg.payload = b"Payload"
     msg.qos = 2
     msg.retain = True
-    msg.timestamp = time.monotonic()
+    msg.timestamp = time.monotonic()  # type:ignore[assignment]
 
     mqtt_data: MqttData = hass.data["mqtt"]
     assert mqtt_data.client
@@ -686,7 +714,12 @@ async def test_reload_entry_with_restored_subscriptions(
 ) -> None:
     """Test reloading the config entry with with subscriptions restored."""
     # Setup the MQTT entry
-    entry = MockConfigEntry(domain=mqtt.DOMAIN, data={mqtt.CONF_BROKER: "test-broker"})
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
     with patch("homeassistant.config.load_yaml_config_file", return_value={}):
@@ -791,7 +824,10 @@ async def test_default_entry_setting_are_applied(
 
     # Config entry data is incomplete but valid according the schema
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN, data={"broker": "test-broker", "port": 1234}
+        domain=mqtt.DOMAIN,
+        data={"broker": "test-broker", "port": 1234},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     hass.config.components.add(mqtt.DOMAIN)
@@ -1026,7 +1062,6 @@ async def test_mqtt_ws_get_device_debug_info(
     }
     data_sensor = json.dumps(config_sensor)
     data_trigger = json.dumps(config_trigger)
-    config_sensor["platform"] = config_trigger["platform"] = mqtt.DOMAIN
 
     async_fire_mqtt_message(hass, "homeassistant/sensor/bla/config", data_sensor)
     async_fire_mqtt_message(
@@ -1083,7 +1118,6 @@ async def test_mqtt_ws_get_device_debug_info_binary(
         "unique_id": "unique",
     }
     data = json.dumps(config)
-    config["platform"] = mqtt.DOMAIN
 
     async_fire_mqtt_message(hass, "homeassistant/camera/bla/config", data)
     await hass.async_block_till_done()
@@ -1318,7 +1352,7 @@ async def test_debug_info_non_mqtt(
     """Test we get empty debug_info for a device with non MQTT entities."""
     await mqtt_mock_entry()
     domain = "sensor"
-    setup_test_component_platform(hass, domain, mock_sensor_entities)
+    setup_test_component_platform(hass, domain, mock_sensor_entities.values())
 
     config_entry = MockConfigEntry(domain="test", data={})
     config_entry.add_to_hass(hass)
@@ -1532,57 +1566,6 @@ async def test_debug_info_qos_retain(
     } in messages
 
 
-async def test_publish_json_from_template(
-    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
-) -> None:
-    """Test the publishing of call to services."""
-    mqtt_mock = await mqtt_mock_entry()
-
-    test_str = "{'valid': 'python', 'invalid': 'json'}"
-    test_str_tpl = "{'valid': '{{ \"python\" }}', 'invalid': 'json'}"
-
-    await async_setup_component(
-        hass,
-        "script",
-        {
-            "script": {
-                "test_script_payload": {
-                    "sequence": {
-                        "service": "mqtt.publish",
-                        "data": {"topic": "test-topic", "payload": test_str_tpl},
-                    }
-                },
-                "test_script_payload_template": {
-                    "sequence": {
-                        "service": "mqtt.publish",
-                        "data": {
-                            "topic": "test-topic",
-                            "payload_template": test_str_tpl,
-                        },
-                    }
-                },
-            }
-        },
-    )
-
-    await hass.services.async_call("script", "test_script_payload", blocking=True)
-    await hass.async_block_till_done()
-
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == test_str
-
-    mqtt_mock.async_publish.reset_mock()
-    assert not mqtt_mock.async_publish.called
-
-    await hass.services.async_call(
-        "script", "test_script_payload_template", blocking=True
-    )
-    await hass.async_block_till_done()
-
-    assert mqtt_mock.async_publish.called
-    assert mqtt_mock.async_publish.call_args[0][1] == test_str
-
-
 async def test_subscribe_connection_status(
     hass: HomeAssistant,
     mock_debouncer: asyncio.Event,
@@ -1651,11 +1634,19 @@ async def test_subscribe_connection_status(
 
 async def test_unload_config_entry(
     hass: HomeAssistant,
-    setup_with_birth_msg_client_mock: MqttMockPahoClient,
+    mqtt_client_mock: MqttMockPahoClient,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test unloading the MQTT entry."""
-    mqtt_client_mock = setup_with_birth_msg_client_mock
+    entry = MockConfigEntry(
+        domain=mqtt.DOMAIN,
+        data={mqtt.CONF_BROKER: "test-broker"},
+        version=mqtt.CONFIG_ENTRY_VERSION,
+        minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+
+    assert await async_setup_component(hass, mqtt.DOMAIN, {})
     assert hass.services.has_service(mqtt.DOMAIN, "dump")
     assert hass.services.has_service(mqtt.DOMAIN, "publish")
 
@@ -1672,8 +1663,8 @@ async def test_unload_config_entry(
     mqtt_client_mock.publish.assert_any_call("just_in_time", "published", 0, False)
     assert new_mqtt_config_entry.state is ConfigEntryState.NOT_LOADED
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert not hass.services.has_service(mqtt.DOMAIN, "dump")
-    assert not hass.services.has_service(mqtt.DOMAIN, "publish")
+    assert hass.services.has_service(mqtt.DOMAIN, "dump")
+    assert hass.services.has_service(mqtt.DOMAIN, "publish")
     assert "No ACK from MQTT server" not in caplog.text
 
 
@@ -1681,6 +1672,9 @@ async def test_publish_or_subscribe_without_valid_config_entry(
     hass: HomeAssistant, record_calls: MessageCallbackType
 ) -> None:
     """Test internal publish function with bad use cases."""
+    assert await async_setup_component(hass, mqtt.DOMAIN, {})
+    assert hass.services.has_service(mqtt.DOMAIN, "dump")
+    assert hass.services.has_service(mqtt.DOMAIN, "publish")
     with pytest.raises(HomeAssistantError):
         await mqtt.async_publish(
             hass, "some-topic", "test-payload", qos=0, retain=False, encoding=None
@@ -1721,7 +1715,7 @@ async def test_disabling_and_enabling_entry(
     config_light = '{"name": "test_new", "command_topic": "test-topic_new"}'
 
     with patch(
-        "homeassistant.components.mqtt.mixins.mqtt_config_entry_enabled",
+        "homeassistant.components.mqtt.entity.mqtt_config_entry_enabled",
         return_value=False,
     ):
         # Discovery of mqtt tag
@@ -2280,7 +2274,6 @@ async def test_multi_platform_discovery(
         "PayloadSentinel",
         "PublishPayloadType",
         "ReceiveMessage",
-        "ReceivePayloadType",
         "async_prepare_subscribe_topics",
         "async_publish",
         "async_subscribe",

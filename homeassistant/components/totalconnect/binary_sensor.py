@@ -17,7 +17,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
 from .coordinator import TotalConnectDataUpdateCoordinator
 from .entity import TotalConnectLocationEntity, TotalConnectZoneEntity
 
@@ -101,6 +100,21 @@ LOCATION_BINARY_SENSORS: tuple[TotalConnectAlarmBinarySensorEntityDescription, .
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda location: location.is_ac_loss(),
     ),
+    TotalConnectAlarmBinarySensorEntityDescription(
+        key="smoke",
+        device_class=BinarySensorDeviceClass.SMOKE,
+        is_on_fn=lambda location: location.arming_state.is_triggered_fire(),
+    ),
+    TotalConnectAlarmBinarySensorEntityDescription(
+        key="carbon_monoxide",
+        device_class=BinarySensorDeviceClass.CO,
+        is_on_fn=lambda location: location.arming_state.is_triggered_gas(),
+    ),
+    TotalConnectAlarmBinarySensorEntityDescription(
+        key="police",
+        translation_key="police",
+        is_on_fn=lambda location: location.arming_state.is_triggered_police(),
+    ),
 )
 
 
@@ -110,7 +124,7 @@ async def async_setup_entry(
     """Set up TotalConnect device sensors based on a config entry."""
     sensors: list = []
 
-    coordinator: TotalConnectDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     client_locations = coordinator.client.locations
 

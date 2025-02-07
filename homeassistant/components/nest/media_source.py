@@ -37,12 +37,12 @@ from google_nest_sdm.transcoder import Transcoder
 
 from homeassistant.components.ffmpeg import get_ffmpeg_manager
 from homeassistant.components.media_player import BrowseError, MediaClass, MediaType
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
+    Unresolvable,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -227,9 +227,10 @@ class NestEventMediaStore(EventMediaStore):
         filename = self.get_media_filename(media_key)
 
         def remove_media(filename: str) -> None:
-            if os.path.exists(filename):
-                _LOGGER.debug("Removing event media from disk store: %s", filename)
-                os.remove(filename)
+            if not os.path.exists(filename):
+                return
+            _LOGGER.debug("Removing event media from disk store: %s", filename)
+            os.remove(filename)
 
         try:
             await self._hass.async_add_executor_job(remove_media, filename)

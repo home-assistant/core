@@ -5,7 +5,6 @@ from unittest.mock import Mock
 import pytest
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.bootstrap import async_setup_component
 from homeassistant.components.rflink import (
     CONF_KEEPALIVE_IDLE,
     CONF_RECONNECT_INTERVAL,
@@ -28,6 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 
 async def mock_rflink(

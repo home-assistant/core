@@ -67,7 +67,7 @@ GDM_CLIENT_PAYLOAD = [
 class MockGDM:
     """Mock a GDM instance."""
 
-    def __init__(self, disabled=False):
+    def __init__(self, disabled=False) -> None:
         """Initialize the object."""
         self.entries = []
         self.disabled = disabled

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 
-from homeassistant import config_entries, setup
+from homeassistant import config_entries, core as ha, setup
 from homeassistant.components import persistent_notification
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -13,7 +13,6 @@ from homeassistant.const import (
     Platform,
     UnitOfSoundPressure,
 )
-import homeassistant.core as ha
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
@@ -55,7 +54,6 @@ COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM = [
 
 COMPONENTS_WITH_DEMO_PLATFORM = [
     Platform.TTS,
-    Platform.MAILBOX,
     Platform.IMAGE_PROCESSING,
     Platform.DEVICE_TRACKER,
 ]

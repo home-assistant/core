@@ -8,6 +8,7 @@ from homeassistant.components.alarm_control_panel import (
     DOMAIN,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.const import (
     ATTR_CODE,
@@ -20,18 +21,15 @@ from homeassistant.const import (
     SERVICE_ALARM_ARM_VACATION,
     SERVICE_ALARM_DISARM,
     SERVICE_ALARM_TRIGGER,
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
 )
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockEntity
 
 
-async def async_alarm_disarm(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_disarm(
+    hass: HomeAssistant, code: str | None = None, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
     """Send the alarm the command for disarm."""
     data = {}
     if code:
@@ -42,7 +40,9 @@ async def async_alarm_disarm(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_DISARM, data, blocking=True)
 
 
-async def async_alarm_arm_home(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_arm_home(
+    hass: HomeAssistant, code: str | None = None, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
     """Send the alarm the command for disarm."""
     data = {}
     if code:
@@ -53,7 +53,9 @@ async def async_alarm_arm_home(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_HOME, data, blocking=True)
 
 
-async def async_alarm_arm_away(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_arm_away(
+    hass: HomeAssistant, code: str | None = None, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
     """Send the alarm the command for disarm."""
     data = {}
     if code:
@@ -64,7 +66,9 @@ async def async_alarm_arm_away(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_AWAY, data, blocking=True)
 
 
-async def async_alarm_arm_night(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_arm_night(
+    hass: HomeAssistant, code: str | None = None, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
     """Send the alarm the command for disarm."""
     data = {}
     if code:
@@ -75,7 +79,9 @@ async def async_alarm_arm_night(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_ARM_NIGHT, data, blocking=True)
 
 
-async def async_alarm_arm_vacation(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_arm_vacation(
+    hass: HomeAssistant, code: str | None = None, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
     """Send the alarm the command for vacation mode."""
     data = {}
     if code:
@@ -88,7 +94,9 @@ async def async_alarm_arm_vacation(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     )
 
 
-async def async_alarm_trigger(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_trigger(
+    hass: HomeAssistant, code: str | None = None, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
     """Send the alarm the command for disarm."""
     data = {}
     if code:
@@ -99,7 +107,9 @@ async def async_alarm_trigger(hass, code=None, entity_id=ENTITY_MATCH_ALL):
     await hass.services.async_call(DOMAIN, SERVICE_ALARM_TRIGGER, data, blocking=True)
 
 
-async def async_alarm_arm_custom_bypass(hass, code=None, entity_id=ENTITY_MATCH_ALL):
+async def async_alarm_arm_custom_bypass(
+    hass: HomeAssistant, code: str | None = None, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
     """Send the alarm the command for disarm."""
     data = {}
     if code:
@@ -130,31 +140,31 @@ class MockAlarm(MockEntity, AlarmControlPanelEntity):
 
     def alarm_arm_away(self, code=None):
         """Send arm away command."""
-        self._attr_state = STATE_ALARM_ARMED_AWAY
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_AWAY
         self.schedule_update_ha_state()
 
     def alarm_arm_home(self, code=None):
         """Send arm home command."""
-        self._attr_state = STATE_ALARM_ARMED_HOME
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_HOME
         self.schedule_update_ha_state()
 
     def alarm_arm_night(self, code=None):
         """Send arm night command."""
-        self._attr_state = STATE_ALARM_ARMED_NIGHT
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_NIGHT
         self.schedule_update_ha_state()
 
     def alarm_arm_vacation(self, code=None):
         """Send arm night command."""
-        self._attr_state = STATE_ALARM_ARMED_VACATION
+        self._attr_alarm_state = AlarmControlPanelState.ARMED_VACATION
         self.schedule_update_ha_state()
 
     def alarm_disarm(self, code=None):
         """Send disarm command."""
         if code == "1234":
-            self._attr_state = STATE_ALARM_DISARMED
+            self._attr_alarm_state = AlarmControlPanelState.DISARMED
             self.schedule_update_ha_state()
 
     def alarm_trigger(self, code=None):
         """Send alarm trigger command."""
-        self._attr_state = STATE_ALARM_TRIGGERED
+        self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
         self.schedule_update_ha_state()

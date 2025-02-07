@@ -46,6 +46,7 @@ from tests.typing import WebSocketGenerator
         ("fan", "on", "on", {}, {}, {}, {}),
         ("light", "on", "on", {}, {}, {}, {}),
         ("lock", "locked", "locked", {}, {}, {}, {}),
+        ("notify", STATE_UNKNOWN, "2021-01-01T23:59:59.123+00:00", {}, {}, {}, {}),
         ("media_player", "on", "on", {}, {}, {}, {}),
         (
             "sensor",
@@ -142,6 +143,7 @@ async def test_config_flow(
         ("fan", {}),
         ("light", {}),
         ("lock", {}),
+        ("notify", {}),
         ("media_player", {}),
         ("switch", {}),
     ],
@@ -220,6 +222,7 @@ def get_suggested(schema, key):
         ("fan", "on", {}, {}),
         ("light", "on", {"all": False}, {}),
         ("lock", "locked", {}, {}),
+        ("notify", "2021-01-01T23:59:59.123+00:00", {}, {}),
         ("media_player", "on", {}, {}),
         (
             "sensor",
@@ -405,6 +408,7 @@ async def test_all_options(
         ("fan", {}),
         ("light", {}),
         ("lock", {}),
+        ("notify", {}),
         ("media_player", {}),
         ("switch", {}),
     ],
@@ -487,6 +491,7 @@ LIGHT_ATTRS = [
     {"color_mode": "unknown"},
 ]
 LOCK_ATTRS = [{"supported_features": 1}, {}]
+NOTIFY_ATTRS = [{"supported_features": 0}, {}]
 MEDIA_PLAYER_ATTRS = [{"supported_features": 0}, {}]
 SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"}]
 
@@ -501,6 +506,7 @@ SENSOR_ATTRS = [{"icon": "mdi:calculator"}, {"max_entity_id": "sensor.input_two"
         ("fan", {}, ["on", "off"], "on", FAN_ATTRS),
         ("light", {}, ["on", "off"], "on", LIGHT_ATTRS),
         ("lock", {}, ["unlocked", "locked"], "unlocked", LOCK_ATTRS),
+        ("notify", {}, ["", ""], "unknown", NOTIFY_ATTRS),
         ("media_player", {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
         ("sensor", {"type": "max"}, ["10", "20"], "20.0", SENSOR_ATTRS),
         ("switch", {}, ["on", "off"], "on", [{}, {}]),
@@ -611,6 +617,7 @@ async def test_config_flow_preview(
         ("fan", {}, {}, ["on", "off"], "on", FAN_ATTRS),
         ("light", {}, {}, ["on", "off"], "on", LIGHT_ATTRS),
         ("lock", {}, {}, ["unlocked", "locked"], "unlocked", LOCK_ATTRS),
+        ("notify", {}, {}, ["", ""], "unknown", NOTIFY_ATTRS),
         ("media_player", {}, {}, ["on", "off"], "on", MEDIA_PLAYER_ATTRS),
         (
             "sensor",

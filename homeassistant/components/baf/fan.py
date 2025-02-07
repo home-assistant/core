@@ -43,7 +43,10 @@ class BAFFan(BAFEntity, FanEntity):
         FanEntityFeature.SET_SPEED
         | FanEntityFeature.DIRECTION
         | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_OFF
+        | FanEntityFeature.TURN_ON
     )
+
     _attr_preset_modes = [PRESET_MODE_AUTO]
     _attr_speed_count = SPEED_COUNT
     _attr_name = None

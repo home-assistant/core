@@ -7,10 +7,14 @@ from dataclasses import dataclass
 from typing import Generic
 
 from deebot_client.capabilities import CapabilitySet
-from deebot_client.events import CleanCountEvent, VolumeEvent
+from deebot_client.events import CleanCountEvent, CutDirectionEvent, VolumeEvent
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.const import EntityCategory
+from homeassistant.components.number import (
+    NumberEntity,
+    NumberEntityDescription,
+    NumberMode,
+)
+from homeassistant.const import DEGREE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -49,6 +53,18 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
         native_max_value=10,
         native_step=1.0,
     ),
+    EcovacsNumberEntityDescription[CutDirectionEvent](
+        capability_fn=lambda caps: caps.settings.cut_direction,
+        value_fn=lambda e: e.angle,
+        key="cut_direction",
+        translation_key="cut_direction",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+        native_min_value=0,
+        native_max_value=180,
+        native_step=1.0,
+        native_unit_of_measurement=DEGREE,
+    ),
     EcovacsNumberEntityDescription[CleanCountEvent](
         capability_fn=lambda caps: caps.clean.count,
         value_fn=lambda e: e.count,
@@ -59,6 +75,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
         native_min_value=1,
         native_max_value=4,
         native_step=1.0,
+        mode=NumberMode.BOX,
     ),
 )
 
@@ -78,7 +95,7 @@ async def async_setup_entry(
 
 
 class EcovacsNumberEntity(
-    EcovacsDescriptionEntity[CapabilitySet[EventT, int]],
+    EcovacsDescriptionEntity[CapabilitySet[EventT, [int]]],
     NumberEntity,
 ):
     """Ecovacs number entity."""

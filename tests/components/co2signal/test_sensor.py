@@ -109,4 +109,4 @@ async def test_sensor_reauth_triggered(
 
     assert (flows := hass.config_entries.flow.async_progress())
     assert len(flows) == 1
-    assert flows[0]["step_id"] == "reauth"
+    assert flows[0]["step_id"] == "reauth_confirm"

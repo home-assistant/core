@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from typing import Any
+
+from env_canada import ECWeather
+
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -25,7 +29,6 @@ from homeassistant.components.weather import (
     SingleCoordinatorWeatherEntity,
     WeatherEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfLength,
     UnitOfPressure,
@@ -36,8 +39,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import device_info
 from .const import DOMAIN
+from .coordinator import ECConfigEntry, ECDataUpdateCoordinator
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
 # docs/current_conditions_icon_code_descriptions_e.csv
@@ -59,11 +62,10 @@ ICON_CONDITION_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ECConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["weather_coordinator"]
     entity_registry = er.async_get(hass)
 
     # Remove hourly entity from legacy config entries
@@ -74,7 +76,7 @@ async def async_setup_entry(
     ):
         entity_registry.async_remove(hourly_entity_id)
 
-    async_add_entities([ECWeather(coordinator)])
+    async_add_entities([ECWeatherEntity(config_entry.runtime_data.weather_coordinator)])
 
 
 def _calculate_unique_id(config_entry_unique_id: str | None, hourly: bool) -> str:
@@ -82,7 +84,9 @@ def _calculate_unique_id(config_entry_unique_id: str | None, hourly: bool) -> st
     return f"{config_entry_unique_id}{'-hourly' if hourly else '-daily'}"
 
 
-class ECWeather(SingleCoordinatorWeatherEntity):
+class ECWeatherEntity(
+    SingleCoordinatorWeatherEntity[ECDataUpdateCoordinator[ECWeather]]
+):
     """Representation of a weather condition."""
 
     _attr_has_entity_name = True
@@ -94,7 +98,7 @@ class ECWeather(SingleCoordinatorWeatherEntity):
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
 
-    def __init__(self, coordinator):
+    def __init__(self, coordinator: ECDataUpdateCoordinator[ECWeather]) -> None:
         """Initialize Environment Canada weather."""
         super().__init__(coordinator)
         self.ec_data = coordinator.ec_data
@@ -103,7 +107,7 @@ class ECWeather(SingleCoordinatorWeatherEntity):
         self._attr_unique_id = _calculate_unique_id(
             coordinator.config_entry.unique_id, False
         )
-        self._attr_device_info = device_info(coordinator.config_entry)
+        self._attr_device_info = coordinator.device_info
 
     @property
     def native_temperature(self):
@@ -190,10 +194,12 @@ def get_forecast(ec_data, hourly) -> list[Forecast] | None:
         if not (half_days := ec_data.daily_forecasts):
             return None
 
-        def get_day_forecast(fcst: list[dict[str, str]]) -> Forecast:
+        def get_day_forecast(
+            fcst: list[dict[str, Any]],
+        ) -> Forecast:
             high_temp = int(fcst[0]["temperature"]) if len(fcst) == 2 else None
             return {
-                ATTR_FORECAST_TIME: fcst[0]["timestamp"],
+                ATTR_FORECAST_TIME: fcst[0]["timestamp"].isoformat(),
                 ATTR_FORECAST_NATIVE_TEMP: high_temp,
                 ATTR_FORECAST_NATIVE_TEMP_LOW: int(fcst[-1]["temperature"]),
                 ATTR_FORECAST_PRECIPITATION_PROBABILITY: int(

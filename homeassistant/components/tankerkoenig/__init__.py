@@ -4,14 +4,11 @@ from __future__ import annotations
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(
@@ -20,11 +17,7 @@ async def async_setup_entry(
     """Set a tankerkoenig configuration entry up."""
     hass.data.setdefault(DOMAIN, {})
 
-    coordinator = TankerkoenigDataUpdateCoordinator(
-        hass,
-        name=entry.unique_id or DOMAIN,
-        update_interval=DEFAULT_SCAN_INTERVAL,
-    )
+    coordinator = TankerkoenigDataUpdateCoordinator(hass, entry, DEFAULT_SCAN_INTERVAL)
     await coordinator.async_setup()
     await coordinator.async_config_entry_first_refresh()
 

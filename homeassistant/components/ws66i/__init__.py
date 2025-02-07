@@ -52,7 +52,7 @@ def _find_zones(hass: HomeAssistant, ws66i: WS66i) -> list[int]:
             zone_id = (amp_num * 10) + zone_num
             zone_list.append(zone_id)
 
-    _LOGGER.info("Detected %d amp(s)", amp_num - 1)
+    _LOGGER.debug("Detected %d amp(s)", amp_num - 1)
     return zone_list
 
 
