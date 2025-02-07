@@ -198,7 +198,6 @@ class OpenAIConversationEntity(
         chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
         """Call the API."""
-        assert user_input.agent_id
         options = self.entry.options
 
         try:
