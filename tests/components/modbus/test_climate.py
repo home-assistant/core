@@ -81,6 +81,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_ADDRESS,
     CONF_NAME,
+    CONF_OFFSET,
     CONF_PLATFORM,
     CONF_SCAN_INTERVAL,
     CONF_SLAVE,
@@ -592,13 +593,14 @@ async def test_service_climate_update(
                         CONF_ADDRESS: 117,
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
-                        CONF_CURRENT_TEMP_SCALE: 0.1,
+                        CONF_CURRENT_TEMP_SCALE: 0.01,
                         CONF_SCALE: 10,
+                        CONF_OFFSET: 20,
                     },
                 ]
             },
             25,
-            [250],
+            [2520],
         ),
         (
             {
@@ -610,6 +612,7 @@ async def test_service_climate_update(
                         CONF_SLAVE: 10,
                         CONF_SCAN_INTERVAL: 0,
                         CONF_CURRENT_TEMP_SCALE: 0.01,
+                        CONF_SCALE: 10,
                     },
                 ]
             },
