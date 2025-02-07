@@ -99,6 +99,12 @@
       },
       "one_touch_filter": {
         "name": "Fresh air filter"
+      },
+      "water_heater_operation_mode": {
+        "name": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "state": {
+          "off": "[%key:common::state::standby%]"
+        }
       }
     },
     "climate": {
@@ -906,6 +912,7 @@
         "state": {
           "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
           "power_off": "Power off",
+          "power_on": "Power on",
           "preheating": "Preheating",
           "start": "[%key:common::action::start%]",
           "stop": "[%key:common::action::stop%]",
@@ -917,6 +924,7 @@
         "state": {
           "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
           "power_off": "[%key:component::lg_thinq::entity::select::operation_mode::state::power_off%]",
+          "power_on": "[%key:component::lg_thinq::entity::select::operation_mode::state::power_on%]",
           "preheating": "[%key:component::lg_thinq::entity::select::operation_mode::state::preheating%]",
           "start": "[%key:common::action::start%]",
           "stop": "[%key:common::action::stop%]",
