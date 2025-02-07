@@ -42,6 +42,31 @@
   list([
     dict({
       'agent_id': 'mock-agent-id',
+      'content': 'Test',
+      'role': 'assistant',
+      'tool_calls': list([
+        dict({
+          'id': 'mock-tool-call-id',
+          'tool_args': dict({
+            'param1': 'Test Param 1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'role': 'tool_result',
+      'tool_call_id': 'mock-tool-call-id',
+      'tool_name': 'test_tool',
+      'tool_result': 'Test Param 1',
+    }),
+  ])
+# ---
+# name: test_add_delta_content_stream[deltas4]
+  list([
+    dict({
+      'agent_id': 'mock-agent-id',
       'content': None,
       'role': 'assistant',
       'tool_calls': list([
