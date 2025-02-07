@@ -63,7 +63,7 @@
         },
         "due_date_string": {
           "name": "Due date string",
-          "description": "The day this task is due, in natural language."
+          "description": "The time this task is due, in natural language."
         },
         "due_date_lang": {
           "name": "Due date language",
