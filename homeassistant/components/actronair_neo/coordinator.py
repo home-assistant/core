@@ -5,11 +5,8 @@ import logging
 
 from actron_neo_api import ActronNeoAPI
 
-from homeassistant.const import CONF_API_TOKEN, CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-from . import ActronConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,7 +16,7 @@ SCAN_INTERVAL = timedelta(seconds=15)
 class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict]):
     """Custom coordinator for Actron Air Neo integration."""
 
-    def __init__(self, hass: HomeAssistant, entry: ActronConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, pairing_token: str) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
@@ -28,21 +25,19 @@ class ActronNeoDataUpdateCoordinator(DataUpdateCoordinator[dict]):
             update_interval=SCAN_INTERVAL,
         )
 
-        pairing_token = entry.data[CONF_API_TOKEN]
-        serial_number = entry.data[CONF_DEVICE_ID]
-
         api = ActronNeoAPI(pairing_token=pairing_token)
-        api.refresh_token()
 
         self.api = api
-        self.serial_number = serial_number
-        self.system = None
+        self.systems = None
 
     async def _async_update_data(self) -> dict:
         """Fetch updates and merge incremental changes into the full state."""
-        if self.system is None:
-            self.system = await self.api.get_ac_systems()
+        if self.api.access_token is None:
+            await self.api.refresh_token()
 
-        await self.api.get_updated_status(self.serial_number)
+        if self.systems is None:
+            self.systems = await self.api.get_ac_systems()
+
+        await self.api.update_status()
 
         return self.api.status

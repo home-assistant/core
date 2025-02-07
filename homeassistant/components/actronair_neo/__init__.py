@@ -1,6 +1,7 @@
 """The Actron Air Neo integration."""
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import PLATFORM
@@ -13,7 +14,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronConfigEntry) -> bo
     """Set up Actron Air Neo integration from a config entry."""
 
     # Initialize the data coordinator
-    coordinator = ActronNeoDataUpdateCoordinator(hass, entry)
+    pairing_token = entry.data[CONF_API_TOKEN]
+    coordinator = ActronNeoDataUpdateCoordinator(hass, pairing_token)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

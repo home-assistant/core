@@ -1,5 +1,6 @@
 """Climate platform for Actron Air Neo integration."""
 
+import logging
 from typing import Any
 
 from actron_neo_api import ActronNeoAPI
@@ -47,6 +48,8 @@ AC_ZONE_SUPPORTED_FEATURES = (
     | ClimateEntityFeature.TURN_OFF
 )
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -59,7 +62,14 @@ async def async_setup_entry(
 
     # Add system-wide climate entity
     entities: list[ClimateEntity] = []
-    entities.append(ActronSystemClimate(coordinator))
+
+    assert coordinator.systems is not None
+
+    systems = coordinator.systems["_embedded"]["ac-system"]
+    for system in systems:
+        description = system["description"]
+        serial_number = system["serial"]
+        entities.append(ActronSystemClimate(coordinator, serial_number, description))
 
     # Add all switches
     async_add_entities(entities)
@@ -76,17 +86,18 @@ class ActronSystemClimate(
     def __init__(
         self,
         coordinator: ActronNeoDataUpdateCoordinator,
+        serial_number: str,
+        description: str,
     ) -> None:
         """Initialize an Actron Air Neo unit."""
         super().__init__(coordinator)
         self._coordinator: ActronNeoDataUpdateCoordinator = coordinator
         self._api: ActronNeoAPI = coordinator.api
-        self._serial_number: str = coordinator.serial_number
+        self._serial_number: str = serial_number
         self._attr_unique_id: str = self._serial_number
-        self._status = coordinator.data
+        self._status = coordinator.data[self._serial_number]
         self._manufacturer: str = "Actron Air"
-        assert coordinator.system is not None
-        self._name: str = coordinator.system["_embedded"]["ac-system"][0]["description"]
+        self._name: str = description
         self._attr_name: str = "AC Unit"
         self._firmware_version: str = self._status.get("AirconSystem", {}).get(
             "MasterWCFirmwareVersion"
@@ -121,9 +132,7 @@ class ActronSystemClimate(
     @property
     def fan_mode(self) -> str:
         """Return the current fan mode."""
-        api_fan_mode = (
-            self._coordinator.data.get("UserAirconSettings", {}).get("FanMode").upper()
-        )
+        api_fan_mode = self._status.get("UserAirconSettings", {}).get("FanMode").upper()
         fan_mode_without_cont = api_fan_mode.split("+")[0]
         return FAN_MODE_MAPPING_REVERSE.get(fan_mode_without_cont, "AUTO")
 
@@ -163,7 +172,7 @@ class ActronSystemClimate(
     def min_temp(self) -> float:
         """Return the minimum temperature that can be set."""
         return (
-            self._coordinator.data.get("NV_Limits", {})
+            self._status.get("NV_Limits", {})
             .get("UserSetpoint_oC", {})
             .get("setCool_Min", DEFAULT_TEMP_MIN)
         )
@@ -172,7 +181,7 @@ class ActronSystemClimate(
     def max_temp(self) -> float:
         """Return the maximum temperature that can be set."""
         return (
-            self._coordinator.data.get("NV_Limits", {})
+            self._status.get("NV_Limits", {})
             .get("UserSetpoint_oC", {})
             .get("setCool_Max", DEFAULT_TEMP_MAX)
         )
