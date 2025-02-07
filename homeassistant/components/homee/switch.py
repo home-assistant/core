@@ -50,26 +50,14 @@ SWITCH_DESCRIPTIONS: dict[AttributeType, HomeeSwitchEntityDescription] = {
     AttributeType.EXTERNAL_BINARY_INPUT: HomeeSwitchEntityDescription(
         key="external_binary_input", entity_category=EntityCategory.CONFIG
     ),
-    AttributeType.IDENTIFICATION_MODE: HomeeSwitchEntityDescription(
-        key="identification_mode", entity_category=EntityCategory.DIAGNOSTIC
-    ),
     AttributeType.MANUAL_OPERATION: HomeeSwitchEntityDescription(
         key="manual_operation"
-    ),
-    AttributeType.MOTOR_ROTATION: HomeeSwitchEntityDescription(
-        key="motor_rotation", entity_category=EntityCategory.CONFIG
     ),
     AttributeType.ON_OFF: HomeeSwitchEntityDescription(
         key="on_off", device_class_fn=get_device_class, name=None
     ),
-    AttributeType.RESTORE_LAST_KNOWN_STATE: HomeeSwitchEntityDescription(
-        key="restore_last_known_state", entity_category=EntityCategory.CONFIG
-    ),
-    AttributeType.SWITCH_TYPE: HomeeSwitchEntityDescription(
-        key="switch_type", entity_category=EntityCategory.CONFIG
-    ),
     AttributeType.WATCHDOG_ON_OFF: HomeeSwitchEntityDescription(
-        key="watchdog_on_off", entity_category=EntityCategory.CONFIG
+        key="watchdog", entity_category=EntityCategory.CONFIG
     ),
 }
 
@@ -86,12 +74,7 @@ async def async_setup_entry(
         devices.extend(
             HomeeSwitch(attribute, config_entry, SWITCH_DESCRIPTIONS[attribute.type])
             for attribute in node.attributes
-            if (
-                attribute.type in SWITCH_DESCRIPTIONS
-                and attribute.editable
-                and attribute.maximum == 1
-                and attribute.step_value == 1
-            )
+            if (attribute.type in SWITCH_DESCRIPTIONS and attribute.editable)
             and not (
                 attribute.type == AttributeType.ON_OFF
                 and node.profile in LIGHT_PROFILES
@@ -123,8 +106,13 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
         if not ((attribute.type == AttributeType.ON_OFF) and (attribute.instance == 0)):
             self._attr_translation_key = description.key
         if attribute.instance > 0:
-            self._attr_translation_key = f"{self._attr_translation_key}_instance"
+            self._attr_translation_key = f"{description.key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
+
+    @property
+    def is_on(self) -> bool:
+        """Return True if entity is on."""
+        return bool(self._attribute.current_value)
 
     @property
     def device_class(self) -> SwitchDeviceClass:

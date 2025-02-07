@@ -156,29 +156,20 @@
       "external_binary_input": {
         "name": "Child Lock"
       },
-      "identification_mode": {
-        "name": "Identification Mode"
-      },
       "manual_operation": {
         "name": "Manual Operation"
       },
-      "motor_rotation": {
-        "name": "Motor rotation direction"
+      "on_off_instance": {
+        "name": "Switch {instance}"
       },
-      "restore_last_known_state": {
-        "name": "Restore last known state"
-      },
-      "switch_type": {
-        "name": "Switch Type"
-      },
-      "watchdog_on_off": {
+      "watchdog": {
         "name": "Watchdog"
       }
     }
   },
   "exceptions": {
     "connection_closed": {
-      "message": "Could not connect to Homee while setting attribute"
+      "message": "Could not connect to Homee while setting attribute."
     }
   }
 }
