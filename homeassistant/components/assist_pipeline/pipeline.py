@@ -13,7 +13,7 @@ from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 import time
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 import wave
 
 import hass_nabucasa
@@ -81,6 +81,9 @@ from .error import (
 )
 from .vad import AudioBuffer, VoiceActivityTimeout, VoiceCommandSegmenter, chunk_samples
 
+if TYPE_CHECKING:
+    from hassil.recognize import RecognizeResult
+
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = f"{DOMAIN}.pipelines"
@@ -121,6 +124,12 @@ PIPELINE_FIELDS: VolDictType = {
 STORED_PIPELINE_RUNS = 10
 
 SAVE_DELAY = 10
+
+
+@callback
+def _async_local_fallback_intent_filter(result: RecognizeResult) -> bool:
+    """Filter out intents that are not local fallback."""
+    return result.intent.name in (intent.INTENT_GET_STATE, intent.INTENT_NEVERMIND)
 
 
 @callback
@@ -1087,7 +1096,9 @@ class PipelineRun:
                 # Try local intents first, if preferred.
                 elif self.pipeline.prefer_local_intents and (
                     intent_response := await conversation.async_handle_intents(
-                        self.hass, user_input
+                        self.hass,
+                        user_input,
+                        intent_filter=_async_local_fallback_intent_filter,
                     )
                 ):
                     # Local intent matched
