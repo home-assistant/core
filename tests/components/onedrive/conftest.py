@@ -1,6 +1,7 @@
 """Fixtures for OneDrive tests."""
 
 from collections.abc import AsyncIterator, Generator
+from json import dumps
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -15,11 +16,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .const import (
+    BACKUP_METADATA,
     CLIENT_ID,
     CLIENT_SECRET,
     MOCK_APPROOT,
     MOCK_BACKUP_FILE,
     MOCK_BACKUP_FOLDER,
+    MOCK_METADATA_FILE,
 )
 
 from tests.common import MockConfigEntry
@@ -89,12 +92,16 @@ def mock_onedrive_client(mock_onedrive_client_init: MagicMock) -> Generator[Magi
     client = mock_onedrive_client_init.return_value
     client.get_approot.return_value = MOCK_APPROOT
     client.create_folder.return_value = MOCK_BACKUP_FOLDER
-    client.list_drive_items.return_value = [MOCK_BACKUP_FILE]
+    client.list_drive_items.return_value = [MOCK_BACKUP_FILE, MOCK_METADATA_FILE]
     client.get_drive_item.return_value = MOCK_BACKUP_FILE
+    client.upload_file.return_value = MOCK_METADATA_FILE
 
     class MockStreamReader:
         async def iter_chunked(self, chunk_size: int) -> AsyncIterator[bytes]:
             yield b"backup data"
+
+        async def read(self) -> bytes:
+            return dumps(BACKUP_METADATA).encode()
 
     client.download_drive_item.return_value = MockStreamReader()
 
@@ -107,6 +114,7 @@ def mock_large_file_upload_client() -> Generator[AsyncMock]:
     with patch(
         "homeassistant.components.onedrive.backup.LargeFileUploadClient.upload"
     ) as mock_upload:
+        mock_upload.return_value = MOCK_BACKUP_FILE
         yield mock_upload
 
 
