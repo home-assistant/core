@@ -439,7 +439,7 @@ async def test_zero_conf_old_blank_entry(
     mock_setup_entry: AsyncMock,
     mock_envoy: AsyncMock,
 ) -> None:
-    """Test re-using old blank entry."""
+    """Test reusing old blank entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -478,7 +478,7 @@ async def test_zero_conf_old_blank_entry_standard_title(
     mock_setup_entry: AsyncMock,
     mock_envoy: AsyncMock,
 ) -> None:
-    """Test re-using old blank entry was Envoy as title."""
+    """Test reusing old blank entry was Envoy as title."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -519,7 +519,7 @@ async def test_zero_conf_old_blank_entry_user_title(
     mock_setup_entry: AsyncMock,
     mock_envoy: AsyncMock,
 ) -> None:
-    """Test re-using old blank entry with user title."""
+    """Test reusing old blank entry with user title."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

@@ -56,6 +56,7 @@ from .const import (
     RPC_INPUTS_EVENTS_TYPES,
     SHBTN_INPUTS_EVENTS_TYPES,
     SHBTN_MODELS,
+    SHELLY_EMIT_EVENT_PATTERN,
     SHIX3_1_INPUTS_EVENTS_TYPES,
     UPTIME_DEVIATION,
     VIRTUAL_COMPONENTS_MAP,
@@ -598,3 +599,10 @@ def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
     url = URL(raw_url)
     ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
     return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))
+
+
+async def get_rpc_script_event_types(device: RpcDevice, id: int) -> list[str]:
+    """Return a list of event types for a specific script."""
+    code_response = await device.script_getcode(id)
+    matches = SHELLY_EMIT_EVENT_PATTERN.finditer(code_response["data"])
+    return sorted([*{str(event_type.group(1)) for event_type in matches}])

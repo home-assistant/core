@@ -21,6 +21,7 @@ from homeassistant.helpers.issue_registry import (
 )
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
+from .common import setup_home_connect_entry
 from .const import (
     BSH_POWER_OFF,
     BSH_POWER_ON,
@@ -100,33 +101,43 @@ POWER_SWITCH_DESCRIPTION = SwitchEntityDescription(
 )
 
 
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    entities: list[HomeConnectEntity] = []
+    entities.extend(
+        HomeConnectProgramSwitch(entry.runtime_data, appliance, program)
+        for program in appliance.programs
+        if program.key != ProgramKey.UNKNOWN
+    )
+    if SettingKey.BSH_COMMON_POWER_STATE in appliance.settings:
+        entities.append(
+            HomeConnectPowerSwitch(
+                entry.runtime_data, appliance, POWER_SWITCH_DESCRIPTION
+            )
+        )
+    entities.extend(
+        HomeConnectSwitch(entry.runtime_data, appliance, description)
+        for description in SWITCHES
+        if description.key in appliance.settings
+    )
+
+    return entities
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect switch."""
-
-    entities: list[SwitchEntity] = []
-    for appliance in entry.runtime_data.data.values():
-        entities.extend(
-            HomeConnectProgramSwitch(entry.runtime_data, appliance, program)
-            for program in appliance.programs
-            if program.key != ProgramKey.UNKNOWN
-        )
-        if SettingKey.BSH_COMMON_POWER_STATE in appliance.settings:
-            entities.append(
-                HomeConnectPowerSwitch(
-                    entry.runtime_data, appliance, POWER_SWITCH_DESCRIPTION
-                )
-            )
-        entities.extend(
-            HomeConnectSwitch(entry.runtime_data, appliance, description)
-            for description in SWITCHES
-            if description.key in appliance.settings
-        )
-
-    async_add_entities(entities)
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
+    )
 
 
 class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
@@ -192,6 +203,7 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
             desc = " ".join(
                 ["Program", program.key.split(".")[-3], program.key.split(".")[-1]]
             )
+        self.program = program
         super().__init__(
             coordinator,
             appliance,
@@ -200,7 +212,6 @@ class HomeConnectProgramSwitch(HomeConnectEntity, SwitchEntity):
         self._attr_name = f"{appliance.info.name} {desc}"
         self._attr_unique_id = f"{appliance.info.ha_id}-{desc}"
         self._attr_has_entity_name = False
-        self.program = program
 
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""

@@ -20,6 +20,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import color as color_util
 
+from .common import setup_home_connect_entry
 from .const import (
     BSH_AMBIENT_LIGHT_COLOR_CUSTOM_COLOR,
     DOMAIN,
@@ -78,20 +79,28 @@ LIGHTS: tuple[HomeConnectLightEntityDescription, ...] = (
 )
 
 
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    return [
+        HomeConnectLight(entry.runtime_data, appliance, description)
+        for description in LIGHTS
+        if description.key in appliance.settings
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect light."""
-
-    async_add_entities(
-        [
-            HomeConnectLight(entry.runtime_data, appliance, description)
-            for description in LIGHTS
-            for appliance in entry.runtime_data.data.values()
-            if description.key in appliance.settings
-        ],
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
     )
 
 
