@@ -23,7 +23,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Child Lock',
+    'original_name': 'Child lock',
     'platform': 'homee',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -36,7 +36,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Test Switch Child Lock',
+      'friendly_name': 'Test Switch Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_switch_child_lock',
@@ -70,7 +70,7 @@
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
-    'original_name': 'Manual Operation',
+    'original_name': 'Manual operation',
     'platform': 'homee',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -83,7 +83,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'switch',
-      'friendly_name': 'Test Switch Manual Operation',
+      'friendly_name': 'Test Switch Manual operation',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_switch_manual_operation',

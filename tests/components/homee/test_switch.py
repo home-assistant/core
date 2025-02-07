@@ -20,6 +20,24 @@ from . import build_mock_node, setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+async def test_switch_state(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test if the correct state is returned."""
+    mock_homee.nodes = [build_mock_node("switches.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("switch.test_switch_switch_1").state is not STATE_ON
+    switch = mock_homee.nodes[0].attributes[2]
+    switch.current_value = 1
+    switch.add_on_changed_listener.call_args_list[0][0][0](switch)
+    await hass.async_block_till_done()
+    assert hass.states.get("switch.test_switch_switch_1").state is STATE_ON
+
+
 async def test_switch_turn_on(
     hass: HomeAssistant,
     mock_homee: MagicMock,
@@ -112,21 +130,3 @@ async def test_switch_snapshot(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_switch_state(
-    hass: HomeAssistant,
-    mock_homee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test if the correct state is returned."""
-    mock_homee.nodes = [build_mock_node("switches.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get("switch.test_switch_switch_1").state is not STATE_ON
-    switch = mock_homee.nodes[0].attributes[2]
-    switch.current_value = 1
-    switch.add_on_changed_listener.call_args_list[0][0][0](switch)
-    await hass.async_block_till_done()
-    assert hass.states.get("switch.test_switch_switch_1").state is STATE_ON
