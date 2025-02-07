@@ -209,30 +209,46 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2025.4.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
+        # Ensure async_create_issue runs in the event loop
+        async def create_issue():
+            # Call async_create_issue without awaiting
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "migrate_aux_heat",
+                breaks_in_ha_version="2025.4.0",
+                is_fixable=True,
+                is_persistent=True,
+                translation_key="migrate_aux_heat",
+                severity=IssueSeverity.WARNING,
+            )
+
+        # Schedule the async task
+        self.hass.loop.call_soon_threadsafe(lambda: self.hass.async_create_task(create_issue()))
+
+        # Set the heater mode
         self._econet.set_mode(ThermostatOperationMode.EMERGENCY_HEAT)
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        async_create_issue(
-            self.hass,
-            DOMAIN,
-            "migrate_aux_heat",
-            breaks_in_ha_version="2025.4.0",
-            is_fixable=True,
-            is_persistent=True,
-            translation_key="migrate_aux_heat",
-            severity=IssueSeverity.WARNING,
-        )
+        # Ensure async_create_issue runs in the event loop
+        async def create_issue():
+            # Call async_create_issue without awaiting
+            async_create_issue(
+                self.hass,
+                DOMAIN,
+                "migrate_aux_heat",
+                breaks_in_ha_version="2025.4.0",
+                is_fixable=True,
+                is_persistent=True,
+                translation_key="migrate_aux_heat",
+                severity=IssueSeverity.WARNING,
+            )
+
+        # Schedule the async task
+        self.hass.loop.call_soon_threadsafe(lambda: self.hass.async_create_task(create_issue()))
+
+        # Set the heater mode
         self._econet.set_mode(ThermostatOperationMode.HEATING)
 
     @property
