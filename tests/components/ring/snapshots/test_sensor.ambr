@@ -117,11 +117,11 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'Wi-Fi signal strength',
+    'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wifi_signal_strength',
+    'translation_key': None,
     'unique_id': '123456-wifi_signal_strength',
     'unit_of_measurement': 'dBm',
   })
@@ -131,7 +131,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'signal_strength',
-      'friendly_name': 'Downstairs Wi-Fi signal strength',
+      'friendly_name': 'Downstairs Signal strength',
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
@@ -294,6 +294,102 @@
     'state': 'unknown',
   })
 # ---
+# name: test_states[sensor.front_door_last_ding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.front_door_last_ding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last ding',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_ding',
+    'unique_id': '987654-last_ding',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.front_door_last_ding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Front Door Last ding',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_door_last_ding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_states[sensor.front_door_last_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.front_door_last_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last motion',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_motion',
+    'unique_id': '987654-last_motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.front_door_last_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Front Door Last motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_door_last_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_states[sensor.front_door_volume-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -412,11 +508,11 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'Wi-Fi signal strength',
+    'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wifi_signal_strength',
+    'translation_key': None,
     'unique_id': '987654-wifi_signal_strength',
     'unit_of_measurement': 'dBm',
   })
@@ -426,7 +522,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'signal_strength',
-      'friendly_name': 'Front Door Wi-Fi signal strength',
+      'friendly_name': 'Front Door Signal strength',
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
@@ -479,6 +575,102 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.front_last_activity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_states[sensor.front_last_ding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.front_last_ding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last ding',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_ding',
+    'unique_id': '765432-last_ding',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.front_last_ding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Front Last ding',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_last_ding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_states[sensor.front_last_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.front_last_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last motion',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_motion',
+    'unique_id': '765432-last_motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.front_last_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Front Last motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.front_last_motion',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -556,11 +748,11 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'Wi-Fi signal strength',
+    'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wifi_signal_strength',
+    'translation_key': None,
     'unique_id': '765432-wifi_signal_strength',
     'unit_of_measurement': 'dBm',
   })
@@ -570,7 +762,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'signal_strength',
-      'friendly_name': 'Front Wi-Fi signal strength',
+      'friendly_name': 'Front Signal strength',
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
@@ -893,11 +1085,11 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'Wi-Fi signal strength',
+    'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wifi_signal_strength',
+    'translation_key': None,
     'unique_id': '185036587-wifi_signal_strength',
     'unit_of_measurement': 'dBm',
   })
@@ -907,7 +1099,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'signal_strength',
-      'friendly_name': 'Ingress Wi-Fi signal strength',
+      'friendly_name': 'Ingress Signal strength',
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,
@@ -1018,6 +1210,102 @@
     'state': 'unknown',
   })
 # ---
+# name: test_states[sensor.internal_last_ding-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.internal_last_ding',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last ding',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_ding',
+    'unique_id': '345678-last_ding',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.internal_last_ding-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Internal Last ding',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.internal_last_ding',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_states[sensor.internal_last_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.internal_last_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Last motion',
+    'platform': 'ring',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'last_motion',
+    'unique_id': '345678-last_motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[sensor.internal_last_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by Ring.com',
+      'device_class': 'timestamp',
+      'friendly_name': 'Internal Last motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.internal_last_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_states[sensor.internal_wifi_signal_category-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1089,11 +1377,11 @@
     }),
     'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
     'original_icon': None,
-    'original_name': 'Wi-Fi signal strength',
+    'original_name': 'Signal strength',
     'platform': 'ring',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'wifi_signal_strength',
+    'translation_key': None,
     'unique_id': '345678-wifi_signal_strength',
     'unit_of_measurement': 'dBm',
   })
@@ -1103,7 +1391,7 @@
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Ring.com',
       'device_class': 'signal_strength',
-      'friendly_name': 'Internal Wi-Fi signal strength',
+      'friendly_name': 'Internal Signal strength',
       'unit_of_measurement': 'dBm',
     }),
     'context': <ANY>,

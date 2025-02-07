@@ -90,6 +90,7 @@ from .const import (
     CONF_HVAC_MODE_VALUES,
     CONF_HVAC_OFF_VALUE,
     CONF_HVAC_ON_VALUE,
+    CONF_HVAC_ONOFF_COIL,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_INPUT_TYPE,
     CONF_MAX_TEMP,
@@ -258,7 +259,8 @@ CLIMATE_SCHEMA = vol.All(
             vol.Optional(CONF_MIN_TEMP, default=5): vol.Coerce(float),
             vol.Optional(CONF_STEP, default=0.5): vol.Coerce(float),
             vol.Optional(CONF_TEMPERATURE_UNIT, default=DEFAULT_TEMP_UNIT): cv.string,
-            vol.Optional(CONF_HVAC_ONOFF_REGISTER): cv.positive_int,
+            vol.Exclusive(CONF_HVAC_ONOFF_COIL, "hvac_onoff_type"): cv.positive_int,
+            vol.Exclusive(CONF_HVAC_ONOFF_REGISTER, "hvac_onoff_type"): cv.positive_int,
             vol.Optional(
                 CONF_HVAC_ON_VALUE, default=DEFAULT_HVAC_ON_VALUE
             ): cv.positive_int,

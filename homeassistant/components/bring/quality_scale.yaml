@@ -7,7 +7,7 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: todo
+  config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: todo
@@ -53,20 +53,20 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt
     comment: |
       no repairs
-  stale-devices: todo
+  stale-devices: done
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done
