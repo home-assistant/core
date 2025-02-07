@@ -250,6 +250,9 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         self._event_is_on = description.event_is_on or set()
         self._ignore_events = False
         self._is_connected = description.is_connected_fn(self.hub, self._obj_id)
+        self._attr_mac_address = self._obj_id
+        self._attr_hostname = description.hostname_fn(self.api, self._obj_id)
+        self._attr_ip_address = description.ip_address_fn(self.api, self._obj_id)
         if self.is_connected:
             self.hub.update_heartbeat(
                 self.unique_id,
@@ -261,21 +264,6 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return self._is_connected
-
-    @property
-    def hostname(self) -> str | None:
-        """Return hostname of the device."""
-        return self.entity_description.hostname_fn(self.api, self._obj_id)
-
-    @property
-    def ip_address(self) -> str | None:
-        """Return the primary ip address of the device."""
-        return self.entity_description.ip_address_fn(self.api, self._obj_id)
-
-    @cached_property
-    def mac_address(self) -> str:
-        """Return the mac address of the device."""
-        return self._obj_id
 
     @cached_property
     def unique_id(self) -> str:
@@ -299,10 +287,14 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
         """
         description = self.entity_description
         hub = self.hub
+        api = self.api
+        obj_id = self._obj_id
 
         if event is ItemEvent.CHANGED:
             # Prioritize normal data updates over events
             self._ignore_events = True
+            self._attr_hostname = description.hostname_fn(api, obj_id)
+            self._attr_ip_address = description.ip_address_fn(api, obj_id)
 
         elif event is ItemEvent.ADDED and not self.available:
             # From unifi.entity.async_signal_reachable_callback
@@ -311,7 +303,6 @@ class UnifiScannerEntity(UnifiEntity[HandlerT, ApiItemT], ScannerEntity):
             hub.remove_heartbeat(self.unique_id)
             return
 
-        obj_id = self._obj_id
         if is_connected := description.is_connected_fn(hub, obj_id):
             self._is_connected = is_connected
             self.hub.update_heartbeat(
