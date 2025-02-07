@@ -34,6 +34,7 @@ from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 UPLOAD_CHUNK_SIZE = 16 * 320 * 1024  # 5.2MB
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
+METADATA_VERSION = 2
 
 
 async def async_get_backup_agents(
@@ -172,7 +173,7 @@ class OneDriveBackupAgent(BackupAgent):
 
         # add metadata to the metadata file
         metadata_description = {
-            "metadata_version": 2,
+            "metadata_version": METADATA_VERSION,
             "backup_id": backup.backup_id,
             "backup_file_id": backup_file.id,
         }
@@ -207,7 +208,9 @@ class OneDriveBackupAgent(BackupAgent):
         return [
             await self._download_backup_metadata(item.id)
             for item in items
-            if item.description and "backup_id" in item.description
+            if item.description
+            and "backup_id" in item.description
+            and f'"metadata_version": {METADATA_VERSION}' in unescape(item.description)
         ]
 
     @handle_backup_errors
@@ -227,7 +230,10 @@ class OneDriveBackupAgent(BackupAgent):
             (
                 item
                 for item in await self._client.list_drive_items(self._folder_id)
-                if item.description and backup_id in item.description
+                if item.description
+                and backup_id in item.description
+                and f'"metadata_version": {METADATA_VERSION}'
+                in unescape(item.description)
             ),
             None,
         )
