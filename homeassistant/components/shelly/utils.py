@@ -318,7 +318,7 @@ def get_model_name(info: dict[str, Any]) -> str:
 def get_deviceinfo_model(device: BlockDevice | RpcDevice) -> str | None:
     """Return the device model for deviceinfo."""
     if isinstance(device, RpcDevice) and device.xmod_info != {}:
-        return cast(str, device.xmod_info["n"])
+        return cast(str, device.xmod_info.get("n"))
 
     return cast(str, MODEL_NAMES.get(device.model))
 
