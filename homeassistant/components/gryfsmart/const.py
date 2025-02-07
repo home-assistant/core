@@ -20,13 +20,17 @@ CONF_API = "api"
 CONF_DEVICE_DATA = "device_data"
 CONF_INPUTS = "input"
 CONF_DEVICE_CLASS = "device_class"
+CONF_OUT_ID = "o_id"
+CONF_TEMP_ID = "t_id"
+CONF_HYSTERESIS = "hysteresis"
 
 PLATFORM_PWM = "pwm"
 PLATFORM_TEMPERATURE = "temperature"
 PLATFORM_INPUT = "input"
 PLATFORM_LIGHT = "light"
-PLATFORM_BINARY_SENSOR = "binary_sensor"
+PLATFORM_BINARY_SENSOR = "binary_input"
 PLATFORM_SWITCH = "output"
+PLATFORM_THERMOSTAT = "thermostat"
 
 DEFAULT_PORT = "/dev/ttyUSB0"
 GRYF_IN_NAME = "Gryf IN"
@@ -47,6 +51,7 @@ DEVICE_TYPES = {
     Platform.BINARY_SENSOR: "Binary input",
     # Platform.LOCK: "Lock",
     # Platform.CLIMATE: "Thermostat",
+    Platform.CLIMATE: "Thermostat",
     PLATFORM_PWM: "PWM",
     PLATFORM_TEMPERATURE: "Termometr",
     PLATFORM_INPUT: "Input",
