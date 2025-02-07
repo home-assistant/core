@@ -55,7 +55,7 @@ rules:
   docs-use-cases: done
   dynamic-devices:
     status: exempt
-    comment: Integration does not support dynamic devices
+    comment: Single device per config entry
   entity-category: todo
   entity-device-class: todo
   entity-disabled-by-default: todo
