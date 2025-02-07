@@ -91,6 +91,7 @@ async def test_agents_list_backups(
             "homeassistant_version": "2024.12.0.dev0",
             "name": "Core 2024.12.0.dev0",
             "failed_agent_ids": [],
+            "extra_metadata": {},
             "with_automatic_settings": None,
         }
     ]
@@ -124,6 +125,7 @@ async def test_agents_get_backup(
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2024.12.0.dev0",
+        "extra_metadata": {},
         "name": "Core 2024.12.0.dev0",
         "failed_agent_ids": [],
         "with_automatic_settings": None,
@@ -179,7 +181,7 @@ async def test_agents_upload(
     assert resp.status == 201
     assert f"Uploading backup {TEST_BACKUP.backup_id}" in caplog.text
     mock_client.upload_blob.assert_called_once_with(
-        name="Core_2024.12.0.dev0_-_2024-11-22_11.48_48727189.tar",
+        name="Core_2024.12.0.dev0_2024-11-22_11.48_48727189.tar",
         metadata=BACKUP_METADATA,
         data=ANY,
         length=ANY,
