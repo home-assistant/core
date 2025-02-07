@@ -8,12 +8,14 @@ import logging
 
 from bring_api import (
     Bring,
+    BringActivityResponse,
     BringAuthException,
     BringItemsResponse,
     BringList,
     BringParseException,
     BringRequestException,
     BringUserSettingsResponse,
+    BringUsersResponse,
 )
 from mashumaro.mixins.orjson import DataClassORJSONMixin
 
@@ -37,6 +39,8 @@ class BringData(DataClassORJSONMixin):
 
     lst: BringList
     content: BringItemsResponse
+    activity: BringActivityResponse
+    users: BringUsersResponse
 
 
 class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
@@ -94,6 +98,8 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                 continue
             try:
                 items = await self.bring.get_list(lst.listUuid)
+                activity = await self.bring.get_activity(lst.listUuid)
+                users = await self.bring.get_list_users(lst.listUuid)
             except BringRequestException as e:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
@@ -105,7 +111,7 @@ class BringDataUpdateCoordinator(DataUpdateCoordinator[dict[str, BringData]]):
                     translation_key="setup_parse_exception",
                 ) from e
             else:
-                list_dict[lst.listUuid] = BringData(lst, items)
+                list_dict[lst.listUuid] = BringData(lst, items, activity, users)
 
         return list_dict
 

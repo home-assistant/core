@@ -702,7 +702,7 @@ easyenergy==2.1.2
 eheimdigital==1.0.6
 
 # homeassistant.components.electric_kiwi
-electrickiwi-api==0.9.12
+electrickiwi-api==0.9.14
 
 # homeassistant.components.elevenlabs
 elevenlabs==1.9.0
@@ -886,7 +886,7 @@ google-cloud-texttospeech==2.17.2
 google-generativeai==0.8.2
 
 # homeassistant.components.nest
-google-nest-sdm==7.1.1
+google-nest-sdm==7.1.3
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1997,7 +1997,7 @@ python-smarttub==0.0.38
 python-songpal==0.16.2
 
 # homeassistant.components.tado
-python-tado==0.18.5
+python-tado==0.18.6
 
 # homeassistant.components.technove
 python-technove==1.3.1
@@ -2523,7 +2523,7 @@ zeroconf==0.143.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.47
+zha==0.0.48
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.0
