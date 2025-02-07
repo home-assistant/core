@@ -76,8 +76,7 @@ BINARY_SENSOR_DESC: dict[ThinQProperty, ThinQBinarySensorEntityDescription] = {
     ),
     ThinQProperty.WATER_HEATER_OPERATION_MODE: ThinQBinarySensorEntityDescription(
         key=ThinQProperty.WATER_HEATER_OPERATION_MODE,
-        device_class=BinarySensorDeviceClass.POWER,
-        translation_key="operation_mode_water_heater",
+        translation_key="operation_mode",
         on_key="power_on",
     ),
     ThinQProperty.ONE_TOUCH_FILTER: ThinQBinarySensorEntityDescription(

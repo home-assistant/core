@@ -72,9 +72,6 @@
       "operation_mode": {
         "default": "mdi:power"
       },
-      "operation_mode_water_heater": {
-        "default": "mdi:power"
-      },
       "one_touch_filter": {
         "default": "mdi:air-filter"
       }
@@ -161,6 +158,9 @@
         "default": "mdi:monitor-eye"
       },
       "current_job_mode": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "current_job_mode_dehumidifier": {
         "default": "mdi:format-list-bulleted"
       },
       "operation_mode": {
