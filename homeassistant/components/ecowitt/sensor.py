@@ -281,7 +281,7 @@ async def async_setup_entry(
             if sensor.stype not in ECOWITT_SENSORS_MAPPING:
                 continue
 
-            # Ignore unsupported locale metrics
+            # Ignore metrics that are not supported by the user's locale
             if sensor.stype in _METRIC and hass.config.units is not METRIC_SYSTEM:
                 continue
             if (
