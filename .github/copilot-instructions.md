@@ -65,8 +65,8 @@ automation application.
   - Message format:
     - No periods at end
     - No integration names or domains (added automatically)
-    - No sensitive data (keys, tokens, passwords), if when those are incorrect.
-  - Be very restrictive on the use if logging info messages, use debug for
+    - No sensitive data (keys, tokens, passwords), even when those are incorrect.
+  - Be very restrictive on the use of logging info messages, use debug for
     anything which is not targeting the user.
   - Use lazy logging (no f-strings):
     ```python
@@ -74,13 +74,13 @@ automation application.
     ```
 - Entities:
   - Ensure unique IDs for state persistence:
-    - Unique IDs should not contain values that are subject to user change.
+    - Unique IDs should not contain values that are subject to user or network change.
     - An ID needs to be unique per platform, not per integration.
     - The ID does not have to contain the integration domain or platform.
     - Acceptable examples:
       - Serial number of a device
       - MAC address of a device formatted using `homeassistant.helpers.device_registry.format_mac`
-        Do not obtain the MAC address thru arp cache of local network access,
+        Do not obtain the MAC address through arp cache of local network access,
         only use the MAC address provided by discovery or the device itself.
       - Unique identifier that is physically printed on the device or burned into an EEPROM
     - Not acceptable examples:
