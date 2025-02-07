@@ -7,24 +7,43 @@ import requests_mock
 from homeassistant.components.wallbox.const import (
     CHARGER_ADDED_ENERGY_KEY,
     CHARGER_ADDED_RANGE_KEY,
+    CHARGER_ATTRIBUTES_KEY,
+    CHARGER_CHARGER_KEY,
+    CHARGER_CHARGER_NAME_KEY,
     CHARGER_CHARGING_POWER_KEY,
     CHARGER_CHARGING_SPEED_KEY,
+    CHARGER_COST_KEY,
     CHARGER_CURRENCY_KEY,
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_DISCHARGED_ENERGY_KEY,
+    CHARGER_DISCHARGING_TIME_KEY,
+    CHARGER_END_KEY,
+    CHARGER_ENERGY_KEY,
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_FEATURES_KEY,
+    CHARGER_GREEN_ENERGY_KEY,
+    CHARGER_GROUP_KEY,
+    CHARGER_ID_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_AVAILABLE_POWER_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_MAX_ICP_CURRENT_KEY,
+    CHARGER_MID_ENERGY_KEY,
     CHARGER_NAME_KEY,
     CHARGER_PART_NUMBER_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
     CHARGER_SERIAL_NUMBER_KEY,
+    CHARGER_SESSION_DATA_KEY,
     CHARGER_SOFTWARE_KEY,
+    CHARGER_START_KEY,
     CHARGER_STATUS_ID_KEY,
+    CHARGER_TIME_KEY,
+    CHARGER_TYPE_KEY,
+    CHARGER_USER_EMAIL_KEY,
+    CHARGER_USER_KEY,
+    CHARGER_USERNAME_KEY,
 )
 from homeassistant.core import HomeAssistant
 
@@ -74,6 +93,70 @@ test_response_bidir = {
     },
 }
 
+test_response_sessions = {
+    CHARGER_SESSION_DATA_KEY: [
+        {
+            CHARGER_TYPE_KEY: "charger_log_session",
+            CHARGER_ID_KEY: "123456789",
+            CHARGER_ATTRIBUTES_KEY: {
+                CHARGER_GROUP_KEY: 12345,
+                CHARGER_CHARGER_KEY: 12345,
+                CHARGER_USER_KEY: 12345,
+                CHARGER_START_KEY: 1728417604,
+                CHARGER_END_KEY: 1728539458,
+                CHARGER_ENERGY_KEY: 15.06,
+                CHARGER_DISCHARGED_ENERGY_KEY: 0,
+                CHARGER_MID_ENERGY_KEY: 0,
+                CHARGER_GREEN_ENERGY_KEY: 0,
+                CHARGER_TIME_KEY: 13577,
+                CHARGER_DISCHARGING_TIME_KEY: 0,
+                CHARGER_COST_KEY: 6.024,
+                CHARGER_CURRENCY_KEY: {
+                    "id": 1,
+                    "name": "Euro Member Countries",
+                    "symbol": "€",
+                    "code": "EUR",
+                },
+                CHARGER_CHARGER_NAME_KEY: "Commander 2 SN 12345",
+                CHARGER_USERNAME_KEY: "user",
+                CHARGER_USER_EMAIL_KEY: "test.test@test.com",
+                "energy_unit": "kWh",
+            },
+        },
+        {
+            CHARGER_TYPE_KEY: "charger_log_session",
+            CHARGER_ID_KEY: "987654321",
+            CHARGER_ATTRIBUTES_KEY: {
+                CHARGER_GROUP_KEY: 12345,
+                CHARGER_CHARGER_KEY: 12345,
+                CHARGER_USER_KEY: 12345,
+                CHARGER_START_KEY: 1728331202,
+                CHARGER_END_KEY: 1728366534,
+                CHARGER_ENERGY_KEY: 16.139,
+                CHARGER_DISCHARGED_ENERGY_KEY: 0,
+                CHARGER_MID_ENERGY_KEY: 0,
+                CHARGER_GREEN_ENERGY_KEY: 0,
+                CHARGER_TIME_KEY: 14480,
+                CHARGER_DISCHARGING_TIME_KEY: 0,
+                CHARGER_COST_KEY: 6.4556,
+                CHARGER_CURRENCY_KEY: {
+                    "id": 1,
+                    "name": "Euro Member Countries",
+                    "symbol": "€",
+                    "code": "EUR",
+                },
+                CHARGER_CHARGER_NAME_KEY: "Commander 2 SN 12345",
+                CHARGER_USERNAME_KEY: "test",
+                CHARGER_USER_EMAIL_KEY: "test.test@test.com",
+                "energy_unit": "kWh",
+            },
+        },
+    ],
+}
+
+test_response_sessions_empty = {
+    CHARGER_SESSION_DATA_KEY: [],
+}
 
 authorisation_response = {
     "data": {
@@ -118,6 +201,41 @@ async def setup_integration(hass: HomeAssistant, entry: MockConfigEntry) -> None
             json=test_response,
             status_code=HTTPStatus.OK,
         )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.put(
+            "https://api.wall-box.com/v2/charger/12345",
+            json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
+            status_code=HTTPStatus.OK,
+        )
+
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+
+async def setup_integration_no_sessions(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox sensor class setup."""
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/chargers/status/12345",
+            json=test_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions_empty,
+            status_code=HTTPStatus.OK,
+        )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
             json={CHARGER_MAX_CHARGING_CURRENT_KEY: 20},
@@ -139,6 +257,11 @@ async def setup_integration_bidir(hass: HomeAssistant, entry: MockConfigEntry) -
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response_bidir,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions,
             status_code=HTTPStatus.OK,
         )
         mock_request.put(
@@ -164,6 +287,11 @@ async def setup_integration_connection_error(
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
+            status_code=HTTPStatus.FORBIDDEN,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions,
             status_code=HTTPStatus.FORBIDDEN,
         )
         mock_request.put(
@@ -192,6 +320,11 @@ async def setup_integration_read_only(
             json=test_response,
             status_code=HTTPStatus.OK,
         )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions,
+            status_code=HTTPStatus.OK,
+        )
         mock_request.put(
             "https://api.wall-box.com/v2/charger/12345",
             json=test_response,
@@ -216,6 +349,11 @@ async def setup_integration_platform_not_ready(
         mock_request.get(
             "https://api.wall-box.com/chargers/status/12345",
             json=test_response,
+            status_code=HTTPStatus.OK,
+        )
+        mock_request.get(
+            "https://api.wall-box.com/v4/sessions/stats",
+            json=test_response_sessions,
             status_code=HTTPStatus.OK,
         )
         mock_request.put(

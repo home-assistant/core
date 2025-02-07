@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from datetime import timedelta
+from dataclasses import dataclass
+from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 import logging
 from typing import Any, Concatenate
@@ -11,22 +12,39 @@ from typing import Any, Concatenate
 import requests
 from wallbox import Wallbox
 
+from homeassistant.components.calendar import CalendarEvent
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    CHARGER_ATTRIBUTES_KEY,
+    CHARGER_CHARGER_KEY,
+    CHARGER_CHARGER_NAME_KEY,
+    CHARGER_CODE_KEY,
+    CHARGER_COST_KEY,
     CHARGER_CURRENCY_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_END_KEY,
+    CHARGER_ENERGY_KEY,
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_FEATURES_KEY,
+    CHARGER_ID_KEY,
+    CHARGER_LAST_EVENT,
     CHARGER_LOCKED_UNLOCKED_KEY,
     CHARGER_MAX_CHARGING_CURRENT_KEY,
     CHARGER_MAX_ICP_CURRENT_KEY,
+    CHARGER_MID_ENERGY_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
+    CHARGER_SESSION_DATA_KEY,
+    CHARGER_START_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
+    CHARGER_TIME_KEY,
+    CHARGER_TYPE_KEY,
+    CHARGER_USERNAME_KEY,
     CODE_KEY,
     DOMAIN,
     UPDATE_INTERVAL,
@@ -67,6 +85,25 @@ CHARGER_STATUS: dict[int, ChargerStatus] = {
     209: ChargerStatus.LOCKED,
     210: ChargerStatus.LOCKED_CAR_CONNECTED,
 }
+
+
+@dataclass
+class WallboxEventMixIn:
+    """Mixin for Wallbox calendar event."""
+
+    charger_name: str
+    username: str
+    session_id: str
+    currency: str
+    serial_number: int
+    time: int
+    energy: float
+    session_cost: float
+
+
+@dataclass
+class WallboxEvent(CalendarEvent, WallboxEventMixIn):
+    """A class to describe a Wallbox calendar event."""
 
 
 def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
@@ -153,6 +190,13 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
             data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
         )
+
+        events = self._get_sessions(
+            self._station,
+            dt_util.now() - timedelta(days=30),
+            dt_util.now(),
+        )
+        data[CHARGER_LAST_EVENT] = events[0] if len(events) > 0 else None
         return data
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -175,6 +219,54 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._set_charging_current, charging_current
         )
         await self.async_request_refresh()
+
+    @_require_authentication
+    def _get_sessions(
+        self,
+        charger_id: str,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> list[WallboxEvent]:
+        """Get charging sessions between timestamps for Wallbox."""
+        data = self._wallbox.getSessionList(charger_id, start_date, end_date)
+        return [
+            WallboxEvent(
+                charger_name=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_NAME_KEY],
+                username=event[CHARGER_ATTRIBUTES_KEY][CHARGER_USERNAME_KEY],
+                session_id=event[CHARGER_ID_KEY],
+                currency=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CURRENCY_KEY][
+                    CHARGER_CODE_KEY
+                ],
+                serial_number=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_KEY],
+                time=event[CHARGER_ATTRIBUTES_KEY][CHARGER_TIME_KEY],
+                energy=event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY]
+                if event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] > 0
+                else event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY],
+                session_cost=event[CHARGER_ATTRIBUTES_KEY][CHARGER_COST_KEY],
+                start=datetime.fromtimestamp(
+                    event[CHARGER_ATTRIBUTES_KEY][CHARGER_START_KEY], UTC
+                ),
+                end=datetime.fromtimestamp(
+                    event[CHARGER_ATTRIBUTES_KEY][CHARGER_END_KEY], UTC
+                ),
+                summary=f"Charging session {event[CHARGER_ID_KEY]}: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY]}KWh",
+                location=event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_NAME_KEY],
+                description=f"Session ID: {event[CHARGER_ID_KEY]}\nSerial number: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_CHARGER_KEY]}\nUsername: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_USERNAME_KEY]}\nTime: {datetime.fromtimestamp(event[CHARGER_ATTRIBUTES_KEY][CHARGER_TIME_KEY]) - datetime.fromtimestamp(0)}\nEnergy: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] if event[CHARGER_ATTRIBUTES_KEY][CHARGER_MID_ENERGY_KEY] > 0 else event[CHARGER_ATTRIBUTES_KEY][CHARGER_ENERGY_KEY]}KWh\nSession cost: {event[CHARGER_ATTRIBUTES_KEY][CHARGER_COST_KEY]}{event[CHARGER_ATTRIBUTES_KEY][CHARGER_CURRENCY_KEY][CHARGER_CODE_KEY]}\n",
+            )
+            for event in data[CHARGER_SESSION_DATA_KEY]
+            if event[CHARGER_TYPE_KEY] == "charger_log_session"
+        ]
+
+    async def async_get_sessions(
+        self,
+        charger_id: str,
+        start_date: datetime,
+        end_date: datetime,
+    ) -> list[WallboxEvent]:
+        """Get charging sessions between timestamps for Wallbox."""
+        return await self.hass.async_add_executor_job(
+            self._get_sessions, charger_id, start_date, end_date
+        )
 
     @_require_authentication
     def _set_icp_current(self, icp_current: float) -> None:
