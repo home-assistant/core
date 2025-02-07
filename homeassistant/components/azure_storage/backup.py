@@ -144,7 +144,7 @@ class AzureStorageBackupAgent(BackupAgent):
         async for blob in self._client.list_blobs(include="metadata"):
             metadata = blob.metadata
 
-            if "backup_metadata" in metadata:
+            if metadata.get("metadata_version") == "1":
                 backups.append(
                     AgentBackup.from_dict(json.loads(metadata["backup_metadata"]))
                 )
@@ -167,6 +167,9 @@ class AzureStorageBackupAgent(BackupAgent):
     async def _find_blob_by_backup_id(self, backup_id: str) -> BlobProperties | None:
         """Find a blob by backup id."""
         async for blob in self._client.list_blobs(include="metadata"):
-            if backup_id == blob.metadata.get("backup_id", ""):
+            if (
+                backup_id == blob.metadata.get("backup_id", "")
+                and blob.metadata.get("metadata_version") == "1"
+            ):
                 return blob
         return None
