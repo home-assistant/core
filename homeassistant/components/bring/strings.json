@@ -25,7 +25,7 @@
         },
         "data_description": {
           "email": "[%key:component::bring::config::step::user::data_description::email%]",
-          "password": "[%key:component::bring::config::step::user::data_description::email%]"
+          "password": "[%key:component::bring::config::step::user::data_description::password%]"
         }
       },
       "reconfigure": {
@@ -37,7 +37,7 @@
         },
         "data_description": {
           "email": "[%key:component::bring::config::step::user::data_description::email%]",
-          "password": "[%key:component::bring::config::step::user::data_description::email%]"
+          "password": "[%key:component::bring::config::step::user::data_description::password%]"
         }
       }
     },

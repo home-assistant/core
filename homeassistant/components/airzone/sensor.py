@@ -30,9 +30,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneConfigEntry
 from .const import TEMP_UNIT_LIB_TO_HASS
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 from .entity import (
     AirzoneEntity,
     AirzoneHotWaterEntity,
