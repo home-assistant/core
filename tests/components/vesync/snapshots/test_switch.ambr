@@ -360,7 +360,7 @@
       'name': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
       'original_icon': None,
       'original_name': None,
       'platform': 'vesync',
@@ -375,6 +375,7 @@
 # name: test_switch_state[Outlet][switch.outlet]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
       'friendly_name': 'Outlet',
     }),
     'context': <ANY>,
@@ -518,7 +519,7 @@
       'name': None,
       'options': dict({
       }),
-      'original_device_class': None,
+      'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
       'original_icon': None,
       'original_name': None,
       'platform': 'vesync',
@@ -533,6 +534,7 @@
 # name: test_switch_state[Wall Switch][switch.wall_switch]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'switch',
       'friendly_name': 'Wall Switch',
     }),
     'context': <ANY>,

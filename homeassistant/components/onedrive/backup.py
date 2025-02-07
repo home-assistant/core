@@ -109,7 +109,7 @@ class OneDriveBackupAgent(BackupAgent):
         self._hass = hass
         self._entry = entry
         self._client = entry.runtime_data.client
-        self._token_provider = entry.runtime_data.token_provider
+        self._token_function = entry.runtime_data.token_function
         self._folder_id = entry.runtime_data.backup_folder_id
         self.name = entry.title
         assert entry.unique_id
@@ -145,7 +145,7 @@ class OneDriveBackupAgent(BackupAgent):
         )
         try:
             item = await LargeFileUploadClient.upload(
-                self._token_provider, file, session=async_get_clientsession(self._hass)
+                self._token_function, file, session=async_get_clientsession(self._hass)
             )
         except HashMismatchError as err:
             raise BackupAgentError(
