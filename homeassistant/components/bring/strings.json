@@ -41,6 +41,20 @@
     }
   },
   "entity": {
+    "event": {
+      "activities": {
+        "name": "Activities",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "list_items_added": "Items added",
+              "list_items_changed": "Items changed",
+              "list_items_removed": "Items removed"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "urgent": {
         "name": "Urgent",
