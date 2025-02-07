@@ -1,9 +1,11 @@
 """Test the PG LAB Electronics config flow."""
 
+from homeassistant.components.mqtt import MQTT_CONNECTION_STATE
 from homeassistant.components.pglab.const import DOMAIN
-from homeassistant.config_entries import SOURCE_MQTT
+from homeassistant.config_entries import SOURCE_MQTT, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from tests.common import MockConfigEntry
@@ -86,3 +88,46 @@ async def test_mqtt_abort_invalid_topic(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_user_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> None:
+    """Test if the user can finish a config flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].data == {
+        "discovery_prefix": "pglab/discovery",
+    }
+
+
+async def test_user_setup_mqtt_not_connected(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient
+) -> None:
+    """Test that the user setup is aborted when MQTT is not connected."""
+
+    mqtt_mock.connected = False
+    async_dispatcher_send(hass, MQTT_CONNECTION_STATE, False)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "mqtt_not_connected"
+
+
+async def test_user_setup_mqtt_not_configured(hass: HomeAssistant) -> None:
+    """Test that the user setup is aborted when MQTT is not configured."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "mqtt_not_configured"
