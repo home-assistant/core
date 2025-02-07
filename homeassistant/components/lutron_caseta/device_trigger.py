@@ -279,12 +279,12 @@ FOUR_GROUP_REMOTE_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
 
 # See mappings at https://github.com/home-assistant/core/issues/137548#issuecomment-2643440119
 PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LIP = {
-    "on": 2,
-    "off": 4,
+    "on": 2,  # 'Number': 2 in LIP
+    "off": 4,  # 'Number': 4 in LIP
 }
 PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LEAP = {
-    "on": 1,
-    "off": 3,
+    "on": 1,  # 'Name': 'Button 1' in LEAP
+    "off": 3,  # 'Name': 'Button 3' in LEAP
 }
 PADDLE_SWITCH_PICO_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
