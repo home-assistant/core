@@ -1,4 +1,4 @@
-"""Tests for the Watergate valve platform."""
+"""Tests for the Watergate sensor platform."""
 
 from collections.abc import Generator
 
