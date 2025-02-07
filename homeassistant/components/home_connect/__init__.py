@@ -140,7 +140,7 @@ SERVICE_SET_OPTION_SCHEMA = vol.Any(
     {
         **SERVICE_OPTIONS_SCHEMA.schema,
     },
-    {  # DEPRECATED: Remove in 2025.6.0
+    {  # DEPRECATED: Remove in 2025.9.0
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_KEY): vol.All(
             vol.Coerce(OptionKey),
@@ -158,7 +158,7 @@ SERVICE_PROGRAM_SCHEMA = vol.Any(
         vol.Optional(ATTR_START): bool,
         **SERVICE_OPTIONS_SCHEMA.schema,
     },
-    {  # DEPRECATED: Remove in 2025.8.0
+    {  # DEPRECATED: Remove in 2025.9.0
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_PROGRAM): vol.All(
             vol.Coerce(ProgramKey),
@@ -265,7 +265,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 hass,
                 DOMAIN,
                 "moved_program_options_keys",
-                breaks_in_ha_version="2025.6.0",
+                breaks_in_ha_version="2025.8.0",
                 is_fixable=False,
                 severity=IssueSeverity.WARNING,
                 translation_key="moved_program_options_keys",
@@ -277,7 +277,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             "data:",
                             f"  {ATTR_DEVICE_ID}: DEVICE_ID",
                             f'  {ATTR_PROGRAM}: "Dishcare.Dishwasher.Program.Auto2"',
-                            f'  {ATTR_KEY}: "BSH.Common.Option.StartInRelative"',
+                            f"  {ATTR_KEY}: {OptionKey.BSH_COMMON_START_IN_RELATIVE}",
                             f'  {ATTR_VALUE}: "1800"',
                             f'  {ATTR_UNIT}: "seconds"',
                             "```",
@@ -290,7 +290,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             "data:",
                             f"  {ATTR_DEVICE_ID}: DEVICE_ID",
                             f'  {ATTR_PROGRAM}: "Dishcare.Dishwasher.Program.Auto2"',
-                            f"  {bsh_key_to_translation_key('BSH.Common.Option.StartInRelative')}: 1800",
+                            f"  {bsh_key_to_translation_key(OptionKey.BSH_COMMON_START_IN_RELATIVE)}: 1800",
                             "```",
                         ]
                     ),
@@ -379,15 +379,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 },
             ) from err
 
-    async def async_service_option_active(call) -> None:
+    async def async_service_option_active(call: ServiceCall) -> None:
         """Service for setting an option for an active program."""
         await _async_service_set_program_options(call, True)
 
-    async def async_service_option_selected(call) -> None:
+    async def async_service_option_selected(call: ServiceCall) -> None:
         """Service for setting an option for a selected program."""
         await _async_service_set_program_options(call, False)
 
-    async def async_service_setting(call) -> None:
+    async def async_service_setting(call: ServiceCall) -> None:
         """Service for changing a setting."""
         key = call.data[ATTR_KEY]
         value = call.data[ATTR_VALUE]

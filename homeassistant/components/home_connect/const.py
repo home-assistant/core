@@ -1,9 +1,10 @@
 """Constants for the Home Connect integration."""
 
-import re
 from typing import cast
 
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
+
+from .utils import bsh_key_to_translation_key
 
 DOMAIN = "home_connect"
 
@@ -71,19 +72,6 @@ SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID = "entity_id"
 SVE_TRANSLATION_PLACEHOLDER_PROGRAM = "program"
 SVE_TRANSLATION_PLACEHOLDER_KEY = "key"
 SVE_TRANSLATION_PLACEHOLDER_VALUE = "value"
-
-RE_CAMEL_CASE = re.compile(r"(?<!^)(?=[A-Z])|(?=\d)(?<=\D)")
-
-
-def bsh_key_to_translation_key(bsh_key: str) -> str:
-    """Convert a BSH key to a translation key format.
-
-    This function takes a BSH key, such as `Dishcare.Dishwasher.Program.Eco50`,
-    and converts it to a translation key format, such as `dishcare_dishwasher_bsh_key_eco50`.
-    """
-    return "_".join(
-        RE_CAMEL_CASE.sub("_", split) for split in bsh_key.split(".")
-    ).lower()
 
 
 TRANSLATION_KEYS_PROGRAMS_MAP = {
