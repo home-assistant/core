@@ -6,6 +6,7 @@
 # contain hints for available should be kept in sync with them
 
 -c homeassistant/package_constraints.txt
+-r requirements.txt
 -r requirements_test_pre_commit.txt
 astroid==3.3.8
 coverage==7.6.10
