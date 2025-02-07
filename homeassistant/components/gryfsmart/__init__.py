@@ -22,7 +22,7 @@ _PLATFORMS: list[Platform] = [
     Platform.LIGHT,
     Platform.BINARY_SENSOR,
     Platform.SENSOR,
-    # Platform.CLIMATE,
+    Platform.CLIMATE,
     # Platform.COVER,
     Platform.SWITCH,
     # Platform.LOCK

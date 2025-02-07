@@ -1613,7 +1613,7 @@ pyfritzhome==0.6.14
 pyfttt==0.3
 
 # homeassistant.components.gryfsmart
-pygryfsmart==0.1.8
+pygryfsmart==0.1.9
 
 # homeassistant.components.hvv_departures
 pygti==0.9.4
