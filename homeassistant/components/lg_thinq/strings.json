@@ -756,8 +756,8 @@
           "weizen": "Weizen"
         }
       },
-      "hop_oil_capsule1": {
-        "name": "Hops1",
+      "hop_oil_capsule_1": {
+        "name": "First hop",
         "state": {
           "cascade": "Cascade",
           "chinook": "Chinook",
@@ -768,18 +768,18 @@
         }
       },
       "hop_oil_capsule_2": {
-        "name": "Hops2",
+        "name": "Second hop",
         "state": {
-          "cascade": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::cascade%]",
-          "chinook": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::chinook%]",
-          "goldings": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::goldings%]",
-          "fuggles": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::fuggles%]",
-          "hallertau": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::hallertau%]",
-          "citrussy": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule1::state::citrussy%]"
+          "cascade": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::cascade%]",
+          "chinook": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::chinook%]",
+          "goldings": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::goldings%]",
+          "fuggles": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::fuggles%]",
+          "hallertau": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::hallertau%]",
+          "citrussy": "[%key:component::lg_thinq::entity::sensor::hop_oil_capsule_1::state::citrussy%]"
         }
       },
       "flavor_capsule_1": {
-        "name": "Flavor1",
+        "name": "First flavor",
         "state": {
           "coriander": "Coriander",
           "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
@@ -787,7 +787,7 @@
         }
       },
       "flavor_capsule_2": {
-        "name": "Flavor2",
+        "name": "Second flavor",
         "state": {
           "coriander": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
           "coriander_seed": "[%key:component::lg_thinq::entity::sensor::flavor_capsule_1::state::coriander%]",
