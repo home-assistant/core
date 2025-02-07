@@ -1966,7 +1966,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "samsungtv",
     "sanix",
     "satel_integra",
-    "schlage",
     "schluter",
     "scrape",
     "screenlogic",
