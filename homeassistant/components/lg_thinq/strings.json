@@ -120,6 +120,18 @@
               "aroma": "Aroma",
               "energy_saving": "Energy saving"
             }
+          },
+          "swing_mode": {
+            "state": {
+              "true": "[%key:common::state::on%]",
+              "false": "[%key:common::state::off%]"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "true": "[%key:common::state::on%]",
+              "false": "[%key:common::state::off%]"
+            }
           }
         }
       }

@@ -88,6 +88,18 @@
               "power": "mdi:fan-chevron-up",
               "auto": "mdi:fan-auto"
             }
+          },
+          "swing_mode": {
+            "state": {
+              "false": "mdi:arrow-oscillating-off",
+              "true": "mdi:arrow-oscillating"
+            }
+          },
+          "swing_horizontal_mode": {
+            "state": {
+              "false": "mdi:arrow-oscillating-off",
+              "true": "mdi:arrow-expand-horizontal"
+            }
           }
         }
       }
