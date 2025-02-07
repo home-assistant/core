@@ -553,6 +553,17 @@ async def test_control_error_handling(
     assert client.play.call_count == int(is_on)
 
 
+async def test_turn_off_when_device_is_off(hass: HomeAssistant, client) -> None:
+    """Test no error when turning off device that is already off."""
+    await setup_webostv(hass)
+    client.is_on = False
+    await client.mock_state_update()
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID}
+    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data, True)
+    assert client.power_off.call_count == 1
+
+
 async def test_supported_features(hass: HomeAssistant, client) -> None:
     """Test test supported features."""
     client.sound_output = "lineout"
