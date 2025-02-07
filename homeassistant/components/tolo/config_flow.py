@@ -66,15 +66,13 @@ class ToloConfigFlow(ConfigFlow, domain=DOMAIN):
 
             errors["base"] = "cannot_connect"
 
-        schema_values: dict[str, Any] | MappingProxyType[str, Any] | None = None
+        schema_values: dict[str, Any] | MappingProxyType[str, Any] = {}
         if user_input is not None:
             schema_values = user_input
         elif self.source == SOURCE_RECONFIGURE:
             schema_values = self._get_reconfigure_entry().data
         elif self.source == SOURCE_DHCP and self._dhcp_discovery_info is not None:
             schema_values = {CONF_HOST: self._dhcp_discovery_info.ip}
-        else:
-            schema_values = {}
 
         return self.async_show_form(
             step_id="user",
