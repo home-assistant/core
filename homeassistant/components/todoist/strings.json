@@ -55,7 +55,7 @@
         },
         "assignee": {
           "name": "Assignee",
-          "description": "A members username of a shared project to assign this task to."
+          "description": "The username of a shared project's member to assign this task to."
         },
         "priority": {
           "name": "Priority",
@@ -67,7 +67,7 @@
         },
         "due_date_lang": {
           "name": "Due date language",
-          "description": "The language of due_date_string."
+          "description": "The language of 'Due date string'."
         },
         "due_date": {
           "name": "Due date",
@@ -79,7 +79,7 @@
         },
         "reminder_date_lang": {
           "name": "Reminder date language",
-          "description": "The language of reminder_date_string."
+          "description": "The language of 'Reminder date string'."
         },
         "reminder_date": {
           "name": "Reminder date",
