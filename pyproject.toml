@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2025.2.0"
+version     = "2025.2.1"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -28,10 +28,10 @@ dependencies    = [
     # change behavior based on presence of supervisor. Deprecated with #127228
     # Lib can be removed with 2025.11
     "aiohasupervisor==0.3.0",
-    "aiohttp==3.11.11",
+    "aiohttp==3.11.12",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.2.0",
-    "aiohttp-asyncmdnsresolver==0.0.3",
+    "aiohttp-asyncmdnsresolver==0.1.0",
     "aiozoneinfo==0.2.1",
     "astral==2.2",
     "async-interrupt==1.2.0",
