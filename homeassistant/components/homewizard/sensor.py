@@ -19,6 +19,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_VIA_DEVICE,
     PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS,
     EntityCategory,
     UnitOfApparentPower,
     UnitOfElectricCurrent,
@@ -135,6 +136,21 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
             lambda data: data.system.wifi_strength_pct
             if data.system is not None
             else None
+        ),
+    ),
+    HomeWizardSensorEntityDescription(
+        key="wifi_rssi",
+        translation_key="wifi_rssi",
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        has_fn=(
+            lambda data: data.system is not None
+            and data.system.wifi_rssi_db is not None
+        ),
+        value_fn=(
+            lambda data: data.system.wifi_rssi_db if data.system is not None else None
         ),
     ),
     HomeWizardSensorEntityDescription(
