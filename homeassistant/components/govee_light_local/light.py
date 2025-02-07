@@ -130,7 +130,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         return int((self._device.brightness / 100.0) * 255.0)
 
     @property
-    def color_temp_kelvin(self) -> int:
+    def color_temp_kelvin(self) -> int | None:
         """Return the color temperature in Kelvin."""
         return self._device.temperature_color
 
