@@ -75,7 +75,7 @@
         },
         "reminder_date_string": {
           "name": "Reminder date string",
-          "description": "When should user be reminded of this task, in natural language."
+          "description": "When the user should be reminded of this task, in natural language."
         },
         "reminder_date_lang": {
           "name": "Reminder date language",
@@ -83,7 +83,7 @@
         },
         "reminder_date": {
           "name": "Reminder date",
-          "description": "When should user be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone."
+          "description": "When the user should be reminded of this task, in format YYYY-MM-DDTHH:MM:SS, in UTC timezone."
         }
       }
     }
