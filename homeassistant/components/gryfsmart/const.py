@@ -44,17 +44,13 @@ CONFIG_FLOW_MENU_OPTIONS = {
 }
 
 DEVICE_TYPES = {
-    # Platform.COVER: "Shutter",
     Platform.LIGHT: "Lights",
-    Platform.SWITCH: "Output",
-    # Platform.SENSOR: "Input",
-    Platform.BINARY_SENSOR: "Binary input",
-    # Platform.LOCK: "Lock",
+    # Platform.SWITCH: "Output",
+    # Platform.BINARY_SENSOR: "Binary input",
     # Platform.CLIMATE: "Thermostat",
-    Platform.CLIMATE: "Thermostat",
-    PLATFORM_PWM: "PWM",
-    PLATFORM_TEMPERATURE: "Termometr",
-    PLATFORM_INPUT: "Input",
+    # PLATFORM_PWM: "PWM",
+    # PLATFORM_TEMPERATURE: "Termometr",
+    # PLATFORM_INPUT: "Input",
 }
 
 CONF_LINE_SENSOR_ICONS = {
