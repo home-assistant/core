@@ -403,6 +403,9 @@ aiowaqi==3.1.0
 # homeassistant.components.watttime
 aiowatttime==0.1.1
 
+# homeassistant.components.webdav
+aiowebdav==0.1.0rc5
+
 # homeassistant.components.webostv
 aiowebostv==0.6.2
 

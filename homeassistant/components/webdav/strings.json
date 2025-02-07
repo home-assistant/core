@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "backup_path": "Backup path",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "url": "The URL of the WebDAV server. Check with your provider for the correct URL.",
+          "username": "The username for the WebDAV server.",
+          "password": "The password for the WebDAV server.",
+          "backup_path": "Define the path where the backups should be located (will be automatically created, if not exist).",
+          "verify_ssl": "Whether to verify the SSL certificate of the server. Set to false if you use a self-signed certificate."
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  }
+}
