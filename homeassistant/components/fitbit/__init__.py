@@ -7,7 +7,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import api
-from .const import DOMAIN, FitbitScope
+from .const import FitbitScope
 from .coordinator import FitbitData, FitbitDeviceCoordinator
 from .exceptions import FitbitApiException, FitbitAuthException
 from .model import config_from_entry_data
@@ -15,10 +15,11 @@ from .model import config_from_entry_data
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up fitbit from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
+type FitbitConfigEntry = ConfigEntry[FitbitData]
 
+
+async def async_setup_entry(hass: HomeAssistant, entry: FitbitConfigEntry) -> bool:
+    """Set up fitbit from a config entry."""
     implementation = (
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, entry
@@ -41,18 +42,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator = FitbitDeviceCoordinator(hass, fitbit_api)
         await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = FitbitData(
-        api=fitbit_api, device_coordinator=coordinator
-    )
+    entry.runtime_data = FitbitData(api=fitbit_api, device_coordinator=coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FitbitConfigEntry) -> bool:
     """Unload a config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

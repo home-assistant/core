@@ -302,7 +302,8 @@ def config_entries_progress(
         [
             flw
             for flw in hass.config_entries.flow.async_progress()
-            if flw["context"]["source"] != config_entries.SOURCE_USER
+            if flw["context"]["source"]
+            not in (config_entries.SOURCE_RECONFIGURE, config_entries.SOURCE_USER)
         ],
     )
 

@@ -23,6 +23,7 @@ from homeassistant.components.homeassistant_hardware.util import (
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -106,7 +107,7 @@ class FakeFirmwareOptionsFlowHandler(BaseFirmwareOptionsFlow):
 
 
 @pytest.fixture(autouse=True)
-def mock_test_firmware_platform(
+async def mock_test_firmware_platform(
     hass: HomeAssistant,
 ) -> Generator[None]:
     """Fixture for a test config flow."""
@@ -115,6 +116,8 @@ def mock_test_firmware_platform(
     )
     mock_integration(hass, mock_module)
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+
+    await async_setup_component(hass, "homeassistant_hardware", {})
 
     with mock_config_flow(TEST_DOMAIN, FakeFirmwareConfigFlow):
         yield
@@ -190,11 +193,19 @@ def mock_addon_info(
             return_value=mock_otbr_manager,
         ),
         patch(
+            "homeassistant.components.homeassistant_hardware.util.get_otbr_addon_manager",
+            return_value=mock_otbr_manager,
+        ),
+        patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.get_zigbee_flasher_addon_manager",
             return_value=mock_flasher_manager,
         ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.is_hassio",
+            return_value=is_hassio,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.is_hassio",
             return_value=is_hassio,
         ),
         patch(
