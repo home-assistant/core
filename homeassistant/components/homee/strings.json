@@ -154,10 +154,10 @@
     },
     "switch": {
       "external_binary_input": {
-        "name": "Child Lock"
+        "name": "Child lock"
       },
       "manual_operation": {
-        "name": "Manual Operation"
+        "name": "Manual operation"
       },
       "on_off_instance": {
         "name": "Switch {instance}"

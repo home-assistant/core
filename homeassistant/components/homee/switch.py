@@ -69,9 +69,8 @@ async def async_setup_entry(
 ) -> None:
     """Add the Homee platform for the switch component."""
 
-    devices: list[HomeeSwitch] = []
     for node in config_entry.runtime_data.nodes:
-        devices.extend(
+        async_add_devices(
             HomeeSwitch(attribute, config_entry, SWITCH_DESCRIPTIONS[attribute.type])
             for attribute in node.attributes
             if (attribute.type in SWITCH_DESCRIPTIONS and attribute.editable)
@@ -84,8 +83,6 @@ async def async_setup_entry(
                 and node.profile in CLIMATE_PROFILES
             )
         )
-    if devices:
-        async_add_devices(devices)
 
 
 class HomeeSwitch(HomeeEntity, SwitchEntity):
@@ -102,7 +99,6 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
         """Initialize a Homee switch entity."""
         super().__init__(attribute, entry)
         self.entity_description = description
-        self._attr_is_on = bool(attribute.current_value)
         if not ((attribute.type == AttributeType.ON_OFF) and (attribute.instance == 0)):
             self._attr_translation_key = description.key
         if attribute.instance > 0:
