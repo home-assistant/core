@@ -82,12 +82,20 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.heos.connect()
         except HeosError as error:
-            raise ConfigEntryNotReady from error
+            _LOGGER.debug("Unable to connect to %s", self.host, exc_info=True)
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_connect",
+                translation_placeholders={"host": self.host},
+            ) from error
         # Load players
         try:
             await self.heos.get_players()
         except HeosError as error:
-            raise ConfigEntryNotReady from error
+            _LOGGER.debug("Unexpected error retrieving players", exc_info=True)
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="unable_to_get_players"
+            ) from error
 
         if not self.heos.is_signed_in:
             _LOGGER.warning(
