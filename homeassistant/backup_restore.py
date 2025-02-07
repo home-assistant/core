@@ -18,6 +18,7 @@ import securetar
 from .const import __version__ as HA_VERSION
 
 RESTORE_BACKUP_FILE = ".HA_RESTORE"
+RESTORE_BACKUP_RESULT_FILE = ".HA_RESTORE_RESULT"
 KEEP_BACKUPS = ("backups",)
 KEEP_DATABASE = (
     "home-assistant_v2.db",
@@ -62,7 +63,10 @@ def restore_backup_file_content(config_dir: Path) -> RestoreBackupFileContent | 
             restore_database=instruction_content["restore_database"],
             restore_homeassistant=instruction_content["restore_homeassistant"],
         )
-    except (FileNotFoundError, KeyError, json.JSONDecodeError):
+    except FileNotFoundError:
+        return None
+    except (KeyError, json.JSONDecodeError) as err:
+        _write_restore_result_file(config_dir, False, err)
         return None
     finally:
         # Always remove the backup instruction file to prevent a boot loop
@@ -142,6 +146,7 @@ def _extract_backup(
                     config_dir,
                     dirs_exist_ok=True,
                     ignore=shutil.ignore_patterns(*(keep)),
+                    ignore_dangling_symlinks=True,
                 )
             elif restore_content.restore_database:
                 for entry in KEEP_DATABASE:
@@ -157,6 +162,23 @@ def _extract_backup(
                         Path(tempdir, "homeassistant", "data", entry),
                         config_dir,
                     )
+
+
+def _write_restore_result_file(
+    config_dir: Path, success: bool, error: Exception | None
+) -> None:
+    """Write the restore result file."""
+    result_path = config_dir.joinpath(RESTORE_BACKUP_RESULT_FILE)
+    result_path.write_text(
+        json.dumps(
+            {
+                "success": success,
+                "error": str(error) if error else None,
+                "error_type": str(type(error).__name__) if error else None,
+            }
+        ),
+        encoding="utf-8",
+    )
 
 
 def restore_backup(config_dir_path: str) -> bool:
@@ -177,7 +199,14 @@ def restore_backup(config_dir_path: str) -> bool:
             restore_content=restore_content,
         )
     except FileNotFoundError as err:
-        raise ValueError(f"Backup file {backup_file_path} does not exist") from err
+        file_not_found = ValueError(f"Backup file {backup_file_path} does not exist")
+        _write_restore_result_file(config_dir, False, file_not_found)
+        raise file_not_found from err
+    except Exception as err:
+        _write_restore_result_file(config_dir, False, err)
+        raise
+    else:
+        _write_restore_result_file(config_dir, True, None)
     if restore_content.remove_after_restore:
         backup_file_path.unlink(missing_ok=True)
     _LOGGER.info("Restore complete, restarting")

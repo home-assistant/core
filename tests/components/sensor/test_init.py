@@ -2144,7 +2144,7 @@ async def test_non_numeric_validation_raise(
         (13, "13"),
         (17.50, "17.5"),
         ("1e-05", "1e-05"),
-        (Decimal(18.50), "18.5"),
+        (Decimal("18.50"), "18.50"),
         ("19.70", "19.70"),
         (None, STATE_UNKNOWN),
     ],

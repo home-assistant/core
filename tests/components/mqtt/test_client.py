@@ -2082,7 +2082,7 @@ async def test_server_sock_buffer_size_with_websocket(
     client.setblocking(False)
     server.setblocking(False)
 
-    class FakeWebsocket(paho_mqtt.WebsocketWrapper):
+    class FakeWebsocket(paho_mqtt._WebsocketWrapper):
         def _do_handshake(self, *args, **kwargs):
             pass
 

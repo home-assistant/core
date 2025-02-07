@@ -16,7 +16,6 @@ import voluptuous as vol
 
 from homeassistant.components import usb
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryBaseFlow,
     ConfigFlow,
     ConfigFlowResult,
@@ -37,6 +36,7 @@ from .const import (
     MANUAL_PATH,
     REFRESH_LIST,
 )
+from .entry_manager import CrownstoneConfigEntry
 from .helpers import list_ports_as_str
 
 CONFIG_FLOW = "config_flow"
@@ -140,7 +140,7 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: CrownstoneConfigEntry,
     ) -> CrownstoneOptionsFlowHandler:
         """Return the Crownstone options."""
         return CrownstoneOptionsFlowHandler(config_entry)
@@ -210,7 +210,9 @@ class CrownstoneConfigFlowHandler(BaseCrownstoneFlowHandler, ConfigFlow, domain=
 class CrownstoneOptionsFlowHandler(BaseCrownstoneFlowHandler, OptionsFlow):
     """Handle Crownstone options."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    config_entry: CrownstoneConfigEntry
+
+    def __init__(self, config_entry: CrownstoneConfigEntry) -> None:
         """Initialize Crownstone options."""
         super().__init__(OPTIONS_FLOW, self.async_create_new_entry)
         self.options = config_entry.options.copy()
@@ -219,9 +221,7 @@ class CrownstoneOptionsFlowHandler(BaseCrownstoneFlowHandler, OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Manage Crownstone options."""
-        self.cloud: CrownstoneCloud = self.hass.data[DOMAIN][
-            self.config_entry.entry_id
-        ].cloud
+        self.cloud = self.config_entry.runtime_data.cloud
 
         spheres = {sphere.name: sphere.cloud_id for sphere in self.cloud.cloud_data}
         usb_path = self.config_entry.options.get(CONF_USB_PATH)

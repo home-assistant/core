@@ -42,24 +42,28 @@ SENSOR_TYPES: tuple[IncomfortBinarySensorEntityDescription, ...] = (
         extra_state_attributes_fn=lambda status: {
             "fault_code": status["fault_code"] or "none",
         },
+        entity_registry_enabled_default=False,
     ),
     IncomfortBinarySensorEntityDescription(
         key="is_pumping",
         translation_key="is_pumping",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_key="is_pumping",
+        entity_registry_enabled_default=False,
     ),
     IncomfortBinarySensorEntityDescription(
         key="is_burning",
         translation_key="is_burning",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_key="is_burning",
+        entity_registry_enabled_default=False,
     ),
     IncomfortBinarySensorEntityDescription(
         key="is_tapping",
         translation_key="is_tapping",
         device_class=BinarySensorDeviceClass.RUNNING,
         value_key="is_tapping",
+        entity_registry_enabled_default=False,
     ),
 )
 
@@ -98,7 +102,7 @@ class IncomfortBinarySensor(IncomfortBoilerEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the status of the sensor."""
-        return self._heater.status[self.entity_description.value_key]
+        return bool(self._heater.status[self.entity_description.value_key])
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

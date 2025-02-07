@@ -38,12 +38,13 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
     fritz: Fritzhome
     has_templates: bool
 
-    def __init__(self, hass: HomeAssistant, name: str) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: FritzboxConfigEntry) -> None:
         """Initialize the Fritzbox Smarthome device coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            name=name,
+            config_entry=config_entry,
+            name=config_entry.entry_id,
             update_interval=timedelta(seconds=30),
         )
 
