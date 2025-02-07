@@ -79,9 +79,6 @@ from .coordinator import ForkedDaapdUpdater
 
 _LOGGER = logging.getLogger(__name__)
 
-WS_NOTIFY_EVENT_TYPES = ["player", "outputs", "volume", "options", "queue", "database"]
-WEBSOCKET_RECONNECT_TIME = 30  # seconds
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
