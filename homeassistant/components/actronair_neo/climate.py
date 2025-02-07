@@ -95,14 +95,13 @@ class ActronSystemClimate(
         self._api: ActronNeoAPI = coordinator.api
         self._serial_number: str = serial_number
         self._status = coordinator.data[self._serial_number]
-        self._manufacturer: str = "Actron Air"
         self._name: str = description
         self._attr_name: str = "AC Unit"
         self._attr_unique_id: str = self._serial_number
         self.attr_device_info = {
             "identifiers": {(DOMAIN, self._serial_number)},
             "name": self._name,
-            "manufacturer": self._manufacturer,
+            "manufacturer": "Actron Air",
             "model": self._status.get("AirconSystem", {}).get("MasterWCModel"),
             "sw_version": self._status.get("AirconSystem", {}).get(
                 "MasterWCFirmwareVersion"
