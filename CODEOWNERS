@@ -731,6 +731,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/intent/ @home-assistant/core @synesthesiam
 /tests/components/intent/ @home-assistant/core @synesthesiam
 /homeassistant/components/intesishome/ @jnimmo
+/homeassistant/components/iometer/ @MaestroOnICe
+/tests/components/iometer/ @MaestroOnICe
 /homeassistant/components/ios/ @robbiet480
 /tests/components/ios/ @robbiet480
 /homeassistant/components/iotawatt/ @gtdiehl @jyavenard
@@ -765,8 +767,8 @@ build.json @home-assistant/supervisor
 /tests/components/ituran/ @shmuelzon
 /homeassistant/components/izone/ @Swamp-Ig
 /tests/components/izone/ @Swamp-Ig
-/homeassistant/components/jellyfin/ @j-stienstra @ctalkington
-/tests/components/jellyfin/ @j-stienstra @ctalkington
+/homeassistant/components/jellyfin/ @RunC0deRun @ctalkington
+/tests/components/jellyfin/ @RunC0deRun @ctalkington
 /homeassistant/components/jewish_calendar/ @tsvi
 /tests/components/jewish_calendar/ @tsvi
 /homeassistant/components/juicenet/ @jesserockz

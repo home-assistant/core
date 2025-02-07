@@ -30,10 +30,13 @@
         "name": "Auto mode"
       },
       "express_mode": {
-        "name": "Ice plus"
+        "name": "Express mode"
+      },
+      "express_fridge": {
+        "name": "Express cool"
       },
       "hot_water_mode": {
-        "name": "Hot water"
+        "name": "Heating water"
       },
       "humidity_warm_mode": {
         "name": "Warm mist"
@@ -64,6 +67,9 @@
       },
       "warm_mode": {
         "name": "Heating"
+      },
+      "display_light": {
+        "name": "Lighting"
       }
     },
     "binary_sensor": {

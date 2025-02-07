@@ -56,13 +56,12 @@ async def test_cleanup(
     ):
         conversation_id = session.conversation_id
         # Add message so it persists
-        async for _tool_result in chat_log.async_add_assistant_content(
+        chat_log.async_add_assistant_content_without_tools(
             AssistantContent(
                 agent_id="mock-agent-id",
                 content="Hey!",
             )
-        ):
-            pytest.fail("should not reach here")
+        )
 
     assert conversation_id in hass.data[DATA_CHAT_HISTORY]
 
@@ -210,13 +209,12 @@ async def test_extra_systen_prompt(
             user_llm_hass_api=None,
             user_llm_prompt=None,
         )
-        async for _tool_result in chat_log.async_add_assistant_content(
+        chat_log.async_add_assistant_content_without_tools(
             AssistantContent(
                 agent_id="mock-agent-id",
                 content="Hey!",
             )
-        ):
-            pytest.fail("should not reach here")
+        )
 
     assert chat_log.extra_system_prompt == extra_system_prompt
     assert chat_log.content[0].content.endswith(extra_system_prompt)
@@ -252,13 +250,12 @@ async def test_extra_systen_prompt(
             user_llm_hass_api=None,
             user_llm_prompt=None,
         )
-        async for _tool_result in chat_log.async_add_assistant_content(
+        chat_log.async_add_assistant_content_without_tools(
             AssistantContent(
                 agent_id="mock-agent-id",
                 content="Hey!",
             )
-        ):
-            pytest.fail("should not reach here")
+        )
 
     assert chat_log.extra_system_prompt == extra_system_prompt2
     assert chat_log.content[0].content.endswith(extra_system_prompt2)
@@ -311,19 +308,24 @@ async def test_tool_call(
                 user_llm_hass_api="assist",
                 user_llm_prompt=None,
             )
+            content = AssistantContent(
+                agent_id=mock_conversation_input.agent_id,
+                content="",
+                tool_calls=[
+                    llm.ToolInput(
+                        id="mock-tool-call-id",
+                        tool_name="test_tool",
+                        tool_args={"param1": "Test Param"},
+                    )
+                ],
+            )
+
+            with pytest.raises(ValueError):
+                chat_log.async_add_assistant_content_without_tools(content)
+
             result = None
             async for tool_result_content in chat_log.async_add_assistant_content(
-                AssistantContent(
-                    agent_id=mock_conversation_input.agent_id,
-                    content="",
-                    tool_calls=[
-                        llm.ToolInput(
-                            id="mock-tool-call-id",
-                            tool_name="test_tool",
-                            tool_args={"param1": "Test Param"},
-                        )
-                    ],
-                )
+                content
             ):
                 assert result is None
                 result = tool_result_content
