@@ -50,7 +50,7 @@ DEVICE_TYPES = {
     # Platform.CLIMATE: "Thermostat",
     # PLATFORM_PWM: "PWM",
     # PLATFORM_TEMPERATURE: "Termometr",
-    # PLATFORM_INPUT: "Input",
+    PLATFORM_INPUT: "Input",
 }
 
 CONF_LINE_SENSOR_ICONS = {
