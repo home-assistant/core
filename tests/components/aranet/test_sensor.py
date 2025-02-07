@@ -216,11 +216,11 @@ async def test_sensors_aranet4(
 
     status_sensor = hass.states.get("sensor.aranet4_12345_concentration_level")
     status_sensor_attrs = status_sensor.attributes
-    assert status_sensor.state == "GREEN"
+    assert status_sensor.state == "green"
     assert (
         status_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Concentration Level"
     )
-    assert status_sensor_attrs[ATTR_OPTIONS] == ["ERROR", "GREEN", "YELLOW", "RED"]
+    assert status_sensor_attrs[ATTR_OPTIONS] == ["error", "green", "yellow", "red"]
 
     # Check device context for the battery sensor
     entity = entity_registry.async_get("sensor.aranet4_12345_battery")
@@ -301,11 +301,11 @@ async def test_sensors_aranetrn(
 
     status_sensor = hass.states.get("sensor.aranetrn_12345_concentration_level")
     status_sensor_attrs = status_sensor.attributes
-    assert status_sensor.state == "GREEN"
+    assert status_sensor.state == "green"
     assert (
         status_sensor_attrs[ATTR_FRIENDLY_NAME] == "AranetRn+ 12345 Concentration Level"
     )
-    assert status_sensor_attrs[ATTR_OPTIONS] == ["ERROR", "GREEN", "YELLOW", "RED"]
+    assert status_sensor_attrs[ATTR_OPTIONS] == ["error", "green", "yellow", "red"]
 
     # Check device context for the battery sensor
     entity = entity_registry.async_get("sensor.aranetrn_12345_battery")

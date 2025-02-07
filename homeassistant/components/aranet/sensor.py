@@ -79,7 +79,7 @@ SENSOR_DESCRIPTIONS = {
         translation_key="concentration_level",
         name="Concentration Level",
         device_class=SensorDeviceClass.ENUM,
-        options=[status.name for status in Color],
+        options=[status.name.lower() for status in Color],
     ),
     "co2": AranetSensorEntityDescription(
         key="co2",
@@ -169,7 +169,7 @@ def sensor_update_to_bluetooth_data_update(
         if val == -1:
             continue
         if key == "status":
-            val = val.name
+            val = val.name.lower()
         val = val * desc.scale
         data[tag] = val
         names[tag] = desc.name
