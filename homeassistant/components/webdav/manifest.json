@@ -1,0 +1,11 @@
+{
+  "domain": "webdav",
+  "name": "WebDAV",
+  "codeowners": ["@jpbede"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/webdav",
+  "iot_class": "cloud_polling",
+  "loggers": ["aiowebdav"],
+  "quality_scale": "bronze",
+  "requirements": ["aiowebdav==0.1.0rc5"]
+}
