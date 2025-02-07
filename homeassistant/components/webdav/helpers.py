@@ -21,6 +21,7 @@ def async_create_client(
             "webdav_hostname": url,
             "webdav_login": username,
             "webdav_password": password,
+            "webdav_timeout": 43200,
         }
     )
     client.verify = verify_ssl
