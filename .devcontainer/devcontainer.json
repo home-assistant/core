@@ -7,9 +7,6 @@
   "containerEnv": {
     "PYTHONASYNCIODEBUG": "1"
   },
-  "mounts": [
-    "source=/home/galo/git/home-assistant/govee-local-api,target=/govee-local-api,type=bind,consistency=cached"
-  ],
   "features": {
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
@@ -19,8 +16,7 @@
     "-e",
     "GIT_EDITOR=code --wait",
     "--security-opt",
-    "label=disable",
-    "--network=host"
+    "label=disable"
   ],
   "customizations": {
     "vscode": {
