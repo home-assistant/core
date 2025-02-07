@@ -124,10 +124,10 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
     """Migrate backup files to metadata version 2."""
     files = await client.list_drive_items(backup_folder_id)
     for file in files:
-        if file.description and "homeassistant_version" in file.description:
-            metadata = loads(unescape(file.description))
-            if metadata["metadata_version"] != 1:
-                continue
+        if file.description and '"metadata_version": 1' in (
+            metadata_json := unescape(file.description)
+        ):
+            metadata = loads(metadata_json)
             del metadata["metadata_version"]
             metadata_filename = file.name.rsplit(".", 1)[0] + ".metadata.json"
             metadata_file = await client.upload_file(

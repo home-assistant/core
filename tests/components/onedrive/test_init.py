@@ -20,6 +20,7 @@ async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client_init: MagicMock,
+    mock_onedrive_client: MagicMock,
 ) -> None:
     """Test loading and unloading the integration."""
     await setup_integration(hass, mock_config_entry)
@@ -27,6 +28,10 @@ async def test_load_unload_config_entry(
     # Ensure the token callback is set up correctly
     token_callback = mock_onedrive_client_init.call_args[0][0]
     assert await token_callback() == "mock-access-token"
+
+    # make sure metadata migration is not called
+    assert mock_onedrive_client.upload_file.call_count == 0
+    assert mock_onedrive_client.update_drive_item.call_count == 0
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
