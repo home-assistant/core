@@ -26,13 +26,6 @@ async def async_setup_entry(
     async_add_entities(FlussButton(api, device) for device in devices if isinstance(device, dict))
 
 
-def validate_device(device):
-    """Validate that a device has the required fields."""
-    if not isinstance(device, dict) or "deviceId" not in device:
-        raise ValueError(f"Invalid device data: 'deviceId' is required, got {device}")
-    return True
-
-
 class FlussButton(ButtonEntity):
     """Representation of a Fluss cover device."""
 

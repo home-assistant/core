@@ -14,7 +14,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN
@@ -26,7 +25,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): cv.string})
 
 class FlussConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fluss+."""
-
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
