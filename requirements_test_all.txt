@@ -702,7 +702,7 @@ easyenergy==2.1.2
 eheimdigital==1.0.6
 
 # homeassistant.components.electric_kiwi
-electrickiwi-api==0.9.12
+electrickiwi-api==0.9.13
 
 # homeassistant.components.elevenlabs
 elevenlabs==1.9.0
@@ -2523,7 +2523,7 @@ zeroconf==0.143.0
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.47
+zha==0.0.48
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.0
