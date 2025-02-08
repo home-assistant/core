@@ -423,9 +423,9 @@ SHABBAT_PARAMS = [
     make_jerusalem_test_params(
         dt(2018, 9, 29, 21, 25),
         {
-            "english_upcoming_candle_lighting": dt(2018, 9, 30, 18, 7),
+            "english_upcoming_candle_lighting": dt(2018, 9, 30, 17, 45),
             "english_upcoming_havdalah": dt(2018, 10, 1, 19, 1),
-            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 18, 1),
+            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 17, 39),
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
@@ -436,9 +436,9 @@ SHABBAT_PARAMS = [
     make_jerusalem_test_params(
         dt(2018, 9, 30, 21, 25),
         {
-            "english_upcoming_candle_lighting": dt(2018, 9, 30, 18, 7),
+            "english_upcoming_candle_lighting": dt(2018, 9, 30, 17, 45),
             "english_upcoming_havdalah": dt(2018, 10, 1, 19, 1),
-            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 18, 1),
+            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 17, 39),
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
@@ -449,9 +449,9 @@ SHABBAT_PARAMS = [
     make_jerusalem_test_params(
         dt(2018, 10, 1, 21, 25),
         {
-            "english_upcoming_candle_lighting": dt(2018, 10, 5, 18, 1),
+            "english_upcoming_candle_lighting": dt(2018, 10, 5, 17, 39),
             "english_upcoming_havdalah": dt(2018, 10, 6, 18, 54),
-            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 18, 1),
+            "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 17, 39),
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
@@ -486,9 +486,9 @@ SHABBAT_PARAMS = [
     make_jerusalem_test_params(
         dt(2017, 9, 21, 8, 25),
         {
-            "english_upcoming_candle_lighting": dt(2017, 9, 20, 18, 20),
+            "english_upcoming_candle_lighting": dt(2017, 9, 20, 17, 58),
             "english_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
-            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 18, 18),
+            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 17, 56),
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",
@@ -499,9 +499,9 @@ SHABBAT_PARAMS = [
     make_jerusalem_test_params(
         dt(2017, 9, 22, 8, 25),
         {
-            "english_upcoming_candle_lighting": dt(2017, 9, 20, 18, 20),
+            "english_upcoming_candle_lighting": dt(2017, 9, 20, 17, 58),
             "english_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
-            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 18, 18),
+            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 17, 56),
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",
@@ -512,9 +512,9 @@ SHABBAT_PARAMS = [
     make_jerusalem_test_params(
         dt(2017, 9, 23, 8, 25),
         {
-            "english_upcoming_candle_lighting": dt(2017, 9, 20, 18, 20),
+            "english_upcoming_candle_lighting": dt(2017, 9, 20, 17, 58),
             "english_upcoming_havdalah": dt(2017, 9, 23, 19, 11),
-            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 18, 18),
+            "english_upcoming_shabbat_candle_lighting": dt(2017, 9, 22, 17, 56),
             "english_upcoming_shabbat_havdalah": dt(2017, 9, 23, 19, 11),
             "english_parshat_hashavua": "Ha'Azinu",
             "hebrew_parshat_hashavua": "האזינו",

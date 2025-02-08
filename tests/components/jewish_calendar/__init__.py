@@ -49,7 +49,7 @@ def make_jerusalem_test_params(dtime, results, havdalah_offset=0):
         }
     return (
         dtime,
-        jewish_calendar.DEFAULT_CANDLE_LIGHT,
+        40,
         havdalah_offset,
         False,
         "Asia/Jerusalem",
