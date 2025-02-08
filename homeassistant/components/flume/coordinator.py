@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from typing import Any
 
 import pyflume
 from pyflume import FlumeAuth, FlumeData, FlumeDeviceList
+from requests import Session
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -17,6 +20,19 @@ from .const import (
     DOMAIN,
     NOTIFICATION_SCAN_INTERVAL,
 )
+
+
+@dataclass
+class FlumeRuntimeData:
+    """Runtime data for the Flume config entry."""
+
+    devices: FlumeDeviceList
+    auth: FlumeAuth
+    http_session: Session
+    notifications_coordinator: FlumeNotificationDataUpdateCoordinator
+
+
+type FlumeConfigEntry = ConfigEntry[FlumeRuntimeData]
 
 
 class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):

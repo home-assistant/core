@@ -58,7 +58,6 @@ from .const import (
     DEFAULT_UNMUTE_VOLUME,
     DOMAIN,
     FD_NAME,
-    HASS_DATA_REMOVE_LISTENERS_KEY,
     HASS_DATA_UPDATER_KEY,
     KNOWN_PIPES,
     PIPE_FUNCTION_MAP,
@@ -110,19 +109,16 @@ async def async_setup_entry(
             ForkedDaapdZone(api, output, config_entry.entry_id) for output in outputs
         )
 
-    remove_add_zones_listener = async_dispatcher_connect(
-        hass, SIGNAL_ADD_ZONES.format(config_entry.entry_id), async_add_zones
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, SIGNAL_ADD_ZONES.format(config_entry.entry_id), async_add_zones
+        )
     )
-    remove_entry_listener = config_entry.add_update_listener(update_listener)
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     if not hass.data.get(DOMAIN):
         hass.data[DOMAIN] = {config_entry.entry_id: {}}
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        HASS_DATA_REMOVE_LISTENERS_KEY: [
-            remove_add_zones_listener,
-            remove_entry_listener,
-        ]
-    }
+
     async_add_entities([forked_daapd_master], False)
     forked_daapd_updater = ForkedDaapdUpdater(
         hass, forked_daapd_api, config_entry.entry_id
