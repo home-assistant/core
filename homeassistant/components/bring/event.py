@@ -5,13 +5,32 @@ from __future__ import annotations
 from dataclasses import asdict
 from datetime import datetime
 
-from bring_api import ActivityType, BringList
+from bring_api import (
+    ActivityType,
+    BringAuthException,
+    BringList,
+    BringNotificationType,
+    BringRequestException,
+    ReactionType,
+)
+import voluptuous as vol
 
-from homeassistant.components.event import EventEntity
+from homeassistant.components.event import ATTR_EVENT_TYPE, EventEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
+)
 
 from . import BringConfigEntry
+from .const import (
+    ATTR_ACTIVITY,
+    ATTR_REACTION,
+    ATTR_RECEIVER,
+    DOMAIN,
+    SERVICE_ACTIVITY_STREAM_REACTION,
+)
 from .coordinator import BringActivityCoordinator
 from .entity import BringBaseEntity
 
@@ -45,6 +64,17 @@ async def async_setup_entry(
 
     coordinator.activity.async_add_listener(add_entities)
     add_entities()
+
+    async_get_current_platform().async_register_entity_service(
+        SERVICE_ACTIVITY_STREAM_REACTION,
+        {
+            vol.Required(ATTR_REACTION): vol.All(
+                vol.Upper,
+                vol.Coerce(ReactionType),
+            ),
+        },
+        "async_send_activity_stream_reaction",
+    )
 
 
 class BringEventEntity(BringBaseEntity, EventEntity):
@@ -110,3 +140,28 @@ class BringEventEntity(BringBaseEntity, EventEntity):
     def _handle_coordinator_update(self) -> None:
         self._async_handle_event()
         return super()._handle_coordinator_update()
+
+    async def async_send_activity_stream_reaction(self, reaction: ReactionType) -> None:
+        """Send a reaction in response to recent activity of a list member."""
+        activity: str = self.state_attributes[ATTR_EVENT_TYPE]
+
+        if activity:
+            try:
+                await self.coordinator.bring.notify(
+                    self._list_uuid,
+                    BringNotificationType.LIST_ACTIVITY_STREAM_REACTION,
+                    receiver=self.state_attributes[ATTR_RECEIVER],
+                    activity=self.state_attributes[ATTR_ACTIVITY],
+                    activity_type=ActivityType(activity.upper()),
+                    reaction=reaction,
+                )
+            except (BringRequestException, BringAuthException) as e:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="reaction_request_failed",
+                ) from e
+        else:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="activity_not_found",
+            )
