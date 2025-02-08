@@ -789,7 +789,7 @@ fivem-api==0.1.2
 fjaraskupan==2.3.2
 
 # homeassistant.components.flexit_bacnet
-flexit_bacnet==2.2.1
+flexit_bacnet==2.2.3
 
 # homeassistant.components.flipr
 flipr-api==1.6.1
