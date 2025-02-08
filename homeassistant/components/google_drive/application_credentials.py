@@ -18,13 +18,11 @@ async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationSe
 
 async def async_get_description_placeholders(hass: HomeAssistant) -> dict[str, str]:
     """Return description placeholders for the credentials dialog."""
-    redirect_url = (
-        MY_AUTH_CALLBACK_PATH
-        if "my" in hass.config.components
-        else f"{hass.config.external_url}{AUTH_CALLBACK_PATH}"
-        if hass.config.external_url
-        else "N/A"
-    )
+    if "my" in hass.config.components:
+        redirect_url = MY_AUTH_CALLBACK_PATH
+    else:
+        ha_host = hass.config.external_url or "https://YOUR_DOMAIN:PORT"
+        redirect_url = f"{ha_host}{AUTH_CALLBACK_PATH}"
     return {
         "oauth_consent_url": "https://console.cloud.google.com/apis/credentials/consent",
         "more_info_url": "https://www.home-assistant.io/integrations/google_drive/",
