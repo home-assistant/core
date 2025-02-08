@@ -62,13 +62,7 @@ def async_get_redirect_uri(hass: HomeAssistant) -> str:
         return MY_AUTH_CALLBACK_PATH
 
     if (req := http.current_request.get()) is None:
-        if hass.config.external_url is None:
-            raise RuntimeError(
-                "'my' integration disabled, no current request in context, and "
-                "no Home Assistant URL set in Settings > System > Network. "
-                "Either enable the 'my' integration or set the external URL."
-            )
-        return f"{hass.config.external_url}{AUTH_CALLBACK_PATH}"
+        raise RuntimeError("No current request in context")
 
     if (ha_host := req.headers.get(HEADER_FRONTEND_BASE)) is None:
         raise RuntimeError("No header in request")
