@@ -169,8 +169,8 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
             api_data = df_predictions.head()
             self.data = NOAATidesData(
                 time_stamp=list(api_data.index),
-                hi_lo=list(api_data["hi_lo"].values),
-                predicted_wl=list(api_data["predicted_wl"].values),
+                hi_lo=list(api_data["type"].values),
+                predicted_wl=list(api_data["v"].values),
             )
             _LOGGER.debug("Data = %s", api_data)
             _LOGGER.debug(
