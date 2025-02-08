@@ -173,7 +173,7 @@ def _convert_content(
     """Convert HA content to Google content."""
     if content.role != "assistant" or not content.tool_calls:  # type: ignore[union-attr]
         role = "model" if content.role == "assistant" else content.role
-        return {"role": role, "parts": content.content or ""}
+        return {"role": role, "parts": content.content}
 
     # Handle the Assistant content with tool calls.
     assert type(content) is conversation.AssistantContent
