@@ -76,7 +76,9 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         sleep = get_sleep_config(context)
         status, obstruction, alert = status_data(context)
         index, _, _, _, _, usage, consumption, *_ = history_stats(
-            parse_samples=-1, start=self.history_stats_start, context=context
+            parse_samples=-1 if self.history_stats_start is not None else 1,
+            start=self.history_stats_start,
+            context=context,
         )
         self.history_stats_start = index["end_counter"]
         return StarlinkData(
