@@ -289,6 +289,8 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
 
     async def async_turn_off(self) -> None:
         """Set the HVAC State to off."""
+        if self._zone["number"] == self._ac["myZone"]:
+            raise ValueError("Cannot turn of the active MyZone")
         await self.async_update_zone({"state": ADVANTAGE_AIR_STATE_CLOSE})
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
@@ -300,5 +302,7 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the Temperature."""
+        if self._ac["mode"] == "myauto":
+            raise ValueError("Cannot set the temperature while MyAuto is enabled.")
         temp = kwargs.get(ATTR_TEMPERATURE)
         await self.async_update_zone({"setTemp": temp})
