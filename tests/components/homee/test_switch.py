@@ -2,8 +2,12 @@
 
 from unittest.mock import MagicMock, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
+from websockets import frames
+from websockets.exceptions import ConnectionClosed
 
+from homeassistant.components.homee.const import DOMAIN
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
@@ -13,6 +17,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import build_mock_node, setup_integration
@@ -114,6 +119,31 @@ async def test_switch_device_class_no_outlet(
         hass.states.get("switch.test_switch_switch_1").attributes["device_class"]
         == SwitchDeviceClass.SWITCH
     )
+
+
+async def test_send_error(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test failed set_value command."""
+    mock_homee.nodes = [build_mock_node("switches.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    await setup_integration(hass, mock_config_entry)
+
+    mock_homee.set_value.side_effect = ConnectionClosed(
+        rcvd=frames.Close(1002, "Protocol Error"), sent=None
+    )
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.test_switch_switch_1"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "connection_closed"
 
 
 async def test_switch_snapshot(

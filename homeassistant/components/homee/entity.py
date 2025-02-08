@@ -57,7 +57,13 @@ class HomeeEntity(Entity):
     async def async_set_value(self, value: float) -> None:
         """Set an attribute value on the homee node."""
         homee = self._entry.runtime_data
-        await homee.set_value(self._attribute.node_id, self._attribute.id, value)
+        try:
+            await homee.set_value(self._attribute.node_id, self._attribute.id, value)
+        except ConnectionClosed as exception:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="connection_closed",
+            ) from exception
 
     async def async_update(self) -> None:
         """Update entity from homee."""
