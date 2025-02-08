@@ -1,8 +1,10 @@
 """Define an object to coordinate fetching Overseerr data."""
 
 from datetime import timedelta
+from typing import TypedDict
 
 from python_overseerr import (
+    IssueCount,
     OverseerrAuthenticationError,
     OverseerrClient,
     OverseerrConnectionError,
@@ -22,7 +24,14 @@ from .const import DOMAIN, LOGGER
 type OverseerrConfigEntry = ConfigEntry[OverseerrCoordinator]
 
 
-class OverseerrCoordinator(DataUpdateCoordinator[RequestCount]):
+class OverseerrData(TypedDict):
+    """Overseerr data."""
+
+    request_count: RequestCount
+    issue_count: IssueCount
+
+
+class OverseerrCoordinator(DataUpdateCoordinator[OverseerrData]):
     """Class to manage fetching Overseerr data."""
 
     config_entry: OverseerrConfigEntry
@@ -49,10 +58,16 @@ class OverseerrCoordinator(DataUpdateCoordinator[RequestCount]):
         self.url = URL.build(host=host, port=port, scheme="https" if ssl else "http")
         self.push = False
 
-    async def _async_update_data(self) -> RequestCount:
+    async def _async_update_data(self) -> OverseerrData:
         """Fetch data from API endpoint."""
         try:
-            return await self.client.get_request_count()
+            request_count = await self.client.get_request_count()
+            issue_count = await self.client.get_issue_count()
+
+            return OverseerrData(
+                request_count=request_count,
+                issue_count=issue_count,
+            )
         except OverseerrAuthenticationError as err:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
