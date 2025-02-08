@@ -46,7 +46,7 @@ rules:
     status: exempt
     comment: |
       No Options flow.
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable:
     status: exempt
     comment: |
@@ -88,7 +88,10 @@ rules:
     status: exempt
     comment: |
       This integration only serves backup.
-  docs-known-limitations: todo
+  docs-known-limitations:
+    status: done
+    comment: |
+      No known limitations.
   docs-supported-devices:
     status: exempt
     comment: |
