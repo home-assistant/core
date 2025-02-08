@@ -63,8 +63,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up fans."""
     data = config_entry.runtime_data
-    parent = data.parent
-    device = parent.device
+    parent_coordinator = data.parent_coordinator
+    device = parent_coordinator.device
 
     known_child_device_ids: set[str] = set()
     first_check = True
@@ -73,7 +73,7 @@ async def async_setup_entry(
         entities = CoordinatedTPLinkModuleEntity.entities_for_device_and_its_children(
             hass=hass,
             device=device,
-            coordinator=parent,
+            coordinator=parent_coordinator,
             entity_class=TPLinkFanEntity,
             descriptions=FAN_DESCRIPTIONS,
             platform_domain=FAN_DOMAIN,
@@ -84,7 +84,7 @@ async def async_setup_entry(
 
     _check_device()
     first_check = False
-    config_entry.async_on_unload(parent.async_add_listener(_check_device))
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
 SPEED_RANGE = (1, 4)  # off is not included

@@ -231,7 +231,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
             },
         )
 
-    parent = TPLinkDataUpdateCoordinator(hass, device, timedelta(seconds=5), entry)
+    parent_coordinator = TPLinkDataUpdateCoordinator(
+        hass, device, timedelta(seconds=5), entry
+    )
 
     camera_creds: Credentials | None = None
     if camera_creds_dict := entry.data.get(CONF_CAMERA_CREDENTIALS):
@@ -240,7 +242,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
         )
     live_view = entry.data.get(CONF_LIVE_VIEW)
 
-    entry.runtime_data = TPLinkData(parent, camera_creds, live_view)
+    entry.runtime_data = TPLinkData(parent_coordinator, camera_creds, live_view)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -249,7 +251,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bool:
     """Unload a config entry."""
     data = entry.runtime_data
-    device = data.parent.device
+    device = data.parent_coordinator.device
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     await device.protocol.close()
 

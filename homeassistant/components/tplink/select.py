@@ -57,8 +57,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up select entities."""
     data = config_entry.runtime_data
-    parent = data.parent
-    device = parent.device
+    parent_coordinator = data.parent_coordinator
+    device = parent_coordinator.device
     known_child_device_ids: set[str] = set()
     first_check = True
 
@@ -66,7 +66,7 @@ async def async_setup_entry(
         entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
             hass=hass,
             device=device,
-            coordinator=parent,
+            coordinator=parent_coordinator,
             feature_type=Feature.Type.Choice,
             entity_class=TPLinkSelectEntity,
             descriptions=SELECT_DESCRIPTIONS_MAP,
@@ -78,7 +78,7 @@ async def async_setup_entry(
 
     _check_device()
     first_check = False
-    config_entry.async_on_unload(parent.async_add_listener(_check_device))
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
 class TPLinkSelectEntity(CoordinatedTPLinkFeatureEntity, SelectEntity):

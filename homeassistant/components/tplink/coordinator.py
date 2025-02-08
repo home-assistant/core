@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 class TPLinkData:
     """Data for the tplink integration."""
 
-    parent: TPLinkDataUpdateCoordinator
+    parent_coordinator: TPLinkDataUpdateCoordinator
     camera_credentials: Credentials | None
     live_view: bool | None
 
@@ -46,11 +46,11 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         device: Device,
         update_interval: timedelta,
         config_entry: TPLinkConfigEntry,
-        parent: TPLinkDataUpdateCoordinator | None = None,
+        parent_coordinator: TPLinkDataUpdateCoordinator | None = None,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.device = device
-        self.parent = parent
+        self.parent_coordinator = parent_coordinator
 
         # The iot HS300 allows a limited number of concurrent requests and
         # fetching the emeter information requires separate ones, so child
@@ -144,7 +144,7 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
                     child,
                     timedelta(seconds=60),
                     self.config_entry,
-                    self,
+                    parent_coordinator=self,
                 )
                 self._child_coordinators[child.device_id] = child_coordinator
             return child_coordinator
