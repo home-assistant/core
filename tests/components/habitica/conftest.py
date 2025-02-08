@@ -17,7 +17,7 @@ from habiticalib import (
     HabiticaTaskOrderResponse,
     HabiticaTaskResponse,
     HabiticaTasksResponse,
-    HabiticaUserAnonymizedrResponse,
+    HabiticaUserAnonymizedResponse,
     HabiticaUserResponse,
     NotAuthorizedError,
     NotFoundError,
@@ -140,7 +140,7 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
             {"data": [], "success": True}
         )
         client.get_user_anonymized.return_value = (
-            HabiticaUserAnonymizedrResponse.from_json(
+            HabiticaUserAnonymizedResponse.from_json(
                 load_fixture("anonymized.json", DOMAIN)
             )
         )

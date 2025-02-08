@@ -38,6 +38,7 @@ from homeassistant.util.unit_conversion import (
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
+    EnergyDistanceConverter,
     InformationConverter,
     MassConverter,
     PowerConverter,
@@ -147,6 +148,7 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
         for unit in ElectricPotentialConverter.VALID_UNITS
     },
     **{unit: EnergyConverter for unit in EnergyConverter.VALID_UNITS},
+    **{unit: EnergyDistanceConverter for unit in EnergyDistanceConverter.VALID_UNITS},
     **{unit: InformationConverter for unit in InformationConverter.VALID_UNITS},
     **{unit: MassConverter for unit in MassConverter.VALID_UNITS},
     **{unit: PowerConverter for unit in PowerConverter.VALID_UNITS},

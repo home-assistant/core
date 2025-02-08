@@ -56,9 +56,6 @@
     "binary_sensor": {
       "ding": {
         "name": "Ding"
-      },
-      "motion": {
-        "name": "Motion"
       }
     },
     "event": {
@@ -122,9 +119,6 @@
       },
       "wifi_signal_category": {
         "name": "Wi-Fi signal category"
-      },
-      "wifi_signal_strength": {
-        "name": "Wi-Fi signal strength"
       }
     },
     "switch": {
@@ -145,6 +139,20 @@
       "last_recording": {
         "name": "Last recording"
       }
+    }
+  },
+  "exceptions": {
+    "api_authentication": {
+      "message": "Authentication error communicating with Ring API"
+    },
+    "api_timeout": {
+      "message": "Timeout communicating with Ring API"
+    },
+    "api_error": {
+      "message": "Error communicating with Ring API"
+    },
+    "sdp_m_line_index_required": {
+      "message": "Error negotiating stream for {device}"
     }
   },
   "issues": {

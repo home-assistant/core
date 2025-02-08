@@ -244,7 +244,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -296,7 +296,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -348,7 +348,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -401,7 +401,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -454,7 +454,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',
@@ -565,7 +565,7 @@
           'top_k': 64,
           'top_p': 0.95,
         }),
-        'model_name': 'models/gemini-1.5-flash-latest',
+        'model_name': 'models/gemini-2.0-flash',
         'safety_settings': dict({
           'DANGEROUS': 'BLOCK_MEDIUM_AND_ABOVE',
           'HARASSMENT': 'BLOCK_MEDIUM_AND_ABOVE',

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import codecs
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any, Literal, cast
 
 from google.api_core.exceptions import GoogleAPIError
 import google.generativeai as genai
@@ -18,7 +18,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, intent, llm
+from homeassistant.helpers import chat_session, device_registry as dr, intent, llm
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -149,15 +149,53 @@ def _escape_decode(value: Any) -> Any:
     return value
 
 
-def _chat_message_convert(
-    message: conversation.Content | conversation.NativeContent[genai_types.ContentDict],
-) -> genai_types.ContentDict:
-    """Convert any native chat message for this agent to the native format."""
-    if message.role == "native":
-        return message.content
+def _create_google_tool_response_content(
+    content: list[conversation.ToolResultContent],
+) -> protos.Content:
+    """Create a Google tool response content."""
+    return protos.Content(
+        parts=[
+            protos.Part(
+                function_response=protos.FunctionResponse(
+                    name=tool_result.tool_name, response=tool_result.tool_result
+                )
+            )
+            for tool_result in content
+        ]
+    )
 
-    role = "model" if message.role == "assistant" else message.role
-    return {"role": role, "parts": message.content}
+
+def _convert_content(
+    content: conversation.UserContent
+    | conversation.AssistantContent
+    | conversation.SystemContent,
+) -> genai_types.ContentDict:
+    """Convert HA content to Google content."""
+    if content.role != "assistant" or not content.tool_calls:  # type: ignore[union-attr]
+        role = "model" if content.role == "assistant" else content.role
+        return {"role": role, "parts": content.content}
+
+    # Handle the Assistant content with tool calls.
+    assert type(content) is conversation.AssistantContent
+    parts = []
+
+    if content.content:
+        parts.append(protos.Part(text=content.content))
+
+    if content.tool_calls:
+        parts.extend(
+            [
+                protos.Part(
+                    function_call=protos.FunctionCall(
+                        name=tool_call.tool_name,
+                        args=_escape_decode(tool_call.tool_args),
+                    )
+                )
+                for tool_call in content.tool_calls
+            ]
+        )
+
+    return protos.Content({"role": "model", "parts": parts})
 
 
 class GoogleGenerativeAIConversationEntity(
@@ -209,23 +247,24 @@ class GoogleGenerativeAIConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        async with conversation.async_get_chat_session(
-            self.hass, user_input
-        ) as session:
-            return await self._async_handle_message(user_input, session)
+        with (
+            chat_session.async_get_chat_session(
+                self.hass, user_input.conversation_id
+            ) as session,
+            conversation.async_get_chat_log(self.hass, session, user_input) as chat_log,
+        ):
+            return await self._async_handle_message(user_input, chat_log)
 
     async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,
-        session: conversation.ChatSession[genai_types.ContentDict],
+        chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
         """Call the API."""
-
-        assert user_input.agent_id
         options = self.entry.options
 
         try:
-            await session.async_update_llm_data(
+            await chat_log.async_update_llm_data(
                 DOMAIN,
                 user_input,
                 options.get(CONF_LLM_HASS_API),
@@ -235,10 +274,10 @@ class GoogleGenerativeAIConversationEntity(
             return err.as_conversation_result()
 
         tools: list[dict[str, Any]] | None = None
-        if session.llm_api:
+        if chat_log.llm_api:
             tools = [
-                _format_tool(tool, session.llm_api.custom_serializer)
-                for tool in session.llm_api.tools
+                _format_tool(tool, chat_log.llm_api.custom_serializer)
+                for tool in chat_log.llm_api.tools
             ]
 
         model_name = self.entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
@@ -249,9 +288,36 @@ class GoogleGenerativeAIConversationEntity(
             "gemini-1.0" not in model_name and "gemini-pro" not in model_name
         )
 
-        prompt, *messages = [
-            _chat_message_convert(message) for message in session.async_get_messages()
-        ]
+        prompt = chat_log.content[0].content  # type: ignore[union-attr]
+        messages: list[genai_types.ContentDict] = []
+
+        # Google groups tool results, we do not. Group them before sending.
+        tool_results: list[conversation.ToolResultContent] = []
+
+        for chat_content in chat_log.content[1:]:
+            if chat_content.role == "tool_result":
+                # mypy doesn't like picking a type based on checking shared property 'role'
+                tool_results.append(cast(conversation.ToolResultContent, chat_content))
+                continue
+
+            if tool_results:
+                messages.append(_create_google_tool_response_content(tool_results))
+                tool_results.clear()
+
+            messages.append(
+                _convert_content(
+                    cast(
+                        conversation.UserContent
+                        | conversation.SystemContent
+                        | conversation.AssistantContent,
+                        chat_content,
+                    )
+                )
+            )
+
+        if tool_results:
+            messages.append(_create_google_tool_response_content(tool_results))
+
         model = genai.GenerativeModel(
             model_name=model_name,
             generation_config={
@@ -279,12 +345,12 @@ class GoogleGenerativeAIConversationEntity(
                 ),
             },
             tools=tools or None,
-            system_instruction=prompt["parts"] if supports_system_instruction else None,
+            system_instruction=prompt if supports_system_instruction else None,
         )
 
         if not supports_system_instruction:
             messages = [
-                {"role": "user", "parts": prompt["parts"]},
+                {"role": "user", "parts": prompt},
                 {"role": "model", "parts": "Ok"},
                 *messages,
             ]
@@ -322,50 +388,40 @@ class GoogleGenerativeAIConversationEntity(
             content = " ".join(
                 [part.text.strip() for part in chat_response.parts if part.text]
             )
-            if content:
-                session.async_add_message(
-                    conversation.Content(
-                        role="assistant",
-                        agent_id=user_input.agent_id,
-                        content=content,
-                    )
-                )
 
-            function_calls = [
-                part.function_call for part in chat_response.parts if part.function_call
-            ]
-
-            if not function_calls or not session.llm_api:
-                break
-
-            tool_responses = []
-            for function_call in function_calls:
-                tool_call = MessageToDict(function_call._pb)  # noqa: SLF001
+            tool_calls = []
+            for part in chat_response.parts:
+                if not part.function_call:
+                    continue
+                tool_call = MessageToDict(part.function_call._pb)  # noqa: SLF001
                 tool_name = tool_call["name"]
                 tool_args = _escape_decode(tool_call["args"])
-                tool_input = llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
-                function_response = await session.async_call_tool(tool_input)
-                tool_responses.append(
-                    protos.Part(
-                        function_response=protos.FunctionResponse(
-                            name=tool_name, response=function_response
+                tool_calls.append(
+                    llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
+                )
+
+            chat_request = _create_google_tool_response_content(
+                [
+                    tool_response
+                    async for tool_response in chat_log.async_add_assistant_content(
+                        conversation.AssistantContent(
+                            agent_id=user_input.agent_id,
+                            content=content,
+                            tool_calls=tool_calls or None,
                         )
                     )
-                )
-            chat_request = protos.Content(parts=tool_responses)
-            session.async_add_message(
-                conversation.NativeContent(
-                    agent_id=user_input.agent_id,
-                    content=chat_request,
-                )
+                ]
             )
+
+            if not tool_calls:
+                break
 
         response = intent.IntentResponse(language=user_input.language)
         response.async_set_speech(
             " ".join([part.text.strip() for part in chat_response.parts if part.text])
         )
         return conversation.ConversationResult(
-            response=response, conversation_id=session.conversation_id
+            response=response, conversation_id=chat_log.conversation_id
         )
 
     async def _async_entry_update_listener(
