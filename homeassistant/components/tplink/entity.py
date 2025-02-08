@@ -151,7 +151,10 @@ def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
                     "exc": str(ex),
                 },
             ) from ex
-        await self.coordinator.async_request_refresh()
+        if self.coordinator.parent_coordinator:
+            await self.coordinator.parent_coordinator.async_request_refresh()
+        else:
+            await self.coordinator.async_request_refresh()
 
     return _async_wrap
 
