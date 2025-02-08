@@ -333,25 +333,14 @@ async def test_tool_call(
                     ),
                 ],
             )
-            tool_call_tasks = None
-            if prerun_tool_tasks:
-                tool_call_tasks = {
-                    tool_call_id: hass.async_create_task(
-                        chat_log.llm_api.async_call_tool(content.tool_calls[0]),
-                        tool_call_id,
-                    )
-                    for tool_call_id in prerun_tool_tasks
-                }
 
-            tool_call_tasks = None
-            if prerun_tool_tasks:
-                tool_call_tasks = {
-                    tool_call_id: hass.async_create_task(
-                        chat_log.llm_api.async_call_tool(content.tool_calls[0]),
-                        tool_call_id,
-                    )
-                    for tool_call_id in prerun_tool_tasks
-                }
+            tool_call_tasks = {
+                tool_call_id: hass.async_create_task(
+                    chat_log.llm_api.async_call_tool(content.tool_calls[0]),
+                    tool_call_id,
+                )
+                for tool_call_id in prerun_tool_tasks
+            }
 
             with pytest.raises(ValueError):
                 chat_log.async_add_assistant_content_without_tools(content)
@@ -359,7 +348,7 @@ async def test_tool_call(
             results = [
                 tool_result_content
                 async for tool_result_content in chat_log.async_add_assistant_content(
-                    content, tool_call_tasks=tool_call_tasks
+                    content, tool_call_tasks=tool_call_tasks or None
                 )
             ]
 

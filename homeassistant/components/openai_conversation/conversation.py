@@ -15,7 +15,6 @@ from openai.types.chat import (
     ChatCompletionToolMessageParam,
     ChatCompletionToolParam,
 )
-from openai.types.chat.chat_completion_chunk import ChoiceDeltaToolCall
 from openai.types.chat.chat_completion_message_tool_call_param import Function
 from openai.types.shared_params import FunctionDefinition
 from voluptuous_openapi import convert
@@ -109,28 +108,6 @@ def _convert_content_to_param(
             for tool_call in content.tool_calls
         ],
     )
-
-
-def _convert_delta_tool_call(
-    tool_call: ChoiceDeltaToolCall,
-) -> conversation.AssistantContentDeltaDict:
-    """Validate and convert to HA tool call."""
-    if (
-        tool_call.id is None
-        or not tool_call.function
-        or tool_call.function.name is None
-        or tool_call.function.arguments is None
-    ):
-        raise ValueError(f"Received invalid tool call: {tool_call}")
-    return {
-        "tool_calls": [
-            llm.ToolInput(
-                id=tool_call.id,
-                tool_name=tool_call.function.name,
-                tool_args=json.loads(tool_call.function.arguments),
-            )
-        ],
-    }
 
 
 class OpenAIConversationEntity(
@@ -250,13 +227,31 @@ class OpenAIConversationEntity(
                 result: AsyncStream[ChatCompletionChunk],
             ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
                 """Transform an OpenAI delta stream into HA format."""
-                current_tool_call: ChoiceDeltaToolCall | None = None
+
+                def _convert_delta_tool_call(
+                    tool_call_data: dict,
+                ) -> conversation.AssistantContentDeltaDict:
+                    """Convert tool call data to HA format."""
+                    return {
+                        "tool_calls": [
+                            llm.ToolInput(
+                                id=tool_call_data["id"],
+                                tool_name=tool_call_data["tool_name"],
+                                tool_args=json.loads(tool_call_data["tool_args"]),
+                            )
+                        ]
+                    }
+
+                current_tool_call: dict | None = None
 
                 async for chunk in result:
                     LOGGER.debug("Received chunk: %s", chunk)
                     choice = chunk.choices[0]
 
                     if choice.finish_reason:
+                        if current_tool_call:
+                            yield _convert_delta_tool_call(current_tool_call)
+
                         break
 
                     delta = chunk.choices[0].delta
@@ -270,31 +265,34 @@ class OpenAIConversationEntity(
                         }
                         continue
 
-                    # After receiving tool calls, we get a choice with finish_reason set.
-                    # So if we're here, we know tool_calls exists.
-                    assert delta.tool_calls
+                    # When doing tool calls, we should always have a tool call
+                    # object or we have gotten stopped above with a finish_reason set.
+                    if (
+                        not delta.tool_calls
+                        or not (delta_tool_call := delta.tool_calls[0])
+                        or not delta_tool_call.function
+                    ):
+                        raise ValueError("Expected delta with tool call")
 
-                    delta_tool_call = delta.tool_calls[0]
-
-                    # It's always set, the old "function_call" is deprecated and not used
-                    assert delta_tool_call.function
-                    if delta_tool_call.function.arguments is None:
-                        delta_tool_call.function.arguments = ""
-
-                    if current_tool_call is None:
-                        current_tool_call = delta_tool_call
-                    elif delta_tool_call.index == current_tool_call.index:
-                        # Concatenate the tool call
-                        current_tool_call.function.arguments += (  # type: ignore[union-attr, operator]
-                            delta_tool_call.function.arguments
+                    if (
+                        current_tool_call
+                        and delta_tool_call.index == current_tool_call["index"]
+                    ):
+                        current_tool_call["tool_args"] += (
+                            delta_tool_call.function.arguments or ""
                         )
-                    else:
-                        # We got tool call with new index, so we need to yield the previous
-                        yield _convert_delta_tool_call(current_tool_call)
-                        current_tool_call = delta_tool_call
+                        continue
 
-                if current_tool_call:
-                    yield _convert_delta_tool_call(current_tool_call)
+                    # We got tool call with new index, so we need to yield the previous
+                    if current_tool_call:
+                        yield _convert_delta_tool_call(current_tool_call)
+
+                    current_tool_call = {
+                        "index": delta_tool_call.index,
+                        "id": delta_tool_call.id,
+                        "tool_name": delta_tool_call.function.name,
+                        "tool_args": delta_tool_call.function.arguments or "",
+                    }
 
             messages.extend(
                 [
@@ -305,7 +303,7 @@ class OpenAIConversationEntity(
                 ]
             )
 
-            if chat_log.content[-1].role != "tool_result":
+            if not chat_log.unresponded_tool_results:
                 break
 
         intent_response = intent.IntentResponse(language=user_input.language)

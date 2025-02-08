@@ -164,6 +164,11 @@ class ChatLog:
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
 
+    @property
+    def unresponded_tool_results(self) -> bool:
+        """Return if there are unresponded tool results."""
+        return self.content[-1].role == "tool_result"
+
     @callback
     def async_add_user_content(self, content: UserContent) -> None:
         """Add user content to the log."""
@@ -260,16 +265,16 @@ class ChatLog:
                     )
                 if tool_calls := delta.get("tool_calls"):
                     # Make MyPy happy
-                    assert type(delta["tool_calls"]) is list
+                    assert type(tool_calls) is list
                     if self.llm_api is None:
                         raise ValueError("No LLM API configured")
 
                     current["tool_calls"] = (
-                        current.setdefault("tool_calls", []) + delta["tool_calls"]
+                        current.setdefault("tool_calls", []) + tool_calls
                     )
 
                     # Start processing the tool calls as soon as we know about them
-                    for tool_call in delta["tool_calls"]:
+                    for tool_call in tool_calls:
                         tool_call_tasks[tool_call.id] = self.hass.async_create_task(
                             self.llm_api.async_call_tool(tool_call),
                             name=f"llm_tool_{tool_call.id}",
