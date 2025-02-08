@@ -41,7 +41,7 @@ class FlickElectricDataCoordinator(DataUpdateCoordinator[FlickPrice]):
             name="Flick Electric",
             update_interval=SCAN_INTERVAL,
         )
-        self.supply_node_ref = self.config_entry.data[CONF_SUPPLY_NODE_REF]
+        self.supply_node_ref = config_entry.data[CONF_SUPPLY_NODE_REF]
         self._api = api
 
     async def _async_update_data(self) -> FlickPrice:
