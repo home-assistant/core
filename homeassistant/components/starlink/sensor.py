@@ -43,6 +43,10 @@ async def async_setup_entry(
         for description in SENSORS
     )
 
+    async_add_entities(
+        StarlinkRestoreSensor(coordinator, description) for description in RESTORESENSORS
+    )
+
 
 @dataclass(frozen=True, kw_only=True)
 class StarlinkSensorEntityDescription(SensorEntityDescription):
@@ -68,7 +72,7 @@ class StarlinkRestoreSensor(StarlinkSensorEntity, RestoreSensor):
     @property
     def native_value(self) -> StateType | datetime:
         """Calculate the sensor value from current value and the entity description."""
-        return self._attr_native_value + super().native_value
+        return self._attr_native_value + self.entity_description.value_fn(self.coordinator.data)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
@@ -139,13 +143,20 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         value_fn=lambda data: data.status["pop_ping_drop_rate"] * 100,
     ),
     StarlinkSensorEntityDescription(
-        key="upload",
-        translation_key="upload",
-        device_class=SensorDeviceClass.DATA_SIZE,
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_fn=lambda data: data.consumption["latest_power"],
+    ),
+)
+RESTORESENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
+    StarlinkSensorEntityDescription(
+        key="energy",
+        device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfInformation.BYTES,
-        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
-        value_fn=lambda data: data.usage["upload_usage"],
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_fn=lambda data: data.consumption["total_energy"],
     ),
     StarlinkSensorEntityDescription(
         key="download",
@@ -157,17 +168,12 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         value_fn=lambda data: data.usage["download_usage"],
     ),
     StarlinkSensorEntityDescription(
-        key="power",
-        device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfPower.WATT,
-        value_fn=lambda data: data.consumption["latest_power"],
-    ),
-    StarlinkSensorEntityDescription(
-        key="energy",
-        device_class=SensorDeviceClass.ENERGY,
+        key="upload",
+        translation_key="upload",
+        device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_fn=lambda data: data.consumption["total_energy"],
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        value_fn=lambda data: data.usage["upload_usage"],
     ),
 )
