@@ -21,7 +21,7 @@ from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-METADATA_VERSION = 1
+METADATA_VERSION = "1"
 
 
 async def async_get_backup_agents(
@@ -116,8 +116,14 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{filename}",
         )
 
+        metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
+        await self._client.upload_iter(
+            json_dumps(backup.as_dict()),
+            f"{self._backup_path}/{metadata_filename}",
+        )
+
         await self._client.set_property_batch(
-            f"{self._backup_path}/{filename}",
+            f"{self._backup_path}/{metadata_filename}",
             [
                 {
                     "namespace": "homeassistant",
@@ -129,16 +135,11 @@ class WebDavBackupAgent(BackupAgent):
                     "name": "metadata_version",
                     "value": METADATA_VERSION,
                 },
-                {
-                    "namespace": "homeassistant",
-                    "name": "metadata",
-                    "value": json_dumps(backup.as_dict()),
-                },
             ],
         )
 
         _LOGGER.debug(
-            "Set metadata for %s",
+            "Uploaded metadata file for %s",
             f"{self._backup_path}/{filename}",
         )
 
@@ -155,7 +156,11 @@ class WebDavBackupAgent(BackupAgent):
         if backup is None:
             return
 
-        await self._client.clean(f"{self._backup_path}/{suggested_filename(backup)}")
+        filename = suggested_filename(backup)
+        await self._client.clean(f"{self._backup_path}/{filename}")
+        metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
+        await self._client.clean(f"{self._backup_path}/{metadata_filename}")
+
         _LOGGER.debug(
             "Deleted backup at %s",
             f"{self._backup_path}/{suggested_filename(backup)}",
@@ -163,27 +168,11 @@ class WebDavBackupAgent(BackupAgent):
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
-        files = await self._client.list(self._backup_path, get_info=True)
-
-        backups = []
-        for file in files:
-            if not file["isdir"] and file["path"].endswith(".tar"):
-                version = await self._client.get_property(
-                    file["path"],
-                    {"namespace": "homeassistant", "name": "metadata_version"},
-                )
-                if version != METADATA_VERSION:
-                    continue
-
-                prop = await self._client.get_property(
-                    file["path"], {"namespace": "homeassistant", "name": "metadata"}
-                )
-                if prop is None:
-                    _LOGGER.debug("Missing metadata for %s", file["path"])
-
-                backups.append(AgentBackup.from_dict(json_loads_object(prop)))
-
-        return backups
+        metadata_files = await self._list_metadata_files()
+        return [
+            await self._download_metadata(metadata_file)
+            for metadata_file in metadata_files
+        ]
 
     async def async_get_backup(
         self,
@@ -193,28 +182,39 @@ class WebDavBackupAgent(BackupAgent):
         """Return a backup."""
         return await self._find_backup_by_id(backup_id)
 
+    async def _list_metadata_files(self) -> list[str]:
+        """List metadata files."""
+        files = await self._client.list(self._backup_path, get_info=True)
+        return [
+            file["path"]
+            for file in files
+            if file["path"].endswith(".json")
+            and await self._is_current_metadata_version(file["path"])
+        ]
+
+    async def _is_current_metadata_version(self, path: str) -> bool:
+        """Check if is current metadata version."""
+        metadata_version = await self._client.get_property(
+            path,
+            {"namespace": "homeassistant", "name": "metadata_version"},
+        )
+        return metadata_version == METADATA_VERSION
+
     async def _find_backup_by_id(self, backup_id: str) -> AgentBackup | None:
         """Find a backup by its backup ID on remote."""
-        files = await self._client.list(self._backup_path, get_info=True)
-
-        for file in files:
-            if not file["isdir"] and file["path"].endswith(".tar"):
-                remote_backup_id = await self._client.get_property(
-                    file["path"], {"namespace": "homeassistant", "name": "backup_id"}
-                )
-                metadata_version = await self._client.get_property(
-                    file["path"],
-                    {"namespace": "homeassistant", "name": "metadata_version"},
-                )
-                if (
-                    remote_backup_id == backup_id
-                    and metadata_version == METADATA_VERSION
-                ):
-                    prop = await self._client.get_property(
-                        file["path"], {"namespace": "homeassistant", "name": "metadata"}
-                    )
-                    if prop:
-                        return AgentBackup.from_dict(json_loads_object(prop))
-                    _LOGGER.debug("Missing metadata for %s", file["path"])
+        metadata_files = await self._list_metadata_files()
+        for metadata_file in metadata_files:
+            remote_backup_id = await self._client.get_property(
+                metadata_file,
+                {"namespace": "homeassistant", "name": "backup_id"},
+            )
+            if remote_backup_id == backup_id:
+                return await self._download_metadata(metadata_file)
 
         return None
+
+    async def _download_metadata(self, path: str) -> AgentBackup:
+        """Download metadata file."""
+        iterator = await self._client.download_iter(path)
+        metadata = await anext(iterator)
+        return AgentBackup.from_dict(json_loads_object(metadata))
