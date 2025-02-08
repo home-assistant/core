@@ -114,21 +114,6 @@ async def _transform_stream(
     result: AsyncStream[ChatCompletionChunk],
 ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
     """Transform an OpenAI delta stream into HA format."""
-
-    def _convert_delta_tool_call(
-        tool_call_data: dict,
-    ) -> conversation.AssistantContentDeltaDict:
-        """Convert tool call data to HA format."""
-        return {
-            "tool_calls": [
-                llm.ToolInput(
-                    id=tool_call_data["id"],
-                    tool_name=tool_call_data["tool_name"],
-                    tool_args=json.loads(tool_call_data["tool_args"]),
-                )
-            ]
-        }
-
     current_tool_call: dict | None = None
 
     async for chunk in result:
@@ -137,7 +122,15 @@ async def _transform_stream(
 
         if choice.finish_reason:
             if current_tool_call:
-                yield _convert_delta_tool_call(current_tool_call)
+                yield {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            id=current_tool_call["id"],
+                            tool_name=current_tool_call["tool_name"],
+                            tool_args=json.loads(current_tool_call["tool_args"]),
+                        )
+                    ]
+                }
 
             break
 
@@ -167,7 +160,15 @@ async def _transform_stream(
 
         # We got tool call with new index, so we need to yield the previous
         if current_tool_call:
-            yield _convert_delta_tool_call(current_tool_call)
+            yield {
+                "tool_calls": [
+                    llm.ToolInput(
+                        id=current_tool_call["id"],
+                        tool_name=current_tool_call["tool_name"],
+                        tool_args=json.loads(current_tool_call["tool_args"]),
+                    )
+                ]
+            }
 
         current_tool_call = {
             "index": delta_tool_call.index,
