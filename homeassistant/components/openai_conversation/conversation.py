@@ -261,7 +261,7 @@ class OpenAIConversationEntity(
 
                     delta = chunk.choices[0].delta
 
-                    # If we're not in nor starting a tool call, we can yield the delta
+                    # We can yield delta messages not continuing or starting tool calls
                     if current_tool_call is None and not delta.tool_calls:
                         yield {  # type: ignore[misc]
                             key: value
@@ -283,7 +283,6 @@ class OpenAIConversationEntity(
 
                     if current_tool_call is None:
                         current_tool_call = delta_tool_call
-
                     elif delta_tool_call.index == current_tool_call.index:
                         # Concatenate the tool call
                         current_tool_call.function.arguments += (  # type: ignore[union-attr, operator]
@@ -292,7 +291,6 @@ class OpenAIConversationEntity(
                     else:
                         # We got tool call with new index, so we need to yield the previous
                         yield _convert_delta_tool_call(current_tool_call)
-
                         current_tool_call = delta_tool_call
 
                 if current_tool_call:

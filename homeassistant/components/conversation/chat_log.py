@@ -258,7 +258,7 @@ class ChatLog:
                     current["content"] = (
                         current.setdefault("content", "") + delta["content"]
                     )
-                if delta.get("tool_calls"):
+                if tool_calls := delta.get("tool_calls"):
                     # Make MyPy happy
                     assert type(delta["tool_calls"]) is list
                     if self.llm_api is None:
@@ -287,10 +287,11 @@ class ChatLog:
                 ):
                     yield tool_result
 
-            current = {}
-            for key in ("content", "tool_calls"):
-                if key in delta:
-                    current[key] = delta[key]
+            current = {
+                key: value
+                for key in ("content", "tool_calls")
+                if (value := delta.get(key)) is not None
+            }
 
         if current:
             content = AssistantContent(**current, agent_id=agent_id)
