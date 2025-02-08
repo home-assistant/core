@@ -322,7 +322,8 @@ class HueOneLightStateView(HomeAssistantView):
 
         if hass_entity_id is None:
             _LOGGER.error(
-                "Unknown entity number: %s not found in emulated_hue_ids.json, state request from %s",
+                "Unknown entity number: %s not found in emulated_hue_ids.json, "
+                "state request from %s",
                 entity_id,
                 request.remote,
             )
