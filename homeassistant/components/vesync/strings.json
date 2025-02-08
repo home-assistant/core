@@ -54,9 +54,6 @@
     "number": {
       "mist_level": {
         "name": "Mist level"
-      },
-      "night_light_brightness": {
-        "name": "Night brightness level"
       }
     },
     "fan": {

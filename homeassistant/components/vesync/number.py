@@ -5,7 +5,6 @@ from dataclasses import dataclass
 import logging
 
 from pyvesync.vesyncbasedevice import VeSyncBaseDevice
-from pyvesync.vesyncfan import VeSyncHumid200300S
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -45,18 +44,7 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
         exists_fn=is_humidifier,
         set_value_fn=lambda device, value: device.set_mist_level(value),
         value_fn=lambda device: device.mist_level,
-    ),
-    VeSyncNumberEntityDescription(
-        key="night_light_brightness",
-        translation_key="night_light_brightness",
-        native_min_value=0,
-        native_max_value=100,
-        native_step=50,
-        mode=NumberMode.SLIDER,
-        exists_fn=lambda device: isinstance(device, VeSyncHumid200300S),
-        set_value_fn=lambda device, value: device.set_night_light_brightness(value),
-        value_fn=lambda device: device.details.get("night_light_brightness", 0),
-    ),
+    )
 ]
 
 
