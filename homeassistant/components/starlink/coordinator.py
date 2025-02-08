@@ -26,11 +26,14 @@ from starlink_grpc import (
     status_data,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
+
+type StarlinkConfigEntry = ConfigEntry[StarlinkUpdateCoordinator]
 
 
 @dataclass

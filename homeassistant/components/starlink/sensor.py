@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -28,19 +27,16 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import now
 
-from .const import DOMAIN
-from .coordinator import StarlinkData
+from .coordinator import StarlinkConfigEntry, StarlinkData
 from .entity import StarlinkEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    _: HomeAssistant, entry: StarlinkConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up all sensors for this entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        StarlinkSensorEntity(coordinator, description) for description in SENSORS
+        StarlinkSensorEntity(entry.runtime_data, description) for description in SENSORS
     )
 
 
