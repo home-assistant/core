@@ -49,7 +49,7 @@ DEVICE_TYPES = {
     # Platform.BINARY_SENSOR: "Binary input",
     # Platform.CLIMATE: "Thermostat",
     # PLATFORM_PWM: "PWM",
-    # PLATFORM_TEMPERATURE: "Termometr",
+    PLATFORM_TEMPERATURE: "Termometr",
     PLATFORM_INPUT: "Input",
 }
 
