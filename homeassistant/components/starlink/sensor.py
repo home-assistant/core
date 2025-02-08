@@ -68,13 +68,13 @@ class StarlinkRestoreSensor(StarlinkSensorEntity, RestoreSensor):
     @property
     def native_value(self) -> StateType | datetime:
         """Calculate the sensor value from current value and the entity description."""
-        return self._attr_native_value + super().native_value()
+        return self._attr_native_value + super().native_value
 
     async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
         await super().async_added_to_hass()
         if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = last_sensor_data.native_value
-            self._attr_native_unit_of_measurement = last_sensor_data.native_unit_of_measurement
 
 
 SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
