@@ -162,6 +162,7 @@ async def test_options_flow(
         "profiles",
         "text_type",
         "stt_model",
+        "tts_timeout",
     }
     assert mock_api_tts_from_service_account_info.list_voices.call_count == 2
 
@@ -181,5 +182,6 @@ async def test_options_flow(
         "profiles": [],
         "text_type": "text",
         "stt_model": "latest_short",
+        "tts_timeout": 10,
     }
     assert mock_api_tts_from_service_account_info.list_voices.call_count == 3
