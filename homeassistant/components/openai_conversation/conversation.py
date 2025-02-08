@@ -110,6 +110,73 @@ def _convert_content_to_param(
     )
 
 
+async def _transform_stream(
+    result: AsyncStream[ChatCompletionChunk],
+) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+    """Transform an OpenAI delta stream into HA format."""
+
+    def _convert_delta_tool_call(
+        tool_call_data: dict,
+    ) -> conversation.AssistantContentDeltaDict:
+        """Convert tool call data to HA format."""
+        return {
+            "tool_calls": [
+                llm.ToolInput(
+                    id=tool_call_data["id"],
+                    tool_name=tool_call_data["tool_name"],
+                    tool_args=json.loads(tool_call_data["tool_args"]),
+                )
+            ]
+        }
+
+    current_tool_call: dict | None = None
+
+    async for chunk in result:
+        LOGGER.debug("Received chunk: %s", chunk)
+        choice = chunk.choices[0]
+
+        if choice.finish_reason:
+            if current_tool_call:
+                yield _convert_delta_tool_call(current_tool_call)
+
+            break
+
+        delta = chunk.choices[0].delta
+
+        # We can yield delta messages not continuing or starting tool calls
+        if current_tool_call is None and not delta.tool_calls:
+            yield {  # type: ignore[misc]
+                key: value
+                for key in ("role", "content")
+                if (value := getattr(delta, key)) is not None
+            }
+            continue
+
+        # When doing tool calls, we should always have a tool call
+        # object or we have gotten stopped above with a finish_reason set.
+        if (
+            not delta.tool_calls
+            or not (delta_tool_call := delta.tool_calls[0])
+            or not delta_tool_call.function
+        ):
+            raise ValueError("Expected delta with tool call")
+
+        if current_tool_call and delta_tool_call.index == current_tool_call["index"]:
+            current_tool_call["tool_args"] += delta_tool_call.function.arguments or ""
+            continue
+
+        # We got tool call with new index, so we need to yield the previous
+        if current_tool_call:
+            yield _convert_delta_tool_call(current_tool_call)
+
+        current_tool_call = {
+            "index": delta_tool_call.index,
+            "id": delta_tool_call.id,
+            "tool_name": delta_tool_call.function.name,
+            "tool_args": delta_tool_call.function.arguments or "",
+        }
+
+
 class OpenAIConversationEntity(
     conversation.ConversationEntity, conversation.AbstractConversationAgent
 ):
@@ -223,82 +290,11 @@ class OpenAIConversationEntity(
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err
 
-            async def transform_stream(
-                result: AsyncStream[ChatCompletionChunk],
-            ) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
-                """Transform an OpenAI delta stream into HA format."""
-
-                def _convert_delta_tool_call(
-                    tool_call_data: dict,
-                ) -> conversation.AssistantContentDeltaDict:
-                    """Convert tool call data to HA format."""
-                    return {
-                        "tool_calls": [
-                            llm.ToolInput(
-                                id=tool_call_data["id"],
-                                tool_name=tool_call_data["tool_name"],
-                                tool_args=json.loads(tool_call_data["tool_args"]),
-                            )
-                        ]
-                    }
-
-                current_tool_call: dict | None = None
-
-                async for chunk in result:
-                    LOGGER.debug("Received chunk: %s", chunk)
-                    choice = chunk.choices[0]
-
-                    if choice.finish_reason:
-                        if current_tool_call:
-                            yield _convert_delta_tool_call(current_tool_call)
-
-                        break
-
-                    delta = chunk.choices[0].delta
-
-                    # We can yield delta messages not continuing or starting tool calls
-                    if current_tool_call is None and not delta.tool_calls:
-                        yield {  # type: ignore[misc]
-                            key: value
-                            for key in ("role", "content")
-                            if (value := getattr(delta, key)) is not None
-                        }
-                        continue
-
-                    # When doing tool calls, we should always have a tool call
-                    # object or we have gotten stopped above with a finish_reason set.
-                    if (
-                        not delta.tool_calls
-                        or not (delta_tool_call := delta.tool_calls[0])
-                        or not delta_tool_call.function
-                    ):
-                        raise ValueError("Expected delta with tool call")
-
-                    if (
-                        current_tool_call
-                        and delta_tool_call.index == current_tool_call["index"]
-                    ):
-                        current_tool_call["tool_args"] += (
-                            delta_tool_call.function.arguments or ""
-                        )
-                        continue
-
-                    # We got tool call with new index, so we need to yield the previous
-                    if current_tool_call:
-                        yield _convert_delta_tool_call(current_tool_call)
-
-                    current_tool_call = {
-                        "index": delta_tool_call.index,
-                        "id": delta_tool_call.id,
-                        "tool_name": delta_tool_call.function.name,
-                        "tool_args": delta_tool_call.function.arguments or "",
-                    }
-
             messages.extend(
                 [
                     _convert_content_to_param(content)
                     async for content in chat_log.async_add_delta_content_stream(
-                        user_input.agent_id, transform_stream(result)
+                        user_input.agent_id, _transform_stream(result)
                     )
                 ]
             )
