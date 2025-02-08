@@ -98,10 +98,9 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         await self._process_child_devices()
         if not self._update_children:
-            # If the children are not being updated, we need to make
-            # sure they write state to reflect the parent state since
-            # they only update every 60s by default and the parent
-            # provides the state for the children (except energy).
+            # If the children are not being updated, it means this is an
+            # IotStrip, and we need to tell the children to write state
+            # since the power state is provided by the parent.
             for child_coordinator in self._child_coordinators.values():
                 child_coordinator.async_set_updated_data(None)
 
