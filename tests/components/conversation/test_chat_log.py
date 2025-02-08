@@ -282,7 +282,7 @@ async def test_extra_systen_prompt(
 @pytest.mark.parametrize(
     "prerun_tool_tasks",
     [
-        None,
+        (),
         ("mock-tool-call-id",),
         ("mock-tool-call-id", "mock-tool-call-id-2"),
     ],
@@ -290,7 +290,7 @@ async def test_extra_systen_prompt(
 async def test_tool_call(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
-    prerun_tool_tasks: tuple[str] | None,
+    prerun_tool_tasks: tuple[str],
 ) -> None:
     """Test using the session tool calling API."""
 
