@@ -44,7 +44,7 @@ async def async_setup_entry(
     )
 
     async_add_entities(
-        StarlinkRestoreSensor(coordinator, description) for description in RESTORESENSORS
+        StarlinkRestoreSensor(coordinator, description) for description in RESTORES
     )
 
 
@@ -69,15 +69,20 @@ class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
 class StarlinkRestoreSensor(StarlinkSensorEntity, RestoreSensor):
     """A RestoreSensorEntity for Starlink devices. Handles creating unique IDs."""
 
+    _attr_native_value: float = 0
+
     @property
     def native_value(self) -> StateType | datetime:
         """Calculate the sensor value from current value and the entity description."""
-        return self._attr_native_value + self.entity_description.value_fn(self.coordinator.data)
+        native_value = super().native_value
+        assert isinstance(native_value, float)
+        return self._attr_native_value + native_value
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
+            assert isinstance(last_sensor_data.native_value, float)
             self._attr_native_value = last_sensor_data.native_value
 
 
@@ -150,7 +155,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         value_fn=lambda data: data.consumption["latest_power"],
     ),
 )
-RESTORESENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
+RESTORES: tuple[StarlinkSensorEntityDescription, ...] = (
     StarlinkSensorEntityDescription(
         key="energy",
         device_class=SensorDeviceClass.ENERGY,
