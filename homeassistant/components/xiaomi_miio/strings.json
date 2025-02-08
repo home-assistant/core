@@ -567,7 +567,7 @@
     },
     "vacuum_goto": {
       "name": "Vacuum go to",
-      "description": "Sends a robot to the specified coordinates.",
+      "description": "Sends the robot to the specified coordinates.",
       "fields": {
         "x_coord": {
           "name": "X coordinate",
