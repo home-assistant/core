@@ -133,7 +133,7 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
             metadata_file = await client.upload_file(
                 backup_folder_id,
                 metadata_filename,
-                dumps(metadata),  # type: ignore[arg-type]
+                dumps(metadata),
             )
             metadata_description = {
                 "metadata_version": 2,
