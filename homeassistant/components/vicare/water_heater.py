@@ -15,6 +15,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareRateLimitError,
 )
 import requests
+import voluptuous as vol
 
 from homeassistant.components.water_heater import (
     WaterHeaterEntity,
@@ -22,13 +23,19 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util.json import json_loads_object
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
 from .utils import get_circuits, get_device_serial
 
 _LOGGER = logging.getLogger(__name__)
+
+SERVICE_SET_DHW_CIRCULATION_PUMP_SCHEDULE = "set_dhw_circulation_pump_schedule"
+SERVICE_SET_DHW_CIRCULATION_PUMP_SCHEDULE_ATTR_MODE = "schedule"
 
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_HEATING = "heating"
@@ -83,6 +90,14 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the ViCare water heater platform."""
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_SET_DHW_CIRCULATION_PUMP_SCHEDULE,
+        {vol.Required(SERVICE_SET_DHW_CIRCULATION_PUMP_SCHEDULE_ATTR_MODE): cv.string},
+        "set_dhw_circulation_pump_schedule",
+    )
+
     async_add_entities(
         await hass.async_add_executor_job(
             _build_entities,
@@ -152,3 +167,13 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         if self._current_mode is None:
             return None
         return VICARE_TO_HA_HVAC_DHW.get(self._current_mode, None)
+
+    def set_dhw_circulation_pump_schedule(self, schedule) -> None:
+        """Service function to set schedule for dhw circulation pump directly."""
+
+        try:
+            schedule_json = json_loads_object(schedule)
+        except Exception as error:
+            raise HomeAssistantError(error) from error
+
+        self._api.setDomesticHotWaterCirculationSchedule(schedule_json)
