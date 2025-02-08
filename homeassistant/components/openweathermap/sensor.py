@@ -9,6 +9,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     DEGREE,
     PERCENTAGE,
     UV_INDEX,
@@ -27,6 +28,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import OpenweathermapConfigEntry
 from .const import (
+    ATTR_API_AIRPOLLUTION_PM2_5,
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
     ATTR_API_CURRENT,
@@ -48,9 +50,9 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
+    OWM_MODE_AIRPOLLUTION,
     OWM_MODE_FREE_FORECAST,
 )
-from .coordinator import WeatherUpdateCoordinator
 
 WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -152,6 +154,16 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+AIRPOLLUTION_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ATTR_API_AIRPOLLUTION_PM2_5,
+        name="PM 2.5",
+        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        device_class=SensorDeviceClass.PM25,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -161,7 +173,7 @@ async def async_setup_entry(
     """Set up OpenWeatherMap sensor entities based on a config entry."""
     domain_data = config_entry.runtime_data
     name = domain_data.name
-    weather_coordinator = domain_data.coordinator
+    coordinator = domain_data.coordinator
 
     if domain_data.mode == OWM_MODE_FREE_FORECAST:
         entity_registry = er.async_get(hass)
@@ -176,9 +188,13 @@ async def async_setup_entry(
                 name,
                 f"{config_entry.unique_id}-{description.key}",
                 description,
-                weather_coordinator,
+                coordinator,
             )
-            for description in WEATHER_SENSOR_TYPES
+            for description in (
+                AIRPOLLUTION_SENSOR_TYPES
+                if domain_data.mode == OWM_MODE_AIRPOLLUTION
+                else WEATHER_SENSOR_TYPES
+            )
         )
 
 
@@ -228,20 +244,7 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
 class OpenWeatherMapSensor(AbstractOpenWeatherMapSensor):
     """Implementation of an OpenWeatherMap sensor."""
 
-    def __init__(
-        self,
-        name: str,
-        unique_id: str,
-        description: SensorEntityDescription,
-        weather_coordinator: WeatherUpdateCoordinator,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(name, unique_id, description, weather_coordinator)
-        self._weather_coordinator = weather_coordinator
-
     @property
     def native_value(self) -> StateType:
         """Return the state of the device."""
-        return self._weather_coordinator.data[ATTR_API_CURRENT].get(
-            self.entity_description.key
-        )
+        return self._coordinator.data[ATTR_API_CURRENT].get(self.entity_description.key)
