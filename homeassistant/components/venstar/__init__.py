@@ -41,6 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, config: ConfigEntry) -> bool:
 
     venstar_data_coordinator = VenstarDataUpdateCoordinator(
         hass,
+        config,
         venstar_connection=client,
     )
     await venstar_data_coordinator.async_config_entry_first_refresh()
