@@ -28,10 +28,9 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FitbitConfigEntry
 from .api import FitbitApi
 from .const import ATTRIBUTION, BATTERY_LEVELS, DOMAIN, FitbitScope, FitbitUnitSystem
-from .coordinator import FitbitDeviceCoordinator
+from .coordinator import FitbitConfigEntry, FitbitDeviceCoordinator
 from .exceptions import FitbitApiException, FitbitAuthException
 from .model import FitbitDevice, config_from_entry_data
 
