@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -152,6 +152,8 @@ class FullySensor(FullyKioskEntity, SensorEntity):
                 value, extra_state_attributes = self.entity_description.state_fn(value)
 
             if self.entity_description.round_state_value:
+                if TYPE_CHECKING:
+                    assert isinstance(value, int)
                 value = round_storage(value)
 
         self._attr_native_value = value

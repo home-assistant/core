@@ -14,6 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from .common import setup_home_connect_entry
 from .const import APPLIANCES_WITH_PROGRAMS, DOMAIN, SVE_TRANSLATION_PLACEHOLDER_PROGRAM
 from .coordinator import (
     HomeConnectApplianceData,
@@ -69,18 +70,31 @@ PROGRAM_SELECT_ENTITY_DESCRIPTIONS = (
 )
 
 
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    return (
+        [
+            HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
+            for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
+        ]
+        if appliance.info.type in APPLIANCES_WITH_PROGRAMS
+        else []
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Home Connect select entities."""
-
-    async_add_entities(
-        HomeConnectProgramSelectEntity(entry.runtime_data, appliance, desc)
-        for appliance in entry.runtime_data.data.values()
-        for desc in PROGRAM_SELECT_ENTITY_DESCRIPTIONS
-        if appliance.info.type in APPLIANCES_WITH_PROGRAMS
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
     )
 
 
@@ -110,7 +124,6 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
                 or program.constraints.execution in desc.allowed_executions
             )
         ]
-        self._attr_current_option = None
 
     def update_native_value(self) -> None:
         """Set the program value."""
