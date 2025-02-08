@@ -31,11 +31,6 @@ VALUE_TO_STATE = {
 CAPABILITIES = (Capability.WINDOW_SHADE,)
 
 
-def has_capabilities(device: SmartThingsDeviceCoordinator) -> bool:
-    """Determine if device has necessary capabilities."""
-    return any(capability in device.data for capability in CAPABILITIES)
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
