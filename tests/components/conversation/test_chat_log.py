@@ -428,6 +428,13 @@ async def test_tool_call_exception(
             {"role": "assistant"},
             {"content": "Test"},
         ],
+        # With 2 content
+        [
+            {"role": "assistant"},
+            {"content": "Test"},
+            {"role": "assistant"},
+            {"content": "Test 2"},
+        ],
         # With 1 tool call
         [
             {"role": "assistant"},
@@ -454,6 +461,22 @@ async def test_tool_call_exception(
                     )
                 ]
             },
+        ],
+        # With 2 contents and 1 tool call
+        [
+            {"role": "assistant"},
+            {"content": "Test"},
+            {
+                "tool_calls": [
+                    llm.ToolInput(
+                        id="mock-tool-call-id",
+                        tool_name="test_tool",
+                        tool_args={"param1": "Test Param 1"},
+                    )
+                ]
+            },
+            {"role": "assistant"},
+            {"content": "Test 2"},
         ],
         # With 2 tool calls
         [
