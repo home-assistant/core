@@ -297,7 +297,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     async def _check_announcement_pickup(self) -> None:
         """Continuously checks if an audio chunk was received within a time limit.
 
-        If not, the caller is presumed to have hung up and the announcement is ended.
+        If not, the caller is presumed to have not picked up the phone and the announcement is ended.
         """
         while True:
             current_time = time.monotonic()
