@@ -2,7 +2,6 @@
 
 from homeassistant.components.application_credentials import AuthorizationServer
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_oauth2_flow
 
 
 async def async_get_authorization_server(hass: HomeAssistant) -> AuthorizationServer:
@@ -19,5 +18,4 @@ async def async_get_description_placeholders(hass: HomeAssistant) -> dict[str, s
         "oauth_consent_url": "https://console.cloud.google.com/apis/credentials/consent",
         "more_info_url": "https://www.home-assistant.io/integrations/google_drive/",
         "oauth_creds_url": "https://console.cloud.google.com/apis/credentials",
-        "redirect_url": config_entry_oauth2_flow.async_get_redirect_uri(hass),
     }
