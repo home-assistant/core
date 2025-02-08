@@ -39,41 +39,18 @@ class NikoHomeControlThermostat(NikoHomeControlEntity, ClimateEntity):
 
     _attr_name = None
     _action: NHCThermostat
-
-    def __init__(self, thermostat, controller, unique_id: str) -> None:
-        """Set up the Niko Home Control Thermostat platform."""
-        super().__init__(thermostat, controller, unique_id)
-
-        #     """Initialize the thermostat."""
-        self._attr_hvac_mode = HVACMode.OFF
-        self._attr_hvac_modes = [
-            HVACMode.OFF,
-            HVACMode.HEAT,
-            HVACMode.COOL,
-            HVACMode.AUTO,
-        ]
-        self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-        self._attr_temperature_unit = UnitOfTemperature.CELSIUS
-
-    @property
-    def hvac_mode(self) -> HVACMode:
-        """Return the current HVAC mode."""
-        return self._attr_hvac_mode or HVACMode.OFF
-
-    @property
-    def target_temperature(self) -> float:
-        """Return the temperature we try to reach."""
-        return self._attr_target_temperature or 0.0
-
-    @property
-    def current_temperature(self) -> float:
-        """Return the current temperature."""
-        return self._attr_current_temperature or 0.0
+    _attr_hvac_mode = HVACMode.OFF
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.HEAT,
+        HVACMode.COOL,
+        HVACMode.AUTO,
+    ]
+    _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
-        self._attr_hvac_mode = hvac_mode
-
         if hvac_mode == HVACMode.HEAT:
             newMode = 0
         elif hvac_mode == HVACMode.OFF:
@@ -89,11 +66,10 @@ class NikoHomeControlThermostat(NikoHomeControlEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        if temperature is not None:
-            self._attr_target_temperature = int(temperature * 10)
-            newTemp = int(temperature * 10)
-            await self._action.set_temperature(newTemp)
+        temperature = kwargs.get(ATTR_TEMPERATURE, 20)
+        self._attr_target_temperature = int(temperature * 10)
+        newTemp = int(temperature * 10)
+        await self._action.set_temperature(newTemp)
 
     def update_state(self) -> None:
         """Update the state of the thermostat."""
