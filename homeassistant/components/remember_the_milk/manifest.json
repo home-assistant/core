@@ -2,6 +2,7 @@
   "domain": "remember_the_milk",
   "name": "Remember The Milk",
   "codeowners": [],
+  "config_flow": true,
   "dependencies": ["configurator"],
   "documentation": "https://www.home-assistant.io/integrations/remember_the_milk",
   "iot_class": "cloud_push",
