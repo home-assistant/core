@@ -94,7 +94,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare==2.41.0
+PyViCare==2.42.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -759,7 +759,7 @@ eternalegypt==0.0.16
 eufylife-ble-client==0.1.8
 
 # homeassistant.components.evohome
-evohome-async==0.4.21
+evohome-async==1.0.2
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -789,7 +789,7 @@ fivem-api==0.1.2
 fjaraskupan==2.3.2
 
 # homeassistant.components.flexit_bacnet
-flexit_bacnet==2.2.1
+flexit_bacnet==2.2.3
 
 # homeassistant.components.flipr
 flipr-api==1.6.1
@@ -1295,7 +1295,7 @@ objgraph==3.5.0
 odp-amsterdam==6.0.2
 
 # homeassistant.components.ohme
-ohme==1.2.8
+ohme==1.2.9
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -1376,7 +1376,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.6.4
+plugwise==1.7.1
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
