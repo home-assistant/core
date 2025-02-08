@@ -510,11 +510,11 @@
     },
     "set_dhw_circulation_pump_schedule": {
       "name": "Set domestic hot water circulation schedule",
-      "description": "Set a ViCare mode.",
+      "description": "Sets a new schedule for the hot water circulation pump.",
       "fields": {
         "schedule": {
           "name": "Schedule",
-          "description": "JSON Definition of a Schedule. (Example: https://www.postman.com/vimicho/viessmann-api-public/request/hpbagam/set-heating-schedule)"
+          "description": "JSON definition of a schedule. (Example: https://www.postman.com/vimicho/viessmann-api-public/request/hpbagam/set-heating-schedule)"
         }
       }
     }
