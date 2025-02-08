@@ -24,12 +24,15 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
+    PermRequired,
     ProtectDeviceEntity,
+    ProtectEntityDescription,
     ProtectIsOnEntity,
     ProtectNVREntity,
+    ProtectSetableKeysMixin,
+    T,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
 ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"

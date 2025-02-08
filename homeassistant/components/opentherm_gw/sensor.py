@@ -32,7 +32,7 @@ from .const import (
     THERMOSTAT_DEVICE_DESCRIPTION,
     OpenThermDataSource,
 )
-from .entity import OpenThermEntity, OpenThermEntityDescription
+from .entity import OpenThermEntityDescription, OpenThermStatusEntity
 
 SENSOR_FLOAT_SUGGESTED_DISPLAY_PRECISION = 1
 
@@ -889,7 +889,7 @@ async def async_setup_entry(
     )
 
 
-class OpenThermSensor(OpenThermEntity, SensorEntity):
+class OpenThermSensor(OpenThermStatusEntity, SensorEntity):
     """Representation of an OpenTherm sensor."""
 
     _attr_entity_category = EntityCategory.DIAGNOSTIC

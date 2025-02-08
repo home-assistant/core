@@ -31,6 +31,8 @@ ATTR_OTHER_INFO = "other_info"
 
 SCAN_INTERVAL = timedelta(minutes=5)
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TrafikverketSensorEntityDescription(SensorEntityDescription):

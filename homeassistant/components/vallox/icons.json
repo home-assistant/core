@@ -45,6 +45,9 @@
     },
     "set_profile_fan_speed_boost": {
       "service": "mdi:speedometer"
+    },
+    "set_profile": {
+      "service": "mdi:fan"
     }
   }
 }

@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant import loader
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api.decorators import require_admin
+from homeassistant.components.websocket_api import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr

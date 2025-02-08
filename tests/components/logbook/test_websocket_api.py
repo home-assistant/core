@@ -37,7 +37,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.components.recorder.common import (
@@ -1181,6 +1181,10 @@ async def test_subscribe_unsubscribe_logbook_stream(
     await async_wait_recording_done(hass)
     websocket_client = await hass_ws_client()
     init_listeners = hass.bus.async_listeners()
+    init_listeners = {
+        **init_listeners,
+        EVENT_HOMEASSISTANT_START: init_listeners[EVENT_HOMEASSISTANT_START] - 1,
+    }
     await websocket_client.send_json(
         {"id": 7, "type": "logbook/event_stream", "start_time": now.isoformat()}
     )
@@ -2981,8 +2985,8 @@ async def test_live_stream_with_changed_state_change(
         ]
     )
 
-    hass.states.async_set("binary_sensor.is_light", "ignored")
-    hass.states.async_set("binary_sensor.is_light", "init")
+    hass.states.async_set("binary_sensor.is_light", "unavailable")
+    hass.states.async_set("binary_sensor.is_light", "unknown")
     await async_wait_recording_done(hass)
 
     @callback
@@ -3019,7 +3023,7 @@ async def test_live_stream_with_changed_state_change(
 
     # Make sure we get rows back in order
     assert recieved_rows == [
-        {"entity_id": "binary_sensor.is_light", "state": "init", "when": ANY},
+        {"entity_id": "binary_sensor.is_light", "state": "unknown", "when": ANY},
         {"entity_id": "binary_sensor.is_light", "state": "on", "when": ANY},
         {"entity_id": "binary_sensor.is_light", "state": "off", "when": ANY},
     ]

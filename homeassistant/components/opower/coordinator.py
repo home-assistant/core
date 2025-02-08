@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta
 import logging
-import socket
 from types import MappingProxyType
 from typing import Any, cast
 
@@ -11,11 +10,11 @@ from opower import (
     AggregateType,
     CostRead,
     Forecast,
-    InvalidAuth,
     MeterType,
     Opower,
     ReadResolution,
 )
+from opower.exceptions import ApiException, CannotConnect, InvalidAuth
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import StatisticData, StatisticMetaData
@@ -24,20 +23,25 @@ from homeassistant.components.recorder.statistics import (
     get_last_statistics,
     statistics_during_period,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_TOTP_SECRET, CONF_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type OpowerConfigEntry = ConfigEntry[OpowerCoordinator]
+
 
 class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
     """Handle fetching Opower data, updating sensors and inserting statistics."""
+
+    config_entry: OpowerConfigEntry
 
     def __init__(
         self,
@@ -54,12 +58,13 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             update_interval=timedelta(hours=12),
         )
         self.api = Opower(
-            aiohttp_client.async_get_clientsession(hass, family=socket.AF_INET),
+            aiohttp_client.async_get_clientsession(hass),
             entry_data[CONF_UTILITY],
             entry_data[CONF_USERNAME],
             entry_data[CONF_PASSWORD],
             entry_data.get(CONF_TOTP_SECRET),
         )
+        self._statistic_ids: set[str] = set()
 
         @callback
         def _dummy_listener() -> None:
@@ -71,6 +76,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         # _async_update_data not periodically getting called which is needed for _insert_statistics.
         self.async_add_listener(_dummy_listener)
 
+        self.config_entry.async_on_unload(self._clear_statistics)
+
+    def _clear_statistics(self) -> None:
+        """Clear statistics."""
+        get_instance(self.hass).async_clear_statistics(list(self._statistic_ids))
+
     async def _async_update_data(
         self,
     ) -> dict[str, Forecast]:
@@ -81,8 +92,16 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             # assume previous session has expired and re-login.
             await self.api.async_login()
         except InvalidAuth as err:
+            _LOGGER.error("Error during login: %s", err)
             raise ConfigEntryAuthFailed from err
-        forecasts: list[Forecast] = await self.api.async_get_forecast()
+        except CannotConnect as err:
+            _LOGGER.error("Error during login: %s", err)
+            raise UpdateFailed(f"Error during login: {err}") from err
+        try:
+            forecasts: list[Forecast] = await self.api.async_get_forecast()
+        except ApiException as err:
+            _LOGGER.error("Error getting forecasts: %s", err)
+            raise
         _LOGGER.debug("Updating sensor data with: %s", forecasts)
         # Because Opower provides historical usage/cost with a delay of a couple of days
         # we need to insert data into statistics.
@@ -91,7 +110,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
 
     async def _insert_statistics(self) -> None:
         """Insert Opower statistics."""
-        for account in await self.api.async_get_accounts():
+        try:
+            accounts = await self.api.async_get_accounts()
+        except ApiException as err:
+            _LOGGER.error("Error getting accounts: %s", err)
+            raise
+        for account in accounts:
             id_prefix = "_".join(
                 (
                     self.api.utility.subdomain(),
@@ -103,6 +127,8 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"
             consumption_statistic_id = f"{DOMAIN}:{id_prefix}_energy_consumption"
+            self._statistic_ids.add(cost_statistic_id)
+            self._statistic_ids.add(consumption_statistic_id)
             _LOGGER.debug(
                 "Updating Statistics for %s and %s",
                 cost_statistic_id,
@@ -129,16 +155,31 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 if not cost_reads:
                     _LOGGER.debug("No recent usage/cost data. Skipping update")
                     continue
-                stats = await get_instance(self.hass).async_add_executor_job(
-                    statistics_during_period,
-                    self.hass,
-                    cost_reads[0].start_time,
-                    None,
-                    {cost_statistic_id, consumption_statistic_id},
-                    "hour" if account.meter_type == MeterType.ELEC else "day",
-                    None,
-                    {"sum"},
-                )
+                start = cost_reads[0].start_time
+                _LOGGER.debug("Getting statistics at: %s", start)
+                # In the common case there should be a previous statistic at start time
+                # so we only need to fetch one statistic. If there isn't any, fetch all.
+                for end in (start + timedelta(seconds=1), None):
+                    stats = await get_instance(self.hass).async_add_executor_job(
+                        statistics_during_period,
+                        self.hass,
+                        start,
+                        end,
+                        {cost_statistic_id, consumption_statistic_id},
+                        "hour",
+                        None,
+                        {"sum"},
+                    )
+                    if stats:
+                        break
+                    if end:
+                        _LOGGER.debug(
+                            "Not found. Trying to find the oldest statistic after %s",
+                            start,
+                        )
+                # We are in this code path only if get_last_statistics found a stat
+                # so statistics_during_period should also have found at least one.
+                assert stats
                 cost_sum = cast(float, stats[cost_statistic_id][0]["sum"])
                 consumption_sum = cast(float, stats[consumption_statistic_id][0]["sum"])
                 last_stats_time = stats[consumption_statistic_id][0]["start"]
@@ -237,9 +278,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         else:
             start = datetime.fromtimestamp(start_time, tz=tz) - timedelta(days=30)
         end = dt_util.now(tz)
-        cost_reads = await self.api.async_get_cost_reads(
-            account, AggregateType.BILL, start, end
-        )
+        _LOGGER.debug("Getting monthly cost reads: %s - %s", start, end)
+        try:
+            cost_reads = await self.api.async_get_cost_reads(
+                account, AggregateType.BILL, start, end
+            )
+        except ApiException as err:
+            _LOGGER.error("Error getting monthly cost reads: %s", err)
+            raise
+        _LOGGER.debug("Got %s monthly cost reads", len(cost_reads))
         if account.read_resolution == ReadResolution.BILLING:
             return cost_reads
 
@@ -250,9 +297,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
                 start = cost_reads[0].start_time
             assert start
             start = max(start, end - timedelta(days=3 * 365))
-        daily_cost_reads = await self.api.async_get_cost_reads(
-            account, AggregateType.DAY, start, end
-        )
+        _LOGGER.debug("Getting daily cost reads: %s - %s", start, end)
+        try:
+            daily_cost_reads = await self.api.async_get_cost_reads(
+                account, AggregateType.DAY, start, end
+            )
+        except ApiException as err:
+            _LOGGER.error("Error getting daily cost reads: %s", err)
+            raise
+        _LOGGER.debug("Got %s daily cost reads", len(daily_cost_reads))
         _update_with_finer_cost_reads(cost_reads, daily_cost_reads)
         if account.read_resolution == ReadResolution.DAY:
             return cost_reads
@@ -262,8 +315,15 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         else:
             assert start
             start = max(start, end - timedelta(days=2 * 30))
-        hourly_cost_reads = await self.api.async_get_cost_reads(
-            account, AggregateType.HOUR, start, end
-        )
+        _LOGGER.debug("Getting hourly cost reads: %s - %s", start, end)
+        try:
+            hourly_cost_reads = await self.api.async_get_cost_reads(
+                account, AggregateType.HOUR, start, end
+            )
+        except ApiException as err:
+            _LOGGER.error("Error getting hourly cost reads: %s", err)
+            raise
+        _LOGGER.debug("Got %s hourly cost reads", len(hourly_cost_reads))
         _update_with_finer_cost_reads(cost_reads, hourly_cost_reads)
+        _LOGGER.debug("Got %s cost reads", len(cost_reads))
         return cost_reads

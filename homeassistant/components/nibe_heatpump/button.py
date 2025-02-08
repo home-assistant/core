@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER
-from .coordinator import Coordinator
+from .coordinator import CoilCoordinator
 
 
 async def async_setup_entry(
@@ -23,7 +23,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up platform."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     def reset_buttons():
         if unit := UNIT_COILGROUPS.get(coordinator.series, {}).get("main"):
@@ -35,13 +35,13 @@ async def async_setup_entry(
     async_add_entities(reset_buttons())
 
 
-class NibeAlarmResetButton(CoordinatorEntity[Coordinator], ButtonEntity):
+class NibeAlarmResetButton(CoordinatorEntity[CoilCoordinator], ButtonEntity):
     """Sensor entity."""
 
     _attr_has_entity_name = True
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
-    def __init__(self, coordinator: Coordinator, unit: UnitCoilGroup) -> None:
+    def __init__(self, coordinator: CoilCoordinator, unit: UnitCoilGroup) -> None:
         """Initialize entity."""
         self._reset_coil = coordinator.heatpump.get_coil_by_address(unit.alarm_reset)
         self._alarm_coil = coordinator.heatpump.get_coil_by_address(unit.alarm)

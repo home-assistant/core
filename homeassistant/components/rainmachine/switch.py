@@ -20,12 +20,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import (
-    RainMachineConfigEntry,
-    RainMachineData,
-    RainMachineEntity,
-    async_update_programs_and_zones,
-)
+from . import RainMachineConfigEntry, RainMachineData, async_update_programs_and_zones
 from .const import (
     CONF_ALLOW_INACTIVE_ZONES_TO_RUN,
     CONF_DEFAULT_ZONE_RUN_TIME,
@@ -37,7 +32,7 @@ from .const import (
     DATA_ZONES,
     DEFAULT_ZONE_RUN,
 )
-from .model import RainMachineEntityDescription
+from .entity import RainMachineEntity, RainMachineEntityDescription
 from .util import RUN_STATE_MAP, key_exists
 
 ATTR_ACTIVITY_TYPE = "activity_type"

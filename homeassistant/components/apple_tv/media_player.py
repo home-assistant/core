@@ -40,10 +40,11 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
-from . import AppleTvConfigEntry, AppleTVEntity, AppleTVManager
+from . import AppleTvConfigEntry, AppleTVManager
 from .browse_media import build_app_list
+from .entity import AppleTVEntity
 
 _LOGGER = logging.getLogger(__name__)
 

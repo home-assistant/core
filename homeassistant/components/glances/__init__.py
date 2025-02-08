@@ -10,7 +10,6 @@ from glances_api.exceptions import (
     GlancesApiNoDataAvailable,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -28,17 +27,13 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
-from .const import DOMAIN
-from .coordinator import GlancesDataUpdateCoordinator
+from .coordinator import GlancesConfigEntry, GlancesDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 
 _LOGGER = logging.getLogger(__name__)
-
-type GlancesConfigEntry = ConfigEntry[GlancesDataUpdateCoordinator]
 
 
 async def async_setup_entry(
@@ -71,7 +66,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: GlancesConfigEntry) -> 
 async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:
     """Return the api from glances_api."""
     httpx_client = get_async_client(hass, verify_ssl=entry_data[CONF_VERIFY_SSL])
-    for version in (4, 3, 2):
+    for version in (4, 3):
         api = Glances(
             host=entry_data[CONF_HOST],
             port=entry_data[CONF_PORT],
@@ -86,19 +81,9 @@ async def get_api(hass: HomeAssistant, entry_data: dict[str, Any]) -> Glances:
         except GlancesApiNoDataAvailable as err:
             _LOGGER.debug("Failed to connect to Glances API v%s: %s", version, err)
             continue
-        if version == 2:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "deprecated_version",
-                breaks_in_ha_version="2024.8.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="deprecated_version",
-            )
         _LOGGER.debug("Connected to Glances API v%s", version)
         return api
-    raise ServerVersionMismatch("Could not connect to Glances API version 2, 3 or 4")
+    raise ServerVersionMismatch("Could not connect to Glances API version 3 or 4")
 
 
 class ServerVersionMismatch(HomeAssistantError):

@@ -8,10 +8,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    AREA_SQUARE_METERS,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfArea,
     UnitOfLength,
     UnitOfTime,
 )
@@ -61,7 +61,7 @@ SENSORS: list[SensorEntityDescription] = [
         key="total_area_cleaned",
         translation_key="total_area_cleaned",
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=AREA_SQUARE_METERS,
+        native_unit_of_measurement=UnitOfArea.SQUARE_METERS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(

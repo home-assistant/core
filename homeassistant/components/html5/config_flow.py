@@ -1,5 +1,7 @@
 """Config flow for the html5 component."""
 
+from __future__ import annotations
+
 import binascii
 from typing import Any, cast
 
@@ -42,7 +44,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @callback
     def _async_create_html5_entry(
-        self: "HTML5ConfigFlow", data: dict[str, str]
+        self: HTML5ConfigFlow, data: dict[str, str]
     ) -> tuple[dict[str, str], ConfigFlowResult | None]:
         """Create an HTML5 entry."""
         errors = {}
@@ -68,7 +70,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
         return errors, flow_result
 
     async def async_step_user(
-        self: "HTML5ConfigFlow", user_input: dict[str, Any] | None = None
+        self: HTML5ConfigFlow, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
         errors: dict[str, str] = {}
@@ -92,7 +94,7 @@ class HTML5ConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(
-        self: "HTML5ConfigFlow", import_config: dict
+        self: HTML5ConfigFlow, import_config: dict
     ) -> ConfigFlowResult:
         """Handle config import from yaml."""
         _, flow_result = self._async_create_html5_entry(import_config)

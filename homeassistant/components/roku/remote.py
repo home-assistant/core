@@ -6,28 +6,26 @@ from collections.abc import Iterable
 from typing import Any
 
 from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RokuDataUpdateCoordinator
+from . import RokuConfigEntry
 from .entity import RokuEntity
 from .helpers import roku_exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RokuConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Load Roku remote based on a config entry."""
-    coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
         [
             RokuRemote(
-                coordinator=coordinator,
+                coordinator=entry.runtime_data,
             )
         ],
         True,

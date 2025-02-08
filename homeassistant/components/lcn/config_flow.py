@@ -9,7 +9,6 @@ import pypck
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_BASE,
     CONF_DEVICES,
@@ -20,13 +19,12 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_USERNAME,
 )
-from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES, DOMAIN
-from .helpers import purge_device_registry, purge_entity_registry
+from . import PchkConnectionManager
+from .const import CONF_ACKNOWLEDGE, CONF_DIM_MODE, CONF_SK_NUM_TRIES, DIM_MODES, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -37,6 +35,7 @@ CONFIG_DATA = {
     vol.Required(CONF_PASSWORD, default=""): str,
     vol.Required(CONF_SK_NUM_TRIES, default=0): cv.positive_int,
     vol.Required(CONF_DIM_MODE, default="STEPS200"): vol.In(DIM_MODES),
+    vol.Required(CONF_ACKNOWLEDGE, default=False): cv.boolean,
 }
 
 USER_DATA = {vol.Required(CONF_HOST, default="pchk"): str, **CONFIG_DATA}
@@ -70,15 +69,17 @@ async def validate_connection(data: ConfigType) -> str | None:
     password = data[CONF_PASSWORD]
     sk_num_tries = data[CONF_SK_NUM_TRIES]
     dim_mode = data[CONF_DIM_MODE]
+    acknowledge = data[CONF_ACKNOWLEDGE]
 
     settings = {
         "SK_NUM_TRIES": sk_num_tries,
         "DIM_MODE": pypck.lcn_defs.OutputPortDimMode[dim_mode],
+        "ACKNOWLEDGE": acknowledge,
     }
 
     _LOGGER.debug("Validating connection parameters to PCHK host '%s'", host_name)
 
-    connection = pypck.connection.PchkConnectionManager(
+    connection = PchkConnectionManager(
         host, port, username, password, settings=settings
     )
 
@@ -95,7 +96,10 @@ async def validate_connection(data: ConfigType) -> str | None:
             host_name,
         )
         error = "license_error"
-    except (TimeoutError, ConnectionRefusedError):
+    except (
+        pypck.connection.PchkConnectionFailedError,
+        pypck.connection.PchkConnectionRefusedError,
+    ):
         _LOGGER.warning('Connection to PCHK "%s" failed', host_name)
         error = "connection_refused"
 
@@ -106,56 +110,8 @@ async def validate_connection(data: ConfigType) -> str | None:
 class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a LCN config flow."""
 
-    VERSION = 1
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import existing configuration from LCN."""
-        # validate the imported connection parameters
-        if error := await validate_connection(import_data):
-            async_create_issue(
-                self.hass,
-                DOMAIN,
-                error,
-                is_fixable=False,
-                issue_domain=DOMAIN,
-                severity=IssueSeverity.ERROR,
-                translation_key=error,
-                translation_placeholders={
-                    "url": "/config/integrations/dashboard/add?domain=lcn"
-                },
-            )
-            return self.async_abort(reason=error)
-
-        async_create_issue(
-            self.hass,
-            HOMEASSISTANT_DOMAIN,
-            f"deprecated_yaml_{DOMAIN}",
-            breaks_in_ha_version="2024.12.0",
-            is_fixable=False,
-            is_persistent=False,
-            issue_domain=DOMAIN,
-            severity=IssueSeverity.WARNING,
-            translation_key="deprecated_yaml",
-            translation_placeholders={
-                "domain": DOMAIN,
-                "integration_title": "LCN",
-            },
-        )
-
-        # check if we already have a host with the same address configured
-        if entry := get_config_entry(self.hass, import_data):
-            entry.source = config_entries.SOURCE_IMPORT
-            # Cleanup entity and device registry, if we imported from configuration.yaml to
-            # remove orphans when entities were removed from configuration
-            purge_entity_registry(self.hass, entry.entry_id, import_data)
-            purge_device_registry(self.hass, entry.entry_id, import_data)
-
-            self.hass.config_entries.async_update_entry(entry, data=import_data)
-            return self.async_abort(reason="existing_configuration_updated")
-
-        return self.async_create_entry(
-            title=f"{import_data[CONF_HOST]}", data=import_data
-        )
+    VERSION = 2
+    MINOR_VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -191,28 +147,26 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
         """Reconfigure LCN configuration."""
+        reconfigure_entry = self._get_reconfigure_entry()
         errors = None
-        entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-        assert entry
-
         if user_input is not None:
-            user_input[CONF_HOST] = entry.data[CONF_HOST]
+            user_input[CONF_HOST] = reconfigure_entry.data[CONF_HOST]
 
-            await self.hass.config_entries.async_unload(entry.entry_id)
+            await self.hass.config_entries.async_unload(reconfigure_entry.entry_id)
             if (error := await validate_connection(user_input)) is not None:
                 errors = {CONF_BASE: error}
 
             if errors is None:
-                data = entry.data.copy()
-                data.update(user_input)
-                self.hass.config_entries.async_update_entry(entry, data=data)
-                await self.hass.config_entries.async_setup(entry.entry_id)
-                return self.async_abort(reason="reconfigure_successful")
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates=user_input
+                )
 
-            await self.hass.config_entries.async_setup(entry.entry_id)
+            await self.hass.config_entries.async_setup(reconfigure_entry.entry_id)
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, entry.data),
-            errors=errors or {},
+            data_schema=self.add_suggested_values_to_schema(
+                CONFIG_SCHEMA, reconfigure_entry.data
+            ),
+            errors=errors,
         )

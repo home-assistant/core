@@ -21,7 +21,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Configure hosts to be scanned by Nmap. Network address and excludes can be IP Addresses (192.168.1.1), IP Networks (192.168.0.0/24) or IP Ranges (192.168.1.0-32).",
+        "description": "Configure hosts to be scanned by Nmap. Network address and excludes can be IP addresses (192.168.1.1), IP networks (192.168.0.0/24) or IP ranges (192.168.1.0-32).",
         "data": {
           "hosts": "Network addresses (comma separated) to scan",
           "home_interval": "Minimum number of minutes between scans of active devices (preserve battery)",
@@ -31,7 +31,7 @@
       }
     },
     "error": {
-      "invalid_hosts": "Invalid Hosts"
+      "invalid_hosts": "Invalid hosts"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_location%]"

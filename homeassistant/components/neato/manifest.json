@@ -1,7 +1,7 @@
 {
   "domain": "neato",
   "name": "Neato Botvac",
-  "codeowners": ["@Santobert"],
+  "codeowners": [],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/neato",

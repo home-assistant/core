@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
-    DOMAIN,
+    DOMAIN as CLIMATE_DOMAIN,
     FAN_AUTO,
     FAN_HIGH,
     FAN_LOW,
@@ -71,7 +71,7 @@ from .common import async_setup_gree, build_device_mock
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.fake_device_1"
+ENTITY_ID = f"{CLIMATE_DOMAIN}.fake_device_1"
 
 
 async def test_discovery_called_once(hass: HomeAssistant, discovery, device) -> None:
@@ -98,7 +98,7 @@ async def test_discovery_setup(hass: HomeAssistant, discovery, device) -> None:
     await async_setup_gree(hass)
     await hass.async_block_till_done()
     assert discovery.call_count == 1
-    assert len(hass.states.async_all(DOMAIN)) == 2
+    assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 2
 
 
 async def test_discovery_setup_connection_error(
@@ -117,7 +117,7 @@ async def test_discovery_setup_connection_error(
     await async_setup_gree(hass)
     await hass.async_block_till_done()
 
-    assert len(hass.states.async_all(DOMAIN)) == 1
+    assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 1
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
     assert state.state == STATE_UNAVAILABLE
@@ -143,7 +143,7 @@ async def test_discovery_after_setup(
     await async_setup_gree(hass)  # Update 1
 
     assert discovery.return_value.scan_count == 1
-    assert len(hass.states.async_all(DOMAIN)) == 2
+    assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 2
 
     # rediscover the same devices shouldn't change anything
     discovery.return_value.mock_devices = [MockDevice1, MockDevice2]
@@ -154,7 +154,7 @@ async def test_discovery_after_setup(
     await hass.async_block_till_done()
 
     assert discovery.return_value.scan_count == 2
-    assert len(hass.states.async_all(DOMAIN)) == 2
+    assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 2
 
 
 async def test_discovery_add_device_after_setup(
@@ -180,7 +180,7 @@ async def test_discovery_add_device_after_setup(
     await hass.async_block_till_done()
 
     assert discovery.return_value.scan_count == 1
-    assert len(hass.states.async_all(DOMAIN)) == 1
+    assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 1
 
     # rediscover the same devices shouldn't change anything
     discovery.return_value.mock_devices = [MockDevice2]
@@ -191,7 +191,7 @@ async def test_discovery_add_device_after_setup(
     await hass.async_block_till_done()
 
     assert discovery.return_value.scan_count == 2
-    assert len(hass.states.async_all(DOMAIN)) == 2
+    assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 2
 
 
 async def test_discovery_device_bind_after_setup(
@@ -209,7 +209,7 @@ async def test_discovery_device_bind_after_setup(
 
     await async_setup_gree(hass)  # Update 1
 
-    assert len(hass.states.async_all(DOMAIN)) == 1
+    assert len(hass.states.async_all(CLIMATE_DOMAIN)) == 1
     state = hass.states.get(ENTITY_ID)
     assert state.name == "fake-device-1"
     assert state.state == STATE_UNAVAILABLE
@@ -328,7 +328,7 @@ async def test_send_command_device_timeout(
 
     # Send failure should not raise exceptions or change device state
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
@@ -377,7 +377,7 @@ async def test_send_power_on(hass: HomeAssistant, discovery, device) -> None:
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
@@ -397,7 +397,7 @@ async def test_send_power_off_device_timeout(
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_TURN_OFF,
         {ATTR_ENTITY_ID: ENTITY_ID},
         blocking=True,
@@ -439,7 +439,7 @@ async def test_send_target_temperature(
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
         blocking=True,
@@ -473,7 +473,7 @@ async def test_send_target_temperature_with_hvac_mode(
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
             ATTR_ENTITY_ID: ENTITY_ID,
@@ -509,7 +509,7 @@ async def test_send_target_temperature_device_timeout(
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
         blocking=True,
@@ -543,7 +543,7 @@ async def test_update_target_temperature(
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_TEMPERATURE: temperature},
         blocking=True,
@@ -565,7 +565,7 @@ async def test_send_preset_mode(hass: HomeAssistant, discovery, device, preset) 
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset},
         blocking=True,
@@ -582,7 +582,7 @@ async def test_send_invalid_preset_mode(hass: HomeAssistant, discovery, device) 
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_PRESET_MODE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: "invalid"},
             blocking=True,
@@ -605,7 +605,7 @@ async def test_send_preset_mode_device_timeout(
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_PRESET_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_PRESET_MODE: preset},
         blocking=True,
@@ -653,7 +653,7 @@ async def test_send_hvac_mode(
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
         blocking=True,
@@ -677,7 +677,7 @@ async def test_send_hvac_mode_device_timeout(
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_HVAC_MODE: hvac_mode},
         blocking=True,
@@ -722,7 +722,7 @@ async def test_send_fan_mode(hass: HomeAssistant, discovery, device, fan_mode) -
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: fan_mode},
         blocking=True,
@@ -739,7 +739,7 @@ async def test_send_invalid_fan_mode(hass: HomeAssistant, discovery, device) -> 
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: "invalid"},
             blocking=True,
@@ -763,7 +763,7 @@ async def test_send_fan_mode_device_timeout(
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_FAN_MODE: fan_mode},
         blocking=True,
@@ -801,7 +801,7 @@ async def test_send_swing_mode(
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_SWING_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: swing_mode},
         blocking=True,
@@ -818,7 +818,7 @@ async def test_send_invalid_swing_mode(hass: HomeAssistant, discovery, device) -
 
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
-            DOMAIN,
+            CLIMATE_DOMAIN,
             SERVICE_SET_SWING_MODE,
             {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: "invalid"},
             blocking=True,
@@ -841,7 +841,7 @@ async def test_send_swing_mode_device_timeout(
     await async_setup_gree(hass)
 
     await hass.services.async_call(
-        DOMAIN,
+        CLIMATE_DOMAIN,
         SERVICE_SET_SWING_MODE,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_SWING_MODE: swing_mode},
         blocking=True,
@@ -884,7 +884,7 @@ async def test_coordinator_update_handler(
     await async_setup_gree(hass)
     await hass.async_block_till_done()
 
-    entity: GreeClimateEntity = hass.data[DOMAIN].get_entity(ENTITY_ID)
+    entity: GreeClimateEntity = hass.data[CLIMATE_DOMAIN].get_entity(ENTITY_ID)
     assert entity is not None
 
     # Initial state
@@ -911,7 +911,7 @@ async def test_coordinator_update_handler(
     assert entity.max_temp == TEMP_MAX
 
 
-@patch("homeassistant.components.gree.PLATFORMS", [DOMAIN])
+@patch("homeassistant.components.gree.PLATFORMS", [CLIMATE_DOMAIN])
 async def test_registry_settings(
     hass: HomeAssistant, entity_registry: er.EntityRegistry, snapshot: SnapshotAssertion
 ) -> None:
@@ -922,7 +922,7 @@ async def test_registry_settings(
     assert entries == snapshot
 
 
-@patch("homeassistant.components.gree.PLATFORMS", [DOMAIN])
+@patch("homeassistant.components.gree.PLATFORMS", [CLIMATE_DOMAIN])
 async def test_entity_states(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None:
     """Test for entity registry settings (unique_id)."""
     await async_setup_gree(hass)

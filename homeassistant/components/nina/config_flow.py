@@ -14,9 +14,8 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.core import callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
@@ -116,7 +115,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
-                return self.async_abort(reason="unknown")
+                errors["base"] = "unknown"
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
 
@@ -171,8 +170,7 @@ class OptionsFlowHandler(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
-        self.data = dict(self.config_entry.data)
+        self.data = dict(config_entry.data)
 
         self._all_region_codes_sorted: dict[str, str] = {}
         self.regions: dict[str, dict[str, Any]] = {}
@@ -199,7 +197,7 @@ class OptionsFlowHandler(OptionsFlow):
                 errors["base"] = "cannot_connect"
             except Exception as err:  # noqa: BLE001
                 _LOGGER.exception("Unexpected exception: %s", err)
-                return self.async_abort(reason="unknown")
+                errors["base"] = "unknown"
 
             self.regions = split_regions(self._all_region_codes_sorted, self.regions)
 

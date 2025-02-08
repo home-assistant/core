@@ -802,7 +802,9 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][lawn_mower.DOMAIN])
+    config: dict[str, Any] = copy.deepcopy(
+        DEFAULT_CONFIG[mqtt.DOMAIN][lawn_mower.DOMAIN]
+    )
     config["actions"] = ["milk", "beer"]
     await help_test_encoding_subscribable_topics(
         hass,

@@ -1,52 +1,70 @@
 """Test the laundrify coordinator."""
 
-from laundrify_aio import exceptions
+from datetime import timedelta
 
-from homeassistant.components.laundrify.const import DOMAIN
-from homeassistant.core import HomeAssistant
+from freezegun.api import FrozenDateTimeFactory
+from laundrify_aio import LaundrifyDevice, exceptions
 
-from . import create_entry
+from homeassistant.components.laundrify.const import DEFAULT_POLL_INTERVAL
+from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant, State
+from homeassistant.util import slugify
+
+from tests.common import async_fire_time_changed
 
 
-async def test_coordinator_update_success(hass: HomeAssistant) -> None:
+def get_coord_entity(hass: HomeAssistant, mock_device: LaundrifyDevice) -> State:
+    """Get the coordinated energy sensor entity."""
+    device_slug = slugify(mock_device.name, separator="_")
+    return hass.states.get(f"sensor.{device_slug}_energy")
+
+
+async def test_coordinator_update_success(
+    hass: HomeAssistant,
+    laundrify_config_entry,
+    mock_device: LaundrifyDevice,
+    freezer: FrozenDateTimeFactory,
+) -> None:
     """Test the coordinator update is performed successfully."""
-    config_entry = create_entry(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    await coordinator.async_refresh()
+    freezer.tick(timedelta(seconds=DEFAULT_POLL_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert coordinator.last_update_success
+    coord_entity = get_coord_entity(hass, mock_device)
+    assert coord_entity.state != STATE_UNAVAILABLE
 
 
 async def test_coordinator_update_unauthorized(
-    hass: HomeAssistant, laundrify_api_mock
+    hass: HomeAssistant,
+    laundrify_config_entry,
+    laundrify_api_mock,
+    mock_device: LaundrifyDevice,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the coordinator update fails if an UnauthorizedException is thrown."""
-    config_entry = create_entry(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    laundrify_api_mock.get_machines.side_effect = exceptions.UnauthorizedException
+
+    freezer.tick(timedelta(seconds=DEFAULT_POLL_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    laundrify_api_mock.side_effect = exceptions.UnauthorizedException
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    assert not coordinator.last_update_success
+    coord_entity = get_coord_entity(hass, mock_device)
+    assert coord_entity.state == STATE_UNAVAILABLE
 
 
 async def test_coordinator_update_connection_failed(
-    hass: HomeAssistant, laundrify_api_mock
+    hass: HomeAssistant,
+    laundrify_config_entry,
+    laundrify_api_mock,
+    mock_device: LaundrifyDevice,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the coordinator update fails if an ApiConnectionException is thrown."""
-    config_entry = create_entry(hass)
-    await hass.config_entries.async_setup(config_entry.entry_id)
+    laundrify_api_mock.get_machines.side_effect = exceptions.ApiConnectionException
+
+    freezer.tick(timedelta(seconds=DEFAULT_POLL_INTERVAL))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]["coordinator"]
-    laundrify_api_mock.side_effect = exceptions.ApiConnectionException
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    assert not coordinator.last_update_success
+    coord_entity = get_coord_entity(hass, mock_device)
+    assert coord_entity.state == STATE_UNAVAILABLE

@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     AUTHENTICATE_TIMEOUT,
@@ -142,9 +142,11 @@ class RoonConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_fallback()
 
-    async def async_step_fallback(self, user_input=None):
+    async def async_step_fallback(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Get host and port details from the user."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             self._host = user_input["host"]
@@ -155,7 +157,9 @@ class RoonConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="fallback", data_schema=DATA_SCHEMA, errors=errors
         )
 
-    async def async_step_link(self, user_input=None):
+    async def async_step_link(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle linking and authenticating with the roon server."""
         errors = {}
         if user_input is not None:

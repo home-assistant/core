@@ -40,7 +40,11 @@ class NiceGOEventEntity(NiceGOEntity, EventEntity):
     async def async_added_to_hass(self) -> None:
         """Listen for events."""
         await super().async_added_to_hass()
-        self.coordinator.api.event(self.on_barrier_obstructed)
+        self.async_on_remove(
+            self.coordinator.api.listen(
+                "on_barrier_obstructed", self.on_barrier_obstructed
+            )
+        )
 
     async def on_barrier_obstructed(self, data: dict[str, Any]) -> None:
         """Handle barrier obstructed event."""

@@ -10,11 +10,13 @@ import voluptuous as vol
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_FLASH,
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     ENTITY_ID_FORMAT,
     ColorMode,
     LightEntity,
@@ -29,16 +31,23 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolSchemaType
-import homeassistant.util.color as color_util
+from homeassistant.util import color as color_util
 
 from .. import subscription
 from ..config import MQTT_RW_SCHEMA
-from ..const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC, PAYLOAD_NONE
-from ..mixins import MqttEntity
+from ..const import (
+    CONF_COLOR_TEMP_KELVIN,
+    CONF_COMMAND_TOPIC,
+    CONF_MAX_KELVIN,
+    CONF_MIN_KELVIN,
+    CONF_STATE_TOPIC,
+    PAYLOAD_NONE,
+)
+from ..entity import MqttEntity
 from ..models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -83,12 +92,15 @@ PLATFORM_SCHEMA_MODERN_TEMPLATE = (
         {
             vol.Optional(CONF_BLUE_TEMPLATE): cv.template,
             vol.Optional(CONF_BRIGHTNESS_TEMPLATE): cv.template,
+            vol.Optional(CONF_COLOR_TEMP_KELVIN, default=False): cv.boolean,
             vol.Optional(CONF_COLOR_TEMP_TEMPLATE): cv.template,
             vol.Required(CONF_COMMAND_OFF_TEMPLATE): cv.template,
             vol.Required(CONF_COMMAND_ON_TEMPLATE): cv.template,
             vol.Optional(CONF_EFFECT_LIST): vol.All(cv.ensure_list, [cv.string]),
             vol.Optional(CONF_EFFECT_TEMPLATE): cv.template,
             vol.Optional(CONF_GREEN_TEMPLATE): cv.template,
+            vol.Optional(CONF_MAX_KELVIN): cv.positive_int,
+            vol.Optional(CONF_MIN_KELVIN): cv.positive_int,
             vol.Optional(CONF_MAX_MIREDS): cv.positive_int,
             vol.Optional(CONF_MIN_MIREDS): cv.positive_int,
             vol.Optional(CONF_NAME): vol.Any(cv.string, None),
@@ -126,8 +138,17 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-        self._attr_max_mireds = config.get(CONF_MAX_MIREDS, super().max_mireds)
-        self._attr_min_mireds = config.get(CONF_MIN_MIREDS, super().min_mireds)
+        self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
+        self._attr_min_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(max_mireds)
+            if (max_mireds := config.get(CONF_MAX_MIREDS))
+            else config.get(CONF_MIN_KELVIN, DEFAULT_MIN_KELVIN)
+        )
+        self._attr_max_color_temp_kelvin = (
+            color_util.color_temperature_mired_to_kelvin(min_mireds)
+            if (min_mireds := config.get(CONF_MIN_MIREDS))
+            else config.get(CONF_MAX_KELVIN, DEFAULT_MAX_KELVIN)
+        )
         self._attr_effect_list = config.get(CONF_EFFECT_LIST)
 
         self._topics = {
@@ -213,8 +234,12 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 color_temp = self._value_templates[CONF_COLOR_TEMP_TEMPLATE](
                     msg.payload
                 )
-                self._attr_color_temp = (
-                    int(color_temp) if color_temp != "None" else None
+                self._attr_color_temp_kelvin = (
+                    int(color_temp)
+                    if self._color_temp_kelvin
+                    else color_util.color_temperature_mired_to_kelvin(int(color_temp))
+                    if color_temp != "None"
+                    else None
                 )
             except ValueError:
                 _LOGGER.warning("Invalid color temperature value received")
@@ -256,7 +281,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             {
                 "_attr_brightness",
                 "_attr_color_mode",
-                "_attr_color_temp",
+                "_attr_color_temp_kelvin",
                 "_attr_effect",
                 "_attr_hs_color",
                 "_attr_is_on",
@@ -275,8 +300,10 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             if last_state.attributes.get(ATTR_HS_COLOR):
                 self._attr_hs_color = last_state.attributes.get(ATTR_HS_COLOR)
                 self._update_color_mode()
-            if last_state.attributes.get(ATTR_COLOR_TEMP):
-                self._attr_color_temp = last_state.attributes.get(ATTR_COLOR_TEMP)
+            if last_state.attributes.get(ATTR_COLOR_TEMP_KELVIN):
+                self._attr_color_temp_kelvin = last_state.attributes.get(
+                    ATTR_COLOR_TEMP_KELVIN
+                )
             if last_state.attributes.get(ATTR_EFFECT):
                 self._attr_effect = last_state.attributes.get(ATTR_EFFECT)
 
@@ -295,11 +322,17 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             if self._optimistic:
                 self._attr_brightness = kwargs[ATTR_BRIGHTNESS]
 
-        if ATTR_COLOR_TEMP in kwargs:
-            values["color_temp"] = int(kwargs[ATTR_COLOR_TEMP])
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            values["color_temp"] = (
+                kwargs[ATTR_COLOR_TEMP_KELVIN]
+                if self._color_temp_kelvin
+                else color_util.color_temperature_kelvin_to_mired(
+                    kwargs[ATTR_COLOR_TEMP_KELVIN]
+                )
+            )
 
             if self._optimistic:
-                self._attr_color_temp = kwargs[ATTR_COLOR_TEMP]
+                self._attr_color_temp_kelvin = kwargs[ATTR_COLOR_TEMP_KELVIN]
                 self._attr_hs_color = None
                 self._update_color_mode()
 
@@ -325,7 +358,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             values["sat"] = hs_color[1]
 
             if self._optimistic:
-                self._attr_color_temp = None
+                self._attr_color_temp_kelvin = None
                 self._attr_hs_color = kwargs[ATTR_HS_COLOR]
                 self._update_color_mode()
 

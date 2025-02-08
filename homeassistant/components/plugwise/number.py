@@ -20,6 +20,8 @@ from .coordinator import PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class PlugwiseNumberEntityDescription(NumberEntityDescription):
@@ -71,7 +73,7 @@ async def async_setup_entry(
             PlugwiseNumberEntity(coordinator, device_id, description)
             for device_id in coordinator.new_devices
             for description in NUMBER_TYPES
-            if description.key in coordinator.data.devices[device_id]
+            if description.key in coordinator.data[device_id]
         )
 
     _add_entities()
@@ -91,12 +93,12 @@ class PlugwiseNumberEntity(PlugwiseEntity, NumberEntity):
     ) -> None:
         """Initiate Plugwise Number."""
         super().__init__(coordinator, device_id)
-        self.device_id = device_id
-        self.entity_description = description
-        self._attr_unique_id = f"{device_id}-{description.key}"
         self._attr_mode = NumberMode.BOX
         self._attr_native_max_value = self.device[description.key]["upper_bound"]
         self._attr_native_min_value = self.device[description.key]["lower_bound"]
+        self._attr_unique_id = f"{device_id}-{description.key}"
+        self.device_id = device_id
+        self.entity_description = description
 
         native_step = self.device[description.key]["resolution"]
         if description.key != "temperature_offset":

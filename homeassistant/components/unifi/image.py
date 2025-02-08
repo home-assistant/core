@@ -17,7 +17,7 @@ from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
 from .entity import (
@@ -49,6 +49,7 @@ class UnifiImageEntityDescription(
 ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
     UnifiImageEntityDescription[Wlans, Wlan](
         key="WLAN QR Code",
+        translation_key="wlan_qr_code",
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         api_handler_fn=lambda api: api.wlans,

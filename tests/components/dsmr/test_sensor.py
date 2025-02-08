@@ -89,7 +89,7 @@ async def test_default_setup(
             (0, 0),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": UnitOfVolume.CUBIC_METERS},
+                {"value": Decimal("745.695"), "unit": UnitOfVolume.CUBIC_METERS},
             ],
         ),
         "GAS_METER_READING",
@@ -152,7 +152,7 @@ async def test_default_setup(
             (0, 0),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642214)},
-                {"value": Decimal(745.701), "unit": UnitOfVolume.CUBIC_METERS},
+                {"value": Decimal("745.701"), "unit": UnitOfVolume.CUBIC_METERS},
             ],
         ),
         "GAS_METER_READING",
@@ -279,7 +279,7 @@ async def test_v4_meter(
             (0, 0),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
         "HOURLY_GAS_METER_READING",
@@ -336,9 +336,9 @@ async def test_v4_meter(
 @pytest.mark.parametrize(
     ("value", "state"),
     [
-        (Decimal(745.690), "745.69"),
-        (Decimal(745.695), "745.695"),
-        (Decimal(0.000), STATE_UNKNOWN),
+        (Decimal("745.690"), "745.69"),
+        (Decimal("745.695"), "745.695"),
+        (Decimal("0.000"), STATE_UNKNOWN),
     ],
 )
 async def test_v5_meter(
@@ -440,7 +440,7 @@ async def test_luxembourg_meter(
             (0, 0),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
         "HOURLY_GAS_METER_READING",
@@ -449,7 +449,7 @@ async def test_luxembourg_meter(
         ELECTRICITY_IMPORTED_TOTAL,
         CosemObject(
             (0, 0),
-            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+            [{"value": Decimal("123.456"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         "ELECTRICITY_IMPORTED_TOTAL",
     )
@@ -457,7 +457,7 @@ async def test_luxembourg_meter(
         ELECTRICITY_EXPORTED_TOTAL,
         CosemObject(
             (0, 0),
-            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+            [{"value": Decimal("654.321"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         "ELECTRICITY_EXPORTED_TOTAL",
     )
@@ -533,7 +533,7 @@ async def test_belgian_meter(
         BELGIUM_CURRENT_AVERAGE_DEMAND,
         CosemObject(
             (0, 0),
-            [{"value": Decimal(1.75), "unit": "kW"}],
+            [{"value": Decimal("1.75"), "unit": "kW"}],
         ),
         "BELGIUM_CURRENT_AVERAGE_DEMAND",
     )
@@ -543,7 +543,7 @@ async def test_belgian_meter(
             (0, 0),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642218)},
-                {"value": Decimal(4.11), "unit": "kW"},
+                {"value": Decimal("4.11"), "unit": "kW"},
             ],
         ),
         "BELGIUM_MAXIMUM_DEMAND_MONTH",
@@ -567,7 +567,7 @@ async def test_belgian_meter(
             (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -591,7 +591,7 @@ async def test_belgian_meter(
             (0, 2),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642214)},
-                {"value": Decimal(678.695), "unit": "m3"},
+                {"value": Decimal("678.695"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -615,7 +615,7 @@ async def test_belgian_meter(
             (0, 3),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642215)},
-                {"value": Decimal(12.12), "unit": "m3"},
+                {"value": Decimal("12.12"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -639,7 +639,7 @@ async def test_belgian_meter(
             (0, 4),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642216)},
-                {"value": Decimal(13.13), "unit": "m3"},
+                {"value": Decimal("13.13"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -782,7 +782,7 @@ async def test_belgian_meter_alt(
             (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642215)},
-                {"value": Decimal(123.456), "unit": "m3"},
+                {"value": Decimal("123.456"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -806,7 +806,7 @@ async def test_belgian_meter_alt(
             (0, 2),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642216)},
-                {"value": Decimal(678.901), "unit": "m3"},
+                {"value": Decimal("678.901"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -830,7 +830,7 @@ async def test_belgian_meter_alt(
             (0, 3),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642217)},
-                {"value": Decimal(12.12), "unit": "m3"},
+                {"value": Decimal("12.12"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -854,7 +854,7 @@ async def test_belgian_meter_alt(
             (0, 4),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642218)},
-                {"value": Decimal(13.13), "unit": "m3"},
+                {"value": Decimal("13.13"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -1001,7 +1001,7 @@ async def test_belgian_meter_mbus(
             (0, 3),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642217)},
-                {"value": Decimal(12.12), "unit": "m3"},
+                {"value": Decimal("12.12"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -1017,7 +1017,7 @@ async def test_belgian_meter_mbus(
             (0, 4),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642218)},
-                {"value": Decimal(13.13), "unit": "m3"},
+                {"value": Decimal("13.13"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -1154,7 +1154,7 @@ async def test_swedish_meter(
         ELECTRICITY_IMPORTED_TOTAL,
         CosemObject(
             (0, 0),
-            [{"value": Decimal(123.456), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+            [{"value": Decimal("123.456"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         "ELECTRICITY_IMPORTED_TOTAL",
     )
@@ -1162,7 +1162,7 @@ async def test_swedish_meter(
         ELECTRICITY_EXPORTED_TOTAL,
         CosemObject(
             (0, 0),
-            [{"value": Decimal(654.321), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+            [{"value": Decimal("654.321"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         "ELECTRICITY_EXPORTED_TOTAL",
     )
@@ -1229,7 +1229,7 @@ async def test_easymeter(
         ELECTRICITY_IMPORTED_TOTAL,
         CosemObject(
             (0, 0),
-            [{"value": Decimal(54184.6316), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+            [{"value": Decimal("54184.6316"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         "ELECTRICITY_IMPORTED_TOTAL",
     )
@@ -1237,7 +1237,7 @@ async def test_easymeter(
         ELECTRICITY_EXPORTED_TOTAL,
         CosemObject(
             (0, 0),
-            [{"value": Decimal(19981.1069), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+            [{"value": Decimal("19981.1069"), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
         ),
         "ELECTRICITY_EXPORTED_TOTAL",
     )
@@ -1489,7 +1489,7 @@ async def test_gas_meter_providing_energy_reading(
             (0, 0),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(123.456), "unit": UnitOfEnergy.GIGA_JOULE},
+                {"value": Decimal("123.456"), "unit": UnitOfEnergy.GIGA_JOULE},
             ],
         ),
         "GAS_METER_READING",
@@ -1518,6 +1518,74 @@ async def test_gas_meter_providing_energy_reading(
     assert (
         gas_consumption.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
         == UnitOfEnergy.GIGA_JOULE
+    )
+
+
+async def test_heat_meter_mbus(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """Test if heat meter reading is correctly parsed."""
+    (connection_factory, transport, protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "5",
+        "serial_id": "1234",
+        "serial_id_gas": None,
+    }
+    entry_options = {
+        "time_between_update": 0,
+    }
+
+    telegram = Telegram()
+    telegram.add(
+        MBUS_DEVICE_TYPE,
+        CosemObject((0, 1), [{"value": "004", "unit": ""}]),
+        "MBUS_DEVICE_TYPE",
+    )
+    telegram.add(
+        MBUS_METER_READING,
+        MBusObject(
+            (0, 1),
+            [
+                {"value": datetime.datetime.fromtimestamp(1551642213)},
+                {"value": Decimal("745.695"), "unit": "GJ"},
+            ],
+        ),
+        "MBUS_METER_READING",
+    )
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data, options=entry_options
+    )
+
+    hass.loop.set_debug(True)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    telegram_callback = connection_factory.call_args_list[0][0][2]
+
+    # simulate a telegram pushed from the smartmeter and parsed by dsmr_parser
+    telegram_callback(telegram)
+
+    # after receiving telegram entities need to have the chance to be created
+    await hass.async_block_till_done()
+
+    # check if gas consumption is parsed correctly
+    heat_consumption = hass.states.get("sensor.heat_meter_energy")
+    assert heat_consumption.state == "745.695"
+    assert (
+        heat_consumption.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
+    )
+    assert (
+        heat_consumption.attributes.get("unit_of_measurement")
+        == UnitOfEnergy.GIGA_JOULE
+    )
+    assert (
+        heat_consumption.attributes.get(ATTR_STATE_CLASS)
+        == SensorStateClass.TOTAL_INCREASING
     )
 
 

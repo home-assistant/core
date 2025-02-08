@@ -12,9 +12,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .base_class import TradfriBaseEntity
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+from .entity import TradfriBaseEntity
 
 ATTR_AUTO = "Auto"
 ATTR_MAX_FAN_STEPS = 49
@@ -69,7 +69,6 @@ class TradfriAirPurifierFan(TradfriBaseEntity, FanEntity):
     # ... with step size 1
     # 50 = Max
     _attr_speed_count = ATTR_MAX_FAN_STEPS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

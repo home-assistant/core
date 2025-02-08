@@ -1,6 +1,7 @@
 """Test ESPHome binary sensors."""
 
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 
 from aioesphomeapi import (
     APIClient,
@@ -12,15 +13,20 @@ from aioesphomeapi import (
 )
 import pytest
 
-from homeassistant.components.esphome import DomainData
+from homeassistant.components.esphome import DOMAIN, DomainData
+from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDevice
 
 from tests.common import MockConfigEntry
+from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_assist_in_progress(
     hass: HomeAssistant,
     mock_voice_assistant_v1_entry,
@@ -42,6 +48,131 @@ async def test_assist_in_progress(
 
     state = hass.states.get("binary_sensor.test_assist_in_progress")
     assert state.state == "off"
+
+
+async def test_assist_in_progress_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_voice_assistant_v1_entry,
+) -> None:
+    """Test assist in progress binary sensor is added disabled."""
+
+    assert not hass.states.get("binary_sensor.test_assist_in_progress")
+    entity_entry = entity_registry.async_get("binary_sensor.test_assist_in_progress")
+    assert entity_entry
+    assert entity_entry.disabled
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+
+    # Test no issue for disabled entity
+    assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_assist_in_progress_issue(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_voice_assistant_v1_entry,
+) -> None:
+    """Test assist in progress binary sensor."""
+
+    state = hass.states.get("binary_sensor.test_assist_in_progress")
+    assert state is not None
+
+    entity_entry = entity_registry.async_get("binary_sensor.test_assist_in_progress")
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"assist_in_progress_deprecated_{entity_entry.id}"
+    )
+    assert issue is not None
+
+    # Test issue goes away after disabling the entity
+    entity_registry.async_update_entity(
+        "binary_sensor.test_assist_in_progress",
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await hass.async_block_till_done()
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"assist_in_progress_deprecated_{entity_entry.id}"
+    )
+    assert issue is None
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_assist_in_progress_repair_flow(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    mock_voice_assistant_v1_entry,
+) -> None:
+    """Test assist in progress binary sensor deprecation issue flow."""
+
+    state = hass.states.get("binary_sensor.test_assist_in_progress")
+    assert state is not None
+
+    entity_entry = entity_registry.async_get("binary_sensor.test_assist_in_progress")
+    assert entity_entry.disabled_by is None
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"assist_in_progress_deprecated_{entity_entry.id}"
+    )
+    assert issue is not None
+    assert issue.data == {
+        "entity_id": "binary_sensor.test_assist_in_progress",
+        "entity_uuid": entity_entry.id,
+        "integration_name": "ESPHome",
+    }
+    assert issue.translation_key == "assist_in_progress_deprecated"
+    assert issue.translation_placeholders == {"integration_name": "ESPHome"}
+
+    assert await async_setup_component(hass, REPAIRS_DOMAIN, {REPAIRS_DOMAIN: {}})
+    await hass.async_block_till_done()
+    await hass.async_start()
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": DOMAIN, "issue_id": issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "data_schema": [],
+        "description_placeholders": {
+            "assist_satellite_domain": "assist_satellite",
+            "entity_id": "binary_sensor.test_assist_in_progress",
+            "integration_name": "ESPHome",
+        },
+        "errors": None,
+        "flow_id": flow_id,
+        "handler": DOMAIN,
+        "last_step": None,
+        "preview": None,
+        "step_id": "confirm_disable_entity",
+        "type": "form",
+    }
+
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}")
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    flow_id = data["flow_id"]
+    assert data == {
+        "description": None,
+        "description_placeholders": None,
+        "flow_id": flow_id,
+        "handler": DOMAIN,
+        "type": "create_entry",
+    }
+
+    # Test the entity is disabled
+    entity_entry = entity_registry.async_get("binary_sensor.test_assist_in_progress")
+    assert entity_entry.disabled_by is er.RegistryEntryDisabler.USER
 
 
 @pytest.mark.parametrize(

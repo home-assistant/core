@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import cast
 
-from jaraco.abode.devices.sensor import BinarySensor
+from jaraco.abode.devices.binary_sensor import BinarySensor
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,

@@ -26,6 +26,8 @@
         'port': 10200,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'wyoming',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -70,6 +72,8 @@
         'port': 10200,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'wyoming',
       'entry_id': <ANY>,
       'minor_version': 1,
@@ -90,7 +94,6 @@
 # name: test_zeroconf_discovery
   FlowResultSnapshot({
     'context': dict({
-      'name': 'Test Satellite',
       'source': 'zeroconf',
       'title_placeholders': dict({
         'name': 'Test Satellite',
@@ -114,6 +117,8 @@
         'port': 12345,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'wyoming',
       'entry_id': <ANY>,
       'minor_version': 1,

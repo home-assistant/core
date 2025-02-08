@@ -15,9 +15,11 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HabiticaConfigEntry
 from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
+from .types import HabiticaConfigEntry
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -26,7 +28,7 @@ class HabiticaSwitchEntityDescription(SwitchEntityDescription):
 
     turn_on_fn: Callable[[HabiticaDataUpdateCoordinator], Any]
     turn_off_fn: Callable[[HabiticaDataUpdateCoordinator], Any]
-    is_on_fn: Callable[[HabiticaData], bool]
+    is_on_fn: Callable[[HabiticaData], bool | None]
 
 
 class HabiticaSwitchEntity(StrEnum):
@@ -40,9 +42,9 @@ SWTICH_DESCRIPTIONS: tuple[HabiticaSwitchEntityDescription, ...] = (
         key=HabiticaSwitchEntity.SLEEP,
         translation_key=HabiticaSwitchEntity.SLEEP,
         device_class=SwitchDeviceClass.SWITCH,
-        turn_on_fn=lambda coordinator: coordinator.api["user"]["sleep"].post(),
-        turn_off_fn=lambda coordinator: coordinator.api["user"]["sleep"].post(),
-        is_on_fn=lambda data: data.user["preferences"]["sleep"],
+        turn_on_fn=lambda coordinator: coordinator.habitica.toggle_sleep(),
+        turn_off_fn=lambda coordinator: coordinator.habitica.toggle_sleep(),
+        is_on_fn=lambda data: data.user.preferences.sleep,
     ),
 )
 

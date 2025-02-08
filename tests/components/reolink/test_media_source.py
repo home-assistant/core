@@ -10,13 +10,12 @@ from reolink_aio.exceptions import ReolinkError
 from homeassistant.components.media_source import (
     DOMAIN as MEDIA_SOURCE_DOMAIN,
     URI_SCHEME,
+    Unresolvable,
     async_browse_media,
     async_resolve_media,
 )
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.components.reolink.const import DOMAIN
+from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.stream import DOMAIN as MEDIA_STREAM_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -33,6 +32,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     TEST_HOST2,
+    TEST_HOST_MODEL,
     TEST_MAC2,
     TEST_NVR_NAME,
     TEST_NVR_NAME2,
@@ -109,11 +109,17 @@ async def test_resolve(
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
+    reolink_connect.is_nvr = False
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
+    assert play_media.mime_type == TEST_MIME_TYPE_MP4
+
     file_id = (
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
-    reolink_connect.is_nvr = False
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
@@ -226,6 +232,8 @@ async def test_browsing(
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
 
+    reolink_connect.model = TEST_HOST_MODEL
+
 
 async def test_browsing_unsupported_encoding(
     hass: HomeAssistant,
@@ -321,14 +329,14 @@ async def test_browsing_not_loaded(
 
     reolink_connect.get_host_data.side_effect = ReolinkError("Test error")
     config_entry2 = MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id=format_mac(TEST_MAC2),
         data={
             CONF_HOST: TEST_HOST2,
             CONF_USERNAME: TEST_USERNAME2,
             CONF_PASSWORD: TEST_PASSWORD2,
             CONF_PORT: TEST_PORT,
-            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -346,3 +354,5 @@ async def test_browsing_not_loaded(
     assert browse.title == "Reolink"
     assert browse.identifier is None
     assert len(browse.children) == 1
+
+    reolink_connect.get_host_data.side_effect = None

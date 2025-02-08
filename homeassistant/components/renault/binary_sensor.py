@@ -19,6 +19,9 @@ from homeassistant.helpers.typing import StateType
 from . import RenaultConfigEntry
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class RenaultBinarySensorEntityDescription(
@@ -28,7 +31,7 @@ class RenaultBinarySensorEntityDescription(
     """Class describing Renault binary sensor entities."""
 
     on_key: str
-    on_value: StateType
+    on_value: StateType | list[StateType]
 
 
 async def async_setup_entry(
@@ -58,6 +61,9 @@ class RenaultBinarySensor(
         """Return true if the binary sensor is on."""
         if (data := self._get_data_attr(self.entity_description.on_key)) is None:
             return None
+
+        if isinstance(self.entity_description.on_value, list):
+            return data in self.entity_description.on_value
         return data == self.entity_description.on_value
 
 
@@ -68,7 +74,10 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
             coordinator="battery",
             device_class=BinarySensorDeviceClass.PLUG,
             on_key="plugStatus",
-            on_value=PlugState.PLUGGED.value,
+            on_value=[
+                PlugState.PLUGGED.value,
+                PlugState.PLUGGED_WAITING_FOR_CHARGE.value,
+            ],
         ),
         RenaultBinarySensorEntityDescription(
             key="charging",
@@ -104,13 +113,13 @@ BINARY_SENSOR_TYPES: tuple[RenaultBinarySensorEntityDescription, ...] = tuple(
     ]
     + [
         RenaultBinarySensorEntityDescription(
-            key=f"{door.replace(' ','_').lower()}_door_status",
+            key=f"{door.replace(' ', '_').lower()}_door_status",
             coordinator="lock_status",
             # On means open, Off means closed
             device_class=BinarySensorDeviceClass.DOOR,
-            on_key=f"doorStatus{door.replace(' ','')}",
+            on_key=f"doorStatus{door.replace(' ', '')}",
             on_value="open",
-            translation_key=f"{door.lower().replace(' ','_')}_door_status",
+            translation_key=f"{door.lower().replace(' ', '_')}_door_status",
         )
         for door in ("Rear Left", "Rear Right", "Driver", "Passenger")
     ],

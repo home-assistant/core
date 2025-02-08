@@ -2,7 +2,7 @@
 
 import requests_mock
 
-from homeassistant.components.climate import DOMAIN
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -54,7 +54,7 @@ async def async_init_integration(
         }
         for model in TEST_MODELS
     ]
-    config = {DOMAIN: platform_config}
+    config = {CLIMATE_DOMAIN: platform_config}
 
-    await async_setup_component(hass, DOMAIN, config)
+    await async_setup_component(hass, CLIMATE_DOMAIN, config)
     await hass.async_block_till_done()

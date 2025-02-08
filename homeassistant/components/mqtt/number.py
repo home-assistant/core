@@ -39,7 +39,7 @@ from .const import (
     CONF_PAYLOAD_RESET,
     CONF_STATE_TOPIC,
 )
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
@@ -49,6 +49,8 @@ from .models import (
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_MIN = "min"
 CONF_MAX = "max"
@@ -177,14 +179,14 @@ class MqttNumber(MqttEntity, RestoreNumber):
             return
 
         if num_value is not None and (
-            num_value < self.min_value or num_value > self.max_value
+            num_value < self.native_min_value or num_value > self.native_max_value
         ):
             _LOGGER.error(
                 "Invalid value for %s: %s (range %s - %s)",
                 self.entity_id,
                 num_value,
-                self.min_value,
-                self.max_value,
+                self.native_min_value,
+                self.native_max_value,
             )
             return
 

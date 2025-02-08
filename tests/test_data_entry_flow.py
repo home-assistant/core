@@ -13,11 +13,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.decorator import Registry
 
-from .common import (
-    async_capture_events,
-    help_test_all,
-    import_and_test_deprecated_constant_enum,
-)
+from .common import async_capture_events
 
 
 class MockFlowManager(data_entry_flow.FlowManager):
@@ -781,83 +777,6 @@ async def test_async_get_unknown_flow(manager: MockFlowManager) -> None:
         await manager.async_get("does_not_exist")
 
 
-async def test_async_has_matching_flow(
-    hass: HomeAssistant, manager: MockFlowManager
-) -> None:
-    """Test we can check for matching flows."""
-    manager.hass = hass
-    assert (
-        manager.async_has_matching_flow(
-            "test",
-            {"source": config_entries.SOURCE_HOMEKIT},
-            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
-        )
-        is False
-    )
-
-    @manager.mock_reg_handler("test")
-    class TestFlow(data_entry_flow.FlowHandler):
-        VERSION = 5
-
-        async def async_step_init(self, user_input=None):
-            return self.async_show_progress(
-                step_id="init",
-                progress_action="task_one",
-            )
-
-    result = await manager.async_init(
-        "test",
-        context={"source": config_entries.SOURCE_HOMEKIT},
-        data={"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
-    )
-    assert result["type"] == data_entry_flow.FlowResultType.SHOW_PROGRESS
-    assert result["progress_action"] == "task_one"
-    assert len(manager.async_progress()) == 1
-    assert len(manager.async_progress_by_handler("test")) == 1
-    assert (
-        len(
-            manager.async_progress_by_handler(
-                "test", match_context={"source": config_entries.SOURCE_HOMEKIT}
-            )
-        )
-        == 1
-    )
-    assert (
-        len(
-            manager.async_progress_by_handler(
-                "test", match_context={"source": config_entries.SOURCE_BLUETOOTH}
-            )
-        )
-        == 0
-    )
-    assert manager.async_get(result["flow_id"])["handler"] == "test"
-
-    assert (
-        manager.async_has_matching_flow(
-            "test",
-            {"source": config_entries.SOURCE_HOMEKIT},
-            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
-        )
-        is True
-    )
-    assert (
-        manager.async_has_matching_flow(
-            "test",
-            {"source": config_entries.SOURCE_SSDP},
-            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
-        )
-        is False
-    )
-    assert (
-        manager.async_has_matching_flow(
-            "other",
-            {"source": config_entries.SOURCE_HOMEKIT},
-            {"properties": {"id": "aa:bb:cc:dd:ee:ff"}},
-        )
-        is False
-    )
-
-
 async def test_move_to_unknown_step_raises_and_removes_from_in_progress(
     manager: MockFlowManager,
 ) -> None:
@@ -1060,22 +979,6 @@ async def test_find_flows_by_init_data_type(manager: MockFlowManager) -> None:
     )
     assert len(wifi_flows) == 0
     assert len(manager.async_progress()) == 0
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(data_entry_flow)
-
-
-@pytest.mark.parametrize(("enum"), list(data_entry_flow.FlowResultType))
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: data_entry_flow.FlowResultType,
-) -> None:
-    """Test deprecated constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, data_entry_flow, enum, "RESULT_TYPE_", "2025.1"
-    )
 
 
 def test_section_in_serializer() -> None:

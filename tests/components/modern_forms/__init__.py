@@ -62,7 +62,9 @@ async def init_integration(
     )
 
     entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_HOST: "192.168.1.123", CONF_MAC: "AA:BB:CC:DD:EE:FF"}
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.123", CONF_MAC: "AA:BB:CC:DD:EE:FF"},
+        unique_id="AA:BB:CC:DD:EE:FF",
     )
 
     entry.add_to_hass(hass)

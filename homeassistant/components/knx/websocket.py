@@ -21,7 +21,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ulid import ulid_now
 
-from .const import DOMAIN
+from .const import DOMAIN, KNX_MODULE_KEY
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
@@ -38,7 +38,6 @@ from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict
 if TYPE_CHECKING:
     from . import KNXModule
 
-
 URL_BASE: Final = "/knx_static"
 
 
@@ -48,6 +47,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_project_file_process)
     websocket_api.async_register_command(hass, ws_project_file_remove)
     websocket_api.async_register_command(hass, ws_group_monitor_info)
+    websocket_api.async_register_command(hass, ws_group_telegrams)
     websocket_api.async_register_command(hass, ws_subscribe_telegram)
     websocket_api.async_register_command(hass, ws_get_knx_project)
     websocket_api.async_register_command(hass, ws_validate_entity)
@@ -126,7 +126,7 @@ def provide_knx(
         ) -> None:
             """Add KNX Module to call function."""
             try:
-                knx: KNXModule = hass.data[DOMAIN]
+                knx = hass.data[KNX_MODULE_KEY]
             except KeyError:
                 _send_not_loaded_error(connection, msg["id"])
                 return
@@ -142,7 +142,7 @@ def provide_knx(
         ) -> None:
             """Add KNX Module to call function."""
             try:
-                knx: KNXModule = hass.data[DOMAIN]
+                knx = hass.data[KNX_MODULE_KEY]
             except KeyError:
                 _send_not_loaded_error(connection, msg["id"])
                 return
@@ -285,6 +285,27 @@ def ws_group_monitor_info(
             "project_loaded": knx.project.loaded,
             "recent_telegrams": recent_telegrams,
         },
+    )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/group_telegrams",
+    }
+)
+@provide_knx
+@callback
+def ws_group_telegrams(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle get group telegrams command."""
+    connection.send_result(
+        msg["id"],
+        knx.telegrams.last_ga_telegrams,
     )
 
 

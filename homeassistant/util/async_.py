@@ -39,7 +39,7 @@ def create_eager_task[_T](
             # pylint: disable-next=import-outside-toplevel
             from homeassistant.helpers import frame
 
-            frame.report("attempted to create an asyncio task from a thread")
+            frame.report_usage("attempted to create an asyncio task from a thread")
             raise
 
     return Task(coro, loop=loop, name=name, eager_start=True)

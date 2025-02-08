@@ -74,6 +74,8 @@ async def test_floodlight_mode_select(
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
+    reolink_connect.set_whiteled.reset_mock(side_effect=True)
+
 
 async def test_play_quick_reply_message(
     hass: HomeAssistant,
@@ -98,6 +100,8 @@ async def test_play_quick_reply_message(
         blocking=True,
     )
     reolink_connect.play_quick_reply.assert_called_once()
+
+    reolink_connect.quick_reply_dict = MagicMock()
 
 
 async def test_chime_select(
@@ -153,3 +157,5 @@ async def test_chime_select(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNKNOWN
+
+    test_chime.set_tone.reset_mock(side_effect=True)

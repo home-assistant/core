@@ -27,7 +27,9 @@
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "You can only reauthenticate this entry with the same Husqvarna account.",
-      "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal."
+      "no_mower_connected": "No mowers connected to this account.",
+      "missing_amc_scope": "The `Authentication API` and the `Automower Connect API` are not connected to your application in the Husqvarna Developer Portal.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
@@ -45,16 +47,19 @@
     "button": {
       "confirm_error": {
         "name": "Confirm error"
+      },
+      "sync_clock": {
+        "name": "Sync clock"
       }
     },
     "number": {
       "cutting_height": {
         "name": "Cutting height"
       },
-      "my_lawn_cutting_height": {
-        "name": "My lawn cutting height "
+      "my_lawn_cutting_height_work_area": {
+        "name": "My lawn cutting height"
       },
-      "work_area_cutting_height": {
+      "work_area_cutting_height_work_area": {
         "name": "{work_area} cutting height"
       }
     },
@@ -115,6 +120,9 @@
           "docking_sensor_defect": "Docking sensor defect",
           "electronic_problem": "Electronic problem",
           "empty_battery": "Empty battery",
+          "error": "Error",
+          "error_at_power_up": "Error at power up",
+          "fatal_error": "Fatal error",
           "folding_cutting_deck_sensor_defect": "Folding cutting deck sensor defect",
           "folding_sensor_activated": "Folding sensor activated",
           "geofence_problem": "Geofence problem",
@@ -198,6 +206,12 @@
           "zone_generator_problem": "Zone generator problem"
         }
       },
+      "my_lawn_last_time_completed": {
+        "name": "My lawn last time completed"
+      },
+      "my_lawn_progress": {
+        "name": "My lawn progress"
+      },
       "number_of_charging_cycles": {
         "name": "Number of charging cycles"
       },
@@ -260,6 +274,12 @@
             "name": "Work area ID assignment"
           }
         }
+      },
+      "work_area_last_time_completed": {
+        "name": "{work_area} last time completed"
+      },
+      "work_area_progress": {
+        "name": "{work_area} progress"
       }
     },
     "switch": {
@@ -268,6 +288,9 @@
       },
       "stay_out_zones": {
         "name": "Avoid {stay_out_zone}"
+      },
+      "my_lawn_work_area": {
+        "name": "My lawn"
       }
     }
   },
@@ -290,10 +313,16 @@
       }
     }
   },
+  "issues": {
+    "deprecated_entity": {
+      "title": "The Husqvarna Automower {entity_name} sensor is deprecated",
+      "description": "The Husqvarna Automower entity `{entity}` is deprecated and will be removed in a future release.\nYou can use the new returning state of the lawn mower entity instead.\nPlease update your automations and scripts to replace the sensor entity with the newly added lawn mower entity.\nWhen you are done migrating you can disable `{entity}`."
+    }
+  },
   "services": {
     "override_schedule": {
       "name": "Override schedule",
-      "description": "Override the schedule to either mow or park for a duration of time.",
+      "description": "Lets the mower either mow or park for a given duration, overriding all schedules.",
       "fields": {
         "duration": {
           "name": "Duration",
@@ -307,7 +336,7 @@
     },
     "override_schedule_work_area": {
       "name": "Override schedule work area",
-      "description": "Override the schedule of the mower for a duration of time in the selected work area.",
+      "description": "Lets the mower mow for a given duration in a specified work area, overriding all schedules.",
       "fields": {
         "duration": {
           "name": "[%key:component::husqvarna_automower::services::override_schedule::fields::duration::name%]",

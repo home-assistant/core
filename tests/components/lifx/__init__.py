@@ -65,10 +65,13 @@ class MockLifxCommand:
         """Init command."""
         self.bulb = bulb
         self.calls = []
-        self.msg_kwargs = kwargs
+        self.msg_kwargs = {
+            k.removeprefix("msg_"): v for k, v in kwargs.items() if k.startswith("msg_")
+        }
         for k, v in kwargs.items():
-            if k != "callb":
-                setattr(self.bulb, k, v)
+            if k.startswith("msg_") or k == "callb":
+                continue
+            setattr(self.bulb, k, v)
 
     def __call__(self, *args, **kwargs):
         """Call command."""
@@ -156,9 +159,16 @@ def _mocked_infrared_bulb() -> Light:
 def _mocked_light_strip() -> Light:
     bulb = _mocked_bulb()
     bulb.product = 31  # LIFX Z
-    bulb.color_zones = [MagicMock(), MagicMock()]
+    bulb.zones_count = 3
+    bulb.color_zones = [MagicMock()] * 3
     bulb.effect = {"effect": "MOVE", "speed": 3, "duration": 0, "direction": "RIGHT"}
-    bulb.get_color_zones = MockLifxCommand(bulb)
+    bulb.get_color_zones = MockLifxCommand(
+        bulb,
+        msg_seq_num=bulb.seq_next(),
+        msg_count=bulb.zones_count,
+        msg_index=0,
+        msg_color=bulb.color_zones,
+    )
     bulb.set_color_zones = MockLifxCommand(bulb)
     bulb.get_multizone_effect = MockLifxCommand(bulb)
     bulb.set_multizone_effect = MockLifxCommand(bulb)

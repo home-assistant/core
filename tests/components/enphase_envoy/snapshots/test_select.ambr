@@ -1,4 +1,61 @@
 # serializer version: 1
+# name: test_select[envoy_eu_batt][select.envoy_1234_storage_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'backup',
+        'self_consumption',
+        'savings',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.envoy_1234_storage_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Storage mode',
+    'platform': 'enphase_envoy',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'storage_mode',
+    'unique_id': '1234_storage_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select[envoy_eu_batt][select.envoy_1234_storage_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Envoy 1234 Storage mode',
+      'options': list([
+        'backup',
+        'self_consumption',
+        'savings',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.envoy_1234_storage_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'self_consumption',
+  })
+# ---
 # name: test_select[envoy_metered_batt_relay][select.enpower_654321_storage_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

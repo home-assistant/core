@@ -16,7 +16,7 @@
         "description": "Set up an Azure DevOps instance to access your project. A Personal Access Token is only required for a private project.",
         "title": "Add Azure DevOps Project"
       },
-      "reauth": {
+      "reauth_confirm": {
         "data": {
           "personal_access_token": "[%key:component::azure_devops::config::step::user::data::personal_access_token%]"
         },

@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from collections import namedtuple
 from datetime import timedelta
-from functools import cached_property
 import logging
 from typing import Any
 
 from fints.client import FinTS3PinTanClient
 from fints.models import SEPAAccount
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -18,7 +18,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, CONF_PIN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -89,7 +89,7 @@ def setup_platform(
 
     for account in balance_accounts:
         if config[CONF_ACCOUNTS] and account.iban not in account_config:
-            _LOGGER.info("Skipping account %s for bank %s", account.iban, fints_name)
+            _LOGGER.debug("Skipping account %s for bank %s", account.iban, fints_name)
             continue
 
         if not (account_name := account_config.get(account.iban)):
@@ -99,7 +99,7 @@ def setup_platform(
 
     for account in holdings_accounts:
         if config[CONF_HOLDINGS] and account.accountnumber not in holdings_config:
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Skipping holdings %s for bank %s", account.accountnumber, fints_name
             )
             continue

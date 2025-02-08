@@ -11,7 +11,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_COUNTRY
 
 from .const import MOCK_CONNECT_CLIENT_ID, MOCK_COUNTRY, MOCK_PAT, MOCK_UUID
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 def mock_thinq_api_response(
@@ -46,6 +46,15 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.lg_thinq.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
+@pytest.fixture
 def mock_uuid() -> Generator[AsyncMock]:
     """Mock a uuid."""
     with (
@@ -59,20 +68,35 @@ def mock_uuid() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_thinq_api() -> Generator[AsyncMock]:
+def mock_thinq_api(mock_thinq_mqtt_client: AsyncMock) -> Generator[AsyncMock]:
     """Mock a thinq api."""
     with (
-        patch("thinqconnect.ThinQApi", autospec=True) as mock_api,
+        patch("homeassistant.components.lg_thinq.ThinQApi", autospec=True) as mock_api,
         patch(
             "homeassistant.components.lg_thinq.config_flow.ThinQApi",
             new=mock_api,
         ),
     ):
         thinq_api = mock_api.return_value
-        thinq_api.async_get_device_list = AsyncMock(
-            return_value=mock_thinq_api_response(status=200, body={})
+        thinq_api.async_get_device_list.return_value = [
+            load_json_object_fixture("air_conditioner/device.json", DOMAIN)
+        ]
+        thinq_api.async_get_device_profile.return_value = load_json_object_fixture(
+            "air_conditioner/profile.json", DOMAIN
+        )
+        thinq_api.async_get_device_status.return_value = load_json_object_fixture(
+            "air_conditioner/status.json", DOMAIN
         )
         yield thinq_api
+
+
+@pytest.fixture
+def mock_thinq_mqtt_client() -> Generator[AsyncMock]:
+    """Mock a thinq api."""
+    with patch(
+        "homeassistant.components.lg_thinq.mqtt.ThinQMQTTClient", autospec=True
+    ) as mock_api:
+        yield mock_api
 
 
 @pytest.fixture

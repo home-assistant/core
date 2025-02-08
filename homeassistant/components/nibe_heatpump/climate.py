@@ -38,7 +38,7 @@ from .const import (
     VALUES_PRIORITY_COOLING,
     VALUES_PRIORITY_HEATING,
 )
-from .coordinator import Coordinator
+from .coordinator import CoilCoordinator
 
 
 async def async_setup_entry(
@@ -48,7 +48,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up platform."""
 
-    coordinator: Coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
 
     main_unit = UNIT_COILGROUPS[coordinator.series]["main"]
 
@@ -62,7 +62,7 @@ async def async_setup_entry(
     async_add_entities(climate_systems())
 
 
-class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
+class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
     """Climate entity."""
 
     _attr_entity_category = None
@@ -74,11 +74,10 @@ class NibeClimateEntity(CoordinatorEntity[Coordinator], ClimateEntity):
     _attr_target_temperature_step = 0.5
     _attr_max_temp = 35.0
     _attr_min_temp = 5.0
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
-        coordinator: Coordinator,
+        coordinator: CoilCoordinator,
         key: str,
         unit: UnitCoilGroup,
         climate: ClimateCoilGroup,

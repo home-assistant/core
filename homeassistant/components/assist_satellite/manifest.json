@@ -1,0 +1,9 @@
+{
+  "domain": "assist_satellite",
+  "name": "Assist Satellite",
+  "codeowners": ["@home-assistant/core", "@synesthesiam"],
+  "dependencies": ["assist_pipeline", "http", "stt", "tts"],
+  "documentation": "https://www.home-assistant.io/integrations/assist_satellite",
+  "integration_type": "entity",
+  "quality_scale": "internal"
+}

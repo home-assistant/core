@@ -19,7 +19,7 @@ from . import coordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.COVER, Platform.SWITCH]
 
 type IottyConfigEntry = ConfigEntry[IottyConfigEntryData]
 

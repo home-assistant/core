@@ -9,8 +9,8 @@ from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SamsungTVConfigEntry
 from .const import LOGGER
+from .coordinator import SamsungTVConfigEntry
 from .entity import SamsungTVEntity
 
 
@@ -46,7 +46,7 @@ class SamsungTVRemote(SamsungTVEntity, RemoteEntity):
         See https://github.com/jaruba/ha-samsungtv-tizen/blob/master/Key_codes.md
         """
         if self._bridge.power_off_in_progress:
-            LOGGER.info("TV is powering off, not sending keys: %s", command)
+            LOGGER.debug("TV is powering off, not sending keys: %s", command)
             return
 
         num_repeats = kwargs[ATTR_NUM_REPEATS]

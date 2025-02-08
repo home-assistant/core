@@ -23,7 +23,6 @@ from homeassistant.components.weather import (
 )
 from homeassistant.const import ATTR_ATTRIBUTION, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import Context, HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -65,7 +64,8 @@ ATTR_FORECAST = "forecast"
         },
     ],
 )
-async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_template_state_text(hass: HomeAssistant) -> None:
     """Test the state text of a template."""
     for attr, v_attr, value in (
         (
@@ -117,8 +117,9 @@ async def test_template_state_text(hass: HomeAssistant, start_ha) -> None:
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_forecasts(
-    hass: HomeAssistant, start_ha, snapshot: SnapshotAssertion, service: str
+    hass: HomeAssistant, snapshot: SnapshotAssertion, service: str
 ) -> None:
     """Test forecast service."""
     for attr, _v_attr, value in (
@@ -241,9 +242,9 @@ async def test_forecasts(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_forecast_invalid(
     hass: HomeAssistant,
-    start_ha,
     caplog: pytest.LogCaptureFixture,
     service: str,
     expected: dict[str, Any],
@@ -323,9 +324,9 @@ async def test_forecast_invalid(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
     hass: HomeAssistant,
-    start_ha,
     caplog: pytest.LogCaptureFixture,
     service: str,
     expected: dict[str, Any],
@@ -391,9 +392,9 @@ async def test_forecast_invalid_is_daytime_missing_in_twice_daily(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_forecast_invalid_datetime_missing(
     hass: HomeAssistant,
-    start_ha,
     caplog: pytest.LogCaptureFixture,
     service: str,
     expected: dict[str, Any],
@@ -458,8 +459,9 @@ async def test_forecast_invalid_datetime_missing(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 async def test_forecast_format_error(
-    hass: HomeAssistant, start_ha, caplog: pytest.LogCaptureFixture, service: str
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, service: str
 ) -> None:
     """Test forecast service invalid on incorrect format."""
     for attr, _v_attr, value in (
@@ -649,9 +651,8 @@ async def test_trigger_entity_restore_state(
         },
     ],
 )
-async def test_trigger_action(
-    hass: HomeAssistant, start_ha, entity_registry: er.EntityRegistry
-) -> None:
+@pytest.mark.usefixtures("start_ha")
+async def test_trigger_action(hass: HomeAssistant) -> None:
     """Test trigger entity with an action works."""
     state = hass.states.get("weather.hello_name")
     assert state is not None
@@ -720,11 +721,10 @@ async def test_trigger_action(
         },
     ],
 )
+@pytest.mark.usefixtures("start_ha")
 @pytest.mark.freeze_time("2023-10-19 13:50:05")
 async def test_trigger_weather_services(
     hass: HomeAssistant,
-    start_ha,
-    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
     service: str,
 ) -> None:

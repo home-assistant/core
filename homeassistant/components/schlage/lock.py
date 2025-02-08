@@ -5,26 +5,30 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SchlageDataUpdateCoordinator
+from . import SchlageConfigEntry
+from .coordinator import LockData, SchlageDataUpdateCoordinator
 from .entity import SchlageEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SchlageConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Schlage WiFi locks based on a config entry."""
-    coordinator: SchlageDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
-    async_add_entities(
-        SchlageLockEntity(coordinator=coordinator, device_id=device_id)
-        for device_id in coordinator.data.locks
-    )
+    coordinator = config_entry.runtime_data
+
+    def _add_new_locks(locks: dict[str, LockData]) -> None:
+        async_add_entities(
+            SchlageLockEntity(coordinator=coordinator, device_id=device_id)
+            for device_id in locks
+        )
+
+    _add_new_locks(coordinator.data.locks)
+    coordinator.new_locks_callbacks.append(_add_new_locks)
 
 
 class SchlageLockEntity(SchlageEntity, LockEntity):
@@ -42,8 +46,9 @@ class SchlageLockEntity(SchlageEntity, LockEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._update_attrs()
-        return super()._handle_coordinator_update()
+        if self.device_id in self.coordinator.data.locks:
+            self._update_attrs()
+        super()._handle_coordinator_update()
 
     def _update_attrs(self) -> None:
         """Update our internal state attributes."""

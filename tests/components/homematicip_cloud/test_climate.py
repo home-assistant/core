@@ -141,13 +141,6 @@ async def test_hmip_heating_group_heat(
     ha_state = hass.states.get(entity_id)
     assert ha_state.attributes[ATTR_PRESET_MODE] == "STD"
 
-    # Not required for hmip, but a possibility to send no temperature.
-    await hass.services.async_call(
-        "climate",
-        "set_temperature",
-        {"entity_id": entity_id, "target_temp_low": 10, "target_temp_high": 10},
-        blocking=True,
-    )
     # No new service call should be in mock_calls.
     assert len(hmip_device.mock_calls) == service_call_counter + 12
     # Only fire event from last async_manipulate_test_data available.

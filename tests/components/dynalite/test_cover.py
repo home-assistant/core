@@ -13,15 +13,9 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
+    CoverState,
 )
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_FRIENDLY_NAME,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
-)
+from homeassistant.const import ATTR_DEVICE_CLASS, ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 
@@ -130,16 +124,16 @@ async def test_cover_positions(hass: HomeAssistant, mock_device: Mock) -> None:
     """Test that the state updates in the various positions."""
     update_func = await create_entity_from_device(hass, mock_device)
     await check_cover_position(
-        hass, update_func, mock_device, True, False, False, STATE_CLOSING
+        hass, update_func, mock_device, True, False, False, CoverState.CLOSING
     )
     await check_cover_position(
-        hass, update_func, mock_device, False, True, False, STATE_OPENING
+        hass, update_func, mock_device, False, True, False, CoverState.OPENING
     )
     await check_cover_position(
-        hass, update_func, mock_device, False, False, True, STATE_CLOSED
+        hass, update_func, mock_device, False, False, True, CoverState.CLOSED
     )
     await check_cover_position(
-        hass, update_func, mock_device, False, False, False, STATE_OPEN
+        hass, update_func, mock_device, False, False, False, CoverState.OPEN
     )
 
 
@@ -147,12 +141,12 @@ async def test_cover_restore_state(hass: HomeAssistant, mock_device: Mock) -> No
     """Test restore from cache."""
     mock_restore_cache(
         hass,
-        [State("cover.name", STATE_OPEN, attributes={ATTR_CURRENT_POSITION: 77})],
+        [State("cover.name", CoverState.OPEN, attributes={ATTR_CURRENT_POSITION: 77})],
     )
     await create_entity_from_device(hass, mock_device)
     mock_device.init_level.assert_called_once_with(77)
     entity_state = hass.states.get("cover.name")
-    assert entity_state.state == STATE_OPEN
+    assert entity_state.state == CoverState.OPEN
 
 
 async def test_cover_restore_state_bad_cache(
@@ -161,9 +155,9 @@ async def test_cover_restore_state_bad_cache(
     """Test restore from a cache without the attribute."""
     mock_restore_cache(
         hass,
-        [State("cover.name", STATE_OPEN, attributes={"bla bla": 77})],
+        [State("cover.name", CoverState.OPEN, attributes={"bla bla": 77})],
     )
     await create_entity_from_device(hass, mock_device)
     mock_device.init_level.assert_not_called()
     entity_state = hass.states.get("cover.name")
-    assert entity_state.state == STATE_CLOSED
+    assert entity_state.state == CoverState.CLOSED

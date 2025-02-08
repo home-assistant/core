@@ -8,11 +8,11 @@ from collections.abc import Callable, Collection, Coroutine, Iterable
 import dataclasses
 from dataclasses import dataclass, field
 from enum import Enum, StrEnum, auto
-from functools import cached_property
 from itertools import groupby
 import logging
 from typing import Any
 
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
@@ -49,6 +49,7 @@ INTENT_NEVERMIND = "HassNevermind"
 INTENT_SET_POSITION = "HassSetPosition"
 INTENT_START_TIMER = "HassStartTimer"
 INTENT_CANCEL_TIMER = "HassCancelTimer"
+INTENT_CANCEL_ALL_TIMERS = "HassCancelAllTimers"
 INTENT_INCREASE_TIMER = "HassIncreaseTimer"
 INTENT_DECREASE_TIMER = "HassDecreaseTimer"
 INTENT_PAUSE_TIMER = "HassPauseTimer"
@@ -56,6 +57,8 @@ INTENT_UNPAUSE_TIMER = "HassUnpauseTimer"
 INTENT_TIMER_STATUS = "HassTimerStatus"
 INTENT_GET_CURRENT_DATE = "HassGetCurrentDate"
 INTENT_GET_CURRENT_TIME = "HassGetCurrentTime"
+INTENT_RESPOND = "HassRespond"
+INTENT_BROADCAST = "HassBroadcast"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -212,6 +215,9 @@ class MatchFailedReason(Enum):
     DUPLICATE_NAME = auto()
     """Two or more entities matched the same name constraint and could not be disambiguated."""
 
+    MULTIPLE_TARGETS = auto()
+    """Two or more entities matched when a single target is required."""
+
     def is_no_entities_reason(self) -> bool:
         """Return True if the match failed because no entities matched."""
         return self not in (
@@ -252,6 +258,9 @@ class MatchTargetsConstraints:
     allow_duplicate_names: bool = False
     """True if entities with duplicate names are allowed in result."""
 
+    single_target: bool = False
+    """True if result must contain a single target."""
+
     @property
     def has_constraints(self) -> bool:
         """Returns True if at least one constraint is set (ignores assistant)."""
@@ -263,6 +272,7 @@ class MatchTargetsConstraints:
             or self.device_classes
             or self.features
             or self.states
+            or self.single_target
         )
 
 
@@ -288,7 +298,7 @@ class MatchTargetsResult:
     """Reason for failed match when is_match = False."""
 
     states: list[State] = field(default_factory=list)
-    """List of matched entity states when is_match = True."""
+    """List of matched entity states."""
 
     no_match_name: str | None = None
     """Name of invalid area/floor or duplicate name when match fails for those reasons."""
@@ -351,9 +361,9 @@ class MatchTargetsCandidate:
     """Candidate for async_match_targets."""
 
     state: State
+    is_exposed: bool
     entity: entity_registry.RegistryEntry | None = None
     area: area_registry.AreaEntry | None = None
-    floor: floor_registry.FloorEntry | None = None
     device: device_registry.DeviceEntry | None = None
     matched_name: str | None = None
 
@@ -514,41 +524,51 @@ def async_match_targets(  # noqa: C901
         if not states:
             return MatchTargetsResult(False, MatchFailedReason.DOMAIN)
 
-    if constraints.assistant:
-        # Filter by exposure
-        states = [
-            s
-            for s in states
-            if async_should_expose(hass, constraints.assistant, s.entity_id)
-        ]
-        if not states:
-            return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
+    candidates = [
+        MatchTargetsCandidate(
+            state=state,
+            is_exposed=(
+                async_should_expose(hass, constraints.assistant, state.entity_id)
+                if constraints.assistant
+                else True
+            ),
+        )
+        for state in states
+    ]
 
     if constraints.domains and (not filtered_by_domain):
         # Filter by domain (if we didn't already do it)
-        states = [s for s in states if s.domain in constraints.domains]
-        if not states:
+        candidates = [c for c in candidates if c.state.domain in constraints.domains]
+        if not candidates:
             return MatchTargetsResult(False, MatchFailedReason.DOMAIN)
 
     if constraints.states:
         # Filter by state
-        states = [s for s in states if s.state in constraints.states]
-        if not states:
+        candidates = [c for c in candidates if c.state.state in constraints.states]
+        if not candidates:
             return MatchTargetsResult(False, MatchFailedReason.STATE)
 
-    # Exit early so we can avoid registry lookups
+    # Try to exit early so we can avoid registry lookups
     if not (
         constraints.name
         or constraints.features
         or constraints.device_classes
         or constraints.area_name
         or constraints.floor_name
+        or constraints.single_target
     ):
-        return MatchTargetsResult(True, states=states)
+        if constraints.assistant:
+            # Check exposure
+            candidates = [c for c in candidates if c.is_exposed]
+            if not candidates:
+                return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
+
+        return MatchTargetsResult(True, states=[c.state for c in candidates])
 
     # We need entity registry entries now
     er = entity_registry.async_get(hass)
-    candidates = [MatchTargetsCandidate(s, er.async_get(s.entity_id)) for s in states]
+    for candidate in candidates:
+        candidate.entity = er.async_get(candidate.state.entity_id)
 
     if constraints.name:
         # Filter by entity name or alias
@@ -637,6 +657,12 @@ def async_match_targets(  # noqa: C901
                     False, MatchFailedReason.AREA, areas=targeted_areas
                 )
 
+    if constraints.assistant:
+        # Check exposure
+        candidates = [c for c in candidates if c.is_exposed]
+        if not candidates:
+            return MatchTargetsResult(False, MatchFailedReason.ASSISTANT)
+
     if constraints.name and (not constraints.allow_duplicate_names):
         # Check for duplicates
         if not areas_added:
@@ -699,6 +725,48 @@ def async_match_targets(  # noqa: C901
             )
 
         candidates = final_candidates
+
+    if constraints.single_target and len(candidates) > 1:
+        # Find best match using preferences
+        if not (preferences.area_id or preferences.floor_id):
+            # No preferences
+            return MatchTargetsResult(
+                False,
+                MatchFailedReason.MULTIPLE_TARGETS,
+                states=[c.state for c in candidates],
+            )
+
+        if not areas_added:
+            ar = area_registry.async_get(hass)
+            dr = device_registry.async_get(hass)
+            _add_areas(ar, dr, candidates)
+            areas_added = True
+
+        filtered_candidates: list[MatchTargetsCandidate] = candidates
+        if preferences.area_id:
+            # Filter by area
+            filtered_candidates = [
+                c for c in candidates if c.area and (c.area.id == preferences.area_id)
+            ]
+
+        if (len(filtered_candidates) > 1) and preferences.floor_id:
+            # Filter by floor
+            filtered_candidates = [
+                c
+                for c in candidates
+                if c.area and (c.area.floor_id == preferences.floor_id)
+            ]
+
+        if len(filtered_candidates) != 1:
+            # Filtering could not restrict to a single target
+            return MatchTargetsResult(
+                False,
+                MatchFailedReason.MULTIPLE_TARGETS,
+                states=[c.state for c in candidates],
+            )
+
+        # Filtering succeeded
+        candidates = filtered_candidates
 
     return MatchTargetsResult(
         True,
@@ -1183,17 +1251,17 @@ class Intent:
     """Hold the intent."""
 
     __slots__ = [
+        "assistant",
+        "category",
+        "context",
+        "conversation_agent_id",
+        "device_id",
         "hass",
-        "platform",
         "intent_type",
+        "language",
+        "platform",
         "slots",
         "text_input",
-        "context",
-        "language",
-        "category",
-        "assistant",
-        "device_id",
-        "conversation_agent_id",
     ]
 
     def __init__(

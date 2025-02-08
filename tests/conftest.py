@@ -20,6 +20,7 @@ from typing import TYPE_CHECKING, Any, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
 from aiohttp import client
+from aiohttp.resolver import AsyncResolver
 from aiohttp.test_utils import (
     BaseTestServer,
     TestClient,
@@ -32,16 +33,18 @@ import bcrypt
 import freezegun
 import multidict
 import pytest
+import pytest_asyncio
 import pytest_socket
 import requests_mock
 import respx
 from syrupy.assertion import SnapshotAssertion
+from syrupy.session import SnapshotSession
 
 from homeassistant import block_async_io
 from homeassistant.exceptions import ServiceNotFound
 
 # Setup patching of recorder functions before any other Home Assistant imports
-from . import patch_recorder  # noqa: F401, isort:skip
+from . import patch_recorder
 
 # Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
@@ -51,11 +54,15 @@ from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import ConfigEntries, ConfigEntry, ConfigEntryState
@@ -83,18 +90,19 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util, location
+from homeassistant.util import dt as dt_util, location as location_util
 from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_handles
 from homeassistant.util.json import json_loads
 
 from .ignore_uncaught_exceptions import IGNORE_UNCAUGHT_EXCEPTIONS
-from .syrupy import HomeAssistantSnapshotExtension
+from .syrupy import HomeAssistantSnapshotExtension, override_syrupy_finish
 from .typing import (
     ClientSessionGenerator,
     MockHAClientWebSocket,
     MqttMockHAClient,
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
+    RecorderInstanceContextManager,
     RecorderInstanceGenerator,
     WebSocketGenerator,
 )
@@ -144,6 +152,11 @@ def pytest_configure(config: pytest.Config) -> None:
     )
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
+
+    # Override default finish to detect unused snapshots despite xdist
+    # Temporary workaround until it is finalised inside syrupy
+    # See https://github.com/syrupy-project/syrupy/pull/901
+    SnapshotSession.finish = override_syrupy_finish
 
 
 def pytest_runtest_setup() -> None:
@@ -238,7 +251,9 @@ def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
 
 
 # Guard a few functions that would make network connections
-location.async_detect_location_info = check_real(location.async_detect_location_info)
+location_util.async_detect_location_info = check_real(
+    location_util.async_detect_location_info
+)
 
 
 @pytest.fixture(name="caplog")
@@ -401,7 +416,9 @@ def verify_cleanup(
 
     try:
         # Verify respx.mock has been cleaned up
-        assert not respx.mock.routes, "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+        assert not respx.mock.routes, (
+            "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+        )
     finally:
         # Clear mock routes not break subsequent tests
         respx.mock.clear()
@@ -414,7 +431,7 @@ def reset_hass_threading_local_object() -> Generator[None]:
     ha._hass.__dict__.clear()
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(autouse=True, scope="session")
 def bcrypt_cost() -> Generator[None]:
     """Run with reduced rounds during tests, to speed up uses."""
     gensalt_orig = bcrypt.gensalt
@@ -500,30 +517,31 @@ def aiohttp_client(
     clients = []
 
     async def go(
-        __param: Application | BaseTestServer,
+        param: Application | BaseTestServer,
+        /,
         *args: Any,
         server_kwargs: dict[str, Any] | None = None,
         **kwargs: Any,
     ) -> TestClient:
-        if isinstance(__param, Callable) and not isinstance(  # type: ignore[arg-type]
-            __param, (Application, BaseTestServer)
+        if isinstance(param, Callable) and not isinstance(  # type: ignore[arg-type]
+            param, (Application, BaseTestServer)
         ):
-            __param = __param(loop, *args, **kwargs)
+            param = param(loop, *args, **kwargs)
             kwargs = {}
         else:
             assert not args, "args should be empty"
 
         client: TestClient
-        if isinstance(__param, Application):
+        if isinstance(param, Application):
             server_kwargs = server_kwargs or {}
-            server = TestServer(__param, loop=loop, **server_kwargs)
+            server = TestServer(param, loop=loop, **server_kwargs)
             # Registering a view after starting the server should still work.
             server.app._router.freeze = lambda: None
             client = CoalescingClient(server, loop=loop, **kwargs)
-        elif isinstance(__param, BaseTestServer):
-            client = TestClient(__param, loop=loop, **kwargs)
+        elif isinstance(param, BaseTestServer):
+            client = TestClient(param, loop=loop, **kwargs)
         else:
-            raise TypeError(f"Unknown argument type: {type(__param)!r}")
+            raise TypeError(f"Unknown argument type: {type(param)!r}")
 
         await client.start_server()
         clients.append(client)
@@ -568,7 +586,7 @@ async def hass(
             exceptions.append(
                 Exception(
                     "Received exception handler without exception, "
-                    f"but with message: {context["message"]}"
+                    f"but with message: {context['message']}"
                 )
             )
         orig_exception_handler(loop, context)
@@ -912,7 +930,13 @@ def fail_on_log_exception(
 
 @pytest.fixture
 def mqtt_config_entry_data() -> dict[str, Any] | None:
-    """Fixture to allow overriding MQTT config."""
+    """Fixture to allow overriding MQTT entry data."""
+    return None
+
+
+@pytest.fixture
+def mqtt_config_entry_options() -> dict[str, Any] | None:
+    """Fixture to allow overriding MQTT entry options."""
     return None
 
 
@@ -989,6 +1013,7 @@ async def mqtt_mock(
     mock_hass_config: None,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_config_entry_options: dict[str, Any] | None,
     mqtt_mock_entry: MqttMockHAClientGenerator,
 ) -> AsyncGenerator[MqttMockHAClient]:
     """Fixture to mock MQTT component."""
@@ -1000,6 +1025,7 @@ async def _mqtt_mock_entry(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_config_entry_options: dict[str, Any] | None,
 ) -> AsyncGenerator[MqttMockHAClientGenerator]:
     """Fixture to mock a delayed setup of the MQTT config entry."""
     # Local import to avoid processing MQTT modules when running a testcase
@@ -1007,17 +1033,19 @@ async def _mqtt_mock_entry(
     from homeassistant.components import mqtt  # pylint: disable=import-outside-toplevel
 
     if mqtt_config_entry_data is None:
-        mqtt_config_entry_data = {
-            mqtt.CONF_BROKER: "mock-broker",
-            mqtt.CONF_BIRTH_MESSAGE: {},
-        }
+        mqtt_config_entry_data = {mqtt.CONF_BROKER: "mock-broker"}
+    if mqtt_config_entry_options is None:
+        mqtt_config_entry_options = {mqtt.CONF_BIRTH_MESSAGE: {}}
 
     await hass.async_block_till_done()
 
     entry = MockConfigEntry(
         data=mqtt_config_entry_data,
+        options=mqtt_config_entry_options,
         domain=mqtt.DOMAIN,
         title="MQTT",
+        version=1,
+        minor_version=2,
     )
     entry.add_to_hass(hass)
 
@@ -1033,7 +1061,6 @@ async def _mqtt_mock_entry(
 
         # Assert that MQTT is setup
         assert real_mqtt_instance is not None, "MQTT was not setup correctly"
-        mock_mqtt_instance.conf = real_mqtt_instance.conf  # For diagnostics
         mock_mqtt_instance._mqttc = mqtt_client_mock
 
         # connected set to True to get a more realistic behavior when subscribing
@@ -1128,6 +1155,7 @@ async def mqtt_mock_entry(
     hass: HomeAssistant,
     mqtt_client_mock: MqttMockPahoClient,
     mqtt_config_entry_data: dict[str, Any] | None,
+    mqtt_config_entry_options: dict[str, Any] | None,
 ) -> AsyncGenerator[MqttMockHAClientGenerator]:
     """Set up an MQTT config entry."""
 
@@ -1144,7 +1172,7 @@ async def mqtt_mock_entry(
         return await mqtt_mock_entry(_async_setup_config_entry)
 
     async with _mqtt_mock_entry(
-        hass, mqtt_client_mock, mqtt_config_entry_data
+        hass, mqtt_client_mock, mqtt_config_entry_data, mqtt_config_entry_options
     ) as mqtt_mock_entry:
         yield _setup_mqtt_entry
 
@@ -1181,7 +1209,12 @@ def mock_get_source_ip() -> Generator[_patch]:
 
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
-    """Only load translations once per session."""
+    """Only load translations once per session.
+
+    Warning: having this as a session fixture can cause issues with tests that
+    create mock integrations, overriding the real integration translations
+    with empty ones. Translations should be reset after such tests (see #131628)
+    """
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
         "homeassistant.helpers.translation._TranslationsCacheData",
@@ -1202,6 +1235,30 @@ def disable_translations_once(
     translations_once.stop()
     yield
     translations_once.start()
+
+
+@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+async def mock_zeroconf_resolver() -> AsyncGenerator[_patch]:
+    """Mock out the zeroconf resolver."""
+    patcher = patch(
+        "homeassistant.helpers.aiohttp_client._async_make_resolver",
+        return_value=AsyncResolver(),
+    )
+    patcher.start()
+    try:
+        yield patcher
+    finally:
+        patcher.stop()
+
+
+@pytest.fixture
+def disable_mock_zeroconf_resolver(
+    mock_zeroconf_resolver: _patch,
+) -> Generator[None]:
+    """Disable the zeroconf resolver."""
+    mock_zeroconf_resolver.stop()
+    yield
+    mock_zeroconf_resolver.start()
 
 
 @pytest.fixture
@@ -1293,11 +1350,21 @@ def enable_nightly_purge() -> bool:
 
 
 @pytest.fixture
-def enable_migrate_context_ids() -> bool:
+def enable_migrate_event_context_ids() -> bool:
     """Fixture to control enabling of recorder's context id migration.
 
     To enable context id migration, tests can be marked with:
-    @pytest.mark.parametrize("enable_migrate_context_ids", [True])
+    @pytest.mark.parametrize("enable_migrate_event_context_ids", [True])
+    """
+    return False
+
+
+@pytest.fixture
+def enable_migrate_state_context_ids() -> bool:
+    """Fixture to control enabling of recorder's context id migration.
+
+    To enable context id migration, tests can be marked with:
+    @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
     """
     return False
 
@@ -1465,11 +1532,12 @@ async def async_test_recorder(
     enable_statistics: bool,
     enable_missing_statistics: bool,
     enable_schema_validation: bool,
-    enable_migrate_context_ids: bool,
+    enable_migrate_event_context_ids: bool,
+    enable_migrate_state_context_ids: bool,
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
     enable_migrate_event_ids: bool,
-) -> AsyncGenerator[RecorderInstanceGenerator]:
+) -> AsyncGenerator[RecorderInstanceContextManager]:
     """Yield context manager to setup recorder instance."""
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
@@ -1527,12 +1595,12 @@ async def async_test_recorder(
     )
     migrate_states_context_ids = (
         migration.StatesContextIDMigration.migrate_data
-        if enable_migrate_context_ids
+        if enable_migrate_state_context_ids
         else None
     )
     migrate_events_context_ids = (
         migration.EventsContextIDMigration.migrate_data
-        if enable_migrate_context_ids
+        if enable_migrate_event_context_ids
         else None
     )
     migrate_event_type_ids = (
@@ -1635,7 +1703,7 @@ async def async_test_recorder(
 
 @pytest.fixture
 async def async_setup_recorder_instance(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> AsyncGenerator[RecorderInstanceGenerator]:
     """Yield callable to setup recorder instance."""
 
@@ -1648,7 +1716,7 @@ async def async_setup_recorder_instance(
             expected_setup_result: bool = True,
             wait_recorder: bool = True,
             wait_recorder_setup: bool = True,
-        ) -> AsyncGenerator[recorder.Recorder]:
+        ) -> recorder.Recorder:
             """Set up and return recorder instance."""
 
             return await stack.enter_async_context(
@@ -1667,7 +1735,7 @@ async def async_setup_recorder_instance(
 @pytest.fixture
 async def recorder_mock(
     recorder_config: dict[str, Any] | None,
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     hass: HomeAssistant,
 ) -> AsyncGenerator[recorder.Recorder]:
     """Fixture with in-memory recorder."""
@@ -1700,7 +1768,7 @@ async def mock_enable_bluetooth(
     await hass.async_block_till_done()
 
 
-@pytest.fixture(scope="session")
+@pytest.fixture(autouse=True, scope="session")
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (
@@ -1751,10 +1819,30 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_integration_frame() -> Generator[Mock]:
-    """Mock as if we're calling code from inside an integration."""
+def integration_frame_path() -> str:
+    """Return the path to the integration frame.
+
+    Can be parametrized with
+    `@pytest.mark.parametrize("integration_frame_path", ["path_to_frame"])`
+
+    - "custom_components/XYZ" for a custom integration
+    - "homeassistant/components/XYZ" for a core integration
+    - "homeassistant/XYZ" for core (no integration)
+
+    Defaults to core component `hue`
+    """
+    return "homeassistant/components/hue"
+
+
+@pytest.fixture
+def mock_integration_frame(integration_frame_path: str) -> Generator[Mock]:
+    """Mock where we are calling code from.
+
+    Defaults to calling from `hue` core integration, and can be parametrized
+    with `integration_frame_path`.
+    """
     correct_frame = Mock(
-        filename="/home/paulus/homeassistant/components/hue/light.py",
+        filename=f"/home/paulus/{integration_frame_path}/light.py",
         lineno="23",
         line="self.light.is_on",
     )
@@ -1852,7 +1940,7 @@ def service_calls(hass: HomeAssistant) -> Generator[list[ServiceCall]]:
         return_response: bool = False,
     ) -> ServiceResponse:
         calls.append(
-            ServiceCall(domain, service, service_data, context, return_response)
+            ServiceCall(hass, domain, service, service_data, context, return_response)
         )
         try:
             return await _original_async_call(

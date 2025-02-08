@@ -175,7 +175,7 @@ async def test_avoid_duplicated_title(hass: HomeAssistant) -> None:
             CONF_IGNORED_ZONES: ["zone.work"],
             CONF_TOLERANCE: 10,
         },
-        unique_id=f"{DOMAIN}_home",
+        unique_id=f"{DOMAIN}_home_3",
     ).add_to_hass(hass)
 
     with patch(

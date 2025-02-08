@@ -12,7 +12,7 @@
       },
       "link": {
         "title": "Link Freebox router",
-        "description": "Click \"Submit\", then touch the right arrow on the router to register Freebox with Home Assistant.\n\n![Location of button on the router](/static/images/config_freebox.png)"
+        "description": "Select **Submit**, then touch the right arrow on the router to register Freebox with Home Assistant.\n\n![Location of button on the router](/static/images/config_freebox.png)"
       }
     },
     "error": {

@@ -1,5 +1,7 @@
 """Config flow for Squeezebox integration."""
 
+from __future__ import annotations
+
 import asyncio
 from http import HTTPStatus
 import logging
@@ -8,7 +10,6 @@ from typing import TYPE_CHECKING, Any
 from pysqueezebox import Server, async_discover
 import voluptuous as vol
 
-from homeassistant.components import dhcp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
@@ -16,6 +17,7 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import CONF_HTTPS, DEFAULT_PORT, DOMAIN
 
@@ -24,9 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 TIMEOUT = 5
 
 
-def _base_schema(discovery_info=None):
+def _base_schema(
+    discovery_info: dict[str, Any] | None = None,
+) -> vol.Schema:
     """Generate base schema."""
-    base_schema = {}
+    base_schema: dict[Any, Any] = {}
     if discovery_info and CONF_HOST in discovery_info:
         base_schema.update(
             {
@@ -71,14 +75,14 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize an instance of the squeezebox config flow."""
         self.data_schema = _base_schema()
-        self.discovery_info = None
+        self.discovery_info: dict[str, Any] | None = None
 
-    async def _discover(self, uuid=None):
+    async def _discover(self, uuid: str | None = None) -> None:
         """Discover an unconfigured LMS server."""
         self.discovery_info = None
         discovery_event = asyncio.Event()
 
-        def _discovery_callback(server):
+        def _discovery_callback(server: Server) -> None:
             if server.uuid:
                 # ignore already configured uuids
                 for entry in self._async_current_entries():
@@ -156,7 +160,9 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_edit(self, user_input=None):
+    async def async_step_edit(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Edit a discovered or manually inputted server."""
         errors = {}
         if user_input:
@@ -171,7 +177,9 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="edit", data_schema=self.data_schema, errors=errors
         )
 
-    async def async_step_integration_discovery(self, discovery_info):
+    async def async_step_integration_discovery(
+        self, discovery_info: dict[str, Any]
+    ) -> ConfigFlowResult:
         """Handle discovery of a server."""
         _LOGGER.debug("Reached server discovery flow with info: %s", discovery_info)
         if "uuid" in discovery_info:
@@ -192,7 +200,7 @@ class SqueezeboxConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_edit()
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery of a Squeezebox player."""
         _LOGGER.debug(

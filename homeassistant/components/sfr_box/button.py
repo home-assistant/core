@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from functools import wraps
-from typing import Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from sfrbox_api.bridge import SFRBox
 from sfrbox_api.exceptions import SFRBoxError
@@ -69,10 +69,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up the buttons."""
     data: DomainData = hass.data[DOMAIN][entry.entry_id]
+    system_info = data.system.data
+    if TYPE_CHECKING:
+        assert system_info is not None
 
     entities = [
-        SFRBoxButton(data.box, description, data.system.data)
-        for description in BUTTON_TYPES
+        SFRBoxButton(data.box, description, system_info) for description in BUTTON_TYPES
     ]
     async_add_entities(entities)
 

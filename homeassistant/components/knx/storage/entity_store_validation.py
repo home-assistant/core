@@ -38,7 +38,10 @@ def parse_invalid(exc: vol.Invalid) -> _ErrorDescription:
 
 
 def validate_entity_data(entity_data: dict) -> dict:
-    """Validate entity data. Return validated data or raise EntityStoreValidationException."""
+    """Validate entity data.
+
+    Return validated data or raise EntityStoreValidationException.
+    """
     try:
         # return so defaults are applied
         return ENTITY_STORE_DATA_SCHEMA(entity_data)  # type: ignore[no-any-return]

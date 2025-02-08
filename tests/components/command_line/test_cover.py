@@ -14,7 +14,11 @@ import pytest
 from homeassistant import setup
 from homeassistant.components.command_line import DOMAIN
 from homeassistant.components.command_line.cover import CommandCover
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, SCAN_INTERVAL
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    SCAN_INTERVAL,
+    CoverState,
+)
 from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
@@ -24,12 +28,11 @@ from homeassistant.const import (
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_STOP_COVER,
-    STATE_OPEN,
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
 
@@ -389,7 +392,7 @@ async def test_availability(
 
     entity_state = hass.states.get("cover.test")
     assert entity_state
-    assert entity_state.state == STATE_OPEN
+    assert entity_state.state == CoverState.OPEN
 
     hass.states.async_set("sensor.input1", "off")
     await hass.async_block_till_done()
@@ -419,13 +422,19 @@ async def test_icon_template(hass: HomeAssistant) -> None:
                             "command_close": f"echo 0 > {path}",
                             "command_stop": f"echo 0 > {path}",
                             "name": "Test",
-                            "icon": "{% if this.state=='open' %} mdi:open {% else %} mdi:closed {% endif %}",
+                            "icon": '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}',
                         }
                     }
                 ]
             },
         )
         await hass.async_block_till_done()
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: "cover.test"},
+            blocking=True,
+        )
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -435,7 +444,7 @@ async def test_icon_template(hass: HomeAssistant) -> None:
         )
         entity_state = hass.states.get("cover.test")
         assert entity_state
-        assert entity_state.attributes.get("icon") == "mdi:closed"
+        assert entity_state.attributes.get("icon") == "mdi:icon1"
 
         await hass.services.async_call(
             COVER_DOMAIN,
@@ -445,4 +454,4 @@ async def test_icon_template(hass: HomeAssistant) -> None:
         )
         entity_state = hass.states.get("cover.test")
         assert entity_state
-        assert entity_state.attributes.get("icon") == "mdi:open"
+        assert entity_state.attributes.get("icon") == "mdi:icon2"

@@ -93,6 +93,8 @@
         'zone': 'zone.home',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'proximity',
       'minor_version': 1,
       'options': dict({

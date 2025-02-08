@@ -88,7 +88,6 @@ class Thermostat(ZHAEntity, ClimateEntity):
     _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key: str = "thermostat"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
         """Initialize the ZHA thermostat entity."""
@@ -120,8 +119,6 @@ class Thermostat(ZHAEntity, ClimateEntity):
             features |= ClimateEntityFeature.FAN_MODE
         if ZHAClimateEntityFeature.SWING_MODE in zha_features:
             features |= ClimateEntityFeature.SWING_MODE
-        if ZHAClimateEntityFeature.AUX_HEAT in zha_features:
-            features |= ClimateEntityFeature.AUX_HEAT
         if ZHAClimateEntityFeature.TURN_OFF in zha_features:
             features |= ClimateEntityFeature.TURN_OFF
         if ZHAClimateEntityFeature.TURN_ON in zha_features:

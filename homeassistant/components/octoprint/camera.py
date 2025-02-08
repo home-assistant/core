@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pyoctoprintapi import OctoprintClient, WebcamSettings
 
-from homeassistant.components.mjpeg.camera import MjpegCamera
+from homeassistant.components.mjpeg import MjpegCamera
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant

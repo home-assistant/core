@@ -20,8 +20,8 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from . import KNXModule
-from .const import DATA_KNX_CONFIG, DOMAIN, KNX_ADDRESS
-from .knx_entity import KnxYamlEntity
+from .const import KNX_ADDRESS, KNX_MODULE_KEY
+from .entity import KnxYamlEntity
 from .schema import FanSchema
 
 DEFAULT_PERCENTAGE: Final = 50
@@ -33,8 +33,8 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up fan(s) for KNX platform."""
-    knx_module: KNXModule = hass.data[DOMAIN]
-    config: list[ConfigType] = hass.data[DATA_KNX_CONFIG][Platform.FAN]
+    knx_module = hass.data[KNX_MODULE_KEY]
+    config: list[ConfigType] = knx_module.config_yaml[Platform.FAN]
 
     async_add_entities(KNXFan(knx_module, entity_config) for entity_config in config)
 
@@ -43,7 +43,6 @@ class KNXFan(KnxYamlEntity, FanEntity):
     """Representation of a KNX fan."""
 
     _device: XknxFan
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX fan."""

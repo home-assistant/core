@@ -10,7 +10,7 @@ from homeassistant.components.text import (
     ATTR_MIN,
     ATTR_PATTERN,
     ATTR_VALUE,
-    DOMAIN,
+    DOMAIN as TEXT_DOMAIN,
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import (
@@ -38,7 +38,9 @@ def text_only() -> Generator[None]:
 @pytest.fixture(autouse=True)
 async def setup_demo_text(hass: HomeAssistant, text_only: None) -> None:
     """Initialize setup demo text."""
-    assert await async_setup_component(hass, DOMAIN, {"text": {"platform": "demo"}})
+    assert await async_setup_component(
+        hass, TEXT_DOMAIN, {"text": {"platform": "demo"}}
+    )
     await hass.async_block_till_done()
 
 
@@ -55,7 +57,7 @@ def test_setup_params(hass: HomeAssistant) -> None:
 async def test_set_value(hass: HomeAssistant) -> None:
     """Test set value service."""
     await hass.services.async_call(
-        DOMAIN,
+        TEXT_DOMAIN,
         SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: ENTITY_TEXT, ATTR_VALUE: "new"},
         blocking=True,

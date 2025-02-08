@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import functools
 
-from homeassistant.components.device_tracker import ScannerEntity, SourceType
+from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -54,11 +54,6 @@ class ZHADeviceScannerEntity(ScannerEntity, ZHAEntity):
         return self.entity_data.entity.is_connected
 
     @property
-    def source_type(self) -> SourceType:
-        """Return the source type, eg gps or router, of the device."""
-        return SourceType.ROUTER
-
-    @property
     def battery_level(self) -> int | None:
         """Return the battery level of the device.
 
@@ -66,7 +61,7 @@ class ZHADeviceScannerEntity(ScannerEntity, ZHAEntity):
         """
         return self.entity_data.entity.battery_level
 
-    @property  # type: ignore[explicit-override, misc]
+    @property  # type: ignore[misc]
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         # We opt ZHA device tracker back into overriding this method because

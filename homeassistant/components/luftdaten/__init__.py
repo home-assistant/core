@@ -52,6 +52,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator: DataUpdateCoordinator[dict[str, Any]] = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name=f"{DOMAIN}_{sensor_community.sensor_id}",
         update_interval=DEFAULT_SCAN_INTERVAL,
         update_method=async_update,

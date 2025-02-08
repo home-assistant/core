@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, CONF_VALUE_TEMPLATE, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -196,7 +196,7 @@ class SerialSensor(SensorEntity):
                     logged_error = True
                 await self._handle_error()
             else:
-                _LOGGER.info("Serial device %s connected", device)
+                _LOGGER.debug("Serial device %s connected", device)
                 while True:
                     try:
                         line = await reader.readline()

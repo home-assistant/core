@@ -30,10 +30,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryNotReady, ServiceValidationError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.dispatcher import async_dispatcher_connect, dispatcher_send
-from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
@@ -47,8 +46,6 @@ CONF_COMMAND = "command"
 
 EVENT_BUTTON_PRESS = "homeworks_button_press"
 EVENT_BUTTON_RELEASE = "homeworks_button_release"
-
-DEFAULT_FADE_RATE = 1.0
 
 KEYPAD_LEDSTATE_POLL_COOLDOWN = 1.0
 
@@ -202,37 +199,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-def calculate_unique_id(controller_id: str, addr: str, idx: int) -> str:
-    """Calculate entity unique id."""
-    return f"homeworks.{controller_id}.{addr}.{idx}"
-
-
-class HomeworksEntity(Entity):
-    """Base class of a Homeworks device."""
-
-    _attr_has_entity_name = True
-    _attr_should_poll = False
-
-    def __init__(
-        self,
-        controller: Homeworks,
-        controller_id: str,
-        addr: str,
-        idx: int,
-        name: str | None,
-    ) -> None:
-        """Initialize Homeworks device."""
-        self._addr = addr
-        self._idx = idx
-        self._controller_id = controller_id
-        self._attr_name = name
-        self._attr_unique_id = calculate_unique_id(
-            self._controller_id, self._addr, self._idx
-        )
-        self._controller = controller
-        self._attr_extra_state_attributes = {"homeworks_address": self._addr}
 
 
 class HomeworksKeypad:

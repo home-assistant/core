@@ -3,7 +3,6 @@
 from datetime import timedelta
 from unittest.mock import Mock, call
 
-import pytest
 from requests.exceptions import HTTPError
 
 from homeassistant.components.fritzbox.const import (
@@ -19,7 +18,7 @@ from homeassistant.components.light import (
     ATTR_MAX_COLOR_TEMP_KELVIN,
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
-    DOMAIN,
+    DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
 from homeassistant.const import (
@@ -31,14 +30,14 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import FritzDeviceLightMock, set_devices, setup_config_entry
 from .const import CONF_FAKE_NAME, MOCK_CONFIG
 
 from tests.common import async_fire_time_changed
 
-ENTITY_ID = f"{DOMAIN}.{CONF_FAKE_NAME}"
+ENTITY_ID = f"{LIGHT_DOMAIN}.{CONF_FAKE_NAME}"
 
 
 async def test_setup(hass: HomeAssistant, fritz: Mock) -> None:
@@ -147,7 +146,7 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
     )
 
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_COLOR_TEMP_KELVIN: 3000},
         True,
@@ -155,8 +154,8 @@ async def test_turn_on(hass: HomeAssistant, fritz: Mock) -> None:
     assert device.set_state_on.call_count == 1
     assert device.set_level.call_count == 1
     assert device.set_color_temp.call_count == 1
-    assert device.set_color_temp.call_args_list == [call(3000)]
-    assert device.set_level.call_args_list == [call(100)]
+    assert device.set_color_temp.call_args_list == [call(3000, 0, True)]
+    assert device.set_level.call_args_list == [call(100, True)]
 
 
 async def test_turn_on_color(hass: HomeAssistant, fritz: Mock) -> None:
@@ -166,11 +165,12 @@ async def test_turn_on_color(hass: HomeAssistant, fritz: Mock) -> None:
     device.get_colors.return_value = {
         "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
     }
+    device.fullcolorsupport = True
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
         True,
@@ -178,13 +178,14 @@ async def test_turn_on_color(hass: HomeAssistant, fritz: Mock) -> None:
     assert device.set_state_on.call_count == 1
     assert device.set_level.call_count == 1
     assert device.set_unmapped_color.call_count == 1
-    assert device.set_level.call_args_list == [call(100)]
+    assert device.set_color.call_count == 0
+    assert device.set_level.call_args_list == [call(100, True)]
     assert device.set_unmapped_color.call_args_list == [
-        call((100, round(70 * 255.0 / 100.0)))
+        call((100, round(70 * 255.0 / 100.0)), 0, True)
     ]
 
 
-async def test_turn_on_color_unsupported_api_method(
+async def test_turn_on_color_no_fullcolorsupport(
     hass: HomeAssistant, fritz: Mock
 ) -> None:
     """Test turn device on in mapped color mode if unmapped is not supported."""
@@ -193,18 +194,13 @@ async def test_turn_on_color_unsupported_api_method(
     device.get_colors.return_value = {
         "Red": [("100", "70", "10"), ("100", "50", "10"), ("100", "30", "10")]
     }
+    device.fullcolorsupport = False
     assert await setup_config_entry(
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
 
-    # test fallback to `setcolor`
-    error = HTTPError("Bad Request")
-    error.response = Mock()
-    error.response.status_code = 400
-    device.set_unmapped_color.side_effect = error
-
     await hass.services.async_call(
-        DOMAIN,
+        LIGHT_DOMAIN,
         SERVICE_TURN_ON,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
         True,
@@ -212,18 +208,9 @@ async def test_turn_on_color_unsupported_api_method(
     assert device.set_state_on.call_count == 1
     assert device.set_level.call_count == 1
     assert device.set_color.call_count == 1
-    assert device.set_level.call_args_list == [call(100)]
-    assert device.set_color.call_args_list == [call((100, 70))]
-
-    # test for unknown error
-    error.response.status_code = 500
-    with pytest.raises(HTTPError, match="Bad Request"):
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: ENTITY_ID, ATTR_BRIGHTNESS: 100, ATTR_HS_COLOR: (100, 70)},
-            True,
-        )
+    assert device.set_unmapped_color.call_count == 0
+    assert device.set_level.call_args_list == [call(100, True)]
+    assert device.set_color.call_args_list == [call((100, 70), 0, True)]
 
 
 async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
@@ -237,7 +224,7 @@ async def test_turn_off(hass: HomeAssistant, fritz: Mock) -> None:
         hass, MOCK_CONFIG[FB_DOMAIN][CONF_DEVICES][0], ENTITY_ID, device, fritz
     )
     await hass.services.async_call(
-        DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
+        LIGHT_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: ENTITY_ID}, True
     )
     assert device.set_state_off.call_count == 1
 
@@ -316,5 +303,5 @@ async def test_discover_new_device(hass: HomeAssistant, fritz: Mock) -> None:
     async_fire_time_changed(hass, next_update)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(f"{DOMAIN}.new_light")
+    state = hass.states.get(f"{LIGHT_DOMAIN}.new_light")
     assert state

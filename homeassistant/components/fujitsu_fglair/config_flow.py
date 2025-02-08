@@ -5,13 +5,15 @@ import logging
 from typing import Any
 
 from ayla_iot_unofficial import AylaAuthError, new_ayla_api
+from ayla_iot_unofficial.fujitsu_consts import FGLAIR_APP_CREDENTIALS
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import API_TIMEOUT, CONF_EUROPE, DOMAIN, FGLAIR_APP_ID, FGLAIR_APP_SECRET
+from .const import API_TIMEOUT, CONF_REGION, DOMAIN, REGION_DEFAULT, REGION_EU
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -20,7 +22,12 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(CONF_EUROPE): bool,
+        vol.Required(CONF_REGION, default=REGION_DEFAULT): SelectSelector(
+            SelectSelectorConfig(
+                options=[region.lower() for region in FGLAIR_APP_CREDENTIALS],
+                translation_key=CONF_REGION,
+            )
+        ),
     }
 )
 STEP_REAUTH_DATA_SCHEMA = vol.Schema(
@@ -33,18 +40,19 @@ STEP_REAUTH_DATA_SCHEMA = vol.Schema(
 class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Fujitsu HVAC (based on Ayla IOT)."""
 
-    _reauth_entry: ConfigEntry | None = None
+    MINOR_VERSION = 2
 
     async def _async_validate_credentials(
         self, user_input: dict[str, Any]
     ) -> dict[str, str]:
         errors: dict[str, str] = {}
+        app_id, app_secret = FGLAIR_APP_CREDENTIALS[user_input[CONF_REGION]]
         api = new_ayla_api(
             user_input[CONF_USERNAME],
             user_input[CONF_PASSWORD],
-            FGLAIR_APP_ID,
-            FGLAIR_APP_SECRET,
-            europe=user_input[CONF_EUROPE],
+            app_id,
+            app_secret,
+            europe=user_input[CONF_REGION] == REGION_EU,
             websession=aiohttp_client.async_get_clientsession(self.hass),
             timeout=API_TIMEOUT,
         )
@@ -84,9 +92,6 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -94,25 +99,23 @@ class FGLairConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Dialog that informs the user that reauth is required."""
         errors: dict[str, str] = {}
-        assert self._reauth_entry
 
+        reauth_entry = self._get_reauth_entry()
         if user_input:
-            reauth_data = {
-                **self._reauth_entry.data,
-                CONF_PASSWORD: user_input[CONF_PASSWORD],
-            }
-            errors = await self._async_validate_credentials(reauth_data)
+            errors = await self._async_validate_credentials(
+                reauth_entry.data | user_input
+            )
 
-            if len(errors) == 0:
+            if not errors:
                 return self.async_update_reload_and_abort(
-                    self._reauth_entry, data=reauth_data
+                    reauth_entry, data_updates=user_input
                 )
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=STEP_REAUTH_DATA_SCHEMA,
             description_placeholders={
-                CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME],
+                CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
                 **self.context["title_placeholders"],
             },
             errors=errors,

@@ -11,7 +11,6 @@
     ],
     "state": {
       "deviceId": "1",
-      "desired": { "key": "value" },
       "reported": {
         "displayName": "Test Garage 1",
         "autoDisabled": false,
@@ -42,7 +41,6 @@
     ],
     "state": {
       "deviceId": "2",
-      "desired": { "key": "value" },
       "reported": {
         "displayName": "Test Garage 2",
         "autoDisabled": false,
@@ -60,5 +58,59 @@
       "connected": true,
       "updatedTimestamp": "123"
     }
+  },
+  {
+    "id": "3",
+    "type": "Mms100",
+    "controlLevel": "Owner",
+    "attr": [
+      {
+        "key": "organization",
+        "value": "test_organization"
+      }
+    ],
+    "state": {
+      "deviceId": "3",
+      "reported": {
+        "displayName": "Test Garage 3",
+        "autoDisabled": false,
+        "migrationStatus": "DONE",
+        "deviceId": "3",
+        "deviceFwVersion": "1.2.3.4.5.6",
+        "barrierStatus": "1,100,0,0,1,0,0,0",
+        "radioConnected": 1,
+        "powerLevel": "LOW"
+      },
+      "timestamp": null,
+      "version": null
+    },
+    "connectionState": null
+  },
+  {
+    "id": "4",
+    "type": "unknown-device-type",
+    "controlLevel": "Owner",
+    "attr": [
+      {
+        "key": "organization",
+        "value": "test_organization"
+      }
+    ],
+    "state": {
+      "deviceId": "4",
+      "reported": {
+        "displayName": "Test Garage 4",
+        "autoDisabled": false,
+        "migrationStatus": "DONE",
+        "deviceId": "4",
+        "deviceFwVersion": "1.2.3.4.5.6",
+        "barrierStatus": "1,100,0,0,1,0,0,0",
+        "radioConnected": 1,
+        "powerLevel": "LOW"
+      },
+      "timestamp": null,
+      "version": null
+    },
+    "connectionState": null
   }
 ]

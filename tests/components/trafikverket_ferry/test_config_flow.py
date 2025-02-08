@@ -62,9 +62,7 @@ async def test_form(hass: HomeAssistant) -> None:
         "weekday": ["mon", "fri"],
     }
     assert len(mock_setup_entry.mock_calls) == 1
-    assert result2["result"].unique_id == "{}-{}-{}-{}".format(
-        "eker\u00f6", "slagsta", "10:00", "['mon', 'fri']"
-    )
+    assert result2["result"].unique_id == "eker\u00f6-slagsta-10:00-['mon', 'fri']"
 
 
 @pytest.mark.parametrize(

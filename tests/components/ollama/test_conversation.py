@@ -18,6 +18,13 @@ from homeassistant.helpers import intent, llm
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture(autouse=True)
+def mock_ulid_tools():
+    """Mock generated ULIDs for tool calls."""
+    with patch("homeassistant.helpers.llm.ulid_now", return_value="mock-tool-call"):
+        yield
+
+
 @pytest.mark.parametrize("agent_id", [None, "conversation.mock_title"])
 async def test_chat(
     hass: HomeAssistant,
@@ -51,13 +58,13 @@ async def test_chat(
 
         assert args["model"] == "test model"
         assert args["messages"] == [
-            Message({"role": "system", "content": prompt}),
-            Message({"role": "user", "content": "test message"}),
+            Message(role="system", content=prompt),
+            Message(role="user", content="test message"),
         ]
 
-        assert (
-            result.response.response_type == intent.IntentResponseType.ACTION_DONE
-        ), result
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+            result
+        )
         assert result.response.speech["plain"]["speech"] == "test response"
 
     # Test Conversation tracing
@@ -106,9 +113,9 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id=mock_config_entry.entry_id
         )
 
-    assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
 
     args = mock_chat.call_args.kwargs
     prompt = args["messages"][0]["content"]
@@ -121,7 +128,7 @@ async def test_template_variables(
     ("tool_args", "expected_tool_args"),
     [
         ({"param1": "test_value"}, {"param1": "test_value"}),
-        ({"param1": 2}, {"param1": 2}),
+        ({"param2": 2}, {"param2": 2}),
         (
             {"param1": "test_value", "floor": ""},
             {"param1": "test_value"},  # Omit empty arguments
@@ -153,7 +160,8 @@ async def test_function_call(
     mock_tool.name = "test_tool"
     mock_tool.description = "Test function"
     mock_tool.parameters = vol.Schema(
-        {vol.Optional("param1", description="Test parameters"): str}
+        {vol.Optional("param1", description="Test parameters"): str},
+        extra=vol.ALLOW_EXTRA,
     )
     mock_tool.async_call.return_value = "Test response"
 
@@ -204,6 +212,7 @@ async def test_function_call(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="mock-tool-call",
             tool_name="test_tool",
             tool_args=expected_tool_args,
         ),
@@ -284,6 +293,7 @@ async def test_function_exception(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="mock-tool-call",
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
         ),
@@ -340,7 +350,7 @@ async def test_message_history_trimming(
         for i in range(5):
             result = await conversation.async_converse(
                 hass,
-                f"message {i+1}",
+                f"message {i + 1}",
                 conversation_id="1234",
                 context=Context(),
                 agent_id=mock_config_entry.entry_id,
@@ -431,7 +441,7 @@ async def test_message_history_pruning(
         for i in range(3):
             result = await conversation.async_converse(
                 hass,
-                f"message {i+1}",
+                f"message {i + 1}",
                 conversation_id=None,
                 context=Context(),
                 agent_id=mock_config_entry.entry_id,
@@ -462,9 +472,9 @@ async def test_message_history_pruning(
             context=Context(),
             agent_id=mock_config_entry.entry_id,
         )
-        assert (
-            result.response.response_type == intent.IntentResponseType.ACTION_DONE
-        ), result
+        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+            result
+        )
 
         # Only the most recent histories should remain
         assert len(agent._history) == 2
@@ -482,12 +492,14 @@ async def test_message_history_unlimited(
             "ollama.AsyncClient.chat",
             return_value={"message": {"role": "assistant", "content": "test response"}},
         ),
-        patch.object(mock_config_entry, "options", {ollama.CONF_MAX_HISTORY: 0}),
     ):
+        hass.config_entries.async_update_entry(
+            mock_config_entry, options={ollama.CONF_MAX_HISTORY: 0}
+        )
         for i in range(100):
             result = await conversation.async_converse(
                 hass,
-                f"message {i+1}",
+                f"message {i + 1}",
                 conversation_id=conversation_id,
                 context=Context(),
                 agent_id=mock_config_entry.entry_id,

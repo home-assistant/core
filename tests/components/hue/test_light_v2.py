@@ -175,7 +175,7 @@ async def test_light_turn_on_service(
     assert len(mock_bridge_v2.mock_requests) == 6
     assert mock_bridge_v2.mock_requests[5]["json"]["color_temperature"]["mirek"] == 500
 
-    # test enable effect
+    # test enable an effect
     await hass.services.async_call(
         "light",
         "turn_on",
@@ -184,8 +184,20 @@ async def test_light_turn_on_service(
     )
     assert len(mock_bridge_v2.mock_requests) == 7
     assert mock_bridge_v2.mock_requests[6]["json"]["effects"]["effect"] == "candle"
+    # fire event to update effect in HA state
+    event = {
+        "id": "3a6710fa-4474-4eba-b533-5e6e72968feb",
+        "type": "light",
+        "effects": {"status": "candle"},
+    }
+    mock_bridge_v2.api.emit_event("update", event)
+    await hass.async_block_till_done()
+    test_light = hass.states.get(test_light_id)
+    assert test_light is not None
+    assert test_light.attributes["effect"] == "candle"
 
     # test disable effect
+    # it should send a request with effect set to "no_effect"
     await hass.services.async_call(
         "light",
         "turn_on",
@@ -194,6 +206,28 @@ async def test_light_turn_on_service(
     )
     assert len(mock_bridge_v2.mock_requests) == 8
     assert mock_bridge_v2.mock_requests[7]["json"]["effects"]["effect"] == "no_effect"
+    # fire event to update effect in HA state
+    event = {
+        "id": "3a6710fa-4474-4eba-b533-5e6e72968feb",
+        "type": "light",
+        "effects": {"status": "no_effect"},
+    }
+    mock_bridge_v2.api.emit_event("update", event)
+    await hass.async_block_till_done()
+    test_light = hass.states.get(test_light_id)
+    assert test_light is not None
+    assert test_light.attributes["effect"] == "None"
+
+    # test turn on with useless effect
+    # it should send a effect in the request if the device has no effect active
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": test_light_id, "effect": "None"},
+        blocking=True,
+    )
+    assert len(mock_bridge_v2.mock_requests) == 9
+    assert "effects" not in mock_bridge_v2.mock_requests[8]["json"]
 
     # test timed effect
     await hass.services.async_call(
@@ -202,11 +236,11 @@ async def test_light_turn_on_service(
         {"entity_id": test_light_id, "effect": "sunrise", "transition": 6},
         blocking=True,
     )
-    assert len(mock_bridge_v2.mock_requests) == 9
+    assert len(mock_bridge_v2.mock_requests) == 10
     assert (
-        mock_bridge_v2.mock_requests[8]["json"]["timed_effects"]["effect"] == "sunrise"
+        mock_bridge_v2.mock_requests[9]["json"]["timed_effects"]["effect"] == "sunrise"
     )
-    assert mock_bridge_v2.mock_requests[8]["json"]["timed_effects"]["duration"] == 6000
+    assert mock_bridge_v2.mock_requests[9]["json"]["timed_effects"]["duration"] == 6000
 
     # test enabling effect should ignore color temperature
     await hass.services.async_call(
@@ -215,9 +249,9 @@ async def test_light_turn_on_service(
         {"entity_id": test_light_id, "effect": "candle", "color_temp": 500},
         blocking=True,
     )
-    assert len(mock_bridge_v2.mock_requests) == 10
-    assert mock_bridge_v2.mock_requests[9]["json"]["effects"]["effect"] == "candle"
-    assert "color_temperature" not in mock_bridge_v2.mock_requests[9]["json"]
+    assert len(mock_bridge_v2.mock_requests) == 11
+    assert mock_bridge_v2.mock_requests[10]["json"]["effects"]["effect"] == "candle"
+    assert "color_temperature" not in mock_bridge_v2.mock_requests[10]["json"]
 
     # test enabling effect should ignore xy color
     await hass.services.async_call(
@@ -226,9 +260,9 @@ async def test_light_turn_on_service(
         {"entity_id": test_light_id, "effect": "candle", "xy_color": [0.123, 0.123]},
         blocking=True,
     )
-    assert len(mock_bridge_v2.mock_requests) == 11
-    assert mock_bridge_v2.mock_requests[10]["json"]["effects"]["effect"] == "candle"
-    assert "xy_color" not in mock_bridge_v2.mock_requests[9]["json"]
+    assert len(mock_bridge_v2.mock_requests) == 12
+    assert mock_bridge_v2.mock_requests[11]["json"]["effects"]["effect"] == "candle"
+    assert "xy_color" not in mock_bridge_v2.mock_requests[11]["json"]
 
 
 async def test_light_turn_off_service(
@@ -358,7 +392,7 @@ async def test_light_availability(
     assert test_light is not None
     assert test_light.state == "on"
 
-    # Change availability by modififying the zigbee_connectivity status
+    # Change availability by modifying the zigbee_connectivity status
     for status in ("connectivity_issue", "disconnected", "connected"):
         mock_bridge_v2.api.emit_event(
             "update",

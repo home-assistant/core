@@ -1,4 +1,4 @@
-"""Fixtures for Tessie."""
+"""Fixtures for Teslemetry."""
 
 from __future__ import annotations
 
@@ -7,9 +7,11 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
 import pytest
+from teslemetry_stream.stream import recursive_match
 
 from .const import (
     COMMAND_OK,
+    ENERGY_HISTORY,
     LIVE_STATUS,
     METADATA,
     PRODUCTS,
@@ -45,6 +47,15 @@ def mock_vehicle_data() -> Generator[AsyncMock]:
         return_value=VEHICLE_DATA,
     ) as mock_vehicle_data:
         yield mock_vehicle_data
+
+
+@pytest.fixture
+def mock_legacy():
+    """Mock Tesla Fleet Api products method."""
+    with patch(
+        "homeassistant.components.teslemetry.VehicleSpecific.pre2021", return_value=True
+    ) as mock_pre2021:
+        yield mock_pre2021
 
 
 @pytest.fixture(autouse=True)
@@ -95,3 +106,66 @@ def mock_site_info():
         side_effect=lambda: deepcopy(SITE_INFO),
     ) as mock_live_status:
         yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_energy_history():
+    """Mock Teslemetry Energy Specific site_info method."""
+    with patch(
+        "homeassistant.components.teslemetry.EnergySpecific.energy_history",
+        return_value=ENERGY_HISTORY,
+    ) as mock_live_status:
+        yield mock_live_status
+
+
+@pytest.fixture(autouse=True)
+def mock_add_listener():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "homeassistant.components.teslemetry.TeslemetryStream.async_add_listener",
+    ) as mock_add_listener:
+        mock_add_listener.listeners = []
+
+        def unsubscribe() -> None:
+            return
+
+        def side_effect(callback, filters):
+            mock_add_listener.listeners.append((callback, filters))
+            return unsubscribe
+
+        def send(event) -> None:
+            for listener, filters in mock_add_listener.listeners:
+                if recursive_match(filters, event):
+                    listener(event)
+
+        mock_add_listener.send = send
+        mock_add_listener.side_effect = side_effect
+        yield mock_add_listener
+
+
+@pytest.fixture(autouse=True)
+def mock_stream_get_config():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.get_config",
+    ) as mock_stream_get_config:
+        yield mock_stream_get_config
+
+
+@pytest.fixture(autouse=True)
+def mock_stream_update_config():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "teslemetry_stream.TeslemetryStreamVehicle.update_config",
+    ) as mock_stream_update_config:
+        yield mock_stream_update_config
+
+
+@pytest.fixture(autouse=True)
+def mock_stream_connected():
+    """Mock Teslemetry Stream listen method."""
+    with patch(
+        "homeassistant.components.teslemetry.TeslemetryStream.connected",
+        return_value=True,
+    ) as mock_stream_connected:
+        yield mock_stream_connected

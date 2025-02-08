@@ -4,18 +4,19 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.components.hassio import get_os_info, is_hassio
+from homeassistant.components.hassio import get_os_info
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     check_multi_pan_addon,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
-    guess_firmware_type,
+    guess_firmware_info,
 )
 from homeassistant.config_entries import SOURCE_HARDWARE, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import discovery_flow
+from homeassistant.helpers.hassio import is_hassio
 
 from .const import FIRMWARE, RADIO_DEVICE, ZHA_HW_DISCOVERY_DATA
 
@@ -74,7 +75,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             # Add-on startup with type service get started before Core, always (e.g. the
             # Multi-Protocol add-on). Probing the firmware would interfere with the add-on,
             # so we can't safely probe here. Instead, we must make an educated guess!
-            firmware_guess = await guess_firmware_type(hass, RADIO_DEVICE)
+            firmware_guess = await guess_firmware_info(hass, RADIO_DEVICE)
 
             new_data = {**config_entry.data}
             new_data[FIRMWARE] = firmware_guess.firmware_type.value
