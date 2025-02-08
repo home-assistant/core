@@ -12,7 +12,7 @@ TO_REDACT = {"id", "latitude", "longitude", "altitude"}
 
 
 async def async_get_config_entry_diagnostics(
-    _: HomeAssistant, entry: StarlinkConfigEntry
+    _: HomeAssistant, e: StarlinkConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for Starlink config entries."""
-    return async_redact_data(asdict(entry.runtime_data.data), TO_REDACT)
+    return async_redact_data(asdict(e.runtime_data.data), TO_REDACT)
