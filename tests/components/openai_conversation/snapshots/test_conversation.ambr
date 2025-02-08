@@ -25,9 +25,16 @@
       'role': 'assistant',
       'tool_calls': list([
         dict({
-          'id': 'call_AbCdEfGhIjKlMnOpQrStUvWx',
+          'id': 'call_call_1',
           'tool_args': dict({
-            'param1': 'test_value',
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+        dict({
+          'id': 'call_call_2',
+          'tool_args': dict({
+            'param1': 'call2',
           }),
           'tool_name': 'test_tool',
         }),
@@ -36,9 +43,16 @@
     dict({
       'agent_id': 'conversation.openai',
       'role': 'tool_result',
-      'tool_call_id': 'call_AbCdEfGhIjKlMnOpQrStUvWx',
+      'tool_call_id': 'call_call_1',
       'tool_name': 'test_tool',
-      'tool_result': 'Test response',
+      'tool_result': 'value1',
+    }),
+    dict({
+      'agent_id': 'conversation.openai',
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_2',
+      'tool_name': 'test_tool',
+      'tool_result': 'value2',
     }),
     dict({
       'agent_id': 'conversation.openai',

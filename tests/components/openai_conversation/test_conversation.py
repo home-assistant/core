@@ -27,6 +27,25 @@ from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
+ASSIST_RESPONSE_FINISH = (
+    # Assistant message
+    ChatCompletionChunk(
+        id="chatcmpl-B",
+        created=1700000000,
+        model="gpt-4-1106-preview",
+        object="chat.completion.chunk",
+        choices=[Choice(index=0, delta=ChoiceDelta(content="Cool"))],
+    ),
+    # Finish stream
+    ChatCompletionChunk(
+        id="chatcmpl-B",
+        created=1700000000,
+        model="gpt-4-1106-preview",
+        object="chat.completion.chunk",
+        choices=[Choice(index=0, finish_reason="stop", delta=ChoiceDelta())],
+    ),
+)
+
 
 @pytest.fixture
 def mock_create_stream() -> Generator[AsyncMock]:
@@ -177,6 +196,7 @@ async def test_function_call(
     mock_create_stream.return_value = [
         # Initial conversation
         (
+            # First tool call
             ChatCompletionChunk(
                 id="chatcmpl-A",
                 created=1700000000,
@@ -188,7 +208,7 @@ async def test_function_call(
                         delta=ChoiceDelta(
                             tool_calls=[
                                 ChoiceDeltaToolCall(
-                                    id="call_AbCdEfGhIjKlMnOpQrStUvWx",
+                                    id="call_call_1",
                                     index=0,
                                     function=ChoiceDeltaToolCallFunction(
                                         name="test_tool",
@@ -236,7 +256,7 @@ async def test_function_call(
                                     index=0,
                                     function=ChoiceDeltaToolCallFunction(
                                         name=None,
-                                        arguments='m1":"test_value"}',
+                                        arguments='m1":"call1"}',
                                     ),
                                 )
                             ]
@@ -244,6 +264,31 @@ async def test_function_call(
                     )
                 ],
             ),
+            # Second tool call
+            ChatCompletionChunk(
+                id="chatcmpl-A",
+                created=1700000000,
+                model="gpt-4-1106-preview",
+                object="chat.completion.chunk",
+                choices=[
+                    Choice(
+                        index=0,
+                        delta=ChoiceDelta(
+                            tool_calls=[
+                                ChoiceDeltaToolCall(
+                                    id="call_call_2",
+                                    index=1,
+                                    function=ChoiceDeltaToolCallFunction(
+                                        name="test_tool",
+                                        arguments='{"param1":"call2"}',
+                                    ),
+                                )
+                            ]
+                        ),
+                    )
+                ],
+            ),
+            # Finish stream
             ChatCompletionChunk(
                 id="chatcmpl-A",
                 created=1700000000,
@@ -255,25 +300,12 @@ async def test_function_call(
             ),
         ),
         # Response after tool responses
-        (
-            ChatCompletionChunk(
-                id="chatcmpl-B",
-                created=1700000000,
-                model="gpt-4-1106-preview",
-                object="chat.completion.chunk",
-                choices=[
-                    Choice(
-                        index=0,
-                        delta=ChoiceDelta(content="Cool"),
-                        stop_reason="stop",
-                    )
-                ],
-            ),
-        ),
+        ASSIST_RESPONSE_FINISH,
     ]
     mock_chat_log.mock_tool_results(
         {
-            "call_AbCdEfGhIjKlMnOpQrStUvWx": "Test response",
+            "call_call_1": "value1",
+            "call_call_2": "value2",
         }
     )
 
@@ -288,6 +320,131 @@ async def test_function_call(
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
     assert mock_chat_log.latest_content() == snapshot
+
+
+@pytest.mark.parametrize(
+    ("description", "messages"),
+    [
+        (
+            "Test function call started with missing arguments",
+            (
+                ChatCompletionChunk(
+                    id="chatcmpl-A",
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    choices=[
+                        Choice(
+                            index=0,
+                            delta=ChoiceDelta(
+                                tool_calls=[
+                                    ChoiceDeltaToolCall(
+                                        id="call_call_1",
+                                        index=0,
+                                        function=ChoiceDeltaToolCallFunction(
+                                            name="test_tool",
+                                            arguments=None,
+                                        ),
+                                    )
+                                ]
+                            ),
+                        )
+                    ],
+                ),
+                ChatCompletionChunk(
+                    id="chatcmpl-B",
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    choices=[Choice(index=0, delta=ChoiceDelta(content="Cool"))],
+                ),
+            ),
+        ),
+        (
+            "Test invalid JSON",
+            (
+                ChatCompletionChunk(
+                    id="chatcmpl-A",
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    choices=[
+                        Choice(
+                            index=0,
+                            delta=ChoiceDelta(
+                                tool_calls=[
+                                    ChoiceDeltaToolCall(
+                                        id="call_call_1",
+                                        index=0,
+                                        function=ChoiceDeltaToolCallFunction(
+                                            name="test_tool",
+                                            arguments=None,
+                                        ),
+                                    )
+                                ]
+                            ),
+                        )
+                    ],
+                ),
+                ChatCompletionChunk(
+                    id="chatcmpl-A",
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    choices=[
+                        Choice(
+                            index=0,
+                            delta=ChoiceDelta(
+                                tool_calls=[
+                                    ChoiceDeltaToolCall(
+                                        index=0,
+                                        function=ChoiceDeltaToolCallFunction(
+                                            name=None,
+                                            arguments='{"para',
+                                        ),
+                                    )
+                                ]
+                            ),
+                        )
+                    ],
+                ),
+                ChatCompletionChunk(
+                    id="chatcmpl-B",
+                    created=1700000000,
+                    model="gpt-4-1106-preview",
+                    object="chat.completion.chunk",
+                    choices=[
+                        Choice(
+                            index=0,
+                            delta=ChoiceDelta(content="Cool"),
+                            finish_reason="tool_calls",
+                        )
+                    ],
+                ),
+            ),
+        ),
+    ],
+)
+async def test_function_call_invalid(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    mock_create_stream: AsyncMock,
+    mock_chat_log: MockChatLog,
+    description: str,
+    messages: tuple[ChatCompletionChunk],
+) -> None:
+    """Test function call containing invalid data."""
+    mock_create_stream.return_value = [messages]
+
+    with pytest.raises(ValueError):
+        await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            "mock-conversation-id",
+            Context(),
+            agent_id="conversation.openai",
+        )
 
 
 async def test_assist_api_tools_conversion(
@@ -315,23 +472,7 @@ async def test_assist_api_tools_conversion(
         hass.states.async_set(f"{component}.test", "on")
         async_expose_entity(hass, "conversation", f"{component}.test", True)
 
-    mock_create_stream.return_value = [
-        (
-            ChatCompletionChunk(
-                id="chatcmpl-B",
-                created=1700000000,
-                model="gpt-4-1106-preview",
-                object="chat.completion.chunk",
-                choices=[
-                    Choice(
-                        index=0,
-                        delta=ChoiceDelta(content="Cool"),
-                        stop_reason="stop",
-                    )
-                ],
-            ),
-        ),
-    ]
+    mock_create_stream.return_value = [ASSIST_RESPONSE_FINISH]
 
     await conversation.async_converse(
         hass, "hello", None, Context(), agent_id="conversation.openai"
