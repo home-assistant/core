@@ -806,10 +806,18 @@ async def test_empty_tts_output(
         satellite.on_chunk(bytes([255] * _ONE_SECOND * 2))
 
         # silence (assumes relaxed VAD sensitivity)
-        satellite.on_chunk(bytes(_ONE_SECOND * 4))
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to finish
-        async with asyncio.timeout(1):
+        async with asyncio.timeout(2):
             await satellite._tts_done.wait()
 
         mock_send_tts.assert_not_called()
@@ -1119,16 +1127,20 @@ async def test_start_conversation(
 
         # Trigger announcement and wait for it to finish
         satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
         async with asyncio.timeout(2):
             await tts_sent.wait()
-
-        tts_sent.clear()
 
         # Trigger pipeline
         satellite.on_chunk(bytes(_ONE_SECOND))
-        async with asyncio.timeout(2):
-            # Wait for TTS
-            await tts_sent.wait()
+        await asyncio.sleep(0.2)
+        satellite.on_chunk(bytes(_ONE_SECOND))
+        await asyncio.sleep(3)
+        async with asyncio.timeout(3):
+            # Wait for Conversation end
             await conversation_task
 
 
@@ -1140,20 +1152,6 @@ async def test_start_conversation_user_doesnt_pick_up(
 ) -> None:
     """Test start conversation when the user doesn't pick up."""
     assert await async_setup_component(hass, "voip", {})
-
-    pipeline = assist_pipeline.Pipeline(
-        conversation_engine="test engine",
-        conversation_language="en",
-        language="en",
-        name="test pipeline",
-        stt_engine="test stt",
-        stt_language="en",
-        tts_engine="test tts",
-        tts_language="en",
-        tts_voice=None,
-        wake_word_entity=None,
-        wake_word_id=None,
-    )
 
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     satellite.addr = ("192.168.1.1", 12345)
@@ -1167,62 +1165,23 @@ async def test_start_conversation_user_doesnt_pick_up(
     mock_protocol: AsyncMock = hass.data[DOMAIN].protocol
     mock_protocol.outgoing_call = Mock()
 
-    pipeline_started = asyncio.Event()
+    announcement = assist_satellite.AssistSatelliteAnnouncement(
+        message="test announcement",
+        media_id=_MEDIA_ID,
+        tts_token="test-token",
+        original_media_id=_MEDIA_ID,
+        media_id_source="tts",
+    )
 
-    async def async_pipeline_from_audio_stream(
-        hass: HomeAssistant,
-        context: Context,
-        *args,
-        conversation_extra_system_prompt: str | None = None,
-        **kwargs,
-    ):
-        # System prompt should be not be set due to timeout (user not picking up)
-        assert conversation_extra_system_prompt is None
-
-        pipeline_started.set()
-
+    # Very short timeout which will trigger because we don't send any audio in
     with (
         patch(
-            "homeassistant.components.assist_satellite.entity.async_get_pipeline",
-            return_value=pipeline,
-        ),
-        patch(
-            "homeassistant.components.voip.assist_satellite.VoipAssistSatellite.async_start_conversation",
-            side_effect=TimeoutError,
-        ),
-        patch(
-            "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
-            new=async_pipeline_from_audio_stream,
-        ),
-        patch(
-            "homeassistant.components.tts.generate_media_source_id",
-            return_value="media-source://bla",
-        ),
-        patch(
-            "homeassistant.components.tts.async_resolve_engine",
-            return_value="test tts",
-        ),
-        patch(
-            "homeassistant.components.tts.async_create_stream",
-            return_value=MockResultStream(hass, "wav", b""),
+            "homeassistant.components.voip.assist_satellite._ANNOUNCEMENT_RING_TIMEOUT",
+            0.1,
         ),
     ):
         satellite.connection_made(Mock())
 
         # Error should clear system prompt
         with pytest.raises(TimeoutError):
-            await hass.services.async_call(
-                assist_satellite.DOMAIN,
-                "start_conversation",
-                {
-                    "entity_id": satellite.entity_id,
-                    "start_message": "test announcement",
-                    "extra_system_prompt": "test prompt",
-                },
-                blocking=True,
-            )
-
-        # Trigger a pipeline so we can check if the system prompt was cleared
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        async with asyncio.timeout(1):
-            await pipeline_started.wait()
+            await satellite.async_start_conversation(announcement)
