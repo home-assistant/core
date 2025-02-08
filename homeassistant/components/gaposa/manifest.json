@@ -5,11 +5,9 @@
   "config_flow": true,
   "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/gaposa",
-  "homekit": {},
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["gaposa"],
-  "requirements": ["pygaposa==0.2.3"],
-  "ssdp": [],
-  "zeroconf": []
+  "quality_scale": "bronze",
+  "requirements": ["pygaposa==0.2.3"]
 }
