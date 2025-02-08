@@ -127,7 +127,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     )
     _LOGGER.debug("LMS Device %s", device)
 
-    server_coordinator = LMSStatusDataUpdateCoordinator(hass, lms)
+    server_coordinator = LMSStatusDataUpdateCoordinator(hass, entry, lms)
 
     entry.runtime_data = SqueezeboxData(
         coordinator=server_coordinator,
