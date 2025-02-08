@@ -4,18 +4,14 @@ from collections.abc import Mapping
 import logging
 from typing import Any, cast
 
-from kiota_abstractions.api_error import APIError
-from kiota_abstractions.authentication import BaseBearerTokenAuthenticationProvider
-from kiota_abstractions.method import Method
-from kiota_abstractions.request_information import RequestInformation
-from msgraph import GraphRequestAdapter, GraphServiceClient
+from onedrive_personal_sdk.clients.client import OneDriveClient
+from onedrive_personal_sdk.exceptions import OneDriveException
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
-from homeassistant.helpers.httpx_client import get_async_client
 
-from .api import OneDriveConfigFlowAccessTokenProvider
 from .const import DOMAIN, OAUTH_SCOPES
 
 
@@ -39,48 +35,24 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         data: dict[str, Any],
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        auth_provider = BaseBearerTokenAuthenticationProvider(
-            access_token_provider=OneDriveConfigFlowAccessTokenProvider(
-                cast(str, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-            )
-        )
-        adapter = GraphRequestAdapter(
-            auth_provider=auth_provider,
-            client=get_async_client(self.hass),
+
+        async def get_access_token() -> str:
+            return cast(str, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+
+        graph_client = OneDriveClient(
+            get_access_token, async_get_clientsession(self.hass)
         )
 
-        graph_client = GraphServiceClient(
-            request_adapter=adapter,
-            scopes=OAUTH_SCOPES,
-        )
-
-        # need to get adapter from client, as client changes it
-        request_adapter = cast(GraphRequestAdapter, graph_client.request_adapter)
-
-        request_info = RequestInformation(
-            method=Method.GET,
-            url_template="{+baseurl}/me/drive/special/approot",
-            path_parameters={},
-        )
-        parent_span = request_adapter.start_tracing_span(request_info, "get_approot")
-
-        # get the OneDrive id
-        # use low level methods, to avoid files.read permissions
-        # which would be required by drives.me.get()
         try:
-            response = await request_adapter.get_http_response_message(
-                request_info=request_info, parent_span=parent_span
-            )
-        except APIError:
+            approot = await graph_client.get_approot()
+        except OneDriveException:
             self.logger.exception("Failed to connect to OneDrive")
             return self.async_abort(reason="connection_error")
         except Exception:
             self.logger.exception("Unknown error")
             return self.async_abort(reason="unknown")
 
-        drive: dict = response.json()
-
-        await self.async_set_unique_id(drive["parentReference"]["driveId"])
+        await self.async_set_unique_id(approot.parent_reference.drive_id)
 
         if self.source == SOURCE_REAUTH:
             reauth_entry = self._get_reauth_entry()
@@ -94,10 +66,11 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         self._abort_if_unique_id_configured()
 
-        user = drive.get("createdBy", {}).get("user", {}).get("displayName")
-
-        title = f"{user}'s OneDrive" if user else "OneDrive"
-
+        title = (
+            f"{approot.created_by.user.display_name}'s OneDrive"
+            if approot.created_by.user and approot.created_by.user.display_name
+            else "OneDrive"
+        )
         return self.async_create_entry(title=title, data=data)
 
     async def async_step_reauth(

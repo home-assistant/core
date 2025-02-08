@@ -3378,6 +3378,39 @@ async def test_device_registry_identifiers_collision(
     assert not device1_refetched.identifiers.isdisjoint(device3_refetched.identifiers)
 
 
+async def test_device_registry_deleted_device_collision(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test update collisions with deleted devices in the device registry."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    device1 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "EE:EE:EE:EE:EE:EE")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert len(device_registry.deleted_devices) == 0
+
+    device_registry.async_remove_device(device1.id)
+    assert len(device_registry.deleted_devices) == 1
+
+    device2 = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+        manufacturer="manufacturer",
+        model="model",
+    )
+    assert len(device_registry.deleted_devices) == 1
+
+    device_registry.async_update_device(
+        device2.id,
+        merge_connections={(dr.CONNECTION_NETWORK_MAC, "EE:EE:EE:EE:EE:EE")},
+    )
+    assert len(device_registry.deleted_devices) == 0
+
+
 async def test_primary_config_entry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

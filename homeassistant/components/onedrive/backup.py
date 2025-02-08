@@ -2,37 +2,22 @@
 
 from __future__ import annotations
 
-import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 from functools import wraps
-import html
-import json
+from html import unescape
+from json import dumps, loads
 import logging
-from typing import Any, Concatenate, cast
+from typing import Any, Concatenate
 
-from httpx import Response, TimeoutException
-from kiota_abstractions.api_error import APIError
-from kiota_abstractions.authentication import AnonymousAuthenticationProvider
-from kiota_abstractions.headers_collection import HeadersCollection
-from kiota_abstractions.method import Method
-from kiota_abstractions.native_response_handler import NativeResponseHandler
-from kiota_abstractions.request_information import RequestInformation
-from kiota_http.middleware.options import ResponseHandlerOption
-from msgraph import GraphRequestAdapter
-from msgraph.generated.drives.item.items.item.content.content_request_builder import (
-    ContentRequestBuilder,
+from aiohttp import ClientTimeout
+from onedrive_personal_sdk.clients.large_file_upload import LargeFileUploadClient
+from onedrive_personal_sdk.exceptions import (
+    AuthenticationError,
+    HashMismatchError,
+    OneDriveException,
 )
-from msgraph.generated.drives.item.items.item.create_upload_session.create_upload_session_post_request_body import (
-    CreateUploadSessionPostRequestBody,
-)
-from msgraph.generated.drives.item.items.item.drive_item_item_request_builder import (
-    DriveItemItemRequestBuilder,
-)
-from msgraph.generated.models.drive_item import DriveItem
-from msgraph.generated.models.drive_item_uploadable_properties import (
-    DriveItemUploadableProperties,
-)
-from msgraph_core.models import LargeFileUploadSession
+from onedrive_personal_sdk.models.items import File, Folder, ItemUpdate
+from onedrive_personal_sdk.models.upload import FileInfo
 
 from homeassistant.components.backup import (
     AgentBackup,
@@ -41,14 +26,15 @@ from homeassistant.components.backup import (
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import OneDriveConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 UPLOAD_CHUNK_SIZE = 16 * 320 * 1024  # 5.2MB
-MAX_RETRIES = 5
+TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
+METADATA_VERSION = 2
 
 
 async def async_get_backup_agents(
@@ -92,18 +78,18 @@ def handle_backup_errors[_R, **P](
     ) -> _R:
         try:
             return await func(self, *args, **kwargs)
-        except APIError as err:
-            if err.response_status_code == 403:
-                self._entry.async_start_reauth(self._hass)
+        except AuthenticationError as err:
+            self._entry.async_start_reauth(self._hass)
+            raise BackupAgentError("Authentication error") from err
+        except OneDriveException as err:
             _LOGGER.error(
-                "Error during backup in %s: Status %s, message %s",
+                "Error during backup in %s:, message %s",
                 func.__name__,
-                err.response_status_code,
-                err.message,
+                err,
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
             raise BackupAgentError("Backup operation failed") from err
-        except TimeoutException as err:
+        except TimeoutError as err:
             _LOGGER.error(
                 "Error during backup in %s: Timeout",
                 func.__name__,
@@ -123,7 +109,8 @@ class OneDriveBackupAgent(BackupAgent):
         super().__init__()
         self._hass = hass
         self._entry = entry
-        self._items = entry.runtime_data.items
+        self._client = entry.runtime_data.client
+        self._token_function = entry.runtime_data.token_function
         self._folder_id = entry.runtime_data.backup_folder_id
         self.name = entry.title
         assert entry.unique_id
@@ -134,24 +121,20 @@ class OneDriveBackupAgent(BackupAgent):
         self, backup_id: str, **kwargs: Any
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        # this forces the query to return a raw httpx response, but breaks typing
-        backup = await self._find_item_by_backup_id(backup_id)
-        if backup is None or backup.id is None:
+        metadata_item = await self._find_item_by_backup_id(backup_id)
+        if (
+            metadata_item is None
+            or metadata_item.description is None
+            or "backup_file_id" not in metadata_item.description
+        ):
             raise BackupAgentError("Backup not found")
 
-        request_config = (
-            ContentRequestBuilder.ContentRequestBuilderGetRequestConfiguration(
-                options=[ResponseHandlerOption(NativeResponseHandler())],
-            )
-        )
-        response = cast(
-            Response,
-            await self._items.by_drive_item_id(backup.id).content.get(
-                request_configuration=request_config
-            ),
-        )
+        metadata_info = loads(unescape(metadata_item.description))
 
-        return response.aiter_bytes(chunk_size=1024)
+        stream = await self._client.download_drive_item(
+            metadata_info["backup_file_id"], timeout=TIMEOUT
+        )
+        return stream.iter_chunked(1024)
 
     @handle_backup_errors
     async def async_upload_backup(
@@ -162,36 +145,42 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-
-        # upload file in chunks to support large files
-        upload_session_request_body = CreateUploadSessionPostRequestBody(
-            item=DriveItemUploadableProperties(
-                additional_data={
-                    "@microsoft.graph.conflictBehavior": "fail",
-                },
+        filename = suggested_filename(backup)
+        file = FileInfo(
+            filename,
+            backup.size,
+            self._folder_id,
+            await open_stream(),
+        )
+        try:
+            backup_file = await LargeFileUploadClient.upload(
+                self._token_function, file, session=async_get_clientsession(self._hass)
             )
-        )
-        file_item = self._get_backup_file_item(suggested_filename(backup))
-        upload_session = await file_item.create_upload_session.post(
-            upload_session_request_body
-        )
-
-        if upload_session is None or upload_session.upload_url is None:
+        except HashMismatchError as err:
             raise BackupAgentError(
-                translation_domain=DOMAIN, translation_key="backup_no_upload_session"
-            )
+                "Hash validation failed, backup file might be corrupt"
+            ) from err
 
-        await self._upload_file(
-            upload_session.upload_url, await open_stream(), backup.size
+        # store metadata in metadata file
+        description = dumps(backup.as_dict())
+        _LOGGER.debug("Creating metadata: %s", description)
+        metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
+        metadata_file = await self._client.upload_file(
+            self._folder_id,
+            metadata_filename,
+            description,
         )
 
-        # store metadata in description
-        backup_dict = backup.as_dict()
-        backup_dict["metadata_version"] = 1  # version of the backup metadata
-        description = json.dumps(backup_dict)
-        _LOGGER.debug("Creating metadata: %s", description)
-
-        await file_item.patch(DriveItem(description=description))
+        # add metadata to the metadata file
+        metadata_description = {
+            "metadata_version": METADATA_VERSION,
+            "backup_id": backup.backup_id,
+            "backup_file_id": backup_file.id,
+        }
+        await self._client.update_drive_item(
+            path_or_id=metadata_file.id,
+            data=ItemUpdate(description=dumps(metadata_description)),
+        )
 
     @handle_backup_errors
     async def async_delete_backup(
@@ -200,128 +189,56 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        backup = await self._find_item_by_backup_id(backup_id)
-        if backup is None or backup.id is None:
+        metadata_item = await self._find_item_by_backup_id(backup_id)
+        if (
+            metadata_item is None
+            or metadata_item.description is None
+            or "backup_file_id" not in metadata_item.description
+        ):
             return
-        await self._items.by_drive_item_id(backup.id).delete()
+        metadata_info = loads(unescape(metadata_item.description))
+
+        await self._client.delete_drive_item(metadata_info["backup_file_id"])
+        await self._client.delete_drive_item(metadata_item.id)
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
-        backups: list[AgentBackup] = []
-        items = await self._items.by_drive_item_id(f"{self._folder_id}").children.get()
-        if items and (values := items.value):
-            for item in values:
-                if (description := item.description) is None:
-                    continue
-                if "homeassistant_version" in description:
-                    backups.append(self._backup_from_description(description))
-        return backups
+        items = await self._client.list_drive_items(self._folder_id)
+        return [
+            await self._download_backup_metadata(item.id)
+            for item in items
+            if item.description
+            and "backup_id" in item.description
+            and f'"metadata_version": {METADATA_VERSION}' in unescape(item.description)
+        ]
 
     @handle_backup_errors
     async def async_get_backup(
         self, backup_id: str, **kwargs: Any
     ) -> AgentBackup | None:
         """Return a backup."""
-        backup = await self._find_item_by_backup_id(backup_id)
-        if backup is None:
+        metadata_file = await self._find_item_by_backup_id(backup_id)
+        if metadata_file is None or metadata_file.description is None:
             return None
 
-        assert backup.description  # already checked in _find_item_by_backup_id
-        return self._backup_from_description(backup.description)
+        return await self._download_backup_metadata(metadata_file.id)
 
-    def _backup_from_description(self, description: str) -> AgentBackup:
-        """Create a backup object from a description."""
-        description = html.unescape(
-            description
-        )  # OneDrive encodes the description on save automatically
-        return AgentBackup.from_dict(json.loads(description))
-
-    async def _find_item_by_backup_id(self, backup_id: str) -> DriveItem | None:
-        """Find a backup item by its backup ID."""
-
-        items = await self._items.by_drive_item_id(f"{self._folder_id}").children.get()
-        if items and (values := items.value):
-            for item in values:
-                if (description := item.description) is None:
-                    continue
-                if backup_id in description:
-                    return item
-        return None
-
-    def _get_backup_file_item(self, backup_id: str) -> DriveItemItemRequestBuilder:
-        return self._items.by_drive_item_id(f"{self._folder_id}:/{backup_id}:")
-
-    async def _upload_file(
-        self, upload_url: str, stream: AsyncIterator[bytes], total_size: int
-    ) -> None:
-        """Use custom large file upload; SDK does not support stream."""
-
-        adapter = GraphRequestAdapter(
-            auth_provider=AnonymousAuthenticationProvider(),
-            client=get_async_client(self._hass),
+    async def _find_item_by_backup_id(self, backup_id: str) -> File | Folder | None:
+        """Find an item by backup ID."""
+        return next(
+            (
+                item
+                for item in await self._client.list_drive_items(self._folder_id)
+                if item.description
+                and backup_id in item.description
+                and f'"metadata_version": {METADATA_VERSION}'
+                in unescape(item.description)
+            ),
+            None,
         )
 
-        async def async_upload(
-            start: int, end: int, chunk_data: bytes
-        ) -> LargeFileUploadSession:
-            info = RequestInformation()
-            info.url = upload_url
-            info.http_method = Method.PUT
-            info.headers = HeadersCollection()
-            info.headers.try_add("Content-Range", f"bytes {start}-{end}/{total_size}")
-            info.headers.try_add("Content-Length", str(len(chunk_data)))
-            info.headers.try_add("Content-Type", "application/octet-stream")
-            _LOGGER.debug(info.headers.get_all())
-            info.set_stream_content(chunk_data)
-            result = await adapter.send_async(info, LargeFileUploadSession, {})
-            _LOGGER.debug("Next expected range: %s", result.next_expected_ranges)
-            return result
-
-        start = 0
-        buffer: list[bytes] = []
-        buffer_size = 0
-        retries = 0
-
-        async for chunk in stream:
-            buffer.append(chunk)
-            buffer_size += len(chunk)
-            if buffer_size >= UPLOAD_CHUNK_SIZE:
-                chunk_data = b"".join(buffer)
-                uploaded_chunks = 0
-                while (
-                    buffer_size > UPLOAD_CHUNK_SIZE
-                ):  # Loop in case the buffer is >= UPLOAD_CHUNK_SIZE * 2
-                    slice_start = uploaded_chunks * UPLOAD_CHUNK_SIZE
-                    try:
-                        await async_upload(
-                            start,
-                            start + UPLOAD_CHUNK_SIZE - 1,
-                            chunk_data[slice_start : slice_start + UPLOAD_CHUNK_SIZE],
-                        )
-                    except APIError as err:
-                        if (
-                            err.response_status_code and err.response_status_code < 500
-                        ):  # no retry on 4xx errors
-                            raise
-                        if retries < MAX_RETRIES:
-                            await asyncio.sleep(2**retries)
-                            retries += 1
-                            continue
-                        raise
-                    except TimeoutException:
-                        if retries < MAX_RETRIES:
-                            retries += 1
-                            continue
-                        raise
-                    retries = 0
-                    start += UPLOAD_CHUNK_SIZE
-                    uploaded_chunks += 1
-                    buffer_size -= UPLOAD_CHUNK_SIZE
-                buffer = [chunk_data[UPLOAD_CHUNK_SIZE * uploaded_chunks :]]
-
-        # upload the remaining bytes
-        if buffer:
-            _LOGGER.debug("Last chunk")
-            chunk_data = b"".join(buffer)
-            await async_upload(start, start + len(chunk_data) - 1, chunk_data)
+    async def _download_backup_metadata(self, item_id: str) -> AgentBackup:
+        metadata_stream = await self._client.download_drive_item(item_id)
+        metadata_json = loads(await metadata_stream.read())
+        return AgentBackup.from_dict(metadata_json)
