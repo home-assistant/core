@@ -10,8 +10,8 @@ from lacrosse_view import HTTPError, LaCrosse, Location, LoginError, Sensor
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import SCAN_INTERVAL
 
@@ -68,7 +68,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
                     location=Location(id=self.id, name=self.name),
                 )
             except HTTPError as error:
-                raise ConfigEntryNotReady from error
+                raise UpdateFailed from error
 
         try:
             # Fetch last hour of data
@@ -82,7 +82,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
                 _LOGGER.debug("Got data: %s", sensor.data)
 
         except HTTPError as error:
-            raise ConfigEntryNotReady from error
+            raise UpdateFailed from error
 
         # Verify that we have permission to read the sensors
         for sensor in self.devices:
