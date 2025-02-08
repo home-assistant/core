@@ -48,7 +48,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     data = entry.runtime_data
-    coordinator = data.parent_coordinator
+    coordinator = data.parent
     oui = format_mac(coordinator.device.mac)[:8].upper()
     return async_redact_data(
         {"device_last_response": coordinator.device.internal_state, "oui": oui},

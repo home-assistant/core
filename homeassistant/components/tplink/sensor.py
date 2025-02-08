@@ -275,8 +275,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
     data = config_entry.runtime_data
-    parent_coordinator = data.parent_coordinator
-    device = parent_coordinator.device
+    parent = data.parent
+    device = parent.device
     known_child_device_ids: set[str] = set()
     first_check = True
 
@@ -284,7 +284,7 @@ async def async_setup_entry(
         entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
             hass=hass,
             device=device,
-            coordinator=parent_coordinator,
+            coordinator=parent,
             feature_type=Feature.Type.Sensor,
             entity_class=TPLinkSensorEntity,
             descriptions=SENSOR_DESCRIPTIONS_MAP,
@@ -296,7 +296,7 @@ async def async_setup_entry(
 
     _check_device()
     first_check = False
-    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
+    config_entry.async_on_unload(parent.async_add_listener(_check_device))
 
 
 class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):

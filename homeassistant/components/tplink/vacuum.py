@@ -67,8 +67,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up vacuum entities."""
     data = config_entry.runtime_data
-    parent_coordinator = data.parent_coordinator
-    device = parent_coordinator.device
+    parent = data.parent
+    device = parent.device
 
     known_child_device_ids: set[str] = set()
     first_check = True
@@ -77,7 +77,7 @@ async def async_setup_entry(
         entities = CoordinatedTPLinkModuleEntity.entities_for_device_and_its_children(
             hass=hass,
             device=device,
-            coordinator=parent_coordinator,
+            coordinator=parent,
             entity_class=TPLinkVacuumEntity,
             descriptions=VACUUM_DESCRIPTIONS,
             platform_domain=VACUUM_DOMAIN,
@@ -88,7 +88,7 @@ async def async_setup_entry(
 
     _check_device()
     first_check = False
-    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
+    config_entry.async_on_unload(parent.async_add_listener(_check_device))
 
 
 class TPLinkVacuumEntity(CoordinatedTPLinkModuleEntity, StateVacuumEntity):
