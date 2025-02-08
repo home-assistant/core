@@ -14,8 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import WeheatConfigEntry
-from .coordinator import WeheatDataUpdateCoordinator
+from .coordinator import WeheatConfigEntry, WeheatDataUpdateCoordinator
 from .entity import WeheatEntity
 
 # Coordinator is used to centralize the data updates

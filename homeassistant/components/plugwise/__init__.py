@@ -82,7 +82,7 @@ def migrate_sensor_entities(
 
     # Migrating opentherm_outdoor_temperature
     # to opentherm_outdoor_air_temperature sensor
-    for device_id, device in coordinator.data.devices.items():
+    for device_id, device in coordinator.data.items():
         if device["dev_class"] != "heater_central":
             continue
 

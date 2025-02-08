@@ -87,7 +87,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
 
 @callback
-def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
+def _async_import_options_from_data_if_missing(
+    hass: HomeAssistant, entry: TadoConfigEntry
+):
     options = dict(entry.options)
     if CONF_FALLBACK not in options:
         options[CONF_FALLBACK] = entry.data.get(
