@@ -1,7 +1,7 @@
 """Define an object to coordinate fetching Overseerr data."""
 
+from dataclasses import dataclass
 from datetime import timedelta
-from typing import TypedDict
 
 from python_overseerr import (
     IssueCount,
@@ -24,7 +24,8 @@ from .const import DOMAIN, LOGGER
 type OverseerrConfigEntry = ConfigEntry[OverseerrCoordinator]
 
 
-class OverseerrData(TypedDict):
+@dataclass
+class OverseerrData:
     """Overseerr data."""
 
     request_count: RequestCount
