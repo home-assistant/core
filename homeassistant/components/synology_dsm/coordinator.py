@@ -59,6 +59,8 @@ def async_re_login_on_expired[_T: SynologyDSMUpdateCoordinator[Any], **_P, _R](
 class SynologyDSMUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator base class for synology_dsm."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -68,10 +70,10 @@ class SynologyDSMUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     ) -> None:
         """Initialize synology_dsm DataUpdateCoordinator."""
         self.api = api
-        self.entry = entry
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"{entry.title} {self.__class__.__name__}",
             update_interval=update_interval,
         )
@@ -174,7 +176,7 @@ class SynologyDSMCameraUpdateCoordinator(
             ):
                 async_dispatcher_send(
                     self.hass,
-                    f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{self.entry.entry_id}_{cam_id}",
+                    f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{self.config_entry.entry_id}_{cam_id}",
                     cam_data_new.live_view.rtsp,
                 )
 

@@ -10,9 +10,10 @@ from aioflo.api import API
 from aioflo.errors import RequestError
 from orjson import JSONDecodeError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN as FLO_DOMAIN, LOGGER
 
@@ -20,10 +21,16 @@ from .const import DOMAIN as FLO_DOMAIN, LOGGER
 class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
     """Flo device object."""
 
+    config_entry: ConfigEntry
     _failure_count: int = 0
 
     def __init__(
-        self, hass: HomeAssistant, api_client: API, location_id: str, device_id: str
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        api_client: API,
+        location_id: str,
+        device_id: str,
     ) -> None:
         """Initialize the device."""
         self.hass: HomeAssistant = hass
@@ -36,6 +43,7 @@ class FloDeviceDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=f"{FLO_DOMAIN}-{device_id}",
             update_interval=timedelta(seconds=60),
         )

@@ -9,7 +9,6 @@ from pyheos import CommandAuthenticationError, Heos, HeosError, HeosOptions
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -23,8 +22,8 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from . import HeosConfigEntry
 from .const import DOMAIN
+from .coordinator import HeosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +106,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: HeosConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return HeosOptionsFlowHandler()
 

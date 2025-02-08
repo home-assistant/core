@@ -9,9 +9,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import CertExpiryConfigEntry
 from .const import DOMAIN
-from .coordinator import CertExpiryDataUpdateCoordinator
+from .coordinator import CertExpiryConfigEntry, CertExpiryDataUpdateCoordinator
 from .entity import CertExpiryEntity
 
 

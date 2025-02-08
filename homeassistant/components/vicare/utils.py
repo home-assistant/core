@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import logging
 from typing import Any
 
@@ -30,7 +30,7 @@ from .const import (
     VICARE_TOKEN_FILENAME,
     HeatingType,
 )
-from .types import ViCareConfigEntry, ViCareRequiredKeysMixin
+from .types import ViCareConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -81,12 +81,12 @@ def get_device_serial(device: PyViCareDevice) -> str | None:
 
 def is_supported(
     name: str,
-    entity_description: ViCareRequiredKeysMixin,
+    getter: Callable[[PyViCareDevice], Any],
     vicare_device,
 ) -> bool:
     """Check if the PyViCare device supports the requested sensor."""
     try:
-        entity_description.value_getter(vicare_device)
+        getter(vicare_device)
     except PyViCareNotSupportedFeatureError:
         _LOGGER.debug("Feature not supported %s", name)
         return False
@@ -131,5 +131,5 @@ def get_compressors(device: PyViCareDevice) -> list[PyViCareHeatingDeviceCompone
 
 
 def filter_state(state: str) -> str | None:
-    """Remove invalid states."""
+    """Return the state if not 'nothing' or 'unknown'."""
     return None if state in ("nothing", "unknown") else state

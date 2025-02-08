@@ -18,9 +18,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import CO2SignalConfigEntry
 from .const import ATTRIBUTION, DOMAIN
-from .coordinator import CO2SignalCoordinator
+from .coordinator import CO2SignalConfigEntry, CO2SignalCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

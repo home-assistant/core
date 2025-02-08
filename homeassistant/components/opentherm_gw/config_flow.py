@@ -25,7 +25,7 @@ from homeassistant.const import (
     PRECISION_WHOLE,
 )
 from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from . import DOMAIN
 from .const import (
