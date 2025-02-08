@@ -130,7 +130,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._tones = tones
         self._processing_tone_done = asyncio.Event()
 
-        _LOGGER.debug("Initializing assist satellite")
         self._announcement: AssistSatelliteAnnouncement | None = None
         self._announcment_start_time: float = 0.0
         self._check_announcement_pickup_task: asyncio.Task | None = None
@@ -237,7 +236,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._call_end_future = asyncio.Future()
         self._run_pipeline_after_announce = run_pipeline_after
 
-        _LOGGER.debug("Announce %s", self)
         if self._rtp_port is None:
             # Choose random port for RTP
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -267,7 +265,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self._last_chunk_time = None
         self._announcment_start_time = time.monotonic()
         self._announcement = announcement
-        _LOGGER.debug("announcement: %s", self._announcement)
 
         # Make the call
         sip_protocol: SipDatagramProtocol = self.hass.data[DOMAIN].protocol
@@ -335,7 +332,9 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                     # Caller hung up
                     _LOGGER.debug("Hang up")
                     self._announcement = None
-                    self._run_pipeline_task = None
+                    if self._run_pipeline_task is not None:
+                        _LOGGER.debug("Cancelling running pipeline")
+                        self._run_pipeline_task.cancel()
                     self._call_end_future.set_result(None)
                     self.disconnect()
                     break
@@ -378,7 +377,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         if self._announcement is None:
             # Pipeline with STT
             if self._run_pipeline_task is None:
-                _LOGGER.debug("Running pipeline %s", self)
                 # Run pipeline until voice command finishes, then start over
                 self._clear_audio_queue()
                 self._tts_done.clear()
@@ -408,16 +406,22 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self.voip_device.set_is_active(True)
 
         async def stt_stream():
+            retry: bool = True
             while True:
                 try:
                     async with asyncio.timeout(self._audio_chunk_timeout):
                         chunk = await self._audio_queue.get()
                         if not chunk:
+                            _LOGGER.debug("STT stream got None")
                             break
 
-                        yield chunk
+                    yield chunk
                 except TimeoutError:
                     _LOGGER.debug("STT Stream timed out")
+                    if not retry:
+                        _LOGGER.debug("No more retries, ending STT stream")
+                        break
+                    retry = False
 
         # Play listening tone at the start of each cycle
         await self._play_tone(Tones.LISTENING, silence_before=0.2)
@@ -439,9 +443,10 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 await self._tts_done.wait()
         except TimeoutError:
             # This shouldn't happen anymore, we are detecting hang ups with a separate task
+            _LOGGER.exception("Timeout error")
             self.disconnect()  # caller hung up
         except asyncio.CancelledError:
-            _LOGGER.exception("Pipeline cancelled unexpectedly")
+            _LOGGER.debug("Pipeline cancelled")
         finally:
             # Stop audio stream
             await self._audio_queue.put(None)
