@@ -1,6 +1,5 @@
 """Module for Tado child lock switch entity."""
 
-import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -8,12 +7,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TadoConfigEntry
-from .const import TYPE_HEATING
+from .const import TADO_CHILD_LOCK_TRANSLATION_KEY
 from .entity import TadoDataUpdateCoordinator, TadoZoneEntity
-
-_LOGGER = logging.getLogger(__name__)
-
-TRANSLATION_KEY = "child_lock"
 
 
 class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
@@ -26,7 +21,7 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
         coordinator: TadoDataUpdateCoordinator,
         zone_name: str,
         zone_id: int,
-        device_info,
+        device_info: dict[str, Any],
     ) -> None:
         """Initialize the Tado child lock switch entity."""
         super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
@@ -39,7 +34,7 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
     @property
     def translation_key(self) -> str:
         """Return the translation key."""
-        return TRANSLATION_KEY
+        return TADO_CHILD_LOCK_TRANSLATION_KEY
 
     @property
     def is_on(self) -> bool | None:
@@ -75,7 +70,7 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
 async def async_setup_entry(
     hass: HomeAssistant, entry: TadoConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
-    """Set up the Tado climate platform."""
+    """Set up the Tado switch platform."""
 
     tado = entry.runtime_data.coordinator
     entities: list[TadoChildLockSwitchEntity] = await _generate_entities(tado)
@@ -86,13 +81,11 @@ async def async_setup_entry(
 async def _generate_entities(
     tado: TadoDataUpdateCoordinator,
 ) -> list[TadoChildLockSwitchEntity]:
-    """Create all climate entities."""
+    """Create all switch entities."""
     entities: list[TadoChildLockSwitchEntity] = []
     for zone in tado.zones:
         zoneChildLockSupported = (
-            zone["type"] in [TYPE_HEATING]
-            and len(zone["devices"]) > 0
-            and "childLockEnabled" in zone["devices"][0]
+            len(zone["devices"]) > 0 and "childLockEnabled" in zone["devices"][0]
         )
 
         if not zoneChildLockSupported:

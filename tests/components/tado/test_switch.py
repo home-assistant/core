@@ -28,11 +28,9 @@ async def test_set_child_lock_on(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    with (
-        patch(
-            "homeassistant.components.tado.PyTado.interface.api.Tado.set_child_lock"
-        ) as mock_set_state,
-    ):
+    with patch(
+        "homeassistant.components.tado.PyTado.interface.api.Tado.set_child_lock"
+    ) as mock_set_state:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_ON,
@@ -49,11 +47,9 @@ async def test_set_child_lock_off(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
-    with (
-        patch(
-            "homeassistant.components.tado.PyTado.interface.api.Tado.set_child_lock"
-        ) as mock_set_state,
-    ):
+    with patch(
+        "homeassistant.components.tado.PyTado.interface.api.Tado.set_child_lock"
+    ) as mock_set_state:
         await hass.services.async_call(
             SWITCH_DOMAIN,
             SERVICE_TURN_OFF,

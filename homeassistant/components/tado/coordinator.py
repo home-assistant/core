@@ -341,8 +341,6 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
 
     async def set_child_lock(self, device_id: str, enabled: bool) -> None:
         """Set child lock of device."""
-        if self._tado is None:
-            raise HomeAssistantError("Tado client is not initialized")
         try:
             await self.hass.async_add_executor_job(
                 self._tado.set_child_lock,
