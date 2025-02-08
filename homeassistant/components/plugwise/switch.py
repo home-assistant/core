@@ -72,7 +72,7 @@ async def async_setup_entry(
         async_add_entities(
             PlugwiseSwitchEntity(coordinator, device_id, description)
             for device_id in coordinator.new_devices
-            if (switches := coordinator.data.devices[device_id].get("switches"))
+            if (switches := coordinator.data[device_id].get("switches"))
             for description in SWITCHES
             if description.key in switches
         )
