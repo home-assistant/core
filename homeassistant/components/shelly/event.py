@@ -17,12 +17,14 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     BASIC_INPUTS_EVENTS_TYPES,
+    CONF_SLEEP_PERIOD,
     RPC_INPUTS_EVENTS_TYPES,
     SHIX3_1_INPUTS_EVENTS_TYPES,
 )
@@ -71,6 +73,11 @@ RPC_EVENT: Final = ShellyRpcEventDescription(
         config, status, key
     ),
 )
+RPC_TEST_EVENT: Final = ShellyRpcEventDescription(
+    key="smoke",
+    translation_key="smoke",
+    device_class=None,
+)
 SCRIPT_EVENT: Final = ShellyRpcEventDescription(
     key="script",
     translation_key="script",
@@ -95,42 +102,69 @@ async def async_setup_entry(
         if TYPE_CHECKING:
             assert coordinator
 
-        key_instances = get_rpc_key_instances(coordinator.device.status, RPC_EVENT.key)
+        if config_entry.data[CONF_SLEEP_PERIOD] and not coordinator.device.initialized:
+            ent_reg = er.async_get(hass)
+            entries = er.async_entries_for_config_entry(ent_reg, config_entry.entry_id)
+            for entry in entries:
+                if entry.domain != "event":
+                    continue
 
-        for key in key_instances:
-            if RPC_EVENT.removal_condition and RPC_EVENT.removal_condition(
-                coordinator.device.config, coordinator.device.status, key
-            ):
-                unique_id = f"{coordinator.mac}-{key}"
-                async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
-            else:
-                entities.append(ShellyRpcEvent(coordinator, key, RPC_EVENT))
+                # Only smoke sensors can have a test event entity
+                attribute = entry.unique_id.split("-")[-1]
+                if not attribute.startswith("smoke"):
+                    continue
 
-        script_instances = get_rpc_key_instances(
-            coordinator.device.status, SCRIPT_EVENT.key
-        )
-        for script in script_instances:
-            script_name = get_rpc_entity_name(coordinator.device, script)
-            if script_name == BLE_SCRIPT_NAME:
-                continue
+                entities.append(
+                    ShellyRpcTestEvent(
+                        coordinator, attribute, ["alarm_test"], entry.original_name
+                    )
+                )
 
-            event_types = await get_rpc_script_event_types(
-                coordinator.device, int(script.split(":")[-1])
+        else:
+            smoke_instances = get_rpc_key_instances(coordinator.device.status, "smoke")
+            entities.extend(
+                ShellyRpcTestEvent(coordinator, smoke, ["alarm_test"])
+                for smoke in smoke_instances
             )
-            if not event_types:
-                continue
 
-            entities.append(ShellyRpcScriptEvent(coordinator, script, event_types))
+            key_instances = get_rpc_key_instances(
+                coordinator.device.status, RPC_EVENT.key
+            )
 
-        # If a script is removed, from the device configuration, we need to remove orphaned entities
-        async_remove_orphaned_entities(
-            hass,
-            config_entry.entry_id,
-            coordinator.mac,
-            EVENT_DOMAIN,
-            coordinator.device.status,
-            "script",
-        )
+            for key in key_instances:
+                if RPC_EVENT.removal_condition and RPC_EVENT.removal_condition(
+                    coordinator.device.config, coordinator.device.status, key
+                ):
+                    unique_id = f"{coordinator.mac}-{key}"
+                    async_remove_shelly_entity(hass, EVENT_DOMAIN, unique_id)
+                else:
+                    entities.append(ShellyRpcEvent(coordinator, key, RPC_EVENT))
+
+            script_instances = get_rpc_key_instances(
+                coordinator.device.status, SCRIPT_EVENT.key
+            )
+            for script in script_instances:
+                script_name = get_rpc_entity_name(coordinator.device, script)
+                if script_name == BLE_SCRIPT_NAME:
+                    continue
+
+                event_types = await get_rpc_script_event_types(
+                    coordinator.device, int(script.split(":")[-1])
+                )
+                if not event_types:
+                    continue
+
+                entities.append(ShellyRpcScriptEvent(coordinator, script, event_types))
+
+            # If a script is removed, from the device configuration, we need to remove orphaned entities
+            async_remove_orphaned_entities(
+                hass,
+                config_entry.entry_id,
+                coordinator.mac,
+                EVENT_DOMAIN,
+                coordinator.device.status,
+                "script",
+            )
 
     else:
         coordinator = config_entry.runtime_data.block
@@ -204,6 +238,7 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
         coordinator: ShellyRpcCoordinator,
         key: str,
         description: ShellyRpcEventDescription,
+        name: str | None = None,
     ) -> None:
         """Initialize Shelly entity."""
         super().__init__(coordinator)
@@ -212,7 +247,9 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
             connections={(CONNECTION_NETWORK_MAC, coordinator.mac)}
         )
         self._attr_unique_id = f"{coordinator.mac}-{key}"
-        self._attr_name = get_rpc_entity_name(coordinator.device, key)
+        self._attr_name = (
+            name if name is not None else get_rpc_entity_name(coordinator.device, key)
+        )
         self.entity_description = description
 
     async def async_added_to_hass(self) -> None:
@@ -226,6 +263,37 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
     @callback
     def _async_handle_event(self, event: dict[str, Any]) -> None:
         """Handle the demo button event."""
+        if event["id"] == self.event_id:
+            self._trigger_event(event["event"])
+            self.async_write_ha_state()
+
+
+class ShellyRpcTestEvent(ShellyRpcEvent):
+    """Represent RPC test event entity."""
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        event_types: list[str],
+        name: str | None = None,
+    ) -> None:
+        """Initialize Shelly test event entity."""
+        super().__init__(coordinator, key, RPC_TEST_EVENT, name)
+
+        self._attr_event_types = event_types
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super(CoordinatorEntity, self).async_added_to_hass()
+
+        self.async_on_remove(
+            self.coordinator.async_subscribe_test_events(self._async_handle_event)
+        )
+
+    @callback
+    def _async_handle_event(self, event: dict[str, Any]) -> None:
+        """Handle test event."""
         if event["id"] == self.event_id:
             self._trigger_event(event["event"])
             self.async_write_ha_state()

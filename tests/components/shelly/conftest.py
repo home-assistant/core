@@ -214,6 +214,7 @@ MOCK_CONFIG = {
     "script:1": {"id": 1, "name": "test_script.js", "enable": True},
     "script:2": {"id": 2, "name": "test_script_2.js", "enable": False},
     "script:3": {"id": 3, "name": BLE_SCRIPT_NAME, "enable": False},
+    "smoke:0": {"name": "test smoke_0"},
 }
 
 
@@ -367,6 +368,7 @@ MOCK_STATUS_RPC = {
     },
     "voltmeter:100": {"voltage": 4.321, "xvoltage": 12.34},
     "wifi": {"rssi": -63},
+    "smoke:0": {"id": 0, "alarm": False},
 }
 
 MOCK_SCRIPTS = [
