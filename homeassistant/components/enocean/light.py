@@ -80,7 +80,7 @@ class EnOceanLight(EnOceanEntity, LightEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light source off."""
-        command = [0xA5, 0x02, 0x00, 0x01, 0x09]
+        command = [0xA5, 0x02, 0x00, 0x01, 0x08]
         command.extend(self._sender_id)
         command.extend([0x00])
         self.send_command(command, [], 0x01)
