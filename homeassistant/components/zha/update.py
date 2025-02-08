@@ -124,7 +124,7 @@ class ZHAFirmwareUpdateEntity(
         return self.entity_data.entity.installed_version
 
     @property
-    def in_progress(self) -> bool | int | None:
+    def in_progress(self) -> bool | None:
         """Update installation progress.
 
         Should return a boolean (True if in progress, False if not).
@@ -163,11 +163,7 @@ class ZHAFirmwareUpdateEntity(
         """
 
         if self.entity_data.device_proxy.device.is_mains_powered:
-            header = (
-                "<ha-alert alert-type='info'>"
-                f"{OTA_MESSAGE_RELIABILITY}"
-                "</ha-alert>"
-            )
+            header = f"<ha-alert alert-type='info'>{OTA_MESSAGE_RELIABILITY}</ha-alert>"
         else:
             header = (
                 "<ha-alert alert-type='info'>"

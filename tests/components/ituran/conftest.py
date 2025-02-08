@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, PropertyMock, patch
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -56,7 +57,10 @@ class MockVehicle:
         self.gps_coordinates = (25.0, -71.0)
         self.address = "Bermuda Triangle"
         self.heading = 150
-        self.last_update = datetime(2024, 1, 1, 0, 0, 0)
+        self.last_update = datetime(
+            2024, 1, 1, 0, 0, 0, tzinfo=ZoneInfo("Asia/Jerusalem")
+        )
+        self.battery_voltage = 12.0
 
 
 @pytest.fixture

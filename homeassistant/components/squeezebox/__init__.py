@@ -105,9 +105,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     lms.name = (
         (STATUS_QUERY_LIBRARYNAME in status and status[STATUS_QUERY_LIBRARYNAME])
         and status[STATUS_QUERY_LIBRARYNAME]
-        or host
-    )
-    version = STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION] or None
+    ) or host
+    version = (STATUS_QUERY_VERSION in status and status[STATUS_QUERY_VERSION]) or None
     # mac can be missing
     mac_connect = (
         {(CONNECTION_NETWORK_MAC, format_mac(status[STATUS_QUERY_MAC]))}

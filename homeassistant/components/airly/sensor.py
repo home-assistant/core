@@ -24,7 +24,6 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AirlyConfigEntry, AirlyDataUpdateCoordinator
 from .const import (
     ATTR_ADVICE,
     ATTR_API_ADVICE,
@@ -52,6 +51,7 @@ from .const import (
     SUFFIX_PERCENT,
     URL,
 )
+from .coordinator import AirlyConfigEntry, AirlyDataUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 

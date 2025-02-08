@@ -34,6 +34,18 @@ class ThinQSwitchEntityDescription(SwitchEntityDescription):
 DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[ThinQSwitchEntityDescription, ...]] = {
     DeviceType.AIR_CONDITIONER: (
         ThinQSwitchEntityDescription(
+            key=ThinQProperty.AIR_CON_OPERATION_MODE,
+            translation_key="operation_power",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        ThinQSwitchEntityDescription(
+            key=ThinQProperty.DISPLAY_LIGHT,
+            translation_key=ThinQProperty.DISPLAY_LIGHT,
+            on_key="on",
+            off_key="off",
+            entity_category=EntityCategory.CONFIG,
+        ),
+        ThinQSwitchEntityDescription(
             key=ThinQProperty.POWER_SAVE_ENABLED,
             translation_key=ThinQProperty.POWER_SAVE_ENABLED,
             on_key="true",
@@ -121,8 +133,20 @@ DEVICE_TYPE_SWITCH_MAP: dict[DeviceType, tuple[ThinQSwitchEntityDescription, ...
             off_key="false",
             entity_category=EntityCategory.CONFIG,
         ),
+        ThinQSwitchEntityDescription(
+            key=ThinQProperty.EXPRESS_FRIDGE,
+            translation_key=ThinQProperty.EXPRESS_FRIDGE,
+            on_key="true",
+            off_key="false",
+            entity_category=EntityCategory.CONFIG,
+        ),
     ),
     DeviceType.SYSTEM_BOILER: (
+        ThinQSwitchEntityDescription(
+            key=ThinQProperty.BOILER_OPERATION_MODE,
+            translation_key="operation_power",
+            entity_category=EntityCategory.CONFIG,
+        ),
         ThinQSwitchEntityDescription(
             key=ThinQProperty.HOT_WATER_MODE,
             translation_key=ThinQProperty.HOT_WATER_MODE,

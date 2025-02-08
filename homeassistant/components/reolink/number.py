@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from reolink_aio.api import Chime, Host
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.number import (
     NumberEntity,
@@ -16,7 +15,6 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .entity import (
@@ -27,7 +25,7 @@ from .entity import (
     ReolinkHostCoordinatorEntity,
     ReolinkHostEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 PARALLEL_UPDATES = 0
 
@@ -426,6 +424,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_brightness",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_brightness",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -439,6 +438,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_contrast",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_contrast",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -452,6 +452,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_saturation",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_saturation",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -465,6 +466,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_sharpness",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_sharpness",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -478,6 +480,7 @@ NUMBER_ENTITIES = (
     ReolinkNumberEntityDescription(
         key="image_hue",
         cmd_key="GetImage",
+        cmd_id=26,
         translation_key="image_hue",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
@@ -589,14 +592,10 @@ class ReolinkNumberEntity(ReolinkChannelCoordinatorEntity, NumberEntity):
         """State of the number entity."""
         return self.entity_description.value(self._host.api, self._channel)
 
+    @raise_translated_error
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        try:
-            await self.entity_description.method(self._host.api, self._channel, value)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api, self._channel, value)
         self.async_write_ha_state()
 
 
@@ -621,14 +620,10 @@ class ReolinkHostNumberEntity(ReolinkHostCoordinatorEntity, NumberEntity):
         """State of the number entity."""
         return self.entity_description.value(self._host.api)
 
+    @raise_translated_error
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        try:
-            await self.entity_description.method(self._host.api, value)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api, value)
         self.async_write_ha_state()
 
 
@@ -654,12 +649,8 @@ class ReolinkChimeNumberEntity(ReolinkChimeCoordinatorEntity, NumberEntity):
         """State of the number entity."""
         return self.entity_description.value(self._chime)
 
+    @raise_translated_error
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
-        try:
-            await self.entity_description.method(self._chime, value)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._chime, value)
         self.async_write_ha_state()

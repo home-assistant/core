@@ -48,6 +48,12 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "operating_status": SensorEntityDescription(
+        key="operating_status",
+        name="Operating Status",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "inverter_condition": SensorEntityDescription(
         key="inverter_condition",
         name="Inverter Condition",

@@ -4,13 +4,11 @@ from __future__ import annotations
 
 from pyoverkiz.enums.ui import UIWidget
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .. import HomeAssistantOverkizData
-from ..const import DOMAIN
+from .. import OverkizDataConfigEntry
 from ..entity import OverkizEntity
 from .atlantic_domestic_hot_water_production_mlb_component import (
     AtlanticDomesticHotWaterProductionMBLComponent,
@@ -22,11 +20,11 @@ from .hitachi_dhw import HitachiDHW
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OverkizDataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Overkiz DHW from a config entry."""
-    data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
     entities: list[OverkizEntity] = []
 
     for device in data.platforms[Platform.WATER_HEATER]:

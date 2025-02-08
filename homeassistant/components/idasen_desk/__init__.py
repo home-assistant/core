@@ -4,53 +4,31 @@ from __future__ import annotations
 
 import logging
 
-from attr import dataclass
 from bleak.exc import BleakError
 from idasen_ha.errors import AuthFailedError
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth.match import ADDRESS, BluetoothCallbackMatcher
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_NAME,
-    CONF_ADDRESS,
-    EVENT_HOMEASSISTANT_STOP,
-    Platform,
-)
+from homeassistant.const import CONF_ADDRESS, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN
 from .coordinator import IdasenDeskCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
 
-
-@dataclass
-class DeskData:
-    """Data for the Idasen Desk integration."""
-
-    address: str
-    device_info: DeviceInfo
-    coordinator: IdasenDeskCoordinator
+type IdasenDeskConfigEntry = ConfigEntry[IdasenDeskCoordinator]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -> bool:
     """Set up IKEA Idasen from a config entry."""
     address: str = entry.data[CONF_ADDRESS].upper()
 
-    coordinator = IdasenDeskCoordinator(hass, _LOGGER, entry.title, address)
-    device_info = DeviceInfo(
-        name=entry.title,
-        connections={(dr.CONNECTION_BLUETOOTH, address)},
-    )
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = DeskData(
-        address, device_info, coordinator
-    )
+    coordinator = IdasenDeskCoordinator(hass, entry.title, address)
+    entry.runtime_data = coordinator
 
     try:
         if not await coordinator.async_connect():
@@ -89,18 +67,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: IdasenDeskConfigEntry
+) -> None:
     """Handle options update."""
-    data: DeskData = hass.data[DOMAIN][entry.entry_id]
-    if entry.title != data.device_info[ATTR_NAME]:
-        await hass.config_entries.async_reload(entry.entry_id)
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: IdasenDeskConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        data: DeskData = hass.data[DOMAIN].pop(entry.entry_id)
-        await data.coordinator.async_disconnect()
-        bluetooth.async_rediscover_address(hass, data.address)
+        coordinator = entry.runtime_data
+        await coordinator.async_disconnect()
+        bluetooth.async_rediscover_address(hass, coordinator.address)
 
     return unload_ok

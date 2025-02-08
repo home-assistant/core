@@ -13,7 +13,7 @@ from israelrailapi.train_station import station_name_to_id
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_SCAN_INTERVAL, DEPARTURES_COUNT, DOMAIN
 

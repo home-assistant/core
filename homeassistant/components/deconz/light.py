@@ -18,6 +18,8 @@ from homeassistant.components.light import (
     ATTR_HS_COLOR,
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
+    DEFAULT_MAX_KELVIN,
+    DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     EFFECT_COLORLOOP,
     FLASH_LONG,
@@ -26,7 +28,6 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -36,6 +37,7 @@ from homeassistant.util.color import (
     color_temperature_mired_to_kelvin,
 )
 
+from . import DeconzConfigEntry
 from .const import DOMAIN as DECONZ_DOMAIN, POWER_PLUGS
 from .entity import DeconzDevice
 from .hub import DeconzHub
@@ -139,11 +141,11 @@ def update_color_state(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: DeconzConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the deCONZ lights and groups from a config entry."""
-    hub = DeconzHub.get_hub(hass, config_entry)
+    hub = config_entry.runtime_data
     hub.entities[LIGHT_DOMAIN] = set()
 
     @callback
@@ -191,6 +193,8 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
 
     TYPE = LIGHT_DOMAIN
     _attr_color_mode = ColorMode.UNKNOWN
+    _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
+    _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
 
     def __init__(self, device: _LightDeviceT, hub: DeconzHub) -> None:
         """Set up light."""
@@ -262,7 +266,7 @@ class DeconzBaseLight[_LightDeviceT: Group | Light](
     @property
     def color_temp_kelvin(self) -> int | None:
         """Return the CT color value."""
-        if self._device.color_temp is None:
+        if self._device.color_temp is None or self._device.color_temp == 0:
             return None
         return color_temperature_mired_to_kelvin(self._device.color_temp)
 

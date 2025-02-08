@@ -38,6 +38,29 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "notification_light": {
+        "name": "Light notification"
+      },
+      "notification_nutrition": {
+        "name": "Nutrition notification"
+      },
+      "notification_temperature": {
+        "name": "Temperature notification"
+      },
+      "notification_water": {
+        "name": "Water notification"
+      },
+      "productive_plant": {
+        "name": "Productive plant"
+      },
+      "repotted": {
+        "name": "Repotted"
+      },
+      "sensor_update_available": {
+        "name": "Sensor update available"
+      }
+    },
     "sensor": {
       "scientific_name": {
         "name": "Scientific name"
@@ -84,6 +107,17 @@
           "too_high": "[%key:component::fyta::entity::sensor::temperature_status::state::too_high%]"
         }
       },
+      "nutrients_status": {
+        "name": "Nutrients state",
+        "state": {
+          "no_data": "[%key:component::fyta::entity::sensor::temperature_status::state::no_data%]",
+          "too_low": "[%key:component::fyta::entity::sensor::temperature_status::state::too_low%]",
+          "low": "[%key:component::fyta::entity::sensor::temperature_status::state::low%]",
+          "perfect": "[%key:component::fyta::entity::sensor::temperature_status::state::perfect%]",
+          "high": "[%key:component::fyta::entity::sensor::temperature_status::state::high%]",
+          "too_high": "[%key:component::fyta::entity::sensor::temperature_status::state::too_high%]"
+        }
+      },
       "salinity_status": {
         "name": "Salinity state",
         "state": {
@@ -100,6 +134,12 @@
       },
       "salinity": {
         "name": "Salinity"
+      },
+      "last_fertilised": {
+        "name": "Last fertilized"
+      },
+      "next_fertilisation": {
+        "name": "Next fertilization"
       }
     }
   },

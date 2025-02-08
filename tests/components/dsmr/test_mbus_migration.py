@@ -10,6 +10,7 @@ from dsmr_parser.obis_references import (
     MBUS_METER_READING,
 )
 from dsmr_parser.objects import CosemObject, MBusObject, Telegram
+import pytest
 
 from homeassistant.components.dsmr.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
@@ -85,7 +86,7 @@ async def test_migrate_gas_to_mbus(
             (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -102,6 +103,17 @@ async def test_migrate_gas_to_mbus(
     # after receiving telegram entities need to have the chance to be created
     await hass.async_block_till_done()
 
+    # Check a new device is created and the old device has been removed
+    assert len(device_registry.devices) == 1
+    assert not device_registry.async_get(device.id)
+    new_entity = entity_registry.async_get("sensor.gas_meter_reading")
+    new_device = device_registry.async_get(new_entity.device_id)
+    new_dev_entities = er.async_entries_for_device(
+        entity_registry, new_device.id, include_disabled_entities=True
+    )
+    assert new_dev_entities == [new_entity]
+
+    # Check no entities are connected to the old device
     dev_entities = er.async_entries_for_device(
         entity_registry, device.id, include_disabled_entities=True
     )
@@ -185,7 +197,7 @@ async def test_migrate_hourly_gas_to_mbus(
             (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1722749707)},
-                {"value": Decimal(778.963), "unit": "m3"},
+                {"value": Decimal("778.963"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -202,6 +214,17 @@ async def test_migrate_hourly_gas_to_mbus(
     # after receiving telegram entities need to have the chance to be created
     await hass.async_block_till_done()
 
+    # Check a new device is created and the old device has been removed
+    assert len(device_registry.devices) == 1
+    assert not device_registry.async_get(device.id)
+    new_entity = entity_registry.async_get("sensor.gas_meter_reading")
+    new_device = device_registry.async_get(new_entity.device_id)
+    new_dev_entities = er.async_entries_for_device(
+        entity_registry, new_device.id, include_disabled_entities=True
+    )
+    assert new_dev_entities == [new_entity]
+
+    # Check no entities are connected to the old device
     dev_entities = er.async_entries_for_device(
         entity_registry, device.id, include_disabled_entities=True
     )
@@ -285,7 +308,7 @@ async def test_migrate_gas_with_devid_to_mbus(
             (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -301,6 +324,18 @@ async def test_migrate_gas_with_devid_to_mbus(
 
     # after receiving telegram entities need to have the chance to be created
     await hass.async_block_till_done()
+
+    # Check a new device is not created and the old device has not been removed
+    assert len(device_registry.devices) == 1
+    assert device_registry.async_get(device.id)
+    new_entity = entity_registry.async_get("sensor.gas_meter_reading")
+    new_device = device_registry.async_get(new_entity.device_id)
+    assert new_device.id == device.id
+    # Check entities are still connected to the old device
+    dev_entities = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+    assert dev_entities == [new_entity]
 
     assert (
         entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id)
@@ -319,6 +354,7 @@ async def test_migrate_gas_to_mbus_exists(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test migration of unique_id."""
     (connection_factory, transport, protocol) = dsmr_connection_fixture
@@ -380,7 +416,7 @@ async def test_migrate_gas_to_mbus_exists(
     telegram = Telegram()
     telegram.add(
         MBUS_DEVICE_TYPE,
-        CosemObject((0, 0), [{"value": "003", "unit": ""}]),
+        CosemObject((0, 1), [{"value": "003", "unit": ""}]),
         "MBUS_DEVICE_TYPE",
     )
     telegram.add(
@@ -397,7 +433,7 @@ async def test_migrate_gas_to_mbus_exists(
             (0, 1),
             [
                 {"value": datetime.datetime.fromtimestamp(1551642213)},
-                {"value": Decimal(745.695), "unit": "m3"},
+                {"value": Decimal("745.695"), "unit": "m3"},
             ],
         ),
         "MBUS_METER_READING",
@@ -414,7 +450,32 @@ async def test_migrate_gas_to_mbus_exists(
     # after receiving telegram entities need to have the chance to be created
     await hass.async_block_till_done()
 
+    # Check a new device is not created and the old device has not been removed
+    assert len(device_registry.devices) == 2
+    assert device_registry.async_get(device.id)
+    assert device_registry.async_get(device2.id)
+    entity = entity_registry.async_get("sensor.gas_meter_reading")
+    dev_entities = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+    assert dev_entities == [entity]
+    entity2 = entity_registry.async_get("sensor.gas_meter_reading_alt")
+    dev2_entities = er.async_entries_for_device(
+        entity_registry, device2.id, include_disabled_entities=True
+    )
+    assert dev2_entities == [entity2]
+
     assert (
         entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, old_unique_id)
         == "sensor.gas_meter_reading"
+    )
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, "37464C4F32313139303333373331"
+        )
+        == "sensor.gas_meter_reading_alt"
+    )
+    assert (
+        "Skip migration of sensor.gas_meter_reading because it already exists"
+        in caplog.text
     )

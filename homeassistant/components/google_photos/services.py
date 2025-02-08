@@ -144,11 +144,9 @@ def async_register_services(hass: HomeAssistant) -> None:
         if call.return_response:
             return {
                 "media_items": [
-                    {
-                        "media_item_id": item_result.media_item.id
-                        for item_result in upload_result.new_media_item_results
-                        if item_result.media_item and item_result.media_item.id
-                    }
+                    {"media_item_id": item_result.media_item.id}
+                    for item_result in upload_result.new_media_item_results
+                    if item_result.media_item and item_result.media_item.id
                 ],
                 "album_id": album_id,
             }

@@ -24,7 +24,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
 
-from .common import DEVICE_ID, CreateDevice, FakeSubscriber, PlatformSetup
+from .common import DEVICE_ID, CreateDevice, PlatformSetup
 from .conftest import FakeAuth
 
 from tests.common import async_fire_time_changed
@@ -520,13 +520,10 @@ async def test_camera_removed(
     hass: HomeAssistant,
     auth: FakeAuth,
     camera_device: None,
-    subscriber: FakeSubscriber,
     setup_platform: PlatformSetup,
 ) -> None:
     """Test case where entities are removed and stream tokens revoked."""
     await setup_platform()
-    # Simplify test setup
-    subscriber.cache_policy.fetch = False
 
     assert len(hass.states.async_all()) == 1
     cam = hass.states.get("camera.my_camera")
@@ -780,7 +777,7 @@ async def test_camera_web_rtc_offer_failure(
     assert response["event"] == {
         "type": "error",
         "code": "webrtc_offer_failed",
-        "message": "Nest API error: Bad Request response from API (400)",
+        "message": "Nest API error:  response from API (400)",
     }
 
 
