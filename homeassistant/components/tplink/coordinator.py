@@ -98,6 +98,8 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         await self._process_child_devices()
         if not self._update_children:
+            # If the children are not being updated, we need to make
+            # sure they write state to reflect the parent state
             for child_coordinator in self._child_coordinators.values():
                 child_coordinator.async_set_updated_data(None)
 
