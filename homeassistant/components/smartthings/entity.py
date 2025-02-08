@@ -2,49 +2,48 @@
 
 from __future__ import annotations
 
-from pysmartthings.device import DeviceEntity
+from typing import Any
+
+from pysmartthings.models import Attribute, Capability
 
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
+from . import SmartThingsDeviceCoordinator
+from .const import DOMAIN
 
 
-class SmartThingsEntity(Entity):
+class SmartThingsEntity(CoordinatorEntity[SmartThingsDeviceCoordinator]):
     """Defines a SmartThings entity."""
 
-    _attr_should_poll = False
-
-    def __init__(self, device: DeviceEntity) -> None:
+    def __init__(self, coordinator: SmartThingsDeviceCoordinator) -> None:
         """Initialize the instance."""
-        self._device = device
-        self._dispatcher_remove = None
-        self._attr_name = device.label
-        self._attr_unique_id = device.device_id
+        super().__init__(coordinator)
+        self._attr_name = coordinator.device.label
+        self._attr_unique_id = coordinator.device.device_id
         self._attr_device_info = DeviceInfo(
             configuration_url="https://account.smartthings.com",
-            identifiers={(DOMAIN, device.device_id)},
-            manufacturer=device.status.ocf_manufacturer_name,
-            model=device.status.ocf_model_number,
-            name=device.label,
-            hw_version=device.status.ocf_hardware_version,
-            sw_version=device.status.ocf_firmware_version,
+            identifiers={(DOMAIN, coordinator.device.device_id)},
+            name=coordinator.device.label,
         )
 
-    async def async_added_to_hass(self):
-        """Device added to hass."""
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to updates."""
+        await super().async_added_to_hass()
+        self._update_attr()
 
-        async def async_update_state(devices):
-            """Update device state."""
-            if self._device.device_id in devices:
-                await self.async_update_ha_state(True)
+    def supports_capability(self, capability: Capability) -> bool:
+        """Test if device supports a capability."""
+        return capability in self.coordinator.data
 
-        self._dispatcher_remove = async_dispatcher_connect(
-            self.hass, SIGNAL_SMARTTHINGS_UPDATE, async_update_state
-        )
+    def get_attribute_value(self, capability: Capability, attribute: Attribute) -> Any:
+        """Get the value of a device attribute."""
+        return self.coordinator.data[capability][attribute].value
 
-    async def async_will_remove_from_hass(self) -> None:
-        """Disconnect the device when removed."""
-        if self._dispatcher_remove:
-            self._dispatcher_remove()
+    def _update_attr(self) -> None:
+        """Update the attributes."""
+
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self._update_attr()
+        super()._handle_coordinator_update()
