@@ -44,9 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
             player_id = int(ident[1])  # type: ignore[unreachable]
 
             # Create set of identifiers excluding this integration
-            identifiers = {
-                ident for domain, identifier in device.identifiers if ident[0] != DOMAIN
-            }
+            identifiers = {ident for ident in device.identifiers if ident[0] != DOMAIN}
             migrated_identifiers = {(DOMAIN, str(player_id))}
             # Add migrated if not already present in another device, which occurs if the user downgraded and then upgraded
             if not device_registry.async_get_device(migrated_identifiers):
