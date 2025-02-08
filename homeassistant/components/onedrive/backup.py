@@ -202,12 +202,11 @@ class OneDriveBackupAgent(BackupAgent):
         if backup_id not in backups:
             return
 
-        self._cache_expiration = time()
-
         backup = backups[backup_id]
 
         await self._client.delete_drive_item(backup.backup_file_id)
         await self._client.delete_drive_item(backup.metadata_file_id)
+        self._cache_expiration = time()
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
