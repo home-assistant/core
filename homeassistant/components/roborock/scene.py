@@ -15,10 +15,16 @@ from .coordinator import RoborockDataUpdateCoordinator
 from .entity import RoborockEntity
 
 
-async def _get_device_scenes(
-    coordinator: RoborockDataUpdateCoordinator,
-) -> list[SceneEntity]:
-    return [
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: RoborockConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up scene platform."""
+    scene_lists = await asyncio.gather(
+        *[coordinator.get_scenes() for coordinator in config_entry.runtime_data.v1],
+    )
+    async_add_entities(
         RoborockSceneEntity(
             coordinator,
             EntityDescription(
@@ -26,26 +32,10 @@ async def _get_device_scenes(
                 name=scene.name,
             ),
         )
-        for scene in await coordinator.get_scenes()
-    ]
-
-
-async def async_setup_entry(
-    hass: HomeAssistant,
-    config_entry: RoborockConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up scene platform."""
-    devices_scene_entities = await asyncio.gather(
-        *[
-            _get_device_scenes(coordinator)
-            for coordinator in config_entry.runtime_data.v1
-        ],
-    )
-    async_add_entities(
-        entity
-        for device_scene_entities in devices_scene_entities
-        for entity in device_scene_entities
+        for coordinator, scenes in zip(
+            config_entry.runtime_data.v1, scene_lists, strict=False
+        )
+        for scene in scenes
     )
 
 
