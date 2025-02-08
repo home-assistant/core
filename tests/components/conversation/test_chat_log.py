@@ -15,7 +15,7 @@ from homeassistant.components.conversation import (
     ToolResultContent,
     async_get_chat_log,
 )
-from homeassistant.components.conversation.chat_log import DATA_CHAT_HISTORY
+from homeassistant.components.conversation.chat_log import DATA_CHAT_LOGS
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, llm
@@ -63,7 +63,7 @@ async def test_cleanup(
             )
         )
 
-    assert conversation_id in hass.data[DATA_CHAT_HISTORY]
+    assert conversation_id in hass.data[DATA_CHAT_LOGS]
 
     # Set the last updated to be older than the timeout
     hass.data[chat_session.DATA_CHAT_SESSION][conversation_id].last_updated = (
@@ -75,7 +75,7 @@ async def test_cleanup(
         dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT * 2 + timedelta(seconds=1),
     )
 
-    assert conversation_id not in hass.data[DATA_CHAT_HISTORY]
+    assert conversation_id not in hass.data[DATA_CHAT_LOGS]
 
 
 async def test_default_content(
@@ -279,9 +279,18 @@ async def test_extra_systen_prompt(
     assert chat_log.content[0].content.endswith(extra_system_prompt2)
 
 
+@pytest.mark.parametrize(
+    "prerun_tool_tasks",
+    [
+        None,
+        ("mock-tool-call-id",),
+        ("mock-tool-call-id", "mock-tool-call-id-2"),
+    ],
+)
 async def test_tool_call(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
+    prerun_tool_tasks: tuple[str] | None,
 ) -> None:
     """Test using the session tool calling API."""
 
@@ -316,26 +325,47 @@ async def test_tool_call(
                         id="mock-tool-call-id",
                         tool_name="test_tool",
                         tool_args={"param1": "Test Param"},
-                    )
+                    ),
+                    llm.ToolInput(
+                        id="mock-tool-call-id-2",
+                        tool_name="test_tool",
+                        tool_args={"param1": "Test Param"},
+                    ),
                 ],
             )
+
+            tool_call_tasks = None
+            if prerun_tool_tasks:
+                tool_call_tasks = {
+                    tool_call_id: hass.async_create_task(
+                        chat_log.llm_api.async_call_tool(content.tool_calls[0]),
+                        tool_call_id,
+                    )
+                    for tool_call_id in prerun_tool_tasks
+                }
 
             with pytest.raises(ValueError):
                 chat_log.async_add_assistant_content_without_tools(content)
 
-            result = None
-            async for tool_result_content in chat_log.async_add_assistant_content(
-                content
-            ):
-                assert result is None
-                result = tool_result_content
+            results = [
+                tool_result_content
+                async for tool_result_content in chat_log.async_add_assistant_content(
+                    content, tool_call_tasks=tool_call_tasks
+                )
+            ]
 
-    assert result == ToolResultContent(
-        agent_id=mock_conversation_input.agent_id,
-        tool_call_id="mock-tool-call-id",
-        tool_result="Test response",
-        tool_name="test_tool",
-    )
+            assert results[0] == ToolResultContent(
+                agent_id=mock_conversation_input.agent_id,
+                tool_call_id="mock-tool-call-id",
+                tool_result="Test response",
+                tool_name="test_tool",
+            )
+            assert results[1] == ToolResultContent(
+                agent_id=mock_conversation_input.agent_id,
+                tool_call_id="mock-tool-call-id-2",
+                tool_result="Test response",
+                tool_name="test_tool",
+            )
 
 
 async def test_tool_call_exception(
