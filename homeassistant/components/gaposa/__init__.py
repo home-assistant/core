@@ -51,6 +51,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
 
+    # Store runtime data that should persist between restarts
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+    entry.runtime_data = {
+        "last_update": None
+    }  # Add any runtime data you want to persist
+
     hass.data[DOMAIN][entry.entry_id] = (gaposa, coordinator)
 
     # Fetch initial data so we have data when entities subscribe
@@ -60,6 +66,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Handle options update."""
+    # Add any code needed to handle configuration updates
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
