@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "climate": {
+      "nhc_thermostat": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:calendar-clock",
+            "state": {
+              "day": "mdi:weather-sunny",
+              "night": "mdi:weather-night",
+              "eco": "mdi:leaf",
+              "off": "mdi:power",
+              "cool": "mdi:snowflake"
+            }
+          }
+        }
+      }
+    }
+  }
+}
