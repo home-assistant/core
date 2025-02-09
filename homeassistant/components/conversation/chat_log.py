@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
 import logging
-from typing import Any, Literal, TypedDict
+from typing import Literal, TypedDict
 
 import voluptuous as vol
 
@@ -251,10 +251,8 @@ class ChatLog:
 
         The keys content and tool_calls will be concatenated if they appear multiple times.
         """
-        current: dict[str, Any] = {
-            "content": "",
-            "tool_calls": [],
-        }
+        current_content = ""
+        current_tool_calls: list[llm.ToolInput] = []
         tool_call_tasks: dict[str, asyncio.Task] = {}
 
         async for delta in stream:
@@ -262,17 +260,17 @@ class ChatLog:
 
             # Indicates update to current message
             if "role" not in delta:
-                if delta.get("content"):  # Also truthy check
-                    current["content"] += delta["content"]
-                if tool_calls := delta.get("tool_calls"):
+                if delta_content := delta.get("content"):
+                    current_content += delta_content
+                if delta_tool_calls := delta.get("tool_calls"):
                     # Make MyPy happy
-                    assert type(tool_calls) is list
+                    assert type(delta_tool_calls) is list
                     if self.llm_api is None:
                         raise ValueError("No LLM API configured")
-                    current["tool_calls"] += tool_calls
+                    current_tool_calls += delta_tool_calls
 
                     # Start processing the tool calls as soon as we know about them
-                    for tool_call in tool_calls:
+                    for tool_call in delta_tool_calls:
                         tool_call_tasks[tool_call.id] = self.hass.async_create_task(
                             self.llm_api.async_call_tool(tool_call),
                             name=f"llm_tool_{tool_call.id}",
@@ -285,11 +283,11 @@ class ChatLog:
                 raise ValueError(f"Only assistant role expected. Got {delta['role']}")
 
             # Yield the previous message if it has content
-            if current["content"] or current["tool_calls"]:
+            if current_content or current_tool_calls:
                 content = AssistantContent(
                     agent_id=agent_id,
-                    content=current["content"] or None,
-                    tool_calls=current["tool_calls"] or None,
+                    content=current_content or None,
+                    tool_calls=current_tool_calls or None,
                 )
                 yield content
                 async for tool_result in self.async_add_assistant_content(
@@ -297,16 +295,14 @@ class ChatLog:
                 ):
                     yield tool_result
 
-            current = {
-                "content": delta.get("content") or "",
-                "tool_calls": delta.get("tool_calls") or [],
-            }
+            current_content = delta.get("content") or ""
+            current_tool_calls = delta.get("tool_calls") or []
 
-        if current["content"] or current["tool_calls"]:
+        if current_content or current_tool_calls:
             content = AssistantContent(
                 agent_id=agent_id,
-                content=current["content"] or None,
-                tool_calls=current["tool_calls"] or None,
+                content=current_content or None,
+                tool_calls=current_tool_calls or None,
             )
             yield content
             async for tool_result in self.async_add_assistant_content(
