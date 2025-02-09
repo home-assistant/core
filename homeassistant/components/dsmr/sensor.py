@@ -538,7 +538,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-    )
+    ),
 )
 
 SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
@@ -996,7 +996,7 @@ class DSMREntity(SensorEntity):
         # DSMR V5B: Note: In Belgium values are swapped:
         # DSMR V5EONHU: Note: In EON HUngary values are swapped:
         # Rate code 2 is used for low rate and rate code 1 is used for normal rate.
-        if dsmr_version in ('5B', '5EONHU'):
+        if dsmr_version in ("5B", "5EONHU"):
             if value == "0001":
                 value = "0002"
             elif value == "0002":
