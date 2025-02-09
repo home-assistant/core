@@ -1550,7 +1550,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2025.1.0
+pydrawise==2025.2.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
