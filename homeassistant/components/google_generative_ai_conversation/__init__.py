@@ -5,11 +5,11 @@ from __future__ import annotations
 import mimetypes
 from pathlib import Path
 
-from google.ai import generativelanguage_v1beta
-from google.api_core.client_options import ClientOptions
-from google.api_core.exceptions import ClientError, DeadlineExceeded, GoogleAPIError
-import google.generativeai as genai
-import google.generativeai.types as genai_types
+from google import genai
+from google.genai import types as genai_types
+from google.genai.errors import APIError, ClientError
+from PIL import Image
+from requests.exceptions import Timeout as DeadlineExceeded
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -27,7 +27,6 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_CHAT_MODEL, CONF_PROMPT, DOMAIN, RECOMMENDED_CHAT_MODEL
 
@@ -36,9 +35,14 @@ CONF_IMAGE_FILENAME = "image_filename"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
+MILLISECONDS = 1000
+
+type GoogleGenerativeAIConfigEntry = ConfigEntry[genai.Client]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(
+    hass: HomeAssistant, config: GoogleGenerativeAIConfigEntry
+) -> bool:
     """Set up Google Generative AI Conversation."""
 
     async def generate_content(call: ServiceCall) -> ServiceResponse:
@@ -57,28 +61,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             mime_type, _ = mimetypes.guess_type(image_filename)
             if mime_type is None or not mime_type.startswith("image"):
                 raise HomeAssistantError(f"`{image_filename}` is not an image")
-            prompt_parts.append(
-                {
-                    "mime_type": mime_type,
-                    "data": await hass.async_add_executor_job(
-                        Path(image_filename).read_bytes
-                    ),
-                }
-            )
-
-        model = genai.GenerativeModel(model_name=RECOMMENDED_CHAT_MODEL)
+            prompt_parts.append(Image.open(image_filename))
 
         try:
-            response = await model.generate_content_async(prompt_parts)
+            response = await config.runtime_data.models.generate_content(
+                model=RECOMMENDED_CHAT_MODEL, contents=prompt_parts
+            )
         except (
-            GoogleAPIError,
+            APIError,
             ValueError,
             genai_types.BlockedPromptException,
             genai_types.StopCandidateException,
         ) as err:
             raise HomeAssistantError(f"Error generating content: {err}") from err
 
-        if not response.parts:
+        if not response.candidates[0].content.parts:
             raise HomeAssistantError("Error generating content")
 
         return {"text": response.text}
@@ -100,30 +97,34 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> bool:
     """Set up Google Generative AI Conversation from a config entry."""
-    genai.configure(api_key=entry.data[CONF_API_KEY])
 
     try:
-        client = generativelanguage_v1beta.ModelServiceAsyncClient(
-            client_options=ClientOptions(api_key=entry.data[CONF_API_KEY])
+        client = genai.Client(api_key=entry.data[CONF_API_KEY])
+        await client.aio.models.get(
+            model=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
+            config={"http_options": {"timeout": 5 * MILLISECONDS}},
         )
-        await client.get_model(
-            name=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL), timeout=5.0
-        )
-    except (GoogleAPIError, ValueError) as err:
+    except (APIError, DeadlineExceeded) as err:
         if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
             raise ConfigEntryAuthFailed(err) from err
         if isinstance(err, DeadlineExceeded):
             raise ConfigEntryNotReady(err) from err
         raise ConfigEntryError(err) from err
+    else:
+        entry.runtime_data = client
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: GoogleGenerativeAIConfigEntry
+) -> bool:
     """Unload GoogleGenerativeAI."""
     if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         return False

@@ -8,10 +8,8 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-from google.ai import generativelanguage_v1beta
-from google.api_core.client_options import ClientOptions
-from google.api_core.exceptions import ClientError, GoogleAPIError
-import google.generativeai as genai
+from google import genai
+from google.genai.errors import APIError, ClientError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -69,16 +67,15 @@ RECOMMENDED_OPTIONS = {
     CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
 }
 
+MILLISECONDS = 1000
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect.
 
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    client = generativelanguage_v1beta.ModelServiceAsyncClient(
-        client_options=ClientOptions(api_key=data[CONF_API_KEY])
+async def validate_input(client: genai.Client) -> None:
+    """Validate the user input allows us to connect."""
+    await client.aio.models.get(
+        model=RECOMMENDED_CHAT_MODEL,
+        config={"http_options": {"timeout": 5 * MILLISECONDS}},
     )
-    await client.list_models(timeout=5.0)
 
 
 class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -92,9 +89,10 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            client = genai.Client(api_key=user_input[CONF_API_KEY])
             try:
-                await validate_input(self.hass, user_input)
-            except GoogleAPIError as err:
+                await validate_input(client)
+            except APIError as err:
                 if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
                     errors["base"] = "invalid_auth"
                 else:
@@ -166,6 +164,7 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
         self.last_rendered_recommended = config_entry.options.get(
             CONF_RECOMMENDED, False
         )
+        self._genai_client = genai.Client(api_key=config_entry.data[CONF_API_KEY])
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -188,7 +187,9 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
                 CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
             }
 
-        schema = await google_generative_ai_config_option_schema(self.hass, options)
+        schema = await google_generative_ai_config_option_schema(
+            self.hass, options, self._genai_client
+        )
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
@@ -198,6 +199,7 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
 async def google_generative_ai_config_option_schema(
     hass: HomeAssistant,
     options: dict[str, Any] | MappingProxyType[str, Any],
+    genai_client: genai.Client,
 ) -> dict:
     """Return a schema for Google Generative AI completion options."""
     hass_apis: list[SelectOptionDict] = [
@@ -236,7 +238,7 @@ async def google_generative_ai_config_option_schema(
     if options.get(CONF_RECOMMENDED):
         return schema
 
-    api_models = await hass.async_add_executor_job(partial(genai.list_models))
+    api_models = await hass.async_add_executor_job(partial(genai_client.models.list))
 
     models = [
         SelectOptionDict(
