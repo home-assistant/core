@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -35,14 +36,32 @@ SCAN_INTERVAL = timedelta(seconds=30)
 _LOGGER = logging.getLogger(__name__)
 
 
+@dataclass
+class RoborockCoordinators:
+    """Roborock coordinators type."""
+
+    v1: list[RoborockDataUpdateCoordinator]
+    a01: list[RoborockDataUpdateCoordinatorA01]
+
+    def values(
+        self,
+    ) -> list[RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01]:
+        """Return all coordinators."""
+        return self.v1 + self.a01
+
+
+type RoborockConfigEntry = ConfigEntry[RoborockCoordinators]
+
+
 class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
     """Class to manage fetching data from the API."""
 
-    config_entry: ConfigEntry
+    config_entry: RoborockConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RoborockConfigEntry,
         device: HomeDataDevice,
         device_networking: NetworkInfo,
         product_info: HomeDataProduct,
@@ -50,7 +69,13 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         home_data_rooms: list[HomeDataRoom],
     ) -> None:
         """Initialize."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
         self.roborock_device_info = RoborockHassDeviceInfo(
             device,
             device_networking,
@@ -186,15 +211,24 @@ class RoborockDataUpdateCoordinatorA01(
 ):
     """Class to manage fetching data from the API for A01 devices."""
 
+    config_entry: RoborockConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: RoborockConfigEntry,
         device: HomeDataDevice,
         product_info: HomeDataProduct,
         api: RoborockClientA01,
     ) -> None:
         """Initialize."""
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
         self.api = api
         self.device_info = DeviceInfo(
             name=device.name,

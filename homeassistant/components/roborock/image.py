@@ -19,7 +19,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import RoborockConfigEntry
 from .const import (
     DEFAULT_DRAWABLES,
     DOMAIN,
@@ -28,7 +27,7 @@ from .const import (
     MAP_FILE_FORMAT,
     MAP_SLEEP,
 )
-from .coordinator import RoborockDataUpdateCoordinator
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
 
