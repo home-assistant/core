@@ -560,8 +560,15 @@ class BackupManager:
             return_exceptions=True,
         )
         for idx, result in enumerate(list_backups_results):
+            agent_id = agent_ids[idx]
             if isinstance(result, BackupAgentError):
-                agent_errors[agent_ids[idx]] = result
+                agent_errors[agent_id] = result
+                continue
+            if isinstance(result, Exception):
+                agent_errors[agent_id] = result
+                LOGGER.error(
+                    "Unexpected error for %s: %s", agent_id, result, exc_info=result
+                )
                 continue
             if isinstance(result, BaseException):
                 raise result  # unexpected error
@@ -588,7 +595,7 @@ class BackupManager:
                         name=agent_backup.name,
                         with_automatic_settings=with_automatic_settings,
                     )
-                backups[backup_id].agents[agent_ids[idx]] = AgentBackupStatus(
+                backups[backup_id].agents[agent_id] = AgentBackupStatus(
                     protected=agent_backup.protected,
                     size=agent_backup.size,
                 )
@@ -611,8 +618,15 @@ class BackupManager:
             return_exceptions=True,
         )
         for idx, result in enumerate(get_backup_results):
+            agent_id = agent_ids[idx]
             if isinstance(result, BackupAgentError):
-                agent_errors[agent_ids[idx]] = result
+                agent_errors[agent_id] = result
+                continue
+            if isinstance(result, Exception):
+                agent_errors[agent_id] = result
+                LOGGER.error(
+                    "Unexpected error for %s: %s", agent_id, result, exc_info=result
+                )
                 continue
             if isinstance(result, BaseException):
                 raise result  # unexpected error
@@ -640,7 +654,7 @@ class BackupManager:
                     name=result.name,
                     with_automatic_settings=with_automatic_settings,
                 )
-            backup.agents[agent_ids[idx]] = AgentBackupStatus(
+            backup.agents[agent_id] = AgentBackupStatus(
                 protected=result.protected,
                 size=result.size,
             )
