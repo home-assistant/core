@@ -24,3 +24,4 @@
 - Is the list of supported (oven/dishwasher/whatever) modes finite?
 - The oven setpoint, does that align with the unit of measurement of the temperature reading?
 - Can disabilities be disabled dynamically?
+- Is the category in the device the one set by the user?
