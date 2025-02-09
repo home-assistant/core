@@ -13,8 +13,8 @@ from homeassistant.const import CONF_NAME, EntityCategory, __version__ as HA_VER
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import VersionConfigEntry
 from .const import CONF_SOURCE, DEFAULT_NAME
+from .coordinator import VersionConfigEntry
 from .entity import VersionEntity
 
 HA_VERSION_OBJECT = AwesomeVersion(HA_VERSION)
