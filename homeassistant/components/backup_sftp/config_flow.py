@@ -50,27 +50,29 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
             port: int = user_input.get(CONF_PORT)
             user: str = user_input.get(CONF_USERNAME)
             private_key_file: str = user_input.get(CONF_PRIVATE_KEY_FILE)
+            backup_location: str = user_input.get(CONF_BACKUP_LOCATION)
 
             # If full path is not provided to private_key_file,
-            # default to look at /config directory 
+            # default to look at /config directory
             if private_key_file and not private_key_file.startswith("/"):
                 private_key_file = f"/config/{private_key_file}"
 
             try:
                 client = SSHClient(
-                    host=user_input.get(CONF_HOST),
-                    port=user_input.get(CONF_PORT),
-                    username=user_input.get(CONF_USERNAME),
+                    host=host,
+                    port=port,
+                    username=user,
                     password=user_input.get(CONF_PASSWORD),
                     private_key_file=private_key_file,
+                    backup_location=backup_location,
                 )
 
                 await self.hass.async_add_executor_job(
-                    check_remote_path, client, user_input.get(CONF_BACKUP_LOCATION)
+                    check_remote_path, client, backup_location
                 )
             except FileNotFoundError as e:
                 errors["base"] = (
-                    f"Remote path not found. Please check if path: '{user_input.get(CONF_BACKUP_LOCATION)}' exists remotely."
+                    f"Remote path not found. Please check if path: '{backup_location}' exists remotely."
                 )
             except ConfigEntryError as e:
                 errors["base"] = str(e)
@@ -80,7 +82,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                     f"Unexpected exception ({type(e).__name__}) occurred during config flow. {e}"
                 )
             else:
-                identifier = client.get_identifier(user_input.get(CONF_BACKUP_LOCATION))
+                identifier = client.get_identifier()
                 await self.async_set_unique_id(identifier)
                 self._abort_if_unique_id_configured()
 
