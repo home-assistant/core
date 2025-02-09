@@ -62,16 +62,6 @@ from .entity import SmartThingsEntity
 #             EntityCategory.DIAGNOSTIC,
 #         )
 #     ],
-#     Capability.air_quality_sensor: [
-#         Map(
-#             Attribute.air_quality,
-#             "Air Quality",
-#             "CAQI",
-#             None,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
 #     Capability.body_mass_index_measurement: [
 #         Map(
 #             Attribute.bmi_measurement,
@@ -131,24 +121,6 @@ from .entity import SmartThingsEntity
 #             None,
 #             EntityCategory.DIAGNOSTIC,
 #         )
-#     ],
-#     Capability.dust_sensor: [
-#         Map(
-#             Attribute.fine_dust_level,
-#             "Fine Dust Level",
-#             None,
-#             None,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         ),
-#         Map(
-#             Attribute.dust_level,
-#             "Dust Level",
-#             None,
-#             None,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         ),
 #     ],
 #     Capability.equivalent_carbon_dioxide_measurement: [
 #         Map(
@@ -236,9 +208,6 @@ from .entity import SmartThingsEntity
 #         Map(
 #             Attribute.playback_shuffle, "Media Playback Shuffle", None, None, None, None
 #         )
-#     ],
-#     Capability.media_playback: [
-#         Map(Attribute.playback_status, "Media Playback Status", None, None, None, None)
 #     ],
 #     Capability.odor_sensor: [
 #         Map(Attribute.odor_level, "Odor Sensor", None, None, None, None)
@@ -659,6 +628,40 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=PERCENTAGE,
             )
         ]
+    },
+    Capability.MEDIA_PLAYBACK: {
+        Attribute.PLAYBACK_STATUS: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.PLAYBACK_STATUS,
+                name="Media Playback Status",
+            )
+        ]
+    },
+    Capability.AIR_QUALITY_SENSOR: {
+        Attribute.AIR_QUALITY: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.AIR_QUALITY,
+                name="Air Quality",
+                native_unit_of_measurement="CAQI",
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.DUST_SENSOR: {
+        Attribute.DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.DUST_LEVEL,
+                name="Dust Level",
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ],
+        Attribute.FINE_DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.FINE_DUST_LEVEL,
+                name="Fine Dust Level",
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ],
     },
 }
 
