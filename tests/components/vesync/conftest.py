@@ -107,7 +107,7 @@ def outlet_fixture():
 
 @pytest.fixture(name="humidifier")
 def humidifier_fixture():
-    """Create a mock VeSync humidifier fixture."""
+    """Create a mock VeSync Classic200S humidifier fixture."""
     return Mock(
         VeSyncHumid200300S,
         cid="200s-humidifier",
@@ -126,6 +126,37 @@ def humidifier_fixture():
         mist_level=6,
         mist_modes=["auto", "manual"],
         mode=None,
+        sub_device_no=0,
+        config_module="configModule",
+        connection_status="online",
+        current_firm_version="1.0.0",
+        water_lacks=False,
+        water_tank_lifted=False,
+    )
+
+
+@pytest.fixture(name="humidifier_300s")
+def humidifier_300s_fixture():
+    """Create a mock VeSync Classic300S humidifier fixture."""
+    return Mock(
+        VeSyncHumid200300S,
+        cid="300s-humidifier",
+        config={
+            "auto_target_humidity": 40,
+            "display": "true",
+            "automatic_stop": "true",
+        },
+        details={
+            "humidity": 35,
+            "mode": "manual",
+        },
+        device_type="Classic300S",
+        device_name="Humidifier 300s",
+        device_status="on",
+        mist_level=6,
+        mist_modes=["auto", "manual"],
+        mode=None,
+        night_light=True,
         sub_device_no=0,
         config_module="configModule",
         connection_status="online",
