@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import AsyncGenerator, AsyncIterable, Generator
 from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
 import logging
+from typing import Literal, TypedDict
 
 import voluptuous as vol
 
@@ -142,7 +143,15 @@ class ToolResultContent:
     tool_result: JsonObjectType
 
 
-Content = SystemContent | UserContent | AssistantContent | ToolResultContent
+type Content = SystemContent | UserContent | AssistantContent | ToolResultContent
+
+
+class AssistantContentDeltaDict(TypedDict, total=False):
+    """Partial content to define an AssistantContent."""
+
+    role: Literal["assistant"]
+    content: str | None
+    tool_calls: list[llm.ToolInput] | None
 
 
 @dataclass
@@ -154,6 +163,11 @@ class ChatLog:
     content: list[Content] = field(default_factory=lambda: [SystemContent(content="")])
     extra_system_prompt: str | None = None
     llm_api: llm.APIInstance | None = None
+
+    @property
+    def unresponded_tool_results(self) -> bool:
+        """Return if there are unresponded tool results."""
+        return self.content[-1].role == "tool_result"
 
     @callback
     def async_add_user_content(self, content: UserContent) -> None:
@@ -222,6 +236,77 @@ class ChatLog:
             )
             self.content.append(response_content)
             yield response_content
+
+    async def async_add_delta_content_stream(
+        self, agent_id: str, stream: AsyncIterable[AssistantContentDeltaDict]
+    ) -> AsyncGenerator[AssistantContent | ToolResultContent]:
+        """Stream content into the chat log.
+
+        Returns a generator with all content that was added to the chat log.
+
+        stream iterates over dictionaries with optional keys role, content and tool_calls.
+
+        When a delta contains a role key, the current message is considered complete and
+        a new message is started.
+
+        The keys content and tool_calls will be concatenated if they appear multiple times.
+        """
+        current_content = ""
+        current_tool_calls: list[llm.ToolInput] = []
+        tool_call_tasks: dict[str, asyncio.Task] = {}
+
+        async for delta in stream:
+            LOGGER.debug("Received delta: %s", delta)
+
+            # Indicates update to current message
+            if "role" not in delta:
+                if delta_content := delta.get("content"):
+                    current_content += delta_content
+                if delta_tool_calls := delta.get("tool_calls"):
+                    if self.llm_api is None:
+                        raise ValueError("No LLM API configured")
+                    current_tool_calls += delta_tool_calls
+
+                    # Start processing the tool calls as soon as we know about them
+                    for tool_call in delta_tool_calls:
+                        tool_call_tasks[tool_call.id] = self.hass.async_create_task(
+                            self.llm_api.async_call_tool(tool_call),
+                            name=f"llm_tool_{tool_call.id}",
+                        )
+                continue
+
+            # Starting a new message
+
+            if delta["role"] != "assistant":
+                raise ValueError(f"Only assistant role expected. Got {delta['role']}")
+
+            # Yield the previous message if it has content
+            if current_content or current_tool_calls:
+                content = AssistantContent(
+                    agent_id=agent_id,
+                    content=current_content or None,
+                    tool_calls=current_tool_calls or None,
+                )
+                yield content
+                async for tool_result in self.async_add_assistant_content(
+                    content, tool_call_tasks=tool_call_tasks
+                ):
+                    yield tool_result
+
+            current_content = delta.get("content") or ""
+            current_tool_calls = delta.get("tool_calls") or []
+
+        if current_content or current_tool_calls:
+            content = AssistantContent(
+                agent_id=agent_id,
+                content=current_content or None,
+                tool_calls=current_tool_calls or None,
+            )
+            yield content
+            async for tool_result in self.async_add_assistant_content(
+                content, tool_call_tasks=tool_call_tasks
+            ):
+                yield tool_result
 
     async def async_update_llm_data(
         self,

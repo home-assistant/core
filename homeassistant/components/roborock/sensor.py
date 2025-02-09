@@ -31,8 +31,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import RoborockConfigEntry
-from .coordinator import RoborockDataUpdateCoordinator, RoborockDataUpdateCoordinatorA01
+from .coordinator import (
+    RoborockConfigEntry,
+    RoborockDataUpdateCoordinator,
+    RoborockDataUpdateCoordinatorA01,
+)
 from .entity import RoborockCoordinatedEntityA01, RoborockCoordinatedEntityV1
 
 
