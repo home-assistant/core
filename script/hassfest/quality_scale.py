@@ -393,7 +393,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "flexit",
     "flexit_bacnet",
     "flic",
-    "flick_electric",
     "flipr",
     "flo",
     "flock",
