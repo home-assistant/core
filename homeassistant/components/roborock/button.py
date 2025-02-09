@@ -11,8 +11,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RoborockConfigEntry
-from .coordinator import RoborockDataUpdateCoordinator
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockEntityV1
 
 
