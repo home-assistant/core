@@ -36,8 +36,8 @@ rules:
     comment: |
       This integration does not have any service actions.
   config-entry-unloading:
-    status: todo
-    comment: Can this be automatic via the coordinator?
+    status: done
+    comment: Handled by the coordinator
   docs-configuration-parameters:
     status: exempt
     comment: No options to configure
