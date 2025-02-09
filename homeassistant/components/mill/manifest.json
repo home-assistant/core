@@ -1,6 +1,7 @@
 {
   "domain": "mill",
   "name": "Mill",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@danielhiversen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/mill",
