@@ -72,10 +72,6 @@ from .entity import SmartThingsEntity
 #             None,
 #         )
 #     ],
-#     Capability.alarm: [Map(Attribute.alarm, "Alarm", None, None, None, None)],
-#     Capability.audio_volume: [
-#         Map(Attribute.volume, "Volume", PERCENTAGE, None, None, None)
-#     ],
 #     Capability.body_mass_index_measurement: [
 #         Map(
 #             Attribute.bmi_measurement,
@@ -647,6 +643,23 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.ALARM: {
+        Attribute.ALARM: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ALARM,
+                name="Alarm",
+            )
+        ]
+    },
+    Capability.AUDIO_VOLUME: {
+        Attribute.VOLUME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.VOLUME,
+                name="Volume",
+                native_unit_of_measurement=PERCENTAGE,
+            )
+        ]
+    },
 }
 
 
@@ -666,23 +679,14 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for a config entry."""
     devices = entry.runtime_data.devices
-    entities = [
+    async_add_entities(
         SmartThingsSensor(device, description, capability, attribute)
         for device in devices
         for capability, attributes in device.data.items()
         if capability in CAPABILITY_TO_SENSORS
         for attribute in attributes
         for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
-    ]
-    entities.extend(
-        SmartThingsSensor(device, description, capability, attribute)
-        for device in devices
-        if Capability.SWITCH in device.data
-        for capability in (Capability.ENERGY_METER, Capability.POWER_METER)
-        for attribute in CAPABILITY_TO_SENSORS[capability]
-        for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
     )
-    async_add_entities(entities)
     # broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     # entities: list[SensorEntity] = []
     # for device in broker.devices.values():
@@ -702,24 +706,6 @@ async def async_setup_entry(
     #                 ]
     #             )
     #         else:
-    #             maps = CAPABILITY_TO_SENSORS[capability]
-    #             entities.extend(
-    #                 [
-    #                     SmartThingsSensor(
-    #                         device,
-    #                         m.attribute,
-    #                         m.name,
-    #                         m.default_unit,
-    #                         m.device_class,
-    #                         m.state_class,
-    #                         m.entity_category,
-    #                     )
-    #                     for m in maps
-    #                 ]
-    #             )
-    #
-    #     if broker.any_assigned(device.device_id, "switch"):
-    #         for capability in (Capability.energy_meter, Capability.power_meter):
     #             maps = CAPABILITY_TO_SENSORS[capability]
     #             entities.extend(
     #                 [

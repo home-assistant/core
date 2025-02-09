@@ -14,7 +14,7 @@
 
 # Things to fix:
 
-- Remove complimentary useless power and energy sensor for every switch capability
+- ~~Remove complimentary useless power and energy sensor for every switch capability~~ Removed them, took more code to maintain and they were useless in the first place
 - Try to see if the microwave door stops being a cover 
 
 # Things to question
