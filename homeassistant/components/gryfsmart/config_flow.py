@@ -10,12 +10,12 @@ from serial import SerialException
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.const import Platform
+
+# from homeassistant.const import Platform
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 
 from .const import (
-    BINARY_SENSOR_DEVICE_CLASS,
     CONF_COMMUNICATION,
     CONF_DEVICES,
     CONF_EXTRA,
@@ -28,7 +28,8 @@ from .const import (
     DEFAULT_PORT,
     DEVICE_TYPES,
     DOMAIN,
-    SWITCH_DEVICE_CLASS,
+    # SWITCH_DEVICE_CLASS,
+    # BINARY_SENSOR_DEVICE_CLASS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -439,18 +440,19 @@ def check_extra_parameter(
     device_type: Any | None,
 ) -> str | None:
     """Check extra parameter."""
-
-    if device_type == Platform.BINARY_SENSOR:
-        if extra_parameter not in BINARY_SENSOR_DEVICE_CLASS:
-            return "Bad binary sensor extra parameter!"
-    elif device_type == Platform.SWITCH:
-        if extra_parameter not in SWITCH_DEVICE_CLASS:
-            return "Bad Output extra parameter!"
-    elif device_type == Platform.CLIMATE:
-        try:
-            if int(extra_parameter) > 10:
-                return None
-        except ValueError:
-            return "Bad Thermostate extra parameter!"
-
     return None
+
+    # if device_type == Platform.BINARY_SENSOR:
+    #     if extra_parameter not in BINARY_SENSOR_DEVICE_CLASS:
+    #         return "Bad binary sensor extra parameter!"
+    # elif device_type == Platform.SWITCH:
+    #     if extra_parameter not in SWITCH_DEVICE_CLASS:
+    #         return "Bad Output extra parameter!"
+    # elif device_type == Platform.CLIMATE:
+    #     try:
+    #         if int(extra_parameter) > 10:
+    #             return None
+    #     except ValueError:
+    #         return "Bad Thermostate extra parameter!"
+    #
+    # return None

@@ -2,21 +2,14 @@
 
 from __future__ import annotations
 
-import logging
-
 from pygryfsmart.api import GryfApi
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers.discovery import async_load_platform
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_API, CONF_COMMUNICATION, CONF_DEVICE_DATA, CONF_PORT, DOMAIN
-from .schema import CONFIG_SCHEMA as SCHEMA
-
-CONFIG_SCHEMA = SCHEMA
 
 _PLATFORMS: list[Platform] = [
     Platform.LIGHT,
@@ -25,34 +18,6 @@ _PLATFORMS: list[Platform] = [
     # Platform.CLIMATE,
     # Platform.SWITCH,
 ]
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def async_setup(
-    hass: HomeAssistant,
-    config: ConfigType,
-) -> bool:
-    """Set up the Gryf Smart Integration."""
-
-    if config.get(DOMAIN) is None:
-        return True
-
-    try:
-        api = GryfApi(config[DOMAIN][CONF_PORT])
-        await api.start_connection()
-        api.start_update_interval(1)
-    except ConnectionError:
-        _LOGGER.error("Unable to connect: %s", ConnectionError)
-        return False
-
-    hass.data[DOMAIN] = config.get(DOMAIN)
-    hass.data[DOMAIN][CONF_API] = api
-
-    for PLATFORM in _PLATFORMS:
-        await async_load_platform(hass, PLATFORM, DOMAIN, None, config)
-
-    return True
 
 
 async def async_setup_entry(

@@ -1,0 +1,107 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Communication configuration",
+        "description": "Give port RS232 and module count.",
+        "data": {
+          "port": "Port",
+          "module_count": "Module count"
+        }
+      },
+      "device_menu": {
+        "title": "Device menu",
+        "description": "Select on of the options",
+        "menu_options": {
+          "add_device": "Add device",
+          "edit_device": "Edit device",
+          "communication": "Communication settings",
+          "finish": "Finish configuration"
+        }
+      },
+      "add_device": {
+        "title": "Add device",
+        "description": "Provide the details of the new device",
+        "data": {
+          "type": "Device type",
+          "name": "Device name",
+          "id": "device ID",
+          "extra": "Extra parameter(Optional)"
+        }
+      },
+      "edit_device": {
+        "title": "Edit device",
+        "description": "Choise device to Edit"
+      },
+      "edit_device_details": {
+        "title": "Edit the device details",
+        "description": "Custom device details",
+        "data": {
+          "type": "Device typ",
+          "name": "Device name",
+          "id": "Device ID",
+          "extra": "Extra parameter(Optional)"
+        }
+      },
+      "communication": {
+        "title": "Communication settings",
+        "description": "Configure parameters of communication",
+        "data": {
+          "port": "Port",
+          "module_count": "Module count"
+        }
+      },
+      "finish": {
+        "title": "Finish Configuration",
+        "description": "Configuration completed successfull"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Details Gryf Smart"
+      },
+      "main_menu": {
+        "title": "Main menu",
+        "description": "Choise one of options"
+      },
+      "add_device": {
+        "title": "Add device",
+        "description": "Provide data of new device",
+        "data": {
+          "type": "Device type",
+          "name": "Device name",
+          "id": "Device id",
+          "extra": "Extra parameter(optional)"
+        }
+      },
+      "edit_device": {
+        "title": "Edit device",
+        "description": "Choise device to edit"
+      },
+      "edit_device_details": {
+        "title": "Edit device details",
+        "description": "Custom device details",
+        "data": {
+          "type": "Device type",
+          "name": "Device name",
+          "id": "Device ID",
+          "extra": "Extra parameter(optional)"
+        }
+      },
+      "communication": {
+        "title": "Communication settings",
+        "description": "Custom communication settings",
+        "data": {
+          "port": "Port",
+          "module_count": "Module count"
+        }
+      },
+      "finish": {
+        "title": "Finish configuration",
+        "description": "Configuration completed successfull"
+      }
+    }
+  }
+}

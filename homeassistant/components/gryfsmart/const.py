@@ -1,7 +1,5 @@
 """Define constants used throughout the Gryf Smart integration."""
 
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import Platform
 
 DOMAIN = "gryfsmart"
@@ -43,14 +41,15 @@ CONFIG_FLOW_MENU_OPTIONS = {
     "finish": "Finish",
 }
 
+
 DEVICE_TYPES = {
     Platform.LIGHT: "Lights",
     # Platform.SWITCH: "Output",
     # Platform.BINARY_SENSOR: "Binary input",
     # Platform.CLIMATE: "Thermostat",
-    # PLATFORM_PWM: "PWM",
+    PLATFORM_PWM: "PWM",
     # PLATFORM_TEMPERATURE: "Termometr",
-    PLATFORM_INPUT: "Input",
+    # PLATFORM_INPUT: "Input",
 }
 
 CONF_LINE_SENSOR_ICONS = {
@@ -58,21 +57,21 @@ CONF_LINE_SENSOR_ICONS = {
     GRYF_OUT_NAME: ["mdi:message-arrow-left-outline", "mdi:message-arrow-left"],
 }
 
-BINARY_SENSOR_DEVICE_CLASS = {
-    "door": BinarySensorDeviceClass.DOOR,
-    "garage door": BinarySensorDeviceClass.GARAGE_DOOR,
-    "heat": BinarySensorDeviceClass.HEAT,
-    "light": BinarySensorDeviceClass.LIGHT,
-    "motion": BinarySensorDeviceClass.MOTION,
-    "window": BinarySensorDeviceClass.WINDOW,
-    "smoke": BinarySensorDeviceClass.SMOKE,
-    "sound": BinarySensorDeviceClass.SOUND,
-    "power": BinarySensorDeviceClass.POWER,
-    None: BinarySensorDeviceClass.OPENING,
-}
-
-SWITCH_DEVICE_CLASS = {
-    None: SwitchDeviceClass.SWITCH,
-    "switch": SwitchDeviceClass.SWITCH,
-    "outlet": SwitchDeviceClass.OUTLET,
-}
+# BINARY_SENSOR_DEVICE_CLASS = {
+#     "door": BinarySensorDeviceClass.DOOR,
+#     "garage door": BinarySensorDeviceClass.GARAGE_DOOR,
+#     "heat": BinarySensorDeviceClass.HEAT,
+#     "light": BinarySensorDeviceClass.LIGHT,
+#     "motion": BinarySensorDeviceClass.MOTION,
+#     "window": BinarySensorDeviceClass.WINDOW,
+#     "smoke": BinarySensorDeviceClass.SMOKE,
+#     "sound": BinarySensorDeviceClass.SOUND,
+#     "power": BinarySensorDeviceClass.POWER,
+#     None: BinarySensorDeviceClass.OPENING,
+# }
+#
+# SWITCH_DEVICE_CLASS = {
+#     None: SwitchDeviceClass.SWITCH,
+#     "switch": SwitchDeviceClass.SWITCH,
+#     "outlet": SwitchDeviceClass.OUTLET,
+# }

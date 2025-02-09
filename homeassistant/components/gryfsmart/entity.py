@@ -12,7 +12,7 @@ from homeassistant.helpers.entity import Entity
 from .const import CONF_DEVICE_DATA
 
 
-class _GryfSmartEntityBase(Entity):
+class _EntityBase(Entity):
     """Base Entity for Gryf Smart."""
 
     _attr_should_poll = False
@@ -27,7 +27,7 @@ class _GryfSmartEntityBase(Entity):
         return self._device.name
 
 
-class GryfConfigFlowEntity(_GryfSmartEntityBase):
+class GryfBaseEntity(_EntityBase):
     """Gryf Config flow entity class."""
 
     _attr_has_entity_name = True
@@ -54,20 +54,3 @@ class GryfConfigFlowEntity(_GryfSmartEntityBase):
     def unique_id(self) -> str | None:
         """Return unique_id."""
         return f"{self._device.name} {self._config_entry.unique_id}"
-
-
-class GryfYamlEntity(_GryfSmartEntityBase):
-    """Gryf yaml entity class."""
-
-    _attr_has_entity_name = True
-    _device: _GryfDevice
-
-    def __init__(self, device: _GryfDevice) -> None:
-        """Init Gryf yaml entity."""
-        super().__init__()
-        self._device = device
-
-    @property
-    def unique_id(self) -> str | None:
-        """Return unique id."""
-        return self._device.name
