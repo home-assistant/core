@@ -44,7 +44,7 @@ from jinja2.sandbox import ImmutableSandboxedEnvironment
 from jinja2.utils import Namespace
 from lru import LRU
 import orjson
-from propcache import under_cached_property
+from propcache.api import under_cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -74,7 +74,7 @@ from homeassistant.loader import bind_hass
 from homeassistant.util import (
     convert,
     dt as dt_util,
-    location as loc_util,
+    location as location_util,
     slugify as slugify_util,
 )
 from homeassistant.util.async_ import run_callback_threadsafe
@@ -386,19 +386,19 @@ class RenderInfo:
     """Holds information about a template render."""
 
     __slots__ = (
-        "template",
-        "filter_lifecycle",
-        "filter",
         "_result",
-        "is_static",
-        "exception",
         "all_states",
         "all_states_lifecycle",
         "domains",
         "domains_lifecycle",
         "entities",
-        "rate_limit",
+        "exception",
+        "filter",
+        "filter_lifecycle",
         "has_time",
+        "is_static",
+        "rate_limit",
+        "template",
     )
 
     def __init__(self, template: Template) -> None:
@@ -507,17 +507,17 @@ class Template:
 
     __slots__ = (
         "__weakref__",
-        "template",
+        "_compiled",
+        "_compiled_code",
+        "_exc_info",
+        "_hash_cache",
+        "_limited",
+        "_log_fn",
+        "_renders",
+        "_strict",
         "hass",
         "is_static",
-        "_compiled_code",
-        "_compiled",
-        "_exc_info",
-        "_limited",
-        "_strict",
-        "_log_fn",
-        "_hash_cache",
-        "_renders",
+        "template",
     )
 
     def __init__(self, template: str, hass: HomeAssistant | None = None) -> None:
@@ -991,7 +991,7 @@ class StateTranslated:
 class DomainStates:
     """Class to expose a specific HA domain as attributes."""
 
-    __slots__ = ("_hass", "_domain")
+    __slots__ = ("_domain", "_hass")
 
     __setitem__ = _readonly
     __delitem__ = _readonly
@@ -1035,7 +1035,7 @@ class DomainStates:
 class TemplateStateBase(State):
     """Class to represent a state object in a template."""
 
-    __slots__ = ("_hass", "_collect", "_entity_id", "_state")
+    __slots__ = ("_collect", "_entity_id", "_hass", "_state")
 
     _state: State
 
@@ -1735,7 +1735,7 @@ def label_entities(hass: HomeAssistant, label_id_or_name: str) -> Iterable[str]:
     return [entry.entity_id for entry in entries]
 
 
-def closest(hass, *args):
+def closest(hass: HomeAssistant, *args: Any) -> State | None:
     """Find closest entity.
 
     Closest to home:
@@ -1775,20 +1775,23 @@ def closest(hass, *args):
             )
             return None
 
-        latitude = point_state.attributes.get(ATTR_LATITUDE)
-        longitude = point_state.attributes.get(ATTR_LONGITUDE)
+        latitude = point_state.attributes[ATTR_LATITUDE]
+        longitude = point_state.attributes[ATTR_LONGITUDE]
 
         entities = args[1]
 
     else:
-        latitude = convert(args[0], float)
-        longitude = convert(args[1], float)
+        latitude_arg = convert(args[0], float)
+        longitude_arg = convert(args[1], float)
 
-        if latitude is None or longitude is None:
+        if latitude_arg is None or longitude_arg is None:
             _LOGGER.warning(
                 "Closest:Received invalid coordinates: %s, %s", args[0], args[1]
             )
             return None
+
+        latitude = latitude_arg
+        longitude = longitude_arg
 
         entities = args[2]
 
@@ -1798,20 +1801,20 @@ def closest(hass, *args):
     return loc_helper.closest(latitude, longitude, states)
 
 
-def closest_filter(hass, *args):
+def closest_filter(hass: HomeAssistant, *args: Any) -> State | None:
     """Call closest as a filter. Need to reorder arguments."""
     new_args = list(args[1:])
     new_args.append(args[0])
     return closest(hass, *new_args)
 
 
-def distance(hass, *args):
+def distance(hass: HomeAssistant, *args: Any) -> float | None:
     """Calculate distance.
 
     Will calculate distance from home to a point or between points.
     Points can be passed in using state objects or lat/lng coordinates.
     """
-    locations = []
+    locations: list[tuple[float, float]] = []
 
     to_process = list(args)
 
@@ -1831,16 +1834,19 @@ def distance(hass, *args):
                 return None
 
             value_2 = to_process.pop(0)
-            latitude = convert(value, float)
-            longitude = convert(value_2, float)
+            latitude_to_process = convert(value, float)
+            longitude_to_process = convert(value_2, float)
 
-            if latitude is None or longitude is None:
+            if latitude_to_process is None or longitude_to_process is None:
                 _LOGGER.warning(
                     "Distance:Unable to process latitude and longitude: %s, %s",
                     value,
                     value_2,
                 )
                 return None
+
+            latitude = latitude_to_process
+            longitude = longitude_to_process
 
         else:
             if not loc_helper.has_location(point_state):
@@ -1849,8 +1855,8 @@ def distance(hass, *args):
                 )
                 return None
 
-            latitude = point_state.attributes.get(ATTR_LATITUDE)
-            longitude = point_state.attributes.get(ATTR_LONGITUDE)
+            latitude = point_state.attributes[ATTR_LATITUDE]
+            longitude = point_state.attributes[ATTR_LONGITUDE]
 
         locations.append((latitude, longitude))
 
@@ -1858,7 +1864,7 @@ def distance(hass, *args):
         return hass.config.distance(*locations[0])
 
     return hass.config.units.length(
-        loc_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
+        location_util.distance(*locations[0] + locations[1]), UnitOfLength.METERS
     )
 
 

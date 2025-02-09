@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from pydrawise import Hydrawise, Zone
+from pydrawise import HydrawiseBase, Zone
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -28,8 +28,8 @@ from .entity import HydrawiseEntity
 class HydrawiseSwitchEntityDescription(SwitchEntityDescription):
     """Describes Hydrawise binary sensor."""
 
-    turn_on_fn: Callable[[Hydrawise, Zone], Coroutine[Any, Any, None]]
-    turn_off_fn: Callable[[Hydrawise, Zone], Coroutine[Any, Any, None]]
+    turn_on_fn: Callable[[HydrawiseBase, Zone], Coroutine[Any, Any, None]]
+    turn_off_fn: Callable[[HydrawiseBase, Zone], Coroutine[Any, Any, None]]
     value_fn: Callable[[Zone], bool]
 
 

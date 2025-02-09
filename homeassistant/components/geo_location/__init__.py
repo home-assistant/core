@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE

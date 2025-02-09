@@ -6,11 +6,11 @@ from unittest.mock import patch
 from pysqueezebox import Server
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.squeezebox.const import CONF_HTTPS, DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -333,7 +333,7 @@ async def test_dhcp_discovery(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbccddeeff",
                 hostname="any",
@@ -355,7 +355,7 @@ async def test_dhcp_discovery_no_server_found(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbccddeeff",
                 hostname="any",
@@ -374,7 +374,7 @@ async def test_dhcp_discovery_existing_player(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 ip="1.1.1.1",
                 macaddress="aabbccddeeff",
                 hostname="any",

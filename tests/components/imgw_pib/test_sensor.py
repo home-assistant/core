@@ -76,6 +76,7 @@ async def test_remove_entity(
 ) -> None:
     """Test removing entity."""
     entity_id = "sensor.river_name_station_name_flood_alarm_level"
+    mock_config_entry.add_to_hass(hass)
 
     entity_registry.async_get_or_create(
         SENSOR_PLATFORM,
@@ -85,6 +86,7 @@ async def test_remove_entity(
         config_entry=mock_config_entry,
     )
 
-    await init_integration(hass, mock_config_entry)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert hass.states.get(entity_id) is None

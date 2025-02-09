@@ -6,7 +6,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final, NamedTuple, cast
 
-from propcache import cached_property
+from propcache.api import cached_property
 from sqlalchemy.engine.row import Row
 
 from homeassistant.components.recorder.filters import Filters

@@ -90,4 +90,6 @@ def _async_make_entity(
         "Relay Switch 1",
     ]:
         return SwitchBotCloudRelaySwitchSwitch(api, device, coordinator)
+    if "Bot" in device.device_type:
+        return SwitchBotCloudSwitch(api, device, coordinator)
     raise NotImplementedError(f"Unsupported device type: {device.device_type}")
