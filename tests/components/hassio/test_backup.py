@@ -733,8 +733,8 @@ async def test_agent_delete_backup(
         (
             SupervisorBadRequestError("blah"),
             {
-                "success": False,
-                "error": {"code": "unknown_error", "message": "Unknown error"},
+                "success": True,
+                "result": {"agent_errors": {"hassio.local": "blah"}},
             },
         ),
         (

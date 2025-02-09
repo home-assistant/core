@@ -3697,12 +3697,13 @@
 # ---
 # name: test_delete_with_errors[side_effect1-storage_data0]
   dict({
-    'error': dict({
-      'code': 'home_assistant_error',
-      'message': 'Boom!',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+        'domain.test': 'Boom!',
+      }),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
@@ -3757,12 +3758,13 @@
 # ---
 # name: test_delete_with_errors[side_effect1-storage_data1]
   dict({
-    'error': dict({
-      'code': 'home_assistant_error',
-      'message': 'Boom!',
-    }),
     'id': 1,
-    'success': False,
+    'result': dict({
+      'agent_errors': dict({
+        'domain.test': 'Boom!',
+      }),
+    }),
+    'success': True,
     'type': 'result',
   })
 # ---
