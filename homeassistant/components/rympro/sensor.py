@@ -39,14 +39,14 @@ SENSOR_DESCRIPTIONS: tuple[RymProSensorEntityDescription, ...] = (
     RymProSensorEntityDescription(
         key="monthly_consumption",
         translation_key="monthly_consumption",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
         value_key="monthly_consumption",
     ),
     RymProSensorEntityDescription(
         key="daily_consumption",
         translation_key="daily_consumption",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
         value_key="daily_consumption",
     ),
