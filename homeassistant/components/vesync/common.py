@@ -9,7 +9,7 @@ from pyvesync.vesyncswitch import VeSyncWallSwitch
 
 from homeassistant.core import HomeAssistant
 
-from .const import VeSyncHumidifierDevice
+from .const import DEV_TYPE_TO_HA, SKU_TO_BASE_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,10 @@ async def async_generate_device_list(
 def is_humidifier(device: VeSyncBaseDevice) -> bool:
     """Check if the device represents a humidifier."""
 
-    return isinstance(device, VeSyncHumidifierDevice)
+    return (
+        DEV_TYPE_TO_HA.get(SKU_TO_BASE_DEVICE.get(device.device_type, ""))
+        == "humidifier"
+    )
 
 
 def is_outlet(device: VeSyncBaseDevice) -> bool:

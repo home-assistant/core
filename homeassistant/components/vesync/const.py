@@ -1,12 +1,7 @@
 """Constants for VeSync Component."""
 
 from pyvesync.vesyncbulb import feature_dict as bulb_features
-from pyvesync.vesyncfan import (
-    VeSyncHumid200300S,
-    VeSyncSuperior6000S,
-    air_features,
-    humid_features,
-)
+from pyvesync.vesyncfan import air_features, humid_features
 from pyvesync.vesyncoutlet import outlet_config
 from pyvesync.vesyncswitch import feature_dict as switch_features
 
@@ -37,9 +32,6 @@ VS_HUMIDIFIER_MODE_HUMIDITY = "humidity"
 VS_HUMIDIFIER_MODE_MANUAL = "manual"
 VS_HUMIDIFIER_MODE_SLEEP = "sleep"
 
-VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
-"""Humidifier device types"""
-
 DEV_TYPE_TO_HA = {}
 
 for device_name, device in bulb_features.items():
@@ -51,6 +43,9 @@ for device_name, device in bulb_features.items():
 
 for device_name in air_features:
     DEV_TYPE_TO_HA[device_name] = "fan"
+
+for device_name in humid_features:
+    DEV_TYPE_TO_HA[device_name] = "humidifier"
 
 for device_name in outlet_config:
     DEV_TYPE_TO_HA[device_name] = "outlet"
