@@ -40,6 +40,8 @@ type OpowerConfigEntry = ConfigEntry[OpowerCoordinator]
 class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
     """Handle fetching Opower data, updating sensors and inserting statistics."""
 
+    config_entry: OpowerConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
