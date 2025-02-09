@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING
 from pynecil import IronOSUpdate, Pynecil
 
 from homeassistant.components import bluetooth
-from homeassistant.const import CONF_NAME, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
