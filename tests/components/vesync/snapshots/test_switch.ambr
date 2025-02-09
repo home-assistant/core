@@ -75,6 +75,44 @@
   list([
   ])
 # ---
+# name: test_switch_state[Air Purifier 300s][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '300s-purifier',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LAP-C301S-WAAA',
+      'model_id': None,
+      'name': 'Air Purifier 300s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Air Purifier 300s][entities]
+  list([
+  ])
+# ---
 # name: test_switch_state[Air Purifier 400s][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -265,6 +303,44 @@
   list([
   ])
 # ---
+# name: test_switch_state[Humidifier 300s][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '300s-humidifier4321',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LUH-A601S-WUSB',
+      'model_id': None,
+      'name': 'Humidifier 300s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Humidifier 300s][entities]
+  list([
+  ])
+# ---
 # name: test_switch_state[Humidifier 600S][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -303,7 +379,7 @@
   list([
   ])
 # ---
-# name: test_switch_state[Outlet][devices]
+# name: test_switch_state[Outlet 10A][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -318,16 +394,16 @@
       'identifiers': set({
         tuple(
           'vesync',
-          'outlet',
+          '10a-outlet',
         ),
       }),
       'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
-      'model': 'wifi-switch-1.3',
+      'model': 'ESW01-EU',
       'model_id': None,
-      'name': 'Outlet',
+      'name': 'Outlet 10A',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -337,7 +413,7 @@
     }),
   ])
 # ---
-# name: test_switch_state[Outlet][entities]
+# name: test_switch_state[Outlet 10A][entities]
   list([
     EntityRegistryEntrySnapshot({
       'aliases': set({
@@ -350,7 +426,7 @@
       'disabled_by': None,
       'domain': 'switch',
       'entity_category': None,
-      'entity_id': 'switch.outlet',
+      'entity_id': 'switch.outlet_10a',
       'has_entity_name': True,
       'hidden_by': None,
       'icon': None,
@@ -367,19 +443,185 @@
       'previous_unique_id': None,
       'supported_features': 0,
       'translation_key': None,
-      'unique_id': 'outlet-device_status',
+      'unique_id': '10a-outlet-device_status',
       'unit_of_measurement': None,
     }),
   ])
 # ---
-# name: test_switch_state[Outlet][switch.outlet]
+# name: test_switch_state[Outlet 10A][switch.outlet_10a]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'outlet',
-      'friendly_name': 'Outlet',
+      'friendly_name': 'Outlet 10A',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.outlet',
+    'entity_id': 'switch.outlet_10a',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[Outlet 7A][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '7a-outlet',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'wifi-switch-1.3',
+      'model_id': None,
+      'name': 'Outlet 7A',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Outlet 7A][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.outlet_7a',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+      'original_icon': None,
+      'original_name': None,
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': '7a-outlet-device_status',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Outlet 7A][switch.outlet_7a]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Outlet 7A',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.outlet_7a',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_state[Outlet Outdoor Plug][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'outdoor-outlet1',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'ESO15-TB',
+      'model_id': None,
+      'name': 'Outlet Outdoor Plug',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Outlet Outdoor Plug][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': None,
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'switch',
+      'entity_category': None,
+      'entity_id': 'switch.outlet_outdoor_plug',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': <SwitchDeviceClass.OUTLET: 'outlet'>,
+      'original_icon': None,
+      'original_name': None,
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'supported_features': 0,
+      'translation_key': None,
+      'unique_id': 'outdoor-outlet1-device_status',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_switch_state[Outlet Outdoor Plug][switch.outlet_outdoor_plug]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'outlet',
+      'friendly_name': 'Outlet Outdoor Plug',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.outlet_outdoor_plug',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

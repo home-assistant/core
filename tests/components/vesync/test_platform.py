@@ -38,7 +38,7 @@ async def test_entity_update(
         entry_id="1",
     )
 
-    mock_multiple_device_responses(requests_mock, ["Air Purifier 400s", "Outlet"])
+    mock_multiple_device_responses(requests_mock, ["Air Purifier 400s", "Outlet 7A"])
 
     expected_entities = [
         # From "Air Purifier 400s"
@@ -46,14 +46,14 @@ async def test_entity_update(
         "sensor.air_purifier_400s_filter_lifetime",
         "sensor.air_purifier_400s_air_quality",
         "sensor.air_purifier_400s_pm2_5",
-        # From Outlet
-        "switch.outlet",
-        "sensor.outlet_current_power",
-        "sensor.outlet_energy_use_today",
-        "sensor.outlet_energy_use_weekly",
-        "sensor.outlet_energy_use_monthly",
-        "sensor.outlet_energy_use_yearly",
-        "sensor.outlet_current_voltage",
+        # From "Outlet 7A"
+        "switch.outlet_7a",
+        "sensor.outlet_7a_current_power",
+        "sensor.outlet_7a_energy_use_today",
+        "sensor.outlet_7a_energy_use_weekly",
+        "sensor.outlet_7a_energy_use_monthly",
+        "sensor.outlet_7a_energy_use_yearly",
+        "sensor.outlet_7a_current_voltage",
     ]
 
     config_entry.add_to_hass(hass)
@@ -66,20 +66,20 @@ async def test_entity_update(
         assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
     assert hass.states.get("sensor.air_purifier_400s_air_quality").state == "5"
-    assert hass.states.get("sensor.outlet_current_voltage").state == "120.0"
-    assert hass.states.get("sensor.outlet_energy_use_weekly").state == "0"
+    assert hass.states.get("sensor.outlet_7a_current_voltage").state == "120.0"
+    assert hass.states.get("sensor.outlet_7a_energy_use_weekly").state == "0"
 
     # Update the mock responses
     mock_air_purifier_400s_update_response(requests_mock)
-    mock_outlet_energy_response(requests_mock, "Outlet", {"totalEnergy": 2.2})
-    mock_device_response(requests_mock, "Outlet", {"voltage": 129})
+    mock_outlet_energy_response(requests_mock, "Outlet 7A", {"totalEnergy": 2.2})
+    mock_device_response(requests_mock, "Outlet 7A", {"voltage": 129})
 
     freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(True)
 
     assert hass.states.get("sensor.air_purifier_400s_air_quality").state == "15"
-    assert hass.states.get("sensor.outlet_current_voltage").state == "129.0"
+    assert hass.states.get("sensor.outlet_7a_current_voltage").state == "129.0"
 
     # Test energy update
     # pyvesync only updates energy parameters once every 6 hours.
@@ -88,5 +88,5 @@ async def test_entity_update(
     await hass.async_block_till_done(True)
 
     assert hass.states.get("sensor.air_purifier_400s_air_quality").state == "15"
-    assert hass.states.get("sensor.outlet_current_voltage").state == "129.0"
-    assert hass.states.get("sensor.outlet_energy_use_weekly").state == "2.2"
+    assert hass.states.get("sensor.outlet_7a_current_voltage").state == "129.0"
+    assert hass.states.get("sensor.outlet_7a_energy_use_weekly").state == "2.2"

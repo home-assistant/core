@@ -188,6 +188,105 @@
     'state': 'on',
   })
 # ---
+# name: test_fan_state[Air Purifier 300s][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '300s-purifier',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LAP-C301S-WAAA',
+      'model_id': None,
+      'name': 'Air Purifier 300s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[Air Purifier 300s][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': set({
+      }),
+      'area_id': None,
+      'capabilities': dict({
+        'preset_modes': list([
+          'auto',
+          'sleep',
+        ]),
+      }),
+      'config_entry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'fan',
+      'entity_category': None,
+      'entity_id': 'fan.air_purifier_300s',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': None,
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'supported_features': <FanEntityFeature: 57>,
+      'translation_key': 'vesync',
+      'unique_id': '300s-purifier',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[Air Purifier 300s][fan.air_purifier_300s]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'child_lock': False,
+      'friendly_name': 'Air Purifier 300s',
+      'mode': 'manual',
+      'night_light': 'off',
+      'percentage': 33,
+      'percentage_step': 33.333333333333336,
+      'preset_mode': None,
+      'preset_modes': list([
+        'auto',
+        'sleep',
+      ]),
+      'screen_status': True,
+      'supported_features': <FanEntityFeature: 57>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.air_purifier_300s',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_fan_state[Air Purifier 400s][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -500,6 +599,44 @@
   list([
   ])
 # ---
+# name: test_fan_state[Humidifier 300s][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '300s-humidifier4321',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LUH-A601S-WUSB',
+      'model_id': None,
+      'name': 'Humidifier 300s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[Humidifier 300s][entities]
+  list([
+  ])
+# ---
 # name: test_fan_state[Humidifier 600S][devices]
   list([
     DeviceRegistryEntrySnapshot({
@@ -538,7 +675,7 @@
   list([
   ])
 # ---
-# name: test_fan_state[Outlet][devices]
+# name: test_fan_state[Outlet 10A][devices]
   list([
     DeviceRegistryEntrySnapshot({
       'area_id': None,
@@ -553,16 +690,16 @@
       'identifiers': set({
         tuple(
           'vesync',
-          'outlet',
+          '10a-outlet',
         ),
       }),
       'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'VeSync',
-      'model': 'wifi-switch-1.3',
+      'model': 'ESW01-EU',
       'model_id': None,
-      'name': 'Outlet',
+      'name': 'Outlet 10A',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
@@ -572,7 +709,83 @@
     }),
   ])
 # ---
-# name: test_fan_state[Outlet][entities]
+# name: test_fan_state[Outlet 10A][entities]
+  list([
+  ])
+# ---
+# name: test_fan_state[Outlet 7A][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '7a-outlet',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'wifi-switch-1.3',
+      'model_id': None,
+      'name': 'Outlet 7A',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[Outlet 7A][entities]
+  list([
+  ])
+# ---
+# name: test_fan_state[Outlet Outdoor Plug][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'outdoor-outlet1',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'ESO15-TB',
+      'model_id': None,
+      'name': 'Outlet Outdoor Plug',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_fan_state[Outlet Outdoor Plug][entities]
   list([
   ])
 # ---

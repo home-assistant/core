@@ -13,6 +13,16 @@
         "configModule": "configModule"
       },
       {
+        "cid": "300s-humidifier",
+        "deviceType": "LUH-A601S-WUSB",
+        "deviceName": "Humidifier 300s",
+        "subDeviceNo": 4321,
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "uuid": "00000000-1111-2222-3333-666666666666",
+        "configModule": "configModule"
+      },
+      {
         "cid": "600s-humidifier",
         "deviceType": "LUH-A602S-WUS",
         "deviceName": "Humidifier 600S",
@@ -45,6 +55,16 @@
         "configModule": "configModule"
       },
       {
+        "cid": "300s-purifier",
+        "deviceType": "LAP-C301S-WAAA",
+        "deviceName": "Air Purifier 300s",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "type": "wifi-air",
+        "connectionStatus": "online",
+        "configModule": "configModule"
+      },
+      {
         "cid": "400s-purifier",
         "deviceType": "LAP-C401S-WJP",
         "deviceName": "Air Purifier 400s",
@@ -60,6 +80,15 @@
         "deviceName": "Air Purifier 600s",
         "subDeviceNo": null,
         "type": "wifi-air",
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "configModule": "configModule"
+      },
+      {
+        "cid": "smarttowerfan",
+        "deviceType": "LTF-F422S-KEU",
+        "deviceName": "SmartTowerFan",
+        "subDeviceNo": null,
         "deviceStatus": "on",
         "connectionStatus": "online",
         "configModule": "configModule"
@@ -83,10 +112,28 @@
         "configModule": "configModule"
       },
       {
-        "cid": "outlet",
+        "cid": "7a-outlet",
         "deviceType": "wifi-switch-1.3",
-        "deviceName": "Outlet",
+        "deviceName": "Outlet 7A",
         "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "configModule": "configModule"
+      },
+      {
+        "cid": "10a-outlet",
+        "deviceType": "ESW01-EU",
+        "deviceName": "Outlet 10A",
+        "subDeviceNo": null,
+        "deviceStatus": "on",
+        "connectionStatus": "online",
+        "configModule": "configModule"
+      },
+      {
+        "cid": "outdoor-outlet",
+        "deviceType": "ESO15-TB",
+        "deviceName": "Outlet Outdoor Plug",
+        "subDeviceNo": 1,
         "deviceStatus": "on",
         "connectionStatus": "online",
         "configModule": "configModule"
@@ -104,15 +151,6 @@
         "cid": "dimmable-switch",
         "deviceType": "ESWD16",
         "deviceName": "Dimmer Switch",
-        "subDeviceNo": null,
-        "deviceStatus": "on",
-        "connectionStatus": "online",
-        "configModule": "configModule"
-      },
-      {
-        "cid": "smarttowerfan",
-        "deviceType": "LTF-F422S-KEU",
-        "deviceName": "SmartTowerFan",
         "subDeviceNo": null,
         "deviceStatus": "on",
         "connectionStatus": "online",
