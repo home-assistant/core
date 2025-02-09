@@ -94,6 +94,7 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="Teslemetry Energy Site Live",
             update_interval=ENERGY_LIVE_INTERVAL,
         )
@@ -139,6 +140,7 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="Teslemetry Energy Site Info",
             update_interval=ENERGY_INFO_INTERVAL,
         )
@@ -173,6 +175,7 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=f"Teslemetry Energy History {api.energy_site_id}",
             update_interval=ENERGY_HISTORY_INTERVAL,
         )
