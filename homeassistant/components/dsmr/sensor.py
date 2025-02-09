@@ -138,7 +138,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="electricity_used_tariff_3",
         translation_key="electricity_used_tariff_3",
-        obis_reference=obis_references.ELECTRICITY_USED_TARIFF_3,
+        obis_reference="ELECTRICITY_USED_TARIFF_3",
         dsmr_versions={"5EONHU"},
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
@@ -147,7 +147,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="electricity_used_tariff_4",
         translation_key="electricity_used_tariff_4",
-        obis_reference=obis_references.ELECTRICITY_USED_TARIFF_4,
+        obis_reference="ELECTRICITY_USED_TARIFF_4",
         dsmr_versions={"5EONHU"},
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
@@ -172,7 +172,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="electricity_delivered_tariff_3",
         translation_key="electricity_delivered_tariff_3",
-        obis_reference=obis_references.ELECTRICITY_DELIVERED_TARIFF_3,
+        obis_reference="ELECTRICITY_DELIVERED_TARIFF_3",
         dsmr_versions={"5EONHU"},
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
@@ -181,7 +181,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="electricity_delivered_tariff_4",
         translation_key="electricity_delivered_tariff_4",
-        obis_reference=obis_references.ELECTRICITY_DELIVERED_TARIFF_4,
+        obis_reference="ELECTRICITY_DELIVERED_TARIFF_4",
         dsmr_versions={"5EONHU"},
         force_update=True,
         device_class=SensorDeviceClass.ENERGY,
@@ -426,7 +426,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="eon_hu_actual_switch_position",
         translation_key="actual_switch_position",
-        obis_reference=obis_references.ACTUAL_SWITCH_POSITION,
+        obis_reference="ACTUAL_SWITCH_POSITION",
         dsmr_versions={"5EONHU"},
         device_class=SensorDeviceClass.ENUM,
         options=["on", "off"],
@@ -435,7 +435,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="eon_hu_actual_treshold_electricity",
         translation_key="actual_treshold_electricity",
-        obis_reference=obis_references.BELGIUM_MAX_POWER_PER_PHASE,
+        obis_reference="BELGIUM_MAX_POWER_PER_PHASE",
         dsmr_versions={"5EONHU"},
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
@@ -445,7 +445,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="eon_hu_electricity_combined",
         translation_key="electricity_combined",
-        obis_reference=obis_references.EON_HU_ELECTRICITY_COMBINED,
+        obis_reference="EON_HU_ELECTRICITY_COMBINED",
         dsmr_versions={"5EONHU"},
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
@@ -453,7 +453,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="eon_hu_instantaneous_power_factor_total",
         translation_key="instantaneous_power_factor_total",
-        obis_reference=obis_references.EON_HU_INSTANTANEOUS_POWER_FACTOR_TOTAL,
+        obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_TOTAL",
         dsmr_versions={"5EONHU"},
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER_FACTOR,
@@ -463,7 +463,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="eon_hu_instantaneous_power_factor_l1",
         translation_key="instantaneous_power_factor_l1",
-        obis_reference=obis_references.EON_HU_INSTANTANEOUS_POWER_FACTOR_L1,
+        obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_L1",
         dsmr_versions={"5EONHU"},
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER_FACTOR,
@@ -473,7 +473,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="eon_hu_instantaneous_power_factor_l2",
         translation_key="instantaneous_power_factor_l2",
-        obis_reference=obis_references.EON_HU_INSTANTANEOUS_POWER_FACTOR_L2,
+        obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_L2",
         dsmr_versions={"5EONHU"},
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER_FACTOR,
@@ -483,7 +483,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="eon_hu_instantaneous_power_factor_l3",
         translation_key="instantaneous_power_factor_l3",
-        obis_reference=obis_references.EON_HU_INSTANTANEOUS_POWER_FACTOR_L3,
+        obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_L3",
         dsmr_versions={"5EONHU"},
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.POWER_FACTOR,
@@ -493,7 +493,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="eon_hu_frequency",
         translation_key="frequency",
-        obis_reference=obis_references.EON_HU_FREQUENCY,
+        obis_reference="EON_HU_FREQUENCY",
         dsmr_versions={"5EONHU"},
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.FREQUENCY,
@@ -503,7 +503,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="eon_hu_max_power_on_l1",
         translation_key="max_power_on_l1",
-        obis_reference=obis_references.BELGIUM_MAX_CURRENT_PER_PHASE,
+        obis_reference="BELGIUM_MAX_CURRENT_PER_PHASE",
         dsmr_versions={"5EONHU"},
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
@@ -513,7 +513,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="eon_hu_max_power_on_l2",
         translation_key="max_power_on_l2",
-        obis_reference=obis_references.EON_HU_MAX_POWER_ON_L2,
+        obis_reference="EON_HU_MAX_POWER_ON_L2",
         dsmr_versions={"5EONHU"},
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
@@ -523,7 +523,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="eon_hu_max_power_on_l3",
         translation_key="max_power_on_l3",
-        obis_reference=obis_references.EON_HU_MAX_POWER_ON_L3,
+        obis_reference="EON_HU_MAX_POWER_ON_L3",
         dsmr_versions={"5EONHU"},
         device_class=SensorDeviceClass.CURRENT,
         entity_registry_enabled_default=False,
@@ -533,12 +533,12 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="text_message",
         translation_key="text_message",
-        obis_reference=obis_references.TEXT_MESSAGE,
+        obis_reference="TEXT_MESSAGE",
         dsmr_versions={"5EONHU"},
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-    ),
+    )
 )
 
 SENSORS_MBUS_DEVICE_TYPE: dict[int, tuple[DSMRSensorEntityDescription, ...]] = {
@@ -996,7 +996,7 @@ class DSMREntity(SensorEntity):
         # DSMR V5B: Note: In Belgium values are swapped:
         # DSMR V5EONHU: Note: In EON HUngary values are swapped:
         # Rate code 2 is used for low rate and rate code 1 is used for normal rate.
-        if dsmr_version == "5B" or dsmr_version == "5EONHU":
+        if dsmr_version in ('5B', '5EONHU'):
             if value == "0001":
                 value = "0002"
             elif value == "0002":
