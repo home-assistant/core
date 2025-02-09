@@ -242,7 +242,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
-    'original_icon': None,
+    'original_icon': 'mdi:water-outline',
     'original_name': 'Daily active water use',
     'platform': 'hydrawise',
     'previous_unique_id': None,

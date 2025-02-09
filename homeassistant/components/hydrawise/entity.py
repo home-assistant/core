@@ -29,12 +29,12 @@ class HydrawiseEntity(CoordinatorEntity[HydrawiseDataUpdateCoordinator]):
         sensor_id: int | None = None,
     ) -> None:
         """Initialize the Hydrawise entity."""
-        super().__init__(coordinator=coordinator)
+        self._device_id = str(zone_id) if zone_id is not None else str(controller.id)
+        super().__init__(coordinator=coordinator, context=self._device_id)
         self.entity_description = description
         self.controller = controller
         self.zone_id = zone_id
         self.sensor_id = sensor_id
-        self._device_id = str(zone_id) if zone_id is not None else str(controller.id)
         self._attr_unique_id = f"{self._device_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device_id)},
