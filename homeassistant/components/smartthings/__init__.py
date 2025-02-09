@@ -39,7 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         entry.data[CONF_ACCESS_TOKEN], session=async_get_clientsession(hass)
     )
 
-    devices = await client.get_devices(location_ids=[entry.data[CONF_LOCATION_ID]])
+    try:
+        devices = await client.get_devices(location_ids=[entry.data[CONF_LOCATION_ID]])
+    except Exception:
+        _LOGGER.exception("Failed to fetch devices")
+        return True
 
     coordinators = [
         SmartThingsDeviceCoordinator(hass, entry, client, device) for device in devices

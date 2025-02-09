@@ -46,7 +46,7 @@ class SmartThingsDeviceCoordinator(
             logger=_LOGGER,
             config_entry=config_entry,
             name=device.name,
-            update_interval=timedelta(seconds=30),
+            update_interval=timedelta(minutes=2),
         )
         self.client = client
         self.device = device
