@@ -43,7 +43,9 @@ class OmadaFirmwareUpdateCoordinator(OmadaCoordinator[FirmwareUpdateStatus]):  #
         devices_coordinator: OmadaDevicesCoordinator,
     ) -> None:
         """Initialize my coordinator."""
-        super().__init__(hass, omada_client, "Firmware Updates", poll_delay=None)
+        super().__init__(
+            hass, config_entry, omada_client, "Firmware Updates", poll_delay=None
+        )
 
         self._devices_coordinator = devices_coordinator
         self._config_entry = config_entry

@@ -12,7 +12,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RokuConfigEntry
+from .coordinator import RokuConfigEntry
 from .entity import RokuEntity
 
 # Coordinator is used to centralize the data updates

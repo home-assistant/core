@@ -10,6 +10,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
+from .coordinator import FireServiceRotaClient, FireServiceUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,15 +33,20 @@ class ResponseSwitch(SwitchEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "incident_response"
 
-    def __init__(self, coordinator, client, entry):
+    def __init__(
+        self,
+        coordinator: FireServiceUpdateCoordinator,
+        client: FireServiceRotaClient,
+        entry: ConfigEntry,
+    ) -> None:
         """Initialize."""
         self._coordinator = coordinator
         self._client = client
         self._attr_unique_id = f"{entry.unique_id}_Response"
         self._entry_id = entry.entry_id
 
-        self._state = None
-        self._state_attributes = {}
+        self._state: bool | None = None
+        self._state_attributes: dict[str, Any] = {}
         self._state_icon = None
 
     @property
@@ -54,7 +60,7 @@ class ResponseSwitch(SwitchEntity):
         return "mdi:forum"
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Get the assumed state of the switch."""
         return self._state
 

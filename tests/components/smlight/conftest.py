@@ -18,7 +18,8 @@ from tests.common import (
     load_json_object_fixture,
 )
 
-MOCK_HOST = "slzb-06.local"
+MOCK_DEVICE_NAME = "slzb-06"
+MOCK_HOST = "192.168.1.161"
 MOCK_USERNAME = "test-user"
 MOCK_PASSWORD = "test-pass"
 
@@ -91,7 +92,10 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
             """Return the firmware version."""
             fw_list = []
             if kwargs.get("mode") == "zigbee":
-                fw_list = load_json_array_fixture("zb_firmware.json", DOMAIN)
+                if kwargs.get("zb_type") == 0:
+                    fw_list = load_json_array_fixture("zb_firmware.json", DOMAIN)
+                else:
+                    fw_list = load_json_array_fixture("zb_firmware_router.json", DOMAIN)
             else:
                 fw_list = load_json_array_fixture("esp_firmware.json", DOMAIN)
 

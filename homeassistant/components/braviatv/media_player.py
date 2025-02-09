@@ -18,8 +18,8 @@ from homeassistant.components.media_player import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BraviaTVConfigEntry
 from .const import SourceType
+from .coordinator import BraviaTVConfigEntry
 from .entity import BraviaTVEntity
 
 

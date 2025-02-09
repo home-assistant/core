@@ -17,9 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SlideConfigEntry
 from .const import DOMAIN
-from .coordinator import SlideCoordinator
+from .coordinator import SlideConfigEntry, SlideCoordinator
 from .entity import SlideEntity
 
 PARALLEL_UPDATES = 1

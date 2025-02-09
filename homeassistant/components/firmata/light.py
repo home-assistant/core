@@ -11,8 +11,9 @@ from homeassistant.const import CONF_MAXIMUM, CONF_MINIMUM, CONF_NAME, CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
+from . import FirmataConfigEntry
 from .board import FirmataPinType
-from .const import CONF_INITIAL_STATE, CONF_PIN_MODE, DOMAIN
+from .const import CONF_INITIAL_STATE, CONF_PIN_MODE
 from .entity import FirmataPinEntity
 from .pin import FirmataBoardPin, FirmataPinUsedException, FirmataPWMOutput
 
@@ -21,13 +22,13 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: FirmataConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Firmata lights."""
     new_entities = []
 
-    board = hass.data[DOMAIN][config_entry.entry_id]
+    board = config_entry.runtime_data
     for light in board.lights:
         pin = light[CONF_PIN]
         pin_mode = light[CONF_PIN_MODE]

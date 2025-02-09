@@ -23,12 +23,13 @@ class FlexitCoordinator(DataUpdateCoordinator[FlexitBACnet]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, device_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}_{device_id}",
+            config_entry=config_entry,
+            name=f"{DOMAIN}_{config_entry.data[CONF_DEVICE_ID]}",
             update_interval=timedelta(seconds=60),
         )
 

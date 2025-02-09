@@ -6,7 +6,7 @@ from datetime import datetime
 import logging
 from typing import overload
 
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 

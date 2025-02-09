@@ -104,6 +104,7 @@ async def integration_fixture(
         "pressure_sensor",
         "room_airconditioner",
         "silabs_dishwasher",
+        "silabs_laundrywasher",
         "smoke_detector",
         "switch_unit",
         "temperature_sensor",
@@ -115,6 +116,7 @@ async def integration_fixture(
         "window_covering_pa_lift",
         "window_covering_pa_tilt",
         "window_covering_tilt",
+        "yandex_smart_socket",
     ]
 )
 async def matter_devices(

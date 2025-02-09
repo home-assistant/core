@@ -4,8 +4,9 @@ from datetime import datetime, timedelta
 from unittest.mock import patch
 
 from freezegun import freeze_time
+from pysmhi import SMHIForecast, SmhiForecastException
+from pysmhi.const import API_POINT_FORECAST
 import pytest
-from smhi.smhi_lib import APIURL_TEMPLATE, SmhiForecast, SmhiForecastException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.smhi.const import ATTR_SMHI_THUNDER_PROBABILITY
@@ -44,7 +45,7 @@ async def test_setup_hass(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test for successfully setting up the smhi integration."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)
@@ -54,7 +55,7 @@ async def test_setup_hass(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.call_count == 1
 
     #  Testing the actual entity state for
     #  deeper testing than normal unity test
@@ -75,7 +76,7 @@ async def test_clear_night(
     """Test for successfully setting up the smhi integration."""
     hass.config.latitude = "59.32624"
     hass.config.longitude = "17.84197"
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
     )
     aioclient_mock.get(uri, text=api_response_night)
@@ -85,7 +86,7 @@ async def test_clear_night(
 
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
-    assert aioclient_mock.call_count == 2
+    assert aioclient_mock.call_count == 1
 
     state = hass.states.get(ENTITY_ID)
 
@@ -109,7 +110,7 @@ async def test_properties_no_data(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.smhi.weather.Smhi.async_get_forecast",
+        "homeassistant.components.smhi.weather.SMHIPointForecast.async_get_daily_forecast",
         side_effect=SmhiForecastException("boom"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -134,61 +135,77 @@ async def test_properties_no_data(hass: HomeAssistant) -> None:
 
 async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
     """Test behaviour when unknown symbol from API."""
-    data = SmhiForecast(
-        temperature=5,
-        temperature_max=10,
-        temperature_min=0,
-        humidity=5,
-        pressure=1008,
-        thunder=0,
-        cloudiness=52,
-        precipitation=1,
-        wind_direction=180,
-        wind_speed=10,
-        horizontal_visibility=6,
-        wind_gust=1.5,
-        mean_precipitation=0.5,
-        total_precipitation=1,
+    data = SMHIForecast(
+        frozen_precipitation=0,
+        high_cloud=100,
+        humidity=96,
+        low_cloud=100,
+        max_precipitation=0.0,
+        mean_precipitation=0.0,
+        median_precipitation=0.0,
+        medium_cloud=75,
+        min_precipitation=0.0,
+        precipitation_category=0,
+        pressure=1018.9,
         symbol=100,  # Faulty symbol
-        valid_time=datetime(2018, 1, 1, 0, 1, 2),
+        temperature=1.0,
+        temperature_max=1.0,
+        temperature_min=1.0,
+        thunder=0,
+        total_cloud=100,
+        valid_time=datetime(2018, 1, 1, 0, 0, 0),
+        visibility=8.8,
+        wind_direction=114,
+        wind_gust=5.8,
+        wind_speed=2.5,
     )
-
-    data2 = SmhiForecast(
-        temperature=5,
-        temperature_max=10,
-        temperature_min=0,
-        humidity=5,
-        pressure=1008,
-        thunder=0,
-        cloudiness=52,
-        precipitation=1,
-        wind_direction=180,
-        wind_speed=10,
-        horizontal_visibility=6,
-        wind_gust=1.5,
-        mean_precipitation=0.5,
-        total_precipitation=1,
+    data2 = SMHIForecast(
+        frozen_precipitation=0,
+        high_cloud=100,
+        humidity=96,
+        low_cloud=100,
+        max_precipitation=0.0,
+        mean_precipitation=0.0,
+        median_precipitation=0.0,
+        medium_cloud=75,
+        min_precipitation=0.0,
+        precipitation_category=0,
+        pressure=1018.9,
         symbol=100,  # Faulty symbol
-        valid_time=datetime(2018, 1, 1, 12, 1, 2),
+        temperature=1.0,
+        temperature_max=1.0,
+        temperature_min=1.0,
+        thunder=0,
+        total_cloud=100,
+        valid_time=datetime(2018, 1, 1, 12, 0, 0),
+        visibility=8.8,
+        wind_direction=114,
+        wind_gust=5.8,
+        wind_speed=2.5,
     )
-
-    data3 = SmhiForecast(
-        temperature=5,
-        temperature_max=10,
-        temperature_min=0,
-        humidity=5,
-        pressure=1008,
-        thunder=0,
-        cloudiness=52,
-        precipitation=1,
-        wind_direction=180,
-        wind_speed=10,
-        horizontal_visibility=6,
-        wind_gust=1.5,
-        mean_precipitation=0.5,
-        total_precipitation=1,
+    data3 = SMHIForecast(
+        frozen_precipitation=0,
+        high_cloud=100,
+        humidity=96,
+        low_cloud=100,
+        max_precipitation=0.0,
+        mean_precipitation=0.0,
+        median_precipitation=0.0,
+        medium_cloud=75,
+        min_precipitation=0.0,
+        precipitation_category=0,
+        pressure=1018.9,
         symbol=100,  # Faulty symbol
-        valid_time=datetime(2018, 1, 2, 12, 1, 2),
+        temperature=1.0,
+        temperature_max=1.0,
+        temperature_min=1.0,
+        thunder=0,
+        total_cloud=100,
+        valid_time=datetime(2018, 1, 2, 0, 0, 0),
+        visibility=8.8,
+        wind_direction=114,
+        wind_gust=5.8,
+        wind_speed=2.5,
     )
 
     testdata = [data, data2, data3]
@@ -198,11 +215,11 @@ async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.smhi.weather.Smhi.async_get_forecast",
+            "homeassistant.components.smhi.weather.SMHIPointForecast.async_get_daily_forecast",
             return_value=testdata,
         ),
         patch(
-            "homeassistant.components.smhi.weather.Smhi.async_get_forecast_hour",
+            "homeassistant.components.smhi.weather.SMHIPointForecast.async_get_hourly_forecast",
             return_value=None,
         ),
     ):
@@ -237,7 +254,7 @@ async def test_refresh_weather_forecast_retry(
     now = dt_util.utcnow()
 
     with patch(
-        "homeassistant.components.smhi.weather.Smhi.async_get_forecast",
+        "homeassistant.components.smhi.weather.SMHIPointForecast.async_get_daily_forecast",
         side_effect=error,
     ) as mock_get_forecast:
         await hass.config_entries.async_setup(entry.entry_id)
@@ -352,7 +369,7 @@ async def test_custom_speed_unit(
     api_response: str,
 ) -> None:
     """Test Wind Gust speed with custom unit."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)
@@ -389,7 +406,7 @@ async def test_forecast_services(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test multiple forecast."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)
@@ -440,7 +457,7 @@ async def test_forecast_services(
     assert msg["type"] == "event"
     forecast1 = msg["event"]["forecast"]
 
-    assert len(forecast1) == 72
+    assert len(forecast1) == 52
     assert forecast1[0] == snapshot
     assert forecast1[6] == snapshot
 
@@ -453,7 +470,7 @@ async def test_forecast_services_lack_of_data(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test forecast lacking data."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
     )
     aioclient_mock.get(uri, text=api_response_lack_data)
@@ -498,7 +515,7 @@ async def test_forecast_service(
     service: str,
 ) -> None:
     """Test forecast service."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)

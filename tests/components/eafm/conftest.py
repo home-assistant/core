@@ -15,5 +15,5 @@ def mock_get_stations():
 @pytest.fixture
 def mock_get_station():
     """Mock aioeafm.get_station."""
-    with patch("homeassistant.components.eafm.get_station") as patched:
+    with patch("homeassistant.components.eafm.coordinator.get_station") as patched:
         yield patched

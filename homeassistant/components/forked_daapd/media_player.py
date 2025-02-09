@@ -31,7 +31,6 @@ from homeassistant.components.spotify import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -58,7 +57,6 @@ from .const import (
     DEFAULT_UNMUTE_VOLUME,
     DOMAIN,
     FD_NAME,
-    HASS_DATA_REMOVE_LISTENERS_KEY,
     HASS_DATA_UPDATER_KEY,
     KNOWN_PIPES,
     PIPE_FUNCTION_MAP,
@@ -76,11 +74,9 @@ from .const import (
     SUPPORTED_FEATURES_ZONE,
     TTS_TIMEOUT,
 )
+from .coordinator import ForkedDaapdUpdater
 
 _LOGGER = logging.getLogger(__name__)
-
-WS_NOTIFY_EVENT_TYPES = ["player", "outputs", "volume", "options", "queue", "database"]
-WEBSOCKET_RECONNECT_TIME = 30  # seconds
 
 
 async def async_setup_entry(
@@ -110,19 +106,16 @@ async def async_setup_entry(
             ForkedDaapdZone(api, output, config_entry.entry_id) for output in outputs
         )
 
-    remove_add_zones_listener = async_dispatcher_connect(
-        hass, SIGNAL_ADD_ZONES.format(config_entry.entry_id), async_add_zones
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, SIGNAL_ADD_ZONES.format(config_entry.entry_id), async_add_zones
+        )
     )
-    remove_entry_listener = config_entry.add_update_listener(update_listener)
+    config_entry.async_on_unload(config_entry.add_update_listener(update_listener))
 
     if not hass.data.get(DOMAIN):
         hass.data[DOMAIN] = {config_entry.entry_id: {}}
-    hass.data[DOMAIN][config_entry.entry_id] = {
-        HASS_DATA_REMOVE_LISTENERS_KEY: [
-            remove_add_zones_listener,
-            remove_entry_listener,
-        ]
-    }
+
     async_add_entities([forked_daapd_master], False)
     forked_daapd_updater = ForkedDaapdUpdater(
         hass, forked_daapd_api, config_entry.entry_id
@@ -901,122 +894,3 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         if url := result.get("artwork_url"):
             return await self._async_fetch_image(self.api.full_url(url))
         return None, None
-
-
-class ForkedDaapdUpdater:
-    """Manage updates for the forked-daapd device."""
-
-    def __init__(self, hass, api, entry_id):
-        """Initialize."""
-        self.hass = hass
-        self._api = api
-        self.websocket_handler = None
-        self._all_output_ids = set()
-        self._entry_id = entry_id
-
-    async def async_init(self):
-        """Perform async portion of class initialization."""
-        if not (server_config := await self._api.get_request("config")):
-            raise PlatformNotReady
-        if websocket_port := server_config.get("websocket_port"):
-            self.websocket_handler = asyncio.create_task(
-                self._api.start_websocket_handler(
-                    websocket_port,
-                    WS_NOTIFY_EVENT_TYPES,
-                    self._update,
-                    WEBSOCKET_RECONNECT_TIME,
-                    self._disconnected_callback,
-                )
-            )
-        else:
-            _LOGGER.error("Invalid websocket port")
-
-    async def _disconnected_callback(self):
-        """Send update signals when the websocket gets disconnected."""
-        async_dispatcher_send(
-            self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), False
-        )
-        async_dispatcher_send(
-            self.hass, SIGNAL_UPDATE_OUTPUTS.format(self._entry_id), []
-        )
-
-    async def _update(self, update_types):
-        """Private update method."""
-        update_types = set(update_types)
-        update_events = {}
-        _LOGGER.debug("Updating %s", update_types)
-        if (
-            "queue" in update_types
-        ):  # update queue, queue before player for async_play_media
-            if queue := await self._api.get_request("queue"):
-                update_events["queue"] = asyncio.Event()
-                async_dispatcher_send(
-                    self.hass,
-                    SIGNAL_UPDATE_QUEUE.format(self._entry_id),
-                    queue,
-                    update_events["queue"],
-                )
-        # order of below don't matter
-        if not {"outputs", "volume"}.isdisjoint(update_types):  # update outputs
-            if outputs := await self._api.get_request("outputs"):
-                outputs = outputs["outputs"]
-                update_events["outputs"] = (
-                    asyncio.Event()
-                )  # only for master, zones should ignore
-                async_dispatcher_send(
-                    self.hass,
-                    SIGNAL_UPDATE_OUTPUTS.format(self._entry_id),
-                    outputs,
-                    update_events["outputs"],
-                )
-                self._add_zones(outputs)
-        if not {"database"}.isdisjoint(update_types):
-            pipes, playlists = await asyncio.gather(
-                self._api.get_pipes(), self._api.get_playlists()
-            )
-            update_events["database"] = asyncio.Event()
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_UPDATE_DATABASE.format(self._entry_id),
-                pipes,
-                playlists,
-                update_events["database"],
-            )
-        if not {"update", "config"}.isdisjoint(update_types):  # not supported
-            _LOGGER.debug("update/config notifications neither requested nor supported")
-        if not {"player", "options", "volume"}.isdisjoint(
-            update_types
-        ):  # update player
-            if player := await self._api.get_request("player"):
-                update_events["player"] = asyncio.Event()
-                if update_events.get("queue"):
-                    await update_events[
-                        "queue"
-                    ].wait()  # make sure queue done before player for async_play_media
-                async_dispatcher_send(
-                    self.hass,
-                    SIGNAL_UPDATE_PLAYER.format(self._entry_id),
-                    player,
-                    update_events["player"],
-                )
-        if update_events:
-            await asyncio.wait(
-                [asyncio.create_task(event.wait()) for event in update_events.values()]
-            )  # make sure callbacks done before update
-            async_dispatcher_send(
-                self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), True
-            )
-
-    def _add_zones(self, outputs):
-        outputs_to_add = []
-        for output in outputs:
-            if output["id"] not in self._all_output_ids:
-                self._all_output_ids.add(output["id"])
-                outputs_to_add.append(output)
-        if outputs_to_add:
-            async_dispatcher_send(
-                self.hass,
-                SIGNAL_ADD_ZONES.format(self._entry_id),
-                self._api,
-                outputs_to_add,
-            )

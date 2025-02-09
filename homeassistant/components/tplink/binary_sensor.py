@@ -36,6 +36,10 @@ BINARY_SENSOR_DESCRIPTIONS: Final = (
         device_class=BinarySensorDeviceClass.PROBLEM,
     ),
     TPLinkBinarySensorEntityDescription(
+        key="overloaded",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    TPLinkBinarySensorEntityDescription(
         key="battery_low",
         device_class=BinarySensorDeviceClass.BATTERY,
     ),

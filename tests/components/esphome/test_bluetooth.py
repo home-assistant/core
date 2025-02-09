@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from homeassistant.components import bluetooth
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from .conftest import MockESPHomeDevice
 
@@ -46,6 +47,34 @@ async def test_bluetooth_connect_with_legacy_adv(
     await hass.async_block_till_done()
     scanner = bluetooth.async_scanner_by_source(hass, "11:22:33:44:55:AA")
     assert scanner.scanning is True
+
+
+async def test_bluetooth_device_linked_via_device(
+    hass: HomeAssistant,
+    mock_bluetooth_entry_with_raw_adv: MockESPHomeDevice,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the Bluetooth device is linked to the ESPHome device."""
+    scanner = bluetooth.async_scanner_by_source(hass, "11:22:33:44:55:AA")
+    assert scanner.connectable is True
+    entry = hass.config_entries.async_entry_for_domain_unique_id(
+        "bluetooth", "11:22:33:44:55:AA"
+    )
+    assert entry is not None
+    esp_device = device_registry.async_get_device(
+        connections={
+            (
+                dr.CONNECTION_NETWORK_MAC,
+                mock_bluetooth_entry_with_raw_adv.device_info.mac_address,
+            )
+        }
+    )
+    assert esp_device is not None
+    device = device_registry.async_get_device(
+        connections={(dr.CONNECTION_BLUETOOTH, "11:22:33:44:55:AA")}
+    )
+    assert device is not None
+    assert device.via_device_id == esp_device.id
 
 
 async def test_bluetooth_cleanup_on_remove_entry(

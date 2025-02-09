@@ -1,4 +1,7 @@
 {
+  "common": {
+    "account_locked_error": "The account is locked. Please follow the instructions in the manufacturer's app to unlock it"
+  },
   "config": {
     "step": {
       "user": {
@@ -31,6 +34,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "account_locked": "[%key:component::whirlpool::common::account_locked_error%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
@@ -84,6 +88,11 @@
       "end_time": {
         "name": "End time"
       }
+    }
+  },
+  "exceptions": {
+    "account_locked": {
+      "message": "[%key:component::whirlpool::common::account_locked_error%]"
     }
   }
 }

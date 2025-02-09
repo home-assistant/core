@@ -105,10 +105,8 @@ class MillHeater(MillBaseEntity, ClimateEntity):
         self, coordinator: MillDataUpdateCoordinator, device: mill.Heater
     ) -> None:
         """Initialize the thermostat."""
-
-        super().__init__(coordinator, device)
         self._attr_unique_id = device.device_id
-        self._update_attr(device)
+        super().__init__(coordinator, device)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""

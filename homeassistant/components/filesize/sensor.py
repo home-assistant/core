@@ -17,9 +17,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FileSizeConfigEntry
 from .const import DOMAIN
-from .coordinator import FileSizeCoordinator
+from .coordinator import FileSizeConfigEntry, FileSizeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -96,7 +96,7 @@ SUPPORTED_FEATURES_VOLUME = (
 PLAYABLE_SOURCES = (
     InputSource.FM,
     InputSource.AM,
-    InputSource.TUNER,
+    InputSource.DAB,
 )
 
 ATTR_PRESET = "preset"

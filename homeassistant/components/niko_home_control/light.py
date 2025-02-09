@@ -18,8 +18,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -110,13 +109,13 @@ class NikoHomeControlLight(NikoHomeControlEntity, LightEntity):
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
             self._attr_brightness = round(action.state * 2.55)
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
-        self._action.turn_on(round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55))
+        await self._action.turn_on(round(kwargs.get(ATTR_BRIGHTNESS, 255) / 2.55))
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        self._action.turn_off()
+        await self._action.turn_off()
 
     def update_state(self) -> None:
         """Handle updates from the controller."""

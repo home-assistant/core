@@ -39,6 +39,12 @@ from tests.common import MockConfigEntry
 @pytest.fixture
 def mock_models():
     """Mock the model list API."""
+    model_20_flash = Mock(
+        display_name="Gemini 2.0 Flash",
+        supported_generation_methods=["generateContent"],
+    )
+    model_20_flash.name = "models/gemini-2.0-flash"
+
     model_15_flash = Mock(
         display_name="Gemini 1.5 Flash",
         supported_generation_methods=["generateContent"],
@@ -58,7 +64,7 @@ def mock_models():
     model_10_pro.name = "models/gemini-pro"
     with patch(
         "homeassistant.components.google_generative_ai_conversation.config_flow.genai.list_models",
-        return_value=iter([model_15_flash, model_15_pro, model_10_pro]),
+        return_value=iter([model_20_flash, model_15_flash, model_15_pro, model_10_pro]),
     ):
         yield
 

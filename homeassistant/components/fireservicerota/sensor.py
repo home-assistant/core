@@ -11,6 +11,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .const import DATA_CLIENT, DOMAIN as FIRESERVICEROTA_DOMAIN
+from .coordinator import FireServiceRotaClient
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,13 +33,13 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
     _attr_has_entity_name = True
     _attr_translation_key = "incidents"
 
-    def __init__(self, client):
+    def __init__(self, client: FireServiceRotaClient) -> None:
         """Initialize."""
         self._client = client
         self._entry_id = self._client.entry_id
         self._attr_unique_id = f"{self._client.unique_id}_Incidents"
-        self._state = None
-        self._state_attributes = {}
+        self._state: str | None = None
+        self._state_attributes: dict[str, Any] = {}
 
     @property
     def icon(self) -> str:
@@ -52,7 +53,7 @@ class IncidentsSensor(RestoreEntity, SensorEntity):
         return "mdi:fire-truck"
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Return the state of the sensor."""
         return self._state
 

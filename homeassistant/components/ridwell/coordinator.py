@@ -29,7 +29,7 @@ class RidwellDataUpdateCoordinator(
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, *, name: str) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize."""
         # These will be filled in by async_initialize; we give them these defaults to
         # avoid arduous typing checks down the line:
@@ -37,7 +37,13 @@ class RidwellDataUpdateCoordinator(
         self.dashboard_url = ""
         self.user_id = ""
 
-        super().__init__(hass, LOGGER, name=name, update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=config_entry.title,
+            update_interval=UPDATE_INTERVAL,
+        )
 
     async def _async_update_data(self) -> dict[str, list[RidwellPickupEvent]]:
         """Fetch the latest data from the source."""

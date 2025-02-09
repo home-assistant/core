@@ -26,7 +26,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import BLU_TRV_TIMEOUT, DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -804,6 +804,7 @@ async def test_blu_trv_climate_set_temperature(
             "method": "Trv.SetTarget",
             "params": {"id": 0, "target_C": 28.0},
         },
+        BLU_TRV_TIMEOUT,
     )
 
     assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 28

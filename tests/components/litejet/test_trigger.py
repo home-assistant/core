@@ -11,7 +11,7 @@ import pytest
 from homeassistant import setup
 from homeassistant.components import automation
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import async_init_integration
 

@@ -55,6 +55,16 @@
         "name": "Target percentage"
       }
     },
+    "select": {
+      "charge_mode": {
+        "name": "Charge mode",
+        "state": {
+          "smart_charge": "Smart charge",
+          "max_charge": "Max charge",
+          "paused": "Paused"
+        }
+      }
+    },
     "sensor": {
       "status": {
         "name": "Status",

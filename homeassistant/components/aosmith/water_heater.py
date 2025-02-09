@@ -17,8 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AOSmithConfigEntry
-from .coordinator import AOSmithStatusCoordinator
+from .coordinator import AOSmithConfigEntry, AOSmithStatusCoordinator
 from .entity import AOSmithStatusEntity
 
 MODE_HA_TO_AOSMITH = {

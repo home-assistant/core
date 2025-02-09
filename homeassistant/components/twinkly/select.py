@@ -10,7 +10,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TwinklyConfigEntry, TwinklyCoordinator
+from .coordinator import TwinklyConfigEntry, TwinklyCoordinator
 from .entity import TwinklyEntity
 
 _LOGGER = logging.getLogger(__name__)

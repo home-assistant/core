@@ -592,6 +592,24 @@
       },
       "window_detection": {
         "name": "Open window detection"
+      },
+      "silence_alarm": {
+        "name": "Silence alarm"
+      },
+      "preheat_active": {
+        "name": "Preheat active"
+      },
+      "fault_alarm": {
+        "name": "Fault alarm"
+      },
+      "led_indicator": {
+        "name": "LED indicator"
+      },
+      "error_or_battery_low": {
+        "name": "Error or battery low"
+      },
+      "flow_switch": {
+        "name": "Flow switch"
       }
     },
     "button": {
@@ -612,6 +630,9 @@
       },
       "restart_device": {
         "name": "Restart device"
+      },
+      "frost_lock_reset": {
+        "name": "Frost lock reset"
       }
     },
     "climate": {
@@ -885,6 +906,144 @@
       },
       "fading_time": {
         "name": "Fading time"
+      },
+      "temperature_offset": {
+        "name": "Temperature offset"
+      },
+      "humidity_offset": {
+        "name": "Humidity offset"
+      },
+      "comfort_temperature_min": {
+        "name": "Comfort temperature min"
+      },
+      "comfort_temperature_max": {
+        "name": "Comfort temperature max"
+      },
+      "comfort_humidity_min": {
+        "name": "Comfort humidity min"
+      },
+      "comfort_humidity_max": {
+        "name": "Comfort humidity max"
+      },
+      "measurement_interval": {
+        "name": "Measurement interval"
+      },
+      "on_time": {
+        "name": "On time"
+      },
+      "alarm_duration": {
+        "name": "Alarm duration"
+      },
+      "max_set": {
+        "name": "Liquid max percentage"
+      },
+      "mini_set": {
+        "name": "Liquid minimal percentage"
+      },
+      "installation_height": {
+        "name": "Height from sensor to tank bottom"
+      },
+      "liquid_depth_max": {
+        "name": "Height from sensor to liquid level"
+      },
+      "interval_time": {
+        "name": "Interval time"
+      },
+      "target_distance": {
+        "name": "Target distance"
+      },
+      "hold_delay_time": {
+        "name": "Hold delay time"
+      },
+      "breath_detection_max": {
+        "name": "Breath detection max"
+      },
+      "breath_detection_min": {
+        "name": "Breath detection min"
+      },
+      "small_move_detection_max": {
+        "name": "Small move detection max"
+      },
+      "small_move_detection_min": {
+        "name": "Small move detection min"
+      },
+      "small_move_sensitivity": {
+        "name": "Small move sensitivity"
+      },
+      "breath_sensitivity": {
+        "name": "Breath sensitivity"
+      },
+      "entry_sensitivity": {
+        "name": "Entry sensitivity"
+      },
+      "entry_distance_indentation": {
+        "name": "Entry distance indentation"
+      },
+      "illuminance_threshold": {
+        "name": "Illuminance threshold"
+      },
+      "block_time": {
+        "name": "Block time"
+      },
+      "motion_sensitivity": {
+        "name": "Motion sensitivity"
+      },
+      "radar_sensitivity": {
+        "name": "Radar sensitivity"
+      },
+      "motionless_detection": {
+        "name": "Motionless detection"
+      },
+      "motionless_sensitivity": {
+        "name": "Motionless detection sensitivity"
+      },
+      "output_time": {
+        "name": "Output time"
+      },
+      "illuminance_interval": {
+        "name": "Illuminance interval"
+      },
+      "temperature_report_interval": {
+        "name": "Temperature report interval"
+      },
+      "humidity_report_interval": {
+        "name": "Humidity report interval"
+      },
+      "alarm_temperature_max": {
+        "name": "Alarm temperature max"
+      },
+      "alarm_temperature_min": {
+        "name": "Alarm temperature min"
+      },
+      "temperature_sensitivity": {
+        "name": "Temperature sensitivity"
+      },
+      "alarm_humidity_max": {
+        "name": "Alarm humidity max"
+      },
+      "alarm_humidity_min": {
+        "name": "Alarm humidity min"
+      },
+      "humidity_sensitivity": {
+        "name": "Humidity sensitivity"
+      },
+      "deadzone_temperature": {
+        "name": "Deadzone temperature"
+      },
+      "min_temperature": {
+        "name": "Min temperature"
+      },
+      "max_temperature": {
+        "name": "Max temperature"
+      },
+      "valve_countdown": {
+        "name": "Irrigation time"
+      },
+      "quantitative_watering": {
+        "name": "Quantitative watering"
+      },
+      "valve_duration": {
+        "name": "Irrigation duration"
       }
     },
     "select": {
@@ -1028,9 +1187,63 @@
       },
       "operation_mode": {
         "name": "Operation mode"
+      },
+      "device_mode": {
+        "name": "Device mode"
+      },
+      "pilot_wire_mode": {
+        "name": "Pilot wire mode"
+      },
+      "alarm_ringtone": {
+        "name": "Alarm ringtone"
+      },
+      "liquid_state": {
+        "name": "Liquid state"
+      },
+      "breaker_mode": {
+        "name": "Breaker mode"
+      },
+      "breaker_status": {
+        "name": "Breaker status"
+      },
+      "status_indication": {
+        "name": "Status indication"
+      },
+      "breaker_polarity": {
+        "name": "Breaker polarity"
+      },
+      "work_mode": {
+        "name": "Work mode"
+      },
+      "presence_sensitivity": {
+        "name": "Presence sensitivity"
+      },
+      "fading_time": {
+        "name": "Fading time"
+      },
+      "display_unit": {
+        "name": "Display unit"
+      },
+      "alarm_mode": {
+        "name": "Alarm mode"
+      },
+      "alarm_volume": {
+        "name": "Alarm volume"
+      },
+      "working_day": {
+        "name": "Working day"
+      },
+      "eco_mode": {
+        "name": "Eco mode"
       }
     },
     "sensor": {
+      "active_power_ph_b": {
+        "name": "Power phase B"
+      },
+      "active_power_ph_c": {
+        "name": "Power phase C"
+      },
       "analog_input": {
         "name": "Analog input"
       },
@@ -1046,11 +1259,23 @@
       "instantaneous_demand": {
         "name": "Instantaneous demand"
       },
+      "power_factor_ph_b": {
+        "name": "Power factor phase B"
+      },
+      "power_factor_ph_c": {
+        "name": "Power factor phase C"
+      },
       "rms_current_ph_b": {
         "name": "Current phase B"
       },
       "rms_current_ph_c": {
         "name": "Current phase C"
+      },
+      "rms_voltage_ph_b": {
+        "name": "Voltage phase B"
+      },
+      "rms_voltage_ph_c": {
+        "name": "Voltage phase C"
       },
       "summation_delivered": {
         "name": "Summation delivered"
@@ -1252,6 +1477,90 @@
       },
       "self_test": {
         "name": "Self test result"
+      },
+      "voc_index": {
+        "name": "VOC index"
+      },
+      "energy_ph_a": {
+        "name": "Energy phase A"
+      },
+      "energy_ph_b": {
+        "name": "Energy phase B"
+      },
+      "energy_ph_c": {
+        "name": "Energy phase C"
+      },
+      "energy_produced": {
+        "name": "Energy produced"
+      },
+      "energy_produced_ph_a": {
+        "name": "Energy produced phase A"
+      },
+      "energy_produced_ph_b": {
+        "name": "Energy produced phase B"
+      },
+      "energy_produced_ph_c": {
+        "name": "Energy produced phase C"
+      },
+      "total_power_factor": {
+        "name": "Total power factor"
+      },
+      "self_test_result": {
+        "name": "Self test result"
+      },
+      "lower_explosive_limit": {
+        "name": "% Lower explosive limit"
+      },
+      "liquid_depth": {
+        "name": "Liquid depth"
+      },
+      "liquid_level_percent": {
+        "name": "Liquid level ratio"
+      },
+      "target_distance": {
+        "name": "Target distance"
+      },
+      "human_motion_state": {
+        "name": "Human motion state"
+      },
+      "temperature_alarm": {
+        "name": "Temperature alarm"
+      },
+      "humidity_alarm": {
+        "name": "Humidity alarm"
+      },
+      "alarm_state": {
+        "name": "Alarm state"
+      },
+      "power_type": {
+        "name": "Power type"
+      },
+      "valve_position": {
+        "name": "Valve position"
+      },
+      "time_left": {
+        "name": "Time left"
+      },
+      "valve_status": {
+        "name": "Valve status"
+      },
+      "valve_duration": {
+        "name": "Irrigation duration"
+      },
+      "smart_irrigation": {
+        "name": "Smart irrigation"
+      },
+      "surplus_flow": {
+        "name": "Surplus flow"
+      },
+      "single_watering_duration": {
+        "name": "Single watering duration"
+      },
+      "single_watering_amount": {
+        "name": "Single watering amount"
+      },
+      "error_status": {
+        "name": "Error status"
       }
     },
     "switch": {
@@ -1380,6 +1689,63 @@
       },
       "find_switch": {
         "name": "Distance switch"
+      },
+      "display_enabled": {
+        "name": "Display enabled"
+      },
+      "show_smiley": {
+        "name": "Show smiley"
+      },
+      "on_only_when_dark": {
+        "name": "On only when dark"
+      },
+      "mute_siren": {
+        "name": "Mute siren"
+      },
+      "self_test_switch": {
+        "name": "Self test"
+      },
+      "output_switch": {
+        "name": "Output switch"
+      },
+      "siren_on": {
+        "name": "Siren on"
+      },
+      "enable_tamper_alarm": {
+        "name": "Enable tamper alarm"
+      },
+      "temperature_alarm": {
+        "name": "Temperature alarm"
+      },
+      "humidity_alarm": {
+        "name": "Humidity alarm"
+      },
+      "silence_alarm": {
+        "name": "Silence alarm"
+      },
+      "frost_protection": {
+        "name": "Frost protection"
+      },
+      "factory_reset": {
+        "name": "Factory reset"
+      },
+      "away_mode": {
+        "name": "Away mode"
+      },
+      "schedule_enable": {
+        "name": "Schedule enable"
+      },
+      "scale_protection": {
+        "name": "Scale protection"
+      },
+      "frost_lock": {
+        "name": "Frost lock"
+      },
+      "switch_enabled": {
+        "name": "Switch enabled"
+      },
+      "total_flow_reset_switch": {
+        "name": "Total flow reset switch"
       }
     }
   }

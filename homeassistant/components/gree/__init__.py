@@ -26,7 +26,7 @@ PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Gree Climate from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    gree_discovery = DiscoveryService(hass)
+    gree_discovery = DiscoveryService(hass, entry)
     hass.data[DATA_DISCOVERY_SERVICE] = gree_discovery
 
     async def _async_scan_update(_=None):

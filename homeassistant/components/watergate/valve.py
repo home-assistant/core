@@ -10,8 +10,7 @@ from homeassistant.components.valve import (
 from homeassistant.core import callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import WatergateConfigEntry
-from .coordinator import WatergateDataCoordinator
+from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 from .entity import WatergateEntity
 
 ENTITY_NAME = "valve"

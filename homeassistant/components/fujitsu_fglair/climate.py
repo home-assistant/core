@@ -27,8 +27,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemper
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FGLairConfigEntry
-from .coordinator import FGLairCoordinator
+from .coordinator import FGLairConfigEntry, FGLairCoordinator
 from .entity import FGLairEntity
 
 HA_TO_FUJI_FAN = {

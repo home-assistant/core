@@ -18,9 +18,12 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PureEnergieConfigEntry
 from .const import DOMAIN
-from .coordinator import PureEnergieData, PureEnergieDataUpdateCoordinator
+from .coordinator import (
+    PureEnergieConfigEntry,
+    PureEnergieData,
+    PureEnergieDataUpdateCoordinator,
+)
 
 
 @dataclass(frozen=True, kw_only=True)

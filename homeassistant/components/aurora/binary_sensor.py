@@ -6,7 +6,7 @@ from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AuroraConfigEntry
+from .coordinator import AuroraConfigEntry
 from .entity import AuroraEntity
 
 

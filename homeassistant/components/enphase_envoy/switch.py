@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity
+from .entity import EnvoyBaseEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -147,11 +147,13 @@ class EnvoyEnpowerSwitchEntity(EnvoyBaseEntity, SwitchEntity):
         assert enpower is not None
         return self.entity_description.value_fn(enpower)
 
+    @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Enpower switch."""
         await self.entity_description.turn_on_fn(self.envoy)
         await self.coordinator.async_request_refresh()
 
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Enpower switch."""
         await self.entity_description.turn_off_fn(self.envoy)
@@ -195,11 +197,13 @@ class EnvoyDryContactSwitchEntity(EnvoyBaseEntity, SwitchEntity):
         assert relay is not None
         return self.entity_description.value_fn(relay)
 
+    @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on (close) the dry contact."""
         if await self.entity_description.turn_on_fn(self.envoy, self.relay_id):
             self.async_write_ha_state()
 
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off (open) the dry contact."""
         if await self.entity_description.turn_off_fn(self.envoy, self.relay_id):
@@ -252,11 +256,13 @@ class EnvoyStorageSettingsSwitchEntity(EnvoyBaseEntity, SwitchEntity):
         assert self.data.tariff.storage_settings is not None
         return self.entity_description.value_fn(self.data.tariff.storage_settings)
 
+    @exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the storage settings switch."""
         await self.entity_description.turn_on_fn(self.envoy)
         await self.coordinator.async_request_refresh()
 
+    @exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the storage switch."""
         await self.entity_description.turn_off_fn(self.envoy)

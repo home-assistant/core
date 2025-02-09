@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MonarchMoneyConfigEntry
+from .coordinator import MonarchMoneyConfigEntry
 from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
 
 

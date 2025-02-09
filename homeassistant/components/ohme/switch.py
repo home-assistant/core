@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import OhmeConfigEntry
 from .const import DOMAIN
+from .coordinator import OhmeConfigEntry
 from .entity import OhmeEntity, OhmeEntityDescription
 
 PARALLEL_UPDATES = 1

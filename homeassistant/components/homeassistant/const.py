@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final
 
-import homeassistant.core as ha
+from homeassistant import core as ha
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:

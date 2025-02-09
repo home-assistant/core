@@ -2,27 +2,27 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections import defaultdict
 from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from typing import cast
 
 from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
 from universal_silabs_flasher.flasher import Flasher
 
 from homeassistant.components.hassio import AddonError, AddonState
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.singleton import singleton
 
+from . import DATA_COMPONENT
 from .const import (
     OTBR_ADDON_MANAGER_DATA,
     OTBR_ADDON_NAME,
     OTBR_ADDON_SLUG,
-    ZHA_DOMAIN,
     ZIGBEE_FLASHER_ADDON_MANAGER_DATA,
     ZIGBEE_FLASHER_ADDON_NAME,
     ZIGBEE_FLASHER_ADDON_SLUG,
@@ -55,11 +55,6 @@ class ApplicationType(StrEnum):
         return FlasherApplicationType(self.value)
 
 
-def get_zha_device_path(config_entry: ConfigEntry) -> str | None:
-    """Get the device path from a ZHA config entry."""
-    return cast(str | None, config_entry.data.get("device", {}).get("path", None))
-
-
 @singleton(OTBR_ADDON_MANAGER_DATA)
 @callback
 def get_otbr_addon_manager(hass: HomeAssistant) -> WaitingAddonManager:
@@ -84,31 +79,80 @@ def get_zigbee_flasher_addon_manager(hass: HomeAssistant) -> WaitingAddonManager
     )
 
 
-@dataclass(slots=True, kw_only=True)
-class FirmwareGuess:
+@dataclass(kw_only=True)
+class OwningAddon:
+    """Owning add-on."""
+
+    slug: str
+
+    def _get_addon_manager(self, hass: HomeAssistant) -> WaitingAddonManager:
+        return WaitingAddonManager(
+            hass,
+            _LOGGER,
+            f"Add-on {self.slug}",
+            self.slug,
+        )
+
+    async def is_running(self, hass: HomeAssistant) -> bool:
+        """Check if the add-on is running."""
+        addon_manager = self._get_addon_manager(hass)
+
+        try:
+            addon_info = await addon_manager.async_get_addon_info()
+        except AddonError:
+            return False
+        else:
+            return addon_info.state == AddonState.RUNNING
+
+
+@dataclass(kw_only=True)
+class OwningIntegration:
+    """Owning integration."""
+
+    config_entry_id: str
+
+    async def is_running(self, hass: HomeAssistant) -> bool:
+        """Check if the integration is running."""
+        if (entry := hass.config_entries.async_get_entry(self.config_entry_id)) is None:
+            return False
+
+        return entry.state in (
+            ConfigEntryState.LOADED,
+            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.SETUP_IN_PROGRESS,
+        )
+
+
+@dataclass(kw_only=True)
+class FirmwareInfo:
     """Firmware guess."""
 
-    is_running: bool
+    device: str
     firmware_type: ApplicationType
+    firmware_version: str | None
+
     source: str
+    owners: list[OwningAddon | OwningIntegration]
+
+    async def is_running(self, hass: HomeAssistant) -> bool:
+        """Check if the firmware owner is running."""
+        states = await asyncio.gather(*(o.is_running(hass) for o in self.owners))
+        if not states:
+            return False
+
+        return all(states)
 
 
-async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> FirmwareGuess:
-    """Guess the firmware type based on installed addons and other integrations."""
-    device_guesses: defaultdict[str | None, list[FirmwareGuess]] = defaultdict(list)
+async def guess_hardware_owners(
+    hass: HomeAssistant, device_path: str
+) -> list[FirmwareInfo]:
+    """Guess the firmware info based on installed addons and other integrations."""
+    device_guesses: defaultdict[str, list[FirmwareInfo]] = defaultdict(list)
 
-    for zha_config_entry in hass.config_entries.async_entries(ZHA_DOMAIN):
-        zha_path = get_zha_device_path(zha_config_entry)
+    async for firmware_info in hass.data[DATA_COMPONENT].iter_firmware_info():
+        device_guesses[firmware_info.device].append(firmware_info)
 
-        if zha_path is not None:
-            device_guesses[zha_path].append(
-                FirmwareGuess(
-                    is_running=(zha_config_entry.state == ConfigEntryState.LOADED),
-                    firmware_type=ApplicationType.EZSP,
-                    source="zha",
-                )
-            )
-
+    # It may be possible for the OTBR addon to be present without the integration
     if is_hassio(hass):
         otbr_addon_manager = get_otbr_addon_manager(hass)
 
@@ -119,14 +163,22 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Firmware
         else:
             if otbr_addon_info.state != AddonState.NOT_INSTALLED:
                 otbr_path = otbr_addon_info.options.get("device")
-                device_guesses[otbr_path].append(
-                    FirmwareGuess(
-                        is_running=(otbr_addon_info.state == AddonState.RUNNING),
-                        firmware_type=ApplicationType.SPINEL,
-                        source="otbr",
-                    )
-                )
 
+                # Only create a new entry if there are no existing OTBR ones
+                if otbr_path is not None and not any(
+                    info.source == "otbr" for info in device_guesses[otbr_path]
+                ):
+                    device_guesses[otbr_path].append(
+                        FirmwareInfo(
+                            device=otbr_path,
+                            firmware_type=ApplicationType.SPINEL,
+                            firmware_version=None,
+                            source="otbr",
+                            owners=[OwningAddon(slug=otbr_addon_manager.addon_slug)],
+                        )
+                    )
+
+    if is_hassio(hass):
         multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
 
         try:
@@ -136,30 +188,48 @@ async def guess_firmware_type(hass: HomeAssistant, device_path: str) -> Firmware
         else:
             if multipan_addon_info.state != AddonState.NOT_INSTALLED:
                 multipan_path = multipan_addon_info.options.get("device")
-                device_guesses[multipan_path].append(
-                    FirmwareGuess(
-                        is_running=(multipan_addon_info.state == AddonState.RUNNING),
-                        firmware_type=ApplicationType.CPC,
-                        source="multiprotocol",
-                    )
-                )
 
-    # Fall back to EZSP if we can't guess the firmware type
-    if device_path not in device_guesses:
-        return FirmwareGuess(
-            is_running=False, firmware_type=ApplicationType.EZSP, source="unknown"
+                if multipan_path is not None:
+                    device_guesses[multipan_path].append(
+                        FirmwareInfo(
+                            device=multipan_path,
+                            firmware_type=ApplicationType.CPC,
+                            firmware_version=None,
+                            source="multiprotocol",
+                            owners=[
+                                OwningAddon(slug=multipan_addon_manager.addon_slug)
+                            ],
+                        )
+                    )
+
+    return device_guesses.get(device_path, [])
+
+
+async def guess_firmware_info(hass: HomeAssistant, device_path: str) -> FirmwareInfo:
+    """Guess the firmware type based on installed addons and other integrations."""
+
+    hardware_owners = await guess_hardware_owners(hass, device_path)
+
+    # Fall back to EZSP if we have no way to guess
+    if not hardware_owners:
+        return FirmwareInfo(
+            device=device_path,
+            firmware_type=ApplicationType.EZSP,
+            firmware_version=None,
+            source="unknown",
+            owners=[],
         )
 
-    # Prioritizes guesses that were pulled from a running addon or integration but keep
-    # the sort order we defined above
-    guesses = sorted(
-        device_guesses[device_path],
-        key=lambda guess: guess.is_running,
-    )
-
+    # Prioritize guesses that are pulled from a real source
+    guesses = [
+        (guess, sum([await owner.is_running(hass) for owner in guess.owners]))
+        for guess in hardware_owners
+    ]
+    guesses.sort(key=lambda p: p[1])
     assert guesses
 
-    return guesses[-1]
+    # Pick the best one. We use a stable sort so ZHA < OTBR < multi-PAN
+    return guesses[-1][0]
 
 
 async def probe_silabs_firmware_type(

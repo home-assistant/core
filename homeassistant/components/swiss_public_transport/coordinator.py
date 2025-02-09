@@ -15,7 +15,7 @@ from opendata_transport.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
@@ -61,6 +61,7 @@ class SwissPublicTransportDataUpdateCoordinator(
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: SwissPublicTransportConfigEntry,
         opendata: OpendataTransport,
         time_offset: dict[str, int] | None,
     ) -> None:
@@ -68,6 +69,7 @@ class SwissPublicTransportDataUpdateCoordinator(
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
         )

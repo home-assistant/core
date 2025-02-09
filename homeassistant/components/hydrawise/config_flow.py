@@ -6,25 +6,32 @@ from collections.abc import Mapping
 from typing import Any
 
 from aiohttp import ClientError
-from pydrawise import auth as pydrawise_auth, client
+from pydrawise import auth as pydrawise_auth, hybrid
 from pydrawise.exceptions import NotAuthorizedError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 
 from .const import APP_ID, DOMAIN, LOGGER
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
-    {vol.Required(CONF_USERNAME): str, vol.Required(CONF_PASSWORD): str}
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+        vol.Required(CONF_API_KEY): str,
+    }
 )
-STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {vol.Required(CONF_PASSWORD): str, vol.Required(CONF_API_KEY): str}
+)
 
 
 class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Hydrawise."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -34,14 +41,19 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
             return self._show_user_form({})
         username = user_input[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        unique_id, errors = await _authenticate(username, password)
+        api_key = user_input[CONF_API_KEY]
+        unique_id, errors = await _authenticate(username, password, api_key)
         if errors:
             return self._show_user_form(errors)
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=username,
-            data={CONF_USERNAME: username, CONF_PASSWORD: password},
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_API_KEY: api_key,
+            },
         )
 
     def _show_user_form(self, errors: dict[str, str]) -> ConfigFlowResult:
@@ -65,14 +77,20 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         username = reauth_entry.data[CONF_USERNAME]
         password = user_input[CONF_PASSWORD]
-        user_id, errors = await _authenticate(username, password)
+        api_key = user_input[CONF_API_KEY]
+        user_id, errors = await _authenticate(username, password, api_key)
         if user_id is None:
             return self._show_reauth_form(errors)
 
         await self.async_set_unique_id(user_id)
         self._abort_if_unique_id_mismatch(reason="wrong_account")
         return self.async_update_reload_and_abort(
-            reauth_entry, data={CONF_USERNAME: username, CONF_PASSWORD: password}
+            reauth_entry,
+            data={
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+                CONF_API_KEY: api_key,
+            },
         )
 
     def _show_reauth_form(self, errors: dict[str, str]) -> ConfigFlowResult:
@@ -82,14 +100,14 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 async def _authenticate(
-    username: str, password: str
+    username: str, password: str, api_key: str
 ) -> tuple[str | None, dict[str, str]]:
     """Authenticate with the Hydrawise API."""
     unique_id = None
     errors: dict[str, str] = {}
-    auth = pydrawise_auth.Auth(username, password)
+    auth = pydrawise_auth.HybridAuth(username, password, api_key)
     try:
-        await auth.token()
+        await auth.check()
     except NotAuthorizedError:
         errors["base"] = "invalid_auth"
     except TimeoutError:
@@ -99,7 +117,7 @@ async def _authenticate(
         return unique_id, errors
 
     try:
-        api = client.Hydrawise(auth, app_id=APP_ID)
+        api = hybrid.HybridClient(auth, app_id=APP_ID)
         # Don't fetch zones because we don't need them yet.
         user = await api.get_user(fetch_zones=False)
     except TimeoutError:

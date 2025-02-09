@@ -75,7 +75,7 @@
         'manufacturer': 'Coordinator Manufacturer',
         'model': 'Coordinator Model',
         'nwk': 0,
-        'version': None,
+        'version': '7.1.4.0 build 389',
       }),
     }),
     'config': dict({

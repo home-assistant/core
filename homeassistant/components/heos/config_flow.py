@@ -9,7 +9,6 @@ from pyheos import CommandAuthenticationError, Heos, HeosError, HeosOptions
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -23,8 +22,8 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
-from . import HeosConfigEntry
 from .const import DOMAIN
+from .coordinator import HeosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -107,7 +106,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: HeosConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return HeosOptionsFlowHandler()
 
@@ -188,9 +187,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         entry: HeosConfigEntry = self._get_reauth_entry()
         if user_input is not None:
             assert entry.state is ConfigEntryState.LOADED
-            if await _validate_auth(
-                user_input, entry.runtime_data.coordinator.heos, errors
-            ):
+            if await _validate_auth(user_input, entry.runtime_data.heos, errors):
                 return self.async_update_reload_and_abort(entry, options=user_input)
 
         return self.async_show_form(
@@ -212,9 +209,7 @@ class HeosOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
         if user_input is not None:
             entry: HeosConfigEntry = self.config_entry
-            if await _validate_auth(
-                user_input, entry.runtime_data.coordinator.heos, errors
-            ):
+            if await _validate_auth(user_input, entry.runtime_data.heos, errors):
                 return self.async_create_entry(data=user_input)
 
         return self.async_show_form(

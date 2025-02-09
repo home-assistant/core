@@ -14,9 +14,8 @@ from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import PlugwiseConfigEntry
 from .const import NumberType
-from .coordinator import PlugwiseDataUpdateCoordinator
+from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
 
@@ -73,7 +72,7 @@ async def async_setup_entry(
             PlugwiseNumberEntity(coordinator, device_id, description)
             for device_id in coordinator.new_devices
             for description in NUMBER_TYPES
-            if description.key in coordinator.data.devices[device_id]
+            if description.key in coordinator.data[device_id]
         )
 
     _add_entities()

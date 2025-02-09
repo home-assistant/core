@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from functools import partial
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Literal, Required, TypedDict, cast
+from typing import Any, Required, TypedDict, cast
 
 import voluptuous as vol
 
@@ -177,8 +177,6 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         for forecast_type in ("twice_daily", "hourly"):
             if (coordinator := self.forecast_coordinators[forecast_type]) is None:
                 continue
-            if TYPE_CHECKING:
-                forecast_type = cast(Literal["twice_daily", "hourly"], forecast_type)
             self.unsub_forecast[forecast_type] = coordinator.async_add_listener(
                 partial(self._handle_forecast_update, forecast_type)
             )

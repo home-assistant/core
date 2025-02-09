@@ -15,7 +15,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
@@ -24,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import FreedomproDataUpdateCoordinator
+from .coordinator import FreedomproConfigEntry, FreedomproDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -44,11 +43,13 @@ SUPPORTED_HVAC_MODES = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: FreedomproConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Freedompro climate."""
     api_key: str = entry.data[CONF_API_KEY]
-    coordinator: FreedomproDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         Device(
             aiohttp_client.async_get_clientsession(hass), api_key, device, coordinator

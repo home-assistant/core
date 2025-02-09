@@ -29,7 +29,6 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import RokuConfigEntry
 from .browse_media import async_browse_media
 from .const import (
     ATTR_ARTIST_NAME,
@@ -40,7 +39,7 @@ from .const import (
     ATTR_THUMBNAIL,
     SERVICE_SEARCH,
 )
-from .coordinator import RokuDataUpdateCoordinator
+from .coordinator import RokuConfigEntry, RokuDataUpdateCoordinator
 from .entity import RokuEntity
 from .helpers import format_channel_name, roku_exception_handler
 

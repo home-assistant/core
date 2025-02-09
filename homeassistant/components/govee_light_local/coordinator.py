@@ -26,11 +26,16 @@ type GoveeLocalConfigEntry = ConfigEntry[GoveeLocalApiCoordinator]
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     """Govee light local coordinator."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    config_entry: GoveeLocalConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: GoveeLocalConfigEntry
+    ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass=hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name="GoveeLightLocalApi",
             update_interval=SCAN_INTERVAL,
         )

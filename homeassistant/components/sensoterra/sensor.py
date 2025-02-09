@@ -25,9 +25,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SensoterraConfigEntry
 from .const import CONFIGURATION_URL, DOMAIN, SENSOR_EXPIRATION_DAYS
-from .coordinator import SensoterraCoordinator
+from .coordinator import SensoterraConfigEntry, SensoterraCoordinator
 
 
 class ProbeSensorType(StrEnum):

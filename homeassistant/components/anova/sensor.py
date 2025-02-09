@@ -18,9 +18,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import AnovaCoordinator
+from .coordinator import AnovaConfigEntry, AnovaCoordinator
 from .entity import AnovaDescriptionEntity
-from .models import AnovaConfigEntry
 
 
 @dataclass(frozen=True, kw_only=True)

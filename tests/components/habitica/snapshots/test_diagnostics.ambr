@@ -8,7 +8,6 @@
     'habitica_data': dict({
       'tasks': list([
         dict({
-          'Type': 'habit',
           'alias': None,
           'attribute': 'str',
           'byHabitica': False,
@@ -71,6 +70,7 @@
           'tags': list([
           ]),
           'text': 'task text',
+          'type': 'habit',
           'up': True,
           'updatedAt': '2024-10-10T15:57:14.287000+00:00',
           'userId': 'ffce870c-3ff3-4fa4-bad1-87612e52b8e7',
@@ -80,7 +80,6 @@
           'yesterDaily': None,
         }),
         dict({
-          'Type': 'todo',
           'alias': None,
           'attribute': 'str',
           'byHabitica': True,
@@ -119,7 +118,8 @@
             'managerNotes': None,
             'taskId': None,
           }),
-          'history': None,
+          'history': list([
+          ]),
           'id': 'e6e06dc6-c887-4b86-b175-b99cc2e20fdf',
           'isDue': None,
           'nextDue': list([
@@ -142,6 +142,7 @@
           'tags': list([
           ]),
           'text': 'task text',
+          'type': 'todo',
           'up': None,
           'updatedAt': '2024-11-27T19:34:29.001000+00:00',
           'userId': 'ffce870c-3ff3-4fa4-bad1-87612e52b8e7',
@@ -151,7 +152,6 @@
           'yesterDaily': None,
         }),
         dict({
-          'Type': 'reward',
           'alias': None,
           'attribute': 'str',
           'byHabitica': False,
@@ -190,7 +190,8 @@
             'managerNotes': None,
             'taskId': None,
           }),
-          'history': None,
+          'history': list([
+          ]),
           'id': '2fbf11a5-ab1e-4fb7-97f0-dfb5c45c96a9',
           'isDue': None,
           'nextDue': list([
@@ -213,6 +214,7 @@
           'tags': list([
           ]),
           'text': 'task text',
+          'type': 'reward',
           'up': None,
           'updatedAt': '2024-10-10T15:57:14.290000+00:00',
           'userId': 'ffce870c-3ff3-4fa4-bad1-87612e52b8e7',
@@ -222,7 +224,6 @@
           'yesterDaily': None,
         }),
         dict({
-          'Type': 'daily',
           'alias': None,
           'attribute': 'str',
           'byHabitica': False,
@@ -339,6 +340,7 @@
           'tags': list([
           ]),
           'text': 'task text',
+          'type': 'daily',
           'up': None,
           'updatedAt': '2024-11-27T19:34:29.001000+00:00',
           'userId': 'ffce870c-3ff3-4fa4-bad1-87612e52b8e7',

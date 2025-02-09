@@ -24,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import SolarlogConfigEntry
+from .coordinator import SolarlogConfigEntry
 from .entity import SolarLogCoordinatorEntity, SolarLogInverterEntity
 
 

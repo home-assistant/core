@@ -12,9 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AmberConfigEntry
 from .const import ATTRIBUTION
-from .coordinator import AmberUpdateCoordinator
+from .coordinator import AmberConfigEntry, AmberUpdateCoordinator
 
 PRICE_SPIKE_ICONS = {
     "none": "mdi:power-plug",

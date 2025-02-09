@@ -41,7 +41,7 @@ from homeassistant.components.recorder.util import (
     session_scope,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ulid import bytes_to_ulid, ulid_at_time, ulid_to_bytes
 
 from .common import (

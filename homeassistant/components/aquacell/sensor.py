@@ -18,8 +18,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import AquacellConfigEntry
-from .coordinator import AquacellCoordinator
+from .coordinator import AquacellConfigEntry, AquacellCoordinator
 from .entity import AquacellEntity
 
 PARALLEL_UPDATES = 1

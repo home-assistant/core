@@ -36,15 +36,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Read configuration and create Modbus cover."""
-    if discovery_info is None:
+    if discovery_info is None or not (covers := discovery_info[CONF_COVERS]):
         return
-
-    covers = []
-    for cover in discovery_info[CONF_COVERS]:
-        hub: ModbusHub = get_hub(hass, discovery_info[CONF_NAME])
-        covers.append(ModbusCover(hass, hub, cover))
-
-    async_add_entities(covers)
+    hub = get_hub(hass, discovery_info[CONF_NAME])
+    async_add_entities(ModbusCover(hass, hub, config) for config in covers)
 
 
 class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):

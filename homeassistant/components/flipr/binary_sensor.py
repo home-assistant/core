@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FliprConfigEntry
+from .coordinator import FliprConfigEntry
 from .entity import FliprEntity
 
 BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (

@@ -175,6 +175,7 @@ BASE_SERVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_KEYBOARD_INLINE): cv.ensure_list,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
         vol.Optional(ATTR_MESSAGE_TAG): cv.string,
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
     },
     extra=vol.ALLOW_EXTRA,
 )
@@ -216,6 +217,7 @@ SERVICE_SCHEMA_SEND_POLL = vol.Schema(
         vol.Optional(ATTR_ALLOWS_MULTIPLE_ANSWERS, default=False): cv.boolean,
         vol.Optional(ATTR_DISABLE_NOTIF): cv.boolean,
         vol.Optional(ATTR_TIMEOUT): cv.positive_int,
+        vol.Optional(ATTR_MESSAGE_THREAD_ID): vol.Coerce(int),
     }
 )
 

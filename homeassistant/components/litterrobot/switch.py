@@ -14,16 +14,16 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _RobotT
+from .entity import LitterRobotEntity, _WhiskerEntityT
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_RobotT]):
+class RobotSwitchEntityDescription(SwitchEntityDescription, Generic[_WhiskerEntityT]):
     """A class that describes robot switch entities."""
 
     entity_category: EntityCategory = EntityCategory.CONFIG
-    set_fn: Callable[[_RobotT, bool], Coroutine[Any, Any, bool]]
-    value_fn: Callable[[_RobotT], bool]
+    set_fn: Callable[[_WhiskerEntityT, bool], Coroutine[Any, Any, bool]]
+    value_fn: Callable[[_WhiskerEntityT], bool]
 
 
 ROBOT_SWITCHES = [
@@ -57,10 +57,10 @@ async def async_setup_entry(
     )
 
 
-class RobotSwitchEntity(LitterRobotEntity[_RobotT], SwitchEntity):
+class RobotSwitchEntity(LitterRobotEntity[_WhiskerEntityT], SwitchEntity):
     """Litter-Robot switch entity."""
 
-    entity_description: RobotSwitchEntityDescription[_RobotT]
+    entity_description: RobotSwitchEntityDescription[_WhiskerEntityT]
 
     @property
     def is_on(self) -> bool | None:

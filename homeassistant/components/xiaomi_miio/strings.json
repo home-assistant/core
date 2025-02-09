@@ -461,7 +461,7 @@
     },
     "switch_set_wifi_led_on": {
       "name": "Switch set Wi-Fi LED on",
-      "description": "Turns the wifi led on.",
+      "description": "Turns the Wi-Fi LED on.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -471,7 +471,7 @@
     },
     "switch_set_wifi_led_off": {
       "name": "Switch set Wi-Fi LED off",
-      "description": "Turn the Wi-Fi led off.",
+      "description": "Turns the Wi-Fi LED off.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -567,7 +567,7 @@
     },
     "vacuum_goto": {
       "name": "Vacuum go to",
-      "description": "Go to the specified coordinates.",
+      "description": "Sends the robot to the specified coordinates.",
       "fields": {
         "x_coord": {
           "name": "X coordinate",

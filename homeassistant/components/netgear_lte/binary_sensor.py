@@ -11,7 +11,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NetgearLTEConfigEntry
+from .coordinator import NetgearLTEConfigEntry
 from .entity import LTEEntity
 
 BINARY_SENSORS: tuple[BinarySensorEntityDescription, ...] = (

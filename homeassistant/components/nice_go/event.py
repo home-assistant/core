@@ -7,7 +7,7 @@ from homeassistant.components.event import EventEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NiceGOConfigEntry
+from .coordinator import NiceGOConfigEntry
 from .entity import NiceGOEntity
 
 _LOGGER = logging.getLogger(__name__)

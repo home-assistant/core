@@ -14,7 +14,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SimpleFinConfigEntry
+from .coordinator import SimpleFinConfigEntry
 from .entity import SimpleFinEntity
 
 

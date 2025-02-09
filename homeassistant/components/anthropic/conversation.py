@@ -272,6 +272,7 @@ class AnthropicConversationEntity(
                     continue
 
                 tool_input = llm.ToolInput(
+                    id=tool_call.id,
                     tool_name=tool_call.name,
                     tool_args=cast(dict[str, Any], tool_call.input),
                 )

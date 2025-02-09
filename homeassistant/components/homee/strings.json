@@ -67,7 +67,23 @@
         "name": "Link quality"
       },
       "node_state": {
-        "name": "Node state"
+        "name": "Node state",
+        "state": {
+          "available": "Available",
+          "unavailable": "Unavailable",
+          "update_in_progress": "Update in progress",
+          "waiting_for_attributes": "Waiting for attributes",
+          "initializing": "Initializing",
+          "user_interaction_required": "User interaction required",
+          "password_required": "Password required",
+          "host_unavailable": "Host unavailable",
+          "delete_in_progress": "Delete in progress",
+          "cosi_connected": "Cosi connected",
+          "blocked": "Blocked",
+          "waiting_for_wakeup": "Waiting for wakeup",
+          "remote_node_deleted": "Remote node deleted",
+          "firmware_update_in_progress": "Firmware update in progress"
+        }
       },
       "operating_hours": {
         "name": "Operating hours"
@@ -135,6 +151,11 @@
           "tilted": "Tilted"
         }
       }
+    }
+  },
+  "exceptions": {
+    "connection_closed": {
+      "message": "Could not connect to Homee while setting attribute"
     }
   }
 }

@@ -72,7 +72,7 @@ class VerisureThermometer(
             manufacturer="Verisure",
             model=DEVICE_TYPE_NAME.get(device_type, device_type),
             identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
             configuration_url="https://mypages.verisure.com",
         )
 
@@ -122,7 +122,7 @@ class VerisureHygrometer(
             manufacturer="Verisure",
             model=DEVICE_TYPE_NAME.get(device_type, device_type),
             identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
             configuration_url="https://mypages.verisure.com",
         )
 

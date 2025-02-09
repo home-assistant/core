@@ -17,8 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import NYTGamesConfigEntry
-from .coordinator import NYTGamesCoordinator
+from .coordinator import NYTGamesConfigEntry, NYTGamesCoordinator
 from .entity import ConnectionsEntity, SpellingBeeEntity, WordleEntity
 
 

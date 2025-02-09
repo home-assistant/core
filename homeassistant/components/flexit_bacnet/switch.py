@@ -40,6 +40,13 @@ SWITCHES: tuple[FlexitSwitchEntityDescription, ...] = (
         turn_on_fn=lambda data: data.enable_electric_heater(),
         turn_off_fn=lambda data: data.disable_electric_heater(),
     ),
+    FlexitSwitchEntityDescription(
+        key="fireplace_mode",
+        translation_key="fireplace_mode",
+        is_on_fn=lambda data: data.fireplace_ventilation_status,
+        turn_on_fn=lambda data: data.trigger_fireplace_mode(),
+        turn_off_fn=lambda data: data.trigger_fireplace_mode(),
+    ),
 )
 
 
