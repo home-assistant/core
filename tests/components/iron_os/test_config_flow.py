@@ -195,7 +195,7 @@ async def test_async_step_bluetooth_devices_already_setup(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("discovery")
+@pytest.mark.usefixtures("discovery", "mock_pynecil")
 async def test_async_step_user_setup_replaces_igonored_device(
     hass: HomeAssistant, config_entry_ignored: AsyncMock
 ) -> None:
