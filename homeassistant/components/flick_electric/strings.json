@@ -8,12 +8,21 @@
           "password": "[%key:common::config_flow::data::password%]",
           "client_id": "Client ID (optional)",
           "client_secret": "Client Secret (optional)"
+        },
+        "data_description": {
+          "username": "Username used to login to Flick Electric",
+          "password": "Password used to login to Flick Electric",
+          "client_id": "Client ID (defaults to one used by Mobile App)",
+          "client_secret": "Client Secret (defaults to one used by Mobile App)"
         }
       },
       "select_account": {
         "title": "Select account",
         "data": {
           "account_id": "Account"
+        },
+        "data_description": {
+          "account_id": "Select the account to get pricing for"
         }
       }
     },
