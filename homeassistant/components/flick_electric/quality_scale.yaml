@@ -16,9 +16,7 @@ rules:
       This integration does not have any service actions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
-    status: todo
-    comment: Add removal instructions
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -41,9 +39,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No options to configure
-  docs-installation-parameters:
-    status: todo
-    comment: Add the proper configuration_basic block
+  docs-installation-parameters: done
   entity-unavailable:
     status: done
     comment: Handled by the coordinator
@@ -68,27 +64,19 @@ rules:
     status: exempt
     comment: |
       This integration does not support discovery.
-  docs-data-update:
-    status: todo
-    comment: Add docs
-  docs-examples:
-    status: todo
-    comment: Add docs
+  docs-data-update: done
+  docs-examples: done
   docs-known-limitations:
-    status: todo
-    comment: Add docs
+    status: exempt
+    comment: |
+      This integration has no known limitations.
   docs-supported-devices:
-    status: todo
-    comment: Add docs
-  docs-supported-functions:
-    status: todo
-    comment: Add docs
-  docs-troubleshooting:
-    status: todo
-    comment: Add docs
-  docs-use-cases:
-    status: todo
-    comment: Add docs
+    status: exempt
+    comment: |
+      This is an service, which doesn't integrate with any devices.
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
