@@ -1029,12 +1029,12 @@ class PipelineRun:
             # pipeline for intent fallback.
             #
             # We prioritize the STT and TTS languages because they may be more
-            # specific, such as "zh-CN" instead of just "zh". This is necessary
+            # specific, such as "zh-CN" instead of just "zh". This is necessary . tts_language is prioritized as the highest priority because when using Whisper as the STT engine, it returns zh instead of zh-CN.
             # for languages whose intents are split out by region when
             # preferring local intent matching.
             input_language = (
-                self.pipeline.stt_language
-                or self.pipeline.tts_language
+                self.pipeline.tts_language
+                or self.pipeline.stt_language
                 or self.pipeline.language
             )
         else:
