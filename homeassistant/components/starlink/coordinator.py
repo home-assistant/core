@@ -61,6 +61,7 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=config_entry.title,
             update_interval=timedelta(seconds=5),
         )
