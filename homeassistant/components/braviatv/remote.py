@@ -9,7 +9,7 @@ from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BraviaTVConfigEntry
+from .coordinator import BraviaTVConfigEntry
 from .entity import BraviaTVEntity
 
 

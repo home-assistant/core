@@ -9,6 +9,7 @@ APPLICATION_CREDENTIALS = [
     "geocaching",
     "google",
     "google_assistant_sdk",
+    "google_drive",
     "google_mail",
     "google_photos",
     "google_sheets",

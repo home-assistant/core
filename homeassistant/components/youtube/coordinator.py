@@ -35,12 +35,15 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, auth: AsyncConfigEntryAuth) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, auth: AsyncConfigEntryAuth
+    ) -> None:
         """Initialize the YouTube data coordinator."""
         self._auth = auth
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=15),
         )

@@ -98,8 +98,15 @@
       'Speaker - Line In 1',
     ]),
     'system': dict({
-      'connected_to_preferred_host': False,
-      'host': '127.0.0.1',
+      'connected_to_preferred_host': True,
+      'host': dict({
+        'ip_address': '127.0.0.1',
+        'model': 'HEOS Drive HS2',
+        'name': 'Test Player',
+        'network': 'wired',
+        'serial': '**REDACTED**',
+        'version': '1.0.0',
+      }),
       'hosts': list([
         dict({
           'ip_address': '127.0.0.1',

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field as dc_field
 from datetime import timedelta
 from decimal import Decimal
 from enum import Enum
@@ -36,6 +36,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType
+from homeassistant.util.ulid import ulid_now
 
 from . import (
     area_registry as ar,
@@ -139,6 +140,8 @@ class ToolInput:
 
     tool_name: str
     tool_args: dict[str, Any]
+    # Using lambda for default to allow patching in tests
+    id: str = dc_field(default_factory=lambda: ulid_now())  # pylint: disable=unnecessary-lambda
 
 
 class Tool:
@@ -326,12 +329,21 @@ class AssistAPI(API):
     def _async_get_api_prompt(
         self, llm_context: LLMContext, exposed_entities: dict | None
     ) -> str:
-        """Return the prompt for the API."""
-        if not exposed_entities:
+        if not exposed_entities or not exposed_entities["entities"]:
             return (
                 "Only if the user wants to control a device, tell them to expose entities "
                 "to their voice assistant in Home Assistant."
             )
+        return "\n".join(
+            [
+                *self._async_get_preable(llm_context),
+                *self._async_get_exposed_entities_prompt(llm_context, exposed_entities),
+            ]
+        )
+
+    @callback
+    def _async_get_preable(self, llm_context: LLMContext) -> list[str]:
+        """Return the prompt for the API."""
 
         prompt = [
             (
@@ -371,13 +383,22 @@ class AssistAPI(API):
         ):
             prompt.append("This device is not able to start timers.")
 
-        if exposed_entities:
+        return prompt
+
+    @callback
+    def _async_get_exposed_entities_prompt(
+        self, llm_context: LLMContext, exposed_entities: dict | None
+    ) -> list[str]:
+        """Return the prompt for the API for exposed entities."""
+        prompt = []
+
+        if exposed_entities and exposed_entities["entities"]:
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
             )
-            prompt.append(yaml_util.dump(list(exposed_entities.values())))
+            prompt.append(yaml_util.dump(list(exposed_entities["entities"].values())))
 
-        return "\n".join(prompt)
+        return prompt
 
     @callback
     def _async_get_tools(
@@ -407,8 +428,9 @@ class AssistAPI(API):
         exposed_domains: set[str] | None = None
         if exposed_entities is not None:
             exposed_domains = {
-                split_entity_id(entity_id)[0] for entity_id in exposed_entities
+                info["domain"] for info in exposed_entities["entities"].values()
             }
+
             intent_handlers = [
                 intent_handler
                 for intent_handler in intent_handlers
@@ -420,25 +442,29 @@ class AssistAPI(API):
             IntentTool(self.cached_slugify(intent_handler.intent_type), intent_handler)
             for intent_handler in intent_handlers
         ]
-        if exposed_domains and CALENDAR_DOMAIN in exposed_domains:
-            tools.append(CalendarGetEventsTool())
 
-        if llm_context.assistant is not None:
-            for state in self.hass.states.async_all(SCRIPT_DOMAIN):
-                if not async_should_expose(
-                    self.hass, llm_context.assistant, state.entity_id
-                ):
-                    continue
+        if exposed_entities:
+            if exposed_entities[CALENDAR_DOMAIN]:
+                names = []
+                for info in exposed_entities[CALENDAR_DOMAIN].values():
+                    names.extend(info["names"].split(", "))
+                tools.append(CalendarGetEventsTool(names))
 
-                tools.append(ScriptTool(self.hass, state.entity_id))
+            tools.extend(
+                ScriptTool(self.hass, script_entity_id)
+                for script_entity_id in exposed_entities[SCRIPT_DOMAIN]
+            )
 
         return tools
 
 
 def _get_exposed_entities(
     hass: HomeAssistant, assistant: str
-) -> dict[str, dict[str, Any]]:
-    """Get exposed entities."""
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Get exposed entities.
+
+    Splits out calendars and scripts.
+    """
     area_registry = ar.async_get(hass)
     entity_registry = er.async_get(hass)
     device_registry = dr.async_get(hass)
@@ -459,12 +485,13 @@ def _get_exposed_entities(
     }
 
     entities = {}
+    data: dict[str, dict[str, Any]] = {
+        SCRIPT_DOMAIN: {},
+        CALENDAR_DOMAIN: {},
+    }
 
     for state in hass.states.async_all():
-        if (
-            not async_should_expose(hass, assistant, state.entity_id)
-            or state.domain == SCRIPT_DOMAIN
-        ):
+        if not async_should_expose(hass, assistant, state.entity_id):
             continue
 
         description: str | None = None
@@ -511,9 +538,13 @@ def _get_exposed_entities(
         }:
             info["attributes"] = attributes
 
-        entities[state.entity_id] = info
+        if state.domain in data:
+            data[state.domain][state.entity_id] = info
+        else:
+            entities[state.entity_id] = info
 
-    return entities
+    data["entities"] = entities
+    return data
 
 
 def _selector_serializer(schema: Any) -> Any:  # noqa: C901
@@ -795,15 +826,18 @@ class CalendarGetEventsTool(Tool):
     name = "calendar_get_events"
     description = (
         "Get events from a calendar. "
-        "When asked when something happens, search the whole week. "
+        "When asked if something happens, search the whole week. "
         "Results are RFC 5545 which means 'end' is exclusive."
     )
-    parameters = vol.Schema(
-        {
-            vol.Required("calendar"): cv.string,
-            vol.Required("range"): vol.In(["today", "week"]),
-        }
-    )
+
+    def __init__(self, calendars: list[str]) -> None:
+        """Init the get events tool."""
+        self.parameters = vol.Schema(
+            {
+                vol.Required("calendar"): vol.In(calendars),
+                vol.Required("range"): vol.In(["today", "week"]),
+            }
+        )
 
     async def async_call(
         self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext

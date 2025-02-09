@@ -33,6 +33,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         client: WeatherKitApiClient,
     ) -> None:
         """Initialize."""
@@ -40,6 +41,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
         )

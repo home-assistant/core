@@ -42,8 +42,8 @@
     'area_id': None,
     'capabilities': dict({
       'fan_speed_list': list([
-        'Quiet',
-        'Max',
+        'quiet',
+        'max',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -68,7 +68,7 @@
     'platform': 'tplink',
     'previous_unique_id': None,
     'supported_features': <VacuumEntityFeature: 12916>,
-    'translation_key': None,
+    'translation_key': 'vacuum',
     'unique_id': '123456789ABCDEFGH-vacuum',
     'unit_of_measurement': None,
   })
@@ -78,10 +78,10 @@
     'attributes': ReadOnlyDict({
       'battery_icon': 'mdi:battery-charging-100',
       'battery_level': 100,
-      'fan_speed': 'Max',
+      'fan_speed': 'max',
       'fan_speed_list': list([
-        'Quiet',
-        'Max',
+        'quiet',
+        'max',
       ]),
       'friendly_name': 'my_vacuum',
       'supported_features': <VacuumEntityFeature: 12916>,

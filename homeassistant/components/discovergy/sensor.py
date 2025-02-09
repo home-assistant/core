@@ -24,9 +24,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DiscovergyConfigEntry
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import DiscovergyUpdateCoordinator
+from .coordinator import DiscovergyConfigEntry, DiscovergyUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 
