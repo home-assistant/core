@@ -163,11 +163,11 @@
       "water_meter_reading": {
         "name": "Water consumption"
       },
-            "actual_switch_position": {
+      "actual_switch_position": {
         "name": "Actual switch position",
         "state": {
-            "on": "On",
-            "off": "Off"
+          "on": "On",
+          "off": "Off"
         }
       },
       "actual_treshold_electricity": {
