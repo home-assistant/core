@@ -7,6 +7,9 @@ from homeassistant.components.flick_electric.const import (
     CONF_SUPPLY_NODE_REF,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 CONF = {
     CONF_USERNAME: "test-username",
@@ -14,6 +17,14 @@ CONF = {
     CONF_ACCOUNT_ID: "1234",
     CONF_SUPPLY_NODE_REF: "123",
 }
+
+
+async def setup_integration(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Fixture for setting up the component."""
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
 
 def _mock_flick_price():
