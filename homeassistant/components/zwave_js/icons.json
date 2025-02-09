@@ -63,6 +63,12 @@
     "clear_lock_usercode": {
       "service": "mdi:eraser"
     },
+    "get_lock_usercode": {
+      "service": "mdi:lock-percent-outline"
+    },
+    "get_lock_usercodes": {
+      "service": "mdi:lock-percent"
+    },
     "invoke_cc_api": {
       "service": "mdi:api"
     },

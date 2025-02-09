@@ -69,6 +69,8 @@
   "device_automation": {
     "action_type": {
       "clear_lock_usercode": "Clear usercode on {entity_name}",
+      "get_lock_usercode": "Get a usercode for {entity_name}",
+      "get_lock_usercodes": "Get all usercodes for {entity_name}",
       "ping": "Ping device",
       "refresh_value": "Refresh the value(s) for {entity_name}",
       "reset_meter": "Reset meters on {subtype}",
@@ -301,6 +303,21 @@
         }
       },
       "name": "Clear lock user code"
+    },
+    "get_lock_usercode": {
+      "description": "Get a user code for a lock.",
+      "fields": {
+        "code_slot": {
+          "description": "Code slot to get the code.",
+          "name": "[%key:component::zwave_js::services::clear_lock_usercode::fields::code_slot::name%]"
+        }
+      },
+      "name": "Get lock user code"
+    },
+    "get_lock_usercodes": {
+      "description": "Get all user codes for a lock.",
+      "fields": {},
+      "name": "Get lock user codes"
     },
     "invoke_cc_api": {
       "description": "Calls a Command Class API on a node. Some Command Classes can't be fully controlled via the `set_value` action and require direct calls to the Command Class API.",

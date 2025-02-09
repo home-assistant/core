@@ -21,6 +21,8 @@ from homeassistant.components.zwave_js.const import (
     ATTR_LOCK_TIMEOUT,
     ATTR_OPERATION_TYPE,
     DOMAIN as ZWAVE_JS_DOMAIN,
+    SERVICE_GET_LOCK_USERCODE,
+    SERVICE_GET_LOCK_USERCODES,
 )
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
 from homeassistant.components.zwave_js.lock import (
@@ -140,6 +142,41 @@ async def test_door_lock(
         "propertyKey": 1,
     }
     assert args["value"] == "1234"
+
+    client.async_send_command.reset_mock()
+
+    # Test get usercode service
+    response = await hass.services.async_call(
+        ZWAVE_JS_DOMAIN,
+        SERVICE_GET_LOCK_USERCODE,
+        {
+            ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+            ATTR_CODE_SLOT: 1,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response[SCHLAGE_BE469_LOCK_ENTITY] == "**********"
+
+    client.async_send_command.reset_mock()
+
+    # Test get usercodes service
+    response = await hass.services.async_call(
+        ZWAVE_JS_DOMAIN,
+        SERVICE_GET_LOCK_USERCODES,
+        {
+            ATTR_ENTITY_ID: SCHLAGE_BE469_LOCK_ENTITY,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert response[SCHLAGE_BE469_LOCK_ENTITY] == {
+        "1": "**********",
+        "2": "**********",
+        "3": "**********",
+    }
 
     client.async_send_command.reset_mock()
 
