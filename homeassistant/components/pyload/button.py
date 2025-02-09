@@ -14,8 +14,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import PyLoadConfigEntry
 from .const import DOMAIN
+from .coordinator import PyLoadConfigEntry
 from .entity import BasePyLoadEntity
 
 
