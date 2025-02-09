@@ -84,9 +84,18 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.update_interval = update_interval
         self._shutdown_requested = False
         if config_entry is UNDEFINED:
+            # late import to avoid circular imports
+            from . import frame  # pylint: disable=import-outside-toplevel
+
+            frame.report_usage(
+                "ContextVar used, should passing the config entry explicitly - see "
+                "https://developers.home-assistant.io/blog/xxxxxxx",
+                core_behavior=frame.ReportBehavior.ERROR,
+                custom_integration_behavior=frame.ReportBehavior.LOG,
+                breaks_in_ha_version="2026.3",
+            )
+
             self.config_entry = config_entries.current_entry.get()
-            # This should be deprecated once all core integrations are updated
-            # to pass in the config entry explicitly.
         else:
             self.config_entry = config_entry
         self.always_update = always_update
