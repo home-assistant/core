@@ -277,8 +277,15 @@ class OllamaConversationEntity(
         )
 
     def _trim_history(self, message_history: MessageHistory, max_messages: int) -> None:
-        """Trims excess messages from a single history."""
-        _LOGGER.debug("Trimming history to %s messages", max_messages)
+        """Trims excess messages from a single history.
+
+        This sets the max history to allow a configurable size history may take
+        up in the context window.
+
+        Note that some messages in the history may not be from ollama only, and
+        may come from other anents, so the assumptions here may not strictly hold,
+        but generally should be effective.
+        """
         if max_messages < 1:
             # Keep all messages
             return
