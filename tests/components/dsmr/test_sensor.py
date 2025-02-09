@@ -522,7 +522,6 @@ async def test_eonhu_meter(
         "port": "/dev/ttyUSB0",
         "dsmr_version": "5EONHU",
         "serial_id": "1234",
-        "serial_id_gas": "5678",
     }
     entry_options = {
         "time_between_update": 0,
