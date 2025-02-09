@@ -6,7 +6,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
-from typing import Any
 
 from gps3.agps3threaded import AGPS3mechanism
 
@@ -38,7 +37,6 @@ _LOGGER = logging.getLogger(__name__)
 
 ATTR_CLIMB = "climb"
 ATTR_ELEVATION = "elevation"
-ATTR_GPS_TIME = "gps_time"
 ATTR_SPEED = "speed"
 ATTR_TOTAL_SATELLITES = "total_satellites"
 ATTR_USED_SATELLITES = "used_satellites"
@@ -201,21 +199,3 @@ class GpsdSensor(SensorEntity):
         """Return the state of GPSD."""
         value = self.entity_description.value_fn(self.agps_thread)
         return None if value == "n/a" else value
-
-    # Deprecated since Home Assistant 2024.9.0
-    # Can be removed completely in 2025.3.0
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return the state attributes of the GPS."""
-        if self.entity_description.key != ATTR_MODE:
-            return None
-
-        return {
-            ATTR_LATITUDE: self.agps_thread.data_stream.lat,
-            ATTR_LONGITUDE: self.agps_thread.data_stream.lon,
-            ATTR_ELEVATION: self.agps_thread.data_stream.alt,
-            ATTR_GPS_TIME: self.agps_thread.data_stream.time,
-            ATTR_SPEED: self.agps_thread.data_stream.speed,
-            ATTR_CLIMB: self.agps_thread.data_stream.climb,
-            ATTR_MODE: self.agps_thread.data_stream.mode,
-        }

@@ -46,9 +46,11 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
         device: Device,
         update_interval: timedelta,
         config_entry: TPLinkConfigEntry,
+        parent_coordinator: TPLinkDataUpdateCoordinator | None = None,
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific SmartPlug."""
         self.device = device
+        self.parent_coordinator = parent_coordinator
 
         # The iot HS300 allows a limited number of concurrent requests and
         # fetching the emeter information requires separate ones, so child
@@ -95,6 +97,12 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
             ) from ex
 
         await self._process_child_devices()
+        if not self._update_children:
+            # If the children are not being updated, it means this is an
+            # IotStrip, and we need to tell the children to write state
+            # since the power state is provided by the parent.
+            for child_coordinator in self._child_coordinators.values():
+                child_coordinator.async_set_updated_data(None)
 
     async def _process_child_devices(self) -> None:
         """Process child devices and remove stale devices."""
@@ -132,7 +140,11 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
                 # The child coordinators only update energy data so we can
                 # set a longer update interval to avoid flooding the device
                 child_coordinator = TPLinkDataUpdateCoordinator(
-                    self.hass, child, timedelta(seconds=60), self.config_entry
+                    self.hass,
+                    child,
+                    timedelta(seconds=60),
+                    self.config_entry,
+                    parent_coordinator=self,
                 )
                 self._child_coordinators[child.device_id] = child_coordinator
             return child_coordinator

@@ -92,7 +92,7 @@ SUPPORT_ONKYO = (
 DEFAULT_PLAYABLE_SOURCES = (
     InputSource.from_meaning("FM"),
     InputSource.from_meaning("AM"),
-    InputSource.from_meaning("TUNER"),
+    InputSource.from_meaning("DAB"),
 )
 
 ATTR_PRESET = "preset"

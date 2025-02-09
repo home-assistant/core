@@ -9,8 +9,8 @@ from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SamsungTVConfigEntry
 from .const import LOGGER
+from .coordinator import SamsungTVConfigEntry
 from .entity import SamsungTVEntity
 
 
