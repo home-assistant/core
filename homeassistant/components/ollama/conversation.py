@@ -118,10 +118,12 @@ def _convert_content(
             role=MessageRole.USER.value,
             content=chat_content.content,
         )
-    return ollama.Message(
-        role=MessageRole.SYSTEM.value,
-        content=chat_content.content,
-    )
+    if isinstance(chat_content, conversation.SystemContent):
+        return ollama.Message(
+            role=MessageRole.SYSTEM.value,
+            content=chat_content.content,
+        )
+    raise ValueError(f"Unexpected content type: {type(chat_content)}")
 
 
 class OllamaConversationEntity(
