@@ -344,7 +344,7 @@ class ChatLog:
                 intent_response = intent.IntentResponse(language=user_input.language)
                 intent_response.async_set_error(
                     intent.IntentResponseErrorCode.UNKNOWN,
-                    f"Error preparing LLM API: {err}",
+                    "Error preparing LLM API",
                 )
                 raise ConverseError(
                     f"Error getting LLM API {user_llm_hass_api}",
@@ -419,24 +419,3 @@ class ChatLog:
                 "tools": self.llm_api.tools if self.llm_api else None,
             },
         )
-
-    def trim_history(
-        self, max_messages: int | None = None, max_age: int | None = None
-    ) -> None:
-        """Trims excess messages from a single history."""
-        if max_messages is not None:
-            self._prune_max_length(max_messages)
-
-    def _prune_max_length(self, max_messages: int) -> None:
-        """Trims excess messages from a single history."""
-        if max_messages < 1:
-            # Keep all messages
-            return
-
-        if len(self.content) >= max_messages:
-            # Trim history but keep system prompt (first message).
-            # Every other message should be an assistant message, so keep 2x
-            # message objects.
-            num_keep = 2 * max_messages
-            drop_index = len(self.content) - num_keep
-            self.content = [self.content[0]] + self.content[drop_index:]
