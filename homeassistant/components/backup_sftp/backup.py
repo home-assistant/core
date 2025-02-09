@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import json
+import re
 import tarfile
 
 from collections.abc import AsyncIterator, Callable, Coroutine
@@ -111,11 +112,29 @@ class SFTPBackupAgent(BackupAgent):
         """Initialize the SFTPBackupAgent backup sync agent."""
         super().__init__()
         self._entry = entry
+        self._host = (
+            f"{self._entry.runtime_data.username}@{self._entry.runtime_data.host}"
+        )
         self._hass = hass
         self.name = entry.title
         self.domain = DOMAIN
-        self._host = (
-            f"{self._entry.runtime_data.username}@{self._entry.runtime_data.host}"
+
+    @property
+    def unique_id(self) -> str:
+        """
+        Returns unique identifier that consists of:
+        `backup_sftp.<host>.<port>.<username>.<remote_path>`.
+        `remote_path` has all non-alphanumeric characters replaced by `_`, as well as `host`
+        and `username`.
+        """
+        host = re.sub(r"[^a-zA-Z\d\s:]", "_", self._entry.runtime_data.host)
+        remote_path = re.sub(
+            r"[^a-zA-Z\d\s:]", "_", self._entry.runtime_data.backup_location
+        )
+        user = re.sub(r"[^a-zA-Z\d\s:]", "_", self._entry.runtime_data.username)
+
+        return (
+            f"backup_sftp.{host}.{self._entry.runtime_data.port}.{user}.{remote_path}"
         )
 
     async def async_download_backup(
