@@ -18,14 +18,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RoborockConfigEntry
 from .const import (
     DOMAIN,
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
 )
-from .coordinator import RoborockDataUpdateCoordinator
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 from .image import ColorsPalette, ImageConfig, RoborockMapDataParser, Sizes
 

@@ -15,8 +15,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import GaragesAmsterdamConfigEntry
-from .coordinator import GaragesAmsterdamDataUpdateCoordinator
+from .coordinator import (
+    GaragesAmsterdamConfigEntry,
+    GaragesAmsterdamDataUpdateCoordinator,
+)
 from .entity import GaragesAmsterdamEntity
 
 

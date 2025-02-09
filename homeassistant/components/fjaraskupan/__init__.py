@@ -76,7 +76,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
 
             coordinator: FjaraskupanCoordinator = FjaraskupanCoordinator(
-                hass, device, device_info
+                hass, entry, device, device_info
             )
             coordinator.detection_callback(service_info)
 

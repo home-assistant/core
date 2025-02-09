@@ -141,7 +141,7 @@ class FluxICTypeSelect(FluxConfigSelect):
     async def async_select_option(self, option: str) -> None:
         """Change the ic type."""
         await self._device.async_set_device_config(ic_type=option)
-        await _async_delayed_reload(self.hass, self.coordinator.entry)
+        await _async_delayed_reload(self.hass, self.coordinator.config_entry)
 
 
 class FluxWiringsSelect(FluxConfigSelect):
@@ -184,7 +184,7 @@ class FluxOperatingModesSelect(FluxConfigSelect):
     async def async_select_option(self, option: str) -> None:
         """Change the ic type."""
         await self._device.async_set_device_config(operating_mode=option)
-        await _async_delayed_reload(self.hass, self.coordinator.entry)
+        await _async_delayed_reload(self.hass, self.coordinator.config_entry)
 
 
 class FluxRemoteConfigSelect(FluxConfigSelect):

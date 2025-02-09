@@ -11,8 +11,7 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .climate import FGLairConfigEntry
-from .coordinator import FGLairCoordinator
+from .coordinator import FGLairConfigEntry, FGLairCoordinator
 from .entity import FGLairEntity
 
 

@@ -16,8 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import DOMAIN, RoborockConfigEntry
-from .coordinator import RoborockDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
