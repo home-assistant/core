@@ -35,7 +35,7 @@ from .utils import get_circuits, get_device_serial
 _LOGGER = logging.getLogger(__name__)
 
 SERVICE_SET_DHW_CIRCULATION_PUMP_SCHEDULE = "set_dhw_circulation_pump_schedule"
-SERVICE_SET_DHW_CIRCULATION_PUMP_SCHEDULE_ATTR_MODE = "schedule"
+SERVICE_SET_DHW_CIRCULATION_PUMP_SCHEDULE_ATTR_SCHEDULE = "schedule"
 
 VICARE_MODE_DHW = "dhw"
 VICARE_MODE_HEATING = "heating"
@@ -94,8 +94,12 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
         SERVICE_SET_DHW_CIRCULATION_PUMP_SCHEDULE,
-        {vol.Required(SERVICE_SET_DHW_CIRCULATION_PUMP_SCHEDULE_ATTR_MODE): cv.string},
-        "set_dhw_circulation_pump_schedule",
+        {
+            vol.Required(
+                SERVICE_SET_DHW_CIRCULATION_PUMP_SCHEDULE_ATTR_SCHEDULE
+            ): cv.string
+        },
+        SERVICE_SET_DHW_CIRCULATION_PUMP_SCHEDULE,
     )
 
     async_add_entities(
