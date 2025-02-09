@@ -33,7 +33,7 @@ async def async_setup_entry(
             ),
         )
         for coordinator, scenes in zip(
-            config_entry.runtime_data.v1, scene_lists, strict=False
+            config_entry.runtime_data.v1, scene_lists, strict=True
         )
         for scene in scenes
     )
