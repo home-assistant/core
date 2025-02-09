@@ -1,5 +1,7 @@
 """Coordinator for Home Connect."""
 
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable
@@ -53,7 +55,7 @@ class HomeConnectApplianceData:
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
 
-    def update(self, other: "HomeConnectApplianceData") -> None:
+    def update(self, other: HomeConnectApplianceData) -> None:
         """Update data with data from other instance."""
         self.events.update(other.events)
         self.info.connected = other.info.connected
