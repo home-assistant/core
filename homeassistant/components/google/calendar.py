@@ -152,7 +152,7 @@ def _get_entity_descriptions(
             local_sync = False
         entity_description = GoogleCalendarEntityDescription(
             key=key,
-            name=data[CONF_NAME].capitalize(),
+            name=data[CONF_NAME],
             entity_id=generate_entity_id(
                 ENTITY_ID_FORMAT, data[CONF_DEVICE_ID], hass=hass
             ),
