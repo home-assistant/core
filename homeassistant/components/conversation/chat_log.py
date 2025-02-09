@@ -142,7 +142,7 @@ class ToolResultContent:
     tool_result: JsonObjectType
 
 
-Content = SystemContent | UserContent | AssistantContent | ToolResultContent
+type Content = SystemContent | UserContent | AssistantContent | ToolResultContent
 
 
 @dataclass

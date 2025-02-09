@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for flipr integration."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -19,8 +21,8 @@ _LOGGER = logging.getLogger(__name__)
 class FliprData:
     """The Flipr data class."""
 
-    flipr_coordinators: list["FliprDataUpdateCoordinator"]
-    hub_coordinators: list["FliprHubDataUpdateCoordinator"]
+    flipr_coordinators: list[FliprDataUpdateCoordinator]
+    hub_coordinators: list[FliprHubDataUpdateCoordinator]
 
 
 type FliprConfigEntry = ConfigEntry[FliprData]
