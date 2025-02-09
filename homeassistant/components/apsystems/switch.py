@@ -11,7 +11,7 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ApSystemsConfigEntry, ApSystemsData
+from .coordinator import ApSystemsConfigEntry, ApSystemsData
 from .entity import ApSystemsEntity
 
 

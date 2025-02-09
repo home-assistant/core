@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare==2.41.0
+PyViCare==2.42.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -116,7 +116,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.37
+SQLAlchemy==2.0.38
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -650,7 +650,7 @@ boto3==1.34.131
 botocore==1.34.131
 
 # homeassistant.components.bring
-bring-api==1.0.1
+bring-api==1.0.2
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
@@ -893,7 +893,7 @@ eufylife-ble-client==0.1.8
 # evdev==1.6.1
 
 # homeassistant.components.evohome
-evohome-async==0.4.21
+evohome-async==1.0.2
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -930,7 +930,7 @@ fixerio==1.0.0a0
 fjaraskupan==2.3.2
 
 # homeassistant.components.flexit_bacnet
-flexit_bacnet==2.2.1
+flexit_bacnet==2.2.3
 
 # homeassistant.components.flipr
 flipr-api==1.6.1
@@ -1489,7 +1489,7 @@ nextcord==2.6.0
 nextdns==4.0.0
 
 # homeassistant.components.niko_home_control
-nhc==0.4.4
+nhc==0.4.10
 
 # homeassistant.components.nibe_heatpump
 nibe==2.14.0
@@ -1501,7 +1501,7 @@ nice-go==1.0.1
 niluclient==0.1.2
 
 # homeassistant.components.noaa_tides
-noaa-coops==0.1.9
+noaa-coops==0.4.0
 
 # homeassistant.components.nfandroidtv
 notifications-android-tv==0.1.5
@@ -1547,7 +1547,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.2.8
+ohme==1.2.9
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -1559,7 +1559,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.8
+onedrive-personal-sdk==0.0.9
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -1663,7 +1663,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.6.4
+plugwise==1.7.1
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1900,7 +1900,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2025.1.0
+pydrawise==2025.2.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0

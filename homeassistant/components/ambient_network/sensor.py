@@ -28,8 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import AmbientNetworkConfigEntry
-from .coordinator import AmbientNetworkDataUpdateCoordinator
+from .coordinator import AmbientNetworkConfigEntry, AmbientNetworkDataUpdateCoordinator
 from .entity import AmbientNetworkEntity
 
 TYPE_AQI_PM25 = "aqi_pm25"

@@ -71,7 +71,7 @@ async def async_setup_entry(
             PlugwiseSelectEntity(coordinator, device_id, description)
             for device_id in coordinator.new_devices
             for description in SELECT_TYPES
-            if description.options_key in coordinator.data.devices[device_id]
+            if description.options_key in coordinator.data[device_id]
         )
 
     _add_entities()

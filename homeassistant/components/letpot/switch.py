@@ -12,8 +12,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LetPotConfigEntry
-from .coordinator import LetPotDeviceCoordinator
+from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
 from .entity import LetPotEntity, exception_handler
 
 # Each change pushes a 'full' device status with the change. The library will cache
