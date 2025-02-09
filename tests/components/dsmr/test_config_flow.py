@@ -164,6 +164,16 @@ async def test_setup_network_rfxtrx(
             },
         ),
         (
+            "5EONHU",
+            {
+                "port": "/dev/ttyUSB1234",
+                "dsmr_version": "5EONHU",
+                "protocol": "dsmr_protocol",
+                "serial_id": "12345678",
+                "serial_id_gas": "123456789",
+            },
+        ),
+        (
             "5S",
             {
                 "port": "/dev/ttyUSB1234",
