@@ -263,8 +263,6 @@ class ChatLog:
                 if delta_content := delta.get("content"):
                     current_content += delta_content
                 if delta_tool_calls := delta.get("tool_calls"):
-                    # Make MyPy happy
-                    assert type(delta_tool_calls) is list
                     if self.llm_api is None:
                         raise ValueError("No LLM API configured")
                     current_tool_calls += delta_tool_calls
