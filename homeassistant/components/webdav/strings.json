@@ -13,7 +13,7 @@
           "url": "The URL of the WebDAV server. Check with your provider for the correct URL.",
           "username": "The username for the WebDAV server.",
           "password": "The password for the WebDAV server.",
-          "backup_path": "Define the path where the backups should be located (will be automatically created, if not exist).",
+          "backup_path": "Define the path where the backups should be located (will be created automatically if it does not exist).",
           "verify_ssl": "Whether to verify the SSL certificate of the server. Set to false if you use a self-signed certificate."
         }
       }
