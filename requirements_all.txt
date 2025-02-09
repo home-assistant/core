@@ -371,7 +371,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.4.1
+aioshelly==12.4.2
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1749,7 +1749,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.6.0
+py-synologydsm-api==2.6.2
 
 # homeassistant.components.atome
 pyAtome==0.1.1

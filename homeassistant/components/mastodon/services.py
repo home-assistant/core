@@ -12,7 +12,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
-from . import MastodonConfigEntry
 from .const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_CONTENT_WARNING,
@@ -22,6 +21,7 @@ from .const import (
     ATTR_VISIBILITY,
     DOMAIN,
 )
+from .coordinator import MastodonConfigEntry
 from .utils import get_media_type
 
 
