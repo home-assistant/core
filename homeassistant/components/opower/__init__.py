@@ -13,7 +13,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: OpowerConfigEntry) -> bool:
     """Set up Opower from a config entry."""
 
-    coordinator = OpowerCoordinator(hass, entry)
+    coordinator = OpowerCoordinator(hass, entry.data)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

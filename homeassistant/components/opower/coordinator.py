@@ -2,7 +2,8 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import cast
+from types import MappingProxyType
+from typing import Any, cast
 
 from opower import (
     Account,
@@ -45,13 +46,12 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: OpowerConfigEntry,
+        entry_data: MappingProxyType[str, Any],
     ) -> None:
         """Initialize the data handler."""
         super().__init__(
             hass,
             _LOGGER,
-            config_entry=config_entry,
             name="Opower",
             # Data is updated daily on Opower.
             # Refresh every 12h to be at most 12h behind.
@@ -59,10 +59,10 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         )
         self.api = Opower(
             aiohttp_client.async_get_clientsession(hass),
-            config_entry.data[CONF_UTILITY],
-            config_entry.data[CONF_USERNAME],
-            config_entry.data[CONF_PASSWORD],
-            config_entry.data.get(CONF_TOTP_SECRET),
+            entry_data[CONF_UTILITY],
+            entry_data[CONF_USERNAME],
+            entry_data[CONF_PASSWORD],
+            entry_data.get(CONF_TOTP_SECRET),
         )
         self._statistic_ids: set[str] = set()
 
