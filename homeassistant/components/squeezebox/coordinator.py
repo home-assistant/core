@@ -90,11 +90,20 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
 class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for Squeezebox players."""
 
-    def __init__(self, hass: HomeAssistant, player: Player, server_uuid: str) -> None:
+    config_entry: SqueezeboxConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SqueezeboxConfigEntry,
+        player: Player,
+        server_uuid: str,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=player.name,
             update_interval=timedelta(seconds=PLAYER_UPDATE_INTERVAL),
             always_update=True,
