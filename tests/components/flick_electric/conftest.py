@@ -7,7 +7,8 @@ import json_api_doc
 from pyflick import FlickPrice
 import pytest
 
-from homeassistant.components.flick_electric.const import DOMAIN
+from homeassistant.components.flick_electric.const import CONF_ACCOUNT_ID, DOMAIN
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
 from . import CONF
 
@@ -23,7 +24,22 @@ def mock_config_entry() -> MockConfigEntry:
         data={**CONF},
         version=2,
         entry_id="974e52a5c0724d17b7ed876dd6ff4bc8",
-        unique_id="10123404",
+        unique_id=CONF[CONF_ACCOUNT_ID],
+    )
+
+
+@pytest.fixture
+def mock_old_config_entry() -> MockConfigEntry:
+    """Mock an outdated config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: CONF[CONF_USERNAME],
+            CONF_PASSWORD: CONF[CONF_PASSWORD],
+        },
+        title=CONF[CONF_USERNAME],
+        unique_id=CONF[CONF_USERNAME],
+        version=1,
     )
 
 
@@ -38,6 +54,10 @@ def mock_flick_client() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.flick_electric.config_flow.FlickAPI",
             new=mock_api,
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
+            return_value="123456789abcdef",
         ),
     ):
         api = mock_api.return_value
@@ -65,6 +85,10 @@ def mock_flick_client_multiple() -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.flick_electric.config_flow.FlickAPI",
             new=mock_api,
+        ),
+        patch(
+            "homeassistant.components.flick_electric.config_flow.SimpleFlickAuth.async_get_access_token",
+            return_value="123456789abcdef",
         ),
     ):
         api = mock_api.return_value
