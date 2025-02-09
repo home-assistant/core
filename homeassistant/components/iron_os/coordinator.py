@@ -55,7 +55,6 @@ type IronOSConfigEntry = ConfigEntry[IronOSCoordinators]
 class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """IronOS base coordinator."""
 
-    config_entry: ConfigEntry
     device_info: DeviceInfoResponse
     config_entry: IronOSConfigEntry
 
@@ -90,7 +89,8 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             self.device_info = DeviceInfoResponse()
 
         self.v223_features = (
-            self.device_info.build and AwesomeVersion(self.device_info.build) >= V223
+            self.device_info.build is not None
+            and AwesomeVersion(self.device_info.build) >= V223
         )
 
 
@@ -149,29 +149,6 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
                     sw_version=self.device_info.build,
                     serial_number=f"{self.device_info.device_sn} (ID:{self.device_info.device_id})",
                 )
-
-
-class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
-    """IronOS coordinator for retrieving update information from github."""
-
-    def __init__(self, hass: HomeAssistant, github: IronOSUpdate) -> None:
-        """Initialize IronOS coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=None,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL_GITHUB,
-        )
-        self.github = github
-
-    async def _async_update_data(self) -> LatestRelease:
-        """Fetch data from Github."""
-
-        try:
-            return await self.github.latest_release()
-        except UpdateException as e:
-            raise UpdateFailed("Failed to check for latest IronOS update") from e
 
 
 class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
