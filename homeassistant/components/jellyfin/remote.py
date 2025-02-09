@@ -16,9 +16,8 @@ from homeassistant.components.remote import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import JellyfinConfigEntry
 from .const import LOGGER
-from .coordinator import JellyfinDataUpdateCoordinator
+from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .entity import JellyfinClientEntity
 
 
