@@ -30,6 +30,7 @@ class SFTPConfigEntryData:
     username: str
     password: str = ""
     private_key_file: str = ""
+    backup_location: str = ""
 
     def client(self):
         """Return SSHClient when called."""
