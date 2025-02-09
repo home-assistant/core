@@ -62,7 +62,7 @@ from .const import (
     SERVICE_START_QUEST,
     SERVICE_TRANSFORMATION,
 )
-from .types import HabiticaConfigEntry
+from .coordinator import HabiticaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 

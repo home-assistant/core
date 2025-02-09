@@ -37,9 +37,8 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.typing import StateType
 
 from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaDataUpdateCoordinator
+from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
 from .util import get_attribute_points, get_attributes_total, inventory_list
 
 _LOGGER = logging.getLogger(__name__)
