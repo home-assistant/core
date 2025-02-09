@@ -209,14 +209,14 @@
       "frequency": {
         "name": "Frequency"
       },
-      "max_power_on_l1": {
-        "name": "Max Power on L1"
+      "fuse_threshold_l1": {
+        "name": "Fuse threshold on L1"
       },
-      "max_power_on_l2": {
-        "name": "Max Power on L2"
+      "fuse_threshold_l2": {
+        "name": "Fuse threshold on L2"
       },
-      "max_power_on_l3": {
-        "name": "Max Power on L3"
+      "fuse_threshold_l3": {
+        "name": "Fuse threshold on L3"
       },
       "text_message": {
         "name": "Text message"
