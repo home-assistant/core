@@ -11,7 +11,7 @@ from pysmartthings.models import Attribute, Capability, Device, Scene, Status
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,7 +51,9 @@ class SmartThingsDeviceCoordinator(
         self.client = client
         self.device = device
 
-    async def _async_update_data(
-        self,
-    ) -> dict[Capability, dict[Attribute, Status]]:
-        return (await self.client.get_device_status(self.device.device_id))["main"]
+    async def _async_update_data(self) -> dict[Capability, dict[Attribute, Status]]:
+        try:
+            return (await self.client.get_device_status(self.device.device_id))["main"]
+        except Exception as err:
+            _LOGGER.exception("Error updating device %s", self.device.device_id)
+            raise UpdateFailed("Error updating device") from err
