@@ -59,7 +59,8 @@ class NINADataUpdateCoordinator(
         self.headline_filter: str = config_entry.data[CONF_HEADLINE_FILTER]
         self.area_filter: str = config_entry.data[CONF_AREA_FILTER]
 
-        for region in config_entry.data[CONF_REGIONS]:
+        regions: dict[str, str] = config_entry.data[CONF_REGIONS]
+        for region in regions:
             self._nina.addRegion(region)
 
         super().__init__(
