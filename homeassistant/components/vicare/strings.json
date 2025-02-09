@@ -509,7 +509,7 @@
       }
     },
     "set_dhw_circulation_pump_schedule": {
-      "name": "Set dhw circulation schedule",
+      "name": "Set DHW circulation schedule",
       "description": "Sets a new schedule for the domestic hot water circulation pump.",
       "fields": {
         "schedule": {
