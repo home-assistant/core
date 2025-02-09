@@ -511,6 +511,7 @@ async def test_luxembourg_meter(
         == UnitOfVolume.CUBIC_METERS
     )
 
+
 async def test_eonhu_meter(
     hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
 ) -> None:
