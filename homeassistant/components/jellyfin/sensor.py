@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
+from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .entity import JellyfinServerEntity
 
 

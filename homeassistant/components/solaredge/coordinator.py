@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 from datetime import date, datetime, timedelta
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from aiosolaredge import SolarEdge
 from stringcase import snakecase
@@ -21,13 +21,22 @@ from .const import (
     POWER_FLOW_UPDATE_DELAY,
 )
 
+if TYPE_CHECKING:
+    from .types import SolarEdgeConfigEntry
+
 
 class SolarEdgeDataService(ABC):
     """Get and update the latest data."""
 
     coordinator: DataUpdateCoordinator[None]
 
-    def __init__(self, hass: HomeAssistant, api: SolarEdge, site_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SolarEdgeConfigEntry,
+        api: SolarEdge,
+        site_id: str,
+    ) -> None:
         """Initialize the data object."""
         self.api = api
         self.site_id = site_id
@@ -36,6 +45,7 @@ class SolarEdgeDataService(ABC):
         self.attributes: dict[str, Any] = {}
 
         self.hass = hass
+        self.config_entry = config_entry
 
     @callback
     def async_setup(self) -> None:
@@ -43,6 +53,7 @@ class SolarEdgeDataService(ABC):
         self.coordinator = DataUpdateCoordinator(
             self.hass,
             LOGGER,
+            config_entry=self.config_entry,
             name=str(self),
             update_method=self.async_update_data,
             update_interval=self.update_interval,
@@ -174,9 +185,15 @@ class SolarEdgeInventoryDataService(SolarEdgeDataService):
 class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
     """Get and update the latest power flow data."""
 
-    def __init__(self, hass: HomeAssistant, api: SolarEdge, site_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SolarEdgeConfigEntry,
+        api: SolarEdge,
+        site_id: str,
+    ) -> None:
         """Initialize the power flow data service."""
-        super().__init__(hass, api, site_id)
+        super().__init__(hass, config_entry, api, site_id)
 
         self.unit = None
 
@@ -234,9 +251,15 @@ class SolarEdgeEnergyDetailsService(SolarEdgeDataService):
 class SolarEdgePowerFlowDataService(SolarEdgeDataService):
     """Get and update the latest power flow data."""
 
-    def __init__(self, hass: HomeAssistant, api: SolarEdge, site_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SolarEdgeConfigEntry,
+        api: SolarEdge,
+        site_id: str,
+    ) -> None:
         """Initialize the power flow data service."""
-        super().__init__(hass, api, site_id)
+        super().__init__(hass, config_entry, api, site_id)
 
         self.unit = None
 

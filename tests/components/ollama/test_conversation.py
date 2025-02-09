@@ -325,7 +325,11 @@ async def test_unknown_hass_api(
     await hass.async_block_till_done()
 
     result = await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
+        hass,
+        "hello",
+        "1234",
+        Context(),
+        agent_id=mock_config_entry.entry_id,
     )
 
     assert result == snapshot
@@ -428,70 +432,17 @@ async def test_message_history_trimming(
         assert args[4].kwargs["messages"][5]["content"] == "message 5"
 
 
-async def test_message_history_pruning(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
-) -> None:
-    """Test that old message histories are pruned."""
-    with patch(
-        "ollama.AsyncClient.chat",
-        return_value={"message": {"role": "assistant", "content": "test response"}},
-    ):
-        # Create 3 different message histories
-        conversation_ids: list[str] = []
-        for i in range(3):
-            result = await conversation.async_converse(
-                hass,
-                f"message {i + 1}",
-                conversation_id=None,
-                context=Context(),
-                agent_id=mock_config_entry.entry_id,
-            )
-            assert (
-                result.response.response_type == intent.IntentResponseType.ACTION_DONE
-            ), result
-            assert isinstance(result.conversation_id, str)
-            conversation_ids.append(result.conversation_id)
-
-        agent = conversation.get_agent_manager(hass).async_get_agent(
-            mock_config_entry.entry_id
-        )
-        assert len(agent._history) == 3
-        assert agent._history.keys() == set(conversation_ids)
-
-        # Modify the timestamps of the first 2 histories so they will be pruned
-        # on the next cycle.
-        for conversation_id in conversation_ids[:2]:
-            # Move back 2 hours
-            agent._history[conversation_id].timestamp -= 2 * 60 * 60
-
-        # Next cycle
-        result = await conversation.async_converse(
-            hass,
-            "test message",
-            conversation_id=None,
-            context=Context(),
-            agent_id=mock_config_entry.entry_id,
-        )
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
-            result
-        )
-
-        # Only the most recent histories should remain
-        assert len(agent._history) == 2
-        assert conversation_ids[-1] in agent._history
-        assert result.conversation_id in agent._history
-
-
 async def test_message_history_unlimited(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_init_component
 ) -> None:
     """Test that message history is not trimmed when max_history = 0."""
     conversation_id = "1234"
+
     with (
         patch(
             "ollama.AsyncClient.chat",
             return_value={"message": {"role": "assistant", "content": "test response"}},
-        ),
+        ) as mock_chat,
     ):
         hass.config_entries.async_update_entry(
             mock_config_entry, options={ollama.CONF_MAX_HISTORY: 0}
@@ -508,13 +459,13 @@ async def test_message_history_unlimited(
                 result.response.response_type == intent.IntentResponseType.ACTION_DONE
             ), result
 
-        agent = conversation.get_agent_manager(hass).async_get_agent(
-            mock_config_entry.entry_id
+        args = mock_chat.call_args_list
+        assert len(args) == 100
+        recorded_messages = args[-1].kwargs["messages"]
+        message_count = sum(
+            (message["role"] == "user") for message in recorded_messages
         )
-
-        assert len(agent._history) == 1
-        assert conversation_id in agent._history
-        assert agent._history[conversation_id].num_user_messages == 100
+        assert message_count == 100
 
 
 async def test_error_handling(
