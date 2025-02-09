@@ -12,10 +12,10 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 CONF = {
-    CONF_USERNAME: "test-username",
+    CONF_USERNAME: "9973debf-963f-49b0-9a73-ba9c3400cbed@anonymised.example.com",
     CONF_PASSWORD: "test-password",
-    CONF_ACCOUNT_ID: "1234",
-    CONF_SUPPLY_NODE_REF: "123",
+    CONF_ACCOUNT_ID: "134800",
+    CONF_SUPPLY_NODE_REF: "/network/nz/supply_nodes/ed7617df-4b10-4c8a-a05d-deadbeef8299",
 }
 
 
