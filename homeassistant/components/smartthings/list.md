@@ -1,0 +1,23 @@
+# device fixtures to find
+
+- ACs
+- Media players
+- Garage doors
+- Locks
+- Fans
+- More sensors
+- Zwave?
+
+- Devices with `energySaved` entity >0
+- Devices with `powerEnergy` entity >0
+- Are there devices with higher power than 0?
+
+# Things to fix:
+
+- Remove complimentary useless power and energy sensor for every switch capability
+- Try to see if the microwave door stops being a cover 
+
+# Things to question
+
+- Is the list of supported (oven/dishwasher/whatever) modes finite?
+- The oven setpoint, does that align with the unit of measurement of the temperature reading?

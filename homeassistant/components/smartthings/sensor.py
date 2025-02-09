@@ -2,6 +2,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Any
+
 from pysmartthings.models import Attribute, Capability
 
 from homeassistant.components.sensor import (
@@ -10,9 +15,17 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import (
+    LIGHT_LUX,
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import SmartThingsConfigEntry, SmartThingsDeviceCoordinator
 from .entity import SmartThingsEntity
@@ -62,16 +75,6 @@ from .entity import SmartThingsEntity
 #     Capability.alarm: [Map(Attribute.alarm, "Alarm", None, None, None, None)],
 #     Capability.audio_volume: [
 #         Map(Attribute.volume, "Volume", PERCENTAGE, None, None, None)
-#     ],
-#     Capability.battery: [
-#         Map(
-#             Attribute.battery,
-#             "Battery",
-#             PERCENTAGE,
-#             SensorDeviceClass.BATTERY,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
 #     ],
 #     Capability.body_mass_index_measurement: [
 #         Map(
@@ -123,27 +126,6 @@ from .entity import SmartThingsEntity
 #             None,
 #         )
 #     ],
-#     Capability.dishwasher_operating_state: [
-#         Map(
-#             Attribute.machine_state, "Dishwasher Machine State", None, None, None, None
-#         ),
-#         Map(
-#             Attribute.dishwasher_job_state,
-#             "Dishwasher Job State",
-#             None,
-#             None,
-#             None,
-#             None,
-#         ),
-#         Map(
-#             Attribute.completion_time,
-#             "Dishwasher Completion Time",
-#             None,
-#             SensorDeviceClass.TIMESTAMP,
-#             None,
-#             None,
-#         ),
-#     ],
 #     Capability.dryer_mode: [
 #         Map(
 #             Attribute.dryer_mode,
@@ -153,18 +135,6 @@ from .entity import SmartThingsEntity
 #             None,
 #             EntityCategory.DIAGNOSTIC,
 #         )
-#     ],
-#     Capability.dryer_operating_state: [
-#         Map(Attribute.machine_state, "Dryer Machine State", None, None, None, None),
-#         Map(Attribute.dryer_job_state, "Dryer Job State", None, None, None, None),
-#         Map(
-#             Attribute.completion_time,
-#             "Dryer Completion Time",
-#             None,
-#             SensorDeviceClass.TIMESTAMP,
-#             None,
-#             None,
-#         ),
 #     ],
 #     Capability.dust_sensor: [
 #         Map(
@@ -183,16 +153,6 @@ from .entity import SmartThingsEntity
 #             SensorStateClass.MEASUREMENT,
 #             None,
 #         ),
-#     ],
-#     Capability.energy_meter: [
-#         Map(
-#             Attribute.energy,
-#             "Energy Meter",
-#             UnitOfEnergy.KILO_WATT_HOUR,
-#             SensorDeviceClass.ENERGY,
-#             SensorStateClass.TOTAL_INCREASING,
-#             None,
-#         )
 #     ],
 #     Capability.equivalent_carbon_dioxide_measurement: [
 #         Map(
@@ -287,34 +247,8 @@ from .entity import SmartThingsEntity
 #     Capability.odor_sensor: [
 #         Map(Attribute.odor_level, "Odor Sensor", None, None, None, None)
 #     ],
-#     Capability.oven_mode: [
-#         Map(
-#             Attribute.oven_mode,
-#             "Oven Mode",
-#             None,
-#             None,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
-#     ],
-#     Capability.oven_operating_state: [
-#         Map(Attribute.machine_state, "Oven Machine State", None, None, None, None),
-#         Map(Attribute.oven_job_state, "Oven Job State", None, None, None, None),
-#         Map(Attribute.completion_time, "Oven Completion Time", None, None, None, None),
-#     ],
 #     Capability.oven_setpoint: [
 #         Map(Attribute.oven_setpoint, "Oven Set Point", None, None, None, None)
-#     ],
-#     Capability.power_consumption_report: [],
-#     Capability.power_meter: [
-#         Map(
-#             Attribute.power,
-#             "Power Meter",
-#             UnitOfPower.WATT,
-#             SensorDeviceClass.POWER,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
 #     ],
 #     Capability.power_source: [
 #         Map(
@@ -334,46 +268,6 @@ from .entity import SmartThingsEntity
 #             SensorDeviceClass.TEMPERATURE,
 #             None,
 #             None,
-#         )
-#     ],
-#     Capability.relative_humidity_measurement: [
-#         Map(
-#             Attribute.humidity,
-#             "Relative Humidity Measurement",
-#             PERCENTAGE,
-#             SensorDeviceClass.HUMIDITY,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
-#     Capability.robot_cleaner_cleaning_mode: [
-#         Map(
-#             Attribute.robot_cleaner_cleaning_mode,
-#             "Robot Cleaner Cleaning Mode",
-#             None,
-#             None,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
-#     ],
-#     Capability.robot_cleaner_movement: [
-#         Map(
-#             Attribute.robot_cleaner_movement,
-#             "Robot Cleaner Movement",
-#             None,
-#             None,
-#             None,
-#             None,
-#         )
-#     ],
-#     Capability.robot_cleaner_turbo_mode: [
-#         Map(
-#             Attribute.robot_cleaner_turbo_mode,
-#             "Robot Cleaner Turbo Mode",
-#             None,
-#             None,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
 #         )
 #     ],
 #     Capability.signal_strength: [
@@ -512,19 +406,248 @@ from .entity import SmartThingsEntity
 #             EntityCategory.DIAGNOSTIC,
 #         )
 #     ],
-#     Capability.washer_operating_state: [
-#         Map(Attribute.machine_state, "Washer Machine State", None, None, None, None),
-#         Map(Attribute.washer_job_state, "Washer Job State", None, None, None, None),
-#         Map(
-#             Attribute.completion_time,
-#             "Washer Completion Time",
-#             None,
-#             SensorDeviceClass.TIMESTAMP,
-#             None,
-#             None,
-#         ),
-#     ],
 # }
+
+
+@dataclass(frozen=True, kw_only=True)
+class SmartThingsSensorEntityDescription(SensorEntityDescription):
+    """Describe a SmartThings sensor entity."""
+
+    value_fn: Callable[[Any], str | float | int | datetime | None] = lambda value: value
+    extra_state_attributes: Callable[[Any], dict[str, Any]] | None = None
+
+
+CAPABILITY_TO_SENSORS: dict[
+    Capability, dict[Attribute, list[SmartThingsSensorEntityDescription]]
+] = {
+    Capability.BATTERY: {
+        Attribute.BATTERY: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.BATTERY,
+                name="Battery",
+                native_unit_of_measurement=PERCENTAGE,
+                device_class=SensorDeviceClass.BATTERY,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        ]
+    },
+    Capability.RELATIVE_HUMIDITY_MEASUREMENT: {
+        Attribute.HUMIDITY: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.HUMIDITY,
+                name="Relative Humidity Measurement",
+                native_unit_of_measurement=PERCENTAGE,
+                device_class=SensorDeviceClass.HUMIDITY,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.TEMPERATURE_MEASUREMENT: {
+        Attribute.TEMPERATURE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.TEMPERATURE,
+                name="Temperature Measurement",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.POWER_CONSUMPTION_REPORT: {
+        Attribute.POWER_CONSUMPTION: [
+            SmartThingsSensorEntityDescription(
+                key="energy_meter",
+                name="energy",
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                device_class=SensorDeviceClass.ENERGY,
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                value_fn=lambda value: value["energy"] / 1000,
+            ),
+            SmartThingsSensorEntityDescription(
+                key="power_meter",
+                name="power",
+                state_class=SensorStateClass.MEASUREMENT,
+                device_class=SensorDeviceClass.POWER,
+                native_unit_of_measurement=UnitOfPower.WATT,
+                value_fn=lambda value: value["power"],
+            ),
+            SmartThingsSensorEntityDescription(
+                key="deltaEnergy_meter",
+                name="deltaEnergy",
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                device_class=SensorDeviceClass.ENERGY,
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                value_fn=lambda value: value["deltaEnergy"] / 1000,
+            ),
+            SmartThingsSensorEntityDescription(
+                key="powerEnergy_meter",
+                name="powerEnergy",
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                device_class=SensorDeviceClass.ENERGY,
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                value_fn=lambda value: value["powerEnergy"] / 1000,
+            ),
+            SmartThingsSensorEntityDescription(
+                key="energySaved_meter",
+                name="energySaved",
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                device_class=SensorDeviceClass.ENERGY,
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                value_fn=lambda value: value["energySaved"] / 1000,
+            ),
+        ]
+    },
+    Capability.DRYER_OPERATING_STATE: {
+        Attribute.MACHINE_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.MACHINE_STATE,
+                name="Dryer Machine State",
+            )
+        ],
+        Attribute.DRYER_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.DRYER_JOB_STATE,
+                name="Dryer Job State",
+            )
+        ],
+        Attribute.COMPLETION_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COMPLETION_TIME,
+                name="Dryer Completion Time",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                value_fn=dt_util.parse_datetime,
+            )
+        ],
+    },
+    Capability.WASHER_OPERATING_STATE: {
+        Attribute.MACHINE_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.MACHINE_STATE,
+                name="Washer Machine State",
+            )
+        ],
+        Attribute.WASHER_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WASHER_JOB_STATE,
+                name="Washer Job State",
+            )
+        ],
+        Attribute.COMPLETION_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COMPLETION_TIME,
+                name="Washer Completion Time",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                value_fn=dt_util.parse_datetime,
+            )
+        ],
+    },
+    Capability.POWER_METER: {
+        Attribute.POWER: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.POWER,
+                name="Power Meter",
+                native_unit_of_measurement=UnitOfPower.WATT,
+                device_class=SensorDeviceClass.POWER,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.ENERGY_METER: {
+        Attribute.ENERGY: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ENERGY,
+                name="Energy Meter",
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                device_class=SensorDeviceClass.ENERGY,
+                state_class=SensorStateClass.TOTAL_INCREASING,
+            )
+        ]
+    },
+    Capability.DISHWASHER_OPERATING_STATE: {
+        Attribute.MACHINE_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.MACHINE_STATE,
+                name="Dishwasher Machine State",
+            )
+        ],
+        Attribute.DISHWASHER_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.DISHWASHER_JOB_STATE,
+                name="Dishwasher Job State",
+            )
+        ],
+        Attribute.COMPLETION_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COMPLETION_TIME,
+                name="Dishwasher Completion Time",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                value_fn=dt_util.parse_datetime,
+            )
+        ],
+    },
+    Capability.OVEN_MODE: {
+        Attribute.OVEN_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.OVEN_MODE,
+                name="Oven Mode",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        ]
+    },
+    Capability.OVEN_OPERATING_STATE: {
+        Attribute.MACHINE_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.MACHINE_STATE,
+                name="Oven Machine State",
+            )
+        ],
+        Attribute.OVEN_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.OVEN_JOB_STATE,
+                name="Oven Job State",
+            )
+        ],
+        Attribute.COMPLETION_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COMPLETION_TIME,
+                name="Oven Completion Time",
+            )
+        ],
+    },
+    Capability.OVEN_SETPOINT: {
+        Attribute.OVEN_SETPOINT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.OVEN_SETPOINT,
+                name="Oven Set Point",
+            )
+        ]
+    },
+    Capability.ROBOT_CLEANER_CLEANING_MODE: {
+        Attribute.ROBOT_CLEANER_CLEANING_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ROBOT_CLEANER_CLEANING_MODE,
+                name="Robot Cleaner Cleaning Mode",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        ],
+    },
+    Capability.ROBOT_CLEANER_MOVEMENT: {
+        Attribute.ROBOT_CLEANER_MOVEMENT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ROBOT_CLEANER_MOVEMENT,
+                name="Robot Cleaner Movement",
+            )
+        ]
+    },
+    Capability.ROBOT_CLEANER_TURBO_MODE: {
+        Attribute.ROBOT_CLEANER_TURBO_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ROBOT_CLEANER_TURBO_MODE,
+                name="Robot Cleaner Turbo Mode",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        ]
+    },
+}
 
 
 UNITS = {
@@ -534,13 +657,6 @@ UNITS = {
 }
 
 THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
-POWER_CONSUMPTION_REPORT_NAMES = [
-    "energy",
-    "power",
-    "deltaEnergy",
-    "powerEnergy",
-    "energySaved",
-]
 
 
 async def async_setup_entry(
@@ -550,14 +666,23 @@ async def async_setup_entry(
 ) -> None:
     """Add sensors for a config entry."""
     devices = entry.runtime_data.devices
-    async_add_entities(
+    entities = [
         SmartThingsSensor(device, description, capability, attribute)
         for device in devices
         for capability, attributes in device.data.items()
         if capability in CAPABILITY_TO_SENSORS
         for attribute in attributes
         for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
+    ]
+    entities.extend(
+        SmartThingsSensor(device, description, capability, attribute)
+        for device in devices
+        if Capability.SWITCH in device.data
+        for capability in (Capability.ENERGY_METER, Capability.POWER_METER)
+        for attribute in CAPABILITY_TO_SENSORS[capability]
+        for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
     )
+    async_add_entities(entities)
     # broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     # entities: list[SensorEntity] = []
     # for device in broker.devices.values():
@@ -620,66 +745,32 @@ async def async_setup_entry(
 #         capability for capability in CAPABILITY_TO_SENSORS if capability in capabilities
 #     ]
 
-CAPABILITY_TO_SENSORS: dict[
-    Capability, dict[Attribute, list[SensorEntityDescription]]
-] = {
-    Capability.BATTERY: {
-        Attribute.BATTERY: [
-            SensorEntityDescription(
-                key=Attribute.BATTERY,
-                name="Battery",
-                native_unit_of_measurement=PERCENTAGE,
-                device_class=SensorDeviceClass.BATTERY,
-                entity_category=EntityCategory.DIAGNOSTIC,
-            )
-        ]
-    },
-    Capability.RELATIVE_HUMIDITY_MEASUREMENT: {
-        Attribute.HUMIDITY: [
-            SensorEntityDescription(
-                key=Attribute.HUMIDITY,
-                name="Relative Humidity Measurement",
-                native_unit_of_measurement=PERCENTAGE,
-                device_class=SensorDeviceClass.HUMIDITY,
-                state_class=SensorStateClass.MEASUREMENT,
-            )
-        ]
-    },
-    Capability.TEMPERATURE_MEASUREMENT: {
-        Attribute.TEMPERATURE: [
-            SensorEntityDescription(
-                key=Attribute.TEMPERATURE,
-                name="Temperature Measurement",
-                device_class=SensorDeviceClass.TEMPERATURE,
-                state_class=SensorStateClass.MEASUREMENT,
-            )
-        ]
-    },
-}
-
 
 class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     """Define a SmartThings Sensor."""
 
+    entity_description: SmartThingsSensorEntityDescription
+
     def __init__(
         self,
         device: SmartThingsDeviceCoordinator,
-        entity_description: SensorEntityDescription,
+        entity_description: SmartThingsSensorEntityDescription,
         capability: Capability,
         attribute: Attribute,
     ) -> None:
         """Init the class."""
         super().__init__(device)
         self._attr_name = f"{device.device.label} {entity_description.name}"
-        self._attr_unique_id = f"{device.device.device_id}.{attribute}"
+        self._attr_unique_id = f"{device.device.device_id}.{entity_description.key}"
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> str | float | datetime | int | None:
         """Return the state of the sensor."""
-        return self.get_attribute_value(self.capability, self._attribute)
+        res = self.get_attribute_value(self.capability, self._attribute)
+        return self.entity_description.value_fn(res)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
@@ -690,6 +781,15 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
             if unit
             else self.entity_description.native_unit_of_measurement
         )
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the state attributes."""
+        if self.entity_description.extra_state_attributes:
+            return self.entity_description.extra_state_attributes(
+                self.get_attribute_value(self.capability, self._attribute)
+            )
+        return None
 
 
 # class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
@@ -710,52 +810,3 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
 #             return three_axis[self._index]
 #         except (TypeError, IndexError):
 #             return None
-#
-#
-# class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
-#     """Define a SmartThings Sensor."""
-#
-#     def __init__(
-#         self,
-#         device: DeviceEntity,
-#         report_name: str,
-#     ) -> None:
-#         """Init the class."""
-#         super().__init__(device)
-#         self.report_name = report_name
-#         self._attr_name = f"{device.label} {report_name}"
-#         self._attr_unique_id = f"{device.device_id}.{report_name}_meter"
-#         if self.report_name == "power":
-#             self._attr_state_class = SensorStateClass.MEASUREMENT
-#             self._attr_device_class = SensorDeviceClass.POWER
-#             self._attr_native_unit_of_measurement = UnitOfPower.WATT
-#         else:
-#             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-#             self._attr_device_class = SensorDeviceClass.ENERGY
-#             self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-#
-#     @property
-#     def native_value(self):
-#         """Return the state of the sensor."""
-#         value = self._device.status.attributes[Attribute.power_consumption].value
-#         if value is None or value.get(self.report_name) is None:
-#             return None
-#         if self.report_name == "power":
-#             return value[self.report_name]
-#         return value[self.report_name] / 1000
-#
-#     @property
-#     def extra_state_attributes(self):
-#         """Return specific state attributes."""
-#         if self.report_name == "power":
-#             attributes = [
-#                 "power_consumption_start",
-#                 "power_consumption_end",
-#             ]
-#             state_attributes = {}
-#             for attribute in attributes:
-#                 value = getattr(self._device.status, attribute)
-#                 if value is not None:
-#                     state_attributes[attribute] = value
-#             return state_attributes
-#         return None

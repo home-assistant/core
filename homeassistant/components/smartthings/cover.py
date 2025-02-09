@@ -85,7 +85,9 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         ):  # or self.supports_capability(Capability.WINDOW_SHADE_LEVEL)
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
-        if self.supports_capability(Capability.WINDOW_SHADE):
+        if self.supports_capability(Capability.DOOR_CONTROL):
+            self._attr_device_class = CoverDeviceClass.DOOR
+        elif self.supports_capability(Capability.WINDOW_SHADE):
             self._attr_device_class = CoverDeviceClass.SHADE
         # elif Capability.garage_door_control in device.capabilities:
         #     self._attr_device_class = CoverDeviceClass.GARAGE
@@ -118,14 +120,13 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
 
     def _update_attr(self) -> None:
         """Update the attrs of the cover."""
-        # if Capability.door_control in self._device.capabilities:
-        #     self._state = VALUE_TO_STATE.get(self._device.status.door)
-        if self.supports_capability(Capability.WINDOW_SHADE):
-            self._state = VALUE_TO_STATE.get(
-                self.get_attribute_value(
-                    Capability.WINDOW_SHADE, Attribute.WINDOW_SHADE
-                )
-            )
+        attribute = {
+            Capability.WINDOW_SHADE: Attribute.WINDOW_SHADE,
+            Capability.DOOR_CONTROL: Attribute.DOOR,
+        }.get(self.capability)
+        self._state = VALUE_TO_STATE.get(
+            self.get_attribute_value(self.capability, attribute)
+        )
         # elif Capability.garage_door_control in self._device.capabilities:
         #     self._state = VALUE_TO_STATE.get(self._device.status.door)
 
