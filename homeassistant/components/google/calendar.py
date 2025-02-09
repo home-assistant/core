@@ -266,6 +266,7 @@ async def async_setup_entry(
             if not entity_description.local_sync:
                 coordinator = CalendarQueryUpdateCoordinator(
                     hass,
+                    config_entry,
                     calendar_service,
                     entity_description.name or entity_description.key,
                     calendar_id,
@@ -285,6 +286,7 @@ async def async_setup_entry(
                 )
                 coordinator = CalendarSyncUpdateCoordinator(
                     hass,
+                    config_entry,
                     sync,
                     entity_description.name or entity_description.key,
                 )

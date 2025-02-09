@@ -78,7 +78,9 @@ MIGRATION_NAME_TO_KEY = {
 
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(),
+        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
     }
 )
 

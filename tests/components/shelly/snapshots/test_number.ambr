@@ -52,7 +52,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '15.2',
+    'state': 'unknown',
   })
 # ---
 # name: test_blu_trv_number_entity[number.trv_name_valve_position-entry]
