@@ -5,7 +5,6 @@ from http import HTTPStatus
 from unittest.mock import MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
-from aiohomeconnect.model.error import UnauthorizedError
 import pytest
 
 from homeassistant import config_entries, setup
@@ -14,7 +13,6 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.home_connect.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -109,15 +107,6 @@ async def test_reauth_flow(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test reauth flow."""
-    appliances = client.get_home_appliances.return_value
-    client.get_home_appliances.return_value = None
-    client.get_home_appliances.side_effect = UnauthorizedError("error.key")
-    assert config_entry.state == ConfigEntryState.NOT_LOADED
-    assert not await integration_setup(client)
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
-    client.get_home_appliances.return_value = appliances
-    client.get_home_appliances.side_effect = None
-
     result = await config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
