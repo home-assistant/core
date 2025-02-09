@@ -119,7 +119,6 @@ class OverseerrEvent(OverseerrEntity, EventEntity):
 
 def parse_event(event: dict[str, Any], nullable_fields: list[str]) -> dict[str, Any]:
     """Parse event."""
-    event.pop("notification_type")
     event.pop("image")
     for field in nullable_fields:
         event.pop(field)
