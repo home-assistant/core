@@ -1,0 +1,72 @@
+rules:
+  config-flow: done
+  test-before-configure: done
+  unique-config-entry: done
+  config-flow-test-coverage: done
+  runtime-data: done
+  test-before-setup: done
+  appropriate-polling: done
+  entity-unique-id: done
+  has-entity-name: done
+  entity-event-setup:
+    status: exempt
+    comment: does not use events
+  dependency-transparency: done
+  action-setup:
+    status: exempt
+    comment: no service actions
+  common-modules: done
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions:
+    status: todo
+    comment: Add removal instructions
+  docs-actions:
+    status: exempt
+    comment: no service actions
+  brands: done
+  config-entry-unloading:
+    status: todo
+    comment: Can this be automatic via the coordinator?
+  log-when-unavailable: done
+  entity-unavailable: done
+  action-exceptions:
+    status: exempt
+    comment: no service actions
+  reauthentication-flow: done
+  parallel-updates: done
+  test-coverage:
+    status: todo
+    comment: We are close to the goal of 95%
+  integration-owner: done
+  docs-installation-parameters:
+    status: todo
+    comment: Add the proper configuration_basic block
+  docs-configuration-parameters:
+    status: exempt
+    comment: No configuration parameters
+  entity-translations: done
+  entity-device-class:
+    status: exempt
+    comment: No applicable device class
+  devices:
+    status: todo
+    comment: Add device
+  entity-category: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: No entities
+  discovery:
+    status: exempt
+    comment: Cannot be discovered
+  stale-devices:
+    status: exempt
+    comment: No devices
+  diagnostics: done
+  exception-translations:
+    status: exempt
+    comment: No service exceptions
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: Add reconfiguration flow
