@@ -53,9 +53,7 @@ rules:
     comment: Handled by the coordinator
   parallel-updates: done
   reauthentication-flow: done
-  test-coverage:
-    status: todo
-    comment: We are close to the goal of 95%
+  test-coverage: done
 
   # Gold
   devices:
