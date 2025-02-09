@@ -82,7 +82,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     # Get a Coordinator if the device is available or if we have connected to the device before
     coordinators = await asyncio.gather(
         *build_setup_functions(
-            hass, entry, device_map, user_data, product_info, home_data.rooms, api_client
+            hass,
+            entry,
+            device_map,
+            user_data,
+            product_info,
+            home_data.rooms,
+            api_client,
         ),
         return_exceptions=True,
     )
