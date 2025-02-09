@@ -32,9 +32,14 @@ async def test_entities_added(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
+    sensor = TEST_SENSOR.model_copy()
+    status = sensor.data
+    sensor.data = None
+
     with (
         patch("lacrosse_view.LaCrosse.login", return_value=True),
-        patch("lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_SENSOR]),
+        patch("lacrosse_view.LaCrosse.get_devices", return_value=[sensor]),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -54,12 +59,17 @@ async def test_sensor_permission(
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
+    sensor = TEST_NO_PERMISSION_SENSOR.model_copy()
+    status = sensor.data
+    sensor.data = None
+
     with (
         patch("lacrosse_view.LaCrosse.login", return_value=True),
         patch(
-            "lacrosse_view.LaCrosse.get_sensors",
-            return_value=[TEST_NO_PERMISSION_SENSOR],
+            "lacrosse_view.LaCrosse.get_devices",
+            return_value=[sensor],
         ),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
     ):
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -79,11 +89,14 @@ async def test_field_not_supported(
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
+    sensor = TEST_UNSUPPORTED_SENSOR.model_copy()
+    status = sensor.data
+    sensor.data = None
+
     with (
         patch("lacrosse_view.LaCrosse.login", return_value=True),
-        patch(
-            "lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_UNSUPPORTED_SENSOR]
-        ),
+        patch("lacrosse_view.LaCrosse.get_devices", return_value=[sensor]),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -114,12 +127,17 @@ async def test_field_types(
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
+    sensor = test_input.model_copy()
+    status = sensor.data
+    sensor.data = None
+
     with (
         patch("lacrosse_view.LaCrosse.login", return_value=True),
         patch(
-            "lacrosse_view.LaCrosse.get_sensors",
+            "lacrosse_view.LaCrosse.get_devices",
             return_value=[test_input],
         ),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -137,12 +155,17 @@ async def test_no_field(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
+    sensor = TEST_NO_FIELD_SENSOR.model_copy()
+    status = sensor.data
+    sensor.data = None
+
     with (
         patch("lacrosse_view.LaCrosse.login", return_value=True),
         patch(
-            "lacrosse_view.LaCrosse.get_sensors",
-            return_value=[TEST_NO_FIELD_SENSOR],
+            "lacrosse_view.LaCrosse.get_devices",
+            return_value=[sensor],
         ),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -160,12 +183,17 @@ async def test_field_data_missing(hass: HomeAssistant) -> None:
     config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_ENTRY_DATA)
     config_entry.add_to_hass(hass)
 
+    sensor = TEST_MISSING_FIELD_DATA_SENSOR.model_copy()
+    status = sensor.data
+    sensor.data = None
+
     with (
         patch("lacrosse_view.LaCrosse.login", return_value=True),
         patch(
-            "lacrosse_view.LaCrosse.get_sensors",
-            return_value=[TEST_MISSING_FIELD_DATA_SENSOR],
+            "lacrosse_view.LaCrosse.get_devices",
+            return_value=[sensor],
         ),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

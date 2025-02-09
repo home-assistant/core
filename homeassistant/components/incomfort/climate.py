@@ -17,9 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import InComfortConfigEntry
 from .const import CONF_LEGACY_SETPOINT_STATUS, DOMAIN
-from .coordinator import InComfortDataCoordinator
+from .coordinator import InComfortConfigEntry, InComfortDataCoordinator
 from .entity import IncomfortEntity
 
 PARALLEL_UPDATES = 1
@@ -74,7 +73,10 @@ class InComfortClimate(IncomfortEntity, ClimateEntity):
             name=f"Thermostat {room.room_no}",
         )
         if coordinator.unique_id:
-            self._attr_device_info["via_device"] = (DOMAIN, coordinator.unique_id)
+            self._attr_device_info["via_device"] = (
+                DOMAIN,
+                coordinator.config_entry.entry_id,
+            )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

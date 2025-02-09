@@ -13,8 +13,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpnpConfigEntry, UpnpDataUpdateCoordinator
 from .const import LOGGER, WAN_STATUS
+from .coordinator import UpnpConfigEntry, UpnpDataUpdateCoordinator
 from .entity import UpnpEntity, UpnpEntityDescription
 
 

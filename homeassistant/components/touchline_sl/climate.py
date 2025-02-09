@@ -12,8 +12,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TouchlineSLConfigEntry
-from .coordinator import TouchlineSLModuleCoordinator
+from .coordinator import TouchlineSLConfigEntry, TouchlineSLModuleCoordinator
 from .entity import TouchlineSLZoneEntity
 
 

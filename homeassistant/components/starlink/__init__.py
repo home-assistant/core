@@ -19,12 +19,9 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: StarlinkConfigEntry) -> bool:
     """Set up Starlink from a config entry."""
-    entry.runtime_data = StarlinkUpdateCoordinator(
-        hass=hass,
-        url=entry.data[CONF_IP_ADDRESS],
-        name=entry.title,
-    )
+    entry.runtime_data = StarlinkUpdateCoordinator(hass, entry)
     await entry.runtime_data.async_config_entry_first_refresh()
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 

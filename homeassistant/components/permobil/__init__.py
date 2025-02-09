@@ -48,7 +48,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryAuthFailed(f"Config error for {p_api.email}") from err
 
     # create the coordinator with the API object
-    coordinator = MyPermobilCoordinator(hass, p_api)
+    coordinator = MyPermobilCoordinator(hass, entry, p_api)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator

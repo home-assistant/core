@@ -46,16 +46,22 @@ class HabiticaData:
     tasks: list[TaskData]
 
 
+type HabiticaConfigEntry = ConfigEntry[HabiticaDataUpdateCoordinator]
+
+
 class HabiticaDataUpdateCoordinator(DataUpdateCoordinator[HabiticaData]):
     """Habitica Data Update Coordinator."""
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, habitica: Habitica) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, habitica: Habitica
+    ) -> None:
         """Initialize the Habitica data coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
             request_refresh_debouncer=Debouncer(

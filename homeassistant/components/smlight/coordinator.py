@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from abc import abstractmethod
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
 
 from pysmlight import Api2, Info, Sensors
 from pysmlight.const import Settings, SettingsProp
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 from pysmlight.models import FirmwareList
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import issue_registry as ir
@@ -21,8 +21,13 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER, SCAN_FIRMWARE_INTERVAL, SCAN_INTERVAL
 
-if TYPE_CHECKING:
-    from . import SmConfigEntry
+
+@dataclass(kw_only=True)
+class SmlightData:
+    """Coordinator data class."""
+
+    data: SmDataUpdateCoordinator
+    firmware: SmFirmwareUpdateCoordinator
 
 
 @dataclass
@@ -42,17 +47,23 @@ class SmFwData:
     zb_firmware: list[FirmwareList]
 
 
+type SmConfigEntry = ConfigEntry[SmlightData]
+
+
 class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base Coordinator for SMLIGHT."""
 
     config_entry: SmConfigEntry
 
-    def __init__(self, hass: HomeAssistant, host: str, client: Api2) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: SmConfigEntry, client: Api2
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
-            name=f"{DOMAIN}_{host}",
+            config_entry=config_entry,
+            name=f"{DOMAIN}_{config_entry.data[CONF_HOST]}",
             update_interval=SCAN_INTERVAL,
         )
 
@@ -133,9 +144,11 @@ class SmDataUpdateCoordinator(SmBaseDataUpdateCoordinator[SmData]):
 class SmFirmwareUpdateCoordinator(SmBaseDataUpdateCoordinator[SmFwData]):
     """Class to manage fetching SMLIGHT firmware update data from cloud."""
 
-    def __init__(self, hass: HomeAssistant, host: str, client: Api2) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: SmConfigEntry, client: Api2
+    ) -> None:
         """Initialize the coordinator."""
-        super().__init__(hass, host, client)
+        super().__init__(hass, config_entry, client)
 
         self.update_interval = SCAN_FIRMWARE_INTERVAL
         # only one update can run at a time (core or zibgee)
