@@ -1505,7 +1505,7 @@ pyatv==0.16.0
 pyaussiebb==0.1.5
 
 # homeassistant.components.balboa
-pybalboa==1.1.1
+pybalboa==1.1.2
 
 # homeassistant.components.blackbird
 pyblackbird==0.6
