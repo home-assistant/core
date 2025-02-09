@@ -170,6 +170,7 @@ async def test_setup_network_rfxtrx(
                 "dsmr_version": "5EONHU",
                 "protocol": "dsmr_protocol",
                 "serial_id": "12345678",
+                "serial_id_gas": None,
             },
         ),
         (
