@@ -17,9 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import DelugeConfigEntry
 from .const import DelugeGetSessionStatusKeys, DelugeSensorType
-from .coordinator import DelugeDataUpdateCoordinator
+from .coordinator import DelugeConfigEntry, DelugeDataUpdateCoordinator
 from .entity import DelugeEntity
 
 

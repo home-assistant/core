@@ -12,7 +12,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RokuConfigEntry
+from .coordinator import RokuConfigEntry
 from .entity import RokuEntity
 from .helpers import format_channel_name, roku_exception_handler
 
