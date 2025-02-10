@@ -191,9 +191,6 @@ from .entity import SmartThingsEntity
 #             None,
 #         )
 #     ],
-#     Capability.media_input_source: [
-#         Map(Attribute.input_source, "Media Input Source", None, None, None, None)
-#     ],
 #     Capability.media_playback_repeat: [
 #         Map(
 #             Attribute.playback_repeat_mode,
@@ -252,16 +249,6 @@ from .entity import SmartThingsEntity
 #     ],
 #     Capability.smoke_detector: [
 #         Map(Attribute.smoke, "Smoke Detector", None, None, None, None)
-#     ],
-#     Capability.temperature_measurement: [
-#         Map(
-#             Attribute.temperature,
-#             "Temperature Measurement",
-#             None,
-#             SensorDeviceClass.TEMPERATURE,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
 #     ],
 #     Capability.thermostat_fan_mode: [
 #         Map(
