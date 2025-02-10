@@ -484,7 +484,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
-        if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) is False:
+        if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
             return HVACMode.OFF
         return AC_MODE_TO_STATE.get(
             self.get_attribute_value(

@@ -1,0 +1,100 @@
+# serializer version: 1
+# name: test_all_entities[da_ac_rac_000001][climate.ac_office_granit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+        'turbo',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_modes': list([
+        'windFree',
+      ]),
+      'swing_modes': None,
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.ac_office_granit',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'AC Office Granit',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 441>,
+    'translation_key': None,
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000001][climate.ac_office_granit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 25,
+      'drlc_status_duration': 0,
+      'drlc_status_level': -1,
+      'drlc_status_override': False,
+      'drlc_status_start': '1970-01-01T00:00:00Z',
+      'fan_mode': 'low',
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+        'turbo',
+      ]),
+      'friendly_name': 'AC Office Granit',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': None,
+      'preset_modes': list([
+        'windFree',
+      ]),
+      'supported_features': <ClimateEntityFeature: 441>,
+      'swing_mode': 'off',
+      'swing_modes': None,
+      'temperature': 25,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.ac_office_granit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
