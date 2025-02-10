@@ -362,6 +362,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_wm_wd_000001",
         "da_wm_wm_000001",
         "da_rvc_normal_000001",
+        "da_ks_microwave_0101x",
     ]
 )
 def devices(

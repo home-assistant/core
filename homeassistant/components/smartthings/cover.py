@@ -28,7 +28,7 @@ VALUE_TO_STATE = {
     "unknown": None,
 }
 
-CAPABILITIES = (Capability.WINDOW_SHADE,)
+CAPABILITIES = (Capability.WINDOW_SHADE, Capability.DOOR_CONTROL)
 
 
 async def async_setup_entry(
