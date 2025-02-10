@@ -19,7 +19,11 @@ from homeassistant.bootstrap import (
     sorted(
         {
             *CORE_INTEGRATIONS,
-            *(domain for name, domains in STAGE_0_INTEGRATIONS for domain in domains),
+            *(
+                domain
+                for name, domains, timeout in STAGE_0_INTEGRATIONS
+                for domain in domains
+            ),
             *STAGE_1_INTEGRATIONS,
             *DEFAULT_INTEGRATIONS,
         }
