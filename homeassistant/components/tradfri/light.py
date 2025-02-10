@@ -79,11 +79,11 @@ class TradfriLight(TradfriBaseEntity, LightEntity):
 
         # Calculate supported color modes
         modes: set[ColorMode] = {ColorMode.ONOFF}
-        if device_control.supports_hsb_xy_color:
+        if device_data.supports_hsb_xy_color:
             modes.add(ColorMode.HS)
-        if device_control.supports_color_temp:
+        if device_data.supports_color_temp:
             modes.add(ColorMode.COLOR_TEMP)
-        if device_control.supports_dimmer:
+        if device_data.supports_dimmer:
             modes.add(ColorMode.BRIGHTNESS)
         self._attr_supported_color_modes = filter_supported_color_modes(modes)
         if len(self._attr_supported_color_modes) == 1:
