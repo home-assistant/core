@@ -705,8 +705,6 @@ UNITS = {
     "mG": None,
 }
 
-THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -727,13 +725,6 @@ async def async_setup_entry(
     # entities: list[SensorEntity] = []
     # for device in broker.devices.values():
     #     for capability in broker.get_assigned(device.device_id, "sensor"):
-    #         if capability == Capability.power_consumption_report:
-    #             entities.extend(
-    #                 [
-    #                     SmartThingsPowerConsumptionSensor(device, report_name)
-    #                     for report_name in POWER_CONSUMPTION_REPORT_NAMES
-    #                 ]
-    #             )
     #         else:
     #             maps = CAPABILITY_TO_SENSORS[capability]
     #             entities.extend(
