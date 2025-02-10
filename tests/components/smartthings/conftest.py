@@ -348,6 +348,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "multipurpose_sensor",
         "contact_sensor",
         "base_electric_meter",
+        "smart_plug",
     ]
 )
 def devices(
