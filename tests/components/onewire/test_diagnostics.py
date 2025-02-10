@@ -23,20 +23,6 @@ def override_platforms() -> Generator[None]:
         yield
 
 
-DEVICE_DETAILS = {
-    "device_info": {
-        "identifiers": [["onewire", "EF.111111111113"]],
-        "manufacturer": "Hobby Boards",
-        "model": "HB_HUB",
-        "name": "EF.111111111113",
-    },
-    "family": "EF",
-    "id": "EF.111111111113",
-    "path": "/EF.111111111113/",
-    "type": "HB_HUB",
-}
-
-
 @pytest.mark.parametrize("device_id", ["EF.111111111113"], indirect=True)
 async def test_entry_diagnostics(
     hass: HomeAssistant,

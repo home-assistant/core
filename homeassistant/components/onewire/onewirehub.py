@@ -2,24 +2,20 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 import logging
 import os
 
 from pyownet import protocol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_VIA_DEVICE,
-    CONF_HOST,
-    CONF_PORT,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_VIA_DEVICE, CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util.signal_type import SignalType
 
 from .const import (
     DEVICE_SUPPORT,
@@ -40,9 +36,14 @@ DEVICE_MANUFACTURER = {
     "EF": MANUFACTURER_HOBBYBOARDS,
 }
 
+_DEVICE_SCAN_INTERVAL = timedelta(minutes=5)
 _LOGGER = logging.getLogger(__name__)
 
 type OneWireConfigEntry = ConfigEntry[OneWireHub]
+
+SIGNAL_NEW_DEVICE_CONNECTED = SignalType["OneWireHub", list[OWDeviceDescription]](
+    f"{DOMAIN}_new_device_connected"
+)
 
 
 def _is_known_device(device_family: str, device_type: str | None) -> bool:
@@ -57,6 +58,7 @@ class OneWireHub:
 
     owproxy: protocol._Proxy
     devices: list[OWDeviceDescription]
+    _version: str
 
     def __init__(self, hass: HomeAssistant, config_entry: OneWireConfigEntry) -> None:
         """Initialize."""
@@ -72,22 +74,47 @@ class OneWireHub:
         port = self._config_entry.data[CONF_PORT]
         _LOGGER.debug("Initializing connection to %s:%s", host, port)
         self.owproxy = protocol.proxy(host, port)
+        self._version = self.owproxy.read(protocol.PTH_VERSION).decode()
         self.devices = _discover_devices(self.owproxy)
 
     async def initialize(self) -> None:
         """Initialize a config entry."""
         await self._hass.async_add_executor_job(self._initialize)
-        # Populate the device registry
+        self._populate_device_registry(self.devices)
+
+    @callback
+    def _populate_device_registry(self, devices: list[OWDeviceDescription]) -> None:
+        """Populate the device registry."""
         device_registry = dr.async_get(self._hass)
-        for device in self.devices:
-            device_info = device.device_info
+        for device in devices:
+            device.device_info["sw_version"] = self._version
             device_registry.async_get_or_create(
                 config_entry_id=self._config_entry.entry_id,
-                identifiers=device_info[ATTR_IDENTIFIERS],
-                manufacturer=device_info[ATTR_MANUFACTURER],
-                model=device_info[ATTR_MODEL],
-                name=device_info[ATTR_NAME],
-                via_device=device_info.get(ATTR_VIA_DEVICE),
+                **device.device_info,
+            )
+
+    def schedule_scan_for_new_devices(self) -> None:
+        """Schedule a regular scan of the bus for new devices."""
+        self._config_entry.async_on_unload(
+            async_track_time_interval(
+                self._hass, self._scan_for_new_devices, _DEVICE_SCAN_INTERVAL
+            )
+        )
+
+    async def _scan_for_new_devices(self, _: datetime) -> None:
+        """Scan the bus for new devices."""
+        devices = await self._hass.async_add_executor_job(
+            _discover_devices, self.owproxy
+        )
+        existing_device_ids = [device.id for device in self.devices]
+        new_devices = [
+            device for device in devices if device.id not in existing_device_ids
+        ]
+        if new_devices:
+            self.devices.extend(new_devices)
+            self._populate_device_registry(new_devices)
+            async_dispatcher_send(
+                self._hass, SIGNAL_NEW_DEVICE_CONNECTED, self, new_devices
             )
 
 
@@ -113,7 +140,9 @@ def _discover_devices(
             identifiers={(DOMAIN, device_id)},
             manufacturer=DEVICE_MANUFACTURER.get(device_family, MANUFACTURER_MAXIM),
             model=device_type,
+            model_id=device_type,
             name=device_id,
+            serial_number=device_id[3:],
         )
         if parent_id:
             device_info[ATTR_VIA_DEVICE] = (DOMAIN, parent_id)

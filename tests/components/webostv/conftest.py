@@ -1,4 +1,4 @@
-"""Common fixtures and objects for the LG webOS integration tests."""
+"""Common fixtures and objects for the LG webOS TV integration tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
@@ -30,13 +30,19 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture(name="client")
 def client_fixture():
     """Patch of client library for tests."""
-    with patch(
-        "homeassistant.components.webostv.WebOsClient", autospec=True
-    ) as mock_client_class:
+    with (
+        patch(
+            "homeassistant.components.webostv.WebOsClient", autospec=True
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.webostv.config_flow.WebOsClient",
+            new=mock_client_class,
+        ),
+    ):
         client = mock_client_class.return_value
         client.hello_info = {"deviceUUID": FAKE_UUID}
         client.software_info = {"major_ver": "major", "minor_ver": "minor"}
-        client.system_info = {"modelName": TV_MODEL}
+        client.system_info = {"modelName": TV_MODEL, "serialNumber": "1234567890"}
         client.client_key = CLIENT_KEY
         client.apps = MOCK_APPS
         client.inputs = MOCK_INPUTS

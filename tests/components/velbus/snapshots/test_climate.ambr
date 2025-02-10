@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[climate.temperature-entry]
+# name: test_entities[climate.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -19,13 +19,14 @@
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.temperature',
-    'has_entity_name': False,
+    'entity_id': 'climate.living_room_temperature',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -45,11 +46,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.temperature-state]
+# name: test_entities[climate.living_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 20.0,
-      'friendly_name': 'Temperature',
+      'friendly_name': 'Living room Temperature',
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.COOL: 'cool'>,
@@ -67,7 +68,7 @@
       'temperature': 21.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.temperature',
+    'entity_id': 'climate.living_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

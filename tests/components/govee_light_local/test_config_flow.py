@@ -10,7 +10,7 @@ from homeassistant.components.govee_light_local.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import DEFAULT_CAPABILITEIS
+from .conftest import DEFAULT_CAPABILITIES
 
 
 def _get_devices(mock_govee_api: AsyncMock) -> list[GoveeDevice]:
@@ -20,7 +20,7 @@ def _get_devices(mock_govee_api: AsyncMock) -> list[GoveeDevice]:
             ip="192.168.1.100",
             fingerprint="asdawdqwdqwd1",
             sku="H615A",
-            capabilities=DEFAULT_CAPABILITEIS,
+            capabilities=DEFAULT_CAPABILITIES,
         )
     ]
 

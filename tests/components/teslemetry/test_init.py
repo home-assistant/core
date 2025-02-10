@@ -179,3 +179,14 @@ async def test_vehicle_stream(
 
     state = hass.states.get("binary_sensor.test_status")
     assert state.state == STATE_OFF
+
+
+async def test_no_live_status(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test coordinator refresh with an error."""
+    mock_live_status.side_effect = AsyncMock({"response": ""})
+    await setup_platform(hass)
+
+    assert hass.states.get("sensor.energy_site_grid_power") is None

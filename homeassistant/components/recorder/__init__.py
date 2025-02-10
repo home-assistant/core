@@ -14,7 +14,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,

@@ -8,7 +8,7 @@ from dataclasses import dataclass
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import Scope
-from teslemetry_stream import TeslemetryStream
+from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -38,6 +38,7 @@ class TeslemetryVehicleData:
     config_entry: ConfigEntry
     coordinator: TeslemetryVehicleDataCoordinator
     stream: TeslemetryStream
+    stream_vehicle: TeslemetryStreamVehicle
     vin: str
     firmware: str
     device: DeviceInfo
@@ -50,7 +51,7 @@ class TeslemetryEnergyData:
     """Data for a vehicle in the Teslemetry integration."""
 
     api: EnergySpecific
-    live_coordinator: TeslemetryEnergySiteLiveCoordinator
+    live_coordinator: TeslemetryEnergySiteLiveCoordinator | None
     info_coordinator: TeslemetryEnergySiteInfoCoordinator
     history_coordinator: TeslemetryEnergyHistoryCoordinator | None
     id: int

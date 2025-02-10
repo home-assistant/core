@@ -16,10 +16,11 @@ from async_upnp_client.search import SsdpSearchListener
 from async_upnp_client.utils import CaseInsensitiveDict
 
 from homeassistant import config_entries
-from homeassistant.components import network, ssdp
+from homeassistant.components import network
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.util.async_ import create_eager_task
 
 from .const import (
@@ -171,7 +172,7 @@ class YeelightScanner:
                 self._hass,
                 DOMAIN,
                 context={"source": config_entries.SOURCE_SSDP},
-                data=ssdp.SsdpServiceInfo(
+                data=SsdpServiceInfo(
                     ssdp_usn="",
                     ssdp_st=SSDP_ST,
                     ssdp_headers=response,

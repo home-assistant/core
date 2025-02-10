@@ -3,11 +3,18 @@
 from __future__ import annotations
 
 from enum import StrEnum
+import logging
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 from aiohttp import ClientError
-from habiticalib import Direction, HabiticaException, Task, TaskType
+from habiticalib import (
+    Direction,
+    HabiticaException,
+    Task,
+    TaskType,
+    TooManyRequestsError,
+)
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.todo import (
@@ -17,16 +24,17 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaDataUpdateCoordinator
+from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
 from .util import next_due_date
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -43,7 +51,7 @@ class HabiticaTodoList(StrEnum):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HabiticaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data
@@ -72,7 +80,14 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
         if len(uids) > 1 and self.entity_description.key is HabiticaTodoList.TODOS:
             try:
                 await self.coordinator.habitica.delete_completed_todos()
+            except TooManyRequestsError as e:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_rate_limit_exception",
+                    translation_placeholders={"retry_after": str(e.retry_after)},
+                ) from e
             except (HabiticaException, ClientError) as e:
+                _LOGGER.debug(str(e))
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="delete_completed_todos_failed",
@@ -81,7 +96,14 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
             for task_id in uids:
                 try:
                     await self.coordinator.habitica.delete_task(UUID(task_id))
+                except TooManyRequestsError as e:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="setup_rate_limit_exception",
+                        translation_placeholders={"retry_after": str(e.retry_after)},
+                    ) from e
                 except (HabiticaException, ClientError) as e:
+                    _LOGGER.debug(str(e))
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
                         translation_key=f"delete_{self.entity_description.key}_failed",
@@ -108,7 +130,14 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
 
         try:
             await self.coordinator.habitica.reorder_task(UUID(uid), pos)
+        except TooManyRequestsError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
+            ) from e
         except (HabiticaException, ClientError) as e:
+            _LOGGER.debug(str(e))
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=f"move_{self.entity_description.key}_item_failed",
@@ -160,7 +189,14 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
             try:
                 await self.coordinator.habitica.update_task(UUID(item.uid), task)
                 refresh_required = True
+            except TooManyRequestsError as e:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_rate_limit_exception",
+                    translation_placeholders={"retry_after": str(e.retry_after)},
+                ) from e
             except (HabiticaException, ClientError) as e:
+                _LOGGER.debug(str(e))
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key=f"update_{self.entity_description.key}_item_failed",
@@ -187,8 +223,14 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 refresh_required = True
             else:
                 score_result = None
-
+        except TooManyRequestsError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
+            ) from e
         except (HabiticaException, ClientError) as e:
+            _LOGGER.debug(str(e))
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=f"score_{self.entity_description.key}_item_failed",
@@ -260,7 +302,14 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
                     date=item.due,
                 )
             )
+        except TooManyRequestsError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
+            ) from e
         except (HabiticaException, ClientError) as e:
+            _LOGGER.debug(str(e))
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=f"create_{self.entity_description.key}_item_failed",

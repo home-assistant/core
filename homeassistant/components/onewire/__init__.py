@@ -37,6 +37,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneWireConfigEntry) -> b
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
+    onewire_hub.schedule_scan_for_new_devices()
+
     entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
     return True

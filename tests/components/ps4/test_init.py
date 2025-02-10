@@ -31,7 +31,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import location
+from homeassistant.util import location as location_util
 
 from tests.common import MockConfigEntry
 
@@ -52,13 +52,14 @@ MOCK_FLOW_RESULT = {
     "title": "test_ps4",
     "data": MOCK_DATA,
     "options": {},
+    "subentries": (),
 }
 
 MOCK_ENTRY_ID = "SomeID"
 
 MOCK_CONFIG = MockConfigEntry(domain=DOMAIN, data=MOCK_DATA, entry_id=MOCK_ENTRY_ID)
 
-MOCK_LOCATION = location.LocationInfo(
+MOCK_LOCATION = location_util.LocationInfo(
     "0.0.0.0",
     "US",
     "USD",
