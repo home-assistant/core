@@ -2,12 +2,15 @@
 
 from collections.abc import Callable, Coroutine
 from copy import deepcopy
+import datetime
 from http import HTTPStatus
 import json
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 from hass_nabucasa import thingtalk
 from hass_nabucasa.auth import (
     InvalidTotpCode,
@@ -1875,9 +1878,11 @@ async def test_download_support_package(
     set_cloud_prefs: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test downloading a support package file."""
+
     aioclient_mock.get("https://cloud.bla.com/status", text="")
     aioclient_mock.get(
         "https://cert-server/directory", exc=Exception("Unexpected exception")
@@ -1935,6 +1940,17 @@ async def test_download_support_package(
             "cloud_ice_servers_enabled": True,
         }
     )
+
+    now = dt_util.utcnow()
+    freezer.move_to(datetime.datetime.fromisoformat("2025-02-10T12:00:00.0+00:00"))
+    with patch(
+        "homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3
+    ):
+        logging.getLogger("hass_nabucasa.iot").info("This message will be dropped")
+        logging.getLogger("hass_nabucasa.iot").info("Hass nabucasa log")
+        logging.getLogger("snitun.utils.aiohttp_client").warning("Snitun log")
+        logging.getLogger("homeassistant.components.cloud.client").error("Cloud log")
+    freezer.move_to(now)  # Reset time otherwise hass_client auth fails
 
     cloud_client = await hass_client()
     with (
