@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import abc
 import asyncio
+from collections import defaultdict
 from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass, replace
 from enum import StrEnum
@@ -734,10 +735,10 @@ class BackupManager:
         # Run the include filter first to ensure we only consider backups that
         # should be included in the deletion process.
         backups = include_filter(backups)
-        backups_by_agent: dict[str, dict[str, ManagerBackup]] = {}
+        backups_by_agent: dict[str, dict[str, ManagerBackup]] = defaultdict(dict)
         for backup_id, backup in backups.items():
             for agent_id in backup.agents:
-                backups_by_agent.setdefault(agent_id, {})[backup_id] = backup
+                backups_by_agent[agent_id][backup_id] = backup
 
         LOGGER.debug("Backups returned by include filter: %s", backups)
         LOGGER.debug(
@@ -753,13 +754,15 @@ class BackupManager:
             return
 
         # always delete oldest backup first
-        backups_to_delete_by_agent: dict[str, dict[str, ManagerBackup]] = {}
+        backups_to_delete_by_agent: dict[str, dict[str, ManagerBackup]] = defaultdict(
+            dict
+        )
         for backup_id, backup in sorted(
             backups_to_delete.items(),
             key=lambda backup_item: backup_item[1].date,
         ):
             for agent_id in backup.agents:
-                backups_to_delete_by_agent.setdefault(agent_id, {})[backup_id] = backup
+                backups_to_delete_by_agent[agent_id][backup_id] = backup
         LOGGER.debug(
             "Backups returned by delete filter by agent: %s",
             {
@@ -783,10 +786,10 @@ class BackupManager:
             },
         )
 
-        backup_ids_to_delete: dict[str, set[str]] = {}
+        backup_ids_to_delete: dict[str, set[str]] = defaultdict(set)
         for agent_id, to_delete in backups_to_delete_by_agent.items():
             for backup_id in to_delete:
-                backup_ids_to_delete.setdefault(backup_id, set()).add(agent_id)
+                backup_ids_to_delete[backup_id].add(agent_id)
 
         if not backup_ids_to_delete:
             return
