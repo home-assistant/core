@@ -648,6 +648,6 @@ class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-en
     def get_live_measurement(self) -> Any:
         """Get live measurement data."""
         if errors := self.data.get("errors"):
-            _LOGGER.error(errors[0])
+            _LOGGER.warning(errors[0])
             return None
         return self.data.get("data", {}).get("liveMeasurement")
