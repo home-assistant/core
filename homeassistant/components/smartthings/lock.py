@@ -2,17 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
 from typing import Any
 
-from pysmartthings import Attribute, Capability
+from pysmartthings.models import Attribute, Capability, Command
 
 from homeassistant.components.lock import LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DATA_BROKERS, DOMAIN
+from .coordinator import SmartThingsConfigEntry
 from .entity import SmartThingsEntity
 
 ST_STATE_LOCKED = "locked"
@@ -28,23 +26,21 @@ ST_LOCK_ATTR_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: SmartThingsConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add locks for a config entry."""
-    broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
+    """Add lights for a config entry."""
+    devices = entry.runtime_data.devices
     async_add_entities(
-        SmartThingsLock(device)
-        for device in broker.devices.values()
-        if broker.any_assigned(device.device_id, "lock")
+        SmartThingsLock(device) for device in devices if Capability.LOCK in device.data
     )
 
 
-def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-    """Return all capabilities supported if minimum required are present."""
-    if Capability.lock in capabilities:
-        return [Capability.lock]
-    return None
+# def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
+#     """Return all capabilities supported if minimum required are present."""
+#     if Capability.lock in capabilities:
+#         return [Capability.lock]
+#     return None
 
 
 class SmartThingsLock(SmartThingsEntity, LockEntity):
@@ -52,24 +48,32 @@ class SmartThingsLock(SmartThingsEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        await self._device.lock(set_status=True)
-        self.async_write_ha_state()
+        await self.coordinator.client.execute_device_command(
+            self.coordinator.device.device_id,
+            Capability.LOCK,
+            Command.LOCK,
+        )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        await self._device.unlock(set_status=True)
-        self.async_write_ha_state()
+        await self.coordinator.client.execute_device_command(
+            self.coordinator.device.device_id,
+            Capability.LOCK,
+            Command.UNLOCK,
+        )
 
     @property
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
-        return self._device.status.lock == ST_STATE_LOCKED
+        return (
+            self.get_attribute_value(Capability.LOCK, Attribute.LOCK) == ST_STATE_LOCKED
+        )
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         state_attrs = {}
-        status = self._device.status.attributes[Attribute.lock]
+        status = self.coordinator.data[Capability.LOCK][Attribute.LOCK]
         if status.value:
             state_attrs["lock_state"] = status.value
         if isinstance(status.data, dict):

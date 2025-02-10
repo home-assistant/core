@@ -19,6 +19,7 @@
 - Device info
 - Don't show disabled capabilities
 - Don't create a coordinator for the bridge?
+- Locks can unlatch = open
 
 # Things to find out
 

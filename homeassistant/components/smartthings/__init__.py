@@ -26,7 +26,7 @@ PLATFORMS = [
     Platform.COVER,
     # Platform.FAN,
     Platform.LIGHT,
-    # Platform.LOCK,
+    Platform.LOCK,
     Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
