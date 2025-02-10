@@ -225,6 +225,7 @@ class AnthropicConversationEntity(
                 ) from err
 
             LOGGER.debug("Response %s", response)
+
             messages.append(_message_convert(response))
             text = "".join(
                 [
