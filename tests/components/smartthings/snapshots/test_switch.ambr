@@ -45,3 +45,49 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[vd_stv_2017_k][switch.tv_samsung_8_series_49-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.tv_samsung_8_series_49',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': '[TV] Samsung 8 Series (49)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[vd_stv_2017_k][switch.tv_samsung_8_series_49-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '[TV] Samsung 8 Series (49)',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.tv_samsung_8_series_49',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

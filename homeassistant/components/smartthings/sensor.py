@@ -326,11 +326,6 @@ from .entity import SmartThingsEntity
 #             EntityCategory.DIAGNOSTIC,
 #         )
 #     ],
-#     Capability.three_axis: [],
-#     Capability.tv_channel: [
-#         Map(Attribute.tv_channel, "Tv Channel", None, None, None, None),
-#         Map(Attribute.tv_channel_name, "Tv Channel Name", None, None, None, None),
-#     ],
 #     Capability.tvoc_measurement: [
 #         Map(
 #             Attribute.tvoc_level,
@@ -685,6 +680,20 @@ CAPABILITY_TO_SENSORS: dict[
                 value_fn=lambda value: value[2],
             ),
         ]
+    },
+    Capability.TV_CHANNEL: {
+        Attribute.TV_CHANNEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.TV_CHANNEL,
+                name="Tv Channel",
+            )
+        ],
+        Attribute.TV_CHANNEL_NAME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.TV_CHANNEL_NAME,
+                name="Tv Channel Name",
+            )
+        ],
     },
 }
 
