@@ -16,8 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .coordinator import TaskUpdateCoordinator
-from .types import GoogleTasksConfigEntry
+from .coordinator import GoogleTasksConfigEntry, TaskUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 

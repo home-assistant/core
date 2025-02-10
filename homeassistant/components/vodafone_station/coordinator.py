@@ -50,7 +50,7 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         host: str,
         username: str,
         password: str,
-        config_entry_unique_id: str | None,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize the scanner."""
 
@@ -58,13 +58,14 @@ class VodafoneStationRouter(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self.api = VodafoneStationSercommApi(host, username, password)
 
         # Last resort as no MAC or S/N can be retrieved via API
-        self._id = config_entry_unique_id
+        self._id = config_entry.unique_id
 
         super().__init__(
             hass=hass,
             logger=_LOGGER,
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
+            config_entry=config_entry,
         )
         device_reg = dr.async_get(self.hass)
         device_list = dr.async_entries_for_config_entry(

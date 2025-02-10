@@ -9,8 +9,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RadarrConfigEntry
-from .coordinator import CalendarUpdateCoordinator, RadarrEvent
+from .coordinator import CalendarUpdateCoordinator, RadarrConfigEntry, RadarrEvent
 from .entity import RadarrEntity
 
 CALENDAR_TYPE = EntityDescription(

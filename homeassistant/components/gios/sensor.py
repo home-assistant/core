@@ -23,7 +23,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GiosConfigEntry
 from .const import (
     ATTR_AQI,
     ATTR_C6H6,
@@ -38,7 +37,7 @@ from .const import (
     MANUFACTURER,
     URL,
 )
-from .coordinator import GiosDataUpdateCoordinator
+from .coordinator import GiosConfigEntry, GiosDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 

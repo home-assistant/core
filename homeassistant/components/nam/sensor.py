@@ -32,7 +32,6 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from . import NAMConfigEntry, NAMDataUpdateCoordinator
 from .const import (
     ATTR_BME280_HUMIDITY,
     ATTR_BME280_PRESSURE,
@@ -69,6 +68,7 @@ from .const import (
     DOMAIN,
     MIGRATION_SENSORS,
 )
+from .coordinator import NAMConfigEntry, NAMDataUpdateCoordinator
 
 PARALLEL_UPDATES = 1
 

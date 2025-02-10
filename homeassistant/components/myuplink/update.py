@@ -8,7 +8,7 @@ from homeassistant.components.update import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
+from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
 
 UPDATE_DESCRIPTION = UpdateEntityDescription(

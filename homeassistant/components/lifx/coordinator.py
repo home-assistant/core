@@ -23,6 +23,7 @@ from aiolifx_themes.themes import ThemeLibrary, ThemePainter
 from awesomeversion import AwesomeVersion
 from propcache.api import cached_property
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     SIGNAL_STRENGTH_DECIBELS,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
@@ -86,11 +87,13 @@ class SkyType(IntEnum):
 class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific lifx device."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         connection: LIFXConnection,
-        title: str,
     ) -> None:
         """Initialize DataUpdateCoordinator."""
         assert connection.device is not None
@@ -105,7 +108,8 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{title} ({self.device.ip_addr})",
+            config_entry=config_entry,
+            name=f"{config_entry.title} ({self.device.ip_addr})",
             update_interval=timedelta(seconds=LIGHT_UPDATE_INTERVAL),
             # We don't want an immediate refresh since the device
             # takes a moment to reflect the state change

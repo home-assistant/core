@@ -374,6 +374,7 @@ class PipelineEventType(StrEnum):
     STT_VAD_END = "stt-vad-end"
     STT_END = "stt-end"
     INTENT_START = "intent-start"
+    INTENT_PROGRESS = "intent-progress"
     INTENT_END = "intent-end"
     TTS_START = "tts-start"
     TTS_END = "tts-end"
@@ -1093,46 +1094,62 @@ class PipelineRun:
                     agent_id = conversation.HOME_ASSISTANT_AGENT
                     processed_locally = True
 
-            # It was already handled, create response and add to chat history
-            if intent_response is not None:
-                with (
-                    chat_session.async_get_chat_session(
-                        self.hass, user_input.conversation_id
-                    ) as session,
-                    conversation.async_get_chat_log(
-                        self.hass, session, user_input
-                    ) as chat_log,
-                ):
+            @callback
+            def chat_log_delta_listener(
+                chat_log: conversation.ChatLog, delta: dict
+            ) -> None:
+                """Handle chat log delta."""
+                self.process_event(
+                    PipelineEvent(
+                        PipelineEventType.INTENT_PROGRESS,
+                        {
+                            "chat_log_delta": delta,
+                        },
+                    )
+                )
+
+            with (
+                chat_session.async_get_chat_session(
+                    self.hass, user_input.conversation_id
+                ) as session,
+                conversation.async_get_chat_log(
+                    self.hass,
+                    session,
+                    user_input,
+                    chat_log_delta_listener=chat_log_delta_listener,
+                ) as chat_log,
+            ):
+                # It was already handled, create response and add to chat history
+                if intent_response is not None:
                     speech: str = intent_response.speech.get("plain", {}).get(
                         "speech", ""
                     )
-                    async for _ in chat_log.async_add_assistant_content(
+                    chat_log.async_add_assistant_content_without_tools(
                         conversation.AssistantContent(
                             agent_id=agent_id,
                             content=speech,
                         )
-                    ):
-                        pass
+                    )
                     conversation_result = conversation.ConversationResult(
                         response=intent_response,
                         conversation_id=session.conversation_id,
                     )
 
-            else:
-                # Fall back to pipeline conversation agent
-                conversation_result = await conversation.async_converse(
-                    hass=self.hass,
-                    text=user_input.text,
-                    conversation_id=user_input.conversation_id,
-                    device_id=user_input.device_id,
-                    context=user_input.context,
-                    language=user_input.language,
-                    agent_id=user_input.agent_id,
-                    extra_system_prompt=user_input.extra_system_prompt,
-                )
-                speech = conversation_result.response.speech.get("plain", {}).get(
-                    "speech", ""
-                )
+                else:
+                    # Fall back to pipeline conversation agent
+                    conversation_result = await conversation.async_converse(
+                        hass=self.hass,
+                        text=user_input.text,
+                        conversation_id=user_input.conversation_id,
+                        device_id=user_input.device_id,
+                        context=user_input.context,
+                        language=user_input.language,
+                        agent_id=user_input.agent_id,
+                        extra_system_prompt=user_input.extra_system_prompt,
+                    )
+                    speech = conversation_result.response.speech.get("plain", {}).get(
+                        "speech", ""
+                    )
 
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")

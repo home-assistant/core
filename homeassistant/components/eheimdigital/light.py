@@ -19,9 +19,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
-from . import EheimDigitalConfigEntry
 from .const import EFFECT_DAYCL_MODE, EFFECT_TO_LIGHT_MODE
-from .coordinator import EheimDigitalUpdateCoordinator
+from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
 from .entity import EheimDigitalEntity
 
 BRIGHTNESS_SCALE = (1, 100)

@@ -12,6 +12,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgentError,
     BackupAgentPlatformProtocol,
+    BackupNotFound,
     BackupReaderWriterError,
     Folder,
     store,
@@ -147,7 +148,8 @@ async def test_info(
 
 
 @pytest.mark.parametrize(
-    "side_effect", [HomeAssistantError("Boom!"), BackupAgentUnreachableError]
+    "side_effect",
+    [Exception("Oops"), HomeAssistantError("Boom!"), BackupAgentUnreachableError],
 )
 async def test_info_with_errors(
     hass: HomeAssistant,
@@ -208,7 +210,8 @@ async def test_details(
 
 
 @pytest.mark.parametrize(
-    "side_effect", [HomeAssistantError("Boom!"), BackupAgentUnreachableError]
+    "side_effect",
+    [Exception("Oops"), HomeAssistantError("Boom!"), BackupAgentUnreachableError],
 )
 async def test_details_with_errors(
     hass: HomeAssistant,
@@ -2967,3 +2970,39 @@ async def test_can_decrypt_on_download(
         }
     )
     assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        BackupAgentError,
+        BackupNotFound,
+    ],
+)
+@pytest.mark.usefixtures("mock_backups")
+async def test_can_decrypt_on_download_with_agent_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    error: Exception,
+) -> None:
+    """Test can decrypt on download."""
+
+    await setup_backup_integration(
+        hass,
+        with_hassio=False,
+        backups={"test.remote": [TEST_BACKUP_ABC123]},
+        remote_agents=["remote"],
+    )
+    client = await hass_ws_client(hass)
+
+    with patch.object(BackupAgentTest, "async_download_backup", side_effect=error):
+        await client.send_json_auto_id(
+            {
+                "type": "backup/can_decrypt_on_download",
+                "backup_id": TEST_BACKUP_ABC123.backup_id,
+                "agent_id": "test.remote",
+                "password": "hunter2",
+            }
+        )
+        assert await client.receive_json() == snapshot

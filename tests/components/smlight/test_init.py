@@ -85,6 +85,7 @@ async def test_async_setup_no_internet(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test we still load integration when no internet is available."""
+    side_effect = mock_smlight_client.get_firmware_version.side_effect
     mock_smlight_client.get_firmware_version.side_effect = SmlightConnectionError
 
     await setup_integration(hass, mock_config_entry_host)
@@ -101,7 +102,7 @@ async def test_async_setup_no_internet(
     assert entity is not None
     assert entity.state == STATE_UNKNOWN
 
-    mock_smlight_client.get_firmware_version.side_effect = None
+    mock_smlight_client.get_firmware_version.side_effect = side_effect
 
     freezer.tick(SCAN_FIRMWARE_INTERVAL)
     async_fire_time_changed(hass)

@@ -7,6 +7,7 @@ from typing import Any
 
 from ondilo import OndiloError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -28,13 +29,18 @@ class OndiloIcoData:
 class OndiloIcoCoordinator(DataUpdateCoordinator[dict[str, OndiloIcoData]]):
     """Class to manage fetching Ondilo ICO data from API."""
 
-    def __init__(self, hass: HomeAssistant, api: OndiloClient) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: OndiloClient
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(minutes=20),
+            update_interval=timedelta(hours=1),
         )
         self.api = api
 
