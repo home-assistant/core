@@ -91,6 +91,52 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[vd_network_audio_002s][switch.soundbar_living-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': None,
+    'entity_id': 'switch.soundbar_living',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Soundbar Living',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '0d94e5db-8501-2355-eb4f-214163702cac',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[vd_network_audio_002s][switch.soundbar_living-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Soundbar Living',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.soundbar_living',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[vd_stv_2017_k][switch.tv_samsung_8_series_49-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
