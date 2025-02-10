@@ -148,7 +148,8 @@ async def test_info(
 
 
 @pytest.mark.parametrize(
-    "side_effect", [HomeAssistantError("Boom!"), BackupAgentUnreachableError]
+    "side_effect",
+    [Exception("Oops"), HomeAssistantError("Boom!"), BackupAgentUnreachableError],
 )
 async def test_info_with_errors(
     hass: HomeAssistant,
@@ -209,7 +210,8 @@ async def test_details(
 
 
 @pytest.mark.parametrize(
-    "side_effect", [HomeAssistantError("Boom!"), BackupAgentUnreachableError]
+    "side_effect",
+    [Exception("Oops"), HomeAssistantError("Boom!"), BackupAgentUnreachableError],
 )
 async def test_details_with_errors(
     hass: HomeAssistant,
