@@ -3,6 +3,7 @@
 from typing import Any
 
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
+from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.types import EheimDigitalClientError, LightMode
 
 from homeassistant.components.light import (
@@ -18,9 +19,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
-from . import EheimDigitalConfigEntry
 from .const import EFFECT_DAYCL_MODE, EFFECT_TO_LIGHT_MODE
-from .coordinator import EheimDigitalUpdateCoordinator
+from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
 from .entity import EheimDigitalEntity
 
 BRIGHTNESS_SCALE = (1, 100)
@@ -37,24 +37,28 @@ async def async_setup_entry(
     """Set up the callbacks for the coordinator so lights can be added as devices are found."""
     coordinator = entry.runtime_data
 
-    async def async_setup_device_entities(device_address: str) -> None:
-        """Set up the light entities for a device."""
-        device = coordinator.hub.devices[device_address]
+    def async_setup_device_entities(
+        device_address: str | dict[str, EheimDigitalDevice],
+    ) -> None:
+        """Set up the light entities for one or multiple devices."""
         entities: list[EheimDigitalClassicLEDControlLight] = []
+        if isinstance(device_address, str):
+            device_address = {device_address: coordinator.hub.devices[device_address]}
+        for device in device_address.values():
+            if isinstance(device, EheimDigitalClassicLEDControl):
+                for channel in range(2):
+                    if len(device.tankconfig[channel]) > 0:
+                        entities.append(
+                            EheimDigitalClassicLEDControlLight(
+                                coordinator, device, channel
+                            )
+                        )
+                        coordinator.known_devices.add(device.mac_address)
 
-        if isinstance(device, EheimDigitalClassicLEDControl):
-            for channel in range(2):
-                if len(device.tankconfig[channel]) > 0:
-                    entities.append(
-                        EheimDigitalClassicLEDControlLight(coordinator, device, channel)
-                    )
-                    coordinator.known_devices.add(device.mac_address)
         async_add_entities(entities)
 
     coordinator.add_platform_callback(async_setup_device_entities)
-
-    for device_address in entry.runtime_data.hub.devices:
-        await async_setup_device_entities(device_address)
+    async_setup_device_entities(coordinator.hub.devices)
 
 
 class EheimDigitalClassicLEDControlLight(

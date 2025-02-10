@@ -883,6 +883,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_getter=lambda api: api.getSeasonalPerformanceFactorHeating(),
     ),
+    ViCareSensorEntityDescription(
+        key="battery_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getBatteryLevel(),
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
@@ -1007,7 +1015,7 @@ def _build_entities(
                 device.api,
             )
             for description in GLOBAL_SENSORS
-            if is_supported(description.key, description, device.api)
+            if is_supported(description.key, description.value_getter, device.api)
         )
         # add component entities
         for component_list, entity_description_list in (
@@ -1025,7 +1033,7 @@ def _build_entities(
                 )
                 for component in component_list
                 for description in entity_description_list
-                if is_supported(description.key, description, component)
+                if is_supported(description.key, description.value_getter, component)
             )
     return entities
 

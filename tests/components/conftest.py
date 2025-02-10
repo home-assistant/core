@@ -535,6 +535,7 @@ def supervisor_client() -> Generator[AsyncMock]:
     supervisor_client.discovery = AsyncMock()
     supervisor_client.homeassistant = AsyncMock()
     supervisor_client.host = AsyncMock()
+    supervisor_client.jobs = AsyncMock()
     supervisor_client.mounts.info.return_value = mounts_info_mock
     supervisor_client.os = AsyncMock()
     supervisor_client.resolution = AsyncMock()

@@ -25,6 +25,10 @@
     "reload": {
       "name": "[%key:common::action::reload%]",
       "description": "Reloads schedules from the YAML-configuration."
+    },
+    "get_schedule": {
+      "name": "Get schedule",
+      "description": "Retrieve one or multiple schedules."
     }
   }
 }

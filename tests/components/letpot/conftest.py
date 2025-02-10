@@ -1,9 +1,9 @@
 """Common fixtures for the LetPot tests."""
 
-from collections.abc import Generator
+from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, patch
 
-from letpot.models import LetPotDevice
+from letpot.models import DeviceFeature, LetPotDevice
 import pytest
 
 from homeassistant.components.letpot.const import (
@@ -47,9 +47,9 @@ def mock_client() -> Generator[AsyncMock]:
         client.refresh_token.return_value = AUTHENTICATION
         client.get_devices.return_value = [
             LetPotDevice(
-                serial_number="LPH21ABCD",
+                serial_number="LPH63ABCD",
                 name="Garden",
-                device_type="LPH21",
+                device_type="LPH63",
                 is_online=True,
                 is_remote=False,
             )
@@ -65,10 +65,33 @@ def mock_device_client() -> Generator[AsyncMock]:
         autospec=True,
     ) as mock_device_client:
         device_client = mock_device_client.return_value
-        device_client.device_model_code = "LPH21"
-        device_client.device_model_name = "LetPot Air"
+        device_client.device_features = (
+            DeviceFeature.LIGHT_BRIGHTNESS_LEVELS
+            | DeviceFeature.NUTRIENT_BUTTON
+            | DeviceFeature.PUMP_AUTO
+            | DeviceFeature.PUMP_STATUS
+            | DeviceFeature.TEMPERATURE
+            | DeviceFeature.WATER_LEVEL
+        )
+        device_client.device_model_code = "LPH63"
+        device_client.device_model_name = "LetPot Max"
+
+        subscribe_callbacks: list[Callable] = []
+
+        def subscribe_side_effect(callback: Callable) -> None:
+            subscribe_callbacks.append(callback)
+
+        def status_side_effect() -> None:
+            # Deliver a status update to any subscribers, like the real client
+            for callback in subscribe_callbacks:
+                callback(STATUS)
+
+        device_client.get_current_status.side_effect = status_side_effect
         device_client.get_current_status.return_value = STATUS
         device_client.last_status.return_value = STATUS
+        device_client.request_status_update.side_effect = status_side_effect
+        device_client.subscribe.side_effect = subscribe_side_effect
+
         yield device_client
 
 

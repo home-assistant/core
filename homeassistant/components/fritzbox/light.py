@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from requests.exceptions import HTTPError
-
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -124,27 +122,22 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
             level = kwargs[ATTR_BRIGHTNESS]
             await self.hass.async_add_executor_job(self.data.set_level, level, True)
         if kwargs.get(ATTR_HS_COLOR) is not None:
-            # Try setunmappedcolor first. This allows free color selection,
-            # but we don't know if its supported by all devices.
-            try:
-                # HA gives 0..360 for hue, fritz light only supports 0..359
-                unmapped_hue = int(kwargs[ATTR_HS_COLOR][0] % 360)
-                unmapped_saturation = round(
-                    cast(float, kwargs[ATTR_HS_COLOR][1]) * 255.0 / 100.0
-                )
+            # HA gives 0..360 for hue, fritz light only supports 0..359
+            unmapped_hue = int(kwargs[ATTR_HS_COLOR][0] % 360)
+            unmapped_saturation = round(
+                cast(float, kwargs[ATTR_HS_COLOR][1]) * 255.0 / 100.0
+            )
+            if self.data.fullcolorsupport:
+                LOGGER.debug("device has fullcolorsupport, using 'setunmappedcolor'")
                 await self.hass.async_add_executor_job(
                     self.data.set_unmapped_color,
                     (unmapped_hue, unmapped_saturation),
                     0,
                     True,
                 )
-            # This will raise 400 BAD REQUEST if the setunmappedcolor is not available
-            except HTTPError as err:
-                if err.response.status_code != 400:
-                    raise
+            else:
                 LOGGER.debug(
-                    "fritzbox does not support method 'setunmappedcolor', fallback to"
-                    " 'setcolor'"
+                    "device has no fullcolorsupport, using supported colors with 'setcolor'"
                 )
                 # find supported hs values closest to what user selected
                 hue = min(

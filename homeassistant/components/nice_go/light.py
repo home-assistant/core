@@ -12,13 +12,13 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NiceGOConfigEntry
 from .const import (
     DOMAIN,
     KNOWN_UNSUPPORTED_DEVICE_TYPES,
     SUPPORTED_DEVICE_TYPES,
     UNSUPPORTED_DEVICE_WARNING,
 )
+from .coordinator import NiceGOConfigEntry
 from .entity import NiceGOEntity
 
 _LOGGER = logging.getLogger(__name__)

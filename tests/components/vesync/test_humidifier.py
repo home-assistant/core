@@ -10,8 +10,15 @@ from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
     ATTR_MODE,
     DOMAIN as HUMIDIFIER_DOMAIN,
+    MODE_AUTO,
+    MODE_SLEEP,
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_MODE,
+)
+from homeassistant.components.vesync.const import (
+    VS_HUMIDIFIER_MODE_AUTO,
+    VS_HUMIDIFIER_MODE_MANUAL,
+    VS_HUMIDIFIER_MODE_SLEEP,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
@@ -222,7 +229,7 @@ async def test_set_mode(
         await hass.services.async_call(
             HUMIDIFIER_DOMAIN,
             SERVICE_SET_MODE,
-            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_MODE: "auto"},
+            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_MODE: MODE_AUTO},
             blocking=True,
         )
     await hass.async_block_till_done()
@@ -285,3 +292,38 @@ async def test_valid_mist_modes(
         await hass.async_block_till_done()
         assert "Unknown mode 'auto'" not in caplog.text
         assert "Unknown mode 'manual'" not in caplog.text
+
+
+async def test_set_mode_sleep_turns_display_off(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    humidifier,
+    manager,
+) -> None:
+    """Test update of display for sleep mode."""
+
+    # First define valid mist modes
+    humidifier.mist_modes = [
+        VS_HUMIDIFIER_MODE_AUTO,
+        VS_HUMIDIFIER_MODE_MANUAL,
+        VS_HUMIDIFIER_MODE_SLEEP,
+    ]
+
+    with patch(
+        "homeassistant.components.vesync.async_generate_device_list",
+        return_value=[humidifier],
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    with (
+        patch.object(humidifier, "set_humidity_mode", return_value=True),
+        patch.object(humidifier, "set_display") as display_mock,
+    ):
+        await hass.services.async_call(
+            HUMIDIFIER_DOMAIN,
+            SERVICE_SET_MODE,
+            {ATTR_ENTITY_ID: ENTITY_HUMIDIFIER, ATTR_MODE: MODE_SLEEP},
+            blocking=True,
+        )
+        display_mock.assert_called_once_with(False)

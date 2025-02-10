@@ -24,9 +24,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import APCUPSdConfigEntry
 from .const import LAST_S_TEST
-from .coordinator import APCUPSdCoordinator
+from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
 
 PARALLEL_UPDATES = 0
 

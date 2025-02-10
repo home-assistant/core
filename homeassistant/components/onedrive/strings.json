@@ -23,31 +23,21 @@
       "connection_error": "Failed to connect to OneDrive.",
       "wrong_drive": "New account does not contain previously configured OneDrive.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "failed_to_create_folder": "Failed to create backup folder"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
   "exceptions": {
-    "backup_not_found": {
-      "message": "Backup not found"
-    },
-    "backup_no_content": {
-      "message": "Backup has no content"
-    },
-    "backup_no_upload_session": {
-      "message": "Failed to start backup upload"
-    },
     "authentication_failed": {
       "message": "Authentication failed"
     },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
     },
-    "failed_to_create_folder": {
-      "message": "Failed to create {folder} folder"
+    "failed_to_migrate_files": {
+      "message": "Failed to migrate metadata to separate files"
     }
   }
 }

@@ -49,11 +49,7 @@ async def async_setup_entry(
 
     available_settings_data = await plenticore.client.get_settings()
     select_data_update_coordinator = SelectDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Settings Data",
-        timedelta(seconds=30),
-        plenticore,
+        hass, entry, _LOGGER, "Settings Data", timedelta(seconds=30), plenticore
     )
 
     entities = []

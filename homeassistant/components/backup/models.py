@@ -41,12 +41,6 @@ class BaseBackup:
     homeassistant_version: str | None  # None if homeassistant_included is False
     name: str
 
-    def as_frontend_json(self) -> dict:
-        """Return a dict representation of this backup for sending to frontend."""
-        return {
-            key: val for key, val in asdict(self).items() if key != "extra_metadata"
-        }
-
 
 @dataclass(frozen=True, kw_only=True)
 class AgentBackup(BaseBackup):
@@ -83,7 +77,25 @@ class BackupError(HomeAssistantError):
     error_code = "unknown"
 
 
+class BackupAgentError(BackupError):
+    """Base class for backup agent errors."""
+
+    error_code = "backup_agent_error"
+
+
 class BackupManagerError(BackupError):
     """Backup manager error."""
 
     error_code = "backup_manager_error"
+
+
+class BackupReaderWriterError(BackupError):
+    """Backup reader/writer error."""
+
+    error_code = "backup_reader_writer_error"
+
+
+class BackupNotFound(BackupAgentError, BackupManagerError):
+    """Raised when a backup is not found."""
+
+    error_code = "backup_not_found"
