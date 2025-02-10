@@ -86,12 +86,7 @@ def _message_convert(
     return MessageParam(role=message.role, content=param_content)
 
 
-def _convert_content(
-    chat_content: conversation.SystemContent
-    | conversation.UserContent
-    | conversation.ToolResultContent
-    | conversation.AssistantContent,
-) -> MessageParam:
+def _convert_content(chat_content: conversation.Content) -> MessageParam:
     """Create tool response content."""
     if isinstance(chat_content, conversation.ToolResultContent):
         return MessageParam(
