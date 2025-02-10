@@ -77,6 +77,24 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.ACCELERATION_SENSOR: {
+        Attribute.ACCELERATION: [
+            SmartThingsBinarySensorEntityDescription(
+                key=Attribute.ACCELERATION,
+                device_class=BinarySensorDeviceClass.MOVING,
+                is_on_key="active",
+            )
+        ]
+    },
+    Capability.CONTACT_SENSOR: {
+        Attribute.CONTACT: [
+            SmartThingsBinarySensorEntityDescription(
+                key=Attribute.CONTACT,
+                device_class=BinarySensorDeviceClass.DOOR,
+                is_on_key="open",
+            )
+        ]
+    },
 }
 
 

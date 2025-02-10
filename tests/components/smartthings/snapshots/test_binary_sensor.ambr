@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_acceleration-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.deck_door_acceleration',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOVING: 'moving'>,
+    'original_icon': None,
+    'original_name': 'Deck Door acceleration',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c.acceleration',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_acceleration-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'moving',
+      'friendly_name': 'Deck Door acceleration',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.deck_door_acceleration',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_contact-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.deck_door_contact',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.DOOR: 'door'>,
+    'original_icon': None,
+    'original_name': 'Deck Door contact',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '7d246592-93db-4d72-a10d-5a51793ece8c.contact',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_contact-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'door',
+      'friendly_name': 'Deck Door contact',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.deck_door_contact',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

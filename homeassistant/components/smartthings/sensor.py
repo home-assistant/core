@@ -380,6 +380,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
 
     value_fn: Callable[[Any], str | float | int | datetime | None] = lambda value: value
     extra_state_attributes: Callable[[Any], dict[str, Any]] | None = None
+    unique_id_separator: str = "."
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -663,6 +664,28 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.THREE_AXIS: {
+        Attribute.THREE_AXIS: [
+            SmartThingsSensorEntityDescription(
+                key="X Coordinate",
+                name="X Coordinate",
+                unique_id_separator=" ",
+                value_fn=lambda value: value[0],
+            ),
+            SmartThingsSensorEntityDescription(
+                key="Y Coordinate",
+                name="Y Coordinate",
+                unique_id_separator=" ",
+                value_fn=lambda value: value[1],
+            ),
+            SmartThingsSensorEntityDescription(
+                key="Z Coordinate",
+                name="Z Coordinate",
+                unique_id_separator=" ",
+                value_fn=lambda value: value[2],
+            ),
+        ]
+    },
 }
 
 
@@ -670,6 +693,7 @@ UNITS = {
     "C": UnitOfTemperature.CELSIUS,
     "F": UnitOfTemperature.FAHRENHEIT,
     "lux": LIGHT_LUX,
+    "mG": None,
 }
 
 THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
@@ -694,14 +718,7 @@ async def async_setup_entry(
     # entities: list[SensorEntity] = []
     # for device in broker.devices.values():
     #     for capability in broker.get_assigned(device.device_id, "sensor"):
-    #         if capability == Capability.three_axis:
-    #             entities.extend(
-    #                 [
-    #                     SmartThingsThreeAxisSensor(device, index)
-    #                     for index in range(len(THREE_AXIS_NAMES))
-    #                 ]
-    #             )
-    #         elif capability == Capability.power_consumption_report:
+    #         if capability == Capability.power_consumption_report:
     #             entities.extend(
     #                 [
     #                     SmartThingsPowerConsumptionSensor(device, report_name)
@@ -750,7 +767,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         """Init the class."""
         super().__init__(device)
         self._attr_name = f"{device.device.label} {entity_description.name}"
-        self._attr_unique_id = f"{device.device.device_id}.{entity_description.key}"
+        self._attr_unique_id = f"{device.device.device_id}{entity_description.unique_id_separator}{entity_description.key}"
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
@@ -779,23 +796,3 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
                 self.get_attribute_value(self.capability, self._attribute)
             )
         return None
-
-
-# class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
-#     """Define a SmartThings Three Axis Sensor."""
-#
-#     def __init__(self, device, index):
-#         """Init the class."""
-#         super().__init__(device)
-#         self._index = index
-#         self._attr_name = f"{device.label} {THREE_AXIS_NAMES[index]}"
-#         self._attr_unique_id = f"{device.device_id} {THREE_AXIS_NAMES[index]}"
-#
-#     @property
-#     def native_value(self):
-#         """Return the state of the sensor."""
-#         three_axis = self._device.status.attributes[Attribute.three_axis].value
-#         try:
-#             return three_axis[self._index]
-#         except (TypeError, IndexError):
-#             return None
