@@ -62,6 +62,7 @@ from .utils import (
     get_rpc_device_wakeup_period,
     get_ws_context,
     mac_address_from_name,
+    rpc_device_has_script_support,
 )
 
 CONFIG_SCHEMA: Final = vol.Schema(
@@ -484,11 +485,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return (
-            get_device_entry_gen(config_entry) in RPC_GENERATIONS
-            and not config_entry.data.get(CONF_SLEEP_PERIOD)
-            and config_entry.data.get(CONF_SCRIPT, True)
-        )
+        return rpc_device_has_script_support(config_entry)
 
 
 class OptionsFlowHandler(OptionsFlow):

@@ -20,6 +20,7 @@ from aioshelly.const import (
     MODEL_EM3,
     MODEL_I3,
     MODEL_NAMES,
+    MODEL_WALL_DISPLAY,
     RPC_GENERATIONS,
 )
 from aioshelly.rpc_device import RpcDevice, WsServer
@@ -28,7 +29,7 @@ from yarl import URL
 from homeassistant.components import network
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import CONF_MODEL, CONF_PORT, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import (
     device_registry as dr,
@@ -46,6 +47,7 @@ from .const import (
     COMPONENT_ID_PATTERN,
     CONF_COAP_PORT,
     CONF_GEN,
+    CONF_SLEEP_PERIOD,
     DEVICES_WITHOUT_FIRMWARE_CHANGELOG,
     DOMAIN,
     FIRMWARE_UNSUPPORTED_ISSUE_ID,
@@ -598,3 +600,15 @@ def get_rpc_ws_url(hass: HomeAssistant) -> str | None:
     url = URL(raw_url)
     ws_url = url.with_scheme("wss" if url.scheme == "https" else "ws")
     return str(ws_url.joinpath(API_WS_URL.removeprefix("/")))
+
+
+def rpc_device_has_script_support(entry: ConfigEntry) -> bool:
+    """Return true if the RPC device support scripts."""
+    if (
+        entry.data.get(CONF_GEN) not in RPC_GENERATIONS
+        or entry.data.get(CONF_SLEEP_PERIOD) is not None
+        or entry.data.get(CONF_MODEL) == MODEL_WALL_DISPLAY
+    ):
+        return False
+
+    return True

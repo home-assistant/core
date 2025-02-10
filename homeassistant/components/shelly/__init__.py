@@ -6,7 +6,7 @@ from typing import Final
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import DEFAULT_COAP_PORT, MODEL_WALL_DISPLAY, RPC_GENERATIONS
+from aioshelly.const import DEFAULT_COAP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -16,13 +16,7 @@ from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import async_remove_scanner
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MODEL,
-    CONF_PASSWORD,
-    CONF_USERNAME,
-    Platform,
-)
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
@@ -39,7 +33,6 @@ from .const import (
     BLOCK_EXPECTED_SLEEP_PERIOD,
     BLOCK_WRONG_SLEEP_PERIOD,
     CONF_COAP_PORT,
-    CONF_GEN,
     CONF_SCRIPT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
@@ -62,6 +55,7 @@ from .utils import (
     get_device_entry_gen,
     get_http_port,
     get_ws_context,
+    rpc_device_has_script_support,
 )
 
 PLATFORMS: Final = [
@@ -356,14 +350,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> 
     LOGGER.debug("Migrating from version %s", entry.version)
 
     if entry.minor_version == 2:
-        if (
-            entry.data.get(CONF_GEN) not in RPC_GENERATIONS
-            or entry.data.get(CONF_SLEEP_PERIOD) is not None
-            or entry.data.get(CONF_MODEL) == MODEL_WALL_DISPLAY
-        ):
-            script_supported = False
-        else:
-            script_supported = True
+        script_supported = rpc_device_has_script_support(entry)
 
         hass.config_entries.async_update_entry(
             entry,
