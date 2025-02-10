@@ -193,10 +193,10 @@
       "fix_flow": {
         "step": {
           "init": {
-            "description": "The backup location for {title} is not configured. Do you want to set it up now?\nDetails can be found in the integration documenation under [Backup Location]({docs_url})",
+            "description": "The backup location for {title} is not configured. Do you want to set it up now? Details can be found in the integration documentation under [Backup Location]({docs_url})",
             "menu_options": {
-              "ignore": "Don't set it up now",
-              "confirm": "Set up the backup location now"
+              "confirm": "Set up the backup location now",
+              "ignore": "Don't set it up now"
             }
           },
           "confirm": {
@@ -213,7 +213,7 @@
         },
         "abort": {
           "no_file_station": "The user seems to have not the correct permissions.\nPlease check the documentation.",
-          "no_shares": "There are no shared folders availbe for the user.\nPlease check the documentation.",
+          "no_shares": "There are no shared folders available for the user.\nPlease check the documentation.",
           "ignored": "The backup location has not been configured.\nYou can still set it up later via the integration options."
         }
       }
