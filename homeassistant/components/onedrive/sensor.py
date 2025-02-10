@@ -107,7 +107,7 @@ class OneDriveDriveStateSensor(
             identifiers={(DOMAIN, f"{coordinator.data.id}")},
             manufacturer="Microsoft",
             model=f"OneDrive {coordinator.data.drive_type.value.capitalize()}",
-            configuration_url=f"https://onedrive.live.com/?id={coordinator.data.id}&cid={coordinator.data.id}",
+            configuration_url=f"https://onedrive.live.com/?id=root&cid={coordinator.data.id}",
         )
 
     @property
