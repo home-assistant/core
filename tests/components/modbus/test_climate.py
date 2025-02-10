@@ -804,10 +804,10 @@ async def test_hvac_onoff_coil_update(
         ),
     ],
 )
-async def test_hvac_onoff_coil_update(
+async def test_config_current_temp_scale(
     hass: HomeAssistant, mock_modbus_ha, result, register_words
 ) -> None:
-    """Test climate update based on On/Off coil values."""
+    """Test behavior with different configurations for temperature scaling."""
     mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
 
     await hass.services.async_call(
