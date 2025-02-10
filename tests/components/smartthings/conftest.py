@@ -353,6 +353,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "c2c_arlo_pro_3_switch",
         "yale_push_button_deadbolt_lock",
         "ge_in_wall_smart_dimmer",
+        "centralite",
     ]
 )
 def devices(
