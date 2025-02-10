@@ -96,7 +96,7 @@ class OneDriveDriveStateSensor(
         coordinator: OneDriveUpdateCoordinator,
         description: OneDriveSensorEntityDescription,
     ) -> None:
-        """Initialize."""
+        """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_translation_key = description.key
