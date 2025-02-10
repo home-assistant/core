@@ -1,5 +1,9 @@
 """Test the tradfri migration tools."""
+
 from unittest.mock import MagicMock
+
+import pytest
+from pytradfri.device import Device
 
 from homeassistant.components.tradfri.const import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -10,8 +14,11 @@ from . import GATEWAY_ID
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize("device", ["air_purifier"], indirect=True)
 async def test_migrate_device_identifier(
-    hass: HomeAssistant, mock_api_factory: MagicMock
+    hass: HomeAssistant,
+    mock_api_factory: MagicMock,
+    device: Device,
 ) -> None:
     """Test migrate device identifier."""
     entry = MockConfigEntry(
@@ -27,12 +34,10 @@ async def test_migrate_device_identifier(
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        identifiers={(DOMAIN, 1)},  # type: ignore[arg-type]
+        identifiers={(DOMAIN, 65551)},  # type: ignore[arg-type]
     )
 
-    assert device_entry.identifiers == {(DOMAIN, 1)}  # type: ignore[comparison-overlap]
-
-    # FIXME: We need to mock the pytradfri device on the gateway.
+    assert device_entry.identifiers == {(DOMAIN, 65551)}  # type: ignore[comparison-overlap]
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -40,4 +45,4 @@ async def test_migrate_device_identifier(
     migrated_device_entry = device_registry.async_get(device_entry.id)
 
     assert migrated_device_entry
-    assert migrated_device_entry.identifiers == {(DOMAIN, "1")}
+    assert migrated_device_entry.identifiers == {(DOMAIN, "65551")}
