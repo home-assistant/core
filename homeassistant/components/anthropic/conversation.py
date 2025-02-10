@@ -168,7 +168,6 @@ class AnthropicConversationEntity(
         self, user_input: conversation.ConversationInput
     ) -> conversation.ConversationResult:
         """Process a sentence."""
-        LOGGER.debug("Conversation id=%s", user_input.conversation_id)
         with (
             chat_session.async_get_chat_session(
                 self.hass, user_input.conversation_id
