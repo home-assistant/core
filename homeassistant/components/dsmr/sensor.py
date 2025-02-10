@@ -424,7 +424,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
-        key="eon_hu_actual_switch_position",
+        key="actual_switch_position",
         translation_key="actual_switch_position",
         obis_reference="ACTUAL_SWITCH_POSITION",
         dsmr_versions={"5EONHU"},
@@ -433,7 +433,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         icon="mdi:electric-switch",
     ),
     DSMRSensorEntityDescription(
-        key="eon_hu_actual_treshold_electricity",
+        key="actual_treshold_electricity",
         translation_key="actual_treshold_electricity",
         obis_reference="ACTUAL_TRESHOLD_ELECTRICITY",
         dsmr_versions={"5EONHU"},
@@ -501,7 +501,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
-        key="eon_hu_fuse_threshold_l1",
+        key="fuse_threshold_l1",
         translation_key="fuse_threshold_l1",
         obis_reference="FUSE_THRESHOLD_L1",
         dsmr_versions={"5EONHU"},
@@ -511,7 +511,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
-        key="eon_hu_fuse_threshold_l2",
+        key="fuse_threshold_l2",
         translation_key="fuse_threshold_l2",
         obis_reference="FUSE_THRESHOLD_L2",
         dsmr_versions={"5EONHU"},
@@ -521,7 +521,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     DSMRSensorEntityDescription(
-        key="eon_hu_fuse_threshold_l3",
+        key="fuse_threshold_l3",
         translation_key="fuse_threshold_l3",
         obis_reference="FUSE_THRESHOLD_L3",
         dsmr_versions={"5EONHU"},
