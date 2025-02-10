@@ -316,7 +316,6 @@ class OllamaConversationEntity(
             message_history.messages = [
                 message_history.messages[0]
             ] + message_history.messages[drop_index:]
-            _LOGGER.debug("Trimmed history to %s messages", message_history.messages)
 
     async def _async_entry_update_listener(
         self, hass: HomeAssistant, entry: ConfigEntry
