@@ -132,7 +132,7 @@ async def async_setup_entry(
         flume_device = flume_datas[device_id]
 
         coordinator = FlumeDeviceDataUpdateCoordinator(
-            hass=hass, flume_device=flume_device
+            hass=hass, config_entry=config_entry, flume_device=flume_device
         )
 
         flume_entity_list.extend(

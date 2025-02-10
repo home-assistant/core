@@ -80,7 +80,7 @@ async def async_setup_entry(
     ] = []
 
     connection_coordinator = FlumeDeviceConnectionUpdateCoordinator(
-        hass=hass, flume_devices=flume_devices
+        hass=hass, config_entry=config_entry, flume_devices=flume_devices
     )
     notification_coordinator = flume_domain_data.notifications_coordinator
     flume_devices = get_valid_flume_devices(flume_devices)

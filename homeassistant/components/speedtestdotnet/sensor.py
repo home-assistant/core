@@ -19,7 +19,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import SpeedTestConfigEntry
 from .const import (
     ATTR_BYTES_RECEIVED,
     ATTR_BYTES_SENT,
@@ -30,7 +29,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
 )
-from .coordinator import SpeedTestDataCoordinator
+from .coordinator import SpeedTestConfigEntry, SpeedTestDataCoordinator
 
 
 @dataclass(frozen=True)
