@@ -8,9 +8,9 @@ rules:
   appropriate-polling: done
 
   brands:
-    status: exempt
+    status: done
     comment: |
-      Only necessary for large brands.
+      See PR
 
   common-modules: done
 
