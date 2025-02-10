@@ -10,7 +10,7 @@
 
 - Devices with `energySaved` entity >0
 - Devices with `powerEnergy` entity >0
-- Are there devices with higher power than 0?
+- Are there devices with higher power than 0? Yes, I saw one pass by
 
 # Things to fix:
 

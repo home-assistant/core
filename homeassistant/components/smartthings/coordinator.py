@@ -53,7 +53,10 @@ class SmartThingsDeviceCoordinator(
 
     async def _async_update_data(self) -> dict[Capability, dict[Attribute, Status]]:
         try:
-            return (await self.client.get_device_status(self.device.device_id))["main"]
+            data = await self.client.get_device_status(self.device.device_id)
         except Exception as err:
             _LOGGER.exception("Error updating device %s", self.device.device_id)
             raise UpdateFailed("Error updating device") from err
+        if "main" not in data:
+            raise UpdateFailed("No main capability found")
+        return data["main"]
