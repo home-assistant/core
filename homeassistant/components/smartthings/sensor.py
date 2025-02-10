@@ -320,16 +320,6 @@ from .entity import SmartThingsEntity
 #             None,
 #         )
 #     ],
-#     Capability.voltage_measurement: [
-#         Map(
-#             Attribute.voltage,
-#             "Voltage Measurement",
-#             UnitOfElectricPotential.VOLT,
-#             SensorDeviceClass.VOLTAGE,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
 #     Capability.washer_mode: [
 #         Map(
 #             Attribute.washer_mode,
@@ -693,6 +683,16 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.INPUT_SOURCE,
                 name="Media Input Source",
+            )
+        ]
+    },
+    Capability.VOLTAGE_MEASUREMENT: {
+        Attribute.VOLTAGE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.VOLTAGE,
+                name="Voltage Measurement",
+                device_class=SensorDeviceClass.VOLTAGE,
+                state_class=SensorStateClass.MEASUREMENT,
             )
         ]
     },
