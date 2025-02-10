@@ -18,6 +18,11 @@
 - Try to see if the microwave door stops being a cover 
 - Device info
 - Don't show disabled capabilities
+- Don't create a coordinator for the bridge?
+
+# Things to find out
+
+- Can we find out which device connected to which bridge?
 
 # Things to question
 
