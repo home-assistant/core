@@ -10,7 +10,7 @@ from letpot.models import DeviceFeature, LetPotDeviceStatus
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
 from .entity import LetPotEntity, exception_handler
@@ -63,7 +63,7 @@ AUTO_MODE_SWITCH: LetPotSwitchEntityDescription = LetPotSwitchEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LetPotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LetPot switch entities based on a config entry and device status/features."""
     coordinators = entry.runtime_data
