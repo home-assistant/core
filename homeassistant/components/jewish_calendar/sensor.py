@@ -281,7 +281,9 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
         if self.entity_description.key == "holiday":
             _holidays = after_shkia_date.holidays
             _id = ", ".join(holiday.name for holiday in _holidays)
-            _type = ", ".join({_holiday.type.name for _holiday in _holidays})
+            _type = ", ".join(
+                dict.fromkeys(_holiday.type.name for _holiday in _holidays)
+            )
             self._attrs = {"id": _id, "type": _type}
             self._attr_options = HolidayDatabase(self._diaspora).get_all_names(
                 self._language
