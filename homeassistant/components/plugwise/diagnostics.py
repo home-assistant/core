@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import PlugwiseConfigEntry
+from .coordinator import PlugwiseConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

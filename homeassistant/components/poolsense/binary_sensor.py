@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import PoolSenseConfigEntry
+from .coordinator import PoolSenseConfigEntry
 from .entity import PoolSenseEntity
 
 BINARY_SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (

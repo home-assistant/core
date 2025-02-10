@@ -14,8 +14,7 @@ from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import PingConfigEntry
-from .coordinator import PingResult, PingUpdateCoordinator
+from .coordinator import PingConfigEntry, PingResult, PingUpdateCoordinator
 from .entity import PingEntity
 
 
