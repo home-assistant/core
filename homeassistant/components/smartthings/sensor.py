@@ -266,16 +266,6 @@ from .entity import SmartThingsEntity
 #             None,
 #         )
 #     ],
-#     Capability.thermostat_cooling_setpoint: [
-#         Map(
-#             Attribute.cooling_setpoint,
-#             "Thermostat Cooling Setpoint",
-#             None,
-#             SensorDeviceClass.TEMPERATURE,
-#             None,
-#             None,
-#         )
-#     ],
 #     Capability.thermostat_fan_mode: [
 #         Map(
 #             Attribute.thermostat_fan_mode,
@@ -376,6 +366,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Any], str | float | int | datetime | None] = lambda value: value
     extra_state_attributes: Callable[[Any], dict[str, Any]] | None = None
     unique_id_separator: str = "."
+    capability_ignore_list: set[Capability] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -695,6 +686,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
+    Capability.THERMOSTAT_COOLING_SETPOINT: {
+        Attribute.COOLING_SETPOINT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COOLING_SETPOINT,
+                name="Thermostat Cooling Setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                capability_ignore_list={Capability.AIR_CONDITIONER_MODE},
+            )
+        ]
+    },
 }
 
 
@@ -720,6 +721,11 @@ async def async_setup_entry(
         if capability in CAPABILITY_TO_SENSORS
         for attribute in attributes
         for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
+        if not description.capability_ignore_list
+        or not any(
+            capability in device.data
+            for capability in description.capability_ignore_list
+        )
     )
     # broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
     # entities: list[SensorEntity] = []
