@@ -34,9 +34,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IstaConfigEntry
 from .const import DOMAIN
-from .coordinator import IstaCoordinator
+from .coordinator import IstaConfigEntry, IstaCoordinator
 from .util import IstaConsumptionType, IstaValueType, get_native_value, get_statistics
 
 _LOGGER = logging.getLogger(__name__)

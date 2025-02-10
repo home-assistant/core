@@ -332,7 +332,7 @@ async def test_operational_state_sensor(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test dishwasher sensor."""
+    """Test Operational State sensor, using a dishwasher fixture."""
     # OperationalState Cluster / OperationalState attribute (1/96/4)
     state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
@@ -351,3 +351,51 @@ async def test_operational_state_sensor(
     state = hass.states.get("sensor.dishwasher_operational_state")
     assert state
     assert state.state == "extra_state"
+
+
+@pytest.mark.parametrize("node_fixture", ["yandex_smart_socket"])
+async def test_draft_electrical_measurement_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Draft Electrical Measurement cluster sensors, using Yandex Smart Socket fixture."""
+    state = hass.states.get("sensor.yndx_00540_power")
+    assert state
+    assert state.state == "70.0"
+
+    # AcPowerDivisor
+    set_node_attribute(matter_node, 1, 2820, 1541, 0)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.yndx_00540_power")
+    assert state
+    assert state.state == "unknown"
+
+    # ActivePower
+    set_node_attribute(matter_node, 1, 2820, 1291, None)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.yndx_00540_power")
+    assert state
+    assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_laundrywasher"])
+async def test_list_sensor(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test Matter List sensor."""
+    # OperationalState Cluster / CurrentPhase attribute (1/96/1)
+    state = hass.states.get("sensor.laundrywasher_current_phase")
+    assert state
+    assert state.state == "pre-soak"
+
+    set_node_attribute(matter_node, 1, 96, 1, 1)
+    await trigger_subscription_callback(hass, matter_client)
+
+    state = hass.states.get("sensor.laundrywasher_current_phase")
+    assert state
+    assert state.state == "rinse"

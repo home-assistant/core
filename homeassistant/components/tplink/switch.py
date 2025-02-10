@@ -74,6 +74,9 @@ SWITCH_DESCRIPTIONS: tuple[TPLinkSwitchEntityDescription, ...] = (
     TPLinkSwitchEntityDescription(
         key="baby_cry_detection",
     ),
+    TPLinkSwitchEntityDescription(
+        key="carpet_boost",
+    ),
 )
 
 SWITCH_DESCRIPTIONS_MAP = {desc.key: desc for desc in SWITCH_DESCRIPTIONS}

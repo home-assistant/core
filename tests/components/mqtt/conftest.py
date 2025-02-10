@@ -38,7 +38,7 @@ def temp_dir_prefix() -> str:
     return "test"
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_temp_dir(temp_dir_prefix: str) -> Generator[str]:
     """Mock the certificate temp directory."""
     with patch(

@@ -20,9 +20,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import AutarcoConfigEntry
 from .const import DOMAIN
-from .coordinator import AutarcoDataUpdateCoordinator
+from .coordinator import AutarcoConfigEntry, AutarcoDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)

@@ -34,10 +34,9 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.async_ import create_eager_task
 
-from . import SamsungTVConfigEntry
 from .bridge import SamsungTVWSBridge
 from .const import CONF_SSDP_RENDERING_CONTROL_LOCATION, LOGGER
-from .coordinator import SamsungTVDataUpdateCoordinator
+from .coordinator import SamsungTVConfigEntry, SamsungTVDataUpdateCoordinator
 from .entity import SamsungTVEntity
 
 SOURCES = {"TV": "KEY_TV", "HDMI": "KEY_HDMI"}

@@ -26,7 +26,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IskraConfigEntry
 from .const import (
     ATTR_FREQUENCY,
     ATTR_NON_RESETTABLE_COUNTER,
@@ -44,7 +43,7 @@ from .const import (
     ATTR_TOTAL_APPARENT_POWER,
     ATTR_TOTAL_REACTIVE_POWER,
 )
-from .coordinator import IskraDataUpdateCoordinator
+from .coordinator import IskraConfigEntry, IskraDataUpdateCoordinator
 from .entity import IskraEntity
 
 

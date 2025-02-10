@@ -208,5 +208,6 @@ DISCOVERY_SCHEMAS = [
             clusters.PowerSource.Attributes.BatPercentRemaining,
         ),
         device_type=(device_types.RoboticVacuumCleaner,),
+        allow_none_value=True,
     ),
 ]
