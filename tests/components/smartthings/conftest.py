@@ -358,6 +358,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_ref_normal_000001",
         "vd_network_audio_002s",
         "iphone",
+        "da_wm_dw_000001",
     ]
 )
 def devices(
