@@ -134,6 +134,7 @@ DATA_REGISTRIES_LOADED: HassKey[None] = HassKey("bootstrap_registries_loaded")
 LOG_SLOW_STARTUP_INTERVAL = 60
 SLOW_STARTUP_CHECK_INTERVAL = 1
 
+STAGE_0_SUBSTAGE_TIMEOUT = 60
 STAGE_1_TIMEOUT = 120
 STAGE_2_TIMEOUT = 300
 WRAP_UP_TIMEOUT = 300
@@ -169,18 +170,22 @@ FRONTEND_INTEGRATIONS = {
     # add it here.
     "backup",
 }
-# Stage 0 is divided into substages. Each substage has a name and a set of integrations.
+# Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
-    ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS),
+    (
+        "logging, http deps",
+        LOGGING_AND_HTTP_DEPS_INTEGRATIONS,
+        STAGE_0_SUBSTAGE_TIMEOUT,
+    ),
     # Setup frontend
-    ("frontend", FRONTEND_INTEGRATIONS),
+    ("frontend", FRONTEND_INTEGRATIONS, STAGE_0_SUBSTAGE_TIMEOUT),
     # Setup recorder
-    ("recorder", {"recorder"}),
+    ("recorder", {"recorder"}, STAGE_0_SUBSTAGE_TIMEOUT),
     # Start up debuggers. Start these first in case they want to wait.
-    ("debugger", {"debugpy"}),
+    ("debugger", {"debugpy"}, STAGE_0_SUBSTAGE_TIMEOUT),
     # Zeroconf is used for mdns resolution in aiohttp client helper.
-    ("zeroconf", {"zeroconf"}),
+    ("zeroconf", {"zeroconf"}, STAGE_0_SUBSTAGE_TIMEOUT),
 )
 DISCOVERY_INTEGRATIONS = ("bluetooth", "dhcp", "ssdp", "usb")
 # Stage 1 integrations are not to be preloaded in bootstrap.
@@ -888,10 +893,10 @@ async def _async_set_up_integrations(
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
 
-    stage_0_and_1_domains: list[tuple[str, set[str], int | None]] = [
+    stage_0_and_1_domains: list[tuple[str, set[str], int]] = [
         *(
-            (name, domain_group & domains_to_setup, None)
-            for name, domain_group in STAGE_0_INTEGRATIONS
+            (name, domain_group & domains_to_setup, timeout)
+            for name, domain_group, timeout in STAGE_0_INTEGRATIONS
         ),
         ("stage 1", STAGE_1_INTEGRATIONS & domains_to_setup, STAGE_1_TIMEOUT),
     ]
@@ -912,17 +917,14 @@ async def _async_set_up_integrations(
         async_set_domains_to_be_loaded(hass, to_be_loaded)
         stage_2_domains -= to_be_loaded
 
-        if timeout is None:
-            await _async_setup_multi_components(hass, domain_group, config)
-        else:
-            try:
-                async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
-                    await _async_setup_multi_components(hass, domain_group, config)
-            except TimeoutError:
-                _LOGGER.warning(
-                    "Setup timed out for stage 1 waiting on %s - moving forward",
-                    hass._active_tasks,  # noqa: SLF001
-                )
+        try:
+            async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
+                await _async_setup_multi_components(hass, domain_group, config)
+        except TimeoutError:
+            _LOGGER.warning(
+                "Setup timed out for stage 1 waiting on %s - moving forward",
+                hass._active_tasks,  # noqa: SLF001
+            )
 
     # Add after dependencies when setting up stage 2 domains
     async_set_domains_to_be_loaded(hass, stage_2_domains)
