@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.network import is_hass_url
 from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry, LinkPlayData
@@ -260,8 +261,8 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         url = async_process_play_media_url(self.hass, media_id)
 
         # Modify the the url if required to use IP address instead of hostname.
-        # This is required for compatibility with some devices.
-        if self._use_ip_url:
+        # This is required for compatibility with some devices, but we only want to edit the URL if it is a HA URL.
+        if self._use_ip_url and is_hass_url(hass=self.hass, url=url):
             parsed_url = yarl.URL(url)
             # Update the parsed URL with the local ip
             url = parsed_url.with_host(self.hass.config.api.local_ip)
