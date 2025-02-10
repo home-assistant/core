@@ -66,4 +66,4 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """Return true if light is on."""
-        return self.coordinator.data[Capability.SWITCH].get(Attribute.SWITCH) == "on"
+        return self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "on"
