@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -53,7 +53,7 @@ from .const import (
     FEED_NAME,
     FEED_TAG,
 )
-from .coordinator import EmoncmsCoordinator
+from .coordinator import EmonCMSConfigEntry, EmoncmsCoordinator
 
 SENSORS: dict[str | None, SensorEntityDescription] = {
     "kWh": SensorEntityDescription(
@@ -288,7 +288,7 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: EmonCMSConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the emoncms sensors."""

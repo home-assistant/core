@@ -10,7 +10,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IdasenDeskConfigEntry, IdasenDeskCoordinator
+from .coordinator import IdasenDeskConfigEntry, IdasenDeskCoordinator
 from .entity import IdasenDeskEntity
 
 _LOGGER = logging.getLogger(__name__)

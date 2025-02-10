@@ -168,7 +168,7 @@ class OneDriveBackupAgent(BackupAgent):
         metadata_file = await self._client.upload_file(
             self._folder_id,
             metadata_filename,
-            description,  # type: ignore[arg-type]
+            description,
         )
 
         # add metadata to the metadata file

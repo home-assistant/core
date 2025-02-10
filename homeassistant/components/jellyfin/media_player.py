@@ -15,11 +15,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
-from . import JellyfinConfigEntry
 from .browse_media import build_item_response, build_root_response
 from .client_wrapper import get_artwork_url
 from .const import CONTENT_TYPE_MAP, LOGGER
-from .coordinator import JellyfinDataUpdateCoordinator
+from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .entity import JellyfinClientEntity
 
 

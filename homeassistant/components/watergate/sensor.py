@@ -26,8 +26,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
-from . import WatergateConfigEntry
-from .coordinator import WatergateAgregatedRequests, WatergateDataCoordinator
+from .coordinator import (
+    WatergateAgregatedRequests,
+    WatergateConfigEntry,
+    WatergateDataCoordinator,
+)
 from .entity import WatergateEntity
 
 _LOGGER = logging.getLogger(__name__)
