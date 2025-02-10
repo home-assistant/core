@@ -25,7 +25,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
-from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_FOLDER_NAME, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .coordinator import (
     OneDriveConfigEntry,
     OneDriveRuntimeData,
@@ -64,18 +64,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
             translation_placeholders={"folder": "approot"},
         ) from err
 
-    instance_id = await async_get_instance_id(hass)
-    backup_folder_name = f"backups_{instance_id[:8]}"
     try:
         backup_folder = await client.create_folder(
-            parent_id=approot.id, name=backup_folder_name
+            parent_id=approot.id, name=entry.data[CONF_FOLDER_NAME]
         )
     except (HttpRequestException, OneDriveException, TimeoutError) as err:
         _LOGGER.debug("Failed to create backup folder", exc_info=True)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="failed_to_get_folder",
-            translation_placeholders={"folder": backup_folder_name},
+            translation_placeholders={"folder": entry.data[CONF_FOLDER_NAME]},
         ) from err
 
     coordinator = OneDriveUpdateCoordinator(hass, entry, client)
@@ -147,3 +145,24 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
                 data=ItemUpdate(description=""),
             )
             _LOGGER.debug("Migrated backup file %s", file.name)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: OneDriveConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if (version := config_entry.version) == 1 and (
+        minor_version := config_entry.minor_version
+    ) == 1:
+        _LOGGER.debug(
+            "Migrating OneDrive config entry from version %s.%s", version, minor_version
+        )
+        instance_id = await async_get_instance_id(hass)
+        data = {**config_entry.data, CONF_FOLDER_NAME: f"backups_{instance_id[:8]}"}
+        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
+        _LOGGER.debug("Migration to version 1.2 successful")
+    return True

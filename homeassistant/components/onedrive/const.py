@@ -6,6 +6,7 @@ from typing import Final
 from homeassistant.util.hass_dict import HassKey
 
 DOMAIN: Final = "onedrive"
+CONF_FOLDER_NAME: Final = "folder_name"
 
 # replace "consumers" with "common", when adding SharePoint or OneDrive for Business support
 OAUTH2_AUTHORIZE: Final = (
