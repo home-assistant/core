@@ -24,6 +24,7 @@
 # Things to find out
 
 - Can we find out which device connected to which bridge?
+- How does a Sensibo AC display in HA?
 
 # Things to question
 
