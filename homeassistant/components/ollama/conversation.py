@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 import json
 import logging
 from typing import Any, Literal
@@ -123,7 +123,47 @@ def _convert_content(
             role=MessageRole.SYSTEM.value,
             content=chat_content.content,
         )
-    raise ValueError(f"Unexpected content type: {type(chat_content)}")
+    raise TypeError(f"Unexpected content type: {type(chat_content)}")
+
+
+async def _transform_stream(
+    result: AsyncGenerator[ollama.Message],
+) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+    """Transform the response stream into HA format.
+
+    An Ollama streaming response may come in chunks like this:
+
+    response: message=Message(role="assistant", content="Paris")
+    response: message=Message(role="assistant", content=".")
+    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+    response: message=Message(role="assistant", tool_calls=[...])
+    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+
+    This generator conforms to the chatlog delta stream expectations in that it
+    yields deltas, then the role only once the response is done.
+    """
+
+    new_msg = True
+    async for response in result:
+        _LOGGER.debug("Received response: %s", response)
+        response_message = response["message"]
+        chunk: conversation.AssistantContentDeltaDict = {}
+        if new_msg:
+            new_msg = False
+            chunk["role"] = "assistant"
+        if (tool_calls := response_message.get("tool_calls")) is not None:
+            chunk["tool_calls"] = [
+                llm.ToolInput(
+                    tool_name=tool_call["function"]["name"],
+                    tool_args=_parse_tool_args(tool_call["function"]["arguments"]),
+                )
+                for tool_call in tool_calls
+            ]
+        if (content := response_message.get("content")) is not None:
+            chunk["content"] = content
+        if response_message.get("done"):
+            new_msg = True
+        yield chunk
 
 
 class OllamaConversationEntity(
@@ -216,12 +256,12 @@ class OllamaConversationEntity(
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
-                response = await client.chat(
+                response_generator = await client.chat(
                     model=model,
                     # Make a copy of the messages because we mutate the list later
                     messages=list(message_history.messages),
                     tools=tools,
-                    stream=False,
+                    stream=True,
                     # keep_alive requires specifying unit. In this case, seconds
                     keep_alive=f"{settings.get(CONF_KEEP_ALIVE, DEFAULT_KEEP_ALIVE)}s",
                     options={CONF_NUM_CTX: settings.get(CONF_NUM_CTX, DEFAULT_NUM_CTX)},
@@ -232,46 +272,25 @@ class OllamaConversationEntity(
                     f"Sorry, I had a problem talking to the Ollama server: {err}"
                 ) from err
 
-            response_message = response["message"]
-            content = response_message.get("content")
-            tool_calls = response_message.get("tool_calls")
-            message_history.messages.append(
-                ollama.Message(
-                    role=response_message["role"],
-                    content=content,
-                    tool_calls=tool_calls,
-                )
-            )
-            tool_inputs = [
-                llm.ToolInput(
-                    tool_name=tool_call["function"]["name"],
-                    tool_args=_parse_tool_args(tool_call["function"]["arguments"]),
-                )
-                for tool_call in tool_calls or ()
-            ]
-
             message_history.messages.extend(
                 [
-                    ollama.Message(
-                        role=MessageRole.TOOL.value,
-                        content=json.dumps(tool_response.tool_result),
-                    )
-                    async for tool_response in chat_log.async_add_assistant_content(
-                        conversation.AssistantContent(
-                            agent_id=user_input.agent_id,
-                            content=content,
-                            tool_calls=tool_inputs or None,
-                        )
+                    _convert_content(content)
+                    async for content in chat_log.async_add_delta_content_stream(
+                        user_input.agent_id, _transform_stream(response_generator)
                     )
                 ]
             )
 
-            if not tool_calls:
+            if not chat_log.unresponded_tool_results:
                 break
 
         # Create intent response
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response_message["content"])
+        if not isinstance(chat_log.content[-1], conversation.AssistantContent):
+            raise TypeError(
+                f"Unexpected last message type: {type(chat_log.content[-1])}"
+            )
+        intent_response.async_set_speech(chat_log.content[-1].content or "")
         return conversation.ConversationResult(
             response=intent_response, conversation_id=chat_log.conversation_id
         )
