@@ -81,9 +81,11 @@ class StarlinkRestoreSensor(StarlinkSensorEntity, RestoreSensor):
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
-        if (last_sensor_data := await self.async_get_last_sensor_data()) is not None:
-            assert isinstance(last_sensor_data.native_value, float)
-            self._attr_native_value = last_sensor_data.native_value
+        if (last_sensor_data := await self.async_get_last_sensor_data()) is not None and (
+            last_native_value := last_sensor_data.native_value
+        ):
+            assert isinstance(last_native_value, float)
+            self._attr_native_value = last_native_value
 
 
 SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
