@@ -440,9 +440,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         SERVICE_BROWSE_MEDIA,
-        vol.All(
-            cv.make_entity_service_schema(MEDIA_PLAYER_BROWSE_MEDIA_SCHEMA),
-        ),
+        {
+            vol.Optional(ATTR_MEDIA_CONTENT_TYPE): cv.string,
+            vol.Optional(ATTR_MEDIA_CONTENT_ID): cv.string,
+        },
         "async_browse_media",
         supports_response=SupportsResponse.ONLY,
     )
