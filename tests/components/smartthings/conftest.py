@@ -342,7 +342,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         yield client
 
 
-@pytest.fixture(params=["da_ac_rac_000001", "multipurpose_sensor"])
+@pytest.fixture(params=["da_ac_rac_000001", "multipurpose_sensor", "contact_sensor"])
 def devices(
     mock_smartthings: AsyncMock, request: pytest.FixtureRequest
 ) -> Generator[AsyncMock]:
