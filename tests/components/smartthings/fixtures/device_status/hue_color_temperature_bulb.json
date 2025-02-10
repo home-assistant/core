@@ -1,0 +1,75 @@
+{
+  "components": {
+    "main": {
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2023-12-17T18:11:41.671Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "online",
+          "data": {},
+          "timestamp": "2025-02-07T15:14:53.823Z"
+        }
+      },
+      "switchLevel": {
+        "levelRange": {
+          "value": {
+            "minimum": 1,
+            "maximum": 100
+          },
+          "unit": "%",
+          "timestamp": "2025-02-07T15:14:53.823Z"
+        },
+        "level": {
+          "value": 70,
+          "unit": "%",
+          "timestamp": "2025-02-07T21:56:04.127Z"
+        }
+      },
+      "refresh": {},
+      "synthetic.lightingEffectFade": {
+        "fade": {
+          "value": null
+        }
+      },
+      "colorTemperature": {
+        "colorTemperatureRange": {
+          "value": {
+            "minimum": 2000,
+            "maximum": 6535
+          },
+          "unit": "K",
+          "timestamp": "2025-02-07T15:14:53.823Z"
+        },
+        "colorTemperature": {
+          "value": 3000,
+          "unit": "K",
+          "timestamp": "2025-02-07T21:56:04.127Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2025-02-07T21:56:04.127Z"
+        }
+      },
+      "synthetic.lightingEffectCircadian": {
+        "circadian": {
+          "value": null
+        }
+      }
+    }
+  }
+}
