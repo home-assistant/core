@@ -171,17 +171,17 @@ FRONTEND_INTEGRATIONS = {
     "backup",
 }
 # Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
+# The substage containing recorder should have no timeout, as it could cancel a database migration.
+# The substages preceding it should also have no timeout, until we ensure that the recorder
+# is not accidentally promoted as a dependency of any of the integrations in them.
+# If we add timeouts to the frontend substages, we should make sure they don't apply in recovery mode.
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
-    (
-        "logging, http deps",
-        LOGGING_AND_HTTP_DEPS_INTEGRATIONS,
-        STAGE_0_SUBSTAGE_TIMEOUT,
-    ),
+    ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
     # Setup frontend
-    ("frontend", FRONTEND_INTEGRATIONS, STAGE_0_SUBSTAGE_TIMEOUT),
+    ("frontend", FRONTEND_INTEGRATIONS, None),
     # Setup recorder
-    ("recorder", {"recorder"}, STAGE_0_SUBSTAGE_TIMEOUT),
+    ("recorder", {"recorder"}, None),
     # Start up debuggers. Start these first in case they want to wait.
     ("debugger", {"debugpy"}, STAGE_0_SUBSTAGE_TIMEOUT),
     # Zeroconf is used for mdns resolution in aiohttp client helper.
@@ -896,7 +896,7 @@ async def _async_set_up_integrations(
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
 
-    stage_0_and_1_domains: list[tuple[str, set[str], int]] = [
+    stage_0_and_1_domains: list[tuple[str, set[str], int | None]] = [
         *(
             (name, domain_group & domains_to_setup, timeout)
             for name, domain_group, timeout in STAGE_0_INTEGRATIONS
@@ -920,14 +920,18 @@ async def _async_set_up_integrations(
         async_set_domains_to_be_loaded(hass, to_be_loaded)
         stage_2_domains -= to_be_loaded
 
-        try:
-            async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
-                await _async_setup_multi_components(hass, domain_group, config)
-        except TimeoutError:
-            _LOGGER.warning(
-                "Setup timed out for stage 1 waiting on %s - moving forward",
-                hass._active_tasks,  # noqa: SLF001
-            )
+        if timeout is None:
+            await _async_setup_multi_components(hass, domain_group, config)
+        else:
+            try:
+                async with hass.timeout.async_timeout(timeout, cool_down=COOLDOWN_TIME):
+                    await _async_setup_multi_components(hass, domain_group, config)
+            except TimeoutError:
+                _LOGGER.warning(
+                    "Setup timed out for %s waiting on %s - moving forward",
+                    name,
+                    hass._active_tasks,  # noqa: SLF001
+                )
 
     # Add after dependencies when setting up stage 2 domains
     async_set_domains_to_be_loaded(hass, stage_2_domains)
