@@ -10,3 +10,5 @@ CONTROLLER = "controller"
 CONTROLLER_KEY: HassKey[LinkPlayController] = HassKey(CONTROLLER)
 PLATFORMS = [Platform.BUTTON, Platform.MEDIA_PLAYER]
 DATA_SESSION = "session"
+
+CONF_USE_IP_URL = "use_ip_url"

@@ -23,6 +23,16 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "LinkPlay options",
+        "data": {
+          "use_ip_url": "Force IP in Home Assistant generated URLs to work around bugs in using local domain names with some devices."
+        }
+      }
+    }
+  },
   "services": {
     "play_preset": {
       "name": "Play preset",
