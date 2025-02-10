@@ -60,13 +60,13 @@ INFO_SENSORS: tuple[SensorEntityDescription, ...] = (
 
 TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
-        key="first_light",
+        key="alot_hashachar",
         name="Alot Hashachar",  # codespell:ignore alot
         icon="mdi:weather-sunset-up",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="talit",
+        key="talit_and_tefillin",
         name="Talit and Tefillin",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
@@ -77,43 +77,43 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:calendar-clock",
     ),
     SensorEntityDescription(
-        key="gra_end_shma",
+        key="sof_zman_shema_gra",
         name='Latest time for Shma Gr"a',
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="mga_end_shma",
+        key="sof_zman_shema_mga",
         name='Latest time for Shma MG"A',
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="gra_end_tfila",
+        key="sof_zman_tfilla_gra",
         name='Latest time for Tefilla Gr"a',
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="mga_end_tfila",
+        key="sof_zman_tfilla_mga",
         name='Latest time for Tefilla MG"A',
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="midday",
+        key="chatsot",
         name="Chatzot Hayom",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="big_mincha",
+        key="mincha_gedola",
         name="Mincha Gedola",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="small_mincha",
+        key="mincha_ketana",
         name="Mincha Ketana",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
@@ -130,13 +130,13 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:weather-sunset",
     ),
     SensorEntityDescription(
-        key="first_stars",
+        key="tset_hakohavim",
         name="T'set Hakochavim",
         icon="mdi:weather-night",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="three_stars",
+        key="tset_hakohavim_shabbat",
         name="T'set Hakochavim, 3 stars",
         icon="mdi:weather-night",
         entity_registry_enabled_default=False,
@@ -283,8 +283,8 @@ class JewishCalendarSensor(JewishCalendarEntity, SensorEntity):
             _id = ", ".join(holiday.name for holiday in _holidays)
             _type = ", ".join({_holiday.type.name for _holiday in _holidays})
             self._attrs = {"id": _id, "type": _type}
-            self._attr_options = HolidayDatabase.get_all_names(
-                self._language, self._diaspora
+            self._attr_options = HolidayDatabase(self._diaspora).get_all_names(
+                self._language
             )
             return ", ".join(str(holiday) for holiday in _holidays) if _holidays else ""
         if self.entity_description.key == "omer_count":
