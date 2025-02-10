@@ -21,7 +21,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TransmissionConfigEntry
 from .const import (
     DOMAIN,
     STATE_ATTR_TORRENT_INFO,
@@ -30,7 +29,7 @@ from .const import (
     STATE_UP_DOWN,
     SUPPORTED_ORDER_MODES,
 )
-from .coordinator import TransmissionDataUpdateCoordinator
+from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 
 MODES: dict[str, list[str] | None] = {
     "started_torrents": ["downloading"],
@@ -83,7 +82,6 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
     TransmissionSensorEntityDescription(
         key="active_torrents",
         translation_key="active_torrents",
-        native_unit_of_measurement="torrents",
         val_func=lambda coordinator: coordinator.data.active_torrent_count,
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
             coordinator=coordinator, key="active_torrents"
@@ -92,7 +90,6 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
     TransmissionSensorEntityDescription(
         key="paused_torrents",
         translation_key="paused_torrents",
-        native_unit_of_measurement="torrents",
         val_func=lambda coordinator: coordinator.data.paused_torrent_count,
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
             coordinator=coordinator, key="paused_torrents"
@@ -101,7 +98,6 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
     TransmissionSensorEntityDescription(
         key="total_torrents",
         translation_key="total_torrents",
-        native_unit_of_measurement="torrents",
         val_func=lambda coordinator: coordinator.data.torrent_count,
         extra_state_attr_func=lambda coordinator: _torrents_info_attr(
             coordinator=coordinator, key="total_torrents"
@@ -110,7 +106,6 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
     TransmissionSensorEntityDescription(
         key="completed_torrents",
         translation_key="completed_torrents",
-        native_unit_of_measurement="torrents",
         val_func=lambda coordinator: len(
             _filter_torrents(coordinator.torrents, MODES["completed_torrents"])
         ),
@@ -121,7 +116,6 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
     TransmissionSensorEntityDescription(
         key="started_torrents",
         translation_key="started_torrents",
-        native_unit_of_measurement="torrents",
         val_func=lambda coordinator: len(
             _filter_torrents(coordinator.torrents, MODES["started_torrents"])
         ),

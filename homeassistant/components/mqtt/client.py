@@ -15,7 +15,6 @@ import socket
 import ssl
 import time
 from typing import TYPE_CHECKING, Any
-import uuid
 
 import certifi
 
@@ -117,9 +116,9 @@ MAX_UNSUBSCRIBES_PER_CALL = 500
 
 MAX_PACKETS_TO_READ = 500
 
-type SocketType = socket.socket | ssl.SSLSocket | mqtt.WebsocketWrapper | Any
+type SocketType = socket.socket | ssl.SSLSocket | mqtt._WebsocketWrapper | Any  # noqa: SLF001
 
-type SubscribePayloadType = str | bytes  # Only bytes if encoding is None
+type SubscribePayloadType = str | bytes | bytearray  # Only bytes if encoding is None
 
 
 def publish(
@@ -220,14 +219,13 @@ def async_subscribe_internal(
         mqtt_data = hass.data[DATA_MQTT]
     except KeyError as exc:
         raise HomeAssistantError(
-            f"Cannot subscribe to topic '{topic}', "
-            "make sure MQTT is set up correctly",
+            f"Cannot subscribe to topic '{topic}', make sure MQTT is set up correctly",
             translation_key="mqtt_not_setup_cannot_subscribe",
             translation_domain=DOMAIN,
             translation_placeholders={"topic": topic},
         ) from exc
     client = mqtt_data.client
-    if not client.connected and not mqtt_config_entry_enabled(hass):
+    if not mqtt_config_entry_enabled(hass):
         raise HomeAssistantError(
             f"Cannot subscribe to topic '{topic}', MQTT is not enabled",
             translation_key="mqtt_not_setup_cannot_subscribe",
@@ -310,12 +308,13 @@ class MqttClientSetup:
         if (client_id := config.get(CONF_CLIENT_ID)) is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
-            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
+            client_id = None
         transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
         self._client = AsyncMQTTClient(
+            mqtt.CallbackAPIVersion.VERSION1,
             client_id,
             protocol=proto,
-            transport=transport,
+            transport=transport,  # type: ignore[arg-type]
             reconnect_on_failure=False,
         )
         self._client.setup()
@@ -534,7 +533,7 @@ class MQTT:
             try:
                 # Some operating systems do not allow us to set the preferred
                 # buffer size. In that case we try some other size options.
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, new_buffer_size)
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, new_buffer_size)  # type: ignore[union-attr]
             except OSError as err:
                 if new_buffer_size <= MIN_BUFFER_SIZE:
                     _LOGGER.warning(
@@ -661,7 +660,7 @@ class MQTT:
                     self.conf.get(CONF_PORT, DEFAULT_PORT),
                     self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
                 )
-        except OSError as err:
+        except (OSError, mqtt.WebsocketConnectionError) as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
             self._async_connection_result(False)
         finally:
@@ -695,12 +694,15 @@ class MQTT:
 
     async def _reconnect_loop(self) -> None:
         """Reconnect to the MQTT server."""
+        # pylint: disable-next=import-outside-toplevel
+        import paho.mqtt.client as mqtt
+
         while True:
             if not self.connected:
                 try:
                     async with self._connection_lock, self._async_connect_in_executor():
                         await self.hass.async_add_executor_job(self._mqttc.reconnect)
-                except OSError as err:
+                except (OSError, mqtt.WebsocketConnectionError) as err:
                     _LOGGER.debug(
                         "Error re-connecting to MQTT server due to exception: %s", err
                     )
@@ -776,7 +778,11 @@ class MQTT:
             else:
                 del self._wildcard_subscriptions[subscription]
         except (KeyError, ValueError) as exc:
-            raise HomeAssistantError("Can't remove subscription twice") from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mqtt_not_setup_cannot_unsubscribe_twice",
+                translation_placeholders={"topic": topic},
+            ) from exc
 
     @callback
     def _async_queue_subscriptions(
@@ -822,7 +828,11 @@ class MQTT:
     ) -> Callable[[], None]:
         """Set up a subscription to a topic with the provided qos."""
         if not isinstance(topic, str):
-            raise HomeAssistantError("Topic needs to be a string!")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mqtt_topic_not_a_string",
+                translation_placeholders={"topic": topic},
+            )
 
         if job_type is None:
             job_type = get_hassjob_callable_job_type(msg_callback)
@@ -1206,18 +1216,26 @@ class MQTT:
         if not future.done():
             future.set_exception(asyncio.TimeoutError)
 
-    async def _async_wait_for_mid_or_raise(self, mid: int, result_code: int) -> None:
+    async def _async_wait_for_mid_or_raise(
+        self, mid: int | None, result_code: int
+    ) -> None:
         """Wait for ACK from broker or raise on error."""
         if result_code != 0:
             # pylint: disable-next=import-outside-toplevel
             import paho.mqtt.client as mqtt
 
             raise HomeAssistantError(
-                f"Error talking to MQTT: {mqtt.error_string(result_code)}"
+                translation_domain=DOMAIN,
+                translation_key="mqtt_broker_error",
+                translation_placeholders={
+                    "error_message": mqtt.error_string(result_code)
+                },
             )
 
         # Create the mid event if not created, either _mqtt_handle_mid or
         # _async_wait_for_mid_or_raise may be executed first.
+        if TYPE_CHECKING:
+            assert mid is not None
         future = self._async_get_mid_future(mid)
         loop = self.hass.loop
         timer_handle = loop.call_later(TIMEOUT_ACK, self._async_timeout_mid, future)
@@ -1255,7 +1273,7 @@ def _matcher_for_topic(subscription: str) -> Callable[[str], bool]:
     # pylint: disable-next=import-outside-toplevel
     from paho.mqtt.matcher import MQTTMatcher
 
-    matcher = MQTTMatcher()
+    matcher = MQTTMatcher()  # type: ignore[no-untyped-call]
     matcher[subscription] = True
 
-    return lambda topic: next(matcher.iter_match(topic), False)
+    return lambda topic: next(matcher.iter_match(topic), False)  # type: ignore[no-untyped-call]

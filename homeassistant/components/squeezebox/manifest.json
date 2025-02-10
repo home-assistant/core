@@ -12,5 +12,5 @@
   "documentation": "https://www.home-assistant.io/integrations/squeezebox",
   "iot_class": "local_polling",
   "loggers": ["pysqueezebox"],
-  "requirements": ["pysqueezebox==0.10.0"]
+  "requirements": ["pysqueezebox==0.11.1"]
 }

@@ -43,7 +43,6 @@ class KNXFan(KnxYamlEntity, FanEntity):
     """Representation of a KNX fan."""
 
     _device: XknxFan
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX fan."""

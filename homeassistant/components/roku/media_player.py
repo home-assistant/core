@@ -23,7 +23,6 @@ from homeassistant.components.media_player import (
     async_process_play_media_url,
 )
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
@@ -38,15 +37,13 @@ from .const import (
     ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
     ATTR_THUMBNAIL,
-    DOMAIN,
     SERVICE_SEARCH,
 )
-from .coordinator import RokuDataUpdateCoordinator
+from .coordinator import RokuConfigEntry, RokuDataUpdateCoordinator
 from .entity import RokuEntity
 from .helpers import format_channel_name, roku_exception_handler
 
 _LOGGER = logging.getLogger(__name__)
-
 
 STREAM_FORMAT_TO_MEDIA_TYPE = {
     "dash": MediaType.VIDEO,
@@ -81,17 +78,17 @@ ATTRS_TO_PLAY_ON_ROKU_AUDIO_PARAMS = {
 
 SEARCH_SCHEMA: VolDictType = {vol.Required(ATTR_KEYWORD): str}
 
+PARALLEL_UPDATES = 1
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: RokuConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the Roku config entry."""
-    coordinator: RokuDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
         [
             RokuMediaPlayer(
-                coordinator=coordinator,
+                coordinator=entry.runtime_data,
             )
         ],
         True,

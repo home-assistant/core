@@ -16,7 +16,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import (
-    BloodGlugoseConcentrationConverter,
+    AreaConverter,
+    BloodGlucoseConcentrationConverter,
     ConductivityConverter,
     DataRateConverter,
     DistanceConverter,
@@ -24,6 +25,7 @@ from homeassistant.util.unit_conversion import (
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
+    EnergyDistanceConverter,
     InformationConverter,
     MassConverter,
     PowerConverter,
@@ -55,8 +57,9 @@ UPDATE_STATISTICS_METADATA_TIME_OUT = 10
 
 UNIT_SCHEMA = vol.Schema(
     {
+        vol.Optional("area"): vol.In(AreaConverter.VALID_UNITS),
         vol.Optional("blood_glucose_concentration"): vol.In(
-            BloodGlugoseConcentrationConverter.VALID_UNITS
+            BloodGlucoseConcentrationConverter.VALID_UNITS
         ),
         vol.Optional("conductivity"): vol.In(ConductivityConverter.VALID_UNITS),
         vol.Optional("data_rate"): vol.In(DataRateConverter.VALID_UNITS),
@@ -65,6 +68,7 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
         vol.Optional("voltage"): vol.In(ElectricPotentialConverter.VALID_UNITS),
         vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
+        vol.Optional("energy_distance"): vol.In(EnergyDistanceConverter.VALID_UNITS),
         vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
         vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
         vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),

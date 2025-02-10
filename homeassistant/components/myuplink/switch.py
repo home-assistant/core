@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
-from .const import F_SERIES
+from .const import DOMAIN, F_SERIES
+from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity, transform_model_series
 
@@ -129,7 +129,11 @@ class MyUplinkDevicePointSwitch(MyUplinkEntity, SwitchEntity):
             )
         except aiohttp.ClientError as err:
             raise HomeAssistantError(
-                f"Failed to set state for {self.entity_id}"
+                translation_domain=DOMAIN,
+                translation_key="set_switch_error",
+                translation_placeholders={
+                    "entity": self.entity_id,
+                },
             ) from err
 
         await self.coordinator.async_request_refresh()

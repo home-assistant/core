@@ -27,6 +27,7 @@ from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    EVENT_CORE_CONFIG_UPDATE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -48,8 +49,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.template import is_number
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, slugify
 from homeassistant.util.enum import try_parse_enum
 
 from .const import (
@@ -404,6 +404,10 @@ class UtilityMeterSensor(RestoreSensor):
         self._tariff = tariff
         self._tariff_entity = tariff_entity
         self._next_reset = None
+        self._current_tz = None
+        self._config_scheduler()
+
+    def _config_scheduler(self):
         self.scheduler = (
             CronSim(
                 self._cron_pattern,
@@ -565,6 +569,7 @@ class UtilityMeterSensor(RestoreSensor):
                     self._next_reset,
                 )
             )
+            self.async_write_ha_state()
 
     async def _async_reset_meter(self, event):
         """Reset the utility meter status."""
@@ -600,6 +605,10 @@ class UtilityMeterSensor(RestoreSensor):
     async def async_added_to_hass(self):
         """Handle entity which will be added."""
         await super().async_added_to_hass()
+
+        # track current timezone in case it changes
+        # and we need to reconfigure the scheduler
+        self._current_tz = self.hass.config.time_zone
 
         await self._program_reset()
 
@@ -654,6 +663,19 @@ class UtilityMeterSensor(RestoreSensor):
             )
 
         self.async_on_remove(async_at_started(self.hass, async_source_tracking))
+
+        async def async_track_time_zone(event):
+            """Reconfigure Scheduler after time zone changes."""
+
+            if self._current_tz != self.hass.config.time_zone:
+                self._current_tz = self.hass.config.time_zone
+
+                self._config_scheduler()
+                await self._program_reset()
+
+        self.async_on_remove(
+            self.hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, async_track_time_zone)
+        )
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""

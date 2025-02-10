@@ -17,6 +17,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'melcloud',
       'unique_id': 'UNIQUE_TEST_ID',
       'version': 1,

@@ -1,10 +1,9 @@
 """Test SMHI component setup process."""
 
-from unittest.mock import patch
-
-from smhi.smhi_lib import APIURL_TEMPLATE
+from pysmhi.const import API_POINT_FORECAST
 
 from homeassistant.components.smhi.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -18,11 +17,11 @@ async def test_setup_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
 ) -> None:
     """Test setup entry."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)
-    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG, version=2)
+    entry = MockConfigEntry(domain=DOMAIN, title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -36,11 +35,11 @@ async def test_remove_entry(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
 ) -> None:
     """Test remove entry."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG["location"]["longitude"], TEST_CONFIG["location"]["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)
-    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG, version=2)
+    entry = MockConfigEntry(domain=DOMAIN, title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -63,7 +62,7 @@ async def test_migrate_entry(
     api_response: str,
 ) -> None:
     """Test migrate entry data."""
-    uri = APIURL_TEMPLATE.format(
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG_MIGRATE["longitude"], TEST_CONFIG_MIGRATE["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)
@@ -77,7 +76,7 @@ async def test_migrate_entry(
         original_name="Weather",
         platform="smhi",
         supported_features=0,
-        unique_id="17.84197, 17.84197",
+        unique_id="59.32624, 17.84197",
     )
 
     await hass.config_entries.async_setup(entry.entry_id)
@@ -86,30 +85,27 @@ async def test_migrate_entry(
     state = hass.states.get(entity.entity_id)
     assert state
 
-    assert entry.version == 2
-    assert entry.unique_id == "17.84197-17.84197"
+    assert entry.version == 3
+    assert entry.unique_id == "59.32624-17.84197"
+    assert entry.data == TEST_CONFIG
 
     entity_get = entity_registry.async_get(entity.entity_id)
-    assert entity_get.unique_id == "17.84197, 17.84197"
+    assert entity_get.unique_id == "59.32624, 17.84197"
 
 
-async def test_migrate_entry_failed(
+async def test_migrate_from_future_version(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, api_response: str
 ) -> None:
-    """Test migrate entry data that fails."""
-    uri = APIURL_TEMPLATE.format(
+    """Test migrate entry not possible from future version."""
+    uri = API_POINT_FORECAST.format(
         TEST_CONFIG_MIGRATE["longitude"], TEST_CONFIG_MIGRATE["latitude"]
     )
     aioclient_mock.get(uri, text=api_response)
-    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG_MIGRATE)
+    entry = MockConfigEntry(domain=DOMAIN, data=TEST_CONFIG_MIGRATE, version=4)
     entry.add_to_hass(hass)
-    assert entry.version == 1
+    assert entry.version == 4
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_update_entry",
-        return_value=False,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert entry.version == 1
+    assert entry.state == ConfigEntryState.MIGRATION_ERROR

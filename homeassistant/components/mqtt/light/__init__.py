@@ -30,6 +30,8 @@ from .schema_template import (
     MqttLightTemplate,
 )
 
+PARALLEL_UPDATES = 0
+
 
 def validate_mqtt_light_discovery(config_value: dict[str, Any]) -> ConfigType:
     """Validate MQTT light schema for discovery."""

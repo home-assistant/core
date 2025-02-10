@@ -615,7 +615,6 @@ async def test_homekit_entity_glob_filter_with_config_entities(
         "select",
         "any",
         "any",
-        device_id="1234",
         entity_category=EntityCategory.CONFIG,
     )
     hass.states.async_set(select_config_entity.entity_id, "off")
@@ -624,7 +623,6 @@ async def test_homekit_entity_glob_filter_with_config_entities(
         "switch",
         "any",
         "any",
-        device_id="1234",
         entity_category=EntityCategory.CONFIG,
     )
     hass.states.async_set(switch_config_entity.entity_id, "off")
@@ -669,7 +667,6 @@ async def test_homekit_entity_glob_filter_with_hidden_entities(
         "select",
         "any",
         "any",
-        device_id="1234",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
     hass.states.async_set(select_config_entity.entity_id, "off")
@@ -678,7 +675,6 @@ async def test_homekit_entity_glob_filter_with_hidden_entities(
         "switch",
         "any",
         "any",
-        device_id="1234",
         hidden_by=er.RegistryEntryHider.INTEGRATION,
     )
     hass.states.async_set(switch_config_entity.entity_id, "off")
@@ -1867,7 +1863,11 @@ async def test_homekit_ignored_missing_devices(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test HomeKit handles a device in the entity registry but missing from the device registry."""
+    """Test HomeKit handles a device in the entity registry but missing from the device registry.
+
+    If the entity registry is updated to remove entities linked to non-existent devices,
+    or set the link to None, this test can be removed.
+    """
 
     entry = await async_init_integration(hass)
     homekit = _mock_homekit(hass, entry, HOMEKIT_MODE_BRIDGE)
@@ -1885,47 +1885,37 @@ async def test_homekit_ignored_missing_devices(
         connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
     )
 
-    entity_registry.async_get_or_create(
+    binary_sensor_entity = entity_registry.async_get_or_create(
         "binary_sensor",
         "powerwall",
         "battery_charging",
         device_id=device_entry.id,
         original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     )
-    entity_registry.async_get_or_create(
+    sensor_entity = entity_registry.async_get_or_create(
         "sensor",
         "powerwall",
         "battery",
         device_id=device_entry.id,
         original_device_class=SensorDeviceClass.BATTERY,
     )
-    light = entity_registry.async_get_or_create(
+    light_entity = light = entity_registry.async_get_or_create(
         "light", "powerwall", "demo", device_id=device_entry.id
     )
     # Delete the device to make sure we fallback
     # to using the platform
-    device_registry.async_remove_device(device_entry.id)
-    # Wait for the entities to be removed
-    await asyncio.sleep(0)
-    await asyncio.sleep(0)
-    # Restore the registry
-    entity_registry.async_get_or_create(
-        "binary_sensor",
-        "powerwall",
-        "battery_charging",
-        device_id=device_entry.id,
-        original_device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-    )
-    entity_registry.async_get_or_create(
-        "sensor",
-        "powerwall",
-        "battery",
-        device_id=device_entry.id,
-        original_device_class=SensorDeviceClass.BATTERY,
-    )
-    light = entity_registry.async_get_or_create(
-        "light", "powerwall", "demo", device_id=device_entry.id
-    )
+    with patch(
+        "homeassistant.helpers.entity_registry.async_entries_for_device",
+        return_value=[],
+    ):
+        device_registry.async_remove_device(device_entry.id)
+        # Wait for the device registry event handlers to execute
+        await asyncio.sleep(0)
+        await asyncio.sleep(0)
+    # Check the entities were not removed
+    assert binary_sensor_entity.entity_id in entity_registry.entities
+    assert sensor_entity.entity_id in entity_registry.entities
+    assert light_entity.entity_id in entity_registry.entities
 
     hass.states.async_set(light.entity_id, STATE_ON)
     hass.states.async_set("light.two", STATE_ON)

@@ -3,7 +3,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add generic thermostat",
+        "title": "Create generic thermostat",
         "description": "Create a climate entity that controls the temperature via a switch and sensor.",
         "data": {
           "ac_mode": "Cooling mode",
@@ -12,7 +12,9 @@
           "min_cycle_duration": "Minimum cycle duration",
           "name": "[%key:common::config_flow::data::name%]",
           "cold_tolerance": "Cold tolerance",
-          "hot_tolerance": "Hot tolerance"
+          "hot_tolerance": "Hot tolerance",
+          "min_temp": "Minimum target temperature",
+          "max_temp": "Maximum target temperature"
         },
         "data_description": {
           "ac_mode": "Set the actuator specified to be treated as a cooling device instead of a heating device.",
@@ -45,7 +47,9 @@
           "target_sensor": "[%key:component::generic_thermostat::config::step::user::data::target_sensor%]",
           "min_cycle_duration": "[%key:component::generic_thermostat::config::step::user::data::min_cycle_duration%]",
           "cold_tolerance": "[%key:component::generic_thermostat::config::step::user::data::cold_tolerance%]",
-          "hot_tolerance": "[%key:component::generic_thermostat::config::step::user::data::hot_tolerance%]"
+          "hot_tolerance": "[%key:component::generic_thermostat::config::step::user::data::hot_tolerance%]",
+          "min_temp": "[%key:component::generic_thermostat::config::step::user::data::min_temp%]",
+          "max_temp": "[%key:component::generic_thermostat::config::step::user::data::max_temp%]"
         },
         "data_description": {
           "heater": "[%key:component::generic_thermostat::config::step::user::data_description::heater%]",

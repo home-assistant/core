@@ -4,9 +4,10 @@ from datetime import date
 from http import HTTPStatus
 from unittest.mock import AsyncMock, patch
 
+from aiomealie import MealplanResponse
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.const import STATE_OFF, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -40,11 +41,26 @@ async def test_entities(
     mock_mealie_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the API returns the calendar."""
+    """Test the calendar entities."""
     with patch("homeassistant.components.mealie.PLATFORMS", [Platform.CALENDAR]):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_no_meal_planned(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_mealie_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the calendar handles no meal planned."""
+    mock_mealie_client.get_mealplans.return_value = MealplanResponse([])
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("calendar.mealie_dinner").state == STATE_OFF
 
 
 async def test_api_events(

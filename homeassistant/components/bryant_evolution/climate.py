@@ -77,7 +77,6 @@ class BryantEvolutionClimate(ClimateEntity):
         HVACMode.OFF,
     ]
     _attr_fan_modes = ["auto", "low", "med", "high"]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

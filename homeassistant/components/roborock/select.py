@@ -13,9 +13,8 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RoborockConfigEntry
 from .const import MAP_SLEEP
-from .coordinator import RoborockDataUpdateCoordinator
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
 
@@ -135,6 +134,9 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
                     RoborockCommand.LOAD_MULTI_MAP,
                     [map_id],
                 )
+                # Update the current map id manually so that nothing gets broken
+                # if another service hits the api.
+                self.coordinator.current_map = map_id
                 # We need to wait after updating the map
                 # so that other commands will be executed correctly.
                 await asyncio.sleep(MAP_SLEEP)
@@ -148,6 +150,9 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
-        if (current_map := self.coordinator.current_map) is not None:
+        if (
+            (current_map := self.coordinator.current_map) is not None
+            and current_map in self.coordinator.maps
+        ):  # 63 means it is searching for a map.
             return self.coordinator.maps[current_map].name
         return None

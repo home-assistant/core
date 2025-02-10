@@ -22,13 +22,14 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    _reauth_username: str
+
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.data: dict = {}
         self.options: dict = {CONF_SERVICES: []}
         self.services: list[dict[str, Any]] = []
         self.client: AussieBB | None = None
-        self._reauth_username: str | None = None
 
     async def async_auth(self, user_input: dict[str, str]) -> dict[str, str] | None:
         """Reusable Auth Helper."""
@@ -92,7 +93,7 @@ class AussieBroadbandConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] | None = None
 
-        if user_input and self._reauth_username:
+        if user_input:
             data = {
                 CONF_USERNAME: self._reauth_username,
                 CONF_PASSWORD: user_input[CONF_PASSWORD],

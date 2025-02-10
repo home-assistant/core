@@ -216,22 +216,22 @@
         "name": "Air quality index"
       },
       "filter_life_remaining": {
-        "name": "Filter lifetime remaining"
+        "name": "Filter life remaining"
       },
       "filter_hours_used": {
         "name": "Filter use"
       },
       "filter_left_time": {
-        "name": "Filter lifetime left"
+        "name": "Filter lifetime remaining"
       },
       "dust_filter_life_remaining": {
-        "name": "Dust filter lifetime remaining"
+        "name": "Dust filter life remaining"
       },
       "dust_filter_life_remaining_days": {
         "name": "Dust filter lifetime remaining days"
       },
       "upper_filter_life_remaining": {
-        "name": "Upper filter lifetime remaining"
+        "name": "Upper filter life remaining"
       },
       "upper_filter_life_remaining_days": {
         "name": "Upper filter lifetime remaining days"
@@ -276,16 +276,16 @@
         "name": "Total dust collection count"
       },
       "main_brush_left": {
-        "name": "Main brush left"
+        "name": "Main brush remaining"
       },
       "side_brush_left": {
-        "name": "Side brush left"
+        "name": "Side brush remaining"
       },
       "filter_left": {
-        "name": "Filter left"
+        "name": "Filter remaining"
       },
       "sensor_dirty_left": {
-        "name": "Sensor dirty left"
+        "name": "Sensor dirty remaining"
       }
     },
     "switch": {
@@ -461,7 +461,7 @@
     },
     "switch_set_wifi_led_on": {
       "name": "Switch set Wi-Fi LED on",
-      "description": "Turns the wifi led on.",
+      "description": "Turns the Wi-Fi LED on.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -471,7 +471,7 @@
     },
     "switch_set_wifi_led_off": {
       "name": "Switch set Wi-Fi LED off",
-      "description": "Turn the Wi-Fi led off.",
+      "description": "Turns the Wi-Fi LED off.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -567,7 +567,7 @@
     },
     "vacuum_goto": {
       "name": "Vacuum go to",
-      "description": "Go to the specified coordinates.",
+      "description": "Sends the robot to the specified coordinates.",
       "fields": {
         "x_coord": {
           "name": "X coordinate",

@@ -69,8 +69,7 @@ async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -
 
     for config_entry in hass.config_entries.async_entries(UNIFI_DOMAIN):
         if config_entry.state is not ConfigEntryState.LOADED or (
-            (hub := config_entry.runtime_data)
-            and not hub.available
+            ((hub := config_entry.runtime_data) and not hub.available)
             or (client := hub.api.clients.get(mac)) is None
             or client.is_wired
         ):
@@ -87,10 +86,8 @@ async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> 
     - Neither IP, hostname nor name is configured.
     """
     for config_entry in hass.config_entries.async_entries(UNIFI_DOMAIN):
-        if (
-            config_entry.state is not ConfigEntryState.LOADED
-            or (hub := config_entry.runtime_data)
-            and not hub.available
+        if config_entry.state is not ConfigEntryState.LOADED or (
+            (hub := config_entry.runtime_data) and not hub.available
         ):
             continue
 

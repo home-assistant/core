@@ -30,7 +30,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
@@ -46,6 +46,8 @@ from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import check_state_too_long
 
 _LOGGER = logging.getLogger(__name__)
+
+PARALLEL_UPDATES = 0
 
 CONF_EXPIRE_AFTER = "expire_after"
 CONF_LAST_RESET_VALUE_TEMPLATE = "last_reset_value_template"

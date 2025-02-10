@@ -35,6 +35,7 @@ DEVICE_CLASS_NONE = "none"
 
 CONF_IS_APPARENT_POWER = "is_apparent_power"
 CONF_IS_AQI = "is_aqi"
+CONF_IS_AREA = "is_area"
 CONF_IS_ATMOSPHERIC_PRESSURE = "is_atmospheric_pressure"
 CONF_IS_BATTERY_LEVEL = "is_battery_level"
 CONF_IS_BLOOD_GLUCOSE_CONCENTRATION = "is_blood_glucose_concentration"
@@ -47,6 +48,7 @@ CONF_IS_DATA_SIZE = "is_data_size"
 CONF_IS_DISTANCE = "is_distance"
 CONF_IS_DURATION = "is_duration"
 CONF_IS_ENERGY = "is_energy"
+CONF_IS_ENERGY_DISTANCE = "is_energy_distance"
 CONF_IS_FREQUENCY = "is_frequency"
 CONF_IS_HUMIDITY = "is_humidity"
 CONF_IS_GAS = "is_gas"
@@ -86,6 +88,7 @@ CONF_IS_WIND_SPEED = "is_wind_speed"
 ENTITY_CONDITIONS = {
     SensorDeviceClass.APPARENT_POWER: [{CONF_TYPE: CONF_IS_APPARENT_POWER}],
     SensorDeviceClass.AQI: [{CONF_TYPE: CONF_IS_AQI}],
+    SensorDeviceClass.AREA: [{CONF_TYPE: CONF_IS_AREA}],
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: [{CONF_TYPE: CONF_IS_ATMOSPHERIC_PRESSURE}],
     SensorDeviceClass.BATTERY: [{CONF_TYPE: CONF_IS_BATTERY_LEVEL}],
     SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: [
@@ -100,6 +103,7 @@ ENTITY_CONDITIONS = {
     SensorDeviceClass.DISTANCE: [{CONF_TYPE: CONF_IS_DISTANCE}],
     SensorDeviceClass.DURATION: [{CONF_TYPE: CONF_IS_DURATION}],
     SensorDeviceClass.ENERGY: [{CONF_TYPE: CONF_IS_ENERGY}],
+    SensorDeviceClass.ENERGY_DISTANCE: [{CONF_TYPE: CONF_IS_ENERGY_DISTANCE}],
     SensorDeviceClass.ENERGY_STORAGE: [{CONF_TYPE: CONF_IS_ENERGY}],
     SensorDeviceClass.FREQUENCY: [{CONF_TYPE: CONF_IS_FREQUENCY}],
     SensorDeviceClass.GAS: [{CONF_TYPE: CONF_IS_GAS}],
@@ -153,6 +157,7 @@ CONDITION_SCHEMA = vol.All(
                 [
                     CONF_IS_APPARENT_POWER,
                     CONF_IS_AQI,
+                    CONF_IS_AREA,
                     CONF_IS_ATMOSPHERIC_PRESSURE,
                     CONF_IS_BATTERY_LEVEL,
                     CONF_IS_BLOOD_GLUCOSE_CONCENTRATION,
@@ -165,6 +170,7 @@ CONDITION_SCHEMA = vol.All(
                     CONF_IS_DISTANCE,
                     CONF_IS_DURATION,
                     CONF_IS_ENERGY,
+                    CONF_IS_ENERGY_DISTANCE,
                     CONF_IS_FREQUENCY,
                     CONF_IS_GAS,
                     CONF_IS_HUMIDITY,

@@ -50,9 +50,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneConfigEntry
 from .const import API_TEMPERATURE_STEP, TEMP_UNIT_LIB_TO_HASS
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 from .entity import AirzoneZoneEntity
 
 BASE_FAN_SPEEDS: Final[dict[int, str]] = {
@@ -136,7 +135,6 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     _attr_name = None
     _speeds: dict[int, str] = {}
     _speeds_reverse: dict[str, int] = {}
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

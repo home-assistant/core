@@ -22,8 +22,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import GlancesConfigEntry, GlancesDataUpdateCoordinator
 from .const import CPU_ICON, DOMAIN
+from .coordinator import GlancesConfigEntry, GlancesDataUpdateCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -375,6 +375,8 @@ class GlancesSensor(CoordinatorEntity[GlancesDataUpdateCoordinator], SensorEntit
         self._data_valid = self._attr_native_value is not None and (
             not self._numeric_state_expected
             or isinstance(self._attr_native_value, (int, float))
-            or isinstance(self._attr_native_value, str)
-            and self._attr_native_value.isnumeric()
+            or (
+                isinstance(self._attr_native_value, str)
+                and self._attr_native_value.isnumeric()
+            )
         )

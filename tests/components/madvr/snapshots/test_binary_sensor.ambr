@@ -1,0 +1,189 @@
+# serializer version: 1
+# name: test_binary_sensor_setup[binary_sensor.madvr_envy_hdr_flag-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.madvr_envy_hdr_flag',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'HDR flag',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'hdr_flag',
+    'unique_id': '00:11:22:33:44:55_hdr_flag',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_setup[binary_sensor.madvr_envy_hdr_flag-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy HDR flag',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.madvr_envy_hdr_flag',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_setup[binary_sensor.madvr_envy_outgoing_hdr_flag-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.madvr_envy_outgoing_hdr_flag',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Outgoing HDR flag',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'outgoing_hdr_flag',
+    'unique_id': '00:11:22:33:44:55_outgoing_hdr_flag',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_setup[binary_sensor.madvr_envy_outgoing_hdr_flag-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Outgoing HDR flag',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.madvr_envy_outgoing_hdr_flag',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_setup[binary_sensor.madvr_envy_power_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.madvr_envy_power_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Power state',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'power_state',
+    'unique_id': '00:11:22:33:44:55_power_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_setup[binary_sensor.madvr_envy_power_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Power state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.madvr_envy_power_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_setup[binary_sensor.madvr_envy_signal_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.madvr_envy_signal_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Signal state',
+    'platform': 'madvr',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'signal_state',
+    'unique_id': '00:11:22:33:44:55_signal_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_setup[binary_sensor.madvr_envy_signal_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'madVR Envy Signal state',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.madvr_envy_signal_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

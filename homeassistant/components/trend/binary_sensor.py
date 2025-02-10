@@ -32,8 +32,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device import async_device_info_to_link_from_entity
 from homeassistant.helpers.entity import generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -227,10 +226,15 @@ class SensorTrend(BinarySensorEntity, RestoreEntity):
                     state = new_state.attributes.get(self._attribute)
                 else:
                     state = new_state.state
-                if state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+
+                if state in (STATE_UNKNOWN, STATE_UNAVAILABLE):
+                    self._attr_available = False
+                else:
+                    self._attr_available = True
                     sample = (new_state.last_updated.timestamp(), float(state))  # type: ignore[arg-type]
                     self.samples.append(sample)
-                    self.async_schedule_update_ha_state(True)
+
+                self.async_schedule_update_ha_state(True)
             except (ValueError, TypeError) as ex:
                 _LOGGER.error(ex)
 

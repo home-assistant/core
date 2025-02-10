@@ -5,10 +5,11 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HomeWizardConfigEntry
-from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 from .helpers import homewizard_exception_handler
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -17,7 +18,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Identify button."""
-    if entry.runtime_data.supports_identify():
+    if entry.runtime_data.data.device.supports_identify():
         async_add_entities([HomeWizardIdentifyButton(entry.runtime_data)])
 
 

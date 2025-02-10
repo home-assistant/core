@@ -17,9 +17,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FileSizeConfigEntry
 from .const import DOMAIN
-from .coordinator import FileSizeCoordinator
+from .coordinator import FileSizeConfigEntry, FileSizeCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +42,13 @@ SENSOR_TYPES = (
     SensorEntityDescription(
         key="last_updated",
         translation_key="last_updated",
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    SensorEntityDescription(
+        key="created",
+        translation_key="created",
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
@@ -75,7 +81,6 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
     ) -> None:
         """Initialize the Filesize sensor."""
         super().__init__(coordinator)
-        base_name = str(coordinator.path.absolute()).rsplit("/", maxsplit=1)[-1]
         self._attr_unique_id = (
             entry_id if description.key == "file" else f"{entry_id}-{description.key}"
         )
@@ -83,7 +88,6 @@ class FilesizeEntity(CoordinatorEntity[FileSizeCoordinator], SensorEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, entry_id)},
-            name=base_name,
         )
 
     @property

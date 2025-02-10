@@ -68,11 +68,11 @@ from .util.hass_dict import HassKey
 from .util.package import is_docker_env
 from .util.unit_system import (
     _CONF_UNIT_SYSTEM_IMPERIAL,
+    _CONF_UNIT_SYSTEM_METRIC,
     _CONF_UNIT_SYSTEM_US_CUSTOMARY,
     METRIC_SYSTEM,
     UnitSystem,
     get_unit_system,
-    validate_unit_system,
 )
 
 # Typing imports that create a circular dependency
@@ -188,6 +188,26 @@ _CUSTOMIZE_CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _raise_issue_if_imperial_unit_system(
+    hass: HomeAssistant, config: dict[str, Any]
+) -> dict[str, Any]:
+    if config.get(CONF_UNIT_SYSTEM) == _CONF_UNIT_SYSTEM_IMPERIAL:
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            "imperial_unit_system",
+            is_fixable=False,
+            learn_more_url="homeassistant://config/general",
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="imperial_unit_system",
+        )
+        config[CONF_UNIT_SYSTEM] = _CONF_UNIT_SYSTEM_US_CUSTOMARY
+    else:
+        ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, "imperial_unit_system")
+
+    return config
+
+
 def _raise_issue_if_historic_currency(hass: HomeAssistant, currency: str) -> None:
     if currency not in HISTORIC_CURRENCIES:
         ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, "historic_currency")
@@ -249,7 +269,11 @@ CORE_CONFIG_SCHEMA = vol.All(
             CONF_ELEVATION: vol.Coerce(int),
             CONF_RADIUS: cv.positive_int,
             vol.Remove(CONF_TEMPERATURE_UNIT): cv.temperature_unit,
-            CONF_UNIT_SYSTEM: validate_unit_system,
+            CONF_UNIT_SYSTEM: vol.Any(
+                _CONF_UNIT_SYSTEM_METRIC,
+                _CONF_UNIT_SYSTEM_US_CUSTOMARY,
+                _CONF_UNIT_SYSTEM_IMPERIAL,
+            ),
             CONF_TIME_ZONE: cv.time_zone,
             vol.Optional(CONF_INTERNAL_URL): cv.url,
             vol.Optional(CONF_EXTERNAL_URL): cv.url,
@@ -332,6 +356,9 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
     # CORE_CONFIG_SCHEMA is not async safe since it uses vol.IsDir
     # so we need to run it in an executor job.
     config = await hass.async_add_executor_job(CORE_CONFIG_SCHEMA, config)
+
+    # Check if we need to raise an issue for imperial unit system
+    config = _raise_issue_if_imperial_unit_system(hass, config)
 
     # Only load auth during startup.
     if not hasattr(hass, "auth"):
@@ -482,25 +509,25 @@ class _ComponentSet(set[str]):
         self._top_level_components = top_level_components
         self._all_components = all_components
 
-    def add(self, component: str) -> None:
+    def add(self, value: str) -> None:
         """Add a component to the store."""
-        if "." not in component:
-            self._top_level_components.add(component)
-            self._all_components.add(component)
+        if "." not in value:
+            self._top_level_components.add(value)
+            self._all_components.add(value)
         else:
-            platform, _, domain = component.partition(".")
+            platform, _, domain = value.partition(".")
             if domain in BASE_PLATFORMS:
                 self._all_components.add(platform)
-        return super().add(component)
+        return super().add(value)
 
-    def remove(self, component: str) -> None:
+    def remove(self, value: str) -> None:
         """Remove a component from the store."""
-        if "." in component:
+        if "." in value:
             raise ValueError("_ComponentSet does not support removing sub-components")
-        self._top_level_components.remove(component)
-        return super().remove(component)
+        self._top_level_components.remove(value)
+        return super().remove(value)
 
-    def discard(self, component: str) -> None:
+    def discard(self, value: str) -> None:
         """Remove a component from the store."""
         raise NotImplementedError("_ComponentSet does not support discard, use remove")
 
@@ -696,10 +723,10 @@ class Config:
         It will be removed in Home Assistant 2025.6.
         """
         report_usage(
-            "set the time zone using set_time_zone instead of async_set_time_zone"
-            " which will stop working in Home Assistant 2025.6",
+            "sets the time zone using set_time_zone instead of async_set_time_zone",
             core_integration_behavior=ReportBehavior.ERROR,
             custom_integration_behavior=ReportBehavior.ERROR,
+            breaks_in_ha_version="2025.6",
         )
         if time_zone := dt_util.get_time_zone(time_zone_str):
             self.time_zone = time_zone_str

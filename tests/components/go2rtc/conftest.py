@@ -3,9 +3,11 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
+from awesomeversion import AwesomeVersion
 from go2rtc_client.rest import _StreamClient, _WebRTCClient
 import pytest
 
+from homeassistant.components.go2rtc.const import RECOMMENDED_VERSION
 from homeassistant.components.go2rtc.server import Server
 
 GO2RTC_PATH = "homeassistant.components.go2rtc"
@@ -23,7 +25,9 @@ def rest_client() -> Generator[AsyncMock]:
         client = mock_client.return_value
         client.streams = streams = Mock(spec_set=_StreamClient)
         streams.list.return_value = {}
-        client.validate_server_version = AsyncMock()
+        client.validate_server_version = AsyncMock(
+            return_value=AwesomeVersion(RECOMMENDED_VERSION)
+        )
         client.webrtc = Mock(spec_set=_WebRTCClient)
         yield client
 

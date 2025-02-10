@@ -17,28 +17,25 @@ from google_nest_sdm.camera_traits import (
     WebRtcStream,
 )
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_manager import DeviceManager
 from google_nest_sdm.exceptions import ApiException
-from webrtc_models import RTCIceCandidate
+from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components.camera import (
     Camera,
     CameraEntityFeature,
-    StreamType,
     WebRTCAnswer,
     WebRTCClientConfiguration,
     WebRTCSendMessage,
 )
 from homeassistant.components.stream import CONF_EXTRA_PART_WAIT_TIME
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util.dt import utcnow
 
-from .const import DATA_DEVICE_MANAGER, DOMAIN
 from .device_info import NestDeviceInfo
+from .types import NestConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,15 +51,12 @@ BACKOFF_MULTIPLIER = 1.5
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant, entry: NestConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the cameras."""
 
-    device_manager: DeviceManager = hass.data[DOMAIN][entry.entry_id][
-        DATA_DEVICE_MANAGER
-    ]
     entities: list[NestCameraBaseEntity] = []
-    for device in device_manager.devices.values():
+    for device in entry.runtime_data.device_manager.devices.values():
         if (live_stream := device.traits.get(CameraLiveStreamTrait.NAME)) is None:
             continue
         if StreamingProtocol.WEB_RTC in live_stream.supported_protocols:
@@ -254,11 +248,6 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         self._webrtc_sessions: dict[str, WebRtcStream] = {}
         self._refresh_unsub: dict[str, Callable[[], None]] = {}
 
-    @property
-    def frontend_stream_type(self) -> StreamType | None:
-        """Return the type of stream supported by this camera."""
-        return StreamType.WEB_RTC
-
     async def _async_refresh_stream(self, session_id: str) -> datetime.datetime | None:
         """Refresh stream to extend expiration time."""
         if not (webrtc_stream := self._webrtc_sessions.get(session_id)):
@@ -304,7 +293,7 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         self._refresh_unsub[session_id] = refresh.unsub
 
     async def async_on_webrtc_candidate(
-        self, session_id: str, candidate: RTCIceCandidate
+        self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
         """Ignore WebRTC candidates for Nest cloud based cameras."""
         return

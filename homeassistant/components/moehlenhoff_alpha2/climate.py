@@ -47,7 +47,6 @@ class Alpha2Climate(CoordinatorEntity[Alpha2BaseCoordinator], ClimateEntity):
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.COOL]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_preset_modes = [PRESET_AUTO, PRESET_DAY, PRESET_NIGHT]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, coordinator: Alpha2BaseCoordinator, heat_area_id: str) -> None:
         """Initialize Alpha2 ClimateEntity."""
