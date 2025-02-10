@@ -677,10 +677,13 @@ class BackupManager:
             return None
         return with_automatic_settings
 
-    async def async_delete_backup(self, backup_id: str) -> dict[str, Exception]:
+    async def async_delete_backup(
+        self, backup_id: str, *, agent_ids: list[str] | None = None
+    ) -> dict[str, Exception]:
         """Delete a backup."""
         agent_errors: dict[str, Exception] = {}
-        agent_ids = list(self.backup_agents)
+        if agent_ids is None:
+            agent_ids = list(self.backup_agents)
 
         delete_backup_results = await asyncio.gather(
             *(
@@ -731,35 +734,69 @@ class BackupManager:
         # Run the include filter first to ensure we only consider backups that
         # should be included in the deletion process.
         backups = include_filter(backups)
+        backups_by_agent: dict[str, dict[str, ManagerBackup]] = {}
+        for backup_id, backup in backups.items():
+            for agent_id in backup.agents:
+                backups_by_agent.setdefault(agent_id, {})[backup_id] = backup
 
-        LOGGER.debug("Total automatic backups: %s", backups)
+        LOGGER.debug("Backups returned by include filter: %s", backups)
+        LOGGER.debug(
+            "Backups returned by include filter by agent: %s",
+            {agent_id: list(backups) for agent_id, backups in backups_by_agent.items()},
+        )
 
         backups_to_delete = delete_filter(backups)
+
+        LOGGER.debug("Backups returned by delete filter: %s", backups_to_delete)
 
         if not backups_to_delete:
             return
 
         # always delete oldest backup first
-        backups_to_delete = dict(
-            sorted(
-                backups_to_delete.items(),
-                key=lambda backup_item: backup_item[1].date,
-            )
+        backups_to_delete_by_agent: dict[str, dict[str, ManagerBackup]] = {}
+        for backup_id, backup in sorted(
+            backups_to_delete.items(),
+            key=lambda backup_item: backup_item[1].date,
+        ):
+            for agent_id in backup.agents:
+                backups_to_delete_by_agent.setdefault(agent_id, {})[backup_id] = backup
+        LOGGER.debug(
+            "Backups returned by delete filter by agent: %s",
+            {
+                agent_id: list(backups)
+                for agent_id, backups in backups_to_delete_by_agent.items()
+            },
+        )
+        for agent_id, to_delete_from_agent in backups_to_delete_by_agent.items():
+            if len(to_delete_from_agent) >= len(backups_by_agent[agent_id]):
+                # Never delete the last backup.
+                last_backup = to_delete_from_agent.popitem()
+                LOGGER.debug(
+                    "Keeping the last backup %s for agent %s", last_backup, agent_id
+                )
+
+        LOGGER.debug(
+            "Backups to delete by agent: %s",
+            {
+                agent_id: list(backups)
+                for agent_id, backups in backups_to_delete_by_agent.items()
+            },
         )
 
-        if len(backups_to_delete) >= len(backups):
-            # Never delete the last backup.
-            last_backup = backups_to_delete.popitem()
-            LOGGER.debug("Keeping the last backup: %s", last_backup)
+        backup_ids_to_delete: dict[str, set[str]] = {}
+        for agent_id, to_delete in backups_to_delete_by_agent.items():
+            for backup_id in to_delete:
+                backup_ids_to_delete.setdefault(backup_id, set()).add(agent_id)
 
-        LOGGER.debug("Backups to delete: %s", backups_to_delete)
-
-        if not backups_to_delete:
+        if not backup_ids_to_delete:
             return
 
-        backup_ids = list(backups_to_delete)
+        backup_ids = list(backup_ids_to_delete)
         delete_results = await asyncio.gather(
-            *(self.async_delete_backup(backup_id) for backup_id in backups_to_delete)
+            *(
+                self.async_delete_backup(backup_id, agent_ids=list(agent_ids))
+                for backup_id, agent_ids in backup_ids_to_delete.items()
+            )
         )
         agent_errors = {
             backup_id: error
