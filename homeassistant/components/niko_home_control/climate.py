@@ -68,7 +68,7 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
         for key, value in THERMOSTAT_MODES.items():
             if value == mode:
                 return key
-        return 0
+        return 3
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
