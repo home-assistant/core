@@ -368,7 +368,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.4.1
+aioshelly==12.4.2
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1097,7 +1097,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habiticalib==0.3.5
+habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
 habluetooth==3.21.1
@@ -1143,7 +1143,7 @@ hole==0.8.0
 holidays==0.66
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250205.0
+home-assistant-frontend==20250210.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.2.5
@@ -1281,7 +1281,7 @@ konnected==1.2.0
 krakenex==2.2.2
 
 # homeassistant.components.lacrosse_view
-lacrosse-view==1.0.4
+lacrosse-view==1.1.1
 
 # homeassistant.components.eufy
 lakeside==0.13
@@ -1544,7 +1544,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.2.8
+ohme==1.2.9
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -1556,7 +1556,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.8
+onedrive-personal-sdk==0.0.10
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -1746,7 +1746,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.6.0
+py-synologydsm-api==2.6.2
 
 # homeassistant.components.atome
 pyAtome==0.1.1
@@ -1897,7 +1897,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2025.1.0
+pydrawise==2025.2.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1987,7 +1987,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.1
+pyheos==1.0.2
 
 # homeassistant.components.hive
 pyhive-integration==1.0.1
@@ -2385,7 +2385,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.google_drive
-python-google-drive-api==0.0.2
+python-google-drive-api==0.1.0
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.8.1
