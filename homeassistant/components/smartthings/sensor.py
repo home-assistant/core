@@ -701,6 +701,14 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.MEDIA_INPUT_SOURCE: {
+        Attribute.INPUT_SOURCE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.INPUT_SOURCE,
+                name="Media Input Source",
+            )
+        ]
+    },
 }
 
 

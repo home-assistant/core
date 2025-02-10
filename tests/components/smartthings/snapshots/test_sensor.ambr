@@ -3828,6 +3828,52 @@
     'state': '17',
   })
 # ---
+# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_input_source-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.tv_samsung_8_series_49_media_input_source',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': '[TV] Samsung 8 Series (49) Media Input Source',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1.inputSource',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_input_source-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': '[TV] Samsung 8 Series (49) Media Input Source',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.tv_samsung_8_series_49_media_input_source',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'HDMI1',
+  })
+# ---
 # name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_playback_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

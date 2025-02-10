@@ -31,4 +31,4 @@
 - The oven setpoint, does that align with the unit of measurement of the temperature reading?
 - Can disabilities be disabled dynamically?
 - Is the category in the device the one set by the user?
-- What are components and when do I know when to use which one? `da_ac_rac_000001` has 2 where the first hasn't been updated in 4 years.
+- What are components and when do I know when to use which one? `da_ac_rac_000001` has 2 where the first hasn't been updated in 4 years. -> The disabled component capability
