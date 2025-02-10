@@ -17,7 +17,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -27,7 +27,7 @@ from .coordinator import FreedomproConfigEntry, FreedomproDataUpdateCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FreedomproConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Freedompro light."""
     api_key: str = entry.data[CONF_API_KEY]

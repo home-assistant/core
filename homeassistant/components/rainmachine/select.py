@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from . import RainMachineConfigEntry, RainMachineData
@@ -83,7 +83,7 @@ SELECT_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RainMachineConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up RainMachine selects based on a config entry."""
     data = entry.runtime_data

@@ -9,7 +9,7 @@ from homeassistant.components.select import SelectEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
@@ -20,7 +20,7 @@ from .helpers import find_matching_platform, skip_entity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyUplinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink select."""
     entities: list[SelectEntity] = []
