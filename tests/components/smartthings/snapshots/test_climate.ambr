@@ -98,3 +98,112 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[da_ac_rac_01001][climate.aire_dormitorio_principal-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+        'turbo',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_modes': list([
+        'windFree',
+      ]),
+      'swing_modes': list([
+        'off',
+        'vertical',
+        'horizontal',
+        'both',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.aire_dormitorio_principal',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Aire Dormitorio Principal',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': <ClimateEntityFeature: 441>,
+    'translation_key': None,
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][climate.aire_dormitorio_principal-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 27,
+      'drlc_status_duration': 0,
+      'drlc_status_level': 0,
+      'drlc_status_override': False,
+      'drlc_status_start': '1970-01-01T00:00:00Z',
+      'fan_mode': 'high',
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+        'turbo',
+      ]),
+      'friendly_name': 'Aire Dormitorio Principal',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': None,
+      'preset_modes': list([
+        'windFree',
+      ]),
+      'supported_features': <ClimateEntityFeature: 441>,
+      'swing_mode': 'off',
+      'swing_modes': list([
+        'off',
+        'vertical',
+        'horizontal',
+        'both',
+      ]),
+      'temperature': 23,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.aire_dormitorio_principal',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---

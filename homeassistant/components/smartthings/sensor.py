@@ -209,9 +209,6 @@ from .entity import SmartThingsEntity
 #             Attribute.playback_shuffle, "Media Playback Shuffle", None, None, None, None
 #         )
 #     ],
-#     Capability.odor_sensor: [
-#         Map(Attribute.odor_level, "Odor Sensor", None, None, None, None)
-#     ],
 #     Capability.oven_setpoint: [
 #         Map(Attribute.oven_setpoint, "Oven Set Point", None, None, None, None)
 #     ],
@@ -693,6 +690,14 @@ CAPABILITY_TO_SENSORS: dict[
                 name="Thermostat Cooling Setpoint",
                 device_class=SensorDeviceClass.TEMPERATURE,
                 capability_ignore_list={Capability.AIR_CONDITIONER_MODE},
+            )
+        ]
+    },
+    Capability.ODOR_SENSOR: {
+        Attribute.ODOR_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ODOR_LEVEL,
+                name="Odor Sensor",
             )
         ]
     },
