@@ -56,7 +56,7 @@ class OpenWeatherMapConfigFlow(ConfigFlow, domain=DOMAIN):
             longitude = user_input[CONF_LONGITUDE]
             mode = user_input[CONF_MODE]
 
-            await self.async_set_unique_id(f"{latitude}-{longitude}")
+            await self.async_set_unique_id(f"{mode}-{latitude}-{longitude}")
             self._abort_if_unique_id_configured()
 
             errors, description_placeholders = await validate_api_key(
