@@ -21,9 +21,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import SmConfigEntry
 from .const import UPTIME_DEVIATION
-from .coordinator import SmDataUpdateCoordinator
+from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
 

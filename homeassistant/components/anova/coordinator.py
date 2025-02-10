@@ -1,5 +1,7 @@
 """Support for Anova Coordinators."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 import logging
 
@@ -20,7 +22,7 @@ class AnovaData:
     """Data for the Anova integration."""
 
     api_jwt: str
-    coordinators: list["AnovaCoordinator"]
+    coordinators: list[AnovaCoordinator]
     api: AnovaApi
 
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -23,13 +25,21 @@ _LOGGER = logging.getLogger(__name__)
 class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
     """Minecraft Server data update coordinator."""
 
-    def __init__(self, hass: HomeAssistant, name: str, api: MinecraftServer) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        api: MinecraftServer,
+    ) -> None:
         """Initialize coordinator instance."""
         self._api = api
 
         super().__init__(
             hass=hass,
-            name=name,
+            name=config_entry.data[CONF_NAME],
+            config_entry=config_entry,
             logger=_LOGGER,
             update_interval=SCAN_INTERVAL,
         )

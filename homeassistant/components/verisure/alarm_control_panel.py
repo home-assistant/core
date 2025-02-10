@@ -49,14 +49,14 @@ class VerisureAlarm(
             name="Verisure Alarm",
             manufacturer="Verisure",
             model="VBox",
-            identifiers={(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+            identifiers={(DOMAIN, self.coordinator.config_entry.data[CONF_GIID])},
             configuration_url="https://mypages.verisure.com",
         )
 
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
-        return self.coordinator.entry.data[CONF_GIID]
+        return self.coordinator.config_entry.data[CONF_GIID]
 
     async def _async_set_arm_state(
         self, state: str, command_data: dict[str, str | dict[str, str]]

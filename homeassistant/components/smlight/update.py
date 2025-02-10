@@ -22,9 +22,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SmConfigEntry, get_radio
+from . import get_radio
 from .const import LOGGER
-from .coordinator import SmFirmwareUpdateCoordinator, SmFwData
+from .coordinator import SmConfigEntry, SmFirmwareUpdateCoordinator, SmFwData
 from .entity import SmEntity
 
 

@@ -12,8 +12,7 @@ from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import InComfortConfigEntry
-from .coordinator import InComfortDataCoordinator
+from .coordinator import InComfortConfigEntry, InComfortDataCoordinator
 from .entity import IncomfortBoilerEntity
 
 _LOGGER = logging.getLogger(__name__)
