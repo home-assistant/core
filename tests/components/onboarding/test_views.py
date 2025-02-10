@@ -14,6 +14,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components import backup, onboarding
 from homeassistant.components.onboarding import const, views
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
 from homeassistant.setup import async_setup_component
 
@@ -978,6 +979,14 @@ async def test_onboarding_backup_restore(
             {"code": "incorrect_password"},
             1,
         ),
+        # Home Assistant error
+        (
+            {"backup_id": "abc123", "agent_id": "backup.local"},
+            HomeAssistantError("Boom!"),
+            400,
+            {"code": "restore_failed", "message": "Boom!"},
+            1,
+        ),
     ],
 )
 async def test_onboarding_backup_restore_error(
@@ -1007,6 +1016,49 @@ async def test_onboarding_backup_restore_error(
 
     assert resp.status == expected_status
     assert await resp.json() == expected_json
+    assert len(mock_restore.mock_calls) == restore_calls
+
+
+@pytest.mark.parametrize(
+    ("params", "restore_error", "expected_status", "expected_message", "restore_calls"),
+    [
+        # Unexpected error
+        (
+            {"backup_id": "abc123", "agent_id": "backup.local"},
+            Exception("Boom!"),
+            500,
+            "500 Internal Server Error",
+            1,
+        ),
+    ],
+)
+async def test_onboarding_backup_restore_unexpected_error(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client: ClientSessionGenerator,
+    params: dict[str, Any],
+    restore_error: Exception | None,
+    expected_status: int,
+    expected_message: str,
+    restore_calls: int,
+) -> None:
+    """Test returning installation type during onboarding."""
+    mock_storage(hass_storage, {"done": []})
+
+    assert await async_setup_component(hass, "onboarding", {})
+    assert await async_setup_component(hass, "backup", {})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.backup.manager.BackupManager.async_restore_backup",
+        side_effect=restore_error,
+    ) as mock_restore:
+        resp = await client.post("/api/onboarding/backup/restore", json=params)
+
+    assert resp.status == expected_status
+    assert (await resp.content.read()).decode().startswith(expected_message)
     assert len(mock_restore.mock_calls) == restore_calls
 
 
