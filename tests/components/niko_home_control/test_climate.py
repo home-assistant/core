@@ -81,29 +81,63 @@ async def test_set_preset(
     ].set_mode.assert_called_once_with(2)
 
 
-@pytest.mark.parametrize(
-    ("thermostat_id", "entity_id", "mode"), [(5, "climate.thermostat", "cool")]
-)
-async def test_set_hvac_mode(
+async def test_set_hvac_cool_mode(
     hass: HomeAssistant,
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
     climate: AsyncMock,
-    thermostat_id: int,
-    entity_id: str,
-    mode: str,
 ) -> None:
-    """Test setting a preset."""
+    """Test setting cool mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: "cool"},
+        blocking=True,
+    )
+    mock_niko_home_control_connection.thermostats[
+        "thermostat-5"
+    ].set_mode.assert_called_once_with(4)
+
+
+async def test_set_hvac_off_mode(
+    hass: HomeAssistant,
+    mock_niko_home_control_connection: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    climate: AsyncMock,
+) -> None:
+    """Test setting off mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        "climate",
+        "set_hvac_mode",
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: "off"},
+        blocking=True,
+    )
+    mock_niko_home_control_connection.thermostats[
+        "thermostat-5"
+    ].set_mode.assert_called_once_with(3)
+
+
+async def test_set_hvac_auto_mode(
+    hass: HomeAssistant,
+    mock_niko_home_control_connection: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    climate: AsyncMock,
+) -> None:
+    """Test setting auto mode."""
     await setup_integration(hass, mock_config_entry)
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {ATTR_ENTITY_ID: entity_id, ATTR_HVAC_MODE: mode},
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: "auto"},
         blocking=True,
     )
     mock_niko_home_control_connection.thermostats[
-        f"thermostat-{thermostat_id}"
-    ].set_mode.assert_called_once_with(4)
+        "thermostat-5"
+    ].set_mode.assert_called_once_with(5)
 
 
 async def test_is_expected_state(
