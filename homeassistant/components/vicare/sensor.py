@@ -37,7 +37,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     VICARE_CUBIC_METER,
@@ -1041,7 +1041,7 @@ def _build_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ViCareConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""
     async_add_entities(
