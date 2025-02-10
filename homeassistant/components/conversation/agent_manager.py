@@ -96,7 +96,7 @@ async def async_converse(
     if language is None:
         language = hass.config.language
 
-    _LOGGER.debug("Processing in %s: %s", language, text)
+    _LOGGER.debug("Processing in %s: %s %s", language, text, conversation_id)
     conversation_input = ConversationInput(
         text=text,
         context=context,
