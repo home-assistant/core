@@ -1,6 +1,5 @@
 """Common tools used for the Tradfri test suite."""
 
-from copy import deepcopy
 from dataclasses import dataclass
 from typing import Any
 
@@ -30,7 +29,7 @@ class CommandStore:
         get_devices_command = gateway.get_devices()
         self.register_response(get_devices_command, [device_response.id])
         get_device_command = gateway.get_device(device_response.id)
-        self.register_response(get_device_command, device_response.dict())
+        self.register_response(get_device_command, device_response.dict(by_alias=True))
 
     def register_response(self, command: Command, response: Any) -> None:
         """Register command response."""
@@ -61,7 +60,7 @@ class CommandStore:
         assert observe_command
 
         device_path = "/".join(str(v) for v in device.path)
-        device_state = deepcopy(device.raw)
+        device_state = device.raw.dict(by_alias=True)
 
         # Create a default observed state based on the sent commands.
         for command in self.sent_commands:

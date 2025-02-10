@@ -93,7 +93,7 @@ async def test_fan_available(
                 ATTR_AIR_PURIFIER_MODE: 0,
             },
             STATE_OFF,
-            None,
+            0,
             None,
         ),
         (
@@ -145,7 +145,7 @@ async def test_fan_available(
                 ATTR_AIR_PURIFIER_MODE: 0,
             },
             STATE_OFF,
-            None,
+            0,
             None,
         ),
     ],
