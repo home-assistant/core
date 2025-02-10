@@ -350,7 +350,7 @@ async def test_media_browse_service(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     with patch(
-        "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
+        "homeassistant.components.demo.media_player.AbstractDemoPlayer.async_browse_media",
         return_value=BrowseMedia(
             media_class=MediaClass.DIRECTORY,
             media_content_id="mock-id",
