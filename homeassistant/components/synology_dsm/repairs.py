@@ -73,8 +73,6 @@ class MissingBackupSetupRepairFlow(RepairsFlow):
                 shares = await syno_data.api.file_station.get_shared_folders(
                     only_writable=True
                 )
-        else:
-            return self.async_abort(reason="no_file_station")
 
         if not shares:
             return self.async_abort(reason="no_shares")

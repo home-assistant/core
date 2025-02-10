@@ -212,7 +212,6 @@
           }
         },
         "abort": {
-          "no_file_station": "The user seems to have not the correct permissions.\nPlease check the documentation.",
           "no_shares": "There are no shared folders available for the user.\nPlease check the documentation.",
           "ignored": "The backup location has not been configured.\nYou can still set it up later via the integration options."
         }
