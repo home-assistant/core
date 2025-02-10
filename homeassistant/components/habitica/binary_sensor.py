@@ -16,8 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ASSETS_URL
+from .coordinator import HabiticaConfigEntry
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
 
 PARALLEL_UPDATES = 1
 

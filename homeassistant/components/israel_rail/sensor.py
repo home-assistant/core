@@ -19,9 +19,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import IsraelRailConfigEntry
 from .const import ATTRIBUTION, DEPARTURES_COUNT, DOMAIN
-from .coordinator import DataConnection, IsraelRailDataUpdateCoordinator
+from .coordinator import (
+    DataConnection,
+    IsraelRailConfigEntry,
+    IsraelRailDataUpdateCoordinator,
+)
 
 _LOGGER = logging.getLogger(__name__)
 

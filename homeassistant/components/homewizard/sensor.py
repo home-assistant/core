@@ -37,9 +37,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import HomeWizardConfigEntry
 from .const import DOMAIN
-from .coordinator import HWEnergyDeviceUpdateCoordinator
+from .coordinator import HomeWizardConfigEntry, HWEnergyDeviceUpdateCoordinator
 from .entity import HomeWizardEntity
 
 PARALLEL_UPDATES = 1
