@@ -196,6 +196,9 @@ class ViCareFan(ViCareEntity, FanEntity):
     @property
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
+        if self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+            return False
+
         return self.percentage is not None and self.percentage > 0
 
     def turn_off(self, **kwargs: Any) -> None:
@@ -206,6 +209,8 @@ class ViCareFan(ViCareEntity, FanEntity):
     @property
     def icon(self) -> str | None:
         """Return the icon to use in the frontend."""
+        if self._api.getVentilationQuickmode(VentilationQuickmode.STANDBY):
+            return "mdi:fan-off"
         if hasattr(self, "_attr_preset_mode"):
             if self._attr_preset_mode == VentilationMode.VENTILATION:
                 return "mdi:fan-clock"

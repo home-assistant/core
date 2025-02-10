@@ -27,8 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import PlugwiseConfigEntry
-from .coordinator import PlugwiseDataUpdateCoordinator
+from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 
 # Coordinator is used to centralize the data updates
@@ -420,7 +419,7 @@ async def async_setup_entry(
         async_add_entities(
             PlugwiseSensorEntity(coordinator, device_id, description)
             for device_id in coordinator.new_devices
-            if (sensors := coordinator.data.devices[device_id].get("sensors"))
+            if (sensors := coordinator.data[device_id].get("sensors"))
             for description in SENSORS
             if description.key in sensors
         )

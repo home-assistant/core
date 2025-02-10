@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from datetime import datetime
 from enum import StrEnum
 from functools import lru_cache
@@ -561,6 +561,21 @@ class DeviceRegistryItems[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)](
                 return self._connections[connection]
         return None
 
+    def get_entries(
+        self,
+        identifiers: set[tuple[str, str]] | None,
+        connections: set[tuple[str, str]] | None,
+    ) -> Iterable[_EntryTypeT]:
+        """Get entries from identifiers or connections."""
+        if identifiers:
+            for identifier in identifiers:
+                if identifier in self._identifiers:
+                    yield self._identifiers[identifier]
+        if connections:
+            for connection in _normalize_connections(connections):
+                if connection in self._connections:
+                    yield self._connections[connection]
+
 
 class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
     """Container for active (non-deleted) device registry entries."""
@@ -666,6 +681,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     ) -> DeletedDeviceEntry | None:
         """Check if device is deleted."""
         return self.deleted_devices.get_entry(identifiers, connections)
+
+    def _async_get_deleted_devices(
+        self,
+        identifiers: set[tuple[str, str]] | None = None,
+        connections: set[tuple[str, str]] | None = None,
+    ) -> Iterable[DeletedDeviceEntry]:
+        """List devices that are deleted."""
+        return self.deleted_devices.get_entries(identifiers, connections)
 
     def _substitute_name_placeholders(
         self,
@@ -958,6 +981,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             new_values["config_entries"] = config_entries
             old_values["config_entries"] = old.config_entries
 
+        added_connections: set[tuple[str, str]] | None = None
+        added_identifiers: set[tuple[str, str]] | None = None
+
         if merge_connections is not UNDEFINED:
             normalized_connections = self._validate_connections(
                 device_id,
@@ -966,6 +992,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
             old_connections = old.connections
             if not normalized_connections.issubset(old_connections):
+                added_connections = normalized_connections
                 new_values["connections"] = old_connections | normalized_connections
                 old_values["connections"] = old_connections
 
@@ -975,17 +1002,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
             old_identifiers = old.identifiers
             if not merge_identifiers.issubset(old_identifiers):
+                added_identifiers = merge_identifiers
                 new_values["identifiers"] = old_identifiers | merge_identifiers
                 old_values["identifiers"] = old_identifiers
 
         if new_connections is not UNDEFINED:
-            new_values["connections"] = self._validate_connections(
+            added_connections = new_values["connections"] = self._validate_connections(
                 device_id, new_connections, False
             )
             old_values["connections"] = old.connections
 
         if new_identifiers is not UNDEFINED:
-            new_values["identifiers"] = self._validate_identifiers(
+            added_identifiers = new_values["identifiers"] = self._validate_identifiers(
                 device_id, new_identifiers, False
             )
             old_values["identifiers"] = old.identifiers
@@ -1027,6 +1055,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.hass.verify_event_loop_thread("device_registry.async_update_device")
         new = attr.evolve(old, **new_values)
         self.devices[device_id] = new
+
+        # NOTE: Once we solve the broader issue of duplicated devices, we might
+        # want to revisit it. Instead of simply removing the duplicated deleted device,
+        # we might want to merge the information from it into the non-deleted device.
+        for deleted_device in self._async_get_deleted_devices(
+            added_identifiers, added_connections
+        ):
+            del self.deleted_devices[deleted_device.id]
 
         # If its only run time attributes (suggested_area)
         # that do not get saved we do not want to write

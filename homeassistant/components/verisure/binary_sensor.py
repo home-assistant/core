@@ -62,7 +62,7 @@ class VerisureDoorWindowSensor(
             manufacturer="Verisure",
             model="Shock Sensor Detector",
             identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.entry.data[CONF_GIID]),
+            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
             configuration_url="https://mypages.verisure.com",
         )
 
@@ -104,7 +104,7 @@ class VerisureEthernetStatus(
     @property
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
-        return f"{self.coordinator.entry.data[CONF_GIID]}_ethernet"
+        return f"{self.coordinator.config_entry.data[CONF_GIID]}_ethernet"
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -113,7 +113,7 @@ class VerisureEthernetStatus(
             name="Verisure Alarm",
             manufacturer="Verisure",
             model="VBox",
-            identifiers={(DOMAIN, self.coordinator.entry.data[CONF_GIID])},
+            identifiers={(DOMAIN, self.coordinator.config_entry.data[CONF_GIID])},
             configuration_url="https://mypages.verisure.com",
         )
 

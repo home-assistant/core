@@ -15,9 +15,12 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
+from .coordinator import (
+    HabiticaConfigEntry,
+    HabiticaData,
+    HabiticaDataUpdateCoordinator,
+)
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
 
 PARALLEL_UPDATES = 1
 
