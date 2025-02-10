@@ -975,7 +975,7 @@ hole==0.8.0
 holidays==0.66
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250205.0
+home-assistant-frontend==20250210.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.2.5
@@ -1462,7 +1462,7 @@ pyDuotecno==2024.10.1
 pyElectra==1.2.4
 
 # homeassistant.components.homee
-pyHomee==1.2.5
+pyHomee==1.2.7
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -1619,7 +1619,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.1
+pyheos==1.0.2
 
 # homeassistant.components.hive
 pyhive-integration==1.0.1
