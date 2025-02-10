@@ -38,10 +38,18 @@ type FlumeConfigEntry = ConfigEntry[FlumeRuntimeData]
 class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for an individual flume device."""
 
-    def __init__(self, hass: HomeAssistant, flume_device: FlumeData) -> None:
+    config_entry: FlumeConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: FlumeConfigEntry,
+        flume_device: FlumeData,
+    ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
+            config_entry=config_entry,
             name=DOMAIN,
             logger=_LOGGER,
             update_interval=DEVICE_SCAN_INTERVAL,
@@ -65,10 +73,18 @@ class FlumeDeviceDataUpdateCoordinator(DataUpdateCoordinator[None]):
 class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
     """Date update coordinator to read connected status from Devices endpoint."""
 
-    def __init__(self, hass: HomeAssistant, flume_devices: FlumeDeviceList) -> None:
+    config_entry: FlumeConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: FlumeConfigEntry,
+        flume_devices: FlumeDeviceList,
+    ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
+            config_entry=config_entry,
             name=DOMAIN,
             logger=_LOGGER,
             update_interval=DEVICE_CONNECTION_SCAN_INTERVAL,
@@ -96,10 +112,15 @@ class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
 class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Data update coordinator for flume notifications."""
 
-    def __init__(self, hass: HomeAssistant, auth: FlumeAuth) -> None:
+    config_entry: FlumeConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: FlumeConfigEntry, auth: FlumeAuth
+    ) -> None:
         """Initialize the Coordinator."""
         super().__init__(
             hass,
+            config_entry=config_entry,
             name=DOMAIN,
             logger=_LOGGER,
             update_interval=NOTIFICATION_SCAN_INTERVAL,

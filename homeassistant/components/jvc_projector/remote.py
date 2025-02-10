@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import JVCConfigEntry
+from .coordinator import JVCConfigEntry
 from .entity import JvcProjectorEntity
 
 COMMANDS = {

@@ -20,9 +20,8 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import ImgwPibConfigEntry
 from .const import DOMAIN
-from .coordinator import ImgwPibDataUpdateCoordinator
+from .coordinator import ImgwPibConfigEntry, ImgwPibDataUpdateCoordinator
 from .entity import ImgwPibEntity
 
 PARALLEL_UPDATES = 1

@@ -21,8 +21,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
-from . import PhilipsTVConfigEntry
-from .coordinator import PhilipsTVDataUpdateCoordinator
+from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 
 EFFECT_PARTITION = ": "

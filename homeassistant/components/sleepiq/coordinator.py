@@ -7,6 +7,8 @@ import logging
 
 from asyncsleepiq import AsyncSleepIQ
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -19,17 +21,20 @@ LONGER_UPDATE_INTERVAL = timedelta(minutes=5)
 class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """SleepIQ data update coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         client: AsyncSleepIQ,
-        username: str,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{username}@SleepIQ",
+            config_entry=config_entry,
+            name=f"{config_entry.data[CONF_USERNAME]}@SleepIQ",
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
@@ -45,17 +50,20 @@ class SleepIQDataUpdateCoordinator(DataUpdateCoordinator[None]):
 class SleepIQPauseUpdateCoordinator(DataUpdateCoordinator[None]):
     """SleepIQ data update coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         client: AsyncSleepIQ,
-        username: str,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{username}@SleepIQPause",
+            config_entry=config_entry,
+            name=f"{config_entry.data[CONF_USERNAME]}@SleepIQPause",
             update_interval=LONGER_UPDATE_INTERVAL,
         )
         self.client = client
