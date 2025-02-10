@@ -29,9 +29,7 @@ async def async_setup_entry(
     controller = entry.runtime_data
 
     async_add_entities(
-        NikoHomeControlClimate(
-            controller.thermostats[thermostat], controller, entry.entry_id
-        )
+        NikoHomeControlClimate(thermostat, controller, entry.entry_id)
         for thermostat in controller.thermostats.values()
     )
 
