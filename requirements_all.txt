@@ -2475,6 +2475,9 @@ python-telegram-bot[socks]==21.5
 # homeassistant.components.vlc
 python-vlc==3.0.18122
 
+# homeassistant.components.whois
+python-whois==0.9.5
+
 # homeassistant.components.egardia
 pythonegardia==1.0.52
 
@@ -3047,9 +3050,6 @@ weheat==2025.1.15
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.12
-
-# homeassistant.components.whois
-whois==0.9.27
 
 # homeassistant.components.wiffi
 wiffi==1.1.2

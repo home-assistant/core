@@ -46,25 +46,26 @@ def mock_whois() -> Generator[MagicMock]:
         patch(
             "homeassistant.components.whois.whois_query",
         ) as whois_mock,
-        patch("homeassistant.components.whois.config_flow.whois.query", new=whois_mock),
+        patch("homeassistant.components.whois.config_flow.whois_query", new=whois_mock),
     ):
-        domain = whois_mock.return_value
-        domain.abuse_contact = "abuse@example.com"
-        domain.admin = "admin@example.com"
-        domain.creation_date = datetime(2019, 1, 1, 0, 0, 0)
-        domain.dnssec = True
-        domain.expiration_date = datetime(2023, 1, 1, 0, 0, 0)
-        domain.last_updated = datetime(
-            2022, 1, 1, 0, 0, 0, tzinfo=dt_util.get_time_zone("Europe/Amsterdam")
-        )
-        domain.name = "home-assistant.io"
-        domain.name_servers = ["ns1.example.com", "ns2.example.com"]
-        domain.owner = "owner@example.com"
-        domain.registrant = "registrant@example.com"
-        domain.registrar = "My Registrar"
-        domain.reseller = "Top Domains, Low Prices"
-        domain.status = "OK"
-        domain.statuses = ["OK"]
+        data = {
+            "abuse_contact": "abuse@example.com",
+            "admin": "admin@example.com",
+            "creation_date": datetime(2019, 1, 1, 0, 0, 0),
+            "dnssec": True,
+            "expiration_date": datetime(2023, 1, 1, 0, 0, 0),
+            "updated_date": datetime(
+                2022, 1, 1, 0, 0, 0, tzinfo=dt_util.get_time_zone("Europe/Amsterdam")
+            ),
+            "name_servers": ["ns1.example.com", "ns2.example.com"],
+            "org": "owner@example.com",
+            "registrant": "registrant@example.com",
+            "registrar": "My Registrar",
+            "reseller": "Top Domains, Low Prices",
+            "status": "OK",
+            "statuses": ["OK"],
+        }
+        whois_mock.return_value = data
         yield whois_mock
 
 
