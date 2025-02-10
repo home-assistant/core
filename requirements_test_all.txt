@@ -874,7 +874,7 @@ goodwe==0.3.6
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.23.0
+google-cloud-pubsub==2.28.0
 
 # homeassistant.components.google_cloud
 google-cloud-speech==2.27.0
@@ -1559,7 +1559,7 @@ pydroid-ipcam==2.0.0
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.1.26
+pyeconet==0.1.27
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.3.1
@@ -1802,6 +1802,9 @@ pypalazzetti==0.1.19
 
 # homeassistant.components.lcn
 pypck==0.8.5
+
+# homeassistant.components.pglab
+pypglab==0.0.3
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
