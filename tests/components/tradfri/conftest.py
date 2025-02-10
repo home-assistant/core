@@ -9,13 +9,12 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from pytradfri.command import Command
-from pytradfri.const import ATTR_FIRMWARE_VERSION, ATTR_GATEWAY_ID
 from pytradfri.device import Device
 from pytradfri.gateway import Gateway
 
 from homeassistant.components.tradfri.const import DOMAIN
 
-from . import GATEWAY_ID, TRADFRI_PATH
+from . import TRADFRI_PATH
 from .common import CommandStore
 
 from tests.common import load_fixture
@@ -30,12 +29,12 @@ def mock_entry_setup() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="mock_gateway", autouse=True)
-def mock_gateway_fixture(command_store: CommandStore) -> Gateway:
+def mock_gateway_fixture(command_store: CommandStore, gateway_response: str) -> Gateway:
     """Mock a Tradfri gateway."""
     gateway = Gateway()
     command_store.register_response(
         gateway.get_gateway_info(),
-        {ATTR_GATEWAY_ID: GATEWAY_ID, ATTR_FIRMWARE_VERSION: "1.2.1234"},
+        json.loads(gateway_response),
     )
     command_store.register_response(
         gateway.get_devices(),
@@ -94,6 +93,12 @@ def device(
     device = Device(device_response)
     command_store.register_device(mock_gateway, device.raw)
     return device
+
+
+@pytest.fixture(scope="package")
+def gateway_response() -> str:
+    """Return a gateway response."""
+    return load_fixture("gateway.json", DOMAIN)
 
 
 @pytest.fixture(scope="package")

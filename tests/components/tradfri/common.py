@@ -5,8 +5,7 @@ from dataclasses import dataclass
 from typing import Any
 
 from pytradfri.command import Command
-from pytradfri.const import ATTR_ID
-from pytradfri.device import Device
+from pytradfri.device import Device, DeviceResponse
 from pytradfri.gateway import Gateway
 
 from homeassistant.components import tradfri
@@ -25,13 +24,13 @@ class CommandStore:
     mock_responses: dict[str, Any]
 
     def register_device(
-        self, gateway: Gateway, device_response: dict[str, Any]
+        self, gateway: Gateway, device_response: DeviceResponse
     ) -> None:
         """Register device response."""
         get_devices_command = gateway.get_devices()
-        self.register_response(get_devices_command, [device_response[ATTR_ID]])
-        get_device_command = gateway.get_device(device_response[ATTR_ID])
-        self.register_response(get_device_command, device_response)
+        self.register_response(get_devices_command, [device_response.id])
+        get_device_command = gateway.get_device(device_response.id)
+        self.register_response(get_device_command, device_response.dict())
 
     def register_response(self, command: Command, response: Any) -> None:
         """Register command response."""
