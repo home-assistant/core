@@ -13,10 +13,6 @@ from .const import CONF_API, CONF_COMMUNICATION, CONF_DEVICE_DATA, CONF_PORT, DO
 
 _PLATFORMS: list[Platform] = [
     Platform.LIGHT,
-    # Platform.BINARY_SENSOR,
-    # Platform.SENSOR,
-    # Platform.CLIMATE,
-    # Platform.SWITCH,
 ]
 
 
