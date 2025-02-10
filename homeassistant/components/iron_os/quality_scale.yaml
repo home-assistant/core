@@ -21,8 +21,10 @@ rules:
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure: todo
-  test-before-setup: todo
+  test-before-configure:
+    status: exempt
+    comment: Device is set up from a Bluetooth discovery
+  test-before-setup: done
   unique-config-entry: done
 
   # Silver
@@ -70,7 +72,9 @@ rules:
   repair-issues:
     status: exempt
     comment: no repairs/issues
-  stale-devices: todo
+  stale-devices:
+    status: exempt
+    comment: Stale devices are removed with the config entry as there is only one device per entry
 
   # Platinum
   async-dependency: done

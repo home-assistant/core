@@ -1595,7 +1595,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "intellifire",
     "intesishome",
     "ios",
-    "iron_os",
     "iotawatt",
     "iotty",
     "iperf3",
