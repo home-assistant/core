@@ -19,9 +19,9 @@ from homeassistant.util.percentage import (
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import KNXModule
 from .const import KNX_ADDRESS, KNX_MODULE_KEY
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import FanSchema
 
 DEFAULT_PERCENTAGE: Final = 50

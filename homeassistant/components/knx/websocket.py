@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from functools import wraps
-from typing import TYPE_CHECKING, Any, Final, overload
+from functools import cache, wraps
+from typing import TYPE_CHECKING, Any, Final, cast, overload
 
 import knx_frontend as knx_panel
 import voluptuous as vol
@@ -14,7 +14,7 @@ from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM
+from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -22,6 +22,9 @@ from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.util.ulid import ulid_now
 
 from .const import DOMAIN, KNX_MODULE_KEY
+from .entity import EntityConfiguration, Persistable
+from .schema_ui import SchemaSerializer
+from .sensor import UiSensorConfig
 from .storage.config_store import ConfigStoreException
 from .storage.const import CONF_DATA
 from .storage.entity_store_schema import (
@@ -36,7 +39,7 @@ from .storage.entity_store_validation import (
 from .telegrams import SIGNAL_KNX_TELEGRAM, TelegramDict
 
 if TYPE_CHECKING:
-    from . import KNXModule
+    from knx_module import KNXModule
 
 URL_BASE: Final = "/knx_static"
 
@@ -57,6 +60,9 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_entity_config)
     websocket_api.async_register_command(hass, ws_get_entity_entries)
     websocket_api.async_register_command(hass, ws_create_device)
+    websocket_api.async_register_command(hass, ws_get_entity_schemas)
+    websocket_api.async_register_command(hass, ws_create_entity_v2)
+    websocket_api.async_register_command(hass, ws_get_entity_config_v2)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
         await hass.http.async_register_static_paths(
@@ -149,6 +155,19 @@ def provide_knx(
             func(hass, knx, connection, msg)
 
     return with_knx
+
+
+def vol_invalid_response(exc: vol.Invalid) -> dict[str, Any]:
+    """Format a Voluptuous validation exception into a structured error response."""
+    errors: list[dict[str, Any]] = [
+        {"path": [str(p) for p in error.path], "error": error.error_message}
+        for error in (exc.errors if isinstance(exc, vol.MultipleInvalid) else [exc])
+    ]
+
+    return {
+        "success": False,
+        "errors": errors,
+    }
 
 
 @websocket_api.require_admin
@@ -541,3 +560,188 @@ def ws_create_device(
         configuration_url=f"homeassistant://knx/entities/view?device_id={_device.id}",
     )
     connection.send_result(msg["id"], _device.dict_repr)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/get_entity_schemas",
+    }
+)
+@provide_knx
+@callback
+def ws_get_entity_schemas(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Retrieve schema definitions for generating dynamic forms in the UI.
+
+    This WebSocket command provides schema definitions required for configuring
+    KNX entities in Home Assistant. The schemas are designed to enable the frontend
+    to dynamically generate forms for user input, ensuring that the configuration
+    matches the expected structure and validation rules.
+
+    The schemas are retrieved dynamically using the `get_schema` method from
+    configuration classes (e.g., `UiSensorConfig`). They are serialized into a
+    JSON-compatible format via the `SchemaSerializer.convert` method and sent to
+    the frontend through the WebSocket connection.
+
+    Args:
+        hass: The Home Assistant core object.
+        knx: The KNX integration module, provided via the
+             `@provide_knx` decorator.
+        connection: The WebSocket connection
+                    instance to communicate with the frontend.
+        msg: The incoming WebSocket message containing the command details.
+
+    Raises:
+        ValueError: If there is an issue serializing the schemas.
+
+    """
+
+    supportedConfigs: tuple[type[EntityConfiguration], ...] = (UiSensorConfig,)
+
+    payload = tuple(
+        SchemaSerializer.convert(config.get_schema()) for config in supportedConfigs
+    )
+
+    connection.send_result(msg["id"], payload)
+
+
+@cache
+def get_entity_config_cls(platform: str) -> type[EntityConfiguration]:
+    """Map supported platform types to their configuration classes.
+
+    Args:
+        platform (str): The platform type for which to retrieve the configuration class.
+
+    Returns:
+        type[EntityConfiguration]: The configuration class associated with the given platform.
+
+    Raises:
+        ValueError: If the provided platform is not supported.
+
+    """
+    supported_config_classes: dict[str, type[EntityConfiguration]] = {
+        Platform.SENSOR: UiSensorConfig,
+    }
+
+    if platform not in supported_config_classes:
+        raise ValueError(f"Unsupported platform: '{platform}'")
+
+    return supported_config_classes[platform]
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/create_entity_v2",
+        vol.Required(CONF_DATA): vol.Schema(
+            {CONF_PLATFORM: str}, extra=vol.ALLOW_EXTRA
+        ),
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_create_entity_v2(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Create an entity from the given configuration data via WebSocket.
+
+    This function retrieves the configuration data from the incoming message,
+    identifies the appropriate configuration class based on the platform, and
+    attempts to create the corresponding entity in the KNX config store. If
+    successful, a success response containing the new entity's ID is sent back
+    to the client; otherwise, an error response is returned.
+
+    Args:
+        hass: The Home Assistant instance.
+        knx: An instance of the KNXModule, which provides access to the KNX config store.
+        connection: The active WebSocket connection used for sending responses.
+        msg: A dictionary containing the incoming WebSocket message data.
+
+    Returns:
+        None. Responses are sent back to the WebSocket client via `connection.send_result`
+        or `connection.send_error`.
+
+    """
+    message_id: int = msg["id"]
+    platform: str = msg[CONF_DATA][CONF_PLATFORM]
+
+    try:
+        config_class = get_entity_config_cls(platform)
+        config = config_class.from_dict(msg[CONF_DATA])
+        if not isinstance(config, Persistable):
+            raise TypeError(f"Config class {config_class} must implement Persistable")  # noqa: TRY301
+
+        entity_id = await knx.config_store.create_entity(
+            platform, config.to_storage_dict()
+        )
+
+        # Send success response with the new entity ID.
+        connection.send_result(
+            message_id,
+            EntityStoreValidationSuccess(success=True, entity_id=entity_id),
+        )
+
+    except (ValueError, TypeError) as err:
+        connection.send_error(
+            message_id,
+            websocket_api.const.ERR_NOT_SUPPORTED,
+            str(err),
+        )
+        return
+    except vol.Invalid as err:
+        connection.send_result(message_id, vol_invalid_response(err))
+        return
+    except ConfigStoreException as err:
+        connection.send_error(
+            message_id,
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
+        )
+        return
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/get_entity_config_v2",
+        vol.Required(CONF_ENTITY_ID): str,
+    }
+)
+@provide_knx
+@callback
+def ws_get_entity_config_v2(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Get entity configuration from entity store."""
+    try:
+        config_entry = knx.config_store.get_entity_config(msg[CONF_ENTITY_ID])
+        platform = config_entry.get(CONF_PLATFORM, "")
+        config_cls = get_entity_config_cls(platform)
+
+        if not issubclass(config_cls, Persistable):
+            raise TypeError(f"Config class {config_cls} must implement Persistable")  # noqa: TRY301
+
+        data = config_entry[CONF_DATA]
+        config = cast(EntityConfiguration, config_cls.from_storage_dict(data))
+        connection.send_result(msg["id"], config.to_dict())
+    except ConfigStoreException as err:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
+        )
+        return
+    except (ValueError, TypeError, Exception) as err:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_SUPPORTED, str(err)
+        )
+        return

@@ -20,7 +20,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import (
     CONF_PAYLOAD_LENGTH,
     CONF_RESPOND_TO_READ,
@@ -30,6 +29,7 @@ from .const import (
     KNX_MODULE_KEY,
 )
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import SelectSchema
 
 
