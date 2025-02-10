@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from enum import StrEnum
 
-from habiticalib import UserStyles
+from habiticalib import Avatar, extract_avatar
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.core import HomeAssistant
@@ -45,7 +44,7 @@ class HabiticaImage(HabiticaBase, ImageEntity):
         translation_key=HabiticaImageEntity.AVATAR,
     )
     _attr_content_type = "image/png"
-    _current_appearance: UserStyles | None = None
+    _current_appearance: Avatar | None = None
     _cache: bytes | None = None
 
     def __init__(
@@ -60,7 +59,7 @@ class HabiticaImage(HabiticaBase, ImageEntity):
 
     def _handle_coordinator_update(self) -> None:
         """Check if equipped gear and other things have changed since last avatar image generation."""
-        new_appearance = UserStyles.from_dict(asdict(self.coordinator.data.user))
+        new_appearance = extract_avatar(self.coordinator.data.user)
 
         if self._current_appearance != new_appearance:
             self._current_appearance = new_appearance
