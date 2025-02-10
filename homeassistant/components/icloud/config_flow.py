@@ -7,8 +7,8 @@ import logging
 import os
 from typing import TYPE_CHECKING, Any
 
-from pyicloudng import PyiCloudService
-from pyicloudng.exceptions import (
+from pyicloud import PyiCloudService
+from pyicloud.exceptions import (
     PyiCloudException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
@@ -299,7 +299,6 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                         PyiCloudService,
                         self._username,
                         self._password,
-                        'com',
                         Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
                         True,
                         None,
