@@ -559,10 +559,12 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     def _determine_hvac_modes(self) -> list[HVACMode]:
         """Determine the supported HVAC modes."""
-        modes = {HVACMode.OFF}
-        for mode in self.get_attribute_value(
-            Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
-        ):
-            if (state := AC_MODE_TO_STATE.get(mode)) is not None:
-                modes.add(state)
-        return list(modes)
+        modes = [HVACMode.OFF]
+        modes.extend(
+            state
+            for mode in self.get_attribute_value(
+                Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+            )
+            if (state := AC_MODE_TO_STATE.get(mode)) is not None
+        )
+        return modes

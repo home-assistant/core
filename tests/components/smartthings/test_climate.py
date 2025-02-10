@@ -4,7 +4,7 @@ The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from syrupy import SnapshotAssertion
 
@@ -12,9 +12,23 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import setup_integration, snapshot_smartthings_entities
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry
+
+
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.CLIMATE)
+
 
 # @pytest.fixture(name="legacy_thermostat")
 # def legacy_thermostat_fixture(device_factory):
@@ -741,17 +755,3 @@ from tests.common import MockConfigEntry, snapshot_platform
 #     )
 #     state = hass.states.get("climate.air_conditioner")
 #     assert state.attributes[ATTR_SWING_MODE] == "vertical"
-
-
-async def test_all_entities(
-    hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    devices: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test all entities."""
-    with patch("homeassistant.components.smartthings.PLATFORMS", [Platform.CLIMATE]):
-        await setup_integration(hass, mock_config_entry)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
