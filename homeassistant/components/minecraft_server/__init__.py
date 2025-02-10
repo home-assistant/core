@@ -10,14 +10,7 @@ import dns.rdataclass
 import dns.rdatatype
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-    Platform,
-)
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -58,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Initialization failed: {error}") from error
 
     # Create coordinator instance.
-    coordinator = MinecraftServerCoordinator(hass, entry.data[CONF_NAME], api)
+    coordinator = MinecraftServerCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
 
     # Store coordinator instance.

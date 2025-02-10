@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
@@ -21,11 +21,7 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Starlink from a config entry."""
-    coordinator = StarlinkUpdateCoordinator(
-        hass=hass,
-        url=entry.data[CONF_IP_ADDRESS],
-        name=entry.title,
-    )
+    coordinator = StarlinkUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 

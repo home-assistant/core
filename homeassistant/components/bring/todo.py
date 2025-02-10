@@ -9,10 +9,10 @@ import uuid
 from bring_api import (
     BringItem,
     BringItemOperation,
+    BringList,
     BringNotificationType,
     BringRequestException,
 )
-from bring_api.types import BringList
 import voluptuous as vol
 
 from homeassistant.components.todo import (
@@ -26,14 +26,13 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import BringConfigEntry
 from .const import (
     ATTR_ITEM_NAME,
     ATTR_NOTIFICATION_TYPE,
     DOMAIN,
     SERVICE_PUSH_NOTIFICATION,
 )
-from .coordinator import BringData, BringDataUpdateCoordinator
+from .coordinator import BringConfigEntry, BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 
 PARALLEL_UPDATES = 0

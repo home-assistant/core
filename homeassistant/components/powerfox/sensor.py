@@ -17,8 +17,7 @@ from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import PowerfoxConfigEntry
-from .coordinator import PowerfoxDataUpdateCoordinator
+from .coordinator import PowerfoxConfigEntry, PowerfoxDataUpdateCoordinator
 from .entity import PowerfoxEntity
 
 

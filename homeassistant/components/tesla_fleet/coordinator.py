@@ -1,9 +1,11 @@
 """Tesla Fleet Data Coordinator."""
 
+from __future__ import annotations
+
 from datetime import datetime, timedelta
 from random import randint
 from time import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
@@ -20,6 +22,9 @@ from tesla_fleet_api.ratecalculator import RateCalculator
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from . import TeslaFleetConfigEntry
 
 from .const import ENERGY_HISTORY_FIELDS, LOGGER, TeslaFleetState
 
@@ -57,18 +62,24 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
 class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the TeslaFleet API."""
 
+    config_entry: TeslaFleetConfigEntry
     updated_once: bool
     pre2021: bool
     last_active: datetime
     rate: RateCalculator
 
     def __init__(
-        self, hass: HomeAssistant, api: VehicleSpecific, product: dict
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslaFleetConfigEntry,
+        api: VehicleSpecific,
+        product: dict,
     ) -> None:
         """Initialize TeslaFleet Vehicle Update Coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="Tesla Fleet Vehicle",
             update_interval=VEHICLE_INTERVAL,
         )
@@ -141,13 +152,20 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site live status from the TeslaFleet API."""
 
+    config_entry: TeslaFleetConfigEntry
     updated_once: bool
 
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslaFleetConfigEntry,
+        api: EnergySpecific,
+    ) -> None:
         """Initialize TeslaFleet Energy Site Live coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="Tesla Fleet Energy Site Live",
             update_interval=timedelta(seconds=10),
         )
@@ -188,11 +206,19 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site history import and export from the Tesla Fleet API."""
 
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific) -> None:
+    config_entry: TeslaFleetConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslaFleetConfigEntry,
+        api: EnergySpecific,
+    ) -> None:
         """Initialize Tesla Fleet Energy Site History coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=f"Tesla Fleet Energy History {api.energy_site_id}",
             update_interval=timedelta(seconds=300),
         )
@@ -243,13 +269,21 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching energy site info from the TeslaFleet API."""
 
+    config_entry: TeslaFleetConfigEntry
     updated_once: bool
 
-    def __init__(self, hass: HomeAssistant, api: EnergySpecific, product: dict) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: TeslaFleetConfigEntry,
+        api: EnergySpecific,
+        product: dict,
+    ) -> None:
         """Initialize TeslaFleet Energy Info coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name="Tesla Fleet Energy Site Info",
             update_interval=timedelta(seconds=15),
         )

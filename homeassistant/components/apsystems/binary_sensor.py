@@ -17,8 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ApSystemsConfigEntry, ApSystemsData
-from .coordinator import ApSystemsDataCoordinator
+from .coordinator import ApSystemsConfigEntry, ApSystemsData, ApSystemsDataCoordinator
 from .entity import ApSystemsEntity
 
 

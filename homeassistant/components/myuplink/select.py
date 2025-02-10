@@ -11,8 +11,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .const import DOMAIN
+from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity
 

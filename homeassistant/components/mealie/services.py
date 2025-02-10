@@ -128,7 +128,7 @@ def setup_services(hass: HomeAssistant) -> None:
                 translation_domain=DOMAIN,
                 translation_key="end_date_before_start_date",
             )
-        client = cast(MealieConfigEntry, entry).runtime_data.client
+        client = entry.runtime_data.client
         try:
             mealplans = await client.get_mealplans(start_date, end_date)
         except MealieConnectionError as err:
