@@ -405,7 +405,8 @@ class AssistSatelliteEntity(entity.Entity):
     def _internal_on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type is PipelineEventType.WAKE_WORD_START:
-            self._set_state(AssistSatelliteState.IDLE)
+            if self.state != AssistSatelliteState.RESPONDING:
+                self._set_state(AssistSatelliteState.IDLE)
         elif event.type is PipelineEventType.STT_START:
             self._set_state(AssistSatelliteState.LISTENING)
         elif event.type is PipelineEventType.INTENT_START:
