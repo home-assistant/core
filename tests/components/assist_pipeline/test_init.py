@@ -1,11 +1,12 @@
 """Test Voice Assistant init."""
 
 import asyncio
+from collections.abc import Generator
 from dataclasses import asdict
 import itertools as it
 from pathlib import Path
 import tempfile
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 import wave
 
 import hass_nabucasa
@@ -39,6 +40,14 @@ from .conftest import (
 )
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
+
+@pytest.fixture(autouse=True)
+def mock_ulid() -> Generator[Mock]:
+    """Mock the ulid of chat sessions."""
+    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
+        mock_ulid_now.return_value = "mock-ulid"
+        yield mock_ulid_now
 
 
 def process_events(events: list[assist_pipeline.PipelineEvent]) -> list[dict]:
@@ -684,7 +693,7 @@ async def test_wake_word_detection_aborted(
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
-        conversation_id=None,
+        conversation_id="mock-conversation-id",
         device_id=None,
         stt_metadata=stt.SpeechMetadata(
             language="",
@@ -771,7 +780,7 @@ async def test_tts_audio_output(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         tts_input="This is a test.",
-        conversation_id=None,
+        conversation_id="mock-conversation-id",
         device_id=None,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
@@ -828,7 +837,7 @@ async def test_tts_wav_preferred_format(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         tts_input="This is a test.",
-        conversation_id=None,
+        conversation_id="mock-conversation-id",
         device_id=None,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
@@ -896,7 +905,7 @@ async def test_tts_dict_preferred_format(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         tts_input="This is a test.",
-        conversation_id=None,
+        conversation_id="mock-conversation-id",
         device_id=None,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
@@ -982,6 +991,7 @@ async def test_sentence_trigger_overrides_conversation_agent(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="test trigger sentence",
+        conversation_id="mock-conversation-id",
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
@@ -1059,6 +1069,7 @@ async def test_prefer_local_intents(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="I'd like to order a stout please",
+        conversation_id="mock-conversation-id",
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
@@ -1136,6 +1147,7 @@ async def test_stt_language_used_instead_of_conversation_language(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="test input",
+        conversation_id="mock-conversation-id",
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
@@ -1210,6 +1222,7 @@ async def test_tts_language_used_instead_of_conversation_language(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="test input",
+        conversation_id="mock-conversation-id",
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
@@ -1284,6 +1297,7 @@ async def test_pipeline_language_used_instead_of_conversation_language(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="test input",
+        conversation_id="mock-conversation-id",
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),

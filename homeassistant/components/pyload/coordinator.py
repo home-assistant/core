@@ -34,16 +34,22 @@ class PyLoadData:
     free_space: int
 
 
+type PyLoadConfigEntry = ConfigEntry[PyLoadCoordinator]
+
+
 class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
     """pyLoad coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: PyLoadConfigEntry
 
-    def __init__(self, hass: HomeAssistant, pyload: PyLoadAPI) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: PyLoadConfigEntry, pyload: PyLoadAPI
+    ) -> None:
         """Initialize pyLoad coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

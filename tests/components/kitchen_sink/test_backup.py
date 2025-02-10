@@ -2,7 +2,7 @@
 
 from collections.abc import AsyncGenerator
 from io import StringIO
-from unittest.mock import patch
+from unittest.mock import ANY, patch
 
 import pytest
 
@@ -55,7 +55,10 @@ async def test_agents_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": "backup.local"}, {"agent_id": "kitchen_sink.syncer"}],
+        "agents": [
+            {"agent_id": "backup.local", "name": "local"},
+            {"agent_id": "kitchen_sink.syncer", "name": "syncer"},
+        ],
     }
 
     config_entry = hass.config_entries.async_entries(DOMAIN)[0]
@@ -66,7 +69,9 @@ async def test_agents_info(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {"agents": [{"agent_id": "backup.local"}]}
+    assert response["result"] == {
+        "agents": [{"agent_id": "backup.local", "name": "local"}]
+    }
 
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
@@ -76,7 +81,10 @@ async def test_agents_info(
 
     assert response["success"]
     assert response["result"] == {
-        "agents": [{"agent_id": "backup.local"}, {"agent_id": "kitchen_sink.syncer"}],
+        "agents": [
+            {"agent_id": "backup.local", "name": "local"},
+            {"agent_id": "kitchen_sink.syncer", "name": "syncer"},
+        ],
     }
 
 
@@ -94,17 +102,16 @@ async def test_agents_list_backups(
     assert response["result"]["backups"] == [
         {
             "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
-            "agent_ids": ["kitchen_sink.syncer"],
+            "agents": {"kitchen_sink.syncer": {"protected": False, "size": 1234}},
             "backup_id": "abc123",
             "database_included": False,
             "date": "1970-01-01T00:00:00Z",
+            "extra_metadata": {},
             "failed_agent_ids": [],
             "folders": ["media", "share"],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0",
             "name": "Kitchen sink syncer",
-            "protected": False,
-            "size": 1234,
             "with_automatic_settings": None,
         }
     ]
@@ -177,17 +184,16 @@ async def test_agents_upload(
     assert len(backup_list) == 2
     assert backup_list[1] == {
         "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
-        "agent_ids": ["kitchen_sink.syncer"],
+        "agents": {"kitchen_sink.syncer": {"protected": False, "size": 0.0}},
         "backup_id": "test-backup",
         "database_included": True,
         "date": "1970-01-01T00:00:00.000Z",
+        "extra_metadata": {"instance_id": ANY, "with_automatic_settings": False},
         "failed_agent_ids": [],
         "folders": ["media", "share"],
         "homeassistant_included": True,
         "homeassistant_version": "2024.12.0",
         "name": "Test",
-        "protected": False,
-        "size": 0.0,
         "with_automatic_settings": False,
     }
 

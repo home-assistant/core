@@ -10,7 +10,7 @@ from pyaprilaire.const import Attribute
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AprilaireConfigEntry, AprilaireCoordinator
 from .entity import BaseAprilaireEntity
@@ -24,7 +24,7 @@ FRESH_AIR_MODE_MAP = {0: "off", 1: "automatic"}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AprilaireConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Aprilaire select devices."""
 

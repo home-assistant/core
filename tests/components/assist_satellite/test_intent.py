@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import intent
 
-from .conftest import MockAssistSatellite
+from .conftest import TEST_DOMAIN, MockAssistSatellite
 
 
 @pytest.fixture
@@ -65,12 +65,7 @@ async def test_broadcast_intent(
         },
         "language": "en",
         "response_type": "action_done",
-        "speech": {
-            "plain": {
-                "extra_data": None,
-                "speech": "Done",
-            }
-        },
+        "speech": {},  # response comes from intents
     }
     assert len(entity.announcements) == 1
     assert len(entity2.announcements) == 1
@@ -99,12 +94,37 @@ async def test_broadcast_intent(
         },
         "language": "en",
         "response_type": "action_done",
-        "speech": {
-            "plain": {
-                "extra_data": None,
-                "speech": "Done",
-            }
-        },
+        "speech": {},  # response comes from intents
     }
     assert len(entity.announcements) == 1
     assert len(entity2.announcements) == 2
+
+
+async def test_broadcast_intent_excluded_domains(
+    hass: HomeAssistant,
+    init_components: ConfigEntry,
+    entity: MockAssistSatellite,
+    entity2: MockAssistSatellite,
+    mock_tts: None,
+) -> None:
+    """Test that the broadcast intent filters out entities in excluded domains."""
+
+    # Exclude the "test" domain
+    with patch(
+        "homeassistant.components.assist_satellite.intent.EXCLUDED_DOMAINS",
+        new={TEST_DOMAIN},
+    ):
+        result = await intent.async_handle(
+            hass, "test", intent.INTENT_BROADCAST, {"message": {"value": "Hello"}}
+        )
+        assert result.as_dict() == {
+            "card": {},
+            "data": {
+                "failed": [],
+                "success": [],  # no satellites
+                "targets": [],
+            },
+            "language": "en",
+            "response_type": "action_done",
+            "speech": {},
+        }

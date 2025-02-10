@@ -33,7 +33,9 @@ SCAN_INTERVAL = timedelta(minutes=3)
 class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]]):
     """Handle Surepetcare data."""
 
-    def __init__(self, entry: ConfigEntry, hass: HomeAssistant) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the data handler."""
         self.surepy = Surepy(
             entry.data[CONF_USERNAME],
@@ -51,6 +53,7 @@ class SurePetcareDataCoordinator(DataUpdateCoordinator[dict[int, SurepyEntity]])
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )

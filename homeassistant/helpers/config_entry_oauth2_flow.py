@@ -55,6 +55,21 @@ OAUTH_AUTHORIZE_URL_TIMEOUT_SEC = 30
 OAUTH_TOKEN_TIMEOUT_SEC = 30
 
 
+@callback
+def async_get_redirect_uri(hass: HomeAssistant) -> str:
+    """Return the redirect uri."""
+    if "my" in hass.config.components:
+        return MY_AUTH_CALLBACK_PATH
+
+    if (req := http.current_request.get()) is None:
+        raise RuntimeError("No current request in context")
+
+    if (ha_host := req.headers.get(HEADER_FRONTEND_BASE)) is None:
+        raise RuntimeError("No header in request")
+
+    return f"{ha_host}{AUTH_CALLBACK_PATH}"
+
+
 class AbstractOAuth2Implementation(ABC):
     """Base class to abstract OAuth2 authentication."""
 
@@ -144,16 +159,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        if "my" in self.hass.config.components:
-            return MY_AUTH_CALLBACK_PATH
-
-        if (req := http.current_request.get()) is None:
-            raise RuntimeError("No current request in context")
-
-        if (ha_host := req.headers.get(HEADER_FRONTEND_BASE)) is None:
-            raise RuntimeError("No header in request")
-
-        return f"{ha_host}{AUTH_CALLBACK_PATH}"
+        return async_get_redirect_uri(self.hass)
 
     @property
     def extra_authorize_data(self) -> dict:

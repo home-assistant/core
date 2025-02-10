@@ -2,12 +2,14 @@
 
 import asyncio
 import base64
+from collections.abc import Generator
 from typing import Any
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components import conversation
 from homeassistant.components.assist_pipeline.const import (
     DOMAIN,
     SAMPLE_CHANNELS,
@@ -21,7 +23,7 @@ from homeassistant.components.assist_pipeline.pipeline import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import chat_session, device_registry as dr
 
 from .conftest import (
     BYTES_ONE_SECOND,
@@ -33,6 +35,14 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
+
+
+@pytest.fixture(autouse=True)
+def mock_ulid() -> Generator[Mock]:
+    """Mock the ulid of chat sessions."""
+    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
+        mock_ulid_now.return_value = "mock-ulid"
+        yield mock_ulid_now
 
 
 @pytest.mark.parametrize(
@@ -2718,3 +2728,62 @@ async def test_stt_cooldown_different_ids(
 
     # Both should start stt
     assert {event_type_1, event_type_2} == {"stt-start"}
+
+
+async def test_intent_progress_event(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+) -> None:
+    """Test intent-progress events from a pipeline are forwarded."""
+    client = await hass_ws_client(hass)
+
+    orig_converse = conversation.async_converse
+    expected_delta_events = [
+        {"chat_log_delta": {"role": "assistant"}},
+        {"chat_log_delta": {"content": "Hello"}},
+    ]
+
+    async def mock_delta_stream():
+        """Mock delta stream."""
+        for d in expected_delta_events:
+            yield d["chat_log_delta"]
+
+    async def mock_converse(**kwargs):
+        """Mock converse method."""
+        with (
+            chat_session.async_get_chat_session(
+                kwargs["hass"], kwargs["conversation_id"]
+            ) as session,
+            conversation.async_get_chat_log(hass, session) as chat_log,
+        ):
+            async for _content in chat_log.async_add_delta_content_stream(
+                "", mock_delta_stream()
+            ):
+                pass
+
+            return await orig_converse(**kwargs)
+
+    with patch("homeassistant.components.conversation.async_converse", mock_converse):
+        await client.send_json_auto_id(
+            {
+                "type": "assist_pipeline/run",
+                "start_stage": "intent",
+                "end_stage": "intent",
+                "input": {"text": "Are the lights on?"},
+                "conversation_id": "mock-conversation-id",
+                "device_id": "mock-device-id",
+            }
+        )
+
+        # result
+        msg = await client.receive_json()
+        assert msg["success"]
+
+        events = []
+        for _ in range(6):
+            msg = await client.receive_json()
+            if msg["event"]["type"] == "intent-progress":
+                events.append(msg["event"]["data"])
+
+    assert events == expected_delta_events

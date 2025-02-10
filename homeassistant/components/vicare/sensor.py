@@ -30,13 +30,14 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfEnergy,
     UnitOfPower,
+    UnitOfPressure,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     VICARE_CUBIC_METER,
@@ -836,6 +837,60 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
             "forcedlevelfour",
         ],
     ),
+    ViCareSensorEntityDescription(
+        key="supply_pressure",
+        translation_key="supply_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getSupplyPressure(),
+        unit_getter=lambda api: api.getSupplyPressureUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="heating_rod_starts",
+        translation_key="heating_rod_starts",
+        value_getter=lambda api: api.getHeatingRodStarts(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="heating_rod_hours",
+        translation_key="heating_rod_hours",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        value_getter=lambda api: api.getHeatingRodHours(),
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    ViCareSensorEntityDescription(
+        key="spf_total",
+        translation_key="spf_total",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getSeasonalPerformanceFactorTotal(),
+    ),
+    ViCareSensorEntityDescription(
+        key="spf_dhw",
+        translation_key="spf_dhw",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getSeasonalPerformanceFactorDHW(),
+    ),
+    ViCareSensorEntityDescription(
+        key="spf_heating",
+        translation_key="spf_heating",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getSeasonalPerformanceFactorHeating(),
+    ),
+    ViCareSensorEntityDescription(
+        key="battery_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getBatteryLevel(),
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
@@ -960,7 +1015,7 @@ def _build_entities(
                 device.api,
             )
             for description in GLOBAL_SENSORS
-            if is_supported(description.key, description, device.api)
+            if is_supported(description.key, description.value_getter, device.api)
         )
         # add component entities
         for component_list, entity_description_list in (
@@ -978,7 +1033,7 @@ def _build_entities(
                 )
                 for component in component_list
                 for description in entity_description_list
-                if is_supported(description.key, description, component)
+                if is_supported(description.key, description.value_getter, component)
             )
     return entities
 
@@ -986,7 +1041,7 @@ def _build_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ViCareConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""
     async_add_entities(

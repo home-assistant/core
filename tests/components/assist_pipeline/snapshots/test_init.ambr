@@ -3,6 +3,7 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -32,7 +33,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -94,6 +95,7 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -123,7 +125,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -185,6 +187,7 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -214,7 +217,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -276,6 +279,7 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -329,7 +333,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test transcript',
@@ -391,6 +395,7 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -427,6 +432,7 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-conversation-id',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -434,7 +440,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-conversation-id',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test input',
@@ -478,6 +484,7 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-conversation-id',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -485,7 +492,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-conversation-id',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test input',
@@ -529,6 +536,7 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-conversation-id',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -536,7 +544,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': None,
+        'conversation_id': 'mock-conversation-id',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test input',
@@ -580,6 +588,7 @@
   list([
     dict({
       'data': dict({
+        'conversation_id': 'mock-conversation-id',
         'language': 'en',
         'pipeline': <ANY>,
       }),

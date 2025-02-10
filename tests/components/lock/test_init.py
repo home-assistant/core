@@ -21,7 +21,7 @@ from homeassistant.components.lock import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .conftest import MockLock

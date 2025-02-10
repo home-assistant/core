@@ -31,7 +31,7 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import recorder as recorder_helper
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import async_wait_recording_done, create_engine_test
 from .conftest import InstrumentedMigration

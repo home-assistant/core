@@ -51,10 +51,10 @@ class AsyncMQTTClient(MQTTClient):
         since the client is running in an async event loop
         and will never run in multiple threads.
         """
-        self._in_callback_mutex = NullLock()
-        self._callback_mutex = NullLock()
-        self._msgtime_mutex = NullLock()
-        self._out_message_mutex = NullLock()
-        self._in_message_mutex = NullLock()
-        self._reconnect_delay_mutex = NullLock()
-        self._mid_generate_mutex = NullLock()
+        self._in_callback_mutex = NullLock()  # type: ignore[assignment]
+        self._callback_mutex = NullLock()  # type: ignore[assignment]
+        self._msgtime_mutex = NullLock()  # type: ignore[assignment]
+        self._out_message_mutex = NullLock()  # type: ignore[assignment]
+        self._in_message_mutex = NullLock()  # type: ignore[assignment]
+        self._reconnect_delay_mutex = NullLock()  # type: ignore[assignment]
+        self._mid_generate_mutex = NullLock()  # type: ignore[assignment]

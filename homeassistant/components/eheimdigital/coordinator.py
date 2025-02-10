@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Coroutine
-from typing import Any
+from collections.abc import Callable
 
 from aiohttp import ClientError
 from eheimdigital.device import EheimDigitalDevice
@@ -19,7 +18,11 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-type AsyncSetupDeviceEntitiesCallback = Callable[[str], Coroutine[Any, Any, None]]
+type AsyncSetupDeviceEntitiesCallback = Callable[
+    [str | dict[str, EheimDigitalDevice]], None
+]
+
+type EheimDigitalConfigEntry = ConfigEntry[EheimDigitalUpdateCoordinator]
 
 
 class EheimDigitalUpdateCoordinator(
@@ -27,12 +30,18 @@ class EheimDigitalUpdateCoordinator(
 ):
     """The EHEIM Digital data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: EheimDigitalConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: EheimDigitalConfigEntry
+    ) -> None:
         """Initialize the EHEIM Digital data update coordinator."""
         super().__init__(
-            hass, LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.hub = EheimDigitalHub(
             host=self.config_entry.data[CONF_HOST],
@@ -61,7 +70,7 @@ class EheimDigitalUpdateCoordinator(
 
         if device_address not in self.known_devices:
             for platform_callback in self.platform_callbacks:
-                await platform_callback(device_address)
+                platform_callback(device_address)
 
     async def _async_receive_callback(self) -> None:
         self.async_set_updated_data(self.hub.devices)

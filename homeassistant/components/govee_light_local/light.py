@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from govee_local_api import GoveeDevice, GoveeLightCapability
+from govee_local_api import GoveeDevice, GoveeLightFeatures
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,7 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
@@ -29,7 +29,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: GoveeLocalConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Govee light setup."""
 
@@ -71,13 +71,13 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         capabilities = device.capabilities
         color_modes = {ColorMode.ONOFF}
         if capabilities:
-            if GoveeLightCapability.COLOR_RGB in capabilities:
+            if GoveeLightFeatures.COLOR_RGB & capabilities.features:
                 color_modes.add(ColorMode.RGB)
-            if GoveeLightCapability.COLOR_KELVIN_TEMPERATURE in capabilities:
+            if GoveeLightFeatures.COLOR_KELVIN_TEMPERATURE & capabilities.features:
                 color_modes.add(ColorMode.COLOR_TEMP)
                 self._attr_max_color_temp_kelvin = 9000
                 self._attr_min_color_temp_kelvin = 2000
-            if GoveeLightCapability.BRIGHTNESS in capabilities:
+            if GoveeLightFeatures.BRIGHTNESS & capabilities.features:
                 color_modes.add(ColorMode.BRIGHTNESS)
 
         self._attr_supported_color_modes = filter_supported_color_modes(color_modes)

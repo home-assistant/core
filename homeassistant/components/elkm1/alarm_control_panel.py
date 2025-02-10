@@ -19,9 +19,8 @@ from homeassistant.components.alarm_control_panel import (
     CodeFormat,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, entity_platform
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import VolDictType
 
@@ -56,7 +55,7 @@ SERVICE_ALARM_CLEAR_BYPASS = "alarm_clear_bypass"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ElkM1ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ElkM1 alarm platform."""
     elk_data = config_entry.runtime_data

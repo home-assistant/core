@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import cast
 
 from aiocomelit.api import ComelitVedoAreaObject
 from aiocomelit.const import ALARM_AREAS, AlarmAreaState
@@ -13,13 +14,11 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import ComelitVedoSystem
+from .coordinator import ComelitConfigEntry, ComelitVedoSystem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,12 +47,12 @@ ALARM_AREA_ARMED_STATUS: dict[str, int] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ComelitConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Comelit VEDO system alarm control panel devices."""
 
-    coordinator: ComelitVedoSystem = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
 
     async_add_entities(
         ComelitAlarmEntity(coordinator, device, config_entry.entry_id)

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -12,14 +11,14 @@ from .const import (
     CONF_DAMPING_MORNING,
     CONF_MODULES_POWER,
 )
-from .coordinator import ForecastSolarDataUpdateCoordinator
+from .coordinator import ForecastSolarConfigEntry, ForecastSolarDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
-type ForecastSolarConfigEntry = ConfigEntry[ForecastSolarDataUpdateCoordinator]
 
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: ForecastSolarConfigEntry
+) -> bool:
     """Migrate old config entry."""
 
     if entry.version == 1:
@@ -53,11 +52,15 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ForecastSolarConfigEntry
+) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_update_options(
+    hass: HomeAssistant, entry: ForecastSolarConfigEntry
+) -> None:
     """Update options."""
     await hass.config_entries.async_reload(entry.entry_id)

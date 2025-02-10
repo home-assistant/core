@@ -1,8 +1,5 @@
 """Constants for the Coolmaster integration."""
 
-DATA_INFO = "info"
-DATA_COORDINATOR = "coordinator"
-
 DOMAIN = "coolmaster"
 
 DEFAULT_PORT = 10102

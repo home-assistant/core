@@ -10,15 +10,15 @@ from unittest.mock import sentinel
 from freezegun import freeze_time
 import pytest
 
+from homeassistant import core as ha
 from homeassistant.components import recorder
 from homeassistant.components.recorder import Recorder, history
 from homeassistant.components.recorder.filters import Filters
 from homeassistant.components.recorder.models import process_timestamp
 from homeassistant.components.recorder.util import session_scope
-import homeassistant.core as ha
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.json import JSONEncoder
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,

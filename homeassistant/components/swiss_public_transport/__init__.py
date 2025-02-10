@@ -96,7 +96,9 @@ async def async_setup_entry(
             },
         ) from e
 
-    coordinator = SwissPublicTransportDataUpdateCoordinator(hass, opendata, time_offset)
+    coordinator = SwissPublicTransportDataUpdateCoordinator(
+        hass, entry, opendata, time_offset
+    )
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 

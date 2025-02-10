@@ -37,6 +37,7 @@ from zha.application.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
     ZHA_CLUSTER_HANDLER_MSG,
+    ZHA_GW_MSG,
 )
 from zha.application.gateway import Gateway
 from zha.application.helpers import (
@@ -59,8 +60,7 @@ from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import VolDictType, VolSchemaType
@@ -331,7 +331,7 @@ async def websocket_permit_devices(
         connection.send_message(websocket_api.event_message(msg["id"], data))
 
     remove_dispatcher_function = async_dispatcher_connect(
-        hass, "zha_gateway_message", forward_messages
+        hass, ZHA_GW_MSG, forward_messages
     )
 
     @callback

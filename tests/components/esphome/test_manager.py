@@ -1100,6 +1100,42 @@ async def test_esphome_device_with_web_server(
     assert dev.configuration_url == "http://test.local:80"
 
 
+async def test_esphome_device_with_ipv6_web_server(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device with a web server."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "fe80::1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        options={},
+    )
+    entry.add_to_hass(hass)
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        entity_info=[],
+        user_service=[],
+        device_info={"webserver_port": 80},
+        states=[],
+    )
+    await hass.async_block_till_done()
+    entry = device.entry
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    assert dev.configuration_url == "http://[fe80::1]:80"
+
+
 async def test_esphome_device_with_compilation_time(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

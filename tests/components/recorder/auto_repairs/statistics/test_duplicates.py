@@ -17,7 +17,7 @@ from homeassistant.components.recorder.auto_repairs.statistics.duplicates import
 from homeassistant.components.recorder.statistics import async_add_external_statistics
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from ...common import async_wait_recording_done
 

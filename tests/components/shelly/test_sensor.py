@@ -1426,3 +1426,32 @@ async def test_blu_trv_sensor_entity(
 
         entry = entity_registry.async_get(entity_id)
         assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+async def test_rpc_device_virtual_number_sensor_with_device_class(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a virtual number sensor with device class for RPC device."""
+    config = deepcopy(mock_rpc_device.config)
+    config["number:203"] = {
+        "name": "Current humidity",
+        "min": 0,
+        "max": 100,
+        "meta": {"ui": {"step": 1, "unit": "%", "view": "label"}},
+        "role": "current_humidity",
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status["number:203"] = {"value": 34}
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    state = hass.states.get("sensor.test_name_current_humidity")
+    assert state
+    assert state.state == "34"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == PERCENTAGE
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.HUMIDITY

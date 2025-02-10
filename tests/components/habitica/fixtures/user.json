@@ -143,6 +143,25 @@
           "trinkets": 0
         }
       }
-    }
+    },
+    "webhooks": [
+      {
+        "id": "43a67e37-1bae-4b11-8d3d-6c4b1b480231",
+        "type": "taskActivity",
+        "label": "My Webhook",
+        "url": "https://some-webhook-url.com",
+        "enabled": true,
+        "failures": 0,
+        "options": {
+          "created": false,
+          "updated": false,
+          "deleted": false,
+          "checklistScored": false,
+          "scored": true
+        },
+        "createdAt": "2025-02-08T22:06:08.894Z",
+        "updatedAt": "2025-02-08T22:06:17.195Z"
+      }
+    ]
   }
 }

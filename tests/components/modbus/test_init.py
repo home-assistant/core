@@ -107,7 +107,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     TEST_ENTITY_NAME,
@@ -1274,3 +1274,56 @@ async def test_no_entities(hass: HomeAssistant) -> None:
         ]
     }
     assert await async_setup_component(hass, DOMAIN, config) is False
+
+
+@pytest.mark.parametrize(
+    ("do_config", "expected_slave_value"),
+    [
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 1234,
+                    },
+                ],
+            },
+            1,
+        ),
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 1234,
+                        CONF_SLAVE: 0,
+                    },
+                ],
+            },
+            0,
+        ),
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 1234,
+                        CONF_DEVICE_ADDRESS: 6,
+                    },
+                ],
+            },
+            6,
+        ),
+    ],
+)
+async def test_check_default_slave(
+    hass: HomeAssistant,
+    mock_modbus,
+    do_config,
+    mock_do_cycle,
+    expected_slave_value: int,
+) -> None:
+    """Test default slave."""
+    assert mock_modbus.read_holding_registers.mock_calls
+    first_call = mock_modbus.read_holding_registers.mock_calls[0]
+    assert first_call.kwargs["slave"] == expected_slave_value

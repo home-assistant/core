@@ -14,7 +14,7 @@ from .const import DOMAIN
 from .coordinator import CookidooConfigEntry, CookidooDataUpdateCoordinator
 from .helpers import cookidoo_from_config_entry
 
-PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.TODO]
+PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR, Platform.TODO]
 
 _LOGGER = logging.getLogger(__name__)
 

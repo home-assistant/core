@@ -400,6 +400,9 @@
     },
     "envoy_error": {
       "message": "Error communicating with Envoy API on {host}: {args}"
+    },
+    "action_error": {
+      "message": "Failed to execute {action} for {entity}, host: {host}: {args}"
     }
   }
 }

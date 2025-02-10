@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import homeassistant.components.persistent_notification as pn
+from homeassistant.components import persistent_notification as pn
 from homeassistant.components.persistent_notification import trigger
 from homeassistant.core import Context, HomeAssistant, callback
 

@@ -37,7 +37,7 @@ class ConversationInput:
     language: str
     """Language of the request."""
 
-    agent_id: str | None = None
+    agent_id: str
     """Agent to use for processing."""
 
     extra_system_prompt: str | None = None

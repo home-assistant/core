@@ -7,18 +7,17 @@ from typing import Any
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import FireServiceRotaClient
 from .const import DATA_CLIENT, DATA_COORDINATOR, DOMAIN as FIRESERVICEROTA_DOMAIN
+from .coordinator import FireServiceRotaClient, FireServiceUpdateCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up FireServiceRota binary sensor based on a config entry."""
 
@@ -26,14 +25,16 @@ async def async_setup_entry(
         DATA_CLIENT
     ]
 
-    coordinator: DataUpdateCoordinator = hass.data[FIRESERVICEROTA_DOMAIN][
+    coordinator: FireServiceUpdateCoordinator = hass.data[FIRESERVICEROTA_DOMAIN][
         entry.entry_id
     ][DATA_COORDINATOR]
 
     async_add_entities([ResponseBinarySensor(coordinator, client, entry)])
 
 
-class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class ResponseBinarySensor(
+    CoordinatorEntity[FireServiceUpdateCoordinator], BinarySensorEntity
+):
     """Representation of an FireServiceRota sensor."""
 
     _attr_has_entity_name = True
@@ -41,7 +42,7 @@ class ResponseBinarySensor(CoordinatorEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: FireServiceUpdateCoordinator,
         client: FireServiceRotaClient,
         entry: ConfigEntry,
     ) -> None:

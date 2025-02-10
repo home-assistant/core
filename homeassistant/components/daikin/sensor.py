@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfEnergy,
@@ -22,9 +21,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import DOMAIN as DAIKIN_DOMAIN
 from .const import (
     ATTR_COMPRESSOR_FREQUENCY,
     ATTR_COOL_ENERGY,
@@ -37,7 +35,7 @@ from .const import (
     ATTR_TOTAL_ENERGY_TODAY,
     ATTR_TOTAL_POWER,
 )
-from .coordinator import DaikinCoordinator
+from .coordinator import DaikinConfigEntry, DaikinCoordinator
 from .entity import DaikinEntity
 
 
@@ -134,10 +132,12 @@ SENSOR_TYPES: tuple[DaikinSensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DaikinConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin climate based on config_entry."""
-    daikin_api = hass.data[DAIKIN_DOMAIN].get(entry.entry_id)
+    daikin_api = entry.runtime_data
     sensors = [ATTR_INSIDE_TEMPERATURE]
     if daikin_api.device.support_outside_temperature:
         sensors.append(ATTR_OUTSIDE_TEMPERATURE)

@@ -28,7 +28,7 @@
   "options": {
     "step": {
       "init": {
-        "description": "Adjust Harmony Hub Options",
+        "description": "Adjust Harmony Hub options",
         "data": {
           "activity": "The default activity to execute when none is specified.",
           "delay_secs": "The delay between sending commands."
@@ -53,7 +53,7 @@
     },
     "change_channel": {
       "name": "Change channel",
-      "description": "Sends change channel command to the Harmony HUB.",
+      "description": "Sends a change channel command to the Harmony Hub.",
       "fields": {
         "channel": {
           "name": "Channel",

@@ -8,7 +8,7 @@ from screenlogicpy.device_const.circuit import GENERIC_CIRCUIT_NAMES, INTERFACE
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LIGHT_CIRCUIT_FUNCTIONS
 from .entity import (
@@ -29,7 +29,7 @@ class ScreenLogicCircuitSwitchDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ScreenLogicConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     entities: list[ScreenLogicSwitchingEntity] = []

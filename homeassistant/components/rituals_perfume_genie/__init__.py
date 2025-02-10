@@ -44,7 +44,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Create a coordinator for each diffuser
     coordinators = {
-        diffuser.hublot: RitualsDataUpdateCoordinator(hass, diffuser, update_interval)
+        diffuser.hublot: RitualsDataUpdateCoordinator(
+            hass, entry, diffuser, update_interval
+        )
         for diffuser in account_devices
     }
 

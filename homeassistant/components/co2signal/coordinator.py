@@ -22,16 +22,27 @@ from .helpers import fetch_latest_carbon_intensity
 
 _LOGGER = logging.getLogger(__name__)
 
+type CO2SignalConfigEntry = ConfigEntry[CO2SignalCoordinator]
+
 
 class CO2SignalCoordinator(DataUpdateCoordinator[CarbonIntensityResponse]):
     """Data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: CO2SignalConfigEntry
 
-    def __init__(self, hass: HomeAssistant, client: ElectricityMaps) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: CO2SignalConfigEntry,
+        client: ElectricityMaps,
+    ) -> None:
         """Initialize the coordinator."""
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=timedelta(minutes=15)
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(minutes=15),
         )
         self.client = client
 

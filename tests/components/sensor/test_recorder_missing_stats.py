@@ -17,7 +17,7 @@ from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import CoreState
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_test_home_assistant
 from tests.components.recorder.common import (

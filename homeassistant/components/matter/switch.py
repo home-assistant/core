@@ -7,7 +7,6 @@ from typing import Any
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
-from matter_server.common.helpers.util import create_attribute_path_from_attribute
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -17,7 +16,7 @@ from homeassistant.components.switch import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -27,7 +26,7 @@ from .models import MatterDiscoverySchema
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter switches from Config Entry."""
     matter = get_matter(hass)
@@ -41,18 +40,14 @@ class MatterSwitch(MatterEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn switch on."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=clusters.OnOff.Commands.On(),
+        await self.send_device_command(
+            clusters.OnOff.Commands.On(),
         )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn switch off."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=clusters.OnOff.Commands.Off(),
+        await self.send_device_command(
+            clusters.OnOff.Commands.Off(),
         )
 
     @callback
@@ -77,15 +72,9 @@ class MatterNumericSwitch(MatterSwitch):
 
     async def _async_set_native_value(self, value: bool) -> None:
         """Update the current value."""
-        matter_attribute = self._entity_info.primary_attribute
         if value_convert := self.entity_description.ha_to_native_value:
             send_value = value_convert(value)
-        await self.matter_client.write_attribute(
-            node_id=self._endpoint.node.node_id,
-            attribute_path=create_attribute_path_from_attribute(
-                self._endpoint.endpoint_id,
-                matter_attribute,
-            ),
+        await self.write_attribute(
             value=send_value,
         )
 

@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -45,10 +45,10 @@ class LaCrosseSensorEntityDescription(SensorEntityDescription):
 
 def get_value(sensor: Sensor, field: str) -> float | int | str | None:
     """Get the value of a sensor field."""
-    field_data = sensor.data.get(field)
+    field_data = sensor.data.get(field) if sensor.data is not None else None
     if field_data is None:
         return None
-    value = field_data["values"][-1]["s"]
+    value = field_data["spot"]["value"]
     try:
         value = float(value)
     except ValueError:
@@ -149,7 +149,7 @@ UNIT_OF_MEASUREMENT_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaCrosse View from a config entry."""
     coordinator: DataUpdateCoordinator[list[Sensor]] = hass.data[DOMAIN][
@@ -178,7 +178,7 @@ async def async_setup_entry(
                 continue
 
             # if the API returns a different unit of measurement from the description, update it
-            if sensor.data.get(field) is not None:
+            if sensor.data is not None and sensor.data.get(field) is not None:
                 native_unit_of_measurement = UNIT_OF_MEASUREMENT_MAP.get(
                     sensor.data[field].get("unit")
                 )
@@ -226,7 +226,6 @@ class LaCrosseViewSensor(
             name=sensor.name,
             manufacturer="LaCrosse Technology",
             model=sensor.model,
-            via_device=(DOMAIN, sensor.location.id),
         )
         self.index = index
 
@@ -240,7 +239,9 @@ class LaCrosseViewSensor(
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
+        data = self.coordinator.data[self.index].data
         return (
             super().available
-            and self.entity_description.key in self.coordinator.data[self.index].data
+            and data is not None
+            and self.entity_description.key in data
         )

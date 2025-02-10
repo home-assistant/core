@@ -1,4 +1,4 @@
-"""Diagnostics support for LG webOS Smart TV."""
+"""Diagnostics support for LG webOS TV."""
 
 from __future__ import annotations
 

@@ -52,6 +52,9 @@
       },
       "home_supply_fan_setpoint": {
         "name": "Home supply fan setpoint"
+      },
+      "fireplace_mode_runtime": {
+        "name": "Fireplace mode runtime"
       }
     },
     "sensor": {
@@ -104,6 +107,9 @@
     "switch": {
       "electric_heater": {
         "name": "Electric heater"
+      },
+      "fireplace_mode": {
+        "name": "Fireplace mode"
       }
     }
   }

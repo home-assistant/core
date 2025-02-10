@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 
@@ -48,11 +48,14 @@ class MealieDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     _name: str
     _update_interval: timedelta
 
-    def __init__(self, hass: HomeAssistant, client: MealieClient) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: MealieConfigEntry, client: MealieClient
+    ) -> None:
         """Initialize the Mealie data coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=f"Mealie {self._name}",
             update_interval=self._update_interval,
         )

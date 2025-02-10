@@ -199,7 +199,6 @@ EXCEPTIONS = {
     "pigpio",  # https://github.com/joan2937/pigpio/pull/608
     "pymitv",  # MIT
     "pybbox",  # https://github.com/HydrelioxGitHub/pybbox/pull/5
-    "pyeconet",  # https://github.com/w1ll1am23/pyeconet/pull/41
     "pysabnzbd",  # https://github.com/jeradM/pysabnzbd/pull/6
     "pyvera",  # https://github.com/maximvelichko/pyvera/pull/164
     "repoze.lru",

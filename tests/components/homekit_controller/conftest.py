@@ -9,7 +9,7 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.components.light.conftest import mock_light_profiles  # noqa: F401
 

@@ -20,11 +20,11 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     HomeAssistantError,
 )
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import DEFAULT_ACCESS, DOMAIN
@@ -39,7 +39,7 @@ SERVICE_APPEND_SHEET = "append_sheet"
 
 SHEET_SERVICE_SCHEMA = vol.All(
     {
-        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Optional(WORKSHEET): cv.string,
         vol.Required(DATA): vol.Any(cv.ensure_list, [dict]),
     },

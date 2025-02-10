@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import StarlinkData
@@ -21,7 +21,9 @@ from .entity import StarlinkEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all binary sensors for this entry."""
     coordinator = hass.data[DOMAIN][entry.entry_id]
@@ -65,6 +67,7 @@ BINARY_SENSORS = [
         key="currently_obstructed",
         translation_key="currently_obstructed",
         device_class=BinarySensorDeviceClass.PROBLEM,
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.status["currently_obstructed"],
     ),
     StarlinkBinarySensorEntityDescription(
@@ -113,5 +116,10 @@ BINARY_SENSORS = [
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda data: data.alert["alert_unexpected_location"],
+    ),
+    StarlinkBinarySensorEntityDescription(
+        key="connection",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        value_fn=lambda data: data.status["state"] == "CONNECTED",
     ),
 ]

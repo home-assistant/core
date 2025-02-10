@@ -22,7 +22,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, EVENTS, LOGGER
+from .const import (
+    CONF_CUSTOM_ATTRIBUTES,
+    CONF_EVENTS,
+    CONF_MAX_ACCURACY,
+    CONF_SKIP_ACCURACY_FILTER_FOR,
+    DOMAIN,
+    EVENTS,
+    LOGGER,
+)
 from .helpers import get_device, get_first_geofence
 
 
@@ -46,25 +54,24 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         client: ApiClient,
-        *,
-        events: list[str],
-        max_accuracy: float,
-        skip_accuracy_filter_for: list[str],
-        custom_attributes: list[str],
     ) -> None:
         """Initialize global Traccar Server data updater."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=None,
         )
         self.client = client
-        self.custom_attributes = custom_attributes
-        self.events = events
-        self.max_accuracy = max_accuracy
-        self.skip_accuracy_filter_for = skip_accuracy_filter_for
+        self.custom_attributes = config_entry.options.get(CONF_CUSTOM_ATTRIBUTES, [])
+        self.events = config_entry.options.get(CONF_EVENTS, [])
+        self.max_accuracy = config_entry.options.get(CONF_MAX_ACCURACY, 0.0)
+        self.skip_accuracy_filter_for = config_entry.options.get(
+            CONF_SKIP_ACCURACY_FILTER_FOR, []
+        )
         self._geofences: list[GeofenceModel] = []
         self._last_event_import: datetime | None = None
         self._should_log_subscription_error: bool = True
