@@ -4,6 +4,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
 from typing import Any
 
+from aiowebdav2 import Property, PropertyRequest
 from propcache.api import cached_property
 
 from homeassistant.components.backup import (
@@ -125,16 +126,16 @@ class WebDavBackupAgent(BackupAgent):
         await self._client.set_property_batch(
             f"{self._backup_path}/{metadata_filename}",
             [
-                {
-                    "namespace": "homeassistant",
-                    "name": "backup_id",
-                    "value": backup.backup_id,
-                },
-                {
-                    "namespace": "homeassistant",
-                    "name": "metadata_version",
-                    "value": METADATA_VERSION,
-                },
+                Property(
+                    namespace="homeassistant",
+                    name="backup_id",
+                    value=backup.backup_id,
+                ),
+                Property(
+                    namespace="homeassistant",
+                    name="metadata_version",
+                    value=METADATA_VERSION,
+                ),
             ],
         )
 
@@ -184,7 +185,7 @@ class WebDavBackupAgent(BackupAgent):
 
     async def _list_metadata_files(self) -> list[str]:
         """List metadata files."""
-        files = await self._client.list(self._backup_path, get_info=True)
+        files = await self._client.list_with_infos(self._backup_path)
         return [
             file["path"]
             for file in files
@@ -196,9 +197,12 @@ class WebDavBackupAgent(BackupAgent):
         """Check if is current metadata version."""
         metadata_version = await self._client.get_property(
             path,
-            {"namespace": "homeassistant", "name": "metadata_version"},
+            PropertyRequest(
+                namespace="homeassistant",
+                name="metadata_version",
+            ),
         )
-        return metadata_version == METADATA_VERSION
+        return metadata_version.value == METADATA_VERSION if metadata_version else False
 
     async def _find_backup_by_id(self, backup_id: str) -> AgentBackup | None:
         """Find a backup by its backup ID on remote."""
@@ -206,9 +210,12 @@ class WebDavBackupAgent(BackupAgent):
         for metadata_file in metadata_files:
             remote_backup_id = await self._client.get_property(
                 metadata_file,
-                {"namespace": "homeassistant", "name": "backup_id"},
+                PropertyRequest(
+                    namespace="homeassistant",
+                    name="backup_id",
+                ),
             )
-            if remote_backup_id == backup_id:
+            if remote_backup_id and remote_backup_id.value == backup_id:
                 return await self._download_metadata(metadata_file)
 
         return None

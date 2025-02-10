@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from aiowebdav.client import Client
+from aiowebdav2.client import Client
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
