@@ -7,7 +7,7 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow: todo
+  config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: todo
@@ -58,9 +58,9 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
@@ -69,4 +69,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done
