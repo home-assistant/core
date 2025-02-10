@@ -39,7 +39,7 @@ async def test_update_failure(
     """Ensure sensors are going unavailable on update failure."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.remaining_onedrive_size")
+    state = hass.states.get("sensor.remaining_storage")
     assert state.state == "0.75"
 
     mock_onedrive_client.get_drive.side_effect = HttpRequestException(
@@ -50,5 +50,5 @@ async def test_update_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("sensor.remaining_onedrive_size")
+    state = hass.states.get("sensor.remaining_storage")
     assert state.state == STATE_UNAVAILABLE

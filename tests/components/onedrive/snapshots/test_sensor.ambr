@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.onedrive_state-entry]
+# name: test_sensors[sensor.drive_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.onedrive_state',
+    'entity_id': 'sensor.drive_state',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -30,7 +30,7 @@
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'OneDrive state',
+    'original_name': 'Drive state',
     'platform': 'onedrive',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -39,11 +39,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.onedrive_state-state]
+# name: test_sensors[sensor.drive_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
-      'friendly_name': 'OneDrive state',
+      'friendly_name': 'Drive state',
       'options': list([
         'normal',
         'nearing',
@@ -52,14 +52,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.onedrive_state',
+    'entity_id': 'sensor.drive_state',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'nearing',
   })
 # ---
-# name: test_sensors[sensor.remaining_onedrive_size-entry]
+# name: test_sensors[sensor.remaining_storage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -71,7 +71,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.remaining_onedrive_size',
+    'entity_id': 'sensor.remaining_storage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -89,7 +89,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
-    'original_name': 'Remaining OneDrive size',
+    'original_name': 'Remaining storage',
     'platform': 'onedrive',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -98,22 +98,22 @@
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
-# name: test_sensors[sensor.remaining_onedrive_size-state]
+# name: test_sensors[sensor.remaining_storage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'Remaining OneDrive size',
+      'friendly_name': 'Remaining storage',
       'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.remaining_onedrive_size',
+    'entity_id': 'sensor.remaining_storage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.75',
   })
 # ---
-# name: test_sensors[sensor.total_onedrive_size-entry]
+# name: test_sensors[sensor.total_available_storage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -125,7 +125,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.total_onedrive_size',
+    'entity_id': 'sensor.total_available_storage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -143,7 +143,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
-    'original_name': 'Total OneDrive size',
+    'original_name': 'Total available storage',
     'platform': 'onedrive',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -152,22 +152,22 @@
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
-# name: test_sensors[sensor.total_onedrive_size-state]
+# name: test_sensors[sensor.total_available_storage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'Total OneDrive size',
+      'friendly_name': 'Total available storage',
       'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.total_onedrive_size',
+    'entity_id': 'sensor.total_available_storage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '5.0',
   })
 # ---
-# name: test_sensors[sensor.used_onedrive_size-entry]
+# name: test_sensors[sensor.used_storage-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -179,7 +179,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.used_onedrive_size',
+    'entity_id': 'sensor.used_storage',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -197,7 +197,7 @@
     }),
     'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
     'original_icon': None,
-    'original_name': 'Used OneDrive size',
+    'original_name': 'Used storage',
     'platform': 'onedrive',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -206,15 +206,15 @@
     'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
   })
 # ---
-# name: test_sensors[sensor.used_onedrive_size-state]
+# name: test_sensors[sensor.used_storage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'data_size',
-      'friendly_name': 'Used OneDrive size',
+      'friendly_name': 'Used storage',
       'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.used_onedrive_size',
+    'entity_id': 'sensor.used_storage',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

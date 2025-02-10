@@ -46,16 +46,16 @@
   "entity": {
     "sensor": {
       "total_size": {
-        "name": "Total OneDrive size"
+        "name": "Total available storage"
       },
       "used_size": {
-        "name": "Used OneDrive size"
+        "name": "Used storage"
       },
       "remaining_size": {
-        "name": "Remaining OneDrive size"
+        "name": "Remaining storage"
       },
       "drive_state": {
-        "name": "OneDrive state",
+        "name": "Drive state",
         "state": {
           "normal": "Normal",
           "nearing": "Nearing limit",
