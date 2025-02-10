@@ -89,7 +89,7 @@ automation application.
     implement the `available()` property method instead
   - Do not use the `unknown` string as a state value, use `None` instead
 - Extra entity state attributes:
-  - Keys for each state attribute should always be present
+  - The keys of all state attributes should always be present
   - If the value is unknown, use `None`
   - Provide descriptive state attributes
 - Testing:
