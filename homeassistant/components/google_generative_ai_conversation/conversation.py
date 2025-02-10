@@ -6,8 +6,18 @@ import codecs
 from collections.abc import Callable
 from typing import Any, Literal, cast
 
-from google.genai import types as genai_types
 from google.genai.errors import APIError
+from google.genai.types import (
+    AutomaticFunctionCallingConfig,
+    Content,
+    FunctionDeclaration,
+    GenerateContentConfig,
+    HarmCategory,
+    Part,
+    SafetySetting,
+    Schema,
+    Tool,
+)
 from voluptuous_openapi import convert
 
 from homeassistant.components import assist_pipeline, conversation
@@ -79,65 +89,7 @@ SUPPORTED_SCHEMA_KEYS = {
 }
 
 
-def _escape_decode(value: Any) -> Any:
-    """Recursively call codecs.escape_decode on all values."""
-    if isinstance(value, str):
-        return codecs.escape_decode(bytes(value, "utf-8"))[0].decode("utf-8")  # type: ignore[attr-defined]
-    if isinstance(value, list):
-        return [_escape_decode(item) for item in value]
-    if isinstance(value, dict):
-        return {k: _escape_decode(v) for k, v in value.items()}
-    return value
-
-
-def _create_google_tool_response_content(
-    content: list[conversation.ToolResultContent],
-) -> genai_types.Content:
-    """Create a Google tool response content."""
-    return genai_types.Content(
-        parts=[
-            genai_types.Part(
-                function_response=genai_types.FunctionResponse(
-                    name=tool_result.tool_name, response=tool_result.tool_result
-                )
-            )
-            for tool_result in content
-        ]
-    )
-
-
-def _convert_content(
-    content: conversation.UserContent
-    | conversation.AssistantContent
-    | conversation.SystemContent,
-) -> genai_types.Content:
-    """Convert HA content to Google content."""
-    if content.role != "assistant" or not content.tool_calls:  # type: ignore[union-attr]
-        role = "model" if content.role == "assistant" else content.role
-        return {"role": role, "parts": content.content}
-
-    # Handle the Assistant content with tool calls.
-    assert type(content) is conversation.AssistantContent
-    parts: list[genai_types.Part] = []
-
-    if content.content:
-        parts.append(genai_types.Part.from_text(text=content.content))
-
-    if content.tool_calls:
-        parts.extend(
-            [
-                genai_types.Part.from_function_call(
-                    name=tool_call.tool_name,
-                    args=_escape_decode(tool_call.tool_args),
-                )
-                for tool_call in content.tool_calls
-            ]
-        )
-
-    return genai_types.Content(role="model", parts=parts)
-
-
-def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
+def _format_schema(schema: dict[str, Any]) -> Schema:
     """Format the schema to be compatible with Gemini API."""
     if subschemas := schema.get("allOf"):
         for subschema in subschemas:  # Gemini API does not support allOf keys
@@ -151,6 +103,8 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
     for key, val in schema.items():
         if key not in SUPPORTED_SCHEMA_KEYS:
             continue
+        if key == "type":
+            val = val.upper()
         if key == "items":
             val = _format_schema(val)
         elif key == "properties":
@@ -170,12 +124,12 @@ def _format_schema(schema: dict[str, Any]) -> dict[str, Any]:
         # but we don't have a better fallback strategy so far.
         result["properties"] = {"json": {"type_": "STRING"}}
         result["required"] = []
-    return result
+    return cast(Schema, result)
 
 
 def _format_tool(
     tool: llm.Tool, custom_serializer: Callable[[Any], Any] | None
-) -> genai_types.Tool:
+) -> Tool:
     """Format tool specification."""
 
     if tool.parameters.schema:
@@ -184,15 +138,80 @@ def _format_tool(
         )
     else:
         parameters = None
-    return genai_types.Tool(
+
+    LOGGER.warning("Tool: %s", tool.name)
+    LOGGER.warning("Parameters: %s", parameters)
+    LOGGER.warning("Description: %s", tool.description)
+    return Tool(
         function_declarations=[
-            genai_types.FunctionDeclaration(
+            FunctionDeclaration(
                 name=tool.name,
                 description=tool.description,
                 parameters=parameters,
             )
         ]
     )
+
+
+def _escape_decode(value: Any) -> Any:
+    """Recursively call codecs.escape_decode on all values."""
+    if isinstance(value, str):
+        return codecs.escape_decode(bytes(value, "utf-8"))[0].decode("utf-8")  # type: ignore[attr-defined]
+    if isinstance(value, list):
+        return [_escape_decode(item) for item in value]
+    if isinstance(value, dict):
+        return {k: _escape_decode(v) for k, v in value.items()}
+    return value
+
+
+def _create_google_tool_response_content(
+    content: list[conversation.ToolResultContent],
+) -> Content:
+    """Create a Google tool response content."""
+    return Content(
+        parts=[
+            Part.from_function_response(
+                name=tool_result.tool_name, response=tool_result.tool_result
+            )
+            for tool_result in content
+        ]
+    )
+
+
+def _convert_content(
+    content: conversation.UserContent
+    | conversation.AssistantContent
+    | conversation.SystemContent,
+) -> Content:
+    """Convert HA content to Google content."""
+    if content.role != "assistant" or not content.tool_calls:  # type: ignore[union-attr]
+        role = "model" if content.role == "assistant" else content.role
+        return Content(
+            role=role,
+            parts=[
+                Part.from_text(text=content.content if content.content else ""),
+            ],
+        )
+
+    # Handle the Assistant content with tool calls.
+    assert type(content) is conversation.AssistantContent
+    parts: list[Part] = []
+
+    if content.content:
+        parts.append(Part.from_text(text=content.content))
+
+    if content.tool_calls:
+        parts.extend(
+            [
+                Part.from_function_call(
+                    name=tool_call.tool_name,
+                    args=_escape_decode(tool_call.tool_args),
+                )
+                for tool_call in content.tool_calls
+            ]
+        )
+
+    return Content(role="model", parts=parts)
 
 
 class GoogleGenerativeAIConversationEntity(
@@ -271,7 +290,7 @@ class GoogleGenerativeAIConversationEntity(
         except conversation.ConverseError as err:
             return err.as_conversation_result()
 
-        tools: list[dict[str, Any]] | None = None
+        tools: list[Tool | Callable[..., Any]] | None = None
         if chat_log.llm_api:
             tools = [
                 _format_tool(tool, chat_log.llm_api.custom_serializer)
@@ -286,8 +305,19 @@ class GoogleGenerativeAIConversationEntity(
             "gemini-1.0" not in model_name and "gemini-pro" not in model_name
         )
 
-        prompt = chat_log.content[0].content  # type: ignore[union-attr]
-        messages: list[genai_types.Content] = []
+        prompt_content = cast(
+            conversation.UserContent
+            | conversation.SystemContent
+            | conversation.AssistantContent,
+            chat_log.content[0],
+        )
+
+        if prompt_content.content:
+            prompt = prompt_content.content
+        else:
+            raise HomeAssistantError("Invalid prompt content")
+
+        messages: list[Content] = []
 
         # Google groups tool results, we do not. Group them before sending.
         tool_results: list[conversation.ToolResultContent] = []
@@ -297,19 +327,25 @@ class GoogleGenerativeAIConversationEntity(
                 # mypy doesn't like picking a type based on checking shared property 'role'
                 tool_results.append(cast(conversation.ToolResultContent, chat_content))
                 continue
-            message: genai_types.Content = _convert_content(
-                cast(
-                    conversation.UserContent
-                    | conversation.SystemContent
-                    | conversation.AssistantContent,
-                    chat_content,
+
+            if tool_results:
+                messages.append(_create_google_tool_response_content(tool_results))
+                tool_results.clear()
+
+            messages.append(
+                _convert_content(
+                    cast(
+                        conversation.UserContent
+                        | conversation.SystemContent
+                        | conversation.AssistantContent,
+                        chat_content,
+                    )
                 )
             )
-            messages.append(message)
+
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
-
-        generateContentConfig = genai_types.GenerateContentConfig(
+        generateContentConfig = GenerateContentConfig(
             temperature=self.entry.options.get(
                 CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
             ),
@@ -319,27 +355,27 @@ class GoogleGenerativeAIConversationEntity(
                 CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS
             ),
             safety_settings=[
-                genai_types.SafetySetting(
-                    category=genai_types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_HATE_SPEECH,
                     threshold=self.entry.options.get(
                         CONF_HATE_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
                     ),
                 ),
-                genai_types.SafetySetting(
-                    category=genai_types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_HARASSMENT,
                     threshold=self.entry.options.get(
                         CONF_HARASSMENT_BLOCK_THRESHOLD,
                         RECOMMENDED_HARM_BLOCK_THRESHOLD,
                     ),
                 ),
-                genai_types.SafetySetting(
-                    category=genai_types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
                     threshold=self.entry.options.get(
                         CONF_DANGEROUS_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
                     ),
                 ),
-                genai_types.SafetySetting(
-                    category=genai_types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+                SafetySetting(
+                    category=HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
                     threshold=self.entry.options.get(
                         CONF_SEXUAL_BLOCK_THRESHOLD, RECOMMENDED_HARM_BLOCK_THRESHOLD
                     ),
@@ -347,23 +383,19 @@ class GoogleGenerativeAIConversationEntity(
             ],
             tools=tools or None,
             system_instruction=prompt if supports_system_instruction else None,
-            automatic_function_calling={"disable": True, "maximum_remote_calls": -1},
+            automatic_function_calling=AutomaticFunctionCallingConfig(disable=True),
         )
 
         if not supports_system_instruction:
             messages = [
-                genai_types.Content(
-                    role="user", parts=[genai_types.Part.from_text(text=prompt)]
-                ),
-                genai_types.Content(
-                    role="model", parts=[genai_types.Part.from_text(text="Ok")]
-                ),
+                Content(role="user", parts=[Part.from_text(text=prompt)]),
+                Content(role="model", parts=[Part.from_text(text="Ok")]),
                 *messages,
             ]
         chat = self._genAi_client.aio.chats.create(
             model=model_name, history=messages, config=generateContentConfig
         )
-        chat_request = user_input.text
+        chat_request: str | Content = user_input.text
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:

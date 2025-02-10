@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from functools import partial
 import logging
 from types import MappingProxyType
 from typing import Any
@@ -72,10 +71,7 @@ MILLISECONDS = 1000
 
 async def validate_input(client: genai.Client) -> None:
     """Validate the user input allows us to connect."""
-    await client.aio.models.get(
-        model=RECOMMENDED_CHAT_MODEL,
-        config={"http_options": {"timeout": 5 * MILLISECONDS}},
-    )
+    await client.aio.models.list(config={"query_base": True})
 
 
 class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -93,7 +89,7 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await validate_input(client)
             except APIError as err:
-                if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
+                if isinstance(err, ClientError) and err.code == 401:
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
@@ -238,18 +234,23 @@ async def google_generative_ai_config_option_schema(
     if options.get(CONF_RECOMMENDED):
         return schema
 
-    api_models = await hass.async_add_executor_job(partial(genai_client.models.list))
-
+    api_models_pager = await genai_client.aio.models.list(config={"query_base": True})
+    api_models = [api_model async for api_model in api_models_pager]
     models = [
         SelectOptionDict(
             label=api_model.display_name,
             value=api_model.name,
         )
-        for api_model in sorted(api_models, key=lambda x: x.display_name)
+        for api_model in sorted(
+            api_models, key=lambda x: x.display_name if x.display_name else ""
+        )
         if (
             api_model.name != "models/gemini-1.0-pro"  # duplicate of gemini-pro
+            and api_model.display_name
+            and api_model.name
+            and api_model.supported_actions
             and "vision" not in api_model.name
-            and "generateContent" in api_model.supported_generation_methods
+            and "generateContent" in api_model.supported_actions
         )
     ]
 

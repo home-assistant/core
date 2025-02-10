@@ -6,7 +6,6 @@ import mimetypes
 from pathlib import Path
 
 from google import genai
-from google.genai import types as genai_types
 from google.genai.errors import APIError, ClientError
 from PIL import Image
 from requests.exceptions import Timeout as DeadlineExceeded
@@ -27,6 +26,7 @@ from homeassistant.exceptions import (
     HomeAssistantError,
 )
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_CHAT_MODEL, CONF_PROMPT, DOMAIN, RECOMMENDED_CHAT_MODEL
 
@@ -40,9 +40,7 @@ MILLISECONDS = 1000
 type GoogleGenerativeAIConfigEntry = ConfigEntry[genai.Client]
 
 
-async def async_setup(
-    hass: HomeAssistant, config: GoogleGenerativeAIConfigEntry
-) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Google Generative AI Conversation."""
 
     async def generate_content(call: ServiceCall) -> ServiceResponse:
@@ -64,19 +62,23 @@ async def async_setup(
             prompt_parts.append(Image.open(image_filename))
 
         try:
-            response = await config.runtime_data.models.generate_content(
+            client = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
+            response = await client.aio.models.generate_content(
                 model=RECOMMENDED_CHAT_MODEL, contents=prompt_parts
             )
         except (
             APIError,
             ValueError,
-            genai_types.BlockedPromptException,
-            genai_types.StopCandidateException,
         ) as err:
             raise HomeAssistantError(f"Error generating content: {err}") from err
 
+        if response.prompt_feedback:
+            raise HomeAssistantError(
+                f"Error generating content due to content violations, reason: {response.prompt_feedback.block_reason_message}"
+            )
+
         if not response.candidates[0].content.parts:
-            raise HomeAssistantError("Error generating content")
+            raise HomeAssistantError("Unknown error generating content")
 
         return {"text": response.text}
 
@@ -109,7 +111,7 @@ async def async_setup_entry(
             config={"http_options": {"timeout": 5 * MILLISECONDS}},
         )
     except (APIError, DeadlineExceeded) as err:
-        if isinstance(err, ClientError) and err.reason == "API_KEY_INVALID":
+        if isinstance(err, ClientError) and err.code == 401:
             raise ConfigEntryAuthFailed(err) from err
         if isinstance(err, DeadlineExceeded):
             raise ConfigEntryNotReady(err) from err
