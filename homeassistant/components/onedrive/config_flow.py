@@ -94,11 +94,17 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if user_input is not None:
             if self.source == SOURCE_RECONFIGURE:
                 reconfigure_entry = self._get_reconfigure_entry()
-                if (old_name := reconfigure_entry.data[CONF_FOLDER_NAME]) != (new_name := user_input[CONF_FOLDER_NAME]):
+                if (old_name := reconfigure_entry.data[CONF_FOLDER_NAME]) != (
+                    new_name := user_input[CONF_FOLDER_NAME]
+                ):
                     try:
-                        self.logger.debug("Renaming folder from %s to %s", old_name, new_name)
+                        self.logger.debug(
+                            "Renaming folder from %s to %s", old_name, new_name
+                        )
                         approot = await self.client.get_approot()
-                        await self.client.update_drive_item(f"{approot.id}:/{old_name}", ItemUpdate(name=new_name))
+                        await self.client.update_drive_item(
+                            f"{approot.id}:/{old_name}", ItemUpdate(name=new_name)
+                        )
                     except OneDriveException:
                         errors["base"] = "update_error"
                 if not errors:
