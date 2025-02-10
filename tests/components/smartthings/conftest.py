@@ -368,6 +368,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "c2c_shade",
         "sonos_player",
         "aeotec_home_energy_meter_gen5",
+        "virtual_water_sensor",
     ]
 )
 def devices(
