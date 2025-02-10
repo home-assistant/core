@@ -58,7 +58,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     }
 
     entry.runtime_data = SmartThingsData(
-        devices=coordinators, client=client, scenes=scenes
+        devices=[
+            coordinator for coordinator in coordinators if coordinator.data is not None
+        ],
+        client=client,
+        scenes=scenes,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
