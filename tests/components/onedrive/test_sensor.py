@@ -32,7 +32,6 @@ async def test_sensors(
 
 async def test_update_failure(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
     freezer: FrozenDateTimeFactory,
