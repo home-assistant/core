@@ -32,6 +32,9 @@ from homeassistant.helpers.typing import ConfigType
 
 from .api import AsyncConfigEntryAuth
 from .const import (
+    AFFECTS_TO_ACTIVE_PROGRAM,
+    AFFECTS_TO_SELECTED_PROGRAM,
+    ATTR_AFFECTS_TO,
     ATTR_KEY,
     ATTR_PROGRAM,
     ATTR_UNIT,
@@ -44,25 +47,20 @@ from .const import (
     SERVICE_PAUSE_PROGRAM,
     SERVICE_RESUME_PROGRAM,
     SERVICE_SELECT_PROGRAM,
+    SERVICE_SET_PROGRAM_AND_OPTIONS,
     SERVICE_SETTING,
     SERVICE_START_PROGRAM,
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
     TRANSLATION_KEYS_PROGRAMS_MAP,
-    bsh_key_to_translation_key,
 )
 from .coordinator import HomeConnectConfigEntry, HomeConnectCoordinator
-from .utils import get_dict_from_home_connect_error
+from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-ATTR_SCHEMA = "schema"
-ATTR_START = "start"
-ATTR_FORCE_SELECTED_ACTIVE = "force_selected_active"
 
 
 PROGRAM_OPTIONS = {
@@ -114,33 +112,9 @@ SERVICE_SETTING_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_OPTIONS_SCHEMA = (
-    vol.Schema(
-        {
-            vol.Required(ATTR_DEVICE_ID): str,
-        }
-    )
-    .extend(
-        {
-            vol.Optional(translation_key): vol.In(allowed_valued.keys())
-            for translation_key, (key, allowed_valued) in PROGRAM_ENUM_OPTIONS.items()
-        }
-    )
-    .extend(
-        {
-            vol.Optional(translation_key): schema
-            for translation_key, (key, schema) in (
-                PROGRAM_OPTIONS | TIME_PROGRAM_OPTIONS
-            ).items()
-        }
-    )
-)
-
-SERVICE_SET_OPTION_SCHEMA = vol.Any(
+# DEPRECATED: Remove in 2025.9.0
+SERVICE_OPTION_SCHEMA = vol.Schema(
     {
-        **SERVICE_OPTIONS_SCHEMA.schema,
-    },
-    {  # DEPRECATED: Remove in 2025.9.0
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_KEY): vol.All(
             vol.Coerce(OptionKey),
@@ -148,17 +122,12 @@ SERVICE_SET_OPTION_SCHEMA = vol.Any(
         ),
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
         vol.Optional(ATTR_UNIT): str,
-    },
+    }
 )
 
+# DEPRECATED: Remove in 2025.9.0
 SERVICE_PROGRAM_SCHEMA = vol.Any(
     {
-        vol.Required(ATTR_DEVICE_ID): str,
-        vol.Required(ATTR_PROGRAM): vol.In(TRANSLATION_KEYS_PROGRAMS_MAP.keys()),
-        vol.Optional(ATTR_START): bool,
-        **SERVICE_OPTIONS_SCHEMA.schema,
-    },
-    {  # DEPRECATED: Remove in 2025.9.0
         vol.Required(ATTR_DEVICE_ID): str,
         vol.Required(ATTR_PROGRAM): vol.All(
             vol.Coerce(ProgramKey),
@@ -171,6 +140,58 @@ SERVICE_PROGRAM_SCHEMA = vol.Any(
         vol.Required(ATTR_VALUE): vol.Any(int, str),
         vol.Optional(ATTR_UNIT): str,
     },
+    {
+        vol.Required(ATTR_DEVICE_ID): str,
+        vol.Required(ATTR_PROGRAM): vol.All(
+            vol.Coerce(ProgramKey),
+            vol.NotIn([ProgramKey.UNKNOWN]),
+        ),
+    },
+)
+
+
+def _require_program_or_at_least_one_option(data: dict) -> dict:
+    if ATTR_PROGRAM not in data and not any(
+        option_key in data
+        for option_key in (
+            PROGRAM_ENUM_OPTIONS | PROGRAM_OPTIONS | TIME_PROGRAM_OPTIONS
+        )
+    ):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="required_program_or_one_option_at_least",
+        )
+    return data
+
+
+SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = vol.All(
+    vol.Schema(
+        {
+            vol.Required(ATTR_DEVICE_ID): str,
+            vol.Required(ATTR_AFFECTS_TO): vol.In(
+                [AFFECTS_TO_ACTIVE_PROGRAM, AFFECTS_TO_SELECTED_PROGRAM]
+            ),
+            vol.Optional(ATTR_PROGRAM): vol.In(TRANSLATION_KEYS_PROGRAMS_MAP.keys()),
+        }
+    )
+    .extend(
+        {
+            vol.Optional(translation_key): vol.In(allowed_valued.keys())
+            for translation_key, (
+                key,
+                allowed_valued,
+            ) in PROGRAM_ENUM_OPTIONS.items()
+        }
+    )
+    .extend(
+        {
+            vol.Optional(translation_key): schema
+            for translation_key, (key, schema) in (
+                PROGRAM_OPTIONS | TIME_PROGRAM_OPTIONS
+            ).items()
+        }
+    ),
+    _require_program_or_at_least_one_option,
 )
 
 SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
@@ -224,20 +245,73 @@ async def _get_client_and_ha_id(
     return entry.runtime_data.client, ha_id
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up Home Connect component."""
 
-    async def _async_service_program(call: ServiceCall, start: bool) -> None:
+    async def _async_service_program(call: ServiceCall, start: bool):
         """Execute calls to services taking a program."""
-        data = dict(call.data)
-        program = data.pop(ATTR_PROGRAM)
-        program = (
-            program
-            if isinstance(program, ProgramKey)
-            else TRANSLATION_KEYS_PROGRAMS_MAP[program]
+        program = call.data[ATTR_PROGRAM]
+        client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
+
+        option_key = call.data.get(ATTR_KEY)
+        options = (
+            [
+                Option(
+                    option_key,
+                    call.data[ATTR_VALUE],
+                    unit=call.data.get(ATTR_UNIT),
+                )
+            ]
+            if option_key is not None
+            else None
         )
-        client, ha_id = await _get_client_and_ha_id(hass, data.pop(ATTR_DEVICE_ID))
-        options = get_options(data)
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_set_program_and_option_actions",
+            breaks_in_ha_version="2025.9.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_set_program_and_option_actions",
+            translation_placeholders={
+                "old_action": "\n".join(
+                    [
+                        "```yaml",
+                        f"action: {DOMAIN}.{SERVICE_START_PROGRAM if start else SERVICE_SELECT_PROGRAM}",
+                        "data:",
+                        f"  {ATTR_DEVICE_ID}: DEVICE_ID",
+                        f"  {ATTR_PROGRAM}: {program}",
+                        *([f"  {ATTR_KEY}: {options[0].key}"] if options else []),
+                        *([f"  {ATTR_VALUE}: {options[0].value}"] if options else []),
+                        *(
+                            [f"  {ATTR_UNIT}: {options[0].unit}"]
+                            if options and options[0].unit
+                            else []
+                        ),
+                        "```",
+                    ]
+                ),
+                "action_options": "\n  ".join(
+                    [
+                        "```yaml",
+                        f"action: {DOMAIN}.{SERVICE_SET_PROGRAM_AND_OPTIONS}",
+                        "data:",
+                        f"  {ATTR_DEVICE_ID}: DEVICE_ID",
+                        f"  {ATTR_AFFECTS_TO}: {AFFECTS_TO_ACTIVE_PROGRAM if start else AFFECTS_TO_SELECTED_PROGRAM}",
+                        f"  {ATTR_PROGRAM}: {bsh_key_to_translation_key(program.value)}",
+                        *(
+                            [
+                                f"  {bsh_key_to_translation_key(options[0].key)}: {options[0].value}"
+                            ]
+                            if options
+                            else []
+                        ),
+                        "```",
+                    ]
+                ),
+            },
+        )
 
         try:
             if start:
@@ -256,99 +330,61 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 },
             ) from err
 
-    def get_options(data: dict[str, Any]) -> list[Option]:
-        """Return a dict with the options ready to be sent to Home Connect API."""
-        options: list[Option] = []
-
-        if ATTR_KEY in data and ATTR_VALUE in data:
-            async_create_issue(
-                hass,
-                DOMAIN,
-                "moved_program_options_keys",
-                breaks_in_ha_version="2025.8.0",
-                is_fixable=False,
-                severity=IssueSeverity.WARNING,
-                translation_key="moved_program_options_keys",
-                translation_placeholders={
-                    "old_action": "\n".join(
-                        [
-                            "```yaml",
-                            f"action: {DOMAIN}.{SERVICE_SELECT_PROGRAM}",
-                            "data:",
-                            f"  {ATTR_DEVICE_ID}: DEVICE_ID",
-                            f'  {ATTR_PROGRAM}: "Dishcare.Dishwasher.Program.Auto2"',
-                            f"  {ATTR_KEY}: {OptionKey.BSH_COMMON_START_IN_RELATIVE}",
-                            f'  {ATTR_VALUE}: "1800"',
-                            f'  {ATTR_UNIT}: "seconds"',
-                            "```",
-                        ]
-                    ),
-                    "action_options": "\n  ".join(
-                        [
-                            "```yaml",
-                            f"action: {DOMAIN}.{SERVICE_SELECT_PROGRAM}",
-                            "data:",
-                            f"  {ATTR_DEVICE_ID}: DEVICE_ID",
-                            f'  {ATTR_PROGRAM}: "Dishcare.Dishwasher.Program.Auto2"',
-                            f"  {bsh_key_to_translation_key(OptionKey.BSH_COMMON_START_IN_RELATIVE)}: 1800",
-                            "```",
-                        ]
-                    ),
-                },
-            )
-            options.append(
-                Option(
-                    data.pop(ATTR_KEY),
-                    data.pop(ATTR_VALUE),
-                    data.pop(ATTR_UNIT, None),
-                )
-            )
-
-        for option, value in data.items():
-            if option in PROGRAM_ENUM_OPTIONS:
-                options.append(
-                    Option(
-                        PROGRAM_ENUM_OPTIONS[option][0],
-                        PROGRAM_ENUM_OPTIONS[option][1][value],
-                    )
-                )
-            elif option in PROGRAM_OPTIONS:
-                option_key = PROGRAM_OPTIONS[option][0]
-                if (
-                    option_key
-                    is OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_COFFEE_MILK_RATIO
-                ):
-                    value = f"ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.{int(value)}Percent"
-                options.append(Option(option_key, value))
-            elif option in TIME_PROGRAM_OPTIONS:
-                options.append(
-                    Option(
-                        TIME_PROGRAM_OPTIONS[option][0],
-                        int(cast(timedelta, value).total_seconds()),
-                    )
-                )
-
-        return options
-
-    async def _async_service_set_program_options(
-        call: ServiceCall, active: bool
-    ) -> None:
+    async def _async_service_set_program_options(call: ServiceCall, active: bool):
         """Execute calls to services taking a program."""
-        data = dict(call.data)
-        client, ha_id = await _get_client_and_ha_id(hass, data.pop(ATTR_DEVICE_ID))
+        option_key = call.data[ATTR_KEY]
+        value = call.data[ATTR_VALUE]
+        unit = call.data.get(ATTR_UNIT)
+        client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
 
-        options = ArrayOfOptions(get_options(data))
-
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_set_program_and_option_actions",
+            breaks_in_ha_version="2025.9.0",
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_set_program_and_option_actions",
+            translation_placeholders={
+                "old_action": "\n".join(
+                    [
+                        "```yaml",
+                        f"action: {DOMAIN}.{SERVICE_OPTION_ACTIVE if active else SERVICE_OPTION_SELECTED}",
+                        "data:",
+                        f"  {ATTR_DEVICE_ID}: DEVICE_ID",
+                        f"  {ATTR_KEY}: {option_key}",
+                        f"  {ATTR_VALUE}: {value}",
+                        *([f"  {ATTR_UNIT}: {unit}"] if unit else []),
+                        "```",
+                    ]
+                ),
+                "action_options": "\n  ".join(
+                    [
+                        "```yaml",
+                        f"action: {DOMAIN}.{SERVICE_SET_PROGRAM_AND_OPTIONS}",
+                        "data:",
+                        f"  {ATTR_DEVICE_ID}: DEVICE_ID",
+                        f"  {ATTR_AFFECTS_TO}: {AFFECTS_TO_ACTIVE_PROGRAM if active else AFFECTS_TO_SELECTED_PROGRAM}",
+                        f"  {bsh_key_to_translation_key(option_key)}: {value}",
+                        "```",
+                    ]
+                ),
+            },
+        )
         try:
             if active:
-                await client.set_active_program_options(
+                await client.set_active_program_option(
                     ha_id,
-                    array_of_options=options,
+                    option_key=option_key,
+                    value=value,
+                    unit=unit,
                 )
             else:
-                await client.set_selected_program_options(
+                await client.set_selected_program_option(
                     ha_id,
-                    array_of_options=options,
+                    option_key=option_key,
+                    value=value,
+                    unit=unit,
                 )
         except HomeConnectError as err:
             raise HomeAssistantError(
@@ -358,12 +394,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 else "set_options_selected_program",
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
+                    SVE_TRANSLATION_PLACEHOLDER_KEY: option_key,
+                    SVE_TRANSLATION_PLACEHOLDER_VALUE: str(value),
                 },
             ) from err
 
-    async def _async_service_command(
-        call: ServiceCall, command_key: CommandKey
-    ) -> None:
+    async def _async_service_command(call: ServiceCall, command_key: CommandKey):
         """Execute calls to services executing a command."""
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
 
@@ -379,15 +415,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 },
             ) from err
 
-    async def async_service_option_active(call: ServiceCall) -> None:
+    async def async_service_option_active(call: ServiceCall):
         """Service for setting an option for an active program."""
         await _async_service_set_program_options(call, True)
 
-    async def async_service_option_selected(call: ServiceCall) -> None:
+    async def async_service_option_selected(call: ServiceCall):
         """Service for setting an option for a selected program."""
         await _async_service_set_program_options(call, False)
 
-    async def async_service_setting(call: ServiceCall) -> None:
+    async def async_service_setting(call: ServiceCall):
         """Service for changing a setting."""
         key = call.data[ATTR_KEY]
         value = call.data[ATTR_VALUE]
@@ -406,19 +442,96 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 },
             ) from err
 
-    async def async_service_pause_program(call: ServiceCall) -> None:
+    async def async_service_pause_program(call: ServiceCall):
         """Service for pausing a program."""
         await _async_service_command(call, CommandKey.BSH_COMMON_PAUSE_PROGRAM)
 
-    async def async_service_resume_program(call: ServiceCall) -> None:
+    async def async_service_resume_program(call: ServiceCall):
         """Service for resuming a paused program."""
         await _async_service_command(call, CommandKey.BSH_COMMON_RESUME_PROGRAM)
 
-    async def async_service_select_program(call: ServiceCall) -> None:
+    async def async_service_select_program(call: ServiceCall):
         """Service for selecting a program."""
         await _async_service_program(call, False)
 
-    async def async_service_start_program(call: ServiceCall) -> None:
+    async def async_service_set_program_and_options(call: ServiceCall):
+        """Service for setting a program and options."""
+        data = dict(call.data)
+        program = data.pop(ATTR_PROGRAM, None)
+        affects_to = data.pop(ATTR_AFFECTS_TO, None)
+        client, ha_id = await _get_client_and_ha_id(hass, data.pop(ATTR_DEVICE_ID))
+
+        options: list[Option] = []
+
+        for option, value in data.items():
+            if option in PROGRAM_ENUM_OPTIONS:
+                options.append(
+                    Option(
+                        PROGRAM_ENUM_OPTIONS[option][0],
+                        PROGRAM_ENUM_OPTIONS[option][1][value],
+                    )
+                )
+            elif option in PROGRAM_OPTIONS:
+                option_key = PROGRAM_OPTIONS[option][0]
+                options.append(Option(option_key, value))
+            elif option in TIME_PROGRAM_OPTIONS:
+                options.append(
+                    Option(
+                        TIME_PROGRAM_OPTIONS[option][0],
+                        int(cast(timedelta, value).total_seconds()),
+                    )
+                )
+        method_call = None
+        exception_translation_key = None
+        if program:
+            program = (
+                program
+                if isinstance(program, ProgramKey)
+                else TRANSLATION_KEYS_PROGRAMS_MAP[program]
+            )
+
+            if affects_to == AFFECTS_TO_ACTIVE_PROGRAM:
+                method_call = client.start_program(
+                    ha_id, program_key=program, options=options
+                )
+                exception_translation_key = "start_program"
+            elif affects_to == AFFECTS_TO_SELECTED_PROGRAM:
+                method_call = client.set_selected_program(
+                    ha_id, program_key=program, options=options
+                )
+                exception_translation_key = "select_program"
+        else:
+            array_of_options = ArrayOfOptions(options)
+            if affects_to == AFFECTS_TO_ACTIVE_PROGRAM:
+                method_call = client.set_active_program_options(
+                    ha_id, array_of_options=array_of_options
+                )
+                exception_translation_key = "set_options_active_program"
+            elif affects_to == AFFECTS_TO_SELECTED_PROGRAM:
+                method_call = client.set_selected_program_options(
+                    ha_id, array_of_options=array_of_options
+                )
+                exception_translation_key = "set_options_selected_program"
+
+        assert method_call
+        assert exception_translation_key
+        try:
+            await method_call
+        except HomeConnectError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=exception_translation_key,
+                translation_placeholders={
+                    **get_dict_from_home_connect_error(err),
+                    **(
+                        {SVE_TRANSLATION_PLACEHOLDER_PROGRAM: program}
+                        if program
+                        else {}
+                    ),
+                },
+            ) from err
+
+    async def async_service_start_program(call: ServiceCall):
         """Service for starting a program."""
         await _async_service_program(call, True)
 
@@ -426,13 +539,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DOMAIN,
         SERVICE_OPTION_ACTIVE,
         async_service_option_active,
-        schema=SERVICE_SET_OPTION_SCHEMA,
+        schema=SERVICE_OPTION_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN,
         SERVICE_OPTION_SELECTED,
         async_service_option_selected,
-        schema=SERVICE_SET_OPTION_SCHEMA,
+        schema=SERVICE_OPTION_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN, SERVICE_SETTING, async_service_setting, schema=SERVICE_SETTING_SCHEMA
@@ -460,6 +573,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_START_PROGRAM,
         async_service_start_program,
         schema=SERVICE_PROGRAM_SCHEMA,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_SET_PROGRAM_AND_OPTIONS,
+        async_service_set_program_and_options,
+        schema=SERVICE_PROGRAM_AND_OPTIONS_SCHEMA,
     )
 
     return True

@@ -56,15 +56,18 @@ SERVICE_OPTION_SELECTED = "set_option_selected"
 SERVICE_PAUSE_PROGRAM = "pause_program"
 SERVICE_RESUME_PROGRAM = "resume_program"
 SERVICE_SELECT_PROGRAM = "select_program"
+SERVICE_SET_PROGRAM_AND_OPTIONS = "set_program_and_options"
 SERVICE_SETTING = "change_setting"
 SERVICE_START_PROGRAM = "start_program"
 
-
+ATTR_AFFECTS_TO = "affects_to"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
 ATTR_UNIT = "unit"
 ATTR_VALUE = "value"
 
+AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
+AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
 
 SVE_TRANSLATION_KEY_SET_SETTING = "set_setting_entity"
 SVE_TRANSLATION_PLACEHOLDER_APPLIANCE_NAME = "appliance_name"

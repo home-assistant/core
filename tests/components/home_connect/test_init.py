@@ -37,7 +37,7 @@ from .conftest import (
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-DEPRECATED_KEYS_SERVICE_KV_CALL_PARAMS = [
+DEPRECATED_SERVICE_KV_CALL_PARAMS = [
     {
         "domain": DOMAIN,
         "service": "set_option_active",
@@ -62,24 +62,7 @@ DEPRECATED_KEYS_SERVICE_KV_CALL_PARAMS = [
 ]
 
 SERVICE_KV_CALL_PARAMS = [
-    {
-        "domain": DOMAIN,
-        "service": "set_option_active",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "b_s_h_common_option_finish_in_relative": "00:00:12",
-        },
-        "blocking": True,
-    },
-    {
-        "domain": DOMAIN,
-        "service": "set_option_selected",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "laundry_care_washer_option_temperature": "laundry_care_washer_enum_type_temperature_g_c_40",
-        },
-        "blocking": True,
-    },
+    *DEPRECATED_SERVICE_KV_CALL_PARAMS,
     {
         "domain": DOMAIN,
         "service": "change_setting",
@@ -90,7 +73,6 @@ SERVICE_KV_CALL_PARAMS = [
         },
         "blocking": True,
     },
-    *DEPRECATED_KEYS_SERVICE_KV_CALL_PARAMS,
 ]
 
 SERVICE_COMMAND_CALL_PARAMS = [
@@ -113,7 +95,7 @@ SERVICE_COMMAND_CALL_PARAMS = [
 ]
 
 
-DEPRECATED_KEYS_SERVICE_PROGRAM_CALL_PARAMS = [
+SERVICE_PROGRAM_CALL_PARAMS = [
     {
         "domain": DOMAIN,
         "service": "select_program",
@@ -139,33 +121,9 @@ DEPRECATED_KEYS_SERVICE_PROGRAM_CALL_PARAMS = [
     },
 ]
 
-SERVICE_PROGRAM_CALL_PARAMS = [
-    {
-        "domain": DOMAIN,
-        "service": "select_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "program": "laundry_care_washer_program_cotton",
-            "laundry_care_washer_option_temperature": "laundry_care_washer_enum_type_temperature_g_c_40",
-        },
-        "blocking": True,
-    },
-    {
-        "domain": DOMAIN,
-        "service": "start_program",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "program": "laundry_care_washer_program_cotton",
-            "laundry_care_washer_option_temperature": "laundry_care_washer_enum_type_temperature_g_c_40",
-        },
-        "blocking": True,
-    },
-    *DEPRECATED_KEYS_SERVICE_PROGRAM_CALL_PARAMS,
-]
-
 SERVICE_APPLIANCE_METHOD_MAPPING = {
-    "set_option_active": "set_active_program_options",
-    "set_option_selected": "set_selected_program_options",
+    "set_option_active": "set_active_program_option",
+    "set_option_selected": "set_selected_program_option",
     "change_setting": "set_setting",
     "pause_program": "put_command",
     "resume_program": "put_command",
@@ -182,6 +140,52 @@ SERVICE_VALIDATION_ERROR_MAPPING = {
     "select_program": r"Error.*selecting.*program.*",
     "start_program": r"Error.*starting.*program.*",
 }
+
+
+SERVICES_SET_PROGRAM_AND_OPTIONS = [
+    {
+        "domain": DOMAIN,
+        "service": "set_program_and_options",
+        "service_data": {
+            "device_id": "DEVICE_ID",
+            "affects_to": "selected_program",
+            "program": "dishcare_dishwasher_program_eco_50",
+            "b_s_h_common_option_start_in_relative": "00:30:00",
+        },
+        "blocking": True,
+    },
+    {
+        "domain": DOMAIN,
+        "service": "set_program_and_options",
+        "service_data": {
+            "device_id": "DEVICE_ID",
+            "affects_to": "active_program",
+            "program": "consumer_products_coffee_maker_program_beverage_coffee",
+            "consumer_products_coffee_maker_option_bean_amount": "consumer_products_coffee_maker_enum_type_bean_amount_normal",
+        },
+        "blocking": True,
+    },
+    {
+        "domain": DOMAIN,
+        "service": "set_program_and_options",
+        "service_data": {
+            "device_id": "DEVICE_ID",
+            "affects_to": "active_program",
+            "consumer_products_coffee_maker_option_coffee_milk_ratio": 60,
+        },
+        "blocking": True,
+    },
+    {
+        "domain": DOMAIN,
+        "service": "set_program_and_options",
+        "service_data": {
+            "device_id": "DEVICE_ID",
+            "affects_to": "selected_program",
+            "consumer_products_coffee_maker_option_fill_quantity": 35,
+        },
+        "blocking": True,
+    },
+]
 
 
 async def test_entry_setup(
@@ -293,7 +297,7 @@ async def test_client_error(
     "service_call",
     SERVICE_KV_CALL_PARAMS + SERVICE_COMMAND_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
 )
-async def test_services(
+async def test_key_value_services(
     service_call: dict[str, Any],
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -324,10 +328,9 @@ async def test_services(
 
 @pytest.mark.parametrize(
     "service_call",
-    DEPRECATED_KEYS_SERVICE_KV_CALL_PARAMS
-    + DEPRECATED_KEYS_SERVICE_PROGRAM_CALL_PARAMS,
+    DEPRECATED_SERVICE_KV_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
 )
-async def test_service_keys_deprecation(
+async def test_programs_and_options_actions_deprecation(
     service_call: dict[str, Any],
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -353,50 +356,27 @@ async def test_service_keys_deprecation(
     await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 1
-    assert issue_registry.async_get_issue(DOMAIN, "moved_program_options_keys")
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_set_program_and_option_actions"
+    )
 
 
 @pytest.mark.parametrize(
-    "service_call",
-    [
-        {
-            "domain": DOMAIN,
-            "service": "select_program",
-            "service_data": {
-                "device_id": "DEVICE_ID",
-                "program": "dishcare_dishwasher_program_eco_50",
-                "b_s_h_common_option_start_in_relative": "00:30:00",
-            },
-        },
-        {
-            "domain": DOMAIN,
-            "service": "start_program",
-            "service_data": {
-                "device_id": "DEVICE_ID",
-                "program": "consumer_products_coffee_maker_program_beverage_coffee",
-                "consumer_products_coffee_maker_option_bean_amount": "consumer_products_coffee_maker_enum_type_bean_amount_normal",
-            },
-        },
-        {
-            "domain": DOMAIN,
-            "service": "set_option_active",
-            "service_data": {
-                "device_id": "DEVICE_ID",
-                "consumer_products_coffee_maker_option_coffee_milk_ratio": 60,
-            },
-        },
-        {
-            "domain": DOMAIN,
-            "service": "set_option_selected",
-            "service_data": {
-                "device_id": "DEVICE_ID",
-                "consumer_products_coffee_maker_option_fill_quantity": 35,
-            },
-        },
-    ],
+    ("service_call", "called_method"),
+    zip(
+        SERVICES_SET_PROGRAM_AND_OPTIONS,
+        [
+            "set_selected_program",
+            "start_program",
+            "set_active_program_options",
+            "set_selected_program_options",
+        ],
+        strict=True,
+    ),
 )
-async def test_recognized_options(
+async def test_set_program_and_options(
     service_call: dict[str, Any],
+    called_method: str,
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
@@ -416,15 +396,85 @@ async def test_recognized_options(
         identifiers={(DOMAIN, appliance_ha_id)},
     )
 
-    service_name = service_call["service"]
     service_call["service_data"]["device_id"] = device_entry.id
     await hass.services.async_call(**service_call)
     await hass.async_block_till_done()
-    method_mock: MagicMock = getattr(
-        client, SERVICE_APPLIANCE_METHOD_MAPPING[service_name]
-    )
+    method_mock: MagicMock = getattr(client, called_method)
     assert method_mock.call_count == 1
     assert method_mock.call_args == snapshot
+
+
+@pytest.mark.parametrize(
+    ("service_call", "error_regex"),
+    zip(
+        SERVICES_SET_PROGRAM_AND_OPTIONS,
+        [
+            r"Error.*selecting.*program.*",
+            r"Error.*starting.*program.*",
+            r"Error.*setting.*options.*active.*program.*",
+            r"Error.*setting.*options.*selected.*program.*",
+        ],
+        strict=True,
+    ),
+)
+async def test_set_program_and_options_exceptions(
+    service_call: dict[str, Any],
+    error_regex: str,
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client_with_exception: MagicMock,
+    appliance_ha_id: str,
+) -> None:
+    """Test recognized options."""
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client_with_exception)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance_ha_id)},
+    )
+
+    service_call["service_data"]["device_id"] = device_entry.id
+    with pytest.raises(HomeAssistantError, match=error_regex):
+        await hass.services.async_call(**service_call)
+
+
+async def test_required_program_or_at_least_an_option(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    appliance_ha_id: str,
+) -> None:
+    "Test that the set_program_and_options does raise an exception if no program nor options are set."
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance_ha_id)},
+    )
+
+    with pytest.raises(
+        ServiceValidationError,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_program_and_options",
+            {
+                "device_id": device_entry.id,
+                "affects_to": "selected_program",
+            },
+            True,
+        )
 
 
 @pytest.mark.parametrize(

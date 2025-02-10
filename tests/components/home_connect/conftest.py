@@ -252,9 +252,17 @@ def _get_set_program_options_side_effect(
                                 handling="",
                                 value=option.value,
                             )
-                            for option in cast(
-                                ArrayOfOptions, kwargs["array_of_options"]
-                            ).options
+                            for option in (
+                                cast(ArrayOfOptions, kwargs["array_of_options"]).options
+                                if "array_of_options" in kwargs
+                                else [
+                                    Option(
+                                        kwargs["option_key"],
+                                        kwargs["value"],
+                                        unit=kwargs["unit"],
+                                    )
+                                ]
+                            )
                         ]
                     ),
                 ),
@@ -352,7 +360,13 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
             event_queue, EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
         ),
     )
+    mock.set_active_program_option = AsyncMock(
+        side_effect=_get_set_program_options_side_effect(event_queue),
+    )
     mock.set_active_program_options = AsyncMock(
+        side_effect=_get_set_program_options_side_effect(event_queue),
+    )
+    mock.set_selected_program_option = AsyncMock(
         side_effect=_get_set_program_options_side_effect(event_queue),
     )
     mock.set_selected_program_options = AsyncMock(
@@ -396,7 +410,9 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
     mock.start_program = AsyncMock(side_effect=exception)
     mock.stop_program = AsyncMock(side_effect=exception)
     mock.set_selected_program = AsyncMock(side_effect=exception)
+    mock.set_active_program_option = AsyncMock(side_effect=exception)
     mock.set_active_program_options = AsyncMock(side_effect=exception)
+    mock.set_selected_program_option = AsyncMock(side_effect=exception)
     mock.set_selected_program_options = AsyncMock(side_effect=exception)
     mock.set_setting = AsyncMock(side_effect=exception)
     mock.get_settings = AsyncMock(side_effect=exception)
