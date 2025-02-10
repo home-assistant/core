@@ -38,6 +38,31 @@
     },
     "failed_to_migrate_files": {
       "message": "Failed to migrate metadata to separate files"
+    },
+    "update_failed": {
+      "message": "Failed to update drive state"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_size": {
+        "name": "Total OneDrive size"
+      },
+      "used_size": {
+        "name": "Used OneDrive size"
+      },
+      "remaining_size": {
+        "name": "Remaining OneDrive size"
+      },
+      "drive_state": {
+        "name": "OneDrive state",
+        "state": {
+          "normal": "Normal",
+          "nearing": "Nearing limit",
+          "critical": "Critical",
+          "exceeded": "Exceeded"
+        }
+      }
     }
   }
 }

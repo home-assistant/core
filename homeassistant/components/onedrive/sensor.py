@@ -1,0 +1,111 @@
+"""Sensors for OneDrive."""
+
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from onedrive_personal_sdk.const import DriveState
+from onedrive_personal_sdk.models.items import DriveQuota
+
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
+from homeassistant.const import EntityCategory, UnitOfInformation
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+
+from .coordinator import OneDriveConfigEntry, OneDriveUpdateCoordinator
+
+PARALLEL_UPDATES = 0
+
+
+@dataclass(kw_only=True, frozen=True)
+class OneDriveSensorEntityDescription(SensorEntityDescription):
+    """Describes OneDrive sensor entity."""
+
+    value_fn: Callable[[DriveQuota], StateType]
+
+
+DRIVE_STATE_ENTITIES: tuple[OneDriveSensorEntityDescription, ...] = (
+    OneDriveSensorEntityDescription(
+        key="total_size",
+        value_fn=lambda quota: quota.total,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        suggested_display_precision=0,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    OneDriveSensorEntityDescription(
+        key="used_size",
+        value_fn=lambda quota: quota.used,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    OneDriveSensorEntityDescription(
+        key="remaining_size",
+        value_fn=lambda quota: quota.remaining,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
+        suggested_display_precision=2,
+        device_class=SensorDeviceClass.DATA_SIZE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    OneDriveSensorEntityDescription(
+        key="drive_state",
+        value_fn=lambda quota: quota.state.value,
+        options=[state.value for state in DriveState],
+        device_class=SensorDeviceClass.ENUM,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: OneDriveConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up OneDrive sensors based on a config entry."""
+    coordinator = entry.runtime_data.coordinator
+    async_add_entities(
+        OneDriveDriveStateSensor(coordinator, description)
+        for description in DRIVE_STATE_ENTITIES
+    )
+
+
+class OneDriveDriveStateSensor(
+    CoordinatorEntity[OneDriveUpdateCoordinator], SensorEntity
+):
+    """Define a OneDrive sensor."""
+
+    entity_description: OneDriveSensorEntityDescription
+    _attr_has_entity_name = True
+
+    def __init__(
+        self,
+        coordinator: OneDriveUpdateCoordinator,
+        description: OneDriveSensorEntityDescription,
+    ) -> None:
+        """Initialize."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_translation_key = description.key
+        assert coordinator.config_entry.unique_id
+        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
+
+    @property
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return (
+            self.entity_description.value_fn(self.coordinator.data)
+            if self.coordinator.data
+            else None
+        )
