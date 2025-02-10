@@ -9,7 +9,7 @@ from homeassistant.components.device_tracker import (
     TrackerEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ATTR_ALTITUDE
 from .coordinator import StarlinkConfigEntry, StarlinkData

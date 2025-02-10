@@ -207,7 +207,7 @@ aiocomelit==0.10.1
 aiodhcpwatcher==1.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==2.2.2
+aiodiscover==2.6.0
 
 # homeassistant.components.dnsip
 aiodns==3.2.0
@@ -941,7 +941,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habiticalib==0.3.5
+habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
 habluetooth==3.21.1
@@ -975,7 +975,7 @@ hole==0.8.0
 holidays==0.66
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250205.0
+home-assistant-frontend==20250210.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.2.5
@@ -1307,7 +1307,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.9
+onedrive-personal-sdk==0.0.10
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -1462,7 +1462,7 @@ pyDuotecno==2024.10.1
 pyElectra==1.2.4
 
 # homeassistant.components.homee
-pyHomee==1.2.5
+pyHomee==1.2.7
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -1505,7 +1505,7 @@ pyatv==0.16.0
 pyaussiebb==0.1.5
 
 # homeassistant.components.balboa
-pybalboa==1.0.2
+pybalboa==1.1.2
 
 # homeassistant.components.blackbird
 pyblackbird==0.6
@@ -1619,7 +1619,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.1
+pyheos==1.0.2
 
 # homeassistant.components.hive
 pyhive-integration==1.0.1
@@ -1799,6 +1799,9 @@ pypalazzetti==0.1.19
 
 # homeassistant.components.lcn
 pypck==0.8.5
+
+# homeassistant.components.pglab
+pypglab==0.0.3
 
 # homeassistant.components.pjlink
 pypjlink2==1.2.1

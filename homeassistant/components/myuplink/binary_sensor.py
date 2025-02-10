@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import F_SERIES
 from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
@@ -58,7 +58,7 @@ def get_description(device_point: DevicePoint) -> BinarySensorEntityDescription 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyUplinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink binary_sensor."""
     entities: list[BinarySensorEntity] = []
