@@ -25,14 +25,14 @@ async def async_setup_entry(
     entry: NikoHomeControlConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the Niko Home Control cover entry."""
+    """Set up the Niko Home Control thermostat entry."""
     controller = entry.runtime_data
 
     async_add_entities(
         NikoHomeControlClimate(
             controller.thermostats[thermostat], controller, entry.entry_id
         )
-        for thermostat in controller.thermostats
+        for thermostat in controller.thermostats.values()
     )
 
 
