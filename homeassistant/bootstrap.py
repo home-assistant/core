@@ -187,8 +187,9 @@ STAGE_0_INTEGRATIONS = (
     # Zeroconf is used for mdns resolution in aiohttp client helper.
     ("zeroconf", {"zeroconf"}, STAGE_0_SUBSTAGE_TIMEOUT),
 )
+
 DISCOVERY_INTEGRATIONS = ("bluetooth", "dhcp", "ssdp", "usb")
-# Stage 1 integrations are not to be preloaded in bootstrap.
+# Stage 1 integrations are not to be preimported in bootstrap.
 STAGE_1_INTEGRATIONS = {
     # We need to make sure discovery integrations
     # update their deps before stage 2 integrations
@@ -201,6 +202,7 @@ STAGE_1_INTEGRATIONS = {
     # To provide account link implementations
     "cloud",
 }
+
 DEFAULT_INTEGRATIONS = {
     # These integrations are set up unless recovery mode is activated.
     #
@@ -241,6 +243,7 @@ DEFAULT_INTEGRATIONS_SUPERVISOR = {
     # These integrations are set up if using the Supervisor
     "hassio",
 }
+
 CRITICAL_INTEGRATIONS = {
     # Recovery mode is activated if these integrations fail to set up
     "frontend",
