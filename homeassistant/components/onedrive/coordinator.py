@@ -37,7 +37,7 @@ type OneDriveConfigEntry = ConfigEntry[OneDriveRuntimeData]
 
 
 class OneDriveUpdateCoordinator(DataUpdateCoordinator[Drive]):
-    """Class to handle fetching data from the tedee API centrally."""
+    """Class to handle fetching data from the Graph API centrally."""
 
     config_entry: OneDriveConfigEntry
 
