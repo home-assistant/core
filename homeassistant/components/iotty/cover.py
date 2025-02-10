@@ -18,9 +18,8 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import IottyConfigEntry
 from .api import IottyProxy
-from .coordinator import IottyDataUpdateCoordinator
+from .coordinator import IottyConfigEntry, IottyDataUpdateCoordinator
 from .entity import IottyEntity
 
 _LOGGER = logging.getLogger(__name__)

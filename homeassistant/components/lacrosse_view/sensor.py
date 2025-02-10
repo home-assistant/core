@@ -226,7 +226,6 @@ class LaCrosseViewSensor(
             name=sensor.name,
             manufacturer="LaCrosse Technology",
             model=sensor.model,
-            via_device=(DOMAIN, sensor.location.id),
         )
         self.index = index
 
