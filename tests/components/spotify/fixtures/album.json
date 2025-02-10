@@ -1,0 +1,128 @@
+{
+  "album_type": "album",
+  "artists": [
+    {
+      "external_urls": {
+        "spotify": "https://open.spotify.com/artist/3jULn43a6xfzqleyeFjPIq"
+      },
+      "href": "https://api.spotify.com/v1/artists/3jULn43a6xfzqleyeFjPIq",
+      "id": "3jULn43a6xfzqleyeFjPIq",
+      "name": "Area 11",
+      "type": "artist",
+      "uri": "spotify:artist:3jULn43a6xfzqleyeFjPIq"
+    }
+  ],
+  "available_markets": [],
+  "copyrights": [
+    {
+      "text": "2020 Smihilism Records",
+      "type": "C"
+    },
+    {
+      "text": "2020 Smihilism Records",
+      "type": "P"
+    }
+  ],
+  "external_ids": {
+    "upc": "195916707034"
+  },
+  "external_urls": {
+    "spotify": "https://open.spotify.com/album/3IqzqH6ShrRtie9Yd2ODyG"
+  },
+  "genres": [],
+  "href": "https://api.spotify.com/v1/albums/3IqzqH6ShrRtie9Yd2ODyG",
+  "id": "3IqzqH6ShrRtie9Yd2ODyG",
+  "images": [
+    {
+      "height": 640,
+      "url": "https://i.scdn.co/image/ab67616d0000b273a61a28c2f084761f8833bce6",
+      "width": 640
+    },
+    {
+      "height": 300,
+      "url": "https://i.scdn.co/image/ab67616d00001e02a61a28c2f084761f8833bce6",
+      "width": 300
+    },
+    {
+      "height": 64,
+      "url": "https://i.scdn.co/image/ab67616d00004851a61a28c2f084761f8833bce6",
+      "width": 64
+    }
+  ],
+  "label": "Smihilism Records",
+  "name": "SINGLARITY",
+  "popularity": 29,
+  "release_date": "2020-12-18",
+  "release_date_precision": "day",
+  "total_tracks": 11,
+  "tracks": {
+    "href": "https://api.spotify.com/v1/albums/3IqzqH6ShrRtie9Yd2ODyG/tracks?offset=0&limit=50&locale=en-US,en;q=0.5",
+    "items": [
+      {
+        "artists": [
+          {
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/3jULn43a6xfzqleyeFjPIq"
+            },
+            "href": "https://api.spotify.com/v1/artists/3jULn43a6xfzqleyeFjPIq",
+            "id": "3jULn43a6xfzqleyeFjPIq",
+            "name": "Area 11",
+            "type": "artist",
+            "uri": "spotify:artist:3jULn43a6xfzqleyeFjPIq"
+          }
+        ],
+        "available_markets": [],
+        "disc_number": 1,
+        "duration_ms": 260372,
+        "explicit": false,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/6akJGriy4njdP8fZTPGjwz"
+        },
+        "href": "https://api.spotify.com/v1/tracks/6akJGriy4njdP8fZTPGjwz",
+        "id": "6akJGriy4njdP8fZTPGjwz",
+        "is_local": false,
+        "name": "All Your Friends",
+        "preview_url": "https://p.scdn.co/mp3-preview/484344e579edfdb8e8f872d73299aff2c3d0369d?cid=cfe923b2d660439caf2b557b21f31221",
+        "track_number": 1,
+        "type": "track",
+        "uri": "spotify:track:6akJGriy4njdP8fZTPGjwz"
+      },
+      {
+        "artists": [
+          {
+            "external_urls": {
+              "spotify": "https://open.spotify.com/artist/3jULn43a6xfzqleyeFjPIq"
+            },
+            "href": "https://api.spotify.com/v1/artists/3jULn43a6xfzqleyeFjPIq",
+            "id": "3jULn43a6xfzqleyeFjPIq",
+            "name": "Area 11",
+            "type": "artist",
+            "uri": "spotify:artist:3jULn43a6xfzqleyeFjPIq"
+          }
+        ],
+        "available_markets": [],
+        "disc_number": 1,
+        "duration_ms": 206613,
+        "explicit": true,
+        "external_urls": {
+          "spotify": "https://open.spotify.com/track/7N02bJK1amhplZ8yAapRS5"
+        },
+        "href": "https://api.spotify.com/v1/tracks/7N02bJK1amhplZ8yAapRS5",
+        "id": "7N02bJK1amhplZ8yAapRS5",
+        "is_local": false,
+        "name": "New Magiks",
+        "preview_url": "https://p.scdn.co/mp3-preview/b59a5a73ed2e9a61be471822993e91210d5f255a?cid=cfe923b2d660439caf2b557b21f31221",
+        "track_number": 2,
+        "type": "track",
+        "uri": "spotify:track:7N02bJK1amhplZ8yAapRS5"
+      }
+    ],
+    "limit": 50,
+    "next": null,
+    "offset": 0,
+    "previous": null,
+    "total": 11
+  },
+  "type": "album",
+  "uri": "spotify:album:3IqzqH6ShrRtie9Yd2ODyG"
+}

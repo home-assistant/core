@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.const.common import (
@@ -33,11 +34,13 @@ async def async_get_connect_info(
     """Construct connect_info from configuration entry and returns it to caller."""
     mac = entry.unique_id
     # Attempt to rediscover gateway to follow IP changes
-    discovered_gateways = await async_discover_gateways_by_unique_id(hass)
+    discovered_gateways = await async_discover_gateways_by_unique_id()
     if mac in discovered_gateways:
         return discovered_gateways[mac]
 
     _LOGGER.debug("Gateway rediscovery failed for %s", entry.title)
+    if TYPE_CHECKING:
+        assert mac is not None
     # Static connection defined or fallback from discovery
     return {
         SL_GATEWAY_NAME: name_for_mac(mac),
@@ -49,6 +52,8 @@ async def async_get_connect_info(
 class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage the data update for the Screenlogic component."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -57,7 +62,6 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
         gateway: ScreenLogicGateway,
     ) -> None:
         """Initialize the Screenlogic Data Update Coordinator."""
-        self.config_entry = config_entry
         self.gateway = gateway
 
         interval = timedelta(
@@ -66,6 +70,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=interval,
             # Debounced option since the device takes
@@ -88,7 +93,6 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
     async def _async_update_data(self) -> None:
         """Fetch data from the Screenlogic gateway."""
-        assert self.config_entry is not None
         try:
             if not self.gateway.is_connected:
                 connect_info = await async_get_connect_info(

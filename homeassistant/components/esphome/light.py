@@ -122,7 +122,7 @@ def _color_mode_to_ha(mode: int) -> str:
         return ColorMode.UNKNOWN
 
     # choose the color mode with the most bits set
-    candidates.sort(key=lambda key: bin(key[1]).count("1"))
+    candidates.sort(key=lambda key: key[1].bit_count())
     return candidates[-1][0]
 
 
@@ -146,7 +146,7 @@ def _least_complex_color_mode(color_modes: tuple[int, ...]) -> int:
     # popcount with bin() function because it appears
     # to be the best way: https://stackoverflow.com/a/9831671
     color_modes_list = list(color_modes)
-    color_modes_list.sort(key=lambda mode: bin(mode).count("1"))
+    color_modes_list.sort(key=lambda mode: (mode).bit_count())
     return color_modes_list[0]
 
 
@@ -414,11 +414,8 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
 
         self._attr_supported_color_modes = supported
         self._attr_effect_list = static_info.effects
-        self._attr_min_mireds = round(static_info.min_mireds)
-        self._attr_max_mireds = round(static_info.max_mireds)
-        if ColorMode.COLOR_TEMP in supported:
-            self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
-            self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
+        self._attr_min_color_temp_kelvin = _mired_to_kelvin(static_info.max_mireds)
+        self._attr_max_color_temp_kelvin = _mired_to_kelvin(static_info.min_mireds)
 
 
 async_setup_entry = partial(

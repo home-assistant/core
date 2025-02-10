@@ -40,7 +40,7 @@ class PilightDaemonSim:
         "message": {"id": 0, "unit": 0, "off": 1},
     }
 
-    def __init__(self, host, port):
+    def __init__(self, host, port) -> None:
         """Init pilight client, ignore parameters."""
 
     def send_code(self, call):

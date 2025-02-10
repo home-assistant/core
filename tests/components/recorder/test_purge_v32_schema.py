@@ -47,12 +47,12 @@ from .db_schema_32 import (
     StatisticsShortTerm,
 )
 
-from tests.typing import RecorderInstanceGenerator
+from tests.typing import RecorderInstanceContextManager
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -96,17 +96,21 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
         assert events.count() == 0
         assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
-        purge_before = dt_util.utcnow() - timedelta(days=4)
+    purge_before = dt_util.utcnow() - timedelta(days=4)
 
-        # run purge_old_data()
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            states_batch_size=1,
-            events_batch_size=1,
-            repack=False,
-        )
-        assert not finished
+    # run purge_old_data()
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        states_batch_size=1,
+        events_batch_size=1,
+        repack=False,
+    )
+    assert not finished
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        state_attributes = session.query(StateAttributes)
         assert states.count() == 2
         assert state_attributes.count() == 1
 
@@ -122,23 +126,31 @@ async def test_purge_old_states(hass: HomeAssistant, recorder_mock: Recorder) ->
         assert dontpurgeme_5.old_state_id == dontpurgeme_4.state_id
         assert dontpurgeme_4.old_state_id is None
 
-        finished = purge_old_data(recorder_mock, purge_before, repack=False)
-        assert finished
+    finished = purge_old_data(recorder_mock, purge_before, repack=False)
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        state_attributes = session.query(StateAttributes)
         assert states.count() == 2
         assert state_attributes.count() == 1
 
         assert "test.recorder2" in recorder_mock.states_manager._last_committed_id
 
-        # run purge_old_data again
-        purge_before = dt_util.utcnow()
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            states_batch_size=1,
-            events_batch_size=1,
-            repack=False,
-        )
-        assert not finished
+    # run purge_old_data again
+    purge_before = dt_util.utcnow()
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        states_batch_size=1,
+        events_batch_size=1,
+        repack=False,
+    )
+    assert not finished
+
+    with session_scope(hass=hass) as session:
+        states = session.query(States)
+        state_attributes = session.query(StateAttributes)
         assert states.count() == 0
         assert state_attributes.count() == 0
 
@@ -178,7 +190,7 @@ async def test_purge_old_states_encouters_database_corruption(
     await async_wait_recording_done(hass)
 
     sqlite3_exception = DatabaseError("statement", {}, [])
-    sqlite3_exception.__cause__ = sqlite3.DatabaseError()
+    sqlite3_exception.__cause__ = sqlite3.DatabaseError("not a database")
 
     with (
         patch(
@@ -270,26 +282,32 @@ async def test_purge_old_events(hass: HomeAssistant, recorder_mock: Recorder) ->
 
         purge_before = dt_util.utcnow() - timedelta(days=4)
 
-        # run purge_old_data()
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
-            events_batch_size=1,
-            states_batch_size=1,
-        )
-        assert not finished
+    # run purge_old_data()
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+        events_batch_size=1,
+        states_batch_size=1,
+    )
+    assert not finished
+
+    with session_scope(hass=hass) as session:
+        events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
         assert events.count() == 2
 
-        # we should only have 2 events left
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
-            events_batch_size=1,
-            states_batch_size=1,
-        )
-        assert finished
+    # we should only have 2 events left
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+        events_batch_size=1,
+        states_batch_size=1,
+    )
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
         assert events.count() == 2
 
 
@@ -306,27 +324,30 @@ async def test_purge_old_recorder_runs(
         recorder_runs = session.query(RecorderRuns)
         assert recorder_runs.count() == 7
 
-        purge_before = dt_util.utcnow()
+    purge_before = dt_util.utcnow()
 
-        # run purge_old_data()
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
-            events_batch_size=1,
-            states_batch_size=1,
-        )
-        assert not finished
+    # run purge_old_data()
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+        events_batch_size=1,
+        states_batch_size=1,
+    )
+    assert not finished
 
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
-            events_batch_size=1,
-            states_batch_size=1,
-        )
-        assert finished
-        assert recorder_runs.count() == 1
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+        events_batch_size=1,
+        states_batch_size=1,
+    )
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        recorder_runs = session.query(RecorderRuns)
+        assert recorder_runs.count() == 3
 
 
 async def test_purge_old_statistics_runs(
@@ -342,14 +363,17 @@ async def test_purge_old_statistics_runs(
         statistics_runs = session.query(StatisticsRuns)
         assert statistics_runs.count() == 7
 
-        purge_before = dt_util.utcnow()
+    purge_before = dt_util.utcnow()
 
-        # run purge_old_data()
-        finished = purge_old_data(recorder_mock, purge_before, repack=False)
-        assert not finished
+    # run purge_old_data()
+    finished = purge_old_data(recorder_mock, purge_before, repack=False)
+    assert not finished
 
-        finished = purge_old_data(recorder_mock, purge_before, repack=False)
-        assert finished
+    finished = purge_old_data(recorder_mock, purge_before, repack=False)
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        statistics_runs = session.query(StatisticsRuns)
         assert statistics_runs.count() == 1
 
 
@@ -485,7 +509,7 @@ async def test_purge_edge_case(hass: HomeAssistant, use_sqlite: bool) -> None:
                     event_type="EVENT_TEST_PURGE",
                     event_data="{}",
                     origin="LOCAL",
-                    time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                    time_fired_ts=timestamp.timestamp(),
                 )
             )
             session.add(
@@ -493,8 +517,8 @@ async def test_purge_edge_case(hass: HomeAssistant, use_sqlite: bool) -> None:
                     entity_id="test.recorder2",
                     state="purgeme",
                     attributes="{}",
-                    last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-                    last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+                    last_changed_ts=timestamp.timestamp(),
+                    last_updated_ts=timestamp.timestamp(),
                     event_id=1001,
                     attributes_id=1002,
                 )
@@ -552,7 +576,7 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                     event_type="KEEP",
                     event_data="{}",
                     origin="LOCAL",
-                    time_fired_ts=dt_util.utc_to_timestamp(timestamp_keep),
+                    time_fired_ts=timestamp_keep.timestamp(),
                 )
             )
             session.add(
@@ -560,8 +584,8 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                     entity_id="test.cutoff",
                     state="keep",
                     attributes="{}",
-                    last_changed_ts=dt_util.utc_to_timestamp(timestamp_keep),
-                    last_updated_ts=dt_util.utc_to_timestamp(timestamp_keep),
+                    last_changed_ts=timestamp_keep.timestamp(),
+                    last_updated_ts=timestamp_keep.timestamp(),
                     event_id=1000,
                     attributes_id=1000,
                 )
@@ -580,7 +604,7 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                         event_type="PURGE",
                         event_data="{}",
                         origin="LOCAL",
-                        time_fired_ts=dt_util.utc_to_timestamp(timestamp_purge),
+                        time_fired_ts=timestamp_purge.timestamp(),
                     )
                 )
                 session.add(
@@ -588,8 +612,8 @@ async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -
                         entity_id="test.cutoff",
                         state="purge",
                         attributes="{}",
-                        last_changed_ts=dt_util.utc_to_timestamp(timestamp_purge),
-                        last_updated_ts=dt_util.utc_to_timestamp(timestamp_purge),
+                        last_changed_ts=timestamp_purge.timestamp(),
+                        last_updated_ts=timestamp_purge.timestamp(),
                         event_id=1000 + row,
                         attributes_id=1000 + row,
                     )
@@ -747,7 +771,7 @@ async def _add_test_events(hass: HomeAssistant, iterations: int = 1):
                         event_type=event_type,
                         event_data=json.dumps(event_data),
                         origin="LOCAL",
-                        time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                        time_fired_ts=timestamp.timestamp(),
                     )
                 )
 
@@ -784,7 +808,7 @@ async def _add_events_with_event_data(hass: HomeAssistant, iterations: int = 1):
                     Events(
                         event_type=event_type,
                         origin="LOCAL",
-                        time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+                        time_fired_ts=timestamp.timestamp(),
                         event_data_rel=event_data,
                     )
                 )
@@ -886,8 +910,8 @@ def _add_state_without_event_linkage(
             entity_id=entity_id,
             state=state,
             attributes=None,
-            last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-            last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+            last_changed_ts=timestamp.timestamp(),
+            last_updated_ts=timestamp.timestamp(),
             event_id=None,
             state_attributes=state_attrs,
         )
@@ -911,8 +935,8 @@ def _add_state_and_state_changed_event(
             entity_id=entity_id,
             state=state,
             attributes=None,
-            last_changed_ts=dt_util.utc_to_timestamp(timestamp),
-            last_updated_ts=dt_util.utc_to_timestamp(timestamp),
+            last_changed_ts=timestamp.timestamp(),
+            last_updated_ts=timestamp.timestamp(),
             event_id=event_id,
             state_attributes=state_attrs,
         )
@@ -923,7 +947,7 @@ def _add_state_and_state_changed_event(
             event_type=EVENT_STATE_CHANGED,
             event_data="{}",
             origin="LOCAL",
-            time_fired_ts=dt_util.utc_to_timestamp(timestamp),
+            time_fired_ts=timestamp.timestamp(),
         )
     )
 
@@ -945,39 +969,48 @@ async def test_purge_many_old_events(
             events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
             assert events.count() == old_events_count * 6
 
-            purge_before = dt_util.utcnow() - timedelta(days=4)
+        purge_before = dt_util.utcnow() - timedelta(days=4)
 
-            # run purge_old_data()
-            finished = purge_old_data(
-                recorder_mock,
-                purge_before,
-                repack=False,
-                states_batch_size=3,
-                events_batch_size=3,
-            )
-            assert not finished
+        # run purge_old_data()
+        finished = purge_old_data(
+            recorder_mock,
+            purge_before,
+            repack=False,
+            states_batch_size=3,
+            events_batch_size=3,
+        )
+        assert not finished
+
+        with session_scope(hass=hass) as session:
+            events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
             assert events.count() == old_events_count * 3
 
-            # we should only have 2 groups of events left
-            finished = purge_old_data(
-                recorder_mock,
-                purge_before,
-                repack=False,
-                states_batch_size=3,
-                events_batch_size=3,
-            )
-            assert finished
+        # we should only have 2 groups of events left
+        finished = purge_old_data(
+            recorder_mock,
+            purge_before,
+            repack=False,
+            states_batch_size=3,
+            events_batch_size=3,
+        )
+        assert finished
+
+        with session_scope(hass=hass) as session:
+            events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
             assert events.count() == old_events_count * 2
 
-            # we should now purge everything
-            finished = purge_old_data(
-                recorder_mock,
-                dt_util.utcnow(),
-                repack=False,
-                states_batch_size=20,
-                events_batch_size=20,
-            )
-            assert finished
+        # we should now purge everything
+        finished = purge_old_data(
+            recorder_mock,
+            dt_util.utcnow(),
+            repack=False,
+            states_batch_size=20,
+            events_batch_size=20,
+        )
+        assert finished
+
+        with session_scope(hass=hass) as session:
+            events = session.query(Events).filter(Events.event_type.like("EVENT_TEST%"))
             assert events.count() == 0
 
 
@@ -994,7 +1027,7 @@ async def test_purge_can_mix_legacy_and_new_format(
     def _recreate_legacy_events_index():
         """Recreate the legacy events index since its no longer created on new instances."""
         migration._create_index(
-            recorder_mock.get_session, "states", "ix_states_event_id"
+            recorder_mock, recorder_mock.get_session, "states", "ix_states_event_id"
         )
         recorder_mock.use_legacy_events_index = True
 
@@ -1038,39 +1071,65 @@ async def test_purge_can_mix_legacy_and_new_format(
         assert states_with_event_id.count() == 50
         assert states_without_event_id.count() == 51
 
-        purge_before = dt_util.utcnow() - timedelta(days=4)
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
+    purge_before = dt_util.utcnow() - timedelta(days=4)
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+    )
+    assert not finished
+
+    with session_scope(hass=hass) as session:
+        states_with_event_id = session.query(States).filter(
+            States.event_id.is_not(None)
         )
-        assert not finished
+        states_without_event_id = session.query(States).filter(
+            States.event_id.is_(None)
+        )
         assert states_with_event_id.count() == 0
         assert states_without_event_id.count() == 51
-        # At this point all the legacy states are gone
-        # and we switch methods
-        purge_before = dt_util.utcnow() - timedelta(days=4)
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
-            events_batch_size=1,
-            states_batch_size=1,
+
+    # At this point all the legacy states are gone
+    # and we switch methods
+    purge_before = dt_util.utcnow() - timedelta(days=4)
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+        events_batch_size=1,
+        states_batch_size=1,
+    )
+    # Since we only allow one iteration, we won't
+    # check if we are finished this loop similar
+    # to the legacy method
+    assert not finished
+
+    with session_scope(hass=hass) as session:
+        states_with_event_id = session.query(States).filter(
+            States.event_id.is_not(None)
         )
-        # Since we only allow one iteration, we won't
-        # check if we are finished this loop similar
-        # to the legacy method
-        assert not finished
+        states_without_event_id = session.query(States).filter(
+            States.event_id.is_(None)
+        )
         assert states_with_event_id.count() == 0
         assert states_without_event_id.count() == 1
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
-            events_batch_size=100,
-            states_batch_size=100,
+
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+        events_batch_size=100,
+        states_batch_size=100,
+    )
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        states_with_event_id = session.query(States).filter(
+            States.event_id.is_not(None)
         )
-        assert finished
+        states_without_event_id = session.query(States).filter(
+            States.event_id.is_(None)
+        )
         assert states_with_event_id.count() == 0
         assert states_without_event_id.count() == 1
         _add_state_without_event_linkage(
@@ -1078,12 +1137,21 @@ async def test_purge_can_mix_legacy_and_new_format(
         )
         assert states_with_event_id.count() == 0
         assert states_without_event_id.count() == 2
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
+
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+    )
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        states_with_event_id = session.query(States).filter(
+            States.event_id.is_not(None)
         )
-        assert finished
+        states_without_event_id = session.query(States).filter(
+            States.event_id.is_(None)
+        )
         # The broken state without a timestamp
         # does not prevent future purges. Its ignored.
         assert states_with_event_id.count() == 0
@@ -1110,7 +1178,7 @@ async def test_purge_can_mix_legacy_and_new_format_with_detached_state(
     def _recreate_legacy_events_index():
         """Recreate the legacy events index since its no longer created on new instances."""
         migration._create_index(
-            recorder_mock.get_session, "states", "ix_states_event_id"
+            recorder_mock, recorder_mock.get_session, "states", "ix_states_event_id"
         )
         recorder_mock.use_legacy_events_index = True
 
@@ -1185,39 +1253,65 @@ async def test_purge_can_mix_legacy_and_new_format_with_detached_state(
         assert states_with_event_id.count() == 52
         assert states_without_event_id.count() == 51
 
-        purge_before = dt_util.utcnow() - timedelta(days=4)
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
+    purge_before = dt_util.utcnow() - timedelta(days=4)
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+    )
+    assert not finished
+
+    with session_scope(hass=hass) as session:
+        states_with_event_id = session.query(States).filter(
+            States.event_id.is_not(None)
         )
-        assert not finished
+        states_without_event_id = session.query(States).filter(
+            States.event_id.is_(None)
+        )
         assert states_with_event_id.count() == 0
         assert states_without_event_id.count() == 51
-        # At this point all the legacy states are gone
-        # and we switch methods
-        purge_before = dt_util.utcnow() - timedelta(days=4)
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
-            events_batch_size=1,
-            states_batch_size=1,
+
+    # At this point all the legacy states are gone
+    # and we switch methods
+    purge_before = dt_util.utcnow() - timedelta(days=4)
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+        events_batch_size=1,
+        states_batch_size=1,
+    )
+    # Since we only allow one iteration, we won't
+    # check if we are finished this loop similar
+    # to the legacy method
+    assert not finished
+
+    with session_scope(hass=hass) as session:
+        states_with_event_id = session.query(States).filter(
+            States.event_id.is_not(None)
         )
-        # Since we only allow one iteration, we won't
-        # check if we are finished this loop similar
-        # to the legacy method
-        assert not finished
+        states_without_event_id = session.query(States).filter(
+            States.event_id.is_(None)
+        )
         assert states_with_event_id.count() == 0
         assert states_without_event_id.count() == 1
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
-            events_batch_size=100,
-            states_batch_size=100,
+
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+        events_batch_size=100,
+        states_batch_size=100,
+    )
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        states_with_event_id = session.query(States).filter(
+            States.event_id.is_not(None)
         )
-        assert finished
+        states_without_event_id = session.query(States).filter(
+            States.event_id.is_(None)
+        )
         assert states_with_event_id.count() == 0
         assert states_without_event_id.count() == 1
         _add_state_without_event_linkage(
@@ -1225,12 +1319,21 @@ async def test_purge_can_mix_legacy_and_new_format_with_detached_state(
         )
         assert states_with_event_id.count() == 0
         assert states_without_event_id.count() == 2
-        finished = purge_old_data(
-            recorder_mock,
-            purge_before,
-            repack=False,
+
+    finished = purge_old_data(
+        recorder_mock,
+        purge_before,
+        repack=False,
+    )
+    assert finished
+
+    with session_scope(hass=hass) as session:
+        states_with_event_id = session.query(States).filter(
+            States.event_id.is_not(None)
         )
-        assert finished
+        states_without_event_id = session.query(States).filter(
+            States.event_id.is_(None)
+        )
         # The broken state without a timestamp
         # does not prevent future purges. Its ignored.
         assert states_with_event_id.count() == 0

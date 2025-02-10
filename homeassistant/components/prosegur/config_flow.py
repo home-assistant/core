@@ -2,13 +2,13 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any
 
 from pyprosegur.auth import COUNTRY, Auth
 from pyprosegur.installation import Installation
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -46,12 +46,13 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Prosegur Alarm."""
 
     VERSION = 1
-    entry: ConfigEntry
     auth: Auth
     user_input: dict
     contracts: list[dict[str, str]]
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         errors = {}
 
@@ -108,19 +109,18 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle initiation of re-authentication with Prosegur."""
-        self.entry = cast(
-            ConfigEntry,
-            self.hass.config_entries.async_get_entry(self.context["entry_id"]),
-        )
         return await self.async_step_reauth_confirm()
 
-    async def async_step_reauth_confirm(self, user_input=None):
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle re-authentication with Prosegur."""
-        errors = {}
+        errors: dict[str, str] = {}
 
+        reauth_entry = self._get_reauth_entry()
         if user_input:
             try:
-                user_input[CONF_COUNTRY] = self.entry.data[CONF_COUNTRY]
+                user_input[CONF_COUNTRY] = reauth_entry.data[CONF_COUNTRY]
                 self.auth, self.contracts = await validate_input(self.hass, user_input)
 
             except CannotConnect:
@@ -131,25 +131,20 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self.hass.config_entries.async_update_entry(
-                    self.entry,
-                    data={
-                        **self.entry.data,
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={
                         CONF_USERNAME: user_input[CONF_USERNAME],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                     },
                 )
-                self.hass.async_create_task(
-                    self.hass.config_entries.async_reload(self.entry.entry_id)
-                )
-                return self.async_abort(reason="reauth_successful")
 
         return self.async_show_form(
             step_id="reauth_confirm",
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_USERNAME, default=self.entry.data[CONF_USERNAME]
+                        CONF_USERNAME, default=reauth_entry.data[CONF_USERNAME]
                     ): str,
                     vol.Required(CONF_PASSWORD): str,
                 }

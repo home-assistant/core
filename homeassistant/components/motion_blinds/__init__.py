@@ -1,7 +1,6 @@
 """The motion_blinds component."""
 
 import asyncio
-from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
@@ -25,7 +24,6 @@ from .const import (
     KEY_SETUP_LOCK,
     KEY_UNSUB_STOP,
     PLATFORMS,
-    UPDATE_INTERVAL,
 )
 from .coordinator import DataUpdateCoordinatorMotionBlinds
 from .gateway import ConnectMotionGateway
@@ -94,13 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     }
 
     coordinator = DataUpdateCoordinatorMotionBlinds(
-        hass,
-        _LOGGER,
-        coordinator_info,
-        # Name of the data. For logging purposes.
-        name=entry.title,
-        # Polling interval. Will only be polled if there are subscribers.
-        update_interval=timedelta(seconds=UPDATE_INTERVAL),
+        hass, entry, _LOGGER, coordinator_info
     )
 
     # Fetch initial data so we have data when entities subscribe

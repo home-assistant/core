@@ -82,17 +82,6 @@ class TOTPConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
-        """Import config from yaml."""
-
-        await self.async_set_unique_id(import_info[CONF_TOKEN])
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=import_info.get(CONF_NAME, DEFAULT_NAME),
-            data=import_info,
-        )
-
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

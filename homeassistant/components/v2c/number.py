@@ -13,11 +13,11 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
+from homeassistant.const import EntityCategory, UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import V2CConfigEntry
-from .coordinator import V2CUpdateCoordinator
+from .coordinator import V2CConfigEntry, V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
 MIN_INTENSITY = 6
@@ -37,10 +37,33 @@ TRYDAN_NUMBER_SETTINGS = (
         key="intensity",
         translation_key="intensity",
         device_class=NumberDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         native_min_value=MIN_INTENSITY,
         native_max_value=MAX_INTENSITY,
         value_fn=lambda evse_data: evse_data.intensity,
         update_fn=lambda evse, value: evse.intensity(value),
+    ),
+    V2CSettingsNumberEntityDescription(
+        key="min_intensity",
+        translation_key="min_intensity",
+        device_class=NumberDeviceClass.CURRENT,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_min_value=MIN_INTENSITY,
+        native_max_value=MAX_INTENSITY,
+        value_fn=lambda evse_data: evse_data.min_intensity,
+        update_fn=lambda evse, value: evse.min_intensity(value),
+    ),
+    V2CSettingsNumberEntityDescription(
+        key="max_intensity",
+        translation_key="max_intensity",
+        device_class=NumberDeviceClass.CURRENT,
+        entity_category=EntityCategory.CONFIG,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        native_min_value=MIN_INTENSITY,
+        native_max_value=MAX_INTENSITY,
+        value_fn=lambda evse_data: evse_data.max_intensity,
+        update_fn=lambda evse, value: evse.max_intensity(value),
     ),
 )
 

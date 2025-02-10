@@ -31,7 +31,7 @@
           "mode": "[%key:common::config_flow::data::mode%]"
         },
         "data_description": {
-          "mode": "Select the mode you want to use to connect to Ecovacs. If you are unsure, select 'Cloud'.\n\nSelect 'Self-hosted' only if you have a working self-hosted instance."
+          "mode": "Select the mode you want to use to connect to Ecovacs. If you are unsure, select **Cloud**.\n\nSelect **Self-hosted** only if you have a working self-hosted instance."
         }
       }
     }
@@ -45,6 +45,9 @@
     "button": {
       "relocate": {
         "name": "Relocate"
+      },
+      "reset_lifespan_base_station_filter": {
+        "name": "Reset station filter lifespan"
       },
       "reset_lifespan_blade": {
         "name": "Reset blade lifespan"
@@ -65,7 +68,10 @@
         "name": "Reset unit care lifespan"
       },
       "reset_lifespan_side_brush": {
-        "name": "Reset side brushes lifespan"
+        "name": "Reset side brush lifespan"
+      },
+      "station_action_empty_dustbin": {
+        "name": "Empty dustbin"
       }
     },
     "event": {
@@ -91,6 +97,9 @@
       "clean_count": {
         "name": "Clean count"
       },
+      "cut_direction": {
+        "name": "Cut direction"
+      },
       "volume": {
         "name": "Volume"
       }
@@ -104,6 +113,9 @@
           }
         }
       },
+      "lifespan_base_station_filter": {
+        "name": "Station filter lifespan"
+      },
       "lifespan_blade": {
         "name": "Blade lifespan"
       },
@@ -116,8 +128,11 @@
       "lifespan_lens_brush": {
         "name": "Lens brush lifespan"
       },
+      "lifespan_main_brush": {
+        "name": "[%key:component::ecovacs::entity::sensor::lifespan_brush::name%]"
+      },
       "lifespan_side_brush": {
-        "name": "Side brushes lifespan"
+        "name": "Side brush lifespan"
       },
       "lifespan_unit_care": {
         "name": "Unit care lifespan"
@@ -133,6 +148,13 @@
       },
       "network_ssid": {
         "name": "Wi-Fi SSID"
+      },
+      "station_state": {
+        "name": "Station state",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "emptying_dustbin": "Emptying dustbin"
+        }
       },
       "stats_area": {
         "name": "Area cleaned"
@@ -229,32 +251,6 @@
     },
     "vacuum_raw_get_positions_not_supported": {
       "message": "Getting the positions of the chargers and the device itself is not supported"
-    }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there was a connection error when trying to import the YAML configuration.\n\nPlease verify that you have a stable internet connection and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_invalid_auth": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there was an authentication error when trying to import the YAML configuration.\n\nCorrect the YAML configuration and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there was an unknown error when trying to import the YAML configuration.\n\nEnsure the YAML configuration is correct and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_invalid_country_length": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there is an invalid country specified in the YAML configuration.\n\nPlease change the country to the [Alpha-2 code of your country]({countries_url}) and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_invalid_continent_length": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there is an invalid continent specified in the YAML configuration.\n\nPlease correct the continent to be one of {continent_list} and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_continent_not_match": {
-      "title": "The Ecovacs YAML configuration import failed",
-      "description": "Configuring Ecovacs using YAML is being removed but there is an unexpected continent specified in the YAML configuration.\n\nFrom the given country, the continent \"{continent}\" is expected. Change the continent and restart Home Assistant to try again or remove the Ecovacs YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually.\n\nIf the contintent \"{continent}\" is not applicable, please open an issue on [GitHub]({github_issue_url})."
     }
   },
   "selector": {

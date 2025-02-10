@@ -7,8 +7,8 @@ from typing import Any, cast
 
 import voluptuous as vol
 
+from homeassistant.components import fan, switch
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import CONF_NAME, DEGREE
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
@@ -16,12 +16,14 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
 )
 
-from .climate import (
+from .const import (
     CONF_AC_MODE,
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
+    CONF_MAX_TEMP,
     CONF_MIN_DUR,
+    CONF_MIN_TEMP,
     CONF_PRESETS,
     CONF_SENSOR,
     DEFAULT_TOLERANCE,
@@ -38,7 +40,7 @@ OPTIONS_SCHEMA = {
         )
     ),
     vol.Required(CONF_HEATER): selector.EntitySelector(
-        selector.EntitySelectorConfig(domain=SWITCH_DOMAIN)
+        selector.EntitySelectorConfig(domain=[fan.DOMAIN, switch.DOMAIN])
     ),
     vol.Required(
         CONF_COLD_TOLERANCE, default=DEFAULT_TOLERANCE
@@ -57,12 +59,22 @@ OPTIONS_SCHEMA = {
     vol.Optional(CONF_MIN_DUR): selector.DurationSelector(
         selector.DurationSelectorConfig(allow_negative=False)
     ),
+    vol.Optional(CONF_MIN_TEMP): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
+        )
+    ),
+    vol.Optional(CONF_MAX_TEMP): selector.NumberSelector(
+        selector.NumberSelectorConfig(
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
+        )
+    ),
 }
 
 PRESETS_SCHEMA = {
     vol.Optional(v): selector.NumberSelector(
         selector.NumberSelectorConfig(
-            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE
+            mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
     )
     for v in CONF_PRESETS.values()

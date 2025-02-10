@@ -1,5 +1,7 @@
 {
   "services": {
-    "invoke_pin": "mdi:alarm-panel"
+    "invoke_pin": {
+      "service": "mdi:alarm-panel"
+    }
   }
 }

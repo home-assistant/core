@@ -11,13 +11,12 @@ from jellyfin_apiclient_python.api import jellyfin_url
 from jellyfin_apiclient_python.client import JellyfinClient
 
 from homeassistant.components.media_player import BrowseError, MediaClass
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -48,7 +47,7 @@ from .const import (
     PLAYABLE_ITEM_TYPES,
     SUPPORTED_COLLECTION_TYPES,
 )
-from .models import JellyfinData
+from .coordinator import JellyfinConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,10 +55,10 @@ _LOGGER = logging.getLogger(__name__)
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
     """Set up Jellyfin media source."""
     # Currently only a single Jellyfin server is supported
-    entry = hass.config_entries.async_entries(DOMAIN)[0]
-    jellyfin_data: JellyfinData = hass.data[DOMAIN][entry.entry_id]
+    entry: JellyfinConfigEntry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator = entry.runtime_data
 
-    return JellyfinSource(hass, jellyfin_data.jellyfin_client, entry)
+    return JellyfinSource(hass, coordinator.api_client, entry)
 
 
 class JellyfinSource(MediaSource):
@@ -68,7 +67,7 @@ class JellyfinSource(MediaSource):
     name: str = "Jellyfin"
 
     def __init__(
-        self, hass: HomeAssistant, client: JellyfinClient, entry: ConfigEntry
+        self, hass: HomeAssistant, client: JellyfinClient, entry: JellyfinConfigEntry
     ) -> None:
         """Initialize the Jellyfin media source."""
         super().__init__(DOMAIN)

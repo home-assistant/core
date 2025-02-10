@@ -7,7 +7,8 @@ from imgw_pib import ApiError
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.imgw_pib.const import UPDATE_INTERVAL
+from homeassistant.components.imgw_pib.const import DOMAIN, UPDATE_INTERVAL
+from homeassistant.components.sensor import DOMAIN as SENSOR_PLATFORM
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -65,3 +66,27 @@ async def test_availability(
     assert state
     assert state.state != STATE_UNAVAILABLE
     assert state.state == "526.0"
+
+
+async def test_remove_entity(
+    hass: HomeAssistant,
+    mock_imgw_pib_client: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test removing entity."""
+    entity_id = "sensor.river_name_station_name_flood_alarm_level"
+    mock_config_entry.add_to_hass(hass)
+
+    entity_registry.async_get_or_create(
+        SENSOR_PLATFORM,
+        DOMAIN,
+        "123_flood_alarm_level",
+        suggested_object_id=entity_id.rsplit(".", maxsplit=1)[-1],
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None

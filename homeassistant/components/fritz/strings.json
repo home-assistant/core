@@ -7,7 +7,8 @@
         "description": "Discovered FRITZ!Box: {name}\n\nSet up FRITZ!Box Tools to control your {name}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
+          "password": "[%key:common::config_flow::data::password%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]"
         }
       },
       "reauth_confirm": {
@@ -18,7 +19,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Updating FRITZ!Box Tools - configuration",
         "description": "Update FRITZ!Box Tools configuration for: {host}.",
         "data": {
@@ -55,6 +56,7 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
+      "unknown_error": "[%key:common::config_flow::error::unknown%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "upnp_not_configured": "Missing UPnP settings on device.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
@@ -165,15 +167,18 @@
   },
   "exceptions": {
     "config_entry_not_found": {
-      "message": "Failed to call service \"{service}\". Config entry for target not found"
+      "message": "Failed to perform action \"{service}\". Config entry for target not found"
     },
-    "service_parameter_unknown": { "message": "Service or parameter unknown" },
-    "service_not_supported": { "message": "Service not supported" },
+    "service_parameter_unknown": { "message": "Action or parameter unknown" },
+    "service_not_supported": { "message": "Action not supported" },
     "error_refresh_hosts_info": {
       "message": "Error refreshing hosts info"
     },
     "unable_to_connect": {
       "message": "Unable to establish a connection"
+    },
+    "update_failed": {
+      "message": "Error while uptaing the data: {error}"
     }
   }
 }

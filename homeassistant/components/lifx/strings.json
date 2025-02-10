@@ -26,7 +26,8 @@
     "abort": {
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {
@@ -208,7 +209,7 @@
         },
         "palette": {
           "name": "Palette",
-          "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-900) values to use for this effect. Overrides the theme attribute."
+          "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-9000) values to use for this effect. Overrides the theme attribute."
         },
         "theme": {
           "name": "[%key:component::lifx::entity::select::theme::name%]",
@@ -220,9 +221,61 @@
         }
       }
     },
+    "effect_sky": {
+      "name": "Sky effect",
+      "description": "Starts the firmware-based Sky effect on LIFX Ceiling.",
+      "fields": {
+        "speed": {
+          "name": "Speed",
+          "description": "How long the Sunrise and Sunset sky types will take to complete. For the Cloud sky type, it is the speed of the clouds across the device."
+        },
+        "sky_type": {
+          "name": "Sky type",
+          "description": "The style of sky that will be animated by the effect."
+        },
+        "cloud_saturation_min": {
+          "name": "Cloud saturation Minimum",
+          "description": "Minimum cloud saturation."
+        },
+        "cloud_saturation_max": {
+          "name": "Cloud Saturation maximum",
+          "description": "Maximum cloud saturation."
+        },
+        "palette": {
+          "name": "Palette",
+          "description": "List of 1 to 6 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-9000) values to use for this effect."
+        },
+        "power_on": {
+          "name": "Power on",
+          "description": "[%key:component::lifx::services::effect_move::fields::power_on::description%]"
+        }
+      }
+    },
     "effect_stop": {
       "name": "Stop effect",
       "description": "Stops a running effect."
+    },
+    "paint_theme": {
+      "name": "Paint Theme",
+      "description": "Paint either a provided theme or custom palette across one or more LIFX lights.",
+      "fields": {
+        "palette": {
+          "name": "Palette",
+          "description": "List of at least 2 and at most 16 colors as hue (0-360), saturation (0-100), brightness (0-100) and kelvin (1500-9000) values to paint across the target lights. Overrides the theme attribute."
+        },
+        "theme": {
+          "name": "[%key:component::lifx::entity::select::theme::name%]",
+          "description": "Predefined color theme to paint. Overridden by the palette attribute."
+        },
+        "transition": {
+          "name": "Transition",
+          "description": "Duration in seconds to paint the theme."
+        },
+        "power_on": {
+          "name": "Power on",
+          "description": "Powered off lights will be turned on before painting the theme."
+        }
+      }
     }
   }
 }

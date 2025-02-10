@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 from pynzbgetapi import NZBGetAPIException
+import pytest
 
 from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -13,7 +14,8 @@ from . import ENTRY_CONFIG, _patch_version, init_integration
 from tests.common import MockConfigEntry
 
 
-async def test_unload_entry(hass: HomeAssistant, nzbget_api) -> None:
+@pytest.mark.usefixtures("nzbget_api")
+async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test successful unload of entry."""
     entry = await init_integration(hass)
 

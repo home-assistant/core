@@ -25,8 +25,8 @@ blueprint:
           filter:
             integration: mobile_app
 
-trigger:
-  platform: state
+triggers:
+  trigger: state
   entity_id: !input person_entity
 
 variables:
@@ -36,13 +36,13 @@ variables:
   person_entity: !input person_entity
   person_name: "{{ states[person_entity].name }}"
 
-condition:
+conditions:
   condition: template
   # The first case handles leaving the Home zone which has a special state when zoning called 'home'.
   # The second case handles leaving all other zones.
   value_template: "{{ zone_entity == 'zone.home' and trigger.from_state.state == 'home' and trigger.to_state.state != 'home' or trigger.from_state.state == zone_state and trigger.to_state.state != zone_state }}"
 
-action:
+actions:
   - alias: "Notify that a person has left the zone"
     domain: mobile_app
     type: notify

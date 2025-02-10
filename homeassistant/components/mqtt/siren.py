@@ -28,9 +28,10 @@ from homeassistant.const import (
     CONF_PAYLOAD_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.json import json_dumps
+from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType, VolSchemaType
 from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads_object
@@ -45,15 +46,16 @@ from .const import (
     PAYLOAD_EMPTY_JSON,
     PAYLOAD_NONE,
 )
-from .mixins import MqttEntity, async_setup_entity_entry_helper
+from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,
     MqttValueTemplate,
     PublishPayloadType,
     ReceiveMessage,
-    ReceivePayloadType,
 )
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Siren"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -215,10 +217,7 @@ class MqttSiren(MqttEntity, SirenEntity):
             try:
                 json_payload = json_loads_object(payload)
                 _LOGGER.debug(
-                    (
-                        "JSON payload detected after processing payload '%s' on"
-                        " topic %s"
-                    ),
+                    "JSON payload detected after processing payload '%s' on topic %s",
                     json_payload,
                     msg.topic,
                 )

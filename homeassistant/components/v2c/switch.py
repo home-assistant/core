@@ -20,8 +20,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import V2CConfigEntry
-from .coordinator import V2CUpdateCoordinator
+from .coordinator import V2CConfigEntry, V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -111,12 +110,12 @@ class V2CSwitchEntity(V2CBaseEntity, SwitchEntity):
         """Return the state of the EVSE switch."""
         return self.entity_description.value_fn(self.data)
 
-    async def async_turn_on(self):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the EVSE switch."""
         await self.entity_description.turn_on_fn(self.coordinator.evse)
         await self.coordinator.async_request_refresh()
 
-    async def async_turn_off(self):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the EVSE switch."""
         await self.entity_description.turn_off_fn(self.coordinator.evse)
         await self.coordinator.async_request_refresh()

@@ -284,23 +284,21 @@ async def test_config_flow_reauth_success(
         "homeassistant.components.permobil.config_flow.MyPermobil",
         return_value=my_permobil,
     ):
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": "reauth", "entry_id": mock_entry.entry_id},
-        )
+        result = await mock_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email_code"
     assert result["errors"] == {}
 
-    # request request new token
+    # request new token
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_CODE: reauth_code},
     )
 
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_entry.data == {
         CONF_EMAIL: MOCK_EMAIL,
         CONF_REGION: MOCK_URL,
         CONF_CODE: reauth_code,
@@ -326,10 +324,7 @@ async def test_config_flow_reauth_fail_invalid_code(
         "homeassistant.components.permobil.config_flow.MyPermobil",
         return_value=my_permobil,
     ):
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": "reauth", "entry_id": mock_entry.entry_id},
-        )
+        result = await mock_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "email_code"
@@ -357,16 +352,11 @@ async def test_config_flow_reauth_fail_code_request(
     )
     mock_entry.add_to_hass(hass)
     # test the reauth and have request_application_code fail leading to an abort
-    my_permobil.request_application_code.side_effect = MyPermobilAPIException
-    reauth_entry = hass.config_entries.async_entries(config_flow.DOMAIN)[0]
     with patch(
         "homeassistant.components.permobil.config_flow.MyPermobil",
         return_value=my_permobil,
     ):
-        result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
-            context={"source": "reauth", "entry_id": reauth_entry.entry_id},
-        )
+        result = await mock_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unknown"

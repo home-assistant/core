@@ -22,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
@@ -88,7 +88,7 @@ async def async_legacy_migration(
         hass, hosts_by_serial, existing_serials, legacy_entry
     )
     if missing_discovery_count:
-        _LOGGER.info(
+        _LOGGER.debug(
             "Migration in progress, waiting to discover %s device(s)",
             missing_discovery_count,
         )
@@ -211,7 +211,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except socket.gaierror as ex:
         connection.async_stop()
         raise ConfigEntryNotReady(f"Could not resolve {host}: {ex}") from ex
-    coordinator = LIFXUpdateCoordinator(hass, connection, entry.title)
+    coordinator = LIFXUpdateCoordinator(hass, entry, connection)
     coordinator.async_setup()
     try:
         await coordinator.async_config_entry_first_refresh()

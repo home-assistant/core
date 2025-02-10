@@ -1,9 +1,18 @@
 """Mealie tests configuration."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from aiomealie import About, Mealplan, MealplanResponse, UserInfo
+from aiomealie import (
+    About,
+    Mealplan,
+    MealplanResponse,
+    Recipe,
+    ShoppingItemsResponse,
+    ShoppingListsResponse,
+    Statistics,
+    UserInfo,
+)
 from mashumaro.codecs.orjson import ORJSONDecoder
 import pytest
 
@@ -11,7 +20,9 @@ from homeassistant.components.mealie.const import DOMAIN
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST
 
 from tests.common import MockConfigEntry, load_fixture
-from tests.components.smhi.common import AsyncMock
+
+SHOPPING_LIST_ID = "list-id-1"
+SHOPPING_ITEM_NOTE = "Shopping Item 1"
 
 
 @pytest.fixture
@@ -50,6 +61,21 @@ def mock_mealie_client() -> Generator[AsyncMock]:
         client.get_about.return_value = About.from_json(
             load_fixture("about.json", DOMAIN)
         )
+        recipe = Recipe.from_json(load_fixture("get_recipe.json", DOMAIN))
+        client.get_recipe.return_value = recipe
+        client.import_recipe.return_value = recipe
+        client.get_shopping_lists.return_value = ShoppingListsResponse.from_json(
+            load_fixture("get_shopping_lists.json", DOMAIN)
+        )
+        client.get_shopping_items.return_value = ShoppingItemsResponse.from_json(
+            load_fixture("get_shopping_items.json", DOMAIN)
+        )
+        client.get_statistics.return_value = Statistics.from_json(
+            load_fixture("statistics.json", DOMAIN)
+        )
+        mealplan = Mealplan.from_json(load_fixture("mealplan.json", DOMAIN))
+        client.random_mealplan.return_value = mealplan
+        client.set_mealplan.return_value = mealplan
         yield client
 
 

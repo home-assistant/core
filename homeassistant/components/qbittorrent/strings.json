@@ -26,7 +26,7 @@
       "upload_speed": {
         "name": "Upload speed"
       },
-      "transmission_status": {
+      "current_status": {
         "name": "Status",
         "state": {
           "idle": "[%key:common::state::idle%]",
@@ -36,16 +36,25 @@
         }
       },
       "active_torrents": {
-        "name": "Active torrents"
+        "name": "Active torrents",
+        "unit_of_measurement": "torrents"
       },
       "inactive_torrents": {
-        "name": "Inactive torrents"
+        "name": "Inactive torrents",
+        "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
       },
       "paused_torrents": {
-        "name": "Paused torrents"
+        "name": "Paused torrents",
+        "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
       },
       "all_torrents": {
-        "name": "All torrents"
+        "name": "All torrents",
+        "unit_of_measurement": "[%key:component::qbittorrent::entity::sensor::active_torrents::unit_of_measurement%]"
+      }
+    },
+    "switch": {
+      "alternative_speed": {
+        "name": "Alternative speed"
       }
     }
   },

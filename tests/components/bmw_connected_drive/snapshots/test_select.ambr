@@ -8,6 +8,7 @@
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -44,6 +45,7 @@
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'context': <ANY>,
@@ -141,6 +143,7 @@
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -177,6 +180,7 @@
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'context': <ANY>,
@@ -274,6 +278,7 @@
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -310,6 +315,7 @@
       'options': list([
         'immediate_charging',
         'delayed_charging',
+        'no_action',
       ]),
     }),
     'context': <ANY>,

@@ -20,7 +20,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import UpnpConfigEntry
 from .const import (
     BYTES_RECEIVED,
     BYTES_SENT,
@@ -38,6 +37,7 @@ from .const import (
     ROUTER_UPTIME,
     WAN_STATUS,
 )
+from .coordinator import UpnpConfigEntry
 from .entity import UpnpEntity, UpnpEntityDescription
 
 
@@ -89,6 +89,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     UpnpSensorEntityDescription(
         key=ROUTER_UPTIME,
         translation_key="uptime",
+        device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,

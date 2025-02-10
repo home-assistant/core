@@ -17,6 +17,23 @@
     }
   },
   "issues": {
+    "issue_addon_boot_fail": {
+      "title": "Add-on failed to start at boot",
+      "fix_flow": {
+        "step": {
+          "fix_menu": {
+            "description": "Add-on {addon} is set to start at boot but failed to start. Usually this occurs when the configuration is incorrect or the same port is used in multiple add-ons. Check the configuration as well as logs for {addon} and Supervisor.\n\nUse Start to try again or Disable to turn off the start at boot option.",
+            "menu_options": {
+              "addon_execute_start": "Start",
+              "addon_disable_boot": "Disable"
+            }
+          }
+        },
+        "abort": {
+          "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."
+        }
+      }
+    },
     "issue_addon_detached_addon_missing": {
       "title": "Missing repository for an installed add-on",
       "description": "Repository for add-on {addon} is missing. This means it will not get updates, and backups may not be restored correctly as the supervisor may not be able to build/download the resources required.\n\nPlease check the [add-on's documentation]({addon_url}) for installation instructions and add the repository to the store."
@@ -26,7 +43,7 @@
       "fix_flow": {
         "step": {
           "addon_execute_remove": {
-            "description": "Add-on {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the supervisor may not be able to build/download the resources required.\n\nClicking submit will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
+            "description": "Add-on {addon} has been removed from the repository it was installed from. This means it will not get updates, and backups may not be restored correctly as the supervisor may not be able to build/download the resources required.\n\nSelecting **Submit** will uninstall this deprecated add-on. Alternatively, you can check [Home Assistant help]({help_url}) and the [community forum]({community_url}) for alternatives to migrate to."
           }
         },
         "abort": {
@@ -76,7 +93,7 @@
             }
           },
           "system_adopt_data_disk": {
-            "description": "Select submit to make `{reference}` the active data disk. The one and only.\n\nYou won't have access anymore to the current Home Assistant data (will be marked as inactive data disk). After reboot, your system will be in the state of the Home Assistant data on `{reference}`."
+            "description": "Select **Submit** to make `{reference}` the active data disk. The one and only.\n\nYou won't have access anymore to the current Home Assistant data (will be marked as inactive data disk). After reboot, your system will be in the state of the Home Assistant data on `{reference}`."
           }
         },
         "abort": {
@@ -208,6 +225,10 @@
     "unsupported_virtualization_image": {
       "title": "Unsupported system - Incorrect OS image for virtualization",
       "description": "System is unsupported because the Home Assistant OS image in use is not intended for use in a virtualized environment. Use the link to learn more and how to fix this."
+    },
+    "update_service_deprecated": {
+      "title": "Deprecated update add-on action",
+      "description": "The update add-on action has been deprecated and will be removed in 2025.5. Please use the update entity and the respective action to update the add-on instead."
     }
   },
   "entity": {
@@ -253,60 +274,60 @@
       "fields": {
         "addon": {
           "name": "Add-on",
-          "description": "The add-on slug."
+          "description": "The add-on to start."
         }
       }
     },
     "addon_restart": {
-      "name": "Restart add-on.",
+      "name": "Restart add-on",
       "description": "Restarts an add-on.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to restart."
         }
       }
     },
     "addon_stdin": {
-      "name": "Write data to add-on stdin.",
-      "description": "Writes data to add-on stdin.",
+      "name": "Write data to add-on stdin",
+      "description": "Writes data to the add-on's standard input.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to write to."
         }
       }
     },
     "addon_stop": {
-      "name": "Stop add-on.",
+      "name": "Stop add-on",
       "description": "Stops an add-on.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to stop."
         }
       }
     },
     "addon_update": {
-      "name": "Update add-on.",
-      "description": "Updates an add-on. This service should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.",
+      "name": "Update add-on",
+      "description": "Updates an add-on. This action should be used with caution since add-on updates can contain breaking changes. It is highly recommended that you review release notes/change logs before updating an add-on.",
       "fields": {
         "addon": {
           "name": "[%key:component::hassio::services::addon_start::fields::addon::name%]",
-          "description": "[%key:component::hassio::services::addon_start::fields::addon::description%]"
+          "description": "The add-on to update."
         }
       }
     },
     "host_reboot": {
-      "name": "Reboot the host system.",
+      "name": "Reboot the host system",
       "description": "Reboots the host system."
     },
     "host_shutdown": {
-      "name": "Power off the host system.",
+      "name": "Power off the host system",
       "description": "Powers off the host system."
     },
     "backup_full": {
-      "name": "Create a full backup.",
+      "name": "Create a full backup",
       "description": "Creates a full backup.",
       "fields": {
         "name": {
@@ -332,7 +353,7 @@
       }
     },
     "backup_partial": {
-      "name": "Create a partial backup.",
+      "name": "Create a partial backup",
       "description": "Creates a partial backup.",
       "fields": {
         "homeassistant": {
@@ -341,7 +362,7 @@
         },
         "addons": {
           "name": "Add-ons",
-          "description": "List of add-ons to include in the backup. Use the name slug of the add-on."
+          "description": "List of add-ons to include in the backup. Use the name slug of each add-on."
         },
         "folders": {
           "name": "Folders",
@@ -370,7 +391,7 @@
       }
     },
     "restore_full": {
-      "name": "Restore from full backup.",
+      "name": "Restore from full backup",
       "description": "Restores from full backup.",
       "fields": {
         "slug": {
@@ -384,7 +405,7 @@
       }
     },
     "restore_partial": {
-      "name": "Restore from partial backup.",
+      "name": "Restore from partial backup",
       "description": "Restores from a partial backup.",
       "fields": {
         "slug": {
@@ -397,11 +418,11 @@
         },
         "folders": {
           "name": "[%key:component::hassio::services::backup_partial::fields::folders::name%]",
-          "description": "[%key:component::hassio::services::backup_partial::fields::folders::description%]"
+          "description": "List of directories to restore from the backup."
         },
         "addons": {
           "name": "[%key:component::hassio::services::backup_partial::fields::addons::name%]",
-          "description": "[%key:component::hassio::services::backup_partial::fields::addons::description%]"
+          "description": "List of add-ons to restore from the backup. Use the name slug of each add-on."
         },
         "password": {
           "name": "[%key:common::config_flow::data::password%]",

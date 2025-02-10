@@ -1,6 +1,7 @@
 """Test the Logitech Harmony Hub remote."""
 
 from datetime import timedelta
+from typing import Any
 
 from aioharmony.const import SendCommandDevice
 
@@ -387,7 +388,9 @@ async def test_sync(
     mock_write_config.assert_called()
 
 
-async def _send_commands_and_wait(hass, service_data):
+async def _send_commands_and_wait(
+    hass: HomeAssistant, service_data: dict[str, Any]
+) -> None:
     await hass.services.async_call(
         REMOTE_DOMAIN,
         SERVICE_SEND_COMMAND,

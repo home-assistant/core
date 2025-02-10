@@ -1,0 +1,746 @@
+{
+  "nodeId": 36,
+  "index": 0,
+  "installerIcon": 3840,
+  "userIcon": 3840,
+  "status": 4,
+  "ready": true,
+  "isListening": false,
+  "isRouting": true,
+  "manufacturerId": 600,
+  "productId": 4232,
+  "productType": 3,
+  "firmwareVersion": "2.94",
+  "zwavePlusVersion": 1,
+  "deviceConfig": {
+    "filename": "/usr/src/app/store/.config-db/devices/0x0258/nas-ab01z.json",
+    "isEmbedded": true,
+    "manufacturer": "Shenzhen Neo Electronics Co., Ltd.",
+    "manufacturerId": 600,
+    "label": "NAS-AB01Z",
+    "description": "Siren Alarm",
+    "devices": [
+      {
+        "productType": 3,
+        "productId": 136
+      },
+      {
+        "productType": 3,
+        "productId": 4232
+      },
+      {
+        "productType": 3,
+        "productId": 8328
+      },
+      {
+        "productType": 3,
+        "productId": 24712
+      }
+    ],
+    "firmwareVersion": {
+      "min": "0.0",
+      "max": "255.255"
+    },
+    "preferred": false,
+    "associations": {},
+    "paramInformation": {
+      "_map": {}
+    }
+  },
+  "label": "NAS-AB01Z",
+  "interviewAttempts": 0,
+  "isFrequentListening": "1000ms",
+  "maxDataRate": 100000,
+  "supportedDataRates": [40000, 100000],
+  "protocolVersion": 3,
+  "supportsBeaming": true,
+  "supportsSecurity": false,
+  "nodeType": 1,
+  "zwavePlusNodeType": 0,
+  "zwavePlusRoleType": 7,
+  "deviceClass": {
+    "basic": {
+      "key": 4,
+      "label": "Routing End Node"
+    },
+    "generic": {
+      "key": 16,
+      "label": "Binary Switch"
+    },
+    "specific": {
+      "key": 5,
+      "label": "Siren"
+    }
+  },
+  "interviewStage": "Complete",
+  "deviceDatabaseUrl": "https://devices.zwave-js.io/?jumpTo=0x0258:0x0003:0x1088:2.94",
+  "statistics": {
+    "commandsTX": 15,
+    "commandsRX": 7,
+    "commandsDroppedRX": 0,
+    "commandsDroppedTX": 0,
+    "timeoutResponse": 0,
+    "rtt": 582.5,
+    "lastSeen": "2024-10-01T10:22:24.457Z",
+    "lwr": {
+      "repeaters": [],
+      "protocolDataRate": 2
+    }
+  },
+  "isControllerNode": false,
+  "keepAwake": false,
+  "lastSeen": "2024-09-30T15:07:11.320Z",
+  "protocol": 0,
+  "values": [
+    {
+      "endpoint": 0,
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "currentValue",
+      "propertyName": "currentValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Current value",
+        "stateful": true,
+        "secret": false
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 37,
+      "commandClassName": "Binary Switch",
+      "property": "targetValue",
+      "propertyName": "targetValue",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": true,
+        "label": "Target value",
+        "valueChangeOptions": ["transitionDuration"],
+        "stateful": true,
+        "secret": false
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 1,
+      "propertyName": "Alarm Volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Volume",
+        "default": 2,
+        "min": 1,
+        "max": 3,
+        "states": {
+          "1": "Low",
+          "2": "Middle",
+          "3": "High"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 2,
+      "propertyName": "Alarm Duration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Duration",
+        "default": 2,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Off",
+          "1": "30 seconds",
+          "2": "1 minute",
+          "3": "5 minutes",
+          "255": "Always on"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 3,
+      "propertyName": "Doorbell Duration",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Doorbell Duration",
+        "default": 1,
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "Off",
+          "255": "Always"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 16
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 4,
+      "propertyName": "Doorbell Volume",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Doorbell Volume",
+        "default": 2,
+        "min": 1,
+        "max": 3,
+        "states": {
+          "1": "Low",
+          "2": "Middle",
+          "3": "High"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 5,
+      "propertyName": "Alarm Sound Selection",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm Sound Selection",
+        "default": 10,
+        "min": 1,
+        "max": 10,
+        "states": {
+          "1": "Doorbell",
+          "2": "F\u00fcr Elise",
+          "3": "Westminster Chimes",
+          "4": "Ding Dong",
+          "5": "William Tell",
+          "6": "Rondo Alla Turca",
+          "7": "Police Siren",
+          "8": "Evacuation",
+          "9": "Beep Beep",
+          "10": "Beep"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 6,
+      "propertyName": "Doorbell Sound Selection",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Doorbell Sound Selection",
+        "default": 9,
+        "min": 1,
+        "max": 10,
+        "states": {
+          "1": "Doorbell",
+          "2": "F\u00fcr Elise",
+          "3": "Westminster Chimes",
+          "4": "Ding Dong",
+          "5": "William Tell",
+          "6": "Rondo Alla Turca",
+          "7": "Police Siren",
+          "8": "Evacuation",
+          "9": "Beep Beep",
+          "10": "Beep"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 10
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 7,
+      "propertyName": "Default Siren Sound",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Default Siren Sound",
+        "default": 1,
+        "min": 1,
+        "max": 2,
+        "states": {
+          "1": "Alarm Sound",
+          "2": "Doorbell Sound"
+        },
+        "valueSize": 1,
+        "format": 0,
+        "allowManualEntry": true,
+        "isFromConfig": true
+      },
+      "value": 2
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 8,
+      "propertyName": "Alarm LED",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Alarm LED",
+        "default": 1,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 1
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 112,
+      "commandClassName": "Configuration",
+      "property": 9,
+      "propertyName": "Doorbell LED",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Doorbell LED",
+        "default": 0,
+        "min": 0,
+        "max": 1,
+        "states": {
+          "0": "Disable",
+          "1": "Enable"
+        },
+        "valueSize": 1,
+        "format": 1,
+        "allowManualEntry": false,
+        "isFromConfig": true
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "Siren",
+      "propertyKey": "Siren status",
+      "propertyName": "Siren",
+      "propertyKeyName": "Siren status",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Siren status",
+        "ccSpecific": {
+          "notificationType": 14
+        },
+        "min": 0,
+        "max": 255,
+        "states": {
+          "0": "idle",
+          "1": "Siren active"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmType",
+      "propertyName": "alarmType",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Type",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 113,
+      "commandClassName": "Notification",
+      "property": "alarmLevel",
+      "propertyName": "alarmLevel",
+      "ccVersion": 8,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Alarm Level",
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "manufacturerId",
+      "propertyName": "manufacturerId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Manufacturer ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 600
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productType",
+      "propertyName": "productType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product type",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 3
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 114,
+      "commandClassName": "Manufacturer Specific",
+      "property": "productId",
+      "propertyName": "productId",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Product ID",
+        "min": 0,
+        "max": 65535,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 4232
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "level",
+      "propertyName": "level",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Battery level",
+        "min": 0,
+        "max": 100,
+        "unit": "%",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 89
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 128,
+      "commandClassName": "Battery",
+      "property": "isLow",
+      "propertyName": "isLow",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "boolean",
+        "readable": true,
+        "writeable": false,
+        "label": "Low battery level",
+        "stateful": true,
+        "secret": false
+      },
+      "value": false
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "libraryType",
+      "propertyName": "libraryType",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Library type",
+        "states": {
+          "0": "Unknown",
+          "1": "Static Controller",
+          "2": "Controller",
+          "3": "Enhanced Slave",
+          "4": "Slave",
+          "5": "Installer",
+          "6": "Routing Slave",
+          "7": "Bridge Controller",
+          "8": "Device under Test",
+          "9": "N/A",
+          "10": "AV Remote",
+          "11": "AV Device"
+        },
+        "stateful": true,
+        "secret": false
+      },
+      "value": 6
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "protocolVersion",
+      "propertyName": "protocolVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "string",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave protocol version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": "4.38"
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "firmwareVersions",
+      "propertyName": "firmwareVersions",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "string[]",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip firmware versions",
+        "stateful": true,
+        "secret": false
+      },
+      "value": ["2.94"]
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 134,
+      "commandClassName": "Version",
+      "property": "hardwareVersion",
+      "propertyName": "hardwareVersion",
+      "ccVersion": 2,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": false,
+        "label": "Z-Wave chip hardware version",
+        "stateful": true,
+        "secret": false
+      },
+      "value": 48
+    },
+    {
+      "endpoint": 0,
+      "commandClass": 135,
+      "commandClassName": "Indicator",
+      "property": "value",
+      "propertyName": "value",
+      "ccVersion": 1,
+      "metadata": {
+        "type": "number",
+        "readable": true,
+        "writeable": true,
+        "label": "Indicator value",
+        "ccSpecific": {
+          "indicatorId": 0
+        },
+        "min": 0,
+        "max": 255,
+        "stateful": true,
+        "secret": false
+      },
+      "value": 0
+    }
+  ],
+  "endpoints": [
+    {
+      "nodeId": 36,
+      "index": 0,
+      "installerIcon": 3840,
+      "userIcon": 3840,
+      "deviceClass": {
+        "basic": {
+          "key": 4,
+          "label": "Routing End Node"
+        },
+        "generic": {
+          "key": 16,
+          "label": "Binary Switch"
+        },
+        "specific": {
+          "key": 5,
+          "label": "Siren"
+        }
+      },
+      "commandClasses": [
+        {
+          "id": 37,
+          "name": "Binary Switch",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 133,
+          "name": "Association",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 89,
+          "name": "Association Group Information",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 128,
+          "name": "Battery",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 114,
+          "name": "Manufacturer Specific",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 115,
+          "name": "Powerlevel",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 134,
+          "name": "Version",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 94,
+          "name": "Z-Wave Plus Info",
+          "version": 2,
+          "isSecure": false
+        },
+        {
+          "id": 90,
+          "name": "Device Reset Locally",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 112,
+          "name": "Configuration",
+          "version": 1,
+          "isSecure": false
+        },
+        {
+          "id": 113,
+          "name": "Notification",
+          "version": 8,
+          "isSecure": false
+        },
+        {
+          "id": 135,
+          "name": "Indicator",
+          "version": 1,
+          "isSecure": false
+        }
+      ]
+    }
+  ]
+}

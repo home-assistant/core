@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import datetime
 from types import MappingProxyType
 from typing import Any
 
@@ -28,6 +29,7 @@ from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     TimestampDataUpdateCoordinator,
 )
+from homeassistant.util.dt import parse_datetime
 from homeassistant.util.unit_conversion import (
     DistanceConverter,
     PressureConverter,
@@ -137,6 +139,11 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfLength.METERS,
         unit_convert=UnitOfLength.MILES,
     ),
+    NWSSensorEntityDescription(
+        key="timestamp",
+        name="Latest Observation Time",
+        device_class=SensorDeviceClass.TIMESTAMP,
+    ),
 )
 
 
@@ -190,7 +197,7 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
         )
 
     @property
-    def native_value(self) -> float | None:
+    def native_value(self) -> float | datetime | None:
         """Return the state."""
         if (
             not (observation := self._nws.observation)
@@ -223,4 +230,6 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
             return round(value, 1)
         if unit_of_measurement == PERCENTAGE:
             return round(value)
+        if self.device_class == SensorDeviceClass.TIMESTAMP:
+            return parse_datetime(value)
         return value

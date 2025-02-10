@@ -6,5 +6,5 @@
   "documentation": "https://www.home-assistant.io/integrations/vera",
   "iot_class": "local_polling",
   "loggers": ["pyvera"],
-  "requirements": ["pyvera==0.3.13"]
+  "requirements": ["pyvera==0.3.15"]
 }

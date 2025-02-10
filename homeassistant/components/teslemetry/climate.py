@@ -74,7 +74,6 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
         | ClimateEntityFeature.PRESET_MODE
     )
     _attr_preset_modes = ["off", "keep", "dog", "camp"]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -84,8 +83,10 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     ) -> None:
         """Initialize the climate."""
         self.scoped = Scope.VEHICLE_CMDS in scopes
+
         if not self.scoped:
             self._attr_supported_features = ClimateEntityFeature(0)
+            self._attr_hvac_modes = []
 
         super().__init__(
             data,
@@ -95,12 +96,14 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         value = self.get("climate_state_is_climate_on")
-        if value is None:
-            self._attr_hvac_mode = None
-        elif value:
+        if value:
             self._attr_hvac_mode = HVACMode.HEAT_COOL
         else:
             self._attr_hvac_mode = HVACMode.OFF
+
+        # If not scoped, prevent the user from changing the HVAC mode by making it the only option
+        if self._attr_hvac_mode and not self.scoped:
+            self._attr_hvac_modes = [self._attr_hvac_mode]
 
         self._attr_current_temperature = self.get("climate_state_inside_temp")
         self._attr_target_temperature = self.get(f"climate_state_{self.key}_setting")
@@ -115,7 +118,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
 
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.auto_conditioning_start())
 
@@ -125,7 +128,7 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
     async def async_turn_off(self) -> None:
         """Set the climate state to off."""
 
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await handle_vehicle_command(self.api.auto_conditioning_stop())
 
@@ -135,7 +138,6 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
-
         if temp := kwargs.get(ATTR_TEMPERATURE):
             await self.wake_up_if_asleep()
             await handle_vehicle_command(
@@ -168,9 +170,8 @@ class TeslemetryClimateEntity(TeslemetryVehicleEntity, ClimateEntity):
             )
         )
         self._attr_preset_mode = preset_mode
-        if preset_mode == self._attr_preset_modes[0]:
-            self._attr_hvac_mode = HVACMode.OFF
-        else:
+        if preset_mode != self._attr_preset_modes[0]:
+            # Changing preset mode will also turn on climate
             self._attr_hvac_mode = HVACMode.HEAT_COOL
         self.async_write_ha_state()
 
@@ -181,10 +182,18 @@ COP_MODES = {
     "FanOnly": HVACMode.FAN_ONLY,
 }
 
+# String to celsius
 COP_LEVELS = {
     "Low": 30,
     "Medium": 35,
     "High": 40,
+}
+
+# Celsius to IntEnum
+TEMP_LEVELS = {
+    30: CabinOverheatProtectionTemp.LOW,
+    35: CabinOverheatProtectionTemp.MEDIUM,
+    40: CabinOverheatProtectionTemp.HIGH,
 }
 
 
@@ -193,11 +202,11 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
 
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 5
-    _attr_min_temp = 30
-    _attr_max_temp = 40
+    _attr_min_temp = COP_LEVELS["Low"]
+    _attr_max_temp = COP_LEVELS["High"]
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(COP_MODES.values())
-    _enable_turn_on_off_backwards_compatibility = False
+
     _attr_entity_registry_enabled_default = False
 
     def __init__(
@@ -207,19 +216,20 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
     ) -> None:
         """Initialize the climate."""
 
+        self.scoped = Scope.VEHICLE_CMDS in scopes
+        if self.scoped:
+            self._attr_supported_features = (
+                ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
+            )
+        else:
+            self._attr_supported_features = ClimateEntityFeature(0)
+            self._attr_hvac_modes = []
+
         super().__init__(data, "climate_state_cabin_overheat_protection")
 
-        # Supported Features
-        self._attr_supported_features = (
-            ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
-        )
-        if self.get("vehicle_config_cop_user_set_temp_supported"):
+        # Supported Features from data
+        if self.scoped and self.get("vehicle_config_cop_user_set_temp_supported"):
             self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
-
-        # Scopes
-        self.scoped = Scope.VEHICLE_CMDS in scopes
-        if not self.scoped:
-            self._attr_supported_features = ClimateEntityFeature(0)
 
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
@@ -228,6 +238,10 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
             self._attr_hvac_mode = None
         else:
             self._attr_hvac_mode = COP_MODES.get(state)
+
+        # If not scoped, prevent the user from changing the HVAC mode by making it the only option
+        if self._attr_hvac_mode and not self.scoped:
+            self._attr_hvac_modes = [self._attr_hvac_mode]
 
         if (level := self.get("climate_state_cop_activation_temperature")) is None:
             self._attr_target_temperature = None
@@ -246,18 +260,11 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the climate temperature."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
 
-        if not (temp := kwargs.get(ATTR_TEMPERATURE)):
-            return
-
-        if temp == 30:
-            cop_mode = CabinOverheatProtectionTemp.LOW
-        elif temp == 35:
-            cop_mode = CabinOverheatProtectionTemp.MEDIUM
-        elif temp == 40:
-            cop_mode = CabinOverheatProtectionTemp.HIGH
-        else:
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is None or (
+            cop_mode := TEMP_LEVELS.get(temp)
+        ) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_cop_temp",
@@ -290,7 +297,7 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryVehicleEntity, ClimateEn
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the climate mode and state."""
-        self.raise_for_scope()
+        self.raise_for_scope(Scope.VEHICLE_CMDS)
         await self.wake_up_if_asleep()
         await self._async_set_cop(hvac_mode)
         self.async_write_ha_state()

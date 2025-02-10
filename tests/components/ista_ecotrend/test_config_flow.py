@@ -6,7 +6,7 @@ from pyecotrend_ista import LoginError, ServerError
 import pytest
 
 from homeassistant.components.ista_ecotrend.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -98,15 +98,7 @@ async def test_reauth(
 
     ista_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": ista_config_entry.entry_id,
-            "unique_id": ista_config_entry.unique_id,
-        },
-    )
-
+    result = await ista_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -148,15 +140,7 @@ async def test_reauth_error_and_recover(
 
     ista_config_entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": ista_config_entry.entry_id,
-            "unique_id": ista_config_entry.unique_id,
-        },
-    )
-
+    result = await ista_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 

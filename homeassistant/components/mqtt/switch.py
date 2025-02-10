@@ -20,7 +20,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
@@ -28,10 +28,22 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
-from .const import CONF_COMMAND_TOPIC, CONF_STATE_TOPIC, PAYLOAD_NONE
-from .mixins import MqttEntity, async_setup_entity_entry_helper
-from .models import MqttValueTemplate, ReceiveMessage
+from .const import (
+    CONF_COMMAND_TEMPLATE,
+    CONF_COMMAND_TOPIC,
+    CONF_STATE_TOPIC,
+    PAYLOAD_NONE,
+)
+from .entity import MqttEntity, async_setup_entity_entry_helper
+from .models import (
+    MqttCommandTemplate,
+    MqttValueTemplate,
+    PublishPayloadType,
+    ReceiveMessage,
+)
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT Switch"
 DEFAULT_PAYLOAD_ON = "ON"
@@ -41,6 +53,7 @@ CONF_STATE_OFF = "state_off"
 
 PLATFORM_SCHEMA_MODERN = MQTT_RW_SCHEMA.extend(
     {
+        vol.Optional(CONF_COMMAND_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_OFF, default=DEFAULT_PAYLOAD_OFF): cv.string,
         vol.Optional(CONF_PAYLOAD_ON, default=DEFAULT_PAYLOAD_ON): cv.string,
@@ -78,7 +91,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
     _entity_id_format = switch.ENTITY_ID_FORMAT
 
     _optimistic: bool
-    _is_on_map: dict[str | bytes, bool | None]
+    _is_on_map: dict[str | bytes | bytearray, bool | None]
+    _command_template: Callable[[PublishPayloadType], PublishPayloadType]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
@@ -100,8 +114,11 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
             config[CONF_OPTIMISTIC] or config.get(CONF_STATE_TOPIC) is None
         )
         self._attr_assumed_state = bool(self._optimistic)
+        self._command_template = MqttCommandTemplate(
+            config.get(CONF_COMMAND_TEMPLATE), entity=self
+        ).async_render
         self._value_template = MqttValueTemplate(
-            self._config.get(CONF_VALUE_TEMPLATE), entity=self
+            config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
 
     @callback
@@ -132,9 +149,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish_with_config(
-            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_ON]
-        )
+        payload = self._command_template(self._config[CONF_PAYLOAD_ON])
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._attr_is_on = True
@@ -145,9 +161,8 @@ class MqttSwitch(MqttEntity, SwitchEntity, RestoreEntity):
 
         This method is a coroutine.
         """
-        await self.async_publish_with_config(
-            self._config[CONF_COMMAND_TOPIC], self._config[CONF_PAYLOAD_OFF]
-        )
+        payload = self._command_template(self._config[CONF_PAYLOAD_OFF])
+        await self.async_publish_with_config(self._config[CONF_COMMAND_TOPIC], payload)
         if self._optimistic:
             # Optimistically assume that switch has changed state.
             self._attr_is_on = False

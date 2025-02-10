@@ -15,9 +15,15 @@ PRESET_MODE_SLEEP = "sleep"
 PRESET_MODE_ON = "on"
 
 FULL_SUPPORT = (
-    FanEntityFeature.SET_SPEED | FanEntityFeature.OSCILLATE | FanEntityFeature.DIRECTION
+    FanEntityFeature.SET_SPEED
+    | FanEntityFeature.OSCILLATE
+    | FanEntityFeature.DIRECTION
+    | FanEntityFeature.TURN_OFF
+    | FanEntityFeature.TURN_ON
 )
-LIMITED_SUPPORT = FanEntityFeature.SET_SPEED
+LIMITED_SUPPORT = (
+    FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_OFF | FanEntityFeature.TURN_ON
+)
 
 
 async def async_setup_entry(
@@ -75,7 +81,9 @@ async def async_setup_entry(
                 hass,
                 "fan5",
                 "Preset Only Limited Fan",
-                FanEntityFeature.PRESET_MODE,
+                FanEntityFeature.PRESET_MODE
+                | FanEntityFeature.TURN_OFF
+                | FanEntityFeature.TURN_ON,
                 [
                     PRESET_MODE_AUTO,
                     PRESET_MODE_SMART,

@@ -19,8 +19,8 @@ from homeassistant.const import EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import RadarrConfigEntry, RadarrEntity
-from .coordinator import RadarrDataUpdateCoordinator, T
+from .coordinator import RadarrConfigEntry, RadarrDataUpdateCoordinator, T
+from .entity import RadarrEntity
 
 
 def get_space(data: list[Diskspace], name: str) -> str:

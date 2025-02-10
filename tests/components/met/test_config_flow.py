@@ -8,9 +8,9 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.met.const import DOMAIN, HOME_LOCATION_NAME
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import CONF_ELEVATION, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.data_entry_flow import FlowResultType
 
 from . import init_integration

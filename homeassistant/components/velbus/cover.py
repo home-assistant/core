@@ -11,23 +11,26 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN
+from . import VelbusConfigEntry
 from .entity import VelbusEntity, api_call
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: VelbusConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Velbus switch based on config_entry."""
-    await hass.data[DOMAIN][entry.entry_id]["tsk"]
-    cntrl = hass.data[DOMAIN][entry.entry_id]["cntrl"]
-    async_add_entities(VelbusCover(channel) for channel in cntrl.get_all("cover"))
+    await entry.runtime_data.scan_task
+    async_add_entities(
+        VelbusCover(channel)
+        for channel in entry.runtime_data.controller.get_all_cover()
+    )
 
 
 class VelbusCover(VelbusEntity, CoverEntity):
@@ -66,12 +69,16 @@ class VelbusCover(VelbusEntity, CoverEntity):
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
-        return self._channel.is_opening()
+        if opening := self._channel.is_opening():
+            self._assumed_closed = False
+        return opening
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
-        return self._channel.is_closing()
+        if closing := self._channel.is_closing():
+            self._assumed_closed = True
+        return closing
 
     @property
     def current_cover_position(self) -> int | None:
@@ -89,13 +96,11 @@ class VelbusCover(VelbusEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._channel.open()
-        self._assumed_closed = False
 
     @api_call
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._channel.close()
-        self._assumed_closed = True
 
     @api_call
     async def async_stop_cover(self, **kwargs: Any) -> None:

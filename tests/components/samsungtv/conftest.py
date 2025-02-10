@@ -21,7 +21,7 @@ from samsungtvws.exceptions import ResponseError
 from samsungtvws.remote import ChannelEmitCommand
 
 from homeassistant.components.samsungtv.const import WEBSOCKET_SSL_PORT
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import SAMPLE_DEVICE_INFO_UE48JU6400, SAMPLE_DEVICE_INFO_WIFI
 
@@ -179,7 +179,7 @@ def rest_api_fixture_non_ssl_only() -> Mock:
     class MockSamsungTVAsyncRest:
         """Mock for a MockSamsungTVAsyncRest."""
 
-        def __init__(self, host, session, port, timeout):
+        def __init__(self, host, session, port, timeout) -> None:
             """Mock a MockSamsungTVAsyncRest."""
             self.port = port
             self.host = host

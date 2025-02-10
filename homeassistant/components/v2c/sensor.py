@@ -15,13 +15,18 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTime
+from homeassistant.const import (
+    EntityCategory,
+    UnitOfElectricPotential,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import V2CConfigEntry
-from .coordinator import V2CUpdateCoordinator
+from .coordinator import V2CConfigEntry, V2CUpdateCoordinator
 from .entity import V2CBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -45,11 +50,19 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="charge_power",
         translation_key="charge_power",
-        icon="mdi:ev-station",
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda evse_data: evse_data.charge_power,
+    ),
+    V2CSensorEntityDescription(
+        key="voltage_installation",
+        translation_key="voltage_installation",
+        native_unit_of_measurement=UnitOfElectricPotential.VOLT,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLTAGE,
+        value_fn=lambda evse_data: evse_data.voltage_installation,
+        entity_registry_enabled_default=False,
     ),
     V2CSensorEntityDescription(
         key="charge_energy",
@@ -86,6 +99,7 @@ TRYDAN_SENSORS = (
     V2CSensorEntityDescription(
         key="meter_error",
         translation_key="meter_error",
+        entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda evse_data: get_meter_value(evse_data.slave_error),
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
@@ -98,6 +112,28 @@ TRYDAN_SENSORS = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.POWER,
         value_fn=lambda evse_data: evse_data.battery_power,
+        entity_registry_enabled_default=False,
+    ),
+    V2CSensorEntityDescription(
+        key="ssid",
+        translation_key="ssid",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda evse_data: evse_data.SSID,
+        entity_registry_enabled_default=False,
+    ),
+    V2CSensorEntityDescription(
+        key="ip_address",
+        translation_key="ip_address",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda evse_data: evse_data.IP,
+        entity_registry_enabled_default=False,
+    ),
+    V2CSensorEntityDescription(
+        key="signal_status",
+        translation_key="signal_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda evse_data: evse_data.signal_status,
         entity_registry_enabled_default=False,
     ),
 )

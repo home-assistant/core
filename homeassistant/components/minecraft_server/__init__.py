@@ -5,19 +5,15 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+import dns.rdata
+import dns.rdataclass
+import dns.rdatatype
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-    Platform,
-)
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.device_registry as dr
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
 from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
@@ -28,8 +24,18 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 _LOGGER = logging.getLogger(__name__)
 
 
+def load_dnspython_rdata_classes() -> None:
+    """Load dnspython rdata classes used by mcstatus."""
+    for rdtype in dns.rdatatype.RdataType:
+        if not dns.rdatatype.is_metatype(rdtype) or rdtype == dns.rdatatype.OPT:
+            dns.rdata.get_rdata_class(dns.rdataclass.IN, rdtype)  # type: ignore[no-untyped-call]
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
+
+    # Workaround to avoid blocking imports from dnspython (https://github.com/rthalley/dnspython/issues/1083)
+    await hass.async_add_executor_job(load_dnspython_rdata_classes)
 
     # Create API instance.
     api = MinecraftServer(
@@ -45,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Initialization failed: {error}") from error
 
     # Create coordinator instance.
-    coordinator = MinecraftServerCoordinator(hass, entry.data[CONF_NAME], api)
+    coordinator = MinecraftServerCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
 
     # Store coordinator instance.

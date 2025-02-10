@@ -5,10 +5,9 @@ from unittest.mock import patch
 from aioskybell import exceptions
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.skybell.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_PASSWORD, CONF_SOURCE
+from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -104,15 +103,7 @@ async def test_step_reauth(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id=USER_ID, data=CONF_DATA)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            CONF_SOURCE: config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -130,15 +121,7 @@ async def test_step_reauth_failed(hass: HomeAssistant, skybell_mock) -> None:
     entry = MockConfigEntry(domain=DOMAIN, unique_id=USER_ID, data=CONF_DATA)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            CONF_SOURCE: config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"

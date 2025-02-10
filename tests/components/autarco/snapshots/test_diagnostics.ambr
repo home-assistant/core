@@ -1,0 +1,45 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'sites_data': list([
+      dict({
+        'battery': dict({
+          'charged_month': 26,
+          'charged_today': 1,
+          'charged_total': 748,
+          'discharged_month': 25,
+          'discharged_today': 2,
+          'discharged_total': 696,
+          'flow_now': 777,
+          'net_charged_now': 777,
+          'state_of_charge': 56,
+        }),
+        'health': 'OK',
+        'id': 1,
+        'inverters': list([
+          dict({
+            'grid_turned_off': False,
+            'health': 'OK',
+            'out_ac_energy_total': 10379,
+            'out_ac_power': 200,
+            'serial_number': 'test-serial-1',
+          }),
+          dict({
+            'grid_turned_off': False,
+            'health': 'OK',
+            'out_ac_energy_total': 10379,
+            'out_ac_power': 500,
+            'serial_number': 'test-serial-2',
+          }),
+        ]),
+        'name': 'test-system',
+        'solar': dict({
+          'energy_production_month': 58,
+          'energy_production_today': 4,
+          'energy_production_total': 10379,
+          'power_production': 200,
+        }),
+      }),
+    ]),
+  })
+# ---

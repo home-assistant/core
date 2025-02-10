@@ -45,12 +45,7 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import (
-    MotionEyeEntity,
-    get_camera_from_cameras,
-    is_acceptable_camera,
-    listen_for_new_cameras,
-)
+from . import get_camera_from_cameras, is_acceptable_camera, listen_for_new_cameras
 from .const import (
     CONF_ACTION,
     CONF_CLIENT,
@@ -65,6 +60,7 @@ from .const import (
     SERVICE_SNAPSHOT,
     TYPE_MOTIONEYE_MJPEG_CAMERA,
 )
+from .entity import MotionEyeEntity
 
 PLATFORMS = [Platform.CAMERA]
 
@@ -136,7 +132,7 @@ async def async_setup_entry(
     )
     platform.async_register_entity_service(
         SERVICE_SNAPSHOT,
-        {},
+        None,
         "async_request_snapshot",
     )
 

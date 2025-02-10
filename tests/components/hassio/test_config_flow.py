@@ -38,4 +38,4 @@ async def test_multiple_entries(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": "system"}
     )
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == "single_instance_allowed"

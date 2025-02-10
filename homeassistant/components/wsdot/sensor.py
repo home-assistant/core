@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 from http import HTTPStatus
 import logging
 import re
+from typing import Any
 
 import requests
 import voluptuous as vol
@@ -16,7 +17,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import ATTR_NAME, CONF_API_KEY, CONF_ID, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -125,7 +126,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
         self._state = self._data.get(ATTR_CURRENT_TIME)
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return other details about the sensor state."""
         if self._data is not None:
             attrs = {}
@@ -140,6 +141,7 @@ class WashingtonStateTravelTimeSensor(WashingtonStateTransportSensor):
                 self._data.get(ATTR_TIME_UPDATED)
             )
             return attrs
+        return None
 
 
 def _parse_wsdot_timestamp(timestamp):

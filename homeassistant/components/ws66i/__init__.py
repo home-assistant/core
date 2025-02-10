@@ -52,7 +52,7 @@ def _find_zones(hass: HomeAssistant, ws66i: WS66i) -> list[int]:
             zone_id = (amp_num * 10) + zone_num
             zone_list.append(zone_id)
 
-    _LOGGER.info("Detected %d amp(s)", amp_num - 1)
+    _LOGGER.debug("Detected %d amp(s)", amp_num - 1)
     return zone_list
 
 
@@ -78,6 +78,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Create the coordinator for the WS66i
     coordinator: Ws66iDataUpdateCoordinator = Ws66iDataUpdateCoordinator(
         hass,
+        entry,
         ws66i,
         zones,
     )

@@ -13,7 +13,7 @@ from xbox.webapi.api.provider.screenshots.models import ScreenshotResponse
 from xbox.webapi.api.provider.smartglass.models import InstalledPackage
 
 from homeassistant.components.media_player import MediaClass
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,

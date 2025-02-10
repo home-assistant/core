@@ -22,8 +22,8 @@ class ConversationTraceEventType(enum.StrEnum):
     AGENT_DETAIL = "agent_detail"
     """Event detail added by a conversation agent."""
 
-    LLM_TOOL_CALL = "llm_tool_call"
-    """An LLM Tool call"""
+    TOOL_CALL = "tool_call"
+    """A conversation agent Tool call or default agent intent call."""
 
 
 @dataclass(frozen=True)
@@ -94,7 +94,7 @@ def async_conversation_trace_append(
 
 
 @contextmanager
-def async_conversation_trace() -> Generator[ConversationTrace, None]:
+def async_conversation_trace() -> Generator[ConversationTrace]:
     """Create a new active ConversationTrace."""
     trace = ConversationTrace()
     token = _current_trace.set(trace)

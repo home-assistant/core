@@ -1,7 +1,7 @@
 {
   "thermostatList": [
     {
-      "identifier": 8675309,
+      "identifier": "8675309",
       "name": "ecobee",
       "modelNumber": "athenaSmart",
       "utcTime": "2022-01-01 10:00:00",
@@ -12,12 +12,31 @@
       "program": {
         "climates": [
           {
+            "name": "Home",
+            "climateRef": "home",
+            "sensors": [
+              {
+                "name": "ecobee"
+              }
+            ]
+          },
+          {
             "name": "Climate1",
-            "climateRef": "c1"
+            "climateRef": "c1",
+            "sensors": [
+              {
+                "name": "ecobee"
+              }
+            ]
           },
           {
             "name": "Climate2",
-            "climateRef": "c2"
+            "climateRef": "c2",
+            "sensors": [
+              {
+                "name": "ecobee"
+              }
+            ]
           }
         ],
         "currentClimateRef": "c1"
@@ -62,6 +81,24 @@
         }
       ],
       "remoteSensors": [
+        {
+          "id": "ei:0",
+          "name": "ecobee",
+          "type": "thermostat",
+          "inUse": true,
+          "capability": [
+            {
+              "id": "1",
+              "type": "temperature",
+              "value": "782"
+            },
+            {
+              "id": "2",
+              "type": "humidity",
+              "value": "54"
+            }
+          ]
+        },
         {
           "id": "rs:100",
           "name": "Remote Sensor 1",
@@ -123,6 +160,7 @@
         "hasHumidifier": true,
         "humidifierMode": "manual",
         "hasHeatPump": true,
+        "compressorProtectionMinTemp": 100,
         "humidity": "30"
       },
       "equipmentStatus": "fan",
@@ -144,6 +182,25 @@
           "name": "Remote Sensor 1",
           "type": "ecobee3_remote_sensor",
           "code": "WKRP",
+          "inUse": false,
+          "capability": [
+            {
+              "id": "1",
+              "type": "temperature",
+              "value": "782"
+            },
+            {
+              "id": "2",
+              "type": "occupancy",
+              "value": "false"
+            }
+          ]
+        },
+        {
+          "id": "rs:101",
+          "name": "Remote Sensor 2",
+          "type": "ecobee3_remote_sensor",
+          "code": "VTRK",
           "inUse": false,
           "capability": [
             {

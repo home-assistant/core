@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from datetime import datetime
 from typing import Any
 
 import voluptuous as vol
@@ -16,10 +15,10 @@ from zwave_js_server.const.command_class.meter import (
 )
 from zwave_js_server.exceptions import BaseZwaveJSServerError
 from zwave_js_server.model.controller import Controller
-from zwave_js_server.model.controller.statistics import ControllerStatisticsDataType
+from zwave_js_server.model.controller.statistics import ControllerStatistics
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
-from zwave_js_server.model.node.statistics import NodeStatisticsDataType
+from zwave_js_server.model.node.statistics import NodeStatistics
 from zwave_js_server.util.command_class.meter import get_meter_type
 
 from homeassistant.components.sensor import (
@@ -52,6 +51,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, StateType
 
+from .binary_sensor import is_valid_notification_binary_sensor
 from .const import (
     ATTR_METER_TYPE,
     ATTR_METER_TYPE_NAME,
@@ -90,6 +90,7 @@ from .discovery_data_template import (
 )
 from .entity import ZWaveBaseEntity
 from .helpers import get_device_info, get_valueless_base_unique_id
+from .migrate import async_migrate_statistics_sensors
 
 PARALLEL_UPDATES = 0
 
@@ -328,152 +329,172 @@ ENTITY_DESCRIPTION_KEY_MAP = {
 }
 
 
-def convert_dict_of_dicts(
-    statistics: ControllerStatisticsDataType | NodeStatisticsDataType, key: str
+def convert_nested_attr(
+    statistics: ControllerStatistics | NodeStatistics, key: str
 ) -> Any:
-    """Convert a dictionary of dictionaries to a value."""
-    keys = key.split(".")
-    return statistics.get(keys[0], {}).get(keys[1], {}).get(keys[2])  # type: ignore[attr-defined]
+    """Convert a string that represents a nested attr to a value."""
+    data = statistics
+    for _key in key.split("."):
+        if data is None:
+            return None  # type: ignore[unreachable]
+        data = getattr(data, _key)
+    return data
 
 
 @dataclass(frozen=True, kw_only=True)
 class ZWaveJSStatisticsSensorEntityDescription(SensorEntityDescription):
     """Class to represent a Z-Wave JS statistics sensor entity description."""
 
-    convert: Callable[
-        [ControllerStatisticsDataType | NodeStatisticsDataType, str], Any
-    ] = lambda statistics, key: statistics.get(key)
+    convert: Callable[[ControllerStatistics | NodeStatistics, str], Any] = getattr
     entity_registry_enabled_default: bool = False
 
 
 # Controller statistics descriptions
 ENTITY_DESCRIPTION_CONTROLLER_STATISTICS_LIST = [
     ZWaveJSStatisticsSensorEntityDescription(
-        key="messagesTX",
+        key="messages_tx",
         translation_key="successful_messages",
         translation_placeholders={"direction": "TX"},
         state_class=SensorStateClass.TOTAL,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="messagesRX",
+        key="messages_rx",
         translation_key="successful_messages",
         translation_placeholders={"direction": "RX"},
         state_class=SensorStateClass.TOTAL,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="messagesDroppedTX",
+        key="messages_dropped_tx",
         translation_key="messages_dropped",
         translation_placeholders={"direction": "TX"},
         state_class=SensorStateClass.TOTAL,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="messagesDroppedRX",
+        key="messages_dropped_rx",
         translation_key="messages_dropped",
         translation_placeholders={"direction": "RX"},
         state_class=SensorStateClass.TOTAL,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="NAK", translation_key="nak", state_class=SensorStateClass.TOTAL
+        key="nak", translation_key="nak", state_class=SensorStateClass.TOTAL
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="CAN", translation_key="can", state_class=SensorStateClass.TOTAL
+        key="can", translation_key="can", state_class=SensorStateClass.TOTAL
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="timeoutACK",
+        key="timeout_ack",
         translation_key="timeout_ack",
         state_class=SensorStateClass.TOTAL,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="timeoutResponse",
+        key="timeout_response",
         translation_key="timeout_response",
         state_class=SensorStateClass.TOTAL,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="timeoutCallback",
+        key="timeout_callback",
         translation_key="timeout_callback",
         state_class=SensorStateClass.TOTAL,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="backgroundRSSI.channel0.average",
+        key="background_rssi.channel_0.average",
         translation_key="average_background_rssi",
         translation_placeholders={"channel": "0"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        convert=convert_dict_of_dicts,
+        convert=convert_nested_attr,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="backgroundRSSI.channel0.current",
+        key="background_rssi.channel_0.current",
         translation_key="current_background_rssi",
         translation_placeholders={"channel": "0"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        convert=convert_dict_of_dicts,
+        convert=convert_nested_attr,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="backgroundRSSI.channel1.average",
+        key="background_rssi.channel_1.average",
         translation_key="average_background_rssi",
         translation_placeholders={"channel": "1"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        convert=convert_dict_of_dicts,
+        convert=convert_nested_attr,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="backgroundRSSI.channel1.current",
+        key="background_rssi.channel_1.current",
         translation_key="current_background_rssi",
         translation_placeholders={"channel": "1"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        convert=convert_dict_of_dicts,
+        convert=convert_nested_attr,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="backgroundRSSI.channel2.average",
+        key="background_rssi.channel_2.average",
         translation_key="average_background_rssi",
         translation_placeholders={"channel": "2"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        convert=convert_dict_of_dicts,
+        convert=convert_nested_attr,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="backgroundRSSI.channel2.current",
+        key="background_rssi.channel_2.current",
         translation_key="current_background_rssi",
         translation_placeholders={"channel": "2"},
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
-        convert=convert_dict_of_dicts,
+        convert=convert_nested_attr,
     ),
 ]
+
+CONTROLLER_STATISTICS_KEY_MAP: dict[str, str] = {
+    "messages_tx": "messagesTX",
+    "messages_rx": "messagesRX",
+    "messages_dropped_tx": "messagesDroppedTX",
+    "messages_dropped_rx": "messagesDroppedRX",
+    "nak": "NAK",
+    "can": "CAN",
+    "timeout_ack": "timeoutAck",
+    "timeout_response": "timeoutResponse",
+    "timeout_callback": "timeoutCallback",
+    "background_rssi.channel_0.average": "backgroundRSSI.channel0.average",
+    "background_rssi.channel_0.current": "backgroundRSSI.channel0.current",
+    "background_rssi.channel_1.average": "backgroundRSSI.channel1.average",
+    "background_rssi.channel_1.current": "backgroundRSSI.channel1.current",
+    "background_rssi.channel_2.average": "backgroundRSSI.channel2.average",
+    "background_rssi.channel_2.current": "backgroundRSSI.channel2.current",
+}
 
 # Node statistics descriptions
 ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
     ZWaveJSStatisticsSensorEntityDescription(
-        key="commandsRX",
+        key="commands_rx",
         translation_key="successful_commands",
         translation_placeholders={"direction": "RX"},
         state_class=SensorStateClass.TOTAL,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="commandsTX",
+        key="commands_tx",
         translation_key="successful_commands",
         translation_placeholders={"direction": "TX"},
         state_class=SensorStateClass.TOTAL,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="commandsDroppedRX",
+        key="commands_dropped_rx",
         translation_key="commands_dropped",
         translation_placeholders={"direction": "RX"},
         state_class=SensorStateClass.TOTAL,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="commandsDroppedTX",
+        key="commands_dropped_tx",
         translation_key="commands_dropped",
         translation_placeholders={"direction": "TX"},
         state_class=SensorStateClass.TOTAL,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="timeoutResponse",
+        key="timeout_response",
         translation_key="timeout_response",
         state_class=SensorStateClass.TOTAL,
     ),
@@ -492,19 +513,23 @@ ENTITY_DESCRIPTION_NODE_STATISTICS_LIST = [
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ZWaveJSStatisticsSensorEntityDescription(
-        key="lastSeen",
+        key="last_seen",
         translation_key="last_seen",
         device_class=SensorDeviceClass.TIMESTAMP,
-        convert=(
-            lambda statistics, key: (
-                datetime.fromisoformat(dt)  # type: ignore[arg-type]
-                if (dt := statistics.get(key))
-                else None
-            )
-        ),
         entity_registry_enabled_default=True,
     ),
 ]
+
+NODE_STATISTICS_KEY_MAP: dict[str, str] = {
+    "commands_rx": "commandsRX",
+    "commands_tx": "commandsTX",
+    "commands_dropped_rx": "commandsDroppedRX",
+    "commands_dropped_tx": "commandsDroppedTX",
+    "timeout_response": "timeoutResponse",
+    "rtt": "rtt",
+    "rssi": "rssi",
+    "last_seen": "lastSeen",
+}
 
 
 def get_entity_description(
@@ -556,7 +581,10 @@ async def async_setup_entry(
                     data.unit_of_measurement,
                 )
             )
-        elif info.platform_hint == "list_sensor":
+        elif info.platform_hint == "notification":
+            # prevent duplicate entities for values that are already represented as binary sensors
+            if is_valid_notification_binary_sensor(info):
+                return
             entities.append(
                 ZWaveListSensor(config_entry, driver, info, entity_description)
             )
@@ -588,6 +616,14 @@ async def async_setup_entry(
     @callback
     def async_add_statistics_sensors(node: ZwaveNode) -> None:
         """Add statistics sensors."""
+        async_migrate_statistics_sensors(
+            hass,
+            driver,
+            node,
+            CONTROLLER_STATISTICS_KEY_MAP
+            if driver.controller.own_node == node
+            else NODE_STATISTICS_KEY_MAP,
+        )
         async_add_entities(
             [
                 ZWaveStatisticsSensor(
@@ -750,10 +786,9 @@ class ZWaveMeterSensor(ZWaveNumericSensor):
                 CommandClass.METER, "reset", *args, wait_for_result=False
             )
         except BaseZwaveJSServerError as err:
-            LOGGER.error(
-                "Failed to reset meters on node %s endpoint %s: %s", node, endpoint, err
-            )
-            raise HomeAssistantError from err
+            raise HomeAssistantError(
+                f"Failed to reset meters on node {node} endpoint {endpoint}: {err}"
+            ) from err
         LOGGER.debug(
             "Meters on node %s endpoint %s reset with the following options: %s",
             node,
@@ -1002,7 +1037,7 @@ class ZWaveStatisticsSensor(SensorEntity):
     def statistics_updated(self, event_data: dict) -> None:
         """Call when statistics updated event is received."""
         self._attr_native_value = self.entity_description.convert(
-            event_data["statistics"], self.entity_description.key
+            event_data["statistics_updated"], self.entity_description.key
         )
         self.async_write_ha_state()
 
@@ -1028,5 +1063,5 @@ class ZWaveStatisticsSensor(SensorEntity):
 
         # Set initial state
         self._attr_native_value = self.entity_description.convert(
-            self.statistics_src.statistics.data, self.entity_description.key
+            self.statistics_src.statistics, self.entity_description.key
         )

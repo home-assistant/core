@@ -9,8 +9,8 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import AcmedaConfigEntry
-from .base import AcmedaBase
 from .const import ACMEDA_HUB_UPDATE
+from .entity import AcmedaEntity
 from .helpers import async_add_acmeda_entities
 
 
@@ -39,7 +39,7 @@ async def async_setup_entry(
     )
 
 
-class AcmedaBattery(AcmedaBase, SensorEntity):
+class AcmedaBattery(AcmedaEntity, SensorEntity):
     """Representation of an Acmeda cover sensor."""
 
     _attr_device_class = SensorDeviceClass.BATTERY

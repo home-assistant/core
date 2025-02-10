@@ -7,7 +7,8 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
@@ -70,14 +71,15 @@ class DoorBirdEventEntity(DoorBirdEntity, EventEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
         self.async_on_remove(
-            self.hass.bus.async_listen(
+            async_dispatcher_connect(
+                self.hass,
                 f"{DOMAIN}_{self._doorbird_event.event}",
                 self._async_handle_event,
             )
         )
 
     @callback
-    def _async_handle_event(self, event: Event) -> None:
+    def _async_handle_event(self) -> None:
         """Handle a device event."""
         event_types = self.entity_description.event_types
         if TYPE_CHECKING:

@@ -1,16 +1,40 @@
 {
   "services": {
-    "start": "mdi:play",
-    "memory": "mdi:memory",
-    "start_log_objects": "mdi:invoice-text-plus",
-    "stop_log_objects": "mdi:invoice-text-remove",
-    "dump_log_objects": "mdi:invoice-export-outline",
-    "start_log_object_sources": "mdi:play",
-    "stop_log_object_sources": "mdi:stop",
-    "lru_stats": "mdi:chart-areaspline",
-    "log_current_tasks": "mdi:format-list-bulleted",
-    "log_thread_frames": "mdi:format-list-bulleted",
-    "log_event_loop_scheduled": "mdi:calendar-clock",
-    "set_asyncio_debug": "mdi:bug-check"
+    "start": {
+      "service": "mdi:play"
+    },
+    "memory": {
+      "service": "mdi:memory"
+    },
+    "start_log_objects": {
+      "service": "mdi:invoice-text-plus"
+    },
+    "stop_log_objects": {
+      "service": "mdi:invoice-text-remove"
+    },
+    "dump_log_objects": {
+      "service": "mdi:invoice-export-outline"
+    },
+    "start_log_object_sources": {
+      "service": "mdi:play"
+    },
+    "stop_log_object_sources": {
+      "service": "mdi:stop"
+    },
+    "lru_stats": {
+      "service": "mdi:chart-areaspline"
+    },
+    "log_current_tasks": {
+      "service": "mdi:format-list-bulleted"
+    },
+    "log_thread_frames": {
+      "service": "mdi:format-list-bulleted"
+    },
+    "log_event_loop_scheduled": {
+      "service": "mdi:calendar-clock"
+    },
+    "set_asyncio_debug": {
+      "service": "mdi:bug-check"
+    }
   }
 }

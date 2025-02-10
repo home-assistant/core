@@ -99,6 +99,7 @@ async def player_setup_fixture(
             return state_1
         if zone == 2:
             return state_2
+        raise ValueError(f"Unknown player zone: {zone}")
 
     await async_setup_component(hass, "homeassistant", {})
 

@@ -18,15 +18,17 @@ from homeassistant.components.todoist.const import (
     DOMAIN,
     LABELS,
     PROJECT_NAME,
+    SECTION_NAME,
     SERVICE_NEW_TASK,
 )
 from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util import dt as dt_util
 
-from .conftest import PROJECT_ID, SUMMARY
+from .conftest import PROJECT_ID, SECTION_ID, SUMMARY
 
 from tests.typing import ClientSessionGenerator
 
@@ -266,6 +268,51 @@ async def test_create_task_service_call(hass: HomeAssistant, api: AsyncMock) -> 
 
     api.add_task.assert_called_with(
         "task", project_id=PROJECT_ID, labels=["Label1"], assignee_id="1"
+    )
+
+
+async def test_create_task_service_call_raises(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test adding an item to an invalid project raises an error."""
+
+    with pytest.raises(ServiceValidationError, match="project_invalid"):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_NEW_TASK,
+            {
+                ASSIGNEE: "user",
+                CONTENT: "task",
+                LABELS: ["Label1"],
+                PROJECT_NAME: "Missing Project",
+            },
+            blocking=True,
+        )
+
+
+async def test_create_task_service_call_with_section(
+    hass: HomeAssistant, api: AsyncMock
+) -> None:
+    """Test api is called correctly when section is included."""
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_NEW_TASK,
+        {
+            ASSIGNEE: "user",
+            CONTENT: "task",
+            LABELS: ["Label1"],
+            PROJECT_NAME: "Name",
+            SECTION_NAME: "Section Name",
+        },
+    )
+    await hass.async_block_till_done()
+
+    api.add_task.assert_called_with(
+        "task",
+        project_id=PROJECT_ID,
+        section_id=SECTION_ID,
+        labels=["Label1"],
+        assignee_id="1",
     )
 
 

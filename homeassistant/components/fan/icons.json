@@ -20,14 +20,32 @@
     }
   },
   "services": {
-    "decrease_speed": "mdi:fan-minus",
-    "increase_speed": "mdi:fan-plus",
-    "oscillate": "mdi:arrow-oscillating",
-    "set_direction": "mdi:rotate-3d-variant",
-    "set_percentage": "mdi:fan",
-    "set_preset_mode": "mdi:fan-auto",
-    "toggle": "mdi:fan",
-    "turn_off": "mdi:fan-off",
-    "turn_on": "mdi:fan"
+    "decrease_speed": {
+      "service": "mdi:fan-minus"
+    },
+    "increase_speed": {
+      "service": "mdi:fan-plus"
+    },
+    "oscillate": {
+      "service": "mdi:arrow-oscillating"
+    },
+    "set_direction": {
+      "service": "mdi:rotate-3d-variant"
+    },
+    "set_percentage": {
+      "service": "mdi:fan"
+    },
+    "set_preset_mode": {
+      "service": "mdi:fan-auto"
+    },
+    "toggle": {
+      "service": "mdi:fan"
+    },
+    "turn_off": {
+      "service": "mdi:fan-off"
+    },
+    "turn_on": {
+      "service": "mdi:fan"
+    }
   }
 }

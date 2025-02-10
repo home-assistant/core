@@ -14,13 +14,13 @@ from homeassistant.components import binary_sensor
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import event as evt
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.event as evt
 
 from .const import DATA_REMOVE_DISCOVER_COMPONENT
 from .discovery import TASMOTA_DISCOVERY_ENTITY_NEW
-from .mixins import TasmotaAvailability, TasmotaDiscoveryUpdate
+from .entity import TasmotaAvailability, TasmotaDiscoveryUpdate
 
 
 async def async_setup_entry(

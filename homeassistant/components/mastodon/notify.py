@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import mimetypes
-from typing import Any
+from typing import Any, cast
 
 from mastodon import Mastodon
-from mastodon.Mastodon import MastodonAPIError, MastodonUnauthorizedError
+from mastodon.Mastodon import MastodonAPIError
 import voluptuous as vol
 
 from homeassistant.components.notify import (
@@ -16,15 +15,21 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_BASE_URL, DEFAULT_URL, LOGGER
+from .const import (
+    ATTR_CONTENT_WARNING,
+    ATTR_MEDIA_WARNING,
+    CONF_BASE_URL,
+    DEFAULT_URL,
+    DOMAIN,
+)
+from .utils import get_media_type
 
 ATTR_MEDIA = "media"
 ATTR_TARGET = "target"
-ATTR_MEDIA_WARNING = "media_warning"
-ATTR_CONTENT_WARNING = "content_warning"
 
 PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     {
@@ -35,47 +40,57 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
     }
 )
 
+INTEGRATION_TITLE = "Mastodon"
 
-def get_service(
+
+async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> MastodonNotificationService | None:
     """Get the Mastodon notification service."""
-    client_id = config.get(CONF_CLIENT_ID)
-    client_secret = config.get(CONF_CLIENT_SECRET)
-    access_token = config.get(CONF_ACCESS_TOKEN)
-    base_url = config.get(CONF_BASE_URL)
-
-    try:
-        mastodon = Mastodon(
-            client_id=client_id,
-            client_secret=client_secret,
-            access_token=access_token,
-            api_base_url=base_url,
-        )
-        mastodon.account_verify_credentials()
-    except MastodonUnauthorizedError:
-        LOGGER.warning("Authentication failed")
+    if discovery_info is None:
         return None
 
-    return MastodonNotificationService(mastodon)
+    client: Mastodon = discovery_info.get("client")
+
+    return MastodonNotificationService(hass, client)
 
 
 class MastodonNotificationService(BaseNotificationService):
     """Implement the notification service for Mastodon."""
 
-    def __init__(self, api: Mastodon) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: Mastodon,
+    ) -> None:
         """Initialize the service."""
-        self._api = api
+
+        self.client = client
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Toot a message, with media perhaps."""
+
+        ir.create_issue(
+            self.hass,
+            DOMAIN,
+            "deprecated_notify_action_mastodon",
+            breaks_in_ha_version="2025.9.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_notify_action",
+        )
+
+        target = None
+        if (target_list := kwargs.get(ATTR_TARGET)) is not None:
+            target = cast(list[str], target_list)[0]
+
         data = kwargs.get(ATTR_DATA)
 
         media = None
         mediadata = None
-        target = None
         sensitive = False
         content_warning = None
 
@@ -83,46 +98,53 @@ class MastodonNotificationService(BaseNotificationService):
             media = data.get(ATTR_MEDIA)
             if media:
                 if not self.hass.config.is_allowed_path(media):
-                    LOGGER.warning("'%s' is not a whitelisted directory", media)
-                    return
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="not_whitelisted_directory",
+                        translation_placeholders={"media": media},
+                    )
                 mediadata = self._upload_media(media)
 
-            target = data.get(ATTR_TARGET)
             sensitive = data.get(ATTR_MEDIA_WARNING)
             content_warning = data.get(ATTR_CONTENT_WARNING)
 
         if mediadata:
             try:
-                self._api.status_post(
+                self.client.status_post(
                     message,
-                    media_ids=mediadata["id"],
-                    sensitive=sensitive,
                     visibility=target,
                     spoiler_text=content_warning,
+                    media_ids=mediadata["id"],
+                    sensitive=sensitive,
                 )
-            except MastodonAPIError:
-                LOGGER.error("Unable to send message")
+            except MastodonAPIError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_send_message",
+                ) from err
+
         else:
             try:
-                self._api.status_post(
+                self.client.status_post(
                     message, visibility=target, spoiler_text=content_warning
                 )
-            except MastodonAPIError:
-                LOGGER.error("Unable to send message")
+            except MastodonAPIError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_send_message",
+                ) from err
 
     def _upload_media(self, media_path: Any = None) -> Any:
         """Upload media."""
         with open(media_path, "rb"):
-            media_type = self._media_type(media_path)
+            media_type = get_media_type(media_path)
         try:
-            mediadata = self._api.media_post(media_path, mime_type=media_type)
-        except MastodonAPIError:
-            LOGGER.error(f"Unable to upload image {media_path}")
+            mediadata = self.client.media_post(media_path, mime_type=media_type)
+        except MastodonAPIError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_upload_image",
+                translation_placeholders={"media_path": media_path},
+            ) from err
 
         return mediadata
-
-    def _media_type(self, media_path: Any = None) -> Any:
-        """Get media Type."""
-        (media_type, _) = mimetypes.guess_type(media_path)
-
-        return media_type

@@ -26,9 +26,9 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, StateType
 
-from . import TautulliConfigEntry, TautulliEntity
 from .const import ATTR_TOP_USER, DOMAIN
-from .coordinator import TautulliDataUpdateCoordinator
+from .coordinator import TautulliConfigEntry, TautulliDataUpdateCoordinator
+from .entity import TautulliEntity
 
 
 def get_top_stats(

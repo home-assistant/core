@@ -1,6 +1,7 @@
 """Support for hive water heaters."""
 
 from datetime import timedelta
+from typing import Any
 
 import voluptuous as vol
 
@@ -15,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HiveEntity, refresh_system
+from . import refresh_system
 from .const import (
     ATTR_ONOFF,
     ATTR_TIME_PERIOD,
@@ -23,6 +24,7 @@ from .const import (
     SERVICE_BOOST_HOT_WATER,
     WATER_HEATER_MODES,
 )
+from .entity import HiveEntity
 
 HOTWATER_NAME = "Hot Water"
 PARALLEL_UPDATES = 0
@@ -76,12 +78,12 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
     _attr_operation_list = SUPPORT_WATER_HEATER
 
     @refresh_system
-    async def async_turn_on(self, **kwargs):
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on hotwater."""
         await self.hive.hotwater.setMode(self.device, "MANUAL")
 
     @refresh_system
-    async def async_turn_off(self, **kwargs):
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn on hotwater."""
         await self.hive.hotwater.setMode(self.device, "OFF")
 
@@ -92,7 +94,7 @@ class HiveWaterHeater(HiveEntity, WaterHeaterEntity):
         await self.hive.hotwater.setMode(self.device, new_mode)
 
     @refresh_system
-    async def async_hot_water_boost(self, time_period, on_off):
+    async def async_hot_water_boost(self, time_period: int, on_off: str) -> None:
         """Handle the service call."""
         if on_off == "on":
             await self.hive.hotwater.setBoostOn(self.device, time_period)

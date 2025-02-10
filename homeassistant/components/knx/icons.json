@@ -1,5 +1,19 @@
 {
   "entity": {
+    "climate": {
+      "knx_climate": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "comfort": "mdi:sofa",
+              "standby": "mdi:home-export-outline",
+              "economy": "mdi:leaf",
+              "building_protection": "mdi:sun-snowflake-variant"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "individual_address": {
         "default": "mdi:router-network"
@@ -22,10 +36,20 @@
     }
   },
   "services": {
-    "send": "mdi:email-arrow-right",
-    "read": "mdi:email-search",
-    "event_register": "mdi:home-import-outline",
-    "exposure_register": "mdi:home-export-outline",
-    "reload": "mdi:reload"
+    "send": {
+      "service": "mdi:email-arrow-right"
+    },
+    "read": {
+      "service": "mdi:email-search"
+    },
+    "event_register": {
+      "service": "mdi:home-import-outline"
+    },
+    "exposure_register": {
+      "service": "mdi:home-export-outline"
+    },
+    "reload": {
+      "service": "mdi:reload"
+    }
   }
 }

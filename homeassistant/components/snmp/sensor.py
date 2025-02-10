@@ -37,7 +37,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
@@ -174,8 +174,6 @@ async def async_setup_platform(
         trigger_entity_config[key] = config[key]
 
     value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-    if value_template is not None:
-        value_template.hass = hass
 
     data = SnmpData(request_args, baseoid, accept_errors, default_value)
     async_add_entities([SnmpSensor(hass, data, trigger_entity_config, value_template)])

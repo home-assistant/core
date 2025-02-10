@@ -14,8 +14,9 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from . import DeviceTuple, RfxtrxEntity, async_setup_platform_entry
+from . import DeviceTuple, async_setup_platform_entry
 from .const import DEVICE_PACKET_TYPE_LIGHTING4
+from .entity import RfxtrxEntity
 
 _LOGGER = logging.getLogger(__name__)
 

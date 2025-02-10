@@ -15,7 +15,7 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    DOMAIN,
+    DOMAIN as COVER_DOMAIN,
     SERVICE_CLOSE_COVER,
     SERVICE_CLOSE_COVER_TILT,
     SERVICE_OPEN_COVER,
@@ -26,6 +26,7 @@ from homeassistant.components.cover import (
     SERVICE_STOP_COVER_TILT,
     CoverDeviceClass,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.components.zwave_js.const import LOGGER
 from homeassistant.components.zwave_js.helpers import ZwaveValueMatcher
@@ -33,10 +34,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -63,12 +60,12 @@ async def test_window_cover(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.WINDOW
 
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
     # Test setting position
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
         {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 50},
         blocking=True,
@@ -89,7 +86,7 @@ async def test_window_cover(
 
     # Test setting position
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
         {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY, ATTR_POSITION: 0},
         blocking=True,
@@ -110,7 +107,7 @@ async def test_window_cover(
 
     # Test opening
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
@@ -131,7 +128,7 @@ async def test_window_cover(
 
     # Test stop after opening
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_STOP_COVER,
         {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
@@ -170,11 +167,11 @@ async def test_window_cover(
     client.async_send_command.reset_mock()
 
     state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     # Test closing
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
         {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
@@ -194,7 +191,7 @@ async def test_window_cover(
 
     # Test stop after closing
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_STOP_COVER,
         {ATTR_ENTITY_ID: WINDOW_COVER_ENTITY},
         blocking=True,
@@ -233,7 +230,7 @@ async def test_window_cover(
     node.receive_event(event)
 
     state = hass.states.get(WINDOW_COVER_ENTITY)
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
 
 async def test_fibaro_fgr222_shutter_cover(
@@ -244,12 +241,12 @@ async def test_fibaro_fgr222_shutter_cover(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
 
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     # Test opening tilts
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_OPEN_COVER_TILT,
         {ATTR_ENTITY_ID: FIBARO_FGR_222_SHUTTER_COVER_ENTITY},
         blocking=True,
@@ -271,7 +268,7 @@ async def test_fibaro_fgr222_shutter_cover(
 
     # Test closing tilts
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
         {ATTR_ENTITY_ID: FIBARO_FGR_222_SHUTTER_COVER_ENTITY},
         blocking=True,
@@ -293,7 +290,7 @@ async def test_fibaro_fgr222_shutter_cover(
 
     # Test setting tilt position
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
         {ATTR_ENTITY_ID: FIBARO_FGR_222_SHUTTER_COVER_ENTITY, ATTR_TILT_POSITION: 12},
         blocking=True,
@@ -345,12 +342,12 @@ async def test_fibaro_fgr223_shutter_cover(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.SHUTTER
 
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     # Test opening tilts
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_OPEN_COVER_TILT,
         {ATTR_ENTITY_ID: FIBARO_FGR_223_SHUTTER_COVER_ENTITY},
         blocking=True,
@@ -370,7 +367,7 @@ async def test_fibaro_fgr223_shutter_cover(
     client.async_send_command.reset_mock()
     # Test closing tilts
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
         {ATTR_ENTITY_ID: FIBARO_FGR_223_SHUTTER_COVER_ENTITY},
         blocking=True,
@@ -390,7 +387,7 @@ async def test_fibaro_fgr223_shutter_cover(
     client.async_send_command.reset_mock()
     # Test setting tilt position
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
         {ATTR_ENTITY_ID: FIBARO_FGR_223_SHUTTER_COVER_ENTITY, ATTR_TILT_POSITION: 12},
         blocking=True,
@@ -441,12 +438,12 @@ async def test_aeotec_nano_shutter_cover(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.WINDOW
 
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_CURRENT_POSITION] == 0
 
     # Test opening
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
@@ -467,7 +464,7 @@ async def test_aeotec_nano_shutter_cover(
 
     # Test stop after opening
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_STOP_COVER,
         {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
@@ -507,11 +504,11 @@ async def test_aeotec_nano_shutter_cover(
     client.async_send_command.reset_mock()
 
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     # Test closing
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
         {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
@@ -531,7 +528,7 @@ async def test_aeotec_nano_shutter_cover(
 
     # Test stop after closing
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_STOP_COVER,
         {ATTR_ENTITY_ID: AEOTEC_SHUTTER_COVER_ENTITY},
         blocking=True,
@@ -579,11 +576,14 @@ async def test_motor_barrier_cover(
     assert state
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GARAGE
 
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     # Test open
     await hass.services.async_call(
-        DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: GDC_COVER_ENTITY}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: GDC_COVER_ENTITY},
+        blocking=True,
     )
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -599,13 +599,16 @@ async def test_motor_barrier_cover(
 
     # state doesn't change until currentState value update is received
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     client.async_send_command.reset_mock()
 
     # Test close
     await hass.services.async_call(
-        DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: GDC_COVER_ENTITY}, blocking=True
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: GDC_COVER_ENTITY},
+        blocking=True,
     )
 
     assert len(client.async_send_command.call_args_list) == 1
@@ -621,7 +624,7 @@ async def test_motor_barrier_cover(
 
     # state doesn't change until currentState value update is received
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     client.async_send_command.reset_mock()
 
@@ -646,7 +649,7 @@ async def test_motor_barrier_cover(
     node.receive_event(event)
 
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     # Barrier sends an opened state
     event = Event(
@@ -669,7 +672,7 @@ async def test_motor_barrier_cover(
     node.receive_event(event)
 
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     # Barrier sends a closing state
     event = Event(
@@ -692,7 +695,7 @@ async def test_motor_barrier_cover(
     node.receive_event(event)
 
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
     # Barrier sends a closed state
     event = Event(
@@ -715,7 +718,7 @@ async def test_motor_barrier_cover(
     node.receive_event(event)
 
     state = hass.states.get(GDC_COVER_ENTITY)
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
 
     # Barrier sends a stopped state
     event = Event(
@@ -821,7 +824,7 @@ async def test_fibaro_fgr223_shutter_cover_no_tilt(
 
     state = hass.states.get(FIBARO_FGR_223_SHUTTER_COVER_ENTITY)
     assert state
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
     assert ATTR_CURRENT_POSITION in state.attributes
     assert ATTR_CURRENT_TILT_POSITION not in state.attributes
 
@@ -846,7 +849,7 @@ async def test_iblinds_v3_cover(
     assert state.attributes[ATTR_CURRENT_TILT_POSITION] == 0
 
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -867,7 +870,7 @@ async def test_iblinds_v3_cover(
     client.async_send_command.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_OPEN_COVER_TILT,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -888,7 +891,7 @@ async def test_iblinds_v3_cover(
     client.async_send_command.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
         {ATTR_ENTITY_ID: entity_id, ATTR_TILT_POSITION: 12},
         blocking=True,
@@ -909,7 +912,7 @@ async def test_iblinds_v3_cover(
     client.async_send_command.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_STOP_COVER_TILT,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -938,7 +941,7 @@ async def test_nice_ibt4zwave_cover(
     state = hass.states.get(entity_id)
     assert state
     # This device has no state because there is no position value
-    assert state.state == STATE_CLOSED
+    assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
         CoverEntityFeature.CLOSE
         | CoverEntityFeature.OPEN
@@ -950,7 +953,7 @@ async def test_nice_ibt4zwave_cover(
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
 
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -970,7 +973,7 @@ async def test_nice_ibt4zwave_cover(
     client.async_send_command.reset_mock()
 
     await hass.services.async_call(
-        DOMAIN,
+        COVER_DOMAIN,
         SERVICE_OPEN_COVER,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
@@ -986,5 +989,108 @@ async def test_nice_ibt4zwave_cover(
         "property": "targetValue",
     }
     assert args["value"] == 99
+
+    client.async_send_command.reset_mock()
+
+
+async def test_window_covering_open_close(
+    hass: HomeAssistant, client, window_covering_outbound_bottom, integration
+) -> None:
+    """Test Window Covering device open and close commands.
+
+    A Window Covering device with position support
+    should be able to open/close with the start/stop level change properties.
+    """
+    entity_id = "cover.node_2_outbound_bottom"
+    state = hass.states.get(entity_id)
+
+    # The entity has position support, but not tilt
+    assert state
+    assert ATTR_CURRENT_POSITION in state.attributes
+    assert ATTR_CURRENT_TILT_POSITION not in state.attributes
+
+    # Test opening
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_OPEN_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 106,
+        "endpoint": 0,
+        "property": "levelChangeUp",
+        "propertyKey": 13,
+    }
+    assert args["value"] is True
+
+    client.async_send_command.reset_mock()
+
+    # Test stop after opening
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 106,
+        "endpoint": 0,
+        "property": "levelChangeUp",
+        "propertyKey": 13,
+    }
+    assert args["value"] is False
+
+    client.async_send_command.reset_mock()
+
+    # Test closing
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_CLOSE_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 106,
+        "endpoint": 0,
+        "property": "levelChangeDown",
+        "propertyKey": 13,
+    }
+    assert args["value"] is True
+
+    client.async_send_command.reset_mock()
+
+    # Test stop after closing
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert len(client.async_send_command.call_args_list) == 1
+    args = client.async_send_command.call_args[0][0]
+    assert args["command"] == "node.set_value"
+    assert args["nodeId"] == 2
+    assert args["valueId"] == {
+        "commandClass": 106,
+        "endpoint": 0,
+        "property": "levelChangeUp",
+        "propertyKey": 13,
+    }
+    assert args["value"] is False
 
     client.async_send_command.reset_mock()

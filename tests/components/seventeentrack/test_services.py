@@ -5,14 +5,24 @@ from unittest.mock import AsyncMock
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.seventeentrack import DOMAIN, SERVICE_GET_PACKAGES
+from homeassistant.components.seventeentrack import DOMAIN
+from homeassistant.components.seventeentrack.const import (
+    SERVICE_ARCHIVE_PACKAGE,
+    SERVICE_GET_PACKAGES,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from . import init_integration
-from .conftest import get_package
+from .conftest import (
+    ARCHIVE_PACKAGE_NUMBER,
+    CONFIG_ENTRY_ID_KEY,
+    PACKAGE_STATE_KEY,
+    PACKAGE_TRACKING_NUMBER_KEY,
+    get_package,
+)
 
 from tests.common import MockConfigEntry
 
@@ -30,8 +40,8 @@ async def test_get_packages_from_list(
         DOMAIN,
         SERVICE_GET_PACKAGES,
         {
-            "config_entry_id": mock_config_entry.entry_id,
-            "package_state": ["in_transit", "delivered"],
+            CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
+            PACKAGE_STATE_KEY: ["in_transit", "delivered"],
         },
         blocking=True,
         return_response=True,
@@ -53,7 +63,7 @@ async def test_get_all_packages(
         DOMAIN,
         SERVICE_GET_PACKAGES,
         {
-            "config_entry_id": mock_config_entry.entry_id,
+            CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
         },
         blocking=True,
         return_response=True,
@@ -76,7 +86,7 @@ async def test_service_called_with_unloaded_entry(
             DOMAIN,
             SERVICE_GET_PACKAGES,
             {
-                "config_entry_id": mock_config_entry.entry_id,
+                CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
             },
             blocking=True,
             return_response=True,
@@ -110,11 +120,56 @@ async def test_service_called_with_non_17track_device(
             DOMAIN,
             SERVICE_GET_PACKAGES,
             {
-                "config_entry_id": device_entry.id,
+                CONFIG_ENTRY_ID_KEY: device_entry.id,
             },
             blocking=True,
             return_response=True,
         )
+
+
+async def test_archive_package(
+    hass: HomeAssistant,
+    mock_seventeentrack: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Ensure service archives package."""
+    await _mock_packages(mock_seventeentrack)
+    await init_integration(hass, mock_config_entry)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_ARCHIVE_PACKAGE,
+        {
+            CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
+            PACKAGE_TRACKING_NUMBER_KEY: ARCHIVE_PACKAGE_NUMBER,
+        },
+        blocking=True,
+    )
+    mock_seventeentrack.return_value.profile.archive_package.assert_called_once_with(
+        ARCHIVE_PACKAGE_NUMBER
+    )
+
+
+async def test_packages_with_none_timestamp(
+    hass: HomeAssistant,
+    mock_seventeentrack: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Ensure service returns all packages when non provided."""
+    await _mock_invalid_packages(mock_seventeentrack)
+    await init_integration(hass, mock_config_entry)
+    service_response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_PACKAGES,
+        {
+            CONFIG_ENTRY_ID_KEY: mock_config_entry.entry_id,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert service_response == snapshot
 
 
 async def _mock_packages(mock_seventeentrack):
@@ -133,4 +188,20 @@ async def _mock_packages(mock_seventeentrack):
         package1,
         package2,
         package3,
+    ]
+
+
+async def _mock_invalid_packages(mock_seventeentrack):
+    package1 = get_package(
+        status=10,
+        timestamp=None,
+    )
+    package2 = get_package(
+        tracking_number="789",
+        friendly_name="friendly name 2",
+        status=40,
+    )
+    mock_seventeentrack.return_value.profile.packages.return_value = [
+        package1,
+        package2,
     ]

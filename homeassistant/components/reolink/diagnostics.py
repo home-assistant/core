@@ -4,18 +4,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from . import ReolinkData
-from .const import DOMAIN
+from .util import ReolinkConfigEntry, ReolinkData
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: ReolinkConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    reolink_data: ReolinkData = hass.data[DOMAIN][config_entry.entry_id]
+    reolink_data: ReolinkData = config_entry.runtime_data
     host = reolink_data.host
     api = host.api
 

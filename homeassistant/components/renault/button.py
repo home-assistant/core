@@ -13,6 +13,10 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from . import RenaultConfigEntry
 from .entity import RenaultEntity
 
+# Coordinator is used to centralize the data updates
+# but renault servers are unreliable and it's safer to queue action calls
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class RenaultButtonEntityDescription(ButtonEntityDescription):

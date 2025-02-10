@@ -7,27 +7,22 @@ from datetime import timedelta
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import HiveEntity
 from .const import DOMAIN
+from .entity import HiveEntity
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
 HIVETOHA = {
-    "home": STATE_ALARM_DISARMED,
-    "asleep": STATE_ALARM_ARMED_NIGHT,
-    "away": STATE_ALARM_ARMED_AWAY,
-    "sos": STATE_ALARM_TRIGGERED,
+    "home": AlarmControlPanelState.DISARMED,
+    "asleep": AlarmControlPanelState.ARMED_NIGHT,
+    "away": AlarmControlPanelState.ARMED_AWAY,
+    "sos": AlarmControlPanelState.TRIGGERED,
 }
 
 
@@ -76,6 +71,6 @@ class HiveAlarmControlPanelEntity(HiveEntity, AlarmControlPanelEntity):
         self._attr_available = self.device["deviceData"].get("online")
         if self._attr_available:
             if self.device["status"]["state"]:
-                self._attr_state = STATE_ALARM_TRIGGERED
+                self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
             else:
-                self._attr_state = HIVETOHA[self.device["status"]["mode"]]
+                self._attr_alarm_state = HIVETOHA[self.device["status"]["mode"]]

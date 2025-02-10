@@ -237,6 +237,8 @@
       'data': dict({
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'webmin',
       'entry_id': '**REDACTED**',
       'minor_version': 1,

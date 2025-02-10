@@ -7,7 +7,7 @@ from p1monitor import Phases, Settings, SmartMeter, WaterMeter
 import pytest
 
 from homeassistant.components.p1_monitor.const import DOMAIN
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
@@ -19,8 +19,9 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="monitor",
         domain=DOMAIN,
-        data={CONF_HOST: "example"},
+        data={CONF_HOST: "example", CONF_PORT: 80},
         unique_id="unique_thingy",
+        version=2,
     )
 
 

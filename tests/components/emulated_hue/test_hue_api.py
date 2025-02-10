@@ -58,7 +58,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonObjectType
 
 from tests.common import (
@@ -793,7 +793,10 @@ async def test_put_light_state(
     await hass_hue.services.async_call(
         light.DOMAIN,
         const.SERVICE_TURN_ON,
-        {const.ATTR_ENTITY_ID: "light.ceiling_lights", light.ATTR_COLOR_TEMP: 20},
+        {
+            const.ATTR_ENTITY_ID: "light.ceiling_lights",
+            light.ATTR_COLOR_TEMP_KELVIN: 50000,
+        },
         blocking=True,
     )
 
@@ -802,8 +805,10 @@ async def test_put_light_state(
     )
 
     assert (
-        hass_hue.states.get("light.ceiling_lights").attributes[light.ATTR_COLOR_TEMP]
-        == 50
+        hass_hue.states.get("light.ceiling_lights").attributes[
+            light.ATTR_COLOR_TEMP_KELVIN
+        ]
+        == 20000
     )
 
     # mock light.turn_on call
@@ -1248,9 +1253,7 @@ async def test_proper_put_state_request(hue_client: TestClient) -> None:
     """Test the request to set the state."""
     # Test proper on value parsing
     result = await hue_client.put(
-        "/api/username/lights/{}/state".format(
-            ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]
-        ),
+        f"/api/username/lights/{ENTITY_NUMBERS_BY_ID['light.ceiling_lights']}/state",
         data=json.dumps({HUE_API_STATE_ON: 1234}),
     )
 
@@ -1258,9 +1261,7 @@ async def test_proper_put_state_request(hue_client: TestClient) -> None:
 
     # Test proper brightness value parsing
     result = await hue_client.put(
-        "/api/username/lights/{}/state".format(
-            ENTITY_NUMBERS_BY_ID["light.ceiling_lights"]
-        ),
+        f"/api/username/lights/{ENTITY_NUMBERS_BY_ID['light.ceiling_lights']}/state",
         data=json.dumps({HUE_API_STATE_ON: True, HUE_API_STATE_BRI: "Hello world!"}),
     )
 
@@ -1789,7 +1790,7 @@ async def test_get_light_state_when_none(
             light.ATTR_BRIGHTNESS: None,
             light.ATTR_RGB_COLOR: None,
             light.ATTR_HS_COLOR: None,
-            light.ATTR_COLOR_TEMP: None,
+            light.ATTR_COLOR_TEMP_KELVIN: None,
             light.ATTR_XY_COLOR: None,
             light.ATTR_SUPPORTED_COLOR_MODES: [
                 light.COLOR_MODE_COLOR_TEMP,
@@ -1817,7 +1818,7 @@ async def test_get_light_state_when_none(
             light.ATTR_BRIGHTNESS: None,
             light.ATTR_RGB_COLOR: None,
             light.ATTR_HS_COLOR: None,
-            light.ATTR_COLOR_TEMP: None,
+            light.ATTR_COLOR_TEMP_KELVIN: None,
             light.ATTR_XY_COLOR: None,
             light.ATTR_SUPPORTED_COLOR_MODES: [
                 light.COLOR_MODE_COLOR_TEMP,

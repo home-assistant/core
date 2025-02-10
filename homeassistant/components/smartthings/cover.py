@@ -10,28 +10,25 @@ from pysmartthings import Attribute, Capability
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
-    STATE_CLOSED,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
+    CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
+from .entity import SmartThingsEntity
 
 VALUE_TO_STATE = {
-    "closed": STATE_CLOSED,
-    "closing": STATE_CLOSING,
-    "open": STATE_OPEN,
-    "opening": STATE_OPENING,
-    "partially open": STATE_OPEN,
+    "closed": CoverState.CLOSED,
+    "closing": CoverState.CLOSING,
+    "open": CoverState.OPEN,
+    "opening": CoverState.OPENING,
+    "partially open": CoverState.OPEN,
     "unknown": None,
 }
 
@@ -147,16 +144,16 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     @property
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
-        return self._state == STATE_OPENING
+        return self._state == CoverState.OPENING
 
     @property
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
-        return self._state == STATE_CLOSING
+        return self._state == CoverState.CLOSING
 
     @property
     def is_closed(self) -> bool | None:
         """Return if the cover is closed or not."""
-        if self._state == STATE_CLOSED:
+        if self._state == CoverState.CLOSED:
             return True
         return None if self._state is None else False

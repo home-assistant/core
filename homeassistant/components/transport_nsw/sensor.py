@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from TransportNSW import TransportNSW
 import voluptuous as vol
@@ -15,7 +16,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import ATTR_MODE, CONF_API_KEY, CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -98,7 +99,7 @@ class TransportNSWSensor(SensorEntity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._times is not None:
             return {
@@ -110,6 +111,7 @@ class TransportNSWSensor(SensorEntity):
                 ATTR_DESTINATION: self._times[ATTR_DESTINATION],
                 ATTR_MODE: self._times[ATTR_MODE],
             }
+        return None
 
     @property
     def native_unit_of_measurement(self):

@@ -5,12 +5,10 @@ from __future__ import annotations
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_UUID
 from homeassistant.core import HomeAssistant
 
-from . import TileData
-from .const import DOMAIN
+from .coordinator import TileConfigEntry
 
 CONF_ALTITUDE = "altitude"
 
@@ -23,11 +21,12 @@ TO_REDACT = {
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: TileConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    data: TileData = hass.data[DOMAIN][entry.entry_id]
+    coordinators = entry.runtime_data.values()
 
     return async_redact_data(
-        {"tiles": [tile.as_dict() for tile in data.tiles.values()]}, TO_REDACT
+        {"tiles": [coordinator.tile.as_dict() for coordinator in coordinators]},
+        TO_REDACT,
     )

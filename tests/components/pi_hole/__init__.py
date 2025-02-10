@@ -33,7 +33,7 @@ ZERO_DATA = {
     "unique_domains": 0,
 }
 
-SAMPLE_VERSIONS = {
+SAMPLE_VERSIONS_WITH_UPDATES = {
     "core_current": "v5.5",
     "core_latest": "v5.6",
     "core_update": True,
@@ -43,6 +43,18 @@ SAMPLE_VERSIONS = {
     "FTL_current": "v5.10",
     "FTL_latest": "v5.11",
     "FTL_update": True,
+}
+
+SAMPLE_VERSIONS_NO_UPDATES = {
+    "core_current": "v5.5",
+    "core_latest": "v5.5",
+    "core_update": False,
+    "web_current": "v5.7",
+    "web_latest": "v5.7",
+    "web_update": False,
+    "FTL_current": "v5.10",
+    "FTL_latest": "v5.10",
+    "FTL_update": False,
 }
 
 HOST = "1.2.3.4"
@@ -103,7 +115,9 @@ CONFIG_ENTRY_WITHOUT_API_KEY = {
 SWITCH_ENTITY_ID = "switch.pi_hole"
 
 
-def _create_mocked_hole(raise_exception=False, has_versions=True, has_data=True):
+def _create_mocked_hole(
+    raise_exception=False, has_versions=True, has_update=True, has_data=True
+):
     mocked_hole = MagicMock()
     type(mocked_hole).get_data = AsyncMock(
         side_effect=HoleError("") if raise_exception else None
@@ -118,7 +132,10 @@ def _create_mocked_hole(raise_exception=False, has_versions=True, has_data=True)
     else:
         mocked_hole.data = []
     if has_versions:
-        mocked_hole.versions = SAMPLE_VERSIONS
+        if has_update:
+            mocked_hole.versions = SAMPLE_VERSIONS_WITH_UPDATES
+        else:
+            mocked_hole.versions = SAMPLE_VERSIONS_NO_UPDATES
     else:
         mocked_hole.versions = None
     return mocked_hole

@@ -6,7 +6,7 @@
   "current": 23.75,
   "network_ssid": "Connecting...",
   "id": "AA:AA:AA:AA:AA:BB",
-  "auto_charge": true,
+  "auto_charge": false,
   "highChargePeriodActive": false,
   "normalPeriodActive": false,
   "maxChargePourcentage": 0.9,

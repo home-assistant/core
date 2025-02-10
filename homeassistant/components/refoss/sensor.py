@@ -27,10 +27,12 @@ from homeassistant.helpers.typing import StateType
 
 from .bridge import RefossDataUpdateCoordinator
 from .const import (
+    _LOGGER,
     CHANNEL_DISPLAY_NAME,
     COORDINATORS,
     DISPATCH_DEVICE_DISCOVERED,
     DOMAIN,
+    SENSOR_EM,
 )
 from .entity import RefossEntity
 
@@ -43,8 +45,13 @@ class RefossSensorEntityDescription(SensorEntityDescription):
     fn: Callable[[float], float] = lambda x: x
 
 
+DEVICETYPE_SENSOR: dict[str, str] = {
+    "em06": SENSOR_EM,
+    "em16": SENSOR_EM,
+}
+
 SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
-    "em06": (
+    SENSOR_EM: (
         RefossSensorEntityDescription(
             key="power",
             translation_key="power",
@@ -91,7 +98,7 @@ SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
             suggested_display_precision=2,
             subkey="mConsume",
-            fn=lambda x: x if x > 0 else 0,
+            fn=lambda x: max(0, x),
         ),
         RefossSensorEntityDescription(
             key="energy_returned",
@@ -121,8 +128,11 @@ async def async_setup_entry(
 
         if not isinstance(device, ElectricityXMix):
             return
+
+        sensor_type = DEVICETYPE_SENSOR.get(device.device_type, "")
+
         descriptions: tuple[RefossSensorEntityDescription, ...] = SENSORS.get(
-            device.device_type, ()
+            sensor_type, ()
         )
 
         async_add_entities(
@@ -134,6 +144,7 @@ async def async_setup_entry(
             for channel in device.channels
             for description in descriptions
         )
+        _LOGGER.debug("Device %s add sensor entity success", device.dev_name)
 
     for coordinator in hass.data[DOMAIN][COORDINATORS]:
         init_device(coordinator)

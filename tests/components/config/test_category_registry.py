@@ -1,10 +1,14 @@
 """Test category registry API."""
 
+from datetime import datetime
+
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.config import category_registry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import category_registry as cr
+from homeassistant.util.dt import utcnow
 
 from tests.common import ANY
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
@@ -19,6 +23,7 @@ async def client_fixture(
     return await hass_ws_client(hass)
 
 
+@pytest.mark.usefixtures("freezer")
 async def test_list_categories(
     client: MockHAClientWebSocket,
     category_registry: cr.CategoryRegistry,
@@ -53,11 +58,15 @@ async def test_list_categories(
     assert len(msg["result"]) == 2
     assert msg["result"][0] == {
         "category_id": category1.category_id,
+        "created_at": utcnow().timestamp(),
+        "modified_at": utcnow().timestamp(),
         "name": "Energy saving",
         "icon": "mdi:leaf",
     }
     assert msg["result"][1] == {
         "category_id": category2.category_id,
+        "created_at": utcnow().timestamp(),
+        "modified_at": utcnow().timestamp(),
         "name": "Something else",
         "icon": "mdi:home",
     }
@@ -71,6 +80,8 @@ async def test_list_categories(
     assert len(msg["result"]) == 1
     assert msg["result"][0] == {
         "category_id": category3.category_id,
+        "created_at": utcnow().timestamp(),
+        "modified_at": utcnow().timestamp(),
         "name": "Grocery stores",
         "icon": "mdi:store",
     }
@@ -79,8 +90,11 @@ async def test_list_categories(
 async def test_create_category(
     client: MockHAClientWebSocket,
     category_registry: cr.CategoryRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test create entry."""
+    created1 = datetime(2024, 2, 14, 12, 0, 0)
+    freezer.move_to(created1)
     await client.send_json_auto_id(
         {
             "type": "config/category_registry/create",
@@ -98,8 +112,13 @@ async def test_create_category(
     assert msg["result"] == {
         "icon": "mdi:leaf",
         "category_id": ANY,
+        "created_at": created1.timestamp(),
+        "modified_at": created1.timestamp(),
         "name": "Energy saving",
     }
+
+    created2 = datetime(2024, 3, 14, 12, 0, 0)
+    freezer.move_to(created2)
 
     await client.send_json_auto_id(
         {
@@ -117,8 +136,13 @@ async def test_create_category(
     assert msg["result"] == {
         "icon": None,
         "category_id": ANY,
+        "created_at": created2.timestamp(),
+        "modified_at": created2.timestamp(),
         "name": "Something else",
     }
+
+    created3 = datetime(2024, 4, 14, 12, 0, 0)
+    freezer.move_to(created3)
 
     # Test adding the same one again in a different scope
     await client.send_json_auto_id(
@@ -139,6 +163,8 @@ async def test_create_category(
     assert msg["result"] == {
         "icon": "mdi:leaf",
         "category_id": ANY,
+        "created_at": created3.timestamp(),
+        "modified_at": created3.timestamp(),
         "name": "Energy saving",
     }
 
@@ -249,14 +275,20 @@ async def test_delete_non_existing_category(
 async def test_update_category(
     client: MockHAClientWebSocket,
     category_registry: cr.CategoryRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update entry."""
+    created = datetime(2024, 2, 14, 12, 0, 0)
+    freezer.move_to(created)
     category = category_registry.async_create(
         scope="automation",
         name="Energy saving",
     )
     assert len(category_registry.categories) == 1
     assert len(category_registry.categories["automation"]) == 1
+
+    modified = datetime(2024, 3, 14, 12, 0, 0)
+    freezer.move_to(modified)
 
     await client.send_json_auto_id(
         {
@@ -275,8 +307,13 @@ async def test_update_category(
     assert msg["result"] == {
         "icon": "mdi:left",
         "category_id": category.category_id,
+        "created_at": created.timestamp(),
+        "modified_at": modified.timestamp(),
         "name": "ENERGY SAVING",
     }
+
+    modified = datetime(2024, 4, 14, 12, 0, 0)
+    freezer.move_to(modified)
 
     await client.send_json_auto_id(
         {
@@ -295,6 +332,8 @@ async def test_update_category(
     assert msg["result"] == {
         "icon": None,
         "category_id": category.category_id,
+        "created_at": created.timestamp(),
+        "modified_at": modified.timestamp(),
         "name": "Energy saving",
     }
 

@@ -51,4 +51,4 @@ class LutronScene(LutronKeypad, Scene):
 
     def activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
-        self._lutron_device.press()
+        self._lutron_device.tap()

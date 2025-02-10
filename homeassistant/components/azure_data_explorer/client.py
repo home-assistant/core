@@ -65,12 +65,17 @@ class AzureDataExplorerClient:
         )
 
         if data[CONF_USE_QUEUED_CLIENT] is True:
-            # Queded is the only option supported on free tear of ADX
+            # Queued is the only option supported on free tier of ADX
             self.write_client = QueuedIngestClient(kcsb_ingest)
         else:
-            self.write_client = ManagedStreamingIngestClient.from_dm_kcsb(kcsb_ingest)
+            self.write_client = ManagedStreamingIngestClient(kcsb_ingest)
 
         self.query_client = KustoClient(kcsb_query)
+
+        # Reduce the HTTP logging, the default INFO logging is too verbose.
+        logging.getLogger("azure.core.pipeline.policies.http_logging_policy").setLevel(
+            logging.WARNING
+        )
 
     def test_connection(self) -> None:
         """Test connection, will throw Exception if it cannot connect."""
@@ -80,7 +85,7 @@ class AzureDataExplorerClient:
         self.query_client.execute_query(self._database, query)
 
     def ingest_data(self, adx_events: str) -> None:
-        """Send data to Axure Data Explorer."""
+        """Send data to Azure Data Explorer."""
 
         bytes_stream = io.StringIO(adx_events)
         stream_descriptor = StreamDescriptor(bytes_stream)

@@ -16,8 +16,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TechnoVEConfigEntry
-from .coordinator import TechnoVEDataUpdateCoordinator
+from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 
 
@@ -46,12 +45,6 @@ BINARY_SENSORS = [
         translation_key="is_battery_protected",
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda station: station.info.is_battery_protected,
-    ),
-    TechnoVEBinarySensorDescription(
-        key="is_session_active",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
-        value_fn=lambda station: station.info.is_session_active,
     ),
     TechnoVEBinarySensorDescription(
         key="is_static_ip",

@@ -17,6 +17,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
+    EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
@@ -748,6 +749,15 @@ SENSOR_PROCESS_DATA = [
         formatter="format_energy",
     ),
     PlenticoreSensorEntityDescription(
+        module_id="scb:event",
+        key="Event:ActiveErrorCnt",
+        name="Active Alarms",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        icon="mdi:alert",
+        formatter="format_round",
+    ),
+    PlenticoreSensorEntityDescription(
         module_id="_virt_",
         key="pv_P",
         name="Sum power of all PV DC inputs",
@@ -806,11 +816,7 @@ async def async_setup_entry(
 
     available_process_data = await plenticore.client.get_process_data()
     process_data_update_coordinator = ProcessDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        "Process Data",
-        timedelta(seconds=10),
-        plenticore,
+        hass, entry, _LOGGER, "Process Data", timedelta(seconds=10), plenticore
     )
     for description in SENSOR_PROCESS_DATA:
         module_id = description.module_id

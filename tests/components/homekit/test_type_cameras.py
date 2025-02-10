@@ -1,6 +1,7 @@
 """Test different accessory types: Camera."""
 
 import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 from uuid import UUID
 
@@ -31,7 +32,13 @@ from homeassistant.components.homekit.const import (
 )
 from homeassistant.components.homekit.type_cameras import Camera
 from homeassistant.components.homekit.type_switches import Switch
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
@@ -47,12 +54,12 @@ PID_THAT_WILL_NEVER_BE_ALIVE = 2147483647
 
 
 @pytest.fixture(autouse=True)
-async def setup_homeassistant(hass: HomeAssistant):
+async def setup_homeassistant(hass: HomeAssistant) -> None:
     """Set up the homeassistant integration."""
     await async_setup_component(hass, "homeassistant", {})
 
 
-async def _async_start_streaming(hass, acc):
+async def _async_start_streaming(hass: HomeAssistant, acc: Camera) -> None:
     """Start streaming a camera."""
     acc.set_selected_stream_configuration(MOCK_START_STREAM_TLV)
     await hass.async_block_till_done()
@@ -60,28 +67,35 @@ async def _async_start_streaming(hass, acc):
     await hass.async_block_till_done()
 
 
-async def _async_setup_endpoints(hass, acc):
+async def _async_setup_endpoints(hass: HomeAssistant, acc: Camera) -> None:
     """Set camera endpoints."""
     acc.set_endpoints(MOCK_END_POINTS_TLV)
     acc.run()
     await hass.async_block_till_done()
 
 
-async def _async_reconfigure_stream(hass, acc, session_info, stream_config):
+async def _async_reconfigure_stream(
+    hass: HomeAssistant,
+    acc: Camera,
+    session_info: dict[str, Any],
+    stream_config: dict[str, Any],
+) -> None:
     """Reconfigure the stream."""
     await acc.reconfigure_stream(session_info, stream_config)
     acc.run()
     await hass.async_block_till_done()
 
 
-async def _async_stop_all_streams(hass, acc):
+async def _async_stop_all_streams(hass: HomeAssistant, acc: Camera) -> None:
     """Stop all camera streams."""
     await acc.stop()
     acc.run()
     await hass.async_block_till_done()
 
 
-async def _async_stop_stream(hass, acc, session_info):
+async def _async_stop_stream(
+    hass: HomeAssistant, acc: Camera, session_info: dict[str, Any]
+) -> None:
     """Stop a camera stream."""
     await acc.stop_stream(session_info)
     acc.run()
@@ -883,6 +897,54 @@ async def test_camera_with_linked_motion_event(hass: HomeAssistant, run_driver) 
     await hass.async_block_till_done()
     assert char.value is False
 
+    # Ensure re-adding does not fire an event
+    hass.states.async_set(
+        motion_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION, "other": "attr"},
+    )
+    await hass.async_block_till_done()
+    assert not broker.mock_calls
+
+    # But a second update does
+    broker.reset_mock()
+    hass.states.async_set(
+        motion_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION},
+    )
+    await hass.async_block_till_done()
+    assert broker.mock_calls
+
+    # Now go unavailable
+    broker.reset_mock()
+    hass.states.async_set(
+        motion_entity_id,
+        STATE_UNAVAILABLE,
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION},
+    )
+    await hass.async_block_till_done()
+    assert not broker.mock_calls
+
+    # Going from unavailable to a state should not fire an event
+    hass.states.async_set(
+        motion_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION},
+    )
+    await hass.async_block_till_done()
+    assert not broker.mock_calls
+
+    # But a another update does
+    broker.reset_mock()
+    hass.states.async_set(
+        motion_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.MOTION, "other": "attr"},
+    )
+    await hass.async_block_till_done()
+    assert broker.mock_calls
+
 
 async def test_camera_with_a_missing_linked_motion_sensor(
     hass: HomeAssistant, run_driver
@@ -1147,6 +1209,35 @@ async def test_camera_with_linked_doorbell_event(
     await hass.async_block_till_done()
     assert char.value is None
     assert char2.value is None
+
+    await hass.async_block_till_done()
+    hass.states.async_set(
+        doorbell_entity_id,
+        STATE_UNAVAILABLE,
+        {ATTR_DEVICE_CLASS: EventDeviceClass.DOORBELL},
+    )
+    await hass.async_block_till_done()
+    # Ensure re-adding does not fire an event
+    assert not broker.mock_calls
+    broker.reset_mock()
+
+    # going from unavailable to a state should not fire an event
+    hass.states.async_set(
+        doorbell_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.DOORBELL},
+    )
+    await hass.async_block_till_done()
+    assert not broker.mock_calls
+
+    # But a second update does
+    hass.states.async_set(
+        doorbell_entity_id,
+        dt_util.utcnow().isoformat(),
+        {ATTR_DEVICE_CLASS: EventDeviceClass.DOORBELL},
+    )
+    await hass.async_block_till_done()
+    assert broker.mock_calls
 
 
 async def test_camera_with_a_missing_linked_doorbell_sensor(

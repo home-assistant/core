@@ -1,7 +1,7 @@
 """Tests for the for the BMW Connected Drive integration."""
 
 from bimmer_connected.const import (
-    REMOTE_SERVICE_BASE_URL,
+    REMOTE_SERVICE_V4_BASE_URL,
     VEHICLE_CHARGING_BASE_URL,
     VEHICLE_POI_URL,
 )
@@ -9,6 +9,7 @@ import respx
 
 from homeassistant import config_entries
 from homeassistant.components.bmw_connected_drive.const import (
+    CONF_CAPTCHA_TOKEN,
     CONF_GCID,
     CONF_READ_ONLY,
     CONF_REFRESH_TOKEN,
@@ -24,8 +25,12 @@ FIXTURE_USER_INPUT = {
     CONF_PASSWORD: "p4ssw0rd",
     CONF_REGION: "rest_of_world",
 }
-FIXTURE_REFRESH_TOKEN = "SOME_REFRESH_TOKEN"
-FIXTURE_GCID = "SOME_GCID"
+FIXTURE_CAPTCHA_INPUT = {
+    CONF_CAPTCHA_TOKEN: "captcha_token",
+}
+FIXTURE_USER_INPUT_W_CAPTCHA = FIXTURE_USER_INPUT | FIXTURE_CAPTCHA_INPUT
+FIXTURE_REFRESH_TOKEN = "another_token_string"
+FIXTURE_GCID = "DUMMY"
 
 FIXTURE_CONFIG_ENTRY = {
     "entry_id": "1",
@@ -40,8 +45,20 @@ FIXTURE_CONFIG_ENTRY = {
     },
     "options": {CONF_READ_ONLY: False},
     "source": config_entries.SOURCE_USER,
-    "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_REGION]}",
+    "unique_id": f"{FIXTURE_USER_INPUT[CONF_REGION]}-{FIXTURE_USER_INPUT[CONF_USERNAME]}",
 }
+
+REMOTE_SERVICE_EXC_REASON = "HTTPStatusError: 502 Bad Gateway"
+REMOTE_SERVICE_EXC_TRANSLATION = (
+    "Error executing remote service on vehicle. HTTPStatusError: 502 Bad Gateway"
+)
+
+BIMMER_CONNECTED_LOGIN_PATCH = (
+    "homeassistant.components.bmw_connected_drive.config_flow.MyBMWAuthentication.login"
+)
+BIMMER_CONNECTED_VEHICLE_PATCH = (
+    "homeassistant.components.bmw_connected_drive.coordinator.MyBMWAccount.get_vehicles"
+)
 
 
 async def setup_mocked_integration(hass: HomeAssistant) -> MockConfigEntry:
@@ -71,11 +88,11 @@ def check_remote_service_call(
         first_remote_service_call: respx.models.Call = next(
             c
             for c in router.calls
-            if c.request.url.path.startswith(REMOTE_SERVICE_BASE_URL)
+            if c.request.url.path.startswith(REMOTE_SERVICE_V4_BASE_URL)
             or c.request.url.path.startswith(
                 VEHICLE_CHARGING_BASE_URL.replace("/{vin}", "")
             )
-            or c.request.url.path == VEHICLE_POI_URL
+            or c.request.url.path.endswith(VEHICLE_POI_URL.rsplit("/", maxsplit=1)[-1])
         )
         assert (
             first_remote_service_call.request.url.path.endswith(remote_service) is True

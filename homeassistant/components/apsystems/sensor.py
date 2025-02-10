@@ -12,16 +12,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
-    StateType,
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import DiscoveryInfoType
+from homeassistant.helpers.typing import DiscoveryInfoType, StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ApSystemsConfigEntry, ApSystemsData
-from .coordinator import ApSystemsDataCoordinator
+from .coordinator import ApSystemsConfigEntry, ApSystemsData, ApSystemsDataCoordinator
 from .entity import ApSystemsEntity
 
 
@@ -148,4 +146,4 @@ class ApSystemsSensorWithDescription(
     @property
     def native_value(self) -> StateType:
         """Return value of sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data.output_data)

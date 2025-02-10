@@ -1,0 +1,132 @@
+{
+  "stations": [
+    {
+      "created_epoch": 1658343273,
+      "devices": [
+        {
+          "device_id": 7654321,
+          "device_meta": {
+            "agl": 1.8288,
+            "environment": "indoor",
+            "name": "HB-00068123",
+            "wifi_network_name": ""
+          },
+          "device_type": "HB",
+          "firmware_revision": "177",
+          "hardware_revision": "1",
+          "location_id": 24432,
+          "serial_number": "HB-00068123"
+        },
+        {
+          "device_id": 123456,
+          "device_meta": {
+            "agl": 1.8288,
+            "environment": "outdoor",
+            "name": "ST-11084623",
+            "wifi_network_name": ""
+          },
+          "device_settings": {
+            "show_precip_final": true
+          },
+          "device_type": "ST",
+          "firmware_revision": "172",
+          "hardware_revision": "1",
+          "location_id": 24432,
+          "serial_number": "ST-11084623"
+        }
+      ],
+      "is_local_mode": false,
+      "last_modified_epoch": 1658344464,
+      "latitude": 43.94962,
+      "location_id": 24432,
+      "longitude": -102.86831,
+      "name": "My Home Station",
+      "public_name": "My Home Station",
+      "station_id": 24432,
+      "station_items": [
+        {
+          "device_id": 123456,
+          "item": "air_temperature_humidity",
+          "location_id": 24432,
+          "location_item_id": 657904,
+          "sort": 0,
+          "station_id": 24432,
+          "station_item_id": 657904
+        },
+        {
+          "device_id": 123456,
+          "item": "barometric_pressure",
+          "location_id": 24432,
+          "location_item_id": 657906,
+          "sort": 3,
+          "station_id": 24432,
+          "station_item_id": 657906
+        },
+        {
+          "device_id": 7654321,
+          "item": "diagnostics",
+          "location_id": 24432,
+          "location_item_id": 657912,
+          "station_id": 24432,
+          "station_item_id": 657912
+        },
+        {
+          "device_id": 123456,
+          "item": "diagnostics",
+          "location_id": 24432,
+          "location_item_id": 657913,
+          "sort": 6,
+          "station_id": 24432,
+          "station_item_id": 657913
+        },
+        {
+          "device_id": 123456,
+          "item": "light",
+          "location_id": 24432,
+          "location_item_id": 657908,
+          "sort": 2,
+          "station_id": 24432,
+          "station_item_id": 657908
+        },
+        {
+          "device_id": 123456,
+          "item": "lightning",
+          "location_id": 24432,
+          "location_item_id": 657905,
+          "sort": 4,
+          "station_id": 24432,
+          "station_item_id": 657905
+        },
+        {
+          "device_id": 123456,
+          "item": "rain",
+          "location_id": 24432,
+          "location_item_id": 657907,
+          "sort": 5,
+          "station_id": 24432,
+          "station_item_id": 657907
+        },
+        {
+          "device_id": 123456,
+          "item": "wind",
+          "location_id": 24432,
+          "location_item_id": 657909,
+          "sort": 1,
+          "station_id": 24432,
+          "station_item_id": 657909
+        }
+      ],
+      "station_meta": {
+        "elevation": 2063.150146484375,
+        "share_with_wf": true,
+        "share_with_wu": true
+      },
+      "timezone": "America/Denver",
+      "timezone_offset_minutes": -420
+    }
+  ],
+  "status": {
+    "status_code": 0,
+    "status_message": "SUCCESS"
+  }
+}

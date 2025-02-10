@@ -258,6 +258,7 @@ DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     ),
 )
 
+
 ENERGY_LIVE_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
     TessieSensorEntityDescription(
         key="solar_power",
@@ -292,6 +293,7 @@ ENERGY_LIVE_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         suggested_display_precision=2,
+        value_fn=lambda value: value or 0,
     ),
     TessieSensorEntityDescription(
         key="battery_power",
@@ -366,6 +368,8 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TessieSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
     ),
 )
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(

@@ -28,8 +28,8 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SmartThingsEntity
 from .const import DATA_BROKERS, DOMAIN
+from .entity import SmartThingsEntity
 
 ATTR_OPERATION_STATE = "operation_state"
 MODE_TO_STATE = {
@@ -143,7 +143,6 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
     # Or must have all of these thermostat capabilities
     thermostat_capabilities = [
         Capability.temperature_measurement,
-        Capability.thermostat_cooling_setpoint,
         Capability.thermostat_heating_setpoint,
         Capability.thermostat_mode,
     ]
@@ -164,8 +163,6 @@ def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
 
 class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings climate entities."""
-
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device):
         """Init the class."""
@@ -348,7 +345,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
     _hvac_modes: list[HVACMode]
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device) -> None:
         """Init the class."""

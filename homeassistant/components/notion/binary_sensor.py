@@ -17,7 +17,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NotionEntity
 from .const import (
     DOMAIN,
     LOGGER,
@@ -32,7 +31,7 @@ from .const import (
     SENSOR_WINDOW_HINGED,
 )
 from .coordinator import NotionDataUpdateCoordinator
-from .model import NotionEntityDescription
+from .entity import NotionEntity, NotionEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)

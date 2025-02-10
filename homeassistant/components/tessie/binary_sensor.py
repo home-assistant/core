@@ -20,6 +20,8 @@ from .const import TessieState
 from .entity import TessieEnergyEntity, TessieEntity
 from .models import TessieEnergyData, TessieVehicleData
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class TessieBinarySensorEntityDescription(BinarySensorEntityDescription):
@@ -161,6 +163,7 @@ VEHICLE_DESCRIPTIONS: tuple[TessieBinarySensorEntityDescription, ...] = (
 ENERGY_LIVE_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
     BinarySensorEntityDescription(key="backup_capable"),
     BinarySensorEntityDescription(key="grid_services_active"),
+    BinarySensorEntityDescription(key="storm_mode_active"),
 )
 
 

@@ -1,5 +1,9 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+    },
     "error": {
       "invalid_access_token": "[%key:common::config_flow::error::invalid_access_token%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -59,9 +63,6 @@
       },
       "charge_state_charge_port_latch": {
         "name": "Charge cable lock"
-      },
-      "vehicle_state_speed_limit_mode_active": {
-        "name": "Speed limit"
       }
     },
     "media_player": {
@@ -235,6 +236,9 @@
       },
       "vehicle_state_rt": {
         "name": "Trunk"
+      },
+      "vehicle_state_sun_roof_state": {
+        "name": "Sunroof"
       }
     },
     "select": {
@@ -294,6 +298,24 @@
       },
       "climate_state_seat_heater_third_row_right": {
         "name": "Seat heater third row right",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_fan_front_left": {
+        "name": "Seat cooler left",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
+          "medium": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::medium%]",
+          "high": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::high%]"
+        }
+      },
+      "climate_state_seat_fan_front_right": {
+        "name": "Seat cooler right",
         "state": {
           "off": "[%key:common::state::off%]",
           "low": "[%key:component::tessie::entity::select::climate_state_seat_heater_left::state::low%]",
@@ -367,6 +389,9 @@
       "components_grid_services_enabled": {
         "name": "Grid services enabled"
       },
+      "storm_mode_active": {
+        "name": "Storm watch active"
+      },
       "grid_services_active": {
         "name": "Grid services active"
       },
@@ -434,7 +459,7 @@
       }
     },
     "switch": {
-      "charge_state_charge_enable_request": {
+      "charge_state_charging_state": {
         "name": "Charge"
       },
       "climate_state_defrost_mode": {
@@ -496,48 +521,13 @@
       "message": "{name} is already inactive."
     },
     "incorrect_pin": {
-      "message": "Incorrect pin for {name}."
+      "message": "Incorrect PIN for {name}."
     },
     "no_cable": {
       "message": "Insert cable to lock"
     },
     "command_failed": {
       "message": "Command failed, {message}"
-    }
-  },
-  "issues": {
-    "deprecated_speed_limit_entity": {
-      "title": "Detected Tessie speed limit lock entity usage",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::tessie::issues::deprecated_speed_limit_entity::title%]",
-            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\nHome Assistant detected that entity `{entity}` is being used in `{info}`\n\nYou should remove the speed limit lock entity from `{info}` then click submit to fix this issue."
-          }
-        }
-      }
-    },
-    "deprecated_speed_limit_locked": {
-      "title": "Detected Tessie speed limit lock entity locked",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::tessie::issues::deprecated_speed_limit_locked::title%]",
-            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then click submit to fix this issue."
-          }
-        }
-      }
-    },
-    "deprecated_speed_limit_unlocked": {
-      "title": "Detected Tessie speed limit lock entity unlocked",
-      "fix_flow": {
-        "step": {
-          "confirm": {
-            "title": "[%key:component::tessie::issues::deprecated_speed_limit_unlocked::title%]",
-            "description": "The Tessie integration's speed limit lock entity has been deprecated and will be remove in 2024.11.0.\n\nPlease remove this entity from any automation or script, disable the entity then click submit to fix this issue."
-          }
-        }
-      }
     }
   }
 }

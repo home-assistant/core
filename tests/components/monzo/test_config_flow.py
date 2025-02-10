@@ -1,10 +1,7 @@
 """Tests for config flow."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
-from monzopy import AuthorisationExpiredError
 import pytest
 
 from homeassistant.components.monzo.application_credentials import (
@@ -12,7 +9,7 @@ from homeassistant.components.monzo.application_credentials import (
     OAUTH2_TOKEN,
 )
 from homeassistant.components.monzo.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -20,7 +17,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from . import setup_integration
 from .conftest import CLIENT_ID, USER_ID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -154,14 +151,7 @@ async def test_config_reauth_profile(
     """Test reauth an existing profile reauthenticates the config entry."""
     await setup_integration(hass, polling_config_entry)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": polling_config_entry.entry_id,
-        },
-        data=polling_config_entry.data,
-    )
+    result = await polling_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -223,14 +213,7 @@ async def test_config_reauth_wrong_account(
     """Test reauth with wrong account."""
     await setup_integration(hass, polling_config_entry)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": SOURCE_REAUTH,
-            "entry_id": polling_config_entry.entry_id,
-        },
-        data=polling_config_entry.data,
-    )
+    result = await polling_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -269,25 +252,3 @@ async def test_config_reauth_wrong_account(
     assert result
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_account"
-
-
-async def test_api_can_trigger_reauth(
-    hass: HomeAssistant,
-    polling_config_entry: MockConfigEntry,
-    monzo: AsyncMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test reauth an existing profile reauthenticates the config entry."""
-    await setup_integration(hass, polling_config_entry)
-
-    monzo.user_account.accounts.side_effect = AuthorisationExpiredError()
-    freezer.tick(timedelta(minutes=10))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    flows = hass.config_entries.flow.async_progress()
-
-    assert len(flows) == 1
-    flow = flows[0]
-    assert flow["step_id"] == "reauth_confirm"
-    assert flow["handler"] == DOMAIN
-    assert flow["context"]["source"] == SOURCE_REAUTH

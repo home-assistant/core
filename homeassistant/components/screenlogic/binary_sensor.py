@@ -2,7 +2,6 @@
 
 from copy import copy
 import dataclasses
-import logging
 
 from screenlogicpy.const.common import ON_OFF
 from screenlogicpy.const.data import ATTR, DEVICE, GROUP, VALUE
@@ -10,17 +9,15 @@ from screenlogicpy.const.msg import CODE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.binary_sensor import (
-    DOMAIN,
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import (
     ScreenLogicEntity,
@@ -28,9 +25,8 @@ from .entity import (
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
 )
+from .types import ScreenLogicConfigEntry
 from .util import cleanup_excluded_entity
-
-_LOGGER = logging.getLogger(__name__)
 
 
 @dataclasses.dataclass(frozen=True, kw_only=True)
@@ -53,26 +49,31 @@ SUPPORTED_CORE_SENSORS = [
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.ACTIVE_ALERT,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="active_alert",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.STATUS_CHANGED,
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.CLEANER_DELAY,
+        translation_key="cleaner_delay",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.STATUS_CHANGED,
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.FREEZE_MODE,
+        translation_key="freeze_mode",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.STATUS_CHANGED,
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.POOL_DELAY,
+        translation_key="pool_delay",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.STATUS_CHANGED,
         data_root=(DEVICE.CONTROLLER, GROUP.SENSOR),
         key=VALUE.SPA_DELAY,
+        translation_key="spa_delay",
     ),
 ]
 
@@ -89,75 +90,96 @@ SUPPORTED_INTELLICHEM_SENSORS = [
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.FLOW_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="flow_alarm",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.ORP_HIGH_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_high_alarm",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.ORP_LOW_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_low_alarm",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.ORP_SUPPLY_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_supply_alarm",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.PH_HIGH_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_high_alarm",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.PH_LOW_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_low_alarm",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.PH_SUPPLY_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="chem_supply_alarm",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALARM),
         key=VALUE.PROBE_FAULT_ALARM,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="probe_fault_alarm",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALERT),
         key=VALUE.ORP_LIMIT,
+        translation_key="chem_limit",
+        translation_placeholders={"chem": "ORP"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALERT),
         key=VALUE.PH_LIMIT,
+        translation_key="chem_limit",
+        translation_placeholders={"chem": "pH"},
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.ALERT),
         key=VALUE.PH_LOCKOUT,
+        translation_key="ph_lockout",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.WATER_BALANCE),
         key=VALUE.CORROSIVE,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="corosive",
     ),
     ScreenLogicPushBinarySensorDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
         data_root=(DEVICE.INTELLICHEM, GROUP.WATER_BALANCE),
         key=VALUE.SCALING,
         device_class=BinarySensorDeviceClass.PROBLEM,
+        translation_key="scaling",
     ),
 ]
 
@@ -165,19 +187,18 @@ SUPPORTED_SCG_SENSORS = [
     ScreenLogicBinarySensorDescription(
         data_root=(DEVICE.SCG, GROUP.SENSOR),
         key=VALUE.STATE,
+        translation_key="scg_state",
     )
 ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ScreenLogicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
     gateway = coordinator.gateway
 
     entities: list[ScreenLogicBinarySensor] = [
@@ -208,7 +229,9 @@ async def async_setup_entry(
             chem_sensor_description.key,
         )
         if EQUIPMENT_FLAG.INTELLICHEM not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, chem_sensor_data_path)
+            cleanup_excluded_entity(
+                coordinator, BINARY_SENSOR_DOMAIN, chem_sensor_data_path
+            )
             continue
         if gateway.get_data(*chem_sensor_data_path):
             entities.append(
@@ -222,7 +245,9 @@ async def async_setup_entry(
             scg_sensor_description.key,
         )
         if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, scg_sensor_data_path)
+            cleanup_excluded_entity(
+                coordinator, BINARY_SENSOR_DOMAIN, scg_sensor_data_path
+            )
             continue
         if gateway.get_data(*scg_sensor_data_path):
             entities.append(

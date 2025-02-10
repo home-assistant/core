@@ -2,11 +2,8 @@
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
 
-from .const import DOMAIN, PLATFORMS
-
-CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
+from .const import PLATFORMS
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

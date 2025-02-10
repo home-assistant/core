@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_TYPE,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -103,7 +103,7 @@ def setup_platform(
 
     devices = []
     for zone_id, extra in config[CONF_ZONES].items():
-        _LOGGER.info("Adding zone %d - %s", zone_id, extra[CONF_NAME])
+        _LOGGER.debug("Adding zone %d - %s", zone_id, extra[CONF_NAME])
         unique_id = f"{connection}-{zone_id}"
         device = BlackbirdZone(blackbird, sources, zone_id, extra[CONF_NAME])
         hass.data[DATA_BLACKBIRD][unique_id] = device

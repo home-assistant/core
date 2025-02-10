@@ -5,12 +5,12 @@ from unittest.mock import MagicMock
 
 from gridnet import GridNetConnectionError
 
-from homeassistant.components import zeroconf
 from homeassistant.components.pure_energie.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
 async def test_full_user_flow_implementation(
@@ -48,7 +48,7 @@ async def test_full_zeroconf_flow_implementationn(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.123"),
             ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",
@@ -104,7 +104,7 @@ async def test_zeroconf_connection_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.123"),
             ip_addresses=[ip_address("192.168.1.123")],
             hostname="example.local.",

@@ -18,7 +18,6 @@ import aiohttp
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
@@ -27,11 +26,13 @@ from homeassistant.components.esphome.const import (
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import VALID_NOISE_PSK
 
@@ -126,7 +127,7 @@ async def test_user_sets_unique_id(
     hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test that the user flow sets the unique id."""
-    service_info = zeroconf.ZeroconfServiceInfo(
+    service_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.43.183"),
         ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
@@ -205,7 +206,7 @@ async def test_user_causes_zeroconf_to_abort(
     hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test that the user flow sets the unique id and aborts the zeroconf flow."""
-    service_info = zeroconf.ZeroconfServiceInfo(
+    service_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.43.183"),
         ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
@@ -568,7 +569,7 @@ async def test_discovery_initiation(
     hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test discovery importing works."""
-    service_info = zeroconf.ZeroconfServiceInfo(
+    service_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.43.183"),
         ip_addresses=[ip_address("192.168.43.183")],
         hostname="test.local.",
@@ -601,7 +602,7 @@ async def test_discovery_no_mac(
     hass: HomeAssistant, mock_client, mock_setup_entry: None
 ) -> None:
     """Test discovery aborted if old ESPHome without mac in zeroconf."""
-    service_info = zeroconf.ZeroconfServiceInfo(
+    service_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.43.183"),
         ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
@@ -629,7 +630,7 @@ async def test_discovery_already_configured(
 
     entry.add_to_hass(hass)
 
-    service_info = zeroconf.ZeroconfServiceInfo(
+    service_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.43.183"),
         ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
@@ -650,7 +651,7 @@ async def test_discovery_duplicate_data(
     hass: HomeAssistant, mock_client: APIClient, mock_setup_entry: None
 ) -> None:
     """Test discovery aborts if same mDNS packet arrives."""
-    service_info = zeroconf.ZeroconfServiceInfo(
+    service_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.43.183"),
         ip_addresses=[ip_address("192.168.43.183")],
         hostname="test.local.",
@@ -685,7 +686,7 @@ async def test_discovery_updates_unique_id(
 
     entry.add_to_hass(hass)
 
-    service_info = zeroconf.ZeroconfServiceInfo(
+    service_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.43.183"),
         ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
@@ -798,14 +799,7 @@ async def test_reauth_initiation(hass: HomeAssistant, mock_client) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
@@ -821,14 +815,7 @@ async def test_reauth_confirm_valid(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
 
     mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
     result = await hass.config_entries.flow.async_configure(
@@ -875,14 +862,7 @@ async def test_reauth_fixed_via_dashboard(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
-        result = await hass.config_entries.flow.async_init(
-            "esphome",
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-                "unique_id": entry.unique_id,
-            },
-        )
+        result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT, result
     assert result["reason"] == "reauth_successful"
@@ -896,7 +876,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
     hass: HomeAssistant,
     mock_client,
     mock_dashboard: dict[str, Any],
-    mock_config_entry,
+    mock_config_entry: MockConfigEntry,
     mock_setup_entry: None,
 ) -> None:
     """Test reauth fixed automatically via dashboard with password removed."""
@@ -918,14 +898,7 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
         "homeassistant.components.esphome.coordinator.ESPHomeDashboardAPI.get_encryption_key",
         return_value=VALID_NOISE_PSK,
     ) as mock_get_encryption_key:
-        result = await hass.config_entries.flow.async_init(
-            "esphome",
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": mock_config_entry.entry_id,
-                "unique_id": mock_config_entry.unique_id,
-            },
-        )
+        result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT, result
     assert result["reason"] == "reauth_successful"
@@ -938,21 +911,14 @@ async def test_reauth_fixed_via_dashboard_add_encryption_remove_password(
 async def test_reauth_fixed_via_remove_password(
     hass: HomeAssistant,
     mock_client,
-    mock_config_entry,
+    mock_config_entry: MockConfigEntry,
     mock_dashboard: dict[str, Any],
     mock_setup_entry: None,
 ) -> None:
     """Test reauth fixed automatically by seeing password removed."""
     mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": mock_config_entry.entry_id,
-            "unique_id": mock_config_entry.unique_id,
-        },
-    )
+    result = await mock_config_entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.ABORT, result
     assert result["reason"] == "reauth_successful"
@@ -981,14 +947,7 @@ async def test_reauth_fixed_via_dashboard_at_confirm(
 
     mock_client.device_info.return_value = DeviceInfo(uses_password=False, name="test")
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM, result
     assert result["step_id"] == "reauth_confirm"
@@ -1027,14 +986,7 @@ async def test_reauth_confirm_invalid(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
 
     mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError
     result = await hass.config_entries.flow.async_configure(
@@ -1070,14 +1022,7 @@ async def test_reauth_confirm_invalid_with_unique_id(
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        "esphome",
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-    )
+    result = await entry.start_reauth_flow(hass)
 
     mock_client.device_info.side_effect = InvalidEncryptionKeyAPIError
     result = await hass.config_entries.flow.async_configure(
@@ -1112,7 +1057,7 @@ async def test_discovery_dhcp_updates_host(
     )
     entry.add_to_hass(hass)
 
-    service_info = dhcp.DhcpServiceInfo(
+    service_info = DhcpServiceInfo(
         ip="192.168.43.184",
         hostname="test8266",
         macaddress="1122334455aa",
@@ -1139,7 +1084,7 @@ async def test_discovery_dhcp_no_changes(
 
     mock_client.device_info = AsyncMock(return_value=DeviceInfo(name="test8266"))
 
-    service_info = dhcp.DhcpServiceInfo(
+    service_info = DhcpServiceInfo(
         ip="192.168.43.183",
         hostname="test8266",
         macaddress="000000000000",
@@ -1188,7 +1133,7 @@ async def test_zeroconf_encryption_key_via_dashboard(
     mock_setup_entry: None,
 ) -> None:
     """Test encryption key retrieved from dashboard."""
-    service_info = zeroconf.ZeroconfServiceInfo(
+    service_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.43.183"),
         ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
@@ -1254,7 +1199,7 @@ async def test_zeroconf_encryption_key_via_dashboard_with_api_encryption_prop(
     mock_setup_entry: None,
 ) -> None:
     """Test encryption key retrieved from dashboard with api_encryption property set."""
-    service_info = zeroconf.ZeroconfServiceInfo(
+    service_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.43.183"),
         ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
@@ -1320,7 +1265,7 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
     mock_setup_entry: None,
 ) -> None:
     """Test encryption key not retrieved from dashboard."""
-    service_info = zeroconf.ZeroconfServiceInfo(
+    service_info = ZeroconfServiceInfo(
         ip_address=ip_address("192.168.43.183"),
         ip_addresses=[ip_address("192.168.43.183")],
         hostname="test8266.local.",
@@ -1454,6 +1399,14 @@ async def test_discovery_mqtt_no_mac(
 ) -> None:
     """Test discovery aborted if mac is missing in MQTT payload."""
     await mqtt_discovery_test_abort(hass, "{}", "mqtt_missing_mac")
+
+
+@pytest.mark.usefixtures("mock_zeroconf")
+async def test_discovery_mqtt_empty_payload(
+    hass: HomeAssistant, mock_client, mock_setup_entry: None
+) -> None:
+    """Test discovery aborted if MQTT payload is empty."""
+    await mqtt_discovery_test_abort(hass, "", "mqtt_missing_payload")
 
 
 @pytest.mark.usefixtures("mock_zeroconf")

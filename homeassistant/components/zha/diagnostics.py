@@ -6,31 +6,36 @@ import dataclasses
 from importlib.metadata import version
 from typing import Any
 
-from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
-from zigpy.profiles import PROFILES
-from zigpy.types import Channels
-from zigpy.zcl import Cluster
-
-from homeassistant.components.diagnostics.util import async_redact_data
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ID, CONF_NAME, CONF_UNIQUE_ID
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
-
-from .core.const import (
-    ATTR_ATTRIBUTE_NAME,
+from zha.application.const import (
+    ATTR_ATTRIBUTE,
     ATTR_DEVICE_TYPE,
     ATTR_IEEE,
     ATTR_IN_CLUSTERS,
     ATTR_OUT_CLUSTERS,
     ATTR_PROFILE_ID,
     ATTR_VALUE,
-    CONF_ALARM_MASTER_CODE,
     UNKNOWN,
 )
-from .core.device import ZHADevice
-from .core.gateway import ZHAGateway
-from .core.helpers import async_get_zha_device, get_zha_data, get_zha_gateway
+from zha.application.gateway import Gateway
+from zha.zigbee.device import Device
+from zigpy.config import CONF_NWK_EXTENDED_PAN_ID
+from zigpy.profiles import PROFILES
+from zigpy.types import Channels
+from zigpy.zcl import Cluster
+
+from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ID, CONF_NAME, CONF_UNIQUE_ID
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from .const import CONF_ALARM_MASTER_CODE
+from .helpers import (
+    ZHADeviceProxy,
+    async_get_zha_device_proxy,
+    get_zha_data,
+    get_zha_gateway,
+)
 
 KEYS_TO_REDACT = {
     ATTR_IEEE,
@@ -44,6 +49,15 @@ KEYS_TO_REDACT = {
 ATTRIBUTES = "attributes"
 CLUSTER_DETAILS = "cluster_details"
 UNSUPPORTED_ATTRIBUTES = "unsupported_attributes"
+
+BELLOWS_VERSION = version("bellows")
+ZIGPY_VERSION = version("zigpy")
+ZIGPY_DECONZ_VERSION = version("zigpy-deconz")
+ZIGPY_XBEE_VERSION = version("zigpy-xbee")
+ZIGPY_ZNP_VERSION = version("zigpy-znp")
+ZIGPY_ZIGATE_VERSION = version("zigpy-zigate")
+ZHA_QUIRKS_VERSION = version("zha-quirks")
+ZHA_VERSION = version("zha")
 
 
 def shallow_asdict(obj: Any) -> dict:
@@ -65,7 +79,7 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     zha_data = get_zha_data(hass)
-    gateway: ZHAGateway = get_zha_gateway(hass)
+    gateway: Gateway = get_zha_gateway(hass)
     app = gateway.application_controller
 
     energy_scan = await app.energy_scan(
@@ -81,13 +95,14 @@ async def async_get_config_entry_diagnostics(
                 channel: 100 * energy / 255 for channel, energy in energy_scan.items()
             },
             "versions": {
-                "bellows": version("bellows"),
-                "zigpy": version("zigpy"),
-                "zigpy_deconz": version("zigpy-deconz"),
-                "zigpy_xbee": version("zigpy-xbee"),
-                "zigpy_znp": version("zigpy_znp"),
-                "zigpy_zigate": version("zigpy-zigate"),
-                "zhaquirks": version("zha-quirks"),
+                "bellows": BELLOWS_VERSION,
+                "zigpy": ZIGPY_VERSION,
+                "zigpy_deconz": ZIGPY_DECONZ_VERSION,
+                "zigpy_xbee": ZIGPY_XBEE_VERSION,
+                "zigpy_znp": ZIGPY_ZNP_VERSION,
+                "zigpy_zigate": ZIGPY_ZIGATE_VERSION,
+                "zhaquirks": ZHA_QUIRKS_VERSION,
+                "zha": ZHA_VERSION,
             },
             "devices": [
                 {
@@ -106,13 +121,15 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, config_entry: ConfigEntry, device: dr.DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
-    zha_device: ZHADevice = async_get_zha_device(hass, device.id)
-    device_info: dict[str, Any] = zha_device.zha_device_info
-    device_info[CLUSTER_DETAILS] = get_endpoint_cluster_attr_data(zha_device)
+    zha_device_proxy: ZHADeviceProxy = async_get_zha_device_proxy(hass, device.id)
+    device_info: dict[str, Any] = zha_device_proxy.zha_device_info
+    device_info[CLUSTER_DETAILS] = get_endpoint_cluster_attr_data(
+        zha_device_proxy.device
+    )
     return async_redact_data(device_info, KEYS_TO_REDACT)
 
 
-def get_endpoint_cluster_attr_data(zha_device: ZHADevice) -> dict:
+def get_endpoint_cluster_attr_data(zha_device: Device) -> dict:
     """Return endpoint cluster attribute data."""
     cluster_details = {}
     for ep_id, endpoint in zha_device.device.endpoints.items():
@@ -150,27 +167,15 @@ def get_endpoint_cluster_attr_data(zha_device: ZHADevice) -> dict:
 
 def get_cluster_attr_data(cluster: Cluster) -> dict:
     """Return cluster attribute data."""
-    unsupported_attributes = {}
-    for u_attr in cluster.unsupported_attributes:
-        try:
-            u_attr_def = cluster.find_attribute(u_attr)
-            unsupported_attributes[f"0x{u_attr_def.id:04x}"] = {
-                ATTR_ATTRIBUTE_NAME: u_attr_def.name
-            }
-        except KeyError:
-            if isinstance(u_attr, int):
-                unsupported_attributes[f"0x{u_attr:04x}"] = {}
-            else:
-                unsupported_attributes[u_attr] = {}
-
     return {
         ATTRIBUTES: {
             f"0x{attr_id:04x}": {
-                ATTR_ATTRIBUTE_NAME: attr_def.name,
-                ATTR_VALUE: attr_value,
+                ATTR_ATTRIBUTE: repr(attr_def),
+                ATTR_VALUE: cluster.get(attr_def.name),
             }
             for attr_id, attr_def in cluster.attributes.items()
-            if (attr_value := cluster.get(attr_def.name)) is not None
         },
-        UNSUPPORTED_ATTRIBUTES: unsupported_attributes,
+        UNSUPPORTED_ATTRIBUTES: sorted(
+            cluster.unsupported_attributes, key=lambda v: (isinstance(v, str), v)
+        ),
     }

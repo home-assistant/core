@@ -37,6 +37,7 @@ MODELS_PORT_80 = [
     "RBR",
     "RBS",
     "RBW",
+    "RS",
     "LBK",
     "LBR",
     "CBK",

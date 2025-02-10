@@ -12,7 +12,8 @@
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
-      "invalid_rova_area": "Rova does not collect at this address"
+      "invalid_rova_area": "Rova does not collect at this address",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
@@ -21,14 +22,6 @@
     }
   },
   "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "The Rova YAML configuration import failed",
-      "description": "Configuring Rova using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure connection to Rova works and restart Home Assistant to try again or remove the Rova YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
-    "deprecated_yaml_import_issue_invalid_rova_area": {
-      "title": "The Rova YAML configuration import failed",
-      "description": "There was an error when trying to import your Rova YAML configuration.\n\nRova does not collect at this address.\n\nEnsure the imported configuration is correct and remove the Rova YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
-    },
     "no_rova_area": {
       "title": "Rova does not collect at this address anymore",
       "description": "Rova does not collect at {zip_code} anymore.\n\nPlease remove the integration."

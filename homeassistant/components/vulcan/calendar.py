@@ -133,7 +133,7 @@ class VulcanCalendarEntity(CalendarEntity):
             events = await get_lessons(self.client)
 
             if not self.available:
-                _LOGGER.info("Restored connection with API")
+                _LOGGER.warning("Restored connection with API")
                 self._attr_available = True
 
             if events == []:

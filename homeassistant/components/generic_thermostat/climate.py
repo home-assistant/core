@@ -14,13 +14,7 @@ import voluptuous as vol
 from homeassistant.components.climate import (
     ATTR_PRESET_MODE,
     PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
-    PRESET_ACTIVITY,
-    PRESET_AWAY,
-    PRESET_COMFORT,
-    PRESET_ECO,
-    PRESET_HOME,
     PRESET_NONE,
-    PRESET_SLEEP,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
@@ -44,7 +38,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import (
-    DOMAIN as HA_DOMAIN,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
     Event,
     EventStateChangedData,
@@ -64,36 +58,31 @@ from homeassistant.helpers.reload import async_setup_reload_service
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
 
-from . import CONF_HEATER, DOMAIN, PLATFORMS
+from .const import (
+    CONF_AC_MODE,
+    CONF_COLD_TOLERANCE,
+    CONF_HEATER,
+    CONF_HOT_TOLERANCE,
+    CONF_MAX_TEMP,
+    CONF_MIN_DUR,
+    CONF_MIN_TEMP,
+    CONF_PRESETS,
+    CONF_SENSOR,
+    DEFAULT_TOLERANCE,
+    DOMAIN,
+    PLATFORMS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_TOLERANCE = 0.3
 DEFAULT_NAME = "Generic Thermostat"
-CONF_SENSOR = "target_sensor"
-CONF_MIN_TEMP = "min_temp"
-CONF_MAX_TEMP = "max_temp"
-CONF_TARGET_TEMP = "target_temp"
-CONF_AC_MODE = "ac_mode"
-CONF_MIN_DUR = "min_cycle_duration"
-CONF_COLD_TOLERANCE = "cold_tolerance"
-CONF_HOT_TOLERANCE = "hot_tolerance"
-CONF_KEEP_ALIVE = "keep_alive"
+
 CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
+CONF_KEEP_ALIVE = "keep_alive"
 CONF_PRECISION = "precision"
+CONF_TARGET_TEMP = "target_temp"
 CONF_TEMP_STEP = "target_temp_step"
 
-CONF_PRESETS = {
-    p: f"{p}_temp"
-    for p in (
-        PRESET_AWAY,
-        PRESET_COMFORT,
-        PRESET_ECO,
-        PRESET_HOME,
-        PRESET_SLEEP,
-        PRESET_ACTIVITY,
-    )
-}
 
 PRESETS_SCHEMA: VolDictType = {
     vol.Optional(v): vol.Coerce(float) for v in CONF_PRESETS.values()
@@ -216,7 +205,6 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
     """Representation of a Generic Thermostat device."""
 
     _attr_should_poll = False
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -280,6 +268,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         else:
             self._attr_preset_modes = [PRESET_NONE]
         self._presets = presets
+        self._presets_inv = {v: k for k, v in presets.items()}
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
@@ -433,6 +422,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
+        self._attr_preset_mode = self._presets_inv.get(temperature, PRESET_NONE)
         self._target_temp = temperature
         await self._async_control_heating(force=True)
         self.async_write_ha_state()
@@ -496,7 +486,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         try:
             cur_temp = float(state.state)
             if not math.isfinite(cur_temp):
-                raise ValueError(f"Sensor has illegal state {state.state}")
+                raise ValueError(f"Sensor has illegal state {state.state}")  # noqa: TRY301
             self._cur_temp = cur_temp
         except ValueError as ex:
             _LOGGER.error("Unable to update from sensor: %s", ex)
@@ -511,7 +501,7 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                 self._target_temp,
             ):
                 self._active = True
-                _LOGGER.info(
+                _LOGGER.debug(
                     (
                         "Obtained current and target temperature. "
                         "Generic thermostat active. %s, %s"
@@ -550,21 +540,21 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
             too_hot = self._cur_temp >= self._target_temp + self._hot_tolerance
             if self._is_device_active:
                 if (self.ac_mode and too_cold) or (not self.ac_mode and too_hot):
-                    _LOGGER.info("Turning off heater %s", self.heater_entity_id)
+                    _LOGGER.debug("Turning off heater %s", self.heater_entity_id)
                     await self._async_heater_turn_off()
                 elif time is not None:
                     # The time argument is passed only in keep-alive case
-                    _LOGGER.info(
+                    _LOGGER.debug(
                         "Keep-alive - Turning on heater heater %s",
                         self.heater_entity_id,
                     )
                     await self._async_heater_turn_on()
             elif (self.ac_mode and too_hot) or (not self.ac_mode and too_cold):
-                _LOGGER.info("Turning on heater %s", self.heater_entity_id)
+                _LOGGER.debug("Turning on heater %s", self.heater_entity_id)
                 await self._async_heater_turn_on()
             elif time is not None:
                 # The time argument is passed only in keep-alive case
-                _LOGGER.info(
+                _LOGGER.debug(
                     "Keep-alive - Turning off heater %s", self.heater_entity_id
                 )
                 await self._async_heater_turn_off()
@@ -581,14 +571,14 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
         """Turn heater toggleable device on."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         await self.hass.services.async_call(
-            HA_DOMAIN, SERVICE_TURN_ON, data, context=self._context
+            HOMEASSISTANT_DOMAIN, SERVICE_TURN_ON, data, context=self._context
         )
 
     async def _async_heater_turn_off(self) -> None:
         """Turn heater toggleable device off."""
         data = {ATTR_ENTITY_ID: self.heater_entity_id}
         await self.hass.services.async_call(
-            HA_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
+            HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data, context=self._context
         )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:

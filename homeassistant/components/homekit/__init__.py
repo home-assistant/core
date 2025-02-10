@@ -33,6 +33,7 @@ from homeassistant.components.device_automation.trigger import (
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventDeviceClass
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -127,7 +128,7 @@ from .const import (
     SIGNAL_RELOAD_ENTITIES,
 )
 from .iidmanager import AccessoryIIDStorage
-from .models import HomeKitEntryData
+from .models import HomeKitConfigEntry, HomeKitEntryData
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
@@ -167,7 +168,6 @@ BATTERY_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.BATTERY)
 MOTION_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.MOTION)
 MOTION_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION)
 DOORBELL_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.DOORBELL)
-DOORBELL_BINARY_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY)
 HUMIDITY_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY)
 
 
@@ -223,8 +223,12 @@ UNPAIR_SERVICE_SCHEMA = vol.All(
 
 def _async_all_homekit_instances(hass: HomeAssistant) -> list[HomeKit]:
     """All active HomeKit instances."""
-    domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
-    return [data.homekit for data in domain_data.values()]
+    hk_data: HomeKitEntryData | None
+    return [
+        hk_data.homekit
+        for entry in hass.config_entries.async_entries(DOMAIN)
+        if (hk_data := getattr(entry, "runtime_data", None))
+    ]
 
 
 def _async_get_imported_entries_indices(
@@ -246,7 +250,6 @@ def _async_get_imported_entries_indices(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the HomeKit from yaml."""
-    hass.data[DOMAIN] = {}
     hass.data[PERSIST_LOCK_DATA] = asyncio.Lock()
 
     # Initialize the loader before loading entries to ensure
@@ -316,7 +319,7 @@ def _async_update_config_entry_from_yaml(
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> bool:
     """Set up HomeKit from a config entry."""
     _async_import_options_from_data_if_missing(hass, entry)
 
@@ -372,7 +375,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry_data = HomeKitEntryData(
         homekit=homekit, pairing_qr=None, pairing_qr_secret=None
     )
-    hass.data[DOMAIN][entry.entry_id] = entry_data
+    entry.runtime_data = entry_data
 
     async def _async_start_homekit(hass: HomeAssistant) -> None:
         await homekit.async_start()
@@ -382,17 +385,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def _async_update_listener(
+    hass: HomeAssistant, entry: HomeKitConfigEntry
+) -> None:
     """Handle options update."""
     if entry.source == SOURCE_IMPORT:
         return
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> bool:
     """Unload a config entry."""
     async_dismiss_setup_message(hass, entry.entry_id)
-    entry_data: HomeKitEntryData = hass.data[DOMAIN][entry.entry_id]
+    entry_data = entry.runtime_data
     homekit = entry_data.homekit
 
     if homekit.status == STATUS_RUNNING:
@@ -404,17 +409,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             break
 
         if not logged_shutdown_wait:
-            _LOGGER.info("Waiting for the HomeKit server to shutdown")
+            _LOGGER.debug("Waiting for the HomeKit server to shutdown")
             logged_shutdown_wait = True
 
         await asyncio.sleep(PORT_CLEANUP_CHECK_INTERVAL_SECS)
 
-    hass.data[DOMAIN].pop(entry.entry_id)
-
     return True
 
 
-async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def async_remove_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> None:
     """Remove a config entry."""
     await hass.async_add_executor_job(
         remove_state_files_for_entry_id, hass, entry.entry_id
@@ -423,7 +426,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
 
 @callback
 def _async_import_options_from_data_if_missing(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: HomeKitConfigEntry
 ) -> None:
     options = deepcopy(dict(entry.options))
     data = deepcopy(dict(entry.data))
@@ -1131,13 +1134,11 @@ class HomeKit:
                 config[entity_id].setdefault(
                     CONF_LINKED_MOTION_SENSOR, motion_binary_sensor_entity_id
                 )
+
+        if domain in (CAMERA_DOMAIN, LOCK_DOMAIN):
             if doorbell_event_entity_id := lookup.get(DOORBELL_EVENT_SENSOR):
                 config[entity_id].setdefault(
                     CONF_LINKED_DOORBELL_SENSOR, doorbell_event_entity_id
-                )
-            elif doorbell_binary_sensor_entity_id := lookup.get(DOORBELL_BINARY_SENSOR):
-                config[entity_id].setdefault(
-                    CONF_LINKED_DOORBELL_SENSOR, doorbell_binary_sensor_entity_id
                 )
 
         if domain == HUMIDIFIER_DOMAIN and (
@@ -1198,9 +1199,10 @@ class HomeKitPairingQRView(HomeAssistantView):
             raise Unauthorized
         entry_id, secret = request.query_string.split("-")
         hass = request.app[KEY_HASS]
-        domain_data: dict[str, HomeKitEntryData] = hass.data[DOMAIN]
+        entry_data: HomeKitEntryData | None
         if (
-            not (entry_data := domain_data.get(entry_id))
+            not (entry := hass.config_entries.async_get_entry(entry_id))
+            or not (entry_data := getattr(entry, "runtime_data", None))
             or not secret
             or not entry_data.pairing_qr_secret
             or secret != entry_data.pairing_qr_secret

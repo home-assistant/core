@@ -20,6 +20,8 @@ class BroadlinkEntity(Entity):
     async def async_added_to_hass(self):
         """Call when the entity is added to hass."""
         self.async_on_remove(self._coordinator.async_add_listener(self._recv_data))
+        if self._coordinator.data:
+            self._update_state(self._coordinator.data)
 
     async def async_update(self):
         """Update the state of the entity."""

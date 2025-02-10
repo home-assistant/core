@@ -149,7 +149,8 @@ def get_codec_string(mp4_bytes: bytes) -> str:
 def find_moov(mp4_io: BufferedIOBase) -> int:
     """Find location of moov atom in a BufferedIOBase mp4."""
     index = 0
-    while 1:
+    # Ruff doesn't understand this loop - the exception is always raised at the end
+    while 1:  # noqa: RET503
         mp4_io.seek(index)
         box_header = mp4_io.read(8)
         if len(box_header) != 8 or box_header[0:4] == b"\x00\x00\x00\x00":

@@ -8,8 +8,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components import websocket_api
-from homeassistant.components.websocket_api import ERR_NOT_FOUND
-from homeassistant.components.websocket_api.decorators import require_admin
+from homeassistant.components.websocket_api import ERR_NOT_FOUND, require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
@@ -280,9 +279,8 @@ def websocket_update_entity(
     result: dict[str, Any] = {"entity_entry": entity_entry.extended_dict}
     if "disabled_by" in changes and changes["disabled_by"] is None:
         # Enabling an entity requires a config entry reload, or HA restart
-        if (
-            not (config_entry_id := entity_entry.config_entry_id)
-            or (config_entry := hass.config_entries.async_get_entry(config_entry_id))
+        if not (config_entry_id := entity_entry.config_entry_id) or (
+            (config_entry := hass.config_entries.async_get_entry(config_entry_id))
             and not config_entry.supports_unload
         ):
             result["require_restart"] = True

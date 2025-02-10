@@ -22,6 +22,7 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'LV-PUR131S',
+      'model_id': None,
       'name': 'Air Purifier 131s',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
@@ -59,6 +60,7 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'Core200S',
+      'model_id': None,
       'name': 'Air Purifier 200s',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
@@ -96,6 +98,7 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'LAP-C401S-WJP',
+      'model_id': None,
       'name': 'Air Purifier 400s',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
@@ -133,6 +136,7 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'LAP-C601S-WUS',
+      'model_id': None,
       'name': 'Air Purifier 600s',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
@@ -170,6 +174,7 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'ESL100',
+      'model_id': None,
       'name': 'Dimmable Light',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
@@ -259,6 +264,7 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'ESWD16',
+      'model_id': None,
       'name': 'Dimmer Switch',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
@@ -329,6 +335,36 @@
 # ---
 # name: test_light_state[Humidifier 200s][devices]
   list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '200s-humidifier4321',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'Classic200S',
+      'model_id': None,
+      'name': 'Humidifier 200s',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
   ])
 # ---
 # name: test_light_state[Humidifier 200s][entities]
@@ -337,6 +373,36 @@
 # ---
 # name: test_light_state[Humidifier 600S][devices]
   list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          '600s-humidifier',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LUH-A602S-WUS',
+      'model_id': None,
+      'name': 'Humidifier 600S',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
   ])
 # ---
 # name: test_light_state[Humidifier 600S][entities]
@@ -366,6 +432,7 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'wifi-switch-1.3',
+      'model_id': None,
       'name': 'Outlet',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
@@ -377,6 +444,44 @@
   ])
 # ---
 # name: test_light_state[Outlet][entities]
+  list([
+  ])
+# ---
+# name: test_light_state[SmartTowerFan][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'smarttowerfan',
+        ),
+      }),
+      'is_new': False,
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LTF-F422S-KEU',
+      'model_id': None,
+      'name': 'SmartTowerFan',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
+      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_light_state[SmartTowerFan][entities]
   list([
   ])
 # ---
@@ -403,6 +508,7 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'ESL100CW',
+      'model_id': None,
       'name': 'Temperature Light',
       'name_by_user': None,
       'primary_config_entry': <ANY>,
@@ -420,10 +526,10 @@
       }),
       'area_id': None,
       'capabilities': dict({
-        'max_color_temp_kelvin': 6493,
+        'max_color_temp_kelvin': 6500,
         'max_mireds': 370,
-        'min_color_temp_kelvin': 2702,
-        'min_mireds': 154,
+        'min_color_temp_kelvin': 2700,
+        'min_mireds': 153,
         'supported_color_modes': list([
           <ColorMode.COLOR_TEMP: 'color_temp'>,
         ]),
@@ -465,10 +571,10 @@
       'color_temp_kelvin': None,
       'friendly_name': 'Temperature Light',
       'hs_color': None,
-      'max_color_temp_kelvin': 6493,
+      'max_color_temp_kelvin': 6500,
       'max_mireds': 370,
-      'min_color_temp_kelvin': 2702,
-      'min_mireds': 154,
+      'min_color_temp_kelvin': 2700,
+      'min_mireds': 153,
       'rgb_color': None,
       'supported_color_modes': list([
         <ColorMode.COLOR_TEMP: 'color_temp'>,
@@ -507,6 +613,7 @@
       }),
       'manufacturer': 'VeSync',
       'model': 'ESWL01',
+      'model_id': None,
       'name': 'Wall Switch',
       'name_by_user': None,
       'primary_config_entry': <ANY>,

@@ -24,12 +24,15 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
+    PermRequired,
     ProtectDeviceEntity,
+    ProtectEntityDescription,
     ProtectIsOnEntity,
     ProtectNVREntity,
+    ProtectSetableKeysMixin,
+    T,
     async_all_device_entities,
 )
-from .models import PermRequired, ProtectEntityDescription, ProtectSetableKeysMixin, T
 
 ATTR_PREV_MIC = "prev_mic_level"
 ATTR_PREV_RECORD = "prev_record_mode"
@@ -314,7 +317,7 @@ CAMERA_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
         name="Tracking: person",
         icon="mdi:walk",
         entity_category=EntityCategory.CONFIG,
-        ufp_required_field="is_ptz",
+        ufp_required_field="feature_flags.is_ptz",
         ufp_value="is_person_tracking_enabled",
         ufp_set_method="set_person_track",
         ufp_perm=PermRequired.WRITE,

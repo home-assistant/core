@@ -17,21 +17,25 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type GlancesConfigEntry = ConfigEntry[GlancesDataUpdateCoordinator]
+
 
 class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Get the latest data from Glances api."""
 
-    config_entry: ConfigEntry
+    config_entry: GlancesConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry, api: Glances) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: GlancesConfigEntry, api: Glances
+    ) -> None:
         """Initialize the Glances data."""
         self.hass = hass
-        self.config_entry = entry
         self.host: str = entry.data[CONF_HOST]
         self.api = api
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"{DOMAIN} - {self.host}",
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
@@ -45,15 +49,13 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except exceptions.GlancesApiError as err:
             raise UpdateFailed from err
         # Update computed values
-        uptime: datetime | None = self.data["computed"]["uptime"] if self.data else None
+        uptime: datetime | None = None
         up_duration: timedelta | None = None
-        if up_duration := parse_duration(data.get("uptime")):
+        if "uptime" in data and (up_duration := parse_duration(data["uptime"])):
+            uptime = self.data["computed"]["uptime"] if self.data else None
             # Update uptime if previous value is None or previous uptime is bigger than
             # new uptime (i.e. server restarted)
-            if (
-                self.data is None
-                or self.data["computed"]["uptime_duration"] > up_duration
-            ):
+            if uptime is None or self.data["computed"]["uptime_duration"] > up_duration:
                 uptime = utcnow() - up_duration
         data["computed"] = {"uptime_duration": up_duration, "uptime": uptime}
         return data or {}

@@ -9,18 +9,16 @@ from screenlogicpy.const.msg import CODE
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.components.number import (
-    DOMAIN,
+    DOMAIN as NUMBER_DOMAIN,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN as SL_DOMAIN
 from .coordinator import ScreenlogicDataUpdateCoordinator
 from .entity import (
     ScreenLogicEntity,
@@ -28,6 +26,7 @@ from .entity import (
     ScreenLogicPushEntity,
     ScreenLogicPushEntityDescription,
 )
+from .types import ScreenLogicConfigEntry
 from .util import cleanup_excluded_entity, get_ha_unit
 
 _LOGGER = logging.getLogger(__name__)
@@ -58,6 +57,7 @@ SUPPORTED_INTELLICHEM_NUMBERS = [
         key=VALUE.CALCIUM_HARDNESS,
         entity_category=EntityCategory.CONFIG,
         mode=NumberMode.BOX,
+        translation_key="calcium_hardness",
     ),
     ScreenLogicPushNumberDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -65,6 +65,7 @@ SUPPORTED_INTELLICHEM_NUMBERS = [
         key=VALUE.CYA,
         entity_category=EntityCategory.CONFIG,
         mode=NumberMode.BOX,
+        translation_key="cya",
     ),
     ScreenLogicPushNumberDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -72,6 +73,7 @@ SUPPORTED_INTELLICHEM_NUMBERS = [
         key=VALUE.TOTAL_ALKALINITY,
         entity_category=EntityCategory.CONFIG,
         mode=NumberMode.BOX,
+        translation_key="total_alkalinity",
     ),
     ScreenLogicPushNumberDescription(
         subscription_code=CODE.CHEMISTRY_CHANGED,
@@ -79,6 +81,7 @@ SUPPORTED_INTELLICHEM_NUMBERS = [
         key=VALUE.SALT_TDS_PPM,
         entity_category=EntityCategory.CONFIG,
         mode=NumberMode.BOX,
+        translation_key="salt_tds_ppm",
     ),
 ]
 
@@ -87,25 +90,25 @@ SUPPORTED_SCG_NUMBERS = [
         data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
         key=VALUE.POOL_SETPOINT,
         entity_category=EntityCategory.CONFIG,
+        translation_key="pool_setpoint",
     ),
     ScreenLogicNumberDescription(
         data_root=(DEVICE.SCG, GROUP.CONFIGURATION),
         key=VALUE.SPA_SETPOINT,
         entity_category=EntityCategory.CONFIG,
+        translation_key="spa_setpoint",
     ),
 ]
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ScreenLogicConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up entry."""
     entities: list[ScreenLogicNumber] = []
-    coordinator: ScreenlogicDataUpdateCoordinator = hass.data[SL_DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinator = config_entry.runtime_data
     gateway = coordinator.gateway
 
     for chem_number_description in SUPPORTED_INTELLICHEM_NUMBERS:
@@ -114,7 +117,7 @@ async def async_setup_entry(
             chem_number_description.key,
         )
         if EQUIPMENT_FLAG.INTELLICHEM not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, chem_number_data_path)
+            cleanup_excluded_entity(coordinator, NUMBER_DOMAIN, chem_number_data_path)
             continue
         if gateway.get_data(*chem_number_data_path):
             entities.append(
@@ -127,7 +130,7 @@ async def async_setup_entry(
             scg_number_description.key,
         )
         if EQUIPMENT_FLAG.CHLORINATOR not in gateway.equipment_flags:
-            cleanup_excluded_entity(coordinator, DOMAIN, scg_number_data_path)
+            cleanup_excluded_entity(coordinator, NUMBER_DOMAIN, scg_number_data_path)
             continue
         if gateway.get_data(*scg_number_data_path):
             entities.append(ScreenLogicSCGNumber(coordinator, scg_number_description))

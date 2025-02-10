@@ -1,10 +1,12 @@
 """Types for the ViCare integration."""
 
 from collections.abc import Callable
+from contextlib import suppress
 from dataclasses import dataclass
 import enum
 from typing import Any
 
+from PyViCare.PyViCare import PyViCare
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
 
@@ -14,6 +16,7 @@ from homeassistant.components.climate import (
     PRESET_HOME,
     PRESET_SLEEP,
 )
+from homeassistant.config_entries import ConfigEntry
 
 
 class HeatingProgram(enum.StrEnum):
@@ -24,11 +27,14 @@ class HeatingProgram(enum.StrEnum):
 
     COMFORT = "comfort"
     COMFORT_HEATING = "comfortHeating"
+    COMFORT_COOLING = "comfortCooling"
     ECO = "eco"
     NORMAL = "normal"
     NORMAL_HEATING = "normalHeating"
+    NORMAL_COOLING = "normalCooling"
     REDUCED = "reduced"
     REDUCED_HEATING = "reducedHeating"
+    REDUCED_COOLING = "reducedCooling"
     STANDBY = "standby"
 
     @staticmethod
@@ -48,8 +54,12 @@ class HeatingProgram(enum.StrEnum):
     ) -> str | None:
         """Return the mapped ViCare heating program for the Home Assistant preset."""
         for program in supported_heating_programs:
-            if VICARE_TO_HA_PRESET_HEATING.get(HeatingProgram(program)) == ha_preset:
-                return program
+            with suppress(ValueError):
+                if (
+                    VICARE_TO_HA_PRESET_HEATING.get(HeatingProgram(program))
+                    == ha_preset
+                ):
+                    return program
         return None
 
 
@@ -70,6 +80,17 @@ class ViCareDevice:
 
     config: PyViCareDeviceConfig
     api: PyViCareDevice
+
+
+@dataclass(frozen=True)
+class ViCareData:
+    """ViCare data class."""
+
+    client: PyViCare
+    devices: list[ViCareDevice]
+
+
+type ViCareConfigEntry = ConfigEntry[ViCareData]
 
 
 @dataclass(frozen=True)

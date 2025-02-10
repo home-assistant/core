@@ -50,7 +50,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.network import is_internal_request
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType, VolDictType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .browse_media import (
     build_item_response,
@@ -529,10 +529,11 @@ class KodiEntity(MediaPlayerEntity):
         return not self._connection.can_subscribe
 
     @property
-    def volume_level(self):
+    def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         if "volume" in self._app_properties:
             return int(self._app_properties["volume"]) / 100.0
+        return None
 
     @property
     def is_volume_muted(self):

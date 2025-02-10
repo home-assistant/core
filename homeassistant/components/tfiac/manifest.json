@@ -2,7 +2,9 @@
   "domain": "tfiac",
   "name": "Tfiac",
   "codeowners": ["@fredrike", "@mellado"],
+  "disabled": "This integration is disabled because we cannot build a valid wheel.",
   "documentation": "https://www.home-assistant.io/integrations/tfiac",
   "iot_class": "local_polling",
+  "quality_scale": "legacy",
   "requirements": ["pytfiac==0.4"]
 }

@@ -12,7 +12,6 @@ from homeassistant.components.cover import CoverDeviceClass, CoverEntityFeature
 from homeassistant.components.media_player import MediaPlayerEntityFeature
 from homeassistant.components.vacuum import VacuumEntityFeature
 from homeassistant.components.valve import SERVICE_STOP_VALVE, ValveEntityFeature
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.const import (
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
@@ -20,6 +19,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import Context, Event, HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import entityfilter
 from homeassistant.setup import async_setup_component
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
@@ -120,7 +120,9 @@ async def test_wrong_version(hass: HomeAssistant) -> None:
         await smart_home.async_handle_message(hass, get_default_config(hass), msg)
 
 
-async def discovery_test(device, hass, expected_endpoints=1):
+async def discovery_test(
+    device, hass: HomeAssistant, expected_endpoints: int = 1
+) -> dict[str, Any] | list[dict[str, Any]] | None:
     """Test alexa discovery request."""
     request = get_new_request("Alexa.Discovery", "Discover")
 
@@ -1979,7 +1981,7 @@ async def test_cover_position(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": supported_features,
-            "position": position,
+            "current_position": position,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2296,7 +2298,7 @@ async def test_cover_position_range(
             "friendly_name": "Test cover range",
             "device_class": "blind",
             "supported_features": 7,
-            "position": 30,
+            "current_position": 30,
         },
     )
     appliance = await discovery_test(device, hass)
@@ -2601,8 +2603,15 @@ async def test_stop_valve(
 
 
 async def assert_percentage_changes(
-    hass, adjustments, namespace, name, endpoint, parameter, service, changed_parameter
-):
+    hass: HomeAssistant,
+    adjustments,
+    namespace,
+    name,
+    endpoint,
+    parameter,
+    service,
+    changed_parameter,
+) -> None:
     """Assert an API request making percentage changes works.
 
     AdjustPercentage, AdjustBrightness, etc. are examples of such requests.
@@ -2616,8 +2625,15 @@ async def assert_percentage_changes(
 
 
 async def assert_range_changes(
-    hass, adjustments, namespace, name, endpoint, service, changed_parameter, instance
-):
+    hass: HomeAssistant,
+    adjustments: list[tuple[int | str, int, bool]],
+    namespace: str,
+    name: str,
+    endpoint: str,
+    service: str,
+    changed_parameter: str | None,
+    instance: str,
+) -> None:
     """Assert an API request making range changes works.
 
     AdjustRangeValue are examples of such requests.
@@ -3983,6 +3999,108 @@ async def test_alarm_control_panel_code_arm_required(hass: HomeAssistant) -> Non
     await discovery_test(device, hass, expected_endpoints=0)
 
 
+async def test_alarm_control_panel_disarm_required(hass: HomeAssistant) -> None:
+    """Test alarm_control_panel disarm required."""
+    device = (
+        "alarm_control_panel.test_4",
+        "armed_away",
+        {
+            "friendly_name": "Test Alarm Control Panel 4",
+            "code_arm_required": False,
+            "code_format": "FORMAT_NUMBER",
+            "code": "1234",
+            "supported_features": 3,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "alarm_control_panel#test_4"
+    assert appliance["displayCategories"][0] == "SECURITY_PANEL"
+    assert appliance["friendlyName"] == "Test Alarm Control Panel 4"
+    assert_endpoint_capabilities(
+        appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    properties = await reported_properties(hass, "alarm_control_panel#test_4")
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")
+
+    msg = await assert_request_fails(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_4",
+        "alarm_control_panel.alarm_arm_home",
+        hass,
+        payload={"armState": "ARMED_STAY"},
+    )
+    assert msg["event"]["payload"]["type"] == "AUTHORIZATION_REQUIRED"
+    assert (
+        msg["event"]["payload"]["message"]
+        == "You must disarm the system before you can set the requested arm state."
+    )
+
+    _, msg = await assert_request_calls_service(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_4",
+        "alarm_control_panel.alarm_arm_away",
+        hass,
+        response_type="Arm.Response",
+        payload={"armState": "ARMED_AWAY"},
+    )
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")
+
+
+async def test_alarm_control_panel_change_arm_type(hass: HomeAssistant) -> None:
+    """Test alarm_control_panel change arm type."""
+    device = (
+        "alarm_control_panel.test_5",
+        "armed_home",
+        {
+            "friendly_name": "Test Alarm Control Panel 5",
+            "code_arm_required": False,
+            "code_format": "FORMAT_NUMBER",
+            "code": "1234",
+            "supported_features": 3,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "alarm_control_panel#test_5"
+    assert appliance["displayCategories"][0] == "SECURITY_PANEL"
+    assert appliance["friendlyName"] == "Test Alarm Control Panel 5"
+    assert_endpoint_capabilities(
+        appliance, "Alexa.SecurityPanelController", "Alexa.EndpointHealth", "Alexa"
+    )
+
+    properties = await reported_properties(hass, "alarm_control_panel#test_5")
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_STAY")
+
+    _, msg = await assert_request_calls_service(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_5",
+        "alarm_control_panel.alarm_arm_home",
+        hass,
+        response_type="Arm.Response",
+        payload={"armState": "ARMED_STAY"},
+    )
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_STAY")
+
+    _, msg = await assert_request_calls_service(
+        "Alexa.SecurityPanelController",
+        "Arm",
+        "alarm_control_panel#test_5",
+        "alarm_control_panel.alarm_arm_away",
+        hass,
+        response_type="Arm.Response",
+        payload={"armState": "ARMED_AWAY"},
+    )
+    properties = ReportedProperties(msg["context"]["properties"])
+    properties.assert_equal("Alexa.SecurityPanelController", "armState", "ARMED_AWAY")
+
+
 async def test_range_unsupported_domain(hass: HomeAssistant) -> None:
     """Test rangeController with unsupported domain."""
     device = ("switch.test", "on", {"friendly_name": "Test switch"})
@@ -4428,6 +4546,7 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
         "tilt_position_attr_in_service_call",
         "supported_features",
         "service_call",
+        "stop_feature_enabled",
     ),
     [
         (
@@ -4438,6 +4557,7 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
             | CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.STOP_TILT,
             "cover.set_cover_tilt_position",
+            True,
         ),
         (
             0,
@@ -4447,6 +4567,7 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
             | CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.STOP_TILT,
             "cover.close_cover_tilt",
+            True,
         ),
         (
             99,
@@ -4456,6 +4577,7 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
             | CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.STOP_TILT,
             "cover.set_cover_tilt_position",
+            True,
         ),
         (
             100,
@@ -4465,36 +4587,42 @@ async def test_presence_sensor(hass: HomeAssistant) -> None:
             | CoverEntityFeature.CLOSE_TILT
             | CoverEntityFeature.STOP_TILT,
             "cover.open_cover_tilt",
+            True,
         ),
         (
             0,
             0,
             CoverEntityFeature.SET_TILT_POSITION,
             "cover.set_cover_tilt_position",
+            False,
         ),
         (
             60,
             60,
             CoverEntityFeature.SET_TILT_POSITION,
             "cover.set_cover_tilt_position",
+            False,
         ),
         (
             100,
             100,
             CoverEntityFeature.SET_TILT_POSITION,
             "cover.set_cover_tilt_position",
+            False,
         ),
         (
             0,
             0,
             CoverEntityFeature.SET_TILT_POSITION | CoverEntityFeature.OPEN_TILT,
             "cover.set_cover_tilt_position",
+            False,
         ),
         (
             100,
             100,
             CoverEntityFeature.SET_TILT_POSITION | CoverEntityFeature.CLOSE_TILT,
             "cover.set_cover_tilt_position",
+            False,
         ),
     ],
     ids=[
@@ -4515,6 +4643,7 @@ async def test_cover_tilt_position(
     tilt_position_attr_in_service_call: int | None,
     supported_features: CoverEntityFeature,
     service_call: str,
+    stop_feature_enabled: bool,
 ) -> None:
     """Test cover discovery and tilt position using rangeController."""
     device = (
@@ -4533,12 +4662,24 @@ async def test_cover_tilt_position(
     assert appliance["displayCategories"][0] == "INTERIOR_BLIND"
     assert appliance["friendlyName"] == "Test cover tilt range"
 
+    expected_interfaces: dict[bool, list[str]] = {
+        False: [
+            "Alexa.PowerController",
+            "Alexa.RangeController",
+            "Alexa.EndpointHealth",
+            "Alexa",
+        ],
+        True: [
+            "Alexa.PowerController",
+            "Alexa.RangeController",
+            "Alexa.PlaybackController",
+            "Alexa.EndpointHealth",
+            "Alexa",
+        ],
+    }
+
     capabilities = assert_endpoint_capabilities(
-        appliance,
-        "Alexa.PowerController",
-        "Alexa.RangeController",
-        "Alexa.EndpointHealth",
-        "Alexa",
+        appliance, *expected_interfaces[stop_feature_enabled]
     )
 
     range_capability = get_capability(capabilities, "Alexa.RangeController")
@@ -4595,6 +4736,7 @@ async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
         appliance,
         "Alexa.PowerController",
         "Alexa.RangeController",
+        "Alexa.PlaybackController",
         "Alexa.EndpointHealth",
         "Alexa",
     )
@@ -4649,6 +4791,66 @@ async def test_cover_tilt_position_range(hass: HomeAssistant) -> None:
     )
 
 
+@pytest.mark.parametrize(
+    ("supported_stop_features", "cover_stop_calls", "cover_stop_tilt_calls"),
+    [
+        (CoverEntityFeature(0), 0, 0),
+        (CoverEntityFeature.STOP, 1, 0),
+        (CoverEntityFeature.STOP_TILT, 0, 1),
+        (CoverEntityFeature.STOP | CoverEntityFeature.STOP_TILT, 1, 1),
+    ],
+    ids=["no_stop", "stop_cover", "stop_cover_tilt", "stop_cover_and_stop_cover_tilt"],
+)
+async def test_cover_stop(
+    hass: HomeAssistant,
+    supported_stop_features: CoverEntityFeature,
+    cover_stop_calls: int,
+    cover_stop_tilt_calls: int,
+) -> None:
+    """Test cover and cover tilt can be stopped."""
+
+    base_features = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.OPEN_TILT
+        | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
+
+    device = (
+        "cover.test_semantics",
+        "open",
+        {
+            "friendly_name": "Test cover semantics",
+            "device_class": "blind",
+            "supported_features": int(base_features | supported_stop_features),
+            "current_position": 30,
+            "tilt_position": 30,
+        },
+    )
+    appliance = await discovery_test(device, hass)
+
+    assert appliance["endpointId"] == "cover#test_semantics"
+    assert appliance["displayCategories"][0] == "INTERIOR_BLIND"
+    assert appliance["friendlyName"] == "Test cover semantics"
+
+    calls_stop = async_mock_service(hass, "cover", "stop_cover")
+    calls_stop_tilt = async_mock_service(hass, "cover", "stop_cover_tilt")
+
+    context = Context()
+    request = get_new_request(
+        "Alexa.PlaybackController", "Stop", "cover#test_semantics"
+    )
+    await smart_home.async_handle_message(
+        hass, get_default_config(hass), request, context
+    )
+    await hass.async_block_till_done()
+
+    assert len(calls_stop) == cover_stop_calls
+    assert len(calls_stop_tilt) == cover_stop_tilt_calls
+
+
 async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
     """Test cover discovery and semantics with position and tilt support."""
     device = (
@@ -4658,7 +4860,7 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
             "friendly_name": "Test cover semantics",
             "device_class": "blind",
             "supported_features": 255,
-            "position": 30,
+            "current_position": 30,
             "tilt_position": 30,
         },
     )
@@ -4672,9 +4874,29 @@ async def test_cover_semantics_position_and_tilt(hass: HomeAssistant) -> None:
         appliance,
         "Alexa.PowerController",
         "Alexa.RangeController",
+        "Alexa.PlaybackController",
         "Alexa.EndpointHealth",
         "Alexa",
     )
+
+    playback_controller_capability = get_capability(
+        capabilities, "Alexa.PlaybackController"
+    )
+    assert playback_controller_capability is not None
+    assert playback_controller_capability["supportedOperations"] == ["Stop"]
+
+    # Assert both the cover and tilt stop calls are invoked
+    stop_cover_tilt_calls = async_mock_service(hass, "cover", "stop_cover_tilt")
+    await assert_request_calls_service(
+        "Alexa.PlaybackController",
+        "Stop",
+        "cover#test_semantics",
+        "cover.stop_cover",
+        hass,
+    )
+    assert len(stop_cover_tilt_calls) == 1
+    call = stop_cover_tilt_calls[0]
+    assert call.data == {"entity_id": "cover.test_semantics"}
 
     # Assert for Position Semantics
     position_capability = get_capability(

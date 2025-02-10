@@ -25,7 +25,7 @@ from homeassistant.components.calendar.trigger import EVENT_END, EVENT_START
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockCalendarEntity
 
@@ -84,9 +84,7 @@ class FakeSchedule:
 
 
 @pytest.fixture
-def fake_schedule(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
-) -> Generator[FakeSchedule]:
+def fake_schedule(hass: HomeAssistant, freezer: FrozenDateTimeFactory) -> FakeSchedule:
     """Fixture that tests can use to make fake events."""
 
     # Setup start time for all tests
@@ -104,7 +102,7 @@ def mock_test_entity(test_entities: list[MockCalendarEntity]) -> MockCalendarEnt
 @pytest.fixture(name="setup_platform", autouse=True)
 async def mock_setup_platform(
     hass: HomeAssistant,
-    mock_setup_integration: Any,
+    mock_setup_integration: None,
     config_entry: MockConfigEntry,
 ) -> None:
     """Fixture to setup platforms used in the test."""

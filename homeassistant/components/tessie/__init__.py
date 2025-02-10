@@ -69,6 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
             vin=vehicle["vin"],
             data_coordinator=TessieStateUpdateCoordinator(
                 hass,
+                entry,
                 api_key=api_key,
                 vin=vehicle["vin"],
                 data=vehicle["last_state"],
@@ -111,13 +112,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
         for product in products:
             if "energy_site_id" in product:
                 site_id = product["energy_site_id"]
+                if not (
+                    product["components"]["battery"]
+                    or product["components"]["solar"]
+                    or "wall_connectors" in product["components"]
+                ):
+                    _LOGGER.debug(
+                        "Skipping Energy Site %s as it has no components",
+                        site_id,
+                    )
+                    continue
+
                 api = EnergySpecific(tessie.energy, site_id)
                 energysites.append(
                     TessieEnergyData(
                         api=api,
                         id=site_id,
-                        live_coordinator=TessieEnergySiteLiveCoordinator(hass, api),
-                        info_coordinator=TessieEnergySiteInfoCoordinator(hass, api),
+                        live_coordinator=TessieEnergySiteLiveCoordinator(
+                            hass, entry, api
+                        ),
+                        info_coordinator=TessieEnergySiteInfoCoordinator(
+                            hass, entry, api
+                        ),
                         device=DeviceInfo(
                             identifiers={(DOMAIN, str(site_id))},
                             manufacturer="Tesla",

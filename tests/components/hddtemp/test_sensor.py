@@ -60,7 +60,7 @@ REFERENCE = {
 class TelnetMock:
     """Mock class for the telnetlib.Telnet object."""
 
-    def __init__(self, host, port, timeout=0):
+    def __init__(self, host, port, timeout=0) -> None:
         """Initialize Telnet object."""
         self.host = host
         self.port = port

@@ -15,10 +15,9 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import NotionEntity
 from .const import DOMAIN, SENSOR_MOLD, SENSOR_TEMPERATURE
 from .coordinator import NotionDataUpdateCoordinator
-from .model import NotionEntityDescription
+from .entity import NotionEntity, NotionEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)

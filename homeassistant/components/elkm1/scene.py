@@ -10,7 +10,8 @@ from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import ElkAttachedEntity, ElkEntity, ElkM1ConfigEntry, create_elk_entities
+from . import ElkM1ConfigEntry
+from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 
 
 async def async_setup_entry(

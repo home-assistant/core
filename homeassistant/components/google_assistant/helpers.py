@@ -521,7 +521,7 @@ def supported_traits_for_state(state: State) -> list[type[trait._Trait]]:
 class GoogleEntity:
     """Adaptation of Entity expressed in Google's terms."""
 
-    __slots__ = ("hass", "config", "state", "_traits")
+    __slots__ = ("_traits", "config", "entity_id", "hass", "state")
 
     def __init__(
         self, hass: HomeAssistant, config: AbstractConfig, state: State
@@ -530,16 +530,12 @@ class GoogleEntity:
         self.hass = hass
         self.config = config
         self.state = state
+        self.entity_id = state.entity_id
         self._traits: list[trait._Trait] | None = None
 
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<GoogleEntity {self.state.entity_id}: {self.state.name}>"
-
-    @property
-    def entity_id(self):
-        """Return entity ID."""
-        return self.state.entity_id
 
     @callback
     def traits(self) -> list[trait._Trait]:

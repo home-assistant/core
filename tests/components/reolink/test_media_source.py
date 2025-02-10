@@ -10,13 +10,12 @@ from reolink_aio.exceptions import ReolinkError
 from homeassistant.components.media_source import (
     DOMAIN as MEDIA_SOURCE_DOMAIN,
     URI_SCHEME,
+    Unresolvable,
     async_browse_media,
     async_resolve_media,
 )
-from homeassistant.components.media_source.error import Unresolvable
-from homeassistant.components.reolink import const
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
-from homeassistant.components.reolink.const import DOMAIN
+from homeassistant.components.reolink.const import CONF_USE_HTTPS, DOMAIN
 from homeassistant.components.stream import DOMAIN as MEDIA_STREAM_DOMAIN
 from homeassistant.const import (
     CONF_HOST,
@@ -33,6 +32,7 @@ from homeassistant.setup import async_setup_component
 
 from .conftest import (
     TEST_HOST2,
+    TEST_HOST_MODEL,
     TEST_MAC2,
     TEST_NVR_NAME,
     TEST_NVR_NAME2,
@@ -54,6 +54,7 @@ TEST_FILE_NAME = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00"
 TEST_FILE_NAME_MP4 = f"{TEST_YEAR}{TEST_MONTH}{TEST_DAY}{TEST_HOUR}{TEST_MINUTE}00.mp4"
 TEST_STREAM = "main"
 TEST_CHANNEL = "0"
+TEST_CAM_NAME = "Cam new name"
 
 TEST_MIME_TYPE = "application/x-mpegURL"
 TEST_MIME_TYPE_MP4 = "video/mp4"
@@ -108,11 +109,17 @@ async def test_resolve(
     )
     assert play_media.mime_type == TEST_MIME_TYPE_MP4
 
+    reolink_connect.is_nvr = False
+
+    play_media = await async_resolve_media(
+        hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
+    )
+    assert play_media.mime_type == TEST_MIME_TYPE_MP4
+
     file_id = (
         f"FILE|{config_entry.entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     )
     reolink_connect.get_vod_source.return_value = (TEST_MIME_TYPE, TEST_URL)
-    reolink_connect.is_nvr = False
 
     play_media = await async_resolve_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{file_id}", None
@@ -129,7 +136,8 @@ async def test_browsing(
 ) -> None:
     """Test browsing the Reolink three."""
     entry_id = config_entry.entry_id
-    reolink_connect.api_version.return_value = 1
+    reolink_connect.supported.return_value = 1
+    reolink_connect.model = "Reolink TrackMix PoE"
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(entry_id) is True
@@ -137,7 +145,7 @@ async def test_browsing(
 
     entries = dr.async_entries_for_config_entry(device_registry, entry_id)
     assert len(entries) > 0
-    device_registry.async_update_device(entries[0].id, name_by_user="Cam new name")
+    device_registry.async_update_device(entries[0].id, name_by_user=TEST_CAM_NAME)
 
     caplog.set_level(logging.DEBUG)
 
@@ -149,6 +157,7 @@ async def test_browsing(
     assert browse.title == "Reolink"
     assert browse.identifier is None
     assert browse.children[0].identifier == browse_root_id
+    assert browse.children[0].title == f"{TEST_CAM_NAME} lens 0"
 
     # browse resolution select
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
@@ -159,7 +168,7 @@ async def test_browsing(
     browse_res_AT_sub_id = f"RES|{entry_id}|{TEST_CHANNEL}|autotrack_sub"
     browse_res_AT_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|autotrack_main"
     assert browse.domain == DOMAIN
-    assert browse.title == TEST_NVR_NAME
+    assert browse.title == f"{TEST_NVR_NAME} lens 0"
     assert browse.identifier == browse_resolution_id
     assert browse.children[0].identifier == browse_res_sub_id
     assert browse.children[1].identifier == browse_res_main_id
@@ -175,19 +184,19 @@ async def test_browsing(
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_sub_id}")
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} Low res."
+    assert browse.title == f"{TEST_NVR_NAME} lens 0 Low res."
 
     browse = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_AT_sub_id}"
     )
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} Autotrack low res."
+    assert browse.title == f"{TEST_NVR_NAME} lens 0 Autotrack low res."
 
     browse = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_AT_main_id}"
     )
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} Autotrack high res."
+    assert browse.title == f"{TEST_NVR_NAME} lens 0 Autotrack high res."
 
     browse = await async_browse_media(
         hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_main_id}"
@@ -197,7 +206,7 @@ async def test_browsing(
     browse_day_0_id = f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
     browse_day_1_id = f"DAY|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY2}"
     assert browse.domain == DOMAIN
-    assert browse.title == f"{TEST_NVR_NAME} High res."
+    assert browse.title == f"{TEST_NVR_NAME} lens 0 High res."
     assert browse.identifier == browse_days_id
     assert browse.children[0].identifier == browse_day_0_id
     assert browse.children[1].identifier == browse_day_1_id
@@ -217,10 +226,13 @@ async def test_browsing(
     browse_file_id = f"FILE|{entry_id}|{TEST_CHANNEL}|{TEST_STREAM}|{TEST_FILE_NAME}"
     assert browse.domain == DOMAIN
     assert (
-        browse.title == f"{TEST_NVR_NAME} High res. {TEST_YEAR}/{TEST_MONTH}/{TEST_DAY}"
+        browse.title
+        == f"{TEST_NVR_NAME} lens 0 High res. {TEST_YEAR}/{TEST_MONTH}/{TEST_DAY}"
     )
     assert browse.identifier == browse_files_id
     assert browse.children[0].identifier == browse_file_id
+
+    reolink_connect.model = TEST_HOST_MODEL
 
 
 async def test_browsing_unsupported_encoding(
@@ -269,10 +281,10 @@ async def test_browsing_rec_playback_unsupported(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing a Reolink camera which does not support playback of recordings."""
-    reolink_connect.api_version.return_value = 0
+    reolink_connect.supported.return_value = 0
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # browse root
@@ -290,10 +302,10 @@ async def test_browsing_errors(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing a Reolink camera errors."""
-    reolink_connect.api_version.return_value = 1
+    reolink_connect.supported.return_value = 1
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     # browse root
@@ -309,22 +321,22 @@ async def test_browsing_not_loaded(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test browsing a Reolink camera integration which is not loaded."""
-    reolink_connect.api_version.return_value = 1
+    reolink_connect.supported.return_value = 1
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
-        assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    reolink_connect.get_host_data = AsyncMock(side_effect=ReolinkError("Test error"))
+    reolink_connect.get_host_data.side_effect = ReolinkError("Test error")
     config_entry2 = MockConfigEntry(
-        domain=const.DOMAIN,
+        domain=DOMAIN,
         unique_id=format_mac(TEST_MAC2),
         data={
             CONF_HOST: TEST_HOST2,
             CONF_USERNAME: TEST_USERNAME2,
             CONF_PASSWORD: TEST_PASSWORD2,
             CONF_PORT: TEST_PORT,
-            const.CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
         },
         options={
             CONF_PROTOCOL: DEFAULT_PROTOCOL,
@@ -342,3 +354,5 @@ async def test_browsing_not_loaded(
     assert browse.title == "Reolink"
     assert browse.identifier is None
     assert len(browse.children) == 1
+
+    reolink_connect.get_host_data.side_effect = None

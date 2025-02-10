@@ -30,9 +30,8 @@ from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AirzoneConfigEntry
 from .const import TEMP_UNIT_LIB_TO_HASS
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 from .entity import AirzoneHotWaterEntity
 
 OPERATION_LIB_TO_HASS: Final[dict[HotWaterOperation, str]] = {
@@ -61,7 +60,7 @@ async def async_setup_entry(
     entry: AirzoneConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Add Airzone sensors from a config_entry."""
+    """Add Airzone Water Heater from a config_entry."""
     coordinator = entry.runtime_data
     if AZD_HOT_WATER in coordinator.data:
         async_add_entities([AirzoneWaterHeater(coordinator, entry)])
