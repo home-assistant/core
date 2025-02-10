@@ -104,7 +104,7 @@ class OneDriveDriveStateSensor(
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             name=coordinator.data.name,
-            identifiers={(DOMAIN, f"{coordinator.data.id}")},
+            identifiers={(DOMAIN, coordinator.data.id)},
             manufacturer="Microsoft",
             model=f"OneDrive {coordinator.data.drive_type.value.capitalize()}",
             configuration_url=f"https://onedrive.live.com/?id=root&cid={coordinator.data.id}",
