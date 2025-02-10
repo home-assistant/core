@@ -1,6 +1,7 @@
 """Test the conversation session."""
 
 from collections.abc import Generator
+from dataclasses import asdict
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -524,18 +525,29 @@ async def test_add_delta_content_stream(
         return tool_input.tool_args["param1"]
 
     mock_tool.async_call.side_effect = tool_call
+    expected_delta = []
 
     async def stream():
         """Yield deltas."""
         for d in deltas:
             yield d
+            expected_delta.append(d)
+
+    captured_deltas = []
 
     with (
         patch(
             "homeassistant.helpers.llm.AssistAPI._async_get_tools", return_value=[]
         ) as mock_get_tools,
         chat_session.async_get_chat_session(hass) as session,
-        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+        async_get_chat_log(
+            hass,
+            session,
+            mock_conversation_input,
+            chat_log_delta_listener=lambda chat_log, delta: captured_deltas.append(
+                delta
+            ),
+        ) as chat_log,
     ):
         mock_get_tools.return_value = [mock_tool]
         await chat_log.async_update_llm_data(
@@ -545,13 +557,17 @@ async def test_add_delta_content_stream(
             user_llm_prompt=None,
         )
 
-        results = [
-            tool_result_content
-            async for tool_result_content in chat_log.async_add_delta_content_stream(
-                "mock-agent-id", stream()
-            )
-        ]
+        results = []
+        async for content in chat_log.async_add_delta_content_stream(
+            "mock-agent-id", stream()
+        ):
+            results.append(content)
 
+            # Interweave the tool results with the source deltas into expected_delta
+            if content.role == "tool_result":
+                expected_delta.append(asdict(content))
+
+        assert captured_deltas == expected_delta
         assert results == snapshot
         assert chat_log.content[2:] == results
 
