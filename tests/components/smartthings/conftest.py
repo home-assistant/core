@@ -352,6 +352,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "vd_stv_2017_k",
         "c2c_arlo_pro_3_switch",
         "yale_push_button_deadbolt_lock",
+        "ge_in_wall_smart_dimmer",
     ]
 )
 def devices(
