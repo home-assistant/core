@@ -1,4 +1,98 @@
 # serializer version: 1
+# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.2nd_floor_hallway_motion',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': '2nd Floor Hallway motion',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd.motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'friendly_name': '2nd Floor Hallway motion',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.2nd_floor_hallway_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_sound-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.2nd_floor_hallway_sound',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.SOUND: 'sound'>,
+    'original_icon': None,
+    'original_name': '2nd Floor Hallway sound',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '10e06a70-ee7d-4832-85e9-a0a06a7a05bd.sound',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[c2c_arlo_pro_3_switch][binary_sensor.2nd_floor_hallway_sound-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'sound',
+      'friendly_name': '2nd Floor Hallway sound',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.2nd_floor_hallway_sound',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[contact_sensor][binary_sensor.front_door_open_closed_sensor_contact-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

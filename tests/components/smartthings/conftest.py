@@ -350,6 +350,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "base_electric_meter",
         "smart_plug",
         "vd_stv_2017_k",
+        "c2c_arlo_pro_3_switch",
     ]
 )
 def devices(

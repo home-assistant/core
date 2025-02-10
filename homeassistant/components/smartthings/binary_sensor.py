@@ -18,23 +18,15 @@ from .coordinator import SmartThingsConfigEntry, SmartThingsDeviceCoordinator
 from .entity import SmartThingsEntity
 
 # CAPABILITY_TO_ATTRIB = {
-#     Capability.acceleration_sensor: Attribute.acceleration,
-#     Capability.contact_sensor: Attribute.contact,
 #     Capability.filter_status: Attribute.filter_status,
-#     Capability.motion_sensor: Attribute.motion,
 #     Capability.presence_sensor: Attribute.presence,
-#     Capability.sound_sensor: Attribute.sound,
 #     Capability.tamper_alert: Attribute.tamper,
 #     Capability.valve: Attribute.valve,
 #     Capability.water_sensor: Attribute.water,
 # }
 # ATTRIB_TO_CLASS = {
-#     Attribute.acceleration: BinarySensorDeviceClass.MOVING,
-#     Attribute.contact: BinarySensorDeviceClass.OPENING,
 #     Attribute.filter_status: BinarySensorDeviceClass.PROBLEM,
-#     Attribute.motion: BinarySensorDeviceClass.MOTION,
 #     Attribute.presence: BinarySensorDeviceClass.PRESENCE,
-#     Attribute.sound: BinarySensorDeviceClass.SOUND,
 #     Attribute.tamper: BinarySensorDeviceClass.PROBLEM,
 #     Attribute.valve: BinarySensorDeviceClass.OPENING,
 #     Attribute.water: BinarySensorDeviceClass.MOISTURE,
@@ -43,14 +35,10 @@ from .entity import SmartThingsEntity
 #     Attribute.tamper: EntityCategory.DIAGNOSTIC,
 # }
 # ATTRIBUTE_ON_VALUES = {
-#     Attribute.acceleration: "active",
-#     Attribute.contact: "open",
 #     Attribute.filter_status: "replace",
-#     Attribute.motion: "active",
 #     Attribute.mute: "muted",
 #     Attribute.playback_shuffle: "enabled",
 #     Attribute.presence: "present",
-#     Attribute.sound: "detected",
 #     Attribute.switch: "on",
 #     Attribute.tamper: "detected",
 #     Attribute.valve: "open",
@@ -92,6 +80,15 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.CONTACT,
                 device_class=BinarySensorDeviceClass.DOOR,
                 is_on_key="open",
+            )
+        ]
+    },
+    Capability.SOUND_SENSOR: {
+        Attribute.SOUND: [
+            SmartThingsBinarySensorEntityDescription(
+                key=Attribute.SOUND,
+                device_class=BinarySensorDeviceClass.SOUND,
+                is_on_key="detected",
             )
         ]
     },
