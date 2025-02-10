@@ -38,9 +38,11 @@ AUTHORITIES = [
     "Greenwich",
     "Hackney",
     "Haringey",
+    "Hammersmith and Fulham",
     "Harrow",
     "Havering",
     "Hillingdon",
+    "Hounslow",
     "Islington",
     "Kensington and Chelsea",
     "Kingston",
@@ -54,8 +56,6 @@ AUTHORITIES = [
     "Tower Hamlets",
     "Wandsworth",
     "Westminster",
-    "Hounslow",
-    "Hammersmith and Fulham",
 ]
 
 URL = "http://api.erg.kcl.ac.uk/AirQuality/Hourly/MonitoringIndex/GroupName=London/Json"
