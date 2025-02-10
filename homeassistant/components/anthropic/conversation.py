@@ -227,6 +227,7 @@ class AnthropicConversationEntity(
             LOGGER.debug("Response %s", response)
 
             messages.append(_message_convert(response))
+
             text = "".join(
                 [
                     content.text
@@ -244,7 +245,7 @@ class AnthropicConversationEntity(
                 if isinstance(tool_call, ToolUseBlock)
             ]
 
-            tool_content = [
+            tool_results = [
                 ToolResultBlockParam(
                     type="tool_result",
                     tool_use_id=tool_response.tool_call_id,
@@ -258,8 +259,8 @@ class AnthropicConversationEntity(
                     )
                 )
             ]
-            if tool_content:
-                messages.append(MessageParam(role="user", content=tool_content))
+            if tool_results:
+                messages.append(MessageParam(role="user", content=tool_results))
 
             if not tool_inputs:
                 break
