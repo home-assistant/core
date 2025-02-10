@@ -365,6 +365,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "da_ks_microwave_0101x",
         "hue_color_temperature_bulb",
         "hue_rgbw_color_bulb",
+        "c2c_shade",
     ]
 )
 def devices(
