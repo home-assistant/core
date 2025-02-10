@@ -22,11 +22,12 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
 
-from tests.common import MockConfigEntry
+from tests.common import ANY, MockConfigEntry
 from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -251,3 +252,70 @@ async def test_missing_backup_no_shares(
     )
     assert data["type"] == "abort"
     assert data["reason"] == "no_shares"
+
+
+@pytest.mark.parametrize(
+    "ignore_translations",
+    ["component.synology_dsm.issues.other_issue.title"],
+)
+async def test_other_fixable_issues(
+    hass: HomeAssistant,
+    setup_dsm_with_filestation: MagicMock,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test fixing another issue."""
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+
+    issue = {
+        "breaks_in_ha_version": None,
+        "domain": DOMAIN,
+        "issue_id": "other_issue",
+        "is_fixable": True,
+        "severity": "error",
+        "translation_key": "other_issue",
+    }
+    ir.async_create_issue(
+        hass,
+        issue["domain"],
+        issue["issue_id"],
+        is_fixable=issue["is_fixable"],
+        severity=issue["severity"],
+        translation_key=issue["translation_key"],
+    )
+
+    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    results = msg["result"]["issues"]
+    assert {
+        "breaks_in_ha_version": None,
+        "created": ANY,
+        "dismissed_version": None,
+        "domain": "synology_dsm",
+        "ignored": False,
+        "is_fixable": True,
+        "issue_domain": None,
+        "issue_id": "other_issue",
+        "learn_more_url": None,
+        "severity": "error",
+        "translation_key": "other_issue",
+        "translation_placeholders": None,
+    } in results
+
+    data = await start_repair_fix_flow(client, DOMAIN, "other_issue")
+
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "confirm"
+
+    data = await process_repair_fix_flow(client, flow_id)
+
+    assert data["type"] == "create_entry"
+    await hass.async_block_till_done()
