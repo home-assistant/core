@@ -3,7 +3,7 @@
 from html import escape
 from json import dumps
 
-from onedrive_personal_sdk.const import DriveState
+from onedrive_personal_sdk.const import DriveState, DriveType
 from onedrive_personal_sdk.models.items import (
     AppRoot,
     Drive,
@@ -106,7 +106,7 @@ MOCK_METADATA_FILE = File(
 MOCK_DRIVE = Drive(
     id="mock_drive_id",
     name="My Drive",
-    drive_type="personal",
+    drive_type=DriveType.PERSONAL,
     owner=IDENTITY_SET,
     quota=DriveQuota(
         deleted=5,

@@ -43,10 +43,7 @@ rules:
   test-coverage: todo
 
   # Gold
-  devices:
-    status: exempt
-    comment: |
-      This integration connects to a single service.
+  devices: done
   diagnostics:
     status: exempt
     comment: |

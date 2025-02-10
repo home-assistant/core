@@ -9,7 +9,7 @@ import logging
 
 from onedrive_personal_sdk import OneDriveClient
 from onedrive_personal_sdk.exceptions import AuthenticationError, OneDriveException
-from onedrive_personal_sdk.models.items import DriveQuota
+from onedrive_personal_sdk.models.items import Drive
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -36,7 +36,7 @@ class OneDriveRuntimeData:
 type OneDriveConfigEntry = ConfigEntry[OneDriveRuntimeData]
 
 
-class OneDriveUpdateCoordinator(DataUpdateCoordinator[DriveQuota | None]):
+class OneDriveUpdateCoordinator(DataUpdateCoordinator[Drive]):
     """Class to handle fetching data from the tedee API centrally."""
 
     config_entry: OneDriveConfigEntry
@@ -54,7 +54,7 @@ class OneDriveUpdateCoordinator(DataUpdateCoordinator[DriveQuota | None]):
         )
         self._client = client
 
-    async def _async_update_data(self) -> DriveQuota | None:
+    async def _async_update_data(self) -> Drive:
         """Fetch data from API endpoint."""
 
         try:
@@ -67,4 +67,4 @@ class OneDriveUpdateCoordinator(DataUpdateCoordinator[DriveQuota | None]):
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="update_failed"
             ) from err
-        return drive.quota
+        return drive

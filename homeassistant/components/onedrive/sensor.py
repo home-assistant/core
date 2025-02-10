@@ -13,10 +13,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .const import DOMAIN
 from .coordinator import OneDriveConfigEntry, OneDriveUpdateCoordinator
 
 PARALLEL_UPDATES = 0
@@ -98,14 +100,21 @@ class OneDriveDriveStateSensor(
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_translation_key = description.key
-        assert coordinator.config_entry.unique_id
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{description.key}"
+        self._attr_unique_id = f"{coordinator.data.id}_{description.key}"
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            name=coordinator.data.name,
+            identifiers={(DOMAIN, f"{coordinator.data.id}")},
+            manufacturer="Microsoft",
+            model=f"OneDrive {coordinator.data.drive_type.value.capitalize()}",
+            configuration_url=f"https://onedrive.live.com/?id={coordinator.data.id}&cid={coordinator.data.id}",
+        )
 
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return (
-            self.entity_description.value_fn(self.coordinator.data)
-            if self.coordinator.data
+            self.entity_description.value_fn(self.coordinator.data.quota)
+            if self.coordinator.data.quota
             else None
         )
