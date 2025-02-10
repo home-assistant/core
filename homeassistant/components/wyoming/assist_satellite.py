@@ -122,8 +122,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self.device.set_audio_settings_listener(self._audio_settings_changed)
 
         # For announcements
-        self._ffmpeg_manager = ffmpeg.get_ffmpeg_manager(hass)
-        self._played_event_received = asyncio.Event()
+        self._ffmpeg_manager: ffmpeg.FFmpegManager | None = None
+        self._played_event_received: asyncio.Event | None = None
 
     @property
     def pipeline_entity_id(self) -> str | None:
@@ -259,6 +259,13 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         Should block until the announcement is done playing.
         """
         assert self._client is not None
+
+        if self._ffmpeg_manager is None:
+            self._ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
+
+        if self._played_event_received is None:
+            self._played_event_received = asyncio.Event()
+
         self._played_event_received.clear()
         await self._client.write_event(
             AudioStart(
@@ -583,7 +590,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 elif Played.is_type(client_event.type):
                     # TTS response has finished playing on satellite
                     self.tts_response_finished()
-                    self._played_event_received.set()
+
+                    if self._played_event_received is not None:
+                        self._played_event_received.set()
                 else:
                     _LOGGER.debug("Unexpected event from satellite: %s", client_event)
 
