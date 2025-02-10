@@ -143,10 +143,14 @@ async def _transform_stream(
     yields deltas, then the role only once the response is done.
     """
 
+    new_msg = True
     async for response in result:
         _LOGGER.debug("Received response: %s", response)
         response_message = response["message"]
         chunk: conversation.AssistantContentDeltaDict = {}
+        if new_msg:
+            new_msg = False
+            chunk["role"] = "assistant"
         if (tool_calls := response_message.get("tool_calls")) is not None:
             chunk["tool_calls"] = [
                 llm.ToolInput(
@@ -158,7 +162,7 @@ async def _transform_stream(
         if (content := response_message.get("content")) is not None:
             chunk["content"] = content
         if response_message.get("done"):
-            chunk["role"] = "assistant"
+            new_msg = True
         yield chunk
 
 
