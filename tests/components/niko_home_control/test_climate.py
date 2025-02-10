@@ -145,7 +145,7 @@ async def test_is_expected_state(
     mock_niko_home_control_connection: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test turning on the light."""
+    """Test is expected state."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get("climate.thermostat").state == "auto"
 
