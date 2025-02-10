@@ -1462,7 +1462,7 @@ pyDuotecno==2024.10.1
 pyElectra==1.2.4
 
 # homeassistant.components.homee
-pyHomee==1.2.5
+pyHomee==1.2.7
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
