@@ -187,6 +187,53 @@
     'state': 'off',
   })
 # ---
+# name: test_all_entities[iphone][binary_sensor.iphone_presence-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.iphone_presence',
+    'has_entity_name': False,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PRESENCE: 'presence'>,
+    'original_icon': None,
+    'original_name': 'iPhone presence',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '184c67cc-69e2-44b6-8f73-55c963068ad9.presence',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[iphone][binary_sensor.iphone_presence-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'presence',
+      'friendly_name': 'iPhone presence',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.iphone_presence',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_all_entities[multipurpose_sensor][binary_sensor.deck_door_acceleration-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({

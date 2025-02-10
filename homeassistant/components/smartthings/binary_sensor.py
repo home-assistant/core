@@ -19,14 +19,12 @@ from .entity import SmartThingsEntity
 
 # CAPABILITY_TO_ATTRIB = {
 #     Capability.filter_status: Attribute.filter_status,
-#     Capability.presence_sensor: Attribute.presence,
 #     Capability.tamper_alert: Attribute.tamper,
 #     Capability.valve: Attribute.valve,
 #     Capability.water_sensor: Attribute.water,
 # }
 # ATTRIB_TO_CLASS = {
 #     Attribute.filter_status: BinarySensorDeviceClass.PROBLEM,
-#     Attribute.presence: BinarySensorDeviceClass.PRESENCE,
 #     Attribute.tamper: BinarySensorDeviceClass.PROBLEM,
 #     Attribute.valve: BinarySensorDeviceClass.OPENING,
 #     Attribute.water: BinarySensorDeviceClass.MOISTURE,
@@ -38,7 +36,6 @@ from .entity import SmartThingsEntity
 #     Attribute.filter_status: "replace",
 #     Attribute.mute: "muted",
 #     Attribute.playback_shuffle: "enabled",
-#     Attribute.presence: "present",
 #     Attribute.switch: "on",
 #     Attribute.tamper: "detected",
 #     Attribute.valve: "open",
@@ -89,6 +86,15 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.SOUND,
                 device_class=BinarySensorDeviceClass.SOUND,
                 is_on_key="detected",
+            )
+        ]
+    },
+    Capability.PRESENCE_SENSOR: {
+        Attribute.PRESENCE: [
+            SmartThingsBinarySensorEntityDescription(
+                key=Attribute.PRESENCE,
+                device_class=BinarySensorDeviceClass.PRESENCE,
+                is_on_key="present",
             )
         ]
     },
