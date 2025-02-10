@@ -21,7 +21,6 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
@@ -37,6 +36,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDevice
@@ -598,7 +598,7 @@ async def test_connection_aborted_wrong_device(
     mock_client.disconnect = AsyncMock()
     caplog.clear()
     # Make sure discovery triggers a reconnect
-    service_info = dhcp.DhcpServiceInfo(
+    service_info = DhcpServiceInfo(
         ip="192.168.43.184",
         hostname="test",
         macaddress="1122334455aa",
@@ -1098,6 +1098,42 @@ async def test_esphome_device_with_web_server(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.configuration_url == "http://test.local:80"
+
+
+async def test_esphome_device_with_ipv6_web_server(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device with a web server."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "fe80::1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        options={},
+    )
+    entry.add_to_hass(hass)
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        entity_info=[],
+        user_service=[],
+        device_info={"webserver_port": 80},
+        states=[],
+    )
+    await hass.async_block_till_done()
+    entry = device.entry
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    assert dev.configuration_url == "http://[fe80::1]:80"
 
 
 async def test_esphome_device_with_compilation_time(

@@ -25,12 +25,12 @@ from .const import DOMAIN
 from .models import DetectionResult, WakeWord
 
 __all__ = [
-    "async_default_entity",
-    "async_get_wake_word_detection_entity",
-    "DetectionResult",
     "DOMAIN",
+    "DetectionResult",
     "WakeWord",
     "WakeWordDetectionEntity",
+    "async_default_entity",
+    "async_get_wake_word_detection_entity",
 ]
 
 _LOGGER = logging.getLogger(__name__)

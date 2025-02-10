@@ -21,6 +21,17 @@
           "otp_code": "Code"
         }
       },
+      "backup_share": {
+        "title": "Synology DSM: Backup location",
+        "data": {
+          "backup_share": "Shared folder",
+          "backup_path": "Path"
+        },
+        "data_description": {
+          "backup_share": "Select the shared folder, where the automatic Home-Assistant backup should be stored.",
+          "backup_path": "Define the path on the selected shared folder (will automatically be created, if not exist)."
+        }
+      },
       "link": {
         "description": "Do you want to set up {name} ({host})?",
         "data": {
@@ -59,7 +70,13 @@
         "data": {
           "scan_interval": "Minutes between scans",
           "timeout": "Timeout (seconds)",
-          "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)"
+          "snap_profile_type": "Quality level of camera snapshots (0:high 1:medium 2:low)",
+          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data::backup_share%]",
+          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data::backup_path%]"
+        },
+        "data_description": {
+          "backup_share": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_share%]",
+          "backup_path": "[%key:component::synology_dsm::config::step::backup_share::data_description::backup_path%]"
         }
       }
     }

@@ -17,9 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import PyLoadConfigEntry
 from .const import UNIT_DOWNLOADS
-from .coordinator import PyLoadData
+from .coordinator import PyLoadConfigEntry, PyLoadData
 from .entity import BasePyLoadEntity
 
 

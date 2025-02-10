@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     zeroconf_instance = await zeroconf.async_get_async_instance(hass)
     device: Client = UdpClient(host, token, zeroconf=zeroconf_instance)
 
-    coordinator = RabbitAirDataUpdateCoordinator(hass, device)
+    coordinator = RabbitAirDataUpdateCoordinator(hass, entry, device)
 
     await coordinator.async_config_entry_first_refresh()
 

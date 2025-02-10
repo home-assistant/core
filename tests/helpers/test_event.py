@@ -13,8 +13,8 @@ from freezegun.api import FrozenDateTimeFactory
 import jinja2
 import pytest
 
+from homeassistant import core as ha
 from homeassistant.const import MATCH_ALL
-import homeassistant.core as ha
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -52,7 +52,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.helpers.template import Template, result_as_boolean
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed, async_fire_time_changed_exact
 

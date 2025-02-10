@@ -12,8 +12,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, loader, runner
-import homeassistant.config as config_util
+from homeassistant import bootstrap, config as config_util, loader, runner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     BASE_PLATFORMS,
@@ -1177,7 +1176,7 @@ async def test_bootstrap_is_cancellation_safe(
 @pytest.mark.parametrize("load_registries", [False])
 async def test_bootstrap_empty_integrations(hass: HomeAssistant) -> None:
     """Test setting up an empty integrations does not raise."""
-    await bootstrap.async_setup_multi_components(hass, set(), {})
+    await bootstrap._async_setup_multi_components(hass, set(), {})
     await hass.async_block_till_done()
 
 
@@ -1312,7 +1311,7 @@ async def test_bootstrap_dependencies(
         ),
     ):
         bootstrap.async_set_domains_to_be_loaded(hass, {integration})
-        await bootstrap.async_setup_multi_components(hass, {integration}, {})
+        await bootstrap._async_setup_multi_components(hass, {integration}, {})
         await hass.async_block_till_done()
 
     for assertion in assertions:
@@ -1408,7 +1407,7 @@ async def test_cancellation_does_not_leak_upward_from_async_setup(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting up an integration that raises asyncio.CancelledError."""
-    await bootstrap.async_setup_multi_components(
+    await bootstrap._async_setup_multi_components(
         hass, {"test_package_raises_cancelled_error"}, {}
     )
     await hass.async_block_till_done()
@@ -1429,12 +1428,12 @@ async def test_cancellation_does_not_leak_upward_from_async_setup_entry(
         domain="test_package_raises_cancelled_error_config_entry", data={}
     )
     entry.add_to_hass(hass)
-    await bootstrap.async_setup_multi_components(
+    await bootstrap._async_setup_multi_components(
         hass, {"test_package_raises_cancelled_error_config_entry"}, {}
     )
     await hass.async_block_till_done()
 
-    await bootstrap.async_setup_multi_components(hass, {"test_package"}, {})
+    await bootstrap._async_setup_multi_components(hass, {"test_package"}, {})
     await hass.async_block_till_done()
     assert (
         "Error setting up entry Mock Title for test_package_raises_cancelled_error_config_entry"

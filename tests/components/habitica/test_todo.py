@@ -23,10 +23,10 @@ from homeassistant.components.todo import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import ERROR_NOT_FOUND
+from .conftest import ERROR_NOT_FOUND, ERROR_TOO_MANY_REQUESTS
 
 from tests.common import (
     MockConfigEntry,
@@ -183,12 +183,30 @@ async def test_uncomplete_todo_item(
     ],
     ids=["completed", "needs_action"],
 )
+@pytest.mark.parametrize(
+    ("exception", "exc_msg", "expected_exception"),
+    [
+        (
+            ERROR_NOT_FOUND,
+            r"Unable to update the score for your Habitica to-do `.+`, please try again",
+            ServiceValidationError,
+        ),
+        (
+            ERROR_TOO_MANY_REQUESTS,
+            "Rate limit exceeded, try again in 5 seconds",
+            HomeAssistantError,
+        ),
+    ],
+)
 async def test_complete_todo_item_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     habitica: AsyncMock,
     uid: str,
     status: str,
+    exception: Exception,
+    exc_msg: str,
+    expected_exception: Exception,
 ) -> None:
     """Test exception when completing/uncompleting an item on the todo list."""
 
@@ -198,10 +216,10 @@ async def test_complete_todo_item_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    habitica.update_score.side_effect = ERROR_NOT_FOUND
+    habitica.update_score.side_effect = exception
     with pytest.raises(
-        expected_exception=ServiceValidationError,
-        match=r"Unable to update the score for your Habitica to-do `.+`, please try again",
+        expected_exception=expected_exception,
+        match=exc_msg,
     ):
         await hass.services.async_call(
             TODO_DOMAIN,
@@ -311,10 +329,28 @@ async def test_update_todo_item(
     habitica.update_task.assert_awaited_once_with(*call_args)
 
 
+@pytest.mark.parametrize(
+    ("exception", "exc_msg", "expected_exception"),
+    [
+        (
+            ERROR_NOT_FOUND,
+            "Unable to update the Habitica to-do `test-summary`, please try again",
+            ServiceValidationError,
+        ),
+        (
+            ERROR_TOO_MANY_REQUESTS,
+            "Rate limit exceeded, try again in 5 seconds",
+            HomeAssistantError,
+        ),
+    ],
+)
 async def test_update_todo_item_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     habitica: AsyncMock,
+    exception: Exception,
+    exc_msg: str,
+    expected_exception: Exception,
 ) -> None:
     """Test exception when update item on the todo list."""
     uid = "88de7cd9-af2b-49ce-9afd-bf941d87336b"
@@ -324,11 +360,8 @@ async def test_update_todo_item_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    habitica.update_task.side_effect = ERROR_NOT_FOUND
-    with pytest.raises(
-        expected_exception=ServiceValidationError,
-        match="Unable to update the Habitica to-do `test-summary`, please try again",
-    ):
+    habitica.update_task.side_effect = exception
+    with pytest.raises(expected_exception=expected_exception, match=exc_msg):
         await hass.services.async_call(
             TODO_DOMAIN,
             TodoServices.UPDATE_ITEM,
@@ -378,10 +411,28 @@ async def test_add_todo_item(
     )
 
 
+@pytest.mark.parametrize(
+    ("exception", "exc_msg", "expected_exception"),
+    [
+        (
+            ERROR_NOT_FOUND,
+            "Unable to create new to-do `test-summary` for Habitica, please try again",
+            ServiceValidationError,
+        ),
+        (
+            ERROR_TOO_MANY_REQUESTS,
+            "Rate limit exceeded, try again in 5 seconds",
+            HomeAssistantError,
+        ),
+    ],
+)
 async def test_add_todo_item_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     habitica: AsyncMock,
+    exception: Exception,
+    exc_msg: str,
+    expected_exception: Exception,
 ) -> None:
     """Test exception when adding a todo item to the todo list."""
 
@@ -391,10 +442,11 @@ async def test_add_todo_item_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    habitica.create_task.side_effect = ERROR_NOT_FOUND
+    habitica.create_task.side_effect = exception
     with pytest.raises(
-        expected_exception=ServiceValidationError,
-        match="Unable to create new to-do `test-summary` for Habitica, please try again",
+        expected_exception=expected_exception,
+        # match="Unable to create new to-do `test-summary` for Habitica, please try again",
+        match=exc_msg,
     ):
         await hass.services.async_call(
             TODO_DOMAIN,
@@ -434,10 +486,28 @@ async def test_delete_todo_item(
     habitica.delete_task.assert_awaited_once_with(UUID(uid))
 
 
+@pytest.mark.parametrize(
+    ("exception", "exc_msg", "expected_exception"),
+    [
+        (
+            ERROR_NOT_FOUND,
+            "Unable to delete item from Habitica to-do list, please try again",
+            ServiceValidationError,
+        ),
+        (
+            ERROR_TOO_MANY_REQUESTS,
+            "Rate limit exceeded, try again in 5 seconds",
+            HomeAssistantError,
+        ),
+    ],
+)
 async def test_delete_todo_item_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     habitica: AsyncMock,
+    exception: Exception,
+    exc_msg: str,
+    expected_exception: Exception,
 ) -> None:
     """Test exception when deleting a todo item from the todo list."""
 
@@ -448,11 +518,11 @@ async def test_delete_todo_item_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    habitica.delete_task.side_effect = ERROR_NOT_FOUND
+    habitica.delete_task.side_effect = exception
 
     with pytest.raises(
-        expected_exception=ServiceValidationError,
-        match="Unable to delete item from Habitica to-do list, please try again",
+        expected_exception=expected_exception,
+        match=exc_msg,
     ):
         await hass.services.async_call(
             TODO_DOMAIN,
@@ -486,10 +556,28 @@ async def test_delete_completed_todo_items(
     habitica.delete_completed_todos.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    ("exception", "exc_msg", "expected_exception"),
+    [
+        (
+            ERROR_NOT_FOUND,
+            "Unable to delete completed to-do items from Habitica to-do list, please try again",
+            ServiceValidationError,
+        ),
+        (
+            ERROR_TOO_MANY_REQUESTS,
+            "Rate limit exceeded, try again in 5 seconds",
+            HomeAssistantError,
+        ),
+    ],
+)
 async def test_delete_completed_todo_items_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     habitica: AsyncMock,
+    exception: Exception,
+    exc_msg: str,
+    expected_exception: Exception,
 ) -> None:
     """Test exception when deleting completed todo items from the todo list."""
     config_entry.add_to_hass(hass)
@@ -498,10 +586,10 @@ async def test_delete_completed_todo_items_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    habitica.delete_completed_todos.side_effect = ERROR_NOT_FOUND
+    habitica.delete_completed_todos.side_effect = exception
     with pytest.raises(
-        expected_exception=ServiceValidationError,
-        match="Unable to delete completed to-do items from Habitica to-do list, please try again",
+        expected_exception=expected_exception,
+        match=exc_msg,
     ):
         await hass.services.async_call(
             TODO_DOMAIN,
@@ -575,11 +663,26 @@ async def test_move_todo_item(
     habitica.reorder_task.assert_awaited_once_with(UUID(uid), 0)
 
 
+@pytest.mark.parametrize(
+    ("exception", "exc_msg"),
+    [
+        (
+            ERROR_NOT_FOUND,
+            "Unable to move the Habitica to-do to position 0, please try again",
+        ),
+        (
+            ERROR_TOO_MANY_REQUESTS,
+            "Rate limit exceeded, try again in 5 seconds",
+        ),
+    ],
+)
 async def test_move_todo_item_exception(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     habitica: AsyncMock,
     hass_ws_client: WebSocketGenerator,
+    exception: Exception,
+    exc_msg: str,
 ) -> None:
     """Test exception when moving todo item."""
 
@@ -590,7 +693,7 @@ async def test_move_todo_item_exception(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    habitica.reorder_task.side_effect = ERROR_NOT_FOUND
+    habitica.reorder_task.side_effect = exception
     client = await hass_ws_client()
 
     data = {
@@ -605,10 +708,7 @@ async def test_move_todo_item_exception(
     habitica.reorder_task.assert_awaited_once_with(UUID(uid), 0)
 
     assert resp["success"] is False
-    assert (
-        resp["error"]["message"]
-        == "Unable to move the Habitica to-do to position 0, please try again"
-    )
+    assert resp["error"]["message"] == exc_msg
 
 
 @pytest.mark.parametrize(

@@ -9,7 +9,7 @@ import functools as ft
 import logging
 from typing import Any, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -300,7 +300,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def supported_features(self) -> CoverEntityFeature:
         """Flag supported features."""
         if (features := self._attr_supported_features) is not None:
-            if type(features) is int:  # noqa: E721
+            if type(features) is int:
                 new_features = CoverEntityFeature(features)
                 self._report_deprecated_supported_features_values(new_features)
                 return new_features

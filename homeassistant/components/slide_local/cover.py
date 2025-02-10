@@ -10,9 +10,8 @@ from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DEFAULT_OFFSET
-from .coordinator import SlideCoordinator
+from .coordinator import SlideConfigEntry, SlideCoordinator
 from .entity import SlideEntity
 
 _LOGGER = logging.getLogger(__name__)

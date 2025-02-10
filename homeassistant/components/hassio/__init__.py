@@ -90,6 +90,7 @@ from .const import (
     ATTR_LOCATION,
     ATTR_PASSWORD,
     ATTR_SLUG,
+    DATA_COMPONENT,
     DATA_CORE_INFO,
     DATA_HOST_INFO,
     DATA_INFO,
@@ -115,7 +116,7 @@ from .coordinator import (
     get_supervisor_info,  # noqa: F401
     get_supervisor_stats,  # noqa: F401
 )
-from .discovery import async_setup_discovery_view  # noqa: F401
+from .discovery import async_setup_discovery_view
 from .handler import (  # noqa: F401
     HassIO,
     HassioAPIError,
@@ -326,7 +327,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     host = os.environ["SUPERVISOR"]
     websession = async_get_clientsession(hass)
-    hass.data[DOMAIN] = hassio = HassIO(hass.loop, websession, host)
+    hass.data[DATA_COMPONENT] = hassio = HassIO(hass.loop, websession, host)
     supervisor_client = get_supervisor_client(hass)
 
     try:

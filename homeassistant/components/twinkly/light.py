@@ -17,8 +17,8 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import TwinklyConfigEntry, TwinklyCoordinator
 from .const import DEV_LED_PROFILE, DEV_PROFILE_RGB, DEV_PROFILE_RGBW
+from .coordinator import TwinklyConfigEntry, TwinklyCoordinator
 from .entity import TwinklyEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,9 +99,9 @@ class TwinklyLight(TwinklyEntity, LightEntity):
         ):
             await self.client.interview()
             if LightEntityFeature.EFFECT & self.supported_features:
-                # Static color only supports rgb
                 await self.client.set_static_colour(
                     (
+                        kwargs[ATTR_RGBW_COLOR][3],
                         kwargs[ATTR_RGBW_COLOR][0],
                         kwargs[ATTR_RGBW_COLOR][1],
                         kwargs[ATTR_RGBW_COLOR][2],

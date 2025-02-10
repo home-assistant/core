@@ -28,9 +28,12 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
+from .coordinator import (
+    HabiticaConfigEntry,
+    HabiticaData,
+    HabiticaDataUpdateCoordinator,
+)
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
 
 PARALLEL_UPDATES = 1
 
@@ -335,16 +338,24 @@ class HabiticaButton(HabiticaBase, ButtonEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
             ) from e
         except NotAuthorizedError as e:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_unallowed",
             ) from e
-        except (HabiticaException, ClientError) as e:
+        except HabiticaException as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+                translation_placeholders={"reason": e.error.message},
+            ) from e
+        except ClientError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
             ) from e
         else:
             await self.coordinator.async_request_refresh()

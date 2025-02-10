@@ -28,7 +28,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    coordinator = OndiloIcoCoordinator(hass, OndiloClient(hass, entry, implementation))
+    coordinator = OndiloIcoCoordinator(
+        hass, entry, OndiloClient(hass, entry, implementation)
+    )
 
     await coordinator.async_config_entry_first_refresh()
 

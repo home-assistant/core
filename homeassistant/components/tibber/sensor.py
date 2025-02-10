@@ -285,7 +285,7 @@ async def async_setup_entry(
         if home.has_active_subscription:
             entities.append(TibberSensorElPrice(home))
             if coordinator is None:
-                coordinator = TibberDataCoordinator(hass, tibber_connection)
+                coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
             entities.extend(
                 TibberDataSensor(home, coordinator, entity_description)
                 for entity_description in SENSORS

@@ -18,9 +18,8 @@ from homeassistant.const import UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import LidarrConfigEntry
 from .const import BYTE_SIZES
-from .coordinator import LidarrDataUpdateCoordinator, T
+from .coordinator import LidarrConfigEntry, LidarrDataUpdateCoordinator, T
 from .entity import LidarrEntity
 
 
@@ -160,10 +159,8 @@ class LidarrSensor(LidarrEntity[T], SensorEntity):
 
 def queue_str(item: LidarrQueueItem) -> str:
     """Return string description of queue item."""
-    if (
-        item.sizeleft > 0
-        and item.timeleft == "00:00:00"
-        or not hasattr(item, "trackedDownloadState")
+    if (item.sizeleft > 0 and item.timeleft == "00:00:00") or not hasattr(
+        item, "trackedDownloadState"
     ):
         return "stopped"
     return item.trackedDownloadState
