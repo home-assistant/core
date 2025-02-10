@@ -88,6 +88,7 @@ async def test_agents_list_backups(
             "backup_id": "23e64aec",
             "date": "2024-11-22T11:48:48.727189+01:00",
             "database_included": True,
+            "extra_metadata": {},
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0.dev0",
@@ -123,6 +124,7 @@ async def test_agents_get_backup(
         "backup_id": "23e64aec",
         "date": "2024-11-22T11:48:48.727189+01:00",
         "database_included": True,
+        "extra_metadata": {},
         "folders": [],
         "homeassistant_included": True,
         "homeassistant_version": "2024.12.0.dev0",
@@ -150,7 +152,7 @@ async def test_agents_delete(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
-    mock_onedrive_client.delete_drive_item.assert_called_once()
+    assert mock_onedrive_client.delete_drive_item.call_count == 2
 
 
 async def test_agents_upload(

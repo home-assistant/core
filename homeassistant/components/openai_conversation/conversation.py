@@ -1,14 +1,15 @@
 """Conversation support for OpenAI."""
 
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 import json
 from typing import Any, Literal, cast
 
 import openai
+from openai._streaming import AsyncStream
 from openai._types import NOT_GIVEN
 from openai.types.chat import (
     ChatCompletionAssistantMessageParam,
-    ChatCompletionMessage,
+    ChatCompletionChunk,
     ChatCompletionMessageParam,
     ChatCompletionMessageToolCallParam,
     ChatCompletionToolMessageParam,
@@ -70,32 +71,6 @@ def _format_tool(
     return ChatCompletionToolParam(type="function", function=tool_spec)
 
 
-def _convert_message_to_param(
-    message: ChatCompletionMessage,
-) -> ChatCompletionMessageParam:
-    """Convert from class to TypedDict."""
-    tool_calls: list[ChatCompletionMessageToolCallParam] = []
-    if message.tool_calls:
-        tool_calls = [
-            ChatCompletionMessageToolCallParam(
-                id=tool_call.id,
-                function=Function(
-                    arguments=tool_call.function.arguments,
-                    name=tool_call.function.name,
-                ),
-                type=tool_call.type,
-            )
-            for tool_call in message.tool_calls
-        ]
-    param = ChatCompletionAssistantMessageParam(
-        role=message.role,
-        content=message.content,
-    )
-    if tool_calls:
-        param["tool_calls"] = tool_calls
-    return param
-
-
 def _convert_content_to_param(
     content: conversation.Content,
 ) -> ChatCompletionMessageParam:
@@ -133,6 +108,74 @@ def _convert_content_to_param(
             for tool_call in content.tool_calls
         ],
     )
+
+
+async def _transform_stream(
+    result: AsyncStream[ChatCompletionChunk],
+) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+    """Transform an OpenAI delta stream into HA format."""
+    current_tool_call: dict | None = None
+
+    async for chunk in result:
+        LOGGER.debug("Received chunk: %s", chunk)
+        choice = chunk.choices[0]
+
+        if choice.finish_reason:
+            if current_tool_call:
+                yield {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            id=current_tool_call["id"],
+                            tool_name=current_tool_call["tool_name"],
+                            tool_args=json.loads(current_tool_call["tool_args"]),
+                        )
+                    ]
+                }
+
+            break
+
+        delta = chunk.choices[0].delta
+
+        # We can yield delta messages not continuing or starting tool calls
+        if current_tool_call is None and not delta.tool_calls:
+            yield {  # type: ignore[misc]
+                key: value
+                for key in ("role", "content")
+                if (value := getattr(delta, key)) is not None
+            }
+            continue
+
+        # When doing tool calls, we should always have a tool call
+        # object or we have gotten stopped above with a finish_reason set.
+        if (
+            not delta.tool_calls
+            or not (delta_tool_call := delta.tool_calls[0])
+            or not delta_tool_call.function
+        ):
+            raise ValueError("Expected delta with tool call")
+
+        if current_tool_call and delta_tool_call.index == current_tool_call["index"]:
+            current_tool_call["tool_args"] += delta_tool_call.function.arguments or ""
+            continue
+
+        # We got tool call with new index, so we need to yield the previous
+        if current_tool_call:
+            yield {
+                "tool_calls": [
+                    llm.ToolInput(
+                        id=current_tool_call["id"],
+                        tool_name=current_tool_call["tool_name"],
+                        tool_args=json.loads(current_tool_call["tool_args"]),
+                    )
+                ]
+            }
+
+        current_tool_call = {
+            "index": delta_tool_call.index,
+            "id": delta_tool_call.id,
+            "tool_name": delta_tool_call.function.name,
+            "tool_args": delta_tool_call.function.arguments or "",
+        }
 
 
 class OpenAIConversationEntity(
@@ -198,7 +241,6 @@ class OpenAIConversationEntity(
         chat_log: conversation.ChatLog,
     ) -> conversation.ConversationResult:
         """Call the API."""
-        assert user_input.agent_id
         options = self.entry.options
 
         try:
@@ -235,6 +277,7 @@ class OpenAIConversationEntity(
                 "top_p": options.get(CONF_TOP_P, RECOMMENDED_TOP_P),
                 "temperature": options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
                 "user": chat_log.conversation_id,
+                "stream": True,
             }
 
             if model.startswith("o"):
@@ -248,39 +291,21 @@ class OpenAIConversationEntity(
                 LOGGER.error("Error talking to OpenAI: %s", err)
                 raise HomeAssistantError("Error talking to OpenAI") from err
 
-            LOGGER.debug("Response %s", result)
-            response = result.choices[0].message
-            messages.append(_convert_message_to_param(response))
-
-            tool_calls: list[llm.ToolInput] | None = None
-            if response.tool_calls:
-                tool_calls = [
-                    llm.ToolInput(
-                        id=tool_call.id,
-                        tool_name=tool_call.function.name,
-                        tool_args=json.loads(tool_call.function.arguments),
-                    )
-                    for tool_call in response.tool_calls
-                ]
-
             messages.extend(
                 [
-                    _convert_content_to_param(tool_response)
-                    async for tool_response in chat_log.async_add_assistant_content(
-                        conversation.AssistantContent(
-                            agent_id=user_input.agent_id,
-                            content=response.content or "",
-                            tool_calls=tool_calls,
-                        )
+                    _convert_content_to_param(content)
+                    async for content in chat_log.async_add_delta_content_stream(
+                        user_input.agent_id, _transform_stream(result)
                     )
                 ]
             )
 
-            if not tool_calls:
+            if not chat_log.unresponded_tool_results:
                 break
 
         intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response.content or "")
+        assert type(chat_log.content[-1]) is conversation.AssistantContent
+        intent_response.async_set_speech(chat_log.content[-1].content or "")
         return conversation.ConversationResult(
             response=intent_response, conversation_id=chat_log.conversation_id
         )

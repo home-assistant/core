@@ -9,8 +9,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import FytaConfigEntry
-from .coordinator import FytaCoordinator
+from .coordinator import FytaConfigEntry, FytaCoordinator
 from .entity import FytaPlantEntity
 
 

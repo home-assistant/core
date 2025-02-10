@@ -6,7 +6,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
 
-from peblar import PeblarApi
+from peblar import PeblarEVInterface
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -31,7 +31,19 @@ class PeblarSwitchEntityDescription(SwitchEntityDescription):
 
     has_fn: Callable[[PeblarRuntimeData], bool] = lambda x: True
     is_on_fn: Callable[[PeblarData], bool]
-    set_fn: Callable[[PeblarApi, bool], Awaitable[Any]]
+    set_fn: Callable[[PeblarDataUpdateCoordinator, bool], Awaitable[Any]]
+
+
+def _async_peblar_charge(
+    coordinator: PeblarDataUpdateCoordinator, on: bool
+) -> Awaitable[PeblarEVInterface]:
+    """Set the charge state."""
+    charge_current_limit = 0
+    if on:
+        charge_current_limit = (
+            coordinator.config_entry.runtime_data.last_known_charging_limit * 1000
+        )
+    return coordinator.api.ev_interface(charge_current_limit=charge_current_limit)
 
 
 DESCRIPTIONS = [
@@ -44,7 +56,14 @@ DESCRIPTIONS = [
             and x.user_configuration_coordinator.data.connected_phases > 1
         ),
         is_on_fn=lambda x: x.ev.force_single_phase,
-        set_fn=lambda x, on: x.ev_interface(force_single_phase=on),
+        set_fn=lambda x, on: x.api.ev_interface(force_single_phase=on),
+    ),
+    PeblarSwitchEntityDescription(
+        key="charge",
+        translation_key="charge",
+        entity_category=EntityCategory.CONFIG,
+        is_on_fn=lambda x: (x.ev.charge_current_limit >= 6000),
+        set_fn=_async_peblar_charge,
     ),
 ]
 
@@ -82,11 +101,11 @@ class PeblarSwitchEntity(
     @peblar_exception_handler
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        await self.entity_description.set_fn(self.coordinator.api, True)
+        await self.entity_description.set_fn(self.coordinator, True)
         await self.coordinator.async_request_refresh()
 
     @peblar_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        await self.entity_description.set_fn(self.coordinator.api, False)
+        await self.entity_description.set_fn(self.coordinator, False)
         await self.coordinator.async_request_refresh()

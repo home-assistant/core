@@ -15,8 +15,11 @@ from homeassistant.const import PERCENTAGE, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import AOSmithConfigEntry
-from .coordinator import AOSmithEnergyCoordinator, AOSmithStatusCoordinator
+from .coordinator import (
+    AOSmithConfigEntry,
+    AOSmithEnergyCoordinator,
+    AOSmithStatusCoordinator,
+)
 from .entity import AOSmithEnergyEntity, AOSmithStatusEntity
 
 

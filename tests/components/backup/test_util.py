@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import AsyncIterator
 import dataclasses
 import tarfile
@@ -189,6 +190,73 @@ async def test_decrypted_backup_streamer(hass: HomeAssistant) -> None:
     assert decrypted_output == decrypted_backup_data + expected_padding
 
 
+async def test_decrypted_backup_streamer_interrupt_stuck_reader(
+    hass: HomeAssistant,
+) -> None:
+    """Test the decrypted backup streamer."""
+    encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
+    backup = AgentBackup(
+        addons=["addon_1", "addon_2"],
+        backup_id="1234",
+        date="2024-12-02T07:23:58.261875-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0.dev0",
+        name="test",
+        protected=True,
+        size=encrypted_backup_path.stat().st_size,
+    )
+
+    stuck = asyncio.Event()
+
+    async def send_backup() -> AsyncIterator[bytes]:
+        f = encrypted_backup_path.open("rb")
+        while chunk := f.read(1024):
+            await stuck.wait()
+            yield chunk
+
+    async def open_backup() -> AsyncIterator[bytes]:
+        return send_backup()
+
+    decryptor = DecryptedBackupStreamer(hass, backup, open_backup, "hunter2")
+    await decryptor.open_stream()
+    await decryptor.wait()
+
+
+async def test_decrypted_backup_streamer_interrupt_stuck_writer(
+    hass: HomeAssistant,
+) -> None:
+    """Test the decrypted backup streamer."""
+    encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
+    backup = AgentBackup(
+        addons=["addon_1", "addon_2"],
+        backup_id="1234",
+        date="2024-12-02T07:23:58.261875-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0.dev0",
+        name="test",
+        protected=True,
+        size=encrypted_backup_path.stat().st_size,
+    )
+
+    async def send_backup() -> AsyncIterator[bytes]:
+        f = encrypted_backup_path.open("rb")
+        while chunk := f.read(1024):
+            yield chunk
+
+    async def open_backup() -> AsyncIterator[bytes]:
+        return send_backup()
+
+    decryptor = DecryptedBackupStreamer(hass, backup, open_backup, "hunter2")
+    await decryptor.open_stream()
+    await decryptor.wait()
+
+
 async def test_decrypted_backup_streamer_wrong_password(hass: HomeAssistant) -> None:
     """Test the decrypted backup streamer with wrong password."""
     encrypted_backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
@@ -277,6 +345,77 @@ async def test_encrypted_backup_streamer(hass: HomeAssistant) -> None:
     # padding.
     encrypted_backup_data = encrypted_backup_path.read_bytes()
     assert encrypted_output == encrypted_backup_data + expected_padding
+
+
+async def test_encrypted_backup_streamer_interrupt_stuck_reader(
+    hass: HomeAssistant,
+) -> None:
+    """Test the encrypted backup streamer."""
+    decrypted_backup_path = get_fixture_path(
+        "test_backups/c0cb53bd.tar.decrypted", DOMAIN
+    )
+    backup = AgentBackup(
+        addons=["addon_1", "addon_2"],
+        backup_id="1234",
+        date="2024-12-02T07:23:58.261875-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0.dev0",
+        name="test",
+        protected=False,
+        size=decrypted_backup_path.stat().st_size,
+    )
+
+    stuck = asyncio.Event()
+
+    async def send_backup() -> AsyncIterator[bytes]:
+        f = decrypted_backup_path.open("rb")
+        while chunk := f.read(1024):
+            await stuck.wait()
+            yield chunk
+
+    async def open_backup() -> AsyncIterator[bytes]:
+        return send_backup()
+
+    decryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
+    await decryptor.open_stream()
+    await decryptor.wait()
+
+
+async def test_encrypted_backup_streamer_interrupt_stuck_writer(
+    hass: HomeAssistant,
+) -> None:
+    """Test the encrypted backup streamer."""
+    decrypted_backup_path = get_fixture_path(
+        "test_backups/c0cb53bd.tar.decrypted", DOMAIN
+    )
+    backup = AgentBackup(
+        addons=["addon_1", "addon_2"],
+        backup_id="1234",
+        date="2024-12-02T07:23:58.261875-05:00",
+        database_included=False,
+        extra_metadata={},
+        folders=[],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0.dev0",
+        name="test",
+        protected=True,
+        size=decrypted_backup_path.stat().st_size,
+    )
+
+    async def send_backup() -> AsyncIterator[bytes]:
+        f = decrypted_backup_path.open("rb")
+        while chunk := f.read(1024):
+            yield chunk
+
+    async def open_backup() -> AsyncIterator[bytes]:
+        return send_backup()
+
+    decryptor = EncryptedBackupStreamer(hass, backup, open_backup, "hunter2")
+    await decryptor.open_stream()
+    await decryptor.wait()
 
 
 async def test_encrypted_backup_streamer_random_nonce(hass: HomeAssistant) -> None:
@@ -390,10 +529,10 @@ async def test_encrypted_backup_streamer_error(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("name", "resulting_filename"),
     [
-        ("test", "test_-_2025-01-30_13.42_12345678.tar"),
-        ("  leading spaces", "leading_spaces_-_2025-01-30_13.42_12345678.tar"),
-        ("trailing spaces  ", "trailing_spaces_-_2025-01-30_13.42_12345678.tar"),
-        ("double  spaces  ", "double_spaces_-_2025-01-30_13.42_12345678.tar"),
+        ("test", "test_2025-01-30_13.42_12345678.tar"),
+        ("  leading spaces", "leading_spaces_2025-01-30_13.42_12345678.tar"),
+        ("trailing spaces  ", "trailing_spaces_2025-01-30_13.42_12345678.tar"),
+        ("double  spaces  ", "double_spaces_2025-01-30_13.42_12345678.tar"),
     ],
 )
 def test_suggested_filename(name: str, resulting_filename: str) -> None:
