@@ -20,6 +20,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHan
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
 from .const import CONF_FOLDER_NAME, DOMAIN, OAUTH_SCOPES
+from .coordinator import OneDriveConfigEntry
 
 
 class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -30,7 +31,6 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     step_data: dict[str, Any] = {}
     title: str
-    client: OneDriveClient
 
     @property
     def logger(self) -> logging.Logger:
@@ -51,7 +51,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         async def get_access_token() -> str:
             return cast(str, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
 
-        self.client = graph_client = OneDriveClient(
+        graph_client = OneDriveClient(
             get_access_token, async_get_clientsession(self.hass)
         )
 
@@ -93,16 +93,17 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             if self.source == SOURCE_RECONFIGURE:
-                reconfigure_entry = self._get_reconfigure_entry()
+                reconfigure_entry: OneDriveConfigEntry = self._get_reconfigure_entry()
                 if (old_name := reconfigure_entry.data[CONF_FOLDER_NAME]) != (
                     new_name := user_input[CONF_FOLDER_NAME]
                 ):
+                    self.logger.debug(
+                        "Renaming folder from %s to %s", old_name, new_name
+                    )
+                    client = reconfigure_entry.runtime_data.client
                     try:
-                        self.logger.debug(
-                            "Renaming folder from %s to %s", old_name, new_name
-                        )
-                        approot = await self.client.get_approot()
-                        await self.client.update_drive_item(
+                        approot = await client.get_approot()
+                        await client.update_drive_item(
                             f"{approot.id}:/{old_name}", ItemUpdate(name=new_name)
                         )
                     except OneDriveException:
