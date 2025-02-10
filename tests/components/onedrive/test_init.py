@@ -101,3 +101,15 @@ async def test_migrate_metadata_files_errors(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_auth_error_during_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test auth error during update."""
+    mock_onedrive_client.get_drive.side_effect = AuthenticationError(403, "Auth failed")
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

@@ -30,8 +30,8 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from . import OneDriveConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .coordinator import OneDriveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 UPLOAD_CHUNK_SIZE = 16 * 320 * 1024  # 5.2MB
