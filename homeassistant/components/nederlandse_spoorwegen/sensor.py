@@ -135,7 +135,7 @@ class NSDepartureSensor(SensorEntity):
     @property
     def extra_state_attributes(self):
         """Return the state attributes."""
-        if not self._trips:
+        if not self._trips or self._first_trip is None:
             return None
 
         if self._first_trip.trip_parts:
@@ -212,6 +212,8 @@ class NSDepartureSensor(SensorEntity):
             attributes["next"] = self._next_trip.departure_time_planned.strftime(
                 "%H:%M:%S"
             )
+        else:
+            attributes["next"] = None
 
         return attributes
 
@@ -263,9 +265,13 @@ class NSDepartureSensor(SensorEntity):
                     > datetime.now().replace(tzinfo=dt_util.get_default_time_zone())
                 ]
 
-                sorted_times = sorted(filtered_times, key=lambda x: x[1])
-                self._first_trip = self._trips[sorted_times[0][0]]
-                self._state = sorted_times[0][1].strftime("%H:%M:%S")
+                if len(filtered_times) > 0:
+                    sorted_times = sorted(filtered_times, key=lambda x: x[1])
+                    self._first_trip = self._trips[sorted_times[0][0]]
+                    self._state = sorted_times[0][1].strftime("%H:%M:%S")
+                else:
+                    self._first_trip = None
+                    self._state = None
 
                 # Filter again to remove trains that leave at the exact same time.
                 filtered_times = [
@@ -273,8 +279,12 @@ class NSDepartureSensor(SensorEntity):
                     for i, time in enumerate(all_times)
                     if time > sorted_times[0][1]
                 ]
-                sorted_times = sorted(filtered_times, key=lambda x: x[1])
-                self._next_trip = self._trips[sorted_times[0][0]]
+
+                if len(filtered_times) > 0:
+                    sorted_times = sorted(filtered_times, key=lambda x: x[1])
+                    self._next_trip = self._trips[sorted_times[0][0]]
+                else:
+                    self._next_trip = None
 
         except (
             requests.exceptions.ConnectionError,
