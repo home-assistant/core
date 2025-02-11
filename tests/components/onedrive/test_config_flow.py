@@ -1,5 +1,6 @@
 """Test the OneDrive config flow."""
 
+from copy import deepcopy
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
@@ -223,7 +224,7 @@ async def test_reauth_flow_id_changed(
     mock_onedrive_client: MagicMock,
 ) -> None:
     """Test that the reauth flow fails on a different drive id."""
-    app_root = MOCK_APPROOT
+    app_root = deepcopy(MOCK_APPROOT)
     app_root.parent_reference.drive_id = "other_drive_id"
     mock_onedrive_client.get_approot.return_value = app_root
 
@@ -284,7 +285,8 @@ async def test_reconfigure_flow_error(
     mock_setup_entry: AsyncMock,
 ) -> None:
     """Testing reconfgure flow errors."""
-    await setup_integration(hass, mock_config_entry)
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
     await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
