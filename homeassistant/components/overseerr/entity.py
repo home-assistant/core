@@ -18,5 +18,6 @@ class OverseerrEntity(CoordinatorEntity[OverseerrCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
             entry_type=DeviceEntryType.SERVICE,
+            configuration_url=coordinator.url,
         )
         self._attr_unique_id = f"{coordinator.config_entry.entry_id}-{key}"

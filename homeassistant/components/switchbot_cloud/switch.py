@@ -7,7 +7,7 @@ from switchbot_api import CommonCommands, Device, PowerState, Remote, SwitchBotA
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
 from .const import DOMAIN
@@ -18,7 +18,7 @@ from .entity import SwitchBotCloudEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
@@ -46,21 +46,18 @@ class SwitchBotCloudSwitch(SwitchBotCloudEntity, SwitchEntity):
         self._attr_is_on = False
         self.async_write_ha_state()
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
         self._attr_is_on = self.coordinator.data.get("power") == PowerState.ON.value
-        self.async_write_ha_state()
 
 
 class SwitchBotCloudRemoteSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot switch provider by a remote."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
 
 
 class SwitchBotCloudPlugSwitch(SwitchBotCloudSwitch):
@@ -72,13 +69,11 @@ class SwitchBotCloudPlugSwitch(SwitchBotCloudSwitch):
 class SwitchBotCloudRelaySwitchSwitch(SwitchBotCloudSwitch):
     """Representation of a SwitchBot relay switch."""
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
         self._attr_is_on = self.coordinator.data.get("switchStatus") == 1
-        self.async_write_ha_state()
 
 
 @callback
@@ -95,4 +90,6 @@ def _async_make_entity(
         "Relay Switch 1",
     ]:
         return SwitchBotCloudRelaySwitchSwitch(api, device, coordinator)
+    if "Bot" in device.device_type:
+        return SwitchBotCloudSwitch(api, device, coordinator)
     raise NotImplementedError(f"Unsupported device type: {device.device_type}")

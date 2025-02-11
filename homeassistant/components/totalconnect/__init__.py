@@ -3,17 +3,14 @@
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.exceptions import AuthenticationError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .const import AUTO_BYPASS, CONF_USERCODES
-from .coordinator import TotalConnectDataUpdateCoordinator
+from .coordinator import TotalConnectConfigEntry, TotalConnectDataUpdateCoordinator
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.BUTTON]
-
-type TotalConnectConfigEntry = ConfigEntry[TotalConnectDataUpdateCoordinator]
 
 
 async def async_setup_entry(
@@ -41,7 +38,7 @@ async def async_setup_entry(
             "TotalConnect authentication failed during setup"
         ) from exception
 
-    coordinator = TotalConnectDataUpdateCoordinator(hass, client)
+    coordinator = TotalConnectDataUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator

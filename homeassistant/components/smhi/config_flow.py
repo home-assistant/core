@@ -4,12 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from smhi.smhi_lib import Smhi, SmhiForecastException
+from pysmhi import SmhiForecastException, SMHIPointForecast
 import voluptuous as vol
 
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     aiohttp_client,
@@ -26,9 +26,9 @@ async def async_check_location(
 ) -> bool:
     """Return true if location is ok."""
     session = aiohttp_client.async_get_clientsession(hass)
-    smhi_api = Smhi(longitude, latitude, session=session)
+    smhi_api = SMHIPointForecast(str(longitude), str(latitude), session=session)
     try:
-        await smhi_api.async_get_forecast()
+        await smhi_api.async_get_daily_forecast()
     except SmhiForecastException:
         return False
 
@@ -38,7 +38,7 @@ async def async_check_location(
 class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for SMHI component."""
 
-    VERSION = 2
+    VERSION = 3
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -57,10 +57,6 @@ class SmhiFlowHandler(ConfigFlow, domain=DOMAIN):
                     and lon == self.hass.config.longitude
                 ):
                     name = HOME_LOCATION_NAME
-
-                user_input[CONF_NAME] = (
-                    HOME_LOCATION_NAME if name == HOME_LOCATION_NAME else DEFAULT_NAME
-                )
 
                 await self.async_set_unique_id(f"{lat}-{lon}")
                 self._abort_if_unique_id_configured()

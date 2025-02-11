@@ -9,7 +9,7 @@ ATTR_MANUFACTURER = "SMLIGHT"
 DATA_COORDINATOR = "data"
 FIRMWARE_COORDINATOR = "firmware"
 
-SCAN_FIRMWARE_INTERVAL = timedelta(hours=6)
+SCAN_FIRMWARE_INTERVAL = timedelta(hours=24)
 LOGGER = logging.getLogger(__package__)
 SCAN_INTERVAL = timedelta(seconds=300)
 SCAN_INTERNET_INTERVAL = timedelta(minutes=15)

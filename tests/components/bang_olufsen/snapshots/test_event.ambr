@@ -1,0 +1,21 @@
+# serializer version: 1
+# name: test_button_event_creation
+  list([
+    'event.beosound_balance_11111111_bluetooth',
+    'event.beosound_balance_11111111_microphone',
+    'event.beosound_balance_11111111_next',
+    'event.beosound_balance_11111111_play_pause',
+    'event.beosound_balance_11111111_favourite_1',
+    'event.beosound_balance_11111111_favourite_2',
+    'event.beosound_balance_11111111_favourite_3',
+    'event.beosound_balance_11111111_favourite_4',
+    'event.beosound_balance_11111111_previous',
+    'event.beosound_balance_11111111_volume',
+    'media_player.beosound_balance_11111111',
+  ])
+# ---
+# name: test_button_event_creation_beoconnect_core
+  list([
+    'media_player.beoconnect_core_22222222',
+  ])
+# ---

@@ -12,7 +12,7 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .entity import (
@@ -206,6 +206,15 @@ SWITCH_ENTITIES = (
         value=lambda api, ch: api.pir_reduce_alarm(ch) is True,
         method=lambda api, ch, value: api.set_pir(ch, reduce_alarm=value),
     ),
+    ReolinkSwitchEntityDescription(
+        key="privacy_mode",
+        always_available=True,
+        translation_key="privacy_mode",
+        entity_category=EntityCategory.CONFIG,
+        supported=lambda api, ch: api.supported(ch, "privacy_mode"),
+        value=lambda api, ch: api.baichuan.privacy_mode(ch),
+        method=lambda api, ch, value: api.baichuan.set_privacy_mode(ch, value),
+    ),
 )
 
 NVR_SWITCH_ENTITIES = (
@@ -321,7 +330,7 @@ DEPRECATED_NVR_SWITCHES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink switch entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
