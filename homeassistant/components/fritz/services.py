@@ -15,7 +15,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_extract_config_entry_ids
 
 from .const import DOMAIN
-from .coordinator import AvmWrapper
+from .coordinator import FritzConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ async def _async_set_guest_wifi_password(service_call: ServiceCall) -> None:
     """Call Fritz set guest wifi password service."""
     hass = service_call.hass
     target_entry_ids = await async_extract_config_entry_ids(hass, service_call)
-    target_entries = [
+    target_entries: list[FritzConfigEntry] = [
         loaded_entry
         for loaded_entry in hass.config_entries.async_loaded_entries(DOMAIN)
         if loaded_entry.entry_id in target_entry_ids
@@ -48,7 +48,7 @@ async def _async_set_guest_wifi_password(service_call: ServiceCall) -> None:
 
     for target_entry in target_entries:
         _LOGGER.debug("Executing service %s", service_call.service)
-        avm_wrapper: AvmWrapper = hass.data[DOMAIN][target_entry.entry_id]
+        avm_wrapper = target_entry.runtime_data
         try:
             await avm_wrapper.async_trigger_set_guest_password(
                 service_call.data.get("password"),

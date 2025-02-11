@@ -6,6 +6,7 @@ To update, run python3 -m script.hassfest
 FLOWS = {
     "helper": [
         "derivative",
+        "filter",
         "generic_hygrostat",
         "generic_thermostat",
         "group",
@@ -230,6 +231,7 @@ FLOWS = {
         "google",
         "google_assistant_sdk",
         "google_cloud",
+        "google_drive",
         "google_generative_ai_conversation",
         "google_mail",
         "google_photos",
@@ -287,6 +289,7 @@ FLOWS = {
         "inkbird",
         "insteon",
         "intellifire",
+        "iometer",
         "ios",
         "iotawatt",
         "iotty",
@@ -464,6 +467,7 @@ FLOWS = {
         "peco",
         "pegel_online",
         "permobil",
+        "pglab",
         "philips_js",
         "pi_hole",
         "picnic",

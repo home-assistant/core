@@ -78,6 +78,9 @@
       "wifi_strength": {
         "name": "Wi-Fi strength"
       },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
       "total_energy_import_kwh": {
         "name": "Energy import"
       },
@@ -137,6 +140,9 @@
       },
       "state_of_charge_pct": {
         "name": "State of charge"
+      },
+      "uptime": {
+        "name": "Uptime"
       }
     },
     "switch": {
@@ -171,8 +177,7 @@
           }
         },
         "error": {
-          "authorization_failed": "[%key:component::homewizard::config::error::authorization_failed%]",
-          "unknown_error": "[%key:common::config_flow::error::unknown%]"
+          "authorization_failed": "[%key:component::homewizard::config::error::authorization_failed%]"
         }
       }
     }

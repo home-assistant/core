@@ -40,8 +40,6 @@ PLATFORMS = [
 CONF_OLD_DISCOVERY = "old_discovery"
 DEFAULT_CONF_OLD_DISCOVERY = False
 
-DATA_FRITZ = "fritz_data"
-
 DSL_CONNECTION: Literal["dsl"] = "dsl"
 
 DEFAULT_DEVICE_NAME = "Unknown device"
