@@ -8,5 +8,5 @@
     "integration_type": "service",
     "config_flow": true,
     "quality_scale": "silver",
-    "requirements": ["redgtech-api==0.1.2"]
+    "requirements": ["redgtech-api==0.1.9"]
 }
