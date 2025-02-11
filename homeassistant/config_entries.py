@@ -1952,7 +1952,7 @@ class ConfigEntries:
         Raises UnknownEntry if entry is not found.
         """
         if (entry := self.async_get_entry(entry_id)) is None:
-            raise UnknownEntry
+            raise UnknownEntry(entry_id)
         return entry
 
     @callback
@@ -3423,7 +3423,7 @@ class ConfigSubentryFlow(
         if data_updates is not UNDEFINED:
             if data is not UNDEFINED:
                 raise ValueError("Cannot set both data and data_updates")
-            data = entry.data | data_updates
+            data = subentry.data | data_updates
         self.hass.config_entries.async_update_subentry(
             entry=entry,
             subentry=subentry,
@@ -3462,7 +3462,7 @@ class ConfigSubentryFlow(
         )
         subentry_id = self._reconfigure_subentry_id
         if subentry_id not in entry.subentries:
-            raise UnknownEntry
+            raise UnknownSubEntry(subentry_id)
         return entry.subentries[subentry_id]
 
 
