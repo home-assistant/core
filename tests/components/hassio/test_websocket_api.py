@@ -9,6 +9,9 @@ from aiohasupervisor.models import HomeAssistantUpdateOptions, StoreAddonUpdate
 import pytest
 
 from homeassistant.components.backup import BackupManagerError, ManagerBackup
+
+# pylint: disable-next=hass-component-root-import
+from homeassistant.components.backup.manager import AgentBackupStatus
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.const import (
     ATTR_DATA,
@@ -467,34 +470,40 @@ async def test_update_addon_with_backup(
         (
             {
                 "backup-1": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     extra_metadata={"supervisor.addon_update": "other"},
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     extra_metadata={"supervisor.addon_update": "other"},
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-5": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     extra_metadata={"supervisor.addon_update": "test"},
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-6": MagicMock(
+                    agents={"hassio.local": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     extra_metadata={"supervisor.addon_update": "test"},
                     with_automatic_settings=True,
