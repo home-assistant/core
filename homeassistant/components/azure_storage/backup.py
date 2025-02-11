@@ -23,6 +23,7 @@ from . import AzureStorageConfigEntry
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+METADATA_VERSION = "1"
 
 
 async def async_get_backup_agents(
@@ -113,7 +114,7 @@ class AzureStorageBackupAgent(BackupAgent):
         """Upload a backup."""
 
         metadata = {
-            "metadata_version": "1",
+            "metadata_version": METADATA_VERSION,
             "backup_id": backup.backup_id,
             "backup_metadata": json.dumps(backup.as_dict()),
         }
@@ -144,7 +145,7 @@ class AzureStorageBackupAgent(BackupAgent):
         async for blob in self._client.list_blobs(include="metadata"):
             metadata = blob.metadata
 
-            if metadata.get("metadata_version") == "1":
+            if metadata.get("metadata_version") == METADATA_VERSION:
                 backups.append(
                     AgentBackup.from_dict(json.loads(metadata["backup_metadata"]))
                 )
@@ -169,7 +170,7 @@ class AzureStorageBackupAgent(BackupAgent):
         async for blob in self._client.list_blobs(include="metadata"):
             if (
                 backup_id == blob.metadata.get("backup_id", "")
-                and blob.metadata.get("metadata_version") == "1"
+                and blob.metadata.get("metadata_version") == METADATA_VERSION
             ):
                 return blob
         return None
