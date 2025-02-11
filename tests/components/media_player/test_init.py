@@ -377,21 +377,23 @@ async def test_media_browse_service(hass: HomeAssistant) -> None:
                 ),
             ],
         ),
-    ):
+    ) as mock_browse_media:
         result = await hass.services.async_call(
             "media_player",
             SERVICE_BROWSE_MEDIA,
             {
                 ATTR_ENTITY_ID: "media_player.browse",
                 ATTR_MEDIA_CONTENT_TYPE: "album",
-                ATTR_MEDIA_CONTENT_ID: "abcd",
+                ATTR_MEDIA_CONTENT_ID: "title=Album*",
             },
             blocking=True,
             return_response=True,
         )
 
+        mock_browse_media.assert_called_with(
+            media_content_type="album", media_content_id="title=Album*"
+        )
         browse_res: BrowseMedia = result["media_player.browse"]
-
         assert browse_res.title == "Mock Title"
         assert browse_res.media_class == "directory"
         assert browse_res.media_content_type == "mock-type"
