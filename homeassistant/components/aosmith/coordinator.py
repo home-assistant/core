@@ -1,5 +1,7 @@
 """The data update coordinator for the A. O. Smith integration."""
 
+from __future__ import annotations
+
 from dataclasses import dataclass
 import logging
 
@@ -27,8 +29,8 @@ class AOSmithData:
     """Data for the A. O. Smith integration."""
 
     client: AOSmithAPIClient
-    status_coordinator: "AOSmithStatusCoordinator"
-    energy_coordinator: "AOSmithEnergyCoordinator"
+    status_coordinator: AOSmithStatusCoordinator
+    energy_coordinator: AOSmithEnergyCoordinator
 
 
 class AOSmithStatusCoordinator(DataUpdateCoordinator[dict[str, AOSmithDevice]]):
