@@ -777,7 +777,7 @@ async def test_onboarding_backup_view_without_backup(
     resp = await client.request(method, f"/api/onboarding/{view}", **kwargs)
 
     assert resp.status == 500
-    assert await resp.json() == {"error": "backup_disabled"}
+    assert await resp.json() == {"code": "backup_disabled"}
 
 
 async def test_onboarding_backup_info(
@@ -920,14 +920,16 @@ async def test_onboarding_backup_restore(
 
 
 @pytest.mark.parametrize(
-    ("params", "restore_error", "expected_status", "expected_message", "restore_calls"),
+    ("params", "restore_error", "expected_status", "expected_json", "restore_calls"),
     [
         # Missing agent_id
         (
             {"backup_id": "abc123"},
             None,
             400,
-            "Message format incorrect: required key not provided @ data['agent_id']",
+            {
+                "message": "Message format incorrect: required key not provided @ data['agent_id']"
+            },
             0,
         ),
         # Missing backup_id
@@ -935,7 +937,9 @@ async def test_onboarding_backup_restore(
             {"agent_id": "backup.local"},
             None,
             400,
-            "Message format incorrect: required key not provided @ data['backup_id']",
+            {
+                "message": "Message format incorrect: required key not provided @ data['backup_id']"
+            },
             0,
         ),
         # Invalid restore_database
@@ -947,7 +951,9 @@ async def test_onboarding_backup_restore(
             },
             None,
             400,
-            "Message format incorrect: expected bool for dictionary value @ data['restore_database']",
+            {
+                "message": "Message format incorrect: expected bool for dictionary value @ data['restore_database']"
+            },
             0,
         ),
         # Invalid folder
@@ -959,7 +965,9 @@ async def test_onboarding_backup_restore(
             },
             None,
             400,
-            "Message format incorrect: expected Folder or one of 'share', 'addons/local', 'ssl', 'media' @ data['restore_folders'][0]",
+            {
+                "message": "Message format incorrect: expected Folder or one of 'share', 'addons/local', 'ssl', 'media' @ data['restore_folders'][0]"
+            },
             0,
         ),
         # Wrong password
@@ -967,7 +975,7 @@ async def test_onboarding_backup_restore(
             {"backup_id": "abc123", "agent_id": "backup.local"},
             backup.IncorrectPasswordError,
             400,
-            "incorrect_password",
+            {"code": "incorrect_password"},
             1,
         ),
     ],
@@ -979,7 +987,7 @@ async def test_onboarding_backup_restore_error(
     params: dict[str, Any],
     restore_error: Exception | None,
     expected_status: int,
-    expected_message: str,
+    expected_json: str,
     restore_calls: int,
 ) -> None:
     """Test returning installation type during onboarding."""
@@ -998,7 +1006,7 @@ async def test_onboarding_backup_restore_error(
         resp = await client.post("/api/onboarding/backup/restore", json=params)
 
     assert resp.status == expected_status
-    assert await resp.json() == {"message": expected_message}
+    assert await resp.json() == expected_json
     assert len(mock_restore.mock_calls) == restore_calls
 
 
