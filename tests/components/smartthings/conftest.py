@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from pysmartthings.models import DeviceResponse, DeviceStatus
+from pysmartthings.models import DeviceResponse, DeviceStatus, SceneResponse
 import pytest
 
 from homeassistant.components.smartthings.const import CONF_LOCATION_ID, DOMAIN
@@ -338,7 +338,9 @@ def mock_smartthings() -> Generator[AsyncMock]:
         ) as mock_client,
     ):
         client = mock_client.return_value
-
+        client.get_scenes.return_value = SceneResponse.from_json(
+            load_fixture("scenes.json", DOMAIN)
+        ).items
         yield client
 
 

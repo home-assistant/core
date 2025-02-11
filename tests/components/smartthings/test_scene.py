@@ -16,7 +16,7 @@ from tests.common import MockConfigEntry
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    devices: AsyncMock,
+    mock_smartthings: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:

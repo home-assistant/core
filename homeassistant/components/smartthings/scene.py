@@ -21,8 +21,6 @@ async def async_setup_entry(
     client = entry.runtime_data.client
     scenes = entry.runtime_data.scenes
     async_add_entities(SmartThingsScene(scene, client) for scene in scenes.values())
-    # broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    # async_add_entities(SmartThingsScene(scene) for scene in broker.scenes.values())
 
 
 class SmartThingsScene(Scene):
@@ -39,11 +37,11 @@ class SmartThingsScene(Scene):
         """Activate scene."""
         await self.client.execute_scene(self._scene.scene_id)
 
-    # @property
-    # def extra_state_attributes(self):
-    #     """Get attributes about the state."""
-    #     return {
-    #         "icon": self._scene.icon,
-    #         "color": self._scene.color,
-    #         "location_id": self._scene.location_id,
-    #     }
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        """Get attributes about the state."""
+        return {
+            "icon": self._scene.icon,
+            "color": self._scene.color,
+            "location_id": self._scene.location_id,
+        }

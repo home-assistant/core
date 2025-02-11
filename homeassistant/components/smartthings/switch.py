@@ -43,14 +43,6 @@ async def async_setup_entry(
     )
 
 
-# def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-#     """Return all capabilities supported if minimum required are present."""
-#     # Must be able to be turned on/off.
-#     if Capability.switch in capabilities:
-#         return [Capability.switch, Capability.energy_meter, Capability.power_meter]
-#     return None
-
-
 class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
     """Define a SmartThings switch."""
 
