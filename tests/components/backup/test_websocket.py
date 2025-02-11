@@ -6,7 +6,6 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from pytest_unordered import unordered
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.backup import (
@@ -98,15 +97,6 @@ def mock_delay_save() -> Generator[None]:
     """Mock the delay save constant."""
     with patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0):
         yield
-
-
-@pytest.fixture(name="delete_backup")
-def mock_delete_backup() -> Generator[AsyncMock]:
-    """Mock manager delete backup."""
-    with patch(
-        "homeassistant.components.backup.BackupManager.async_delete_backup"
-    ) as mock_delete_backup:
-        yield mock_delete_backup
 
 
 @pytest.fixture(name="get_backups")
@@ -911,7 +901,7 @@ async def test_agents_info(
     assert await client.receive_json() == snapshot
 
 
-@pytest.mark.usefixtures("create_backup", "delete_backup", "get_backups")
+@pytest.mark.usefixtures("get_backups")
 @pytest.mark.parametrize(
     "storage_data",
     [
@@ -1161,7 +1151,7 @@ async def test_config_info(
     assert await client.receive_json() == snapshot
 
 
-@pytest.mark.usefixtures("create_backup", "delete_backup", "get_backups")
+@pytest.mark.usefixtures("get_backups")
 @pytest.mark.parametrize(
     "commands",
     [
@@ -1326,7 +1316,7 @@ async def test_config_update(
     assert hass_storage[DOMAIN] == snapshot
 
 
-@pytest.mark.usefixtures("create_backup", "delete_backup", "get_backups")
+@pytest.mark.usefixtures("get_backups")
 @pytest.mark.parametrize(
     "command",
     [
@@ -1783,14 +1773,13 @@ async def test_config_schedule_logic(
         "command",
         "backups",
         "get_backups_agent_errors",
-        "delete_backup_agent_errors",
+        "agent_delete_backup_side_effects",
         "last_backup_time",
         "next_time",
         "backup_time",
         "backup_calls",
         "get_backups_calls",
         "delete_calls",
-        "delete_args_list",
     ),
     [
         (
@@ -1833,8 +1822,7 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,  # we get backups even if backup retention copies is None
-            0,
-            [],
+            {},
         ),
         (
             {
@@ -1876,8 +1864,7 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            0,
-            [],
+            {},
         ),
         (
             {
@@ -1907,8 +1894,7 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            0,
-            [],
+            {},
         ),
         (
             {
@@ -1971,13 +1957,10 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            1,
-            [
-                call(
-                    "backup-1",
-                    agent_ids=unordered(["test.test-agent", "test.test-agent2"]),
-                )
-            ],
+            {
+                "test.test-agent": [call("backup-1")],
+                "test.test-agent2": [call("backup-1")],
+            },
         ),
         (
             {
@@ -2039,13 +2022,10 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            1,
-            [
-                call(
-                    "backup-1",
-                    agent_ids=unordered(["test.test-agent", "test.test-agent2"]),
-                )
-            ],
+            {
+                "test.test-agent": [call("backup-1")],
+                "test.test-agent2": [call("backup-1")],
+            },
         ),
         (
             {
@@ -2093,11 +2073,7 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            2,
-            [
-                call("backup-1", agent_ids=["test.test-agent"]),
-                call("backup-2", agent_ids=["test.test-agent"]),
-            ],
+            {"test.test-agent": [call("backup-1"), call("backup-2")]},
         ),
         (
             {
@@ -2132,15 +2108,14 @@ async def test_config_schedule_logic(
                     spec=ManagerBackup,
                 ),
             },
-            {"test-agent": BackupAgentError("Boom!")},
+            {"test.test-agent": BackupAgentError("Boom!")},
             {},
             "2024-11-11T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            1,
-            [call("backup-1", agent_ids=["test.test-agent"])],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             {
@@ -2176,14 +2151,13 @@ async def test_config_schedule_logic(
                 ),
             },
             {},
-            {"test-agent": BackupAgentError("Boom!")},
+            {"test.test-agent": BackupAgentError("Boom!")},
             "2024-11-11T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            1,
-            [call("backup-1", agent_ids=["test.test-agent"])],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             {
@@ -2246,21 +2220,18 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            3,
-            [
-                call(
-                    "backup-1",
-                    agent_ids=unordered(["test.test-agent", "test.test-agent2"]),
-                ),
-                call(
-                    "backup-2",
-                    agent_ids=unordered(["test.test-agent", "test.test-agent2"]),
-                ),
-                call(
-                    "backup-3",
-                    agent_ids=unordered(["test.test-agent", "test.test-agent2"]),
-                ),
-            ],
+            {
+                "test.test-agent": [
+                    call("backup-1"),
+                    call("backup-2"),
+                    call("backup-3"),
+                ],
+                "test.test-agent2": [
+                    call("backup-1"),
+                    call("backup-2"),
+                    call("backup-3"),
+                ],
+            },
         ),
         (
             {
@@ -2322,18 +2293,14 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            3,
-            [
-                call(
-                    "backup-1",
-                    agent_ids=unordered(["test.test-agent", "test.test-agent2"]),
-                ),
-                call(
-                    "backup-2",
-                    agent_ids=unordered(["test.test-agent", "test.test-agent2"]),
-                ),
-                call("backup-3", agent_ids=["test.test-agent"]),
-            ],
+            {
+                "test.test-agent": [
+                    call("backup-1"),
+                    call("backup-2"),
+                    call("backup-3"),
+                ],
+                "test.test-agent2": [call("backup-1"), call("backup-2")],
+            },
         ),
         (
             {
@@ -2363,8 +2330,7 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            0,
-            [],
+            {},
         ),
     ],
 )
@@ -2375,19 +2341,17 @@ async def test_config_retention_copies_logic(
     freezer: FrozenDateTimeFactory,
     hass_storage: dict[str, Any],
     create_backup: AsyncMock,
-    delete_backup: AsyncMock,
     get_backups: AsyncMock,
     command: dict[str, Any],
     backups: dict[str, Any],
     get_backups_agent_errors: dict[str, Exception],
-    delete_backup_agent_errors: dict[str, Exception],
+    agent_delete_backup_side_effects: dict[str, Exception],
     last_backup_time: str,
     next_time: str,
     backup_time: str,
     backup_calls: int,
     get_backups_calls: int,
-    delete_calls: int,
-    delete_args_list: Any,
+    delete_calls: dict[str, Any],
 ) -> None:
     """Test config backup retention copies logic."""
     created_backup: MagicMock = create_backup.return_value[1].result().backup
@@ -2425,12 +2389,17 @@ async def test_config_retention_copies_logic(
         "minor_version": store.STORAGE_VERSION_MINOR,
     }
     get_backups.return_value = (backups, get_backups_agent_errors)
-    delete_backup.return_value = delete_backup_agent_errors
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-11 12:00:00+01:00")
 
-    await setup_backup_integration(hass, remote_agents=["test-agent"])
+    await setup_backup_integration(hass, remote_agents=["test-agent", "test-agent2"])
     await hass.async_block_till_done()
+
+    manager = hass.data[DATA_MANAGER]
+    for agent_id, agent in manager.backup_agents.items():
+        agent.async_delete_backup = AsyncMock(
+            side_effect=agent_delete_backup_side_effects.get(agent_id), autospec=True
+        )
 
     await client.send_json_auto_id(command)
     result = await client.receive_json()
@@ -2442,8 +2411,10 @@ async def test_config_retention_copies_logic(
     await hass.async_block_till_done()
     assert create_backup.call_count == backup_calls
     assert get_backups.call_count == get_backups_calls
-    assert delete_backup.call_count == delete_calls
-    assert delete_backup.call_args_list == delete_args_list
+    for agent_id, agent in manager.backup_agents.items():
+        agent_delete_calls = delete_calls.get(agent_id, [])
+        assert agent.async_delete_backup.call_count == len(agent_delete_calls)
+        assert agent.async_delete_backup.call_args_list == agent_delete_calls
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert (
@@ -2474,11 +2445,9 @@ async def test_config_retention_copies_logic(
         "config_command",
         "backups",
         "get_backups_agent_errors",
-        "delete_backup_agent_errors",
         "backup_calls",
         "get_backups_calls",
         "delete_calls",
-        "delete_args_list",
     ),
     [
         (
@@ -2515,11 +2484,9 @@ async def test_config_retention_copies_logic(
                 ),
             },
             {},
-            {},
             1,
             1,  # we get backups even if backup retention copies is None
-            0,
-            [],
+            {},
         ),
         (
             {
@@ -2555,11 +2522,9 @@ async def test_config_retention_copies_logic(
                 ),
             },
             {},
+            1,
+            1,
             {},
-            1,
-            1,
-            0,
-            [],
         ),
         (
             {
@@ -2601,11 +2566,9 @@ async def test_config_retention_copies_logic(
                 ),
             },
             {},
-            {},
             1,
             1,
-            1,
-            [call("backup-1", agent_ids=["test.test-agent"])],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             {
@@ -2647,14 +2610,9 @@ async def test_config_retention_copies_logic(
                 ),
             },
             {},
-            {},
             1,
             1,
-            2,
-            [
-                call("backup-1", agent_ids=["test.test-agent"]),
-                call("backup-2", agent_ids=["test.test-agent"]),
-            ],
+            {"test.test-agent": [call("backup-1"), call("backup-2")]},
         ),
     ],
 )
@@ -2664,18 +2622,15 @@ async def test_config_retention_copies_logic_manual_backup(
     freezer: FrozenDateTimeFactory,
     hass_storage: dict[str, Any],
     create_backup: AsyncMock,
-    delete_backup: AsyncMock,
     get_backups: AsyncMock,
     config_command: dict[str, Any],
     backup_command: dict[str, Any],
     backups: dict[str, Any],
     get_backups_agent_errors: dict[str, Exception],
-    delete_backup_agent_errors: dict[str, Exception],
     backup_time: str,
     backup_calls: int,
     get_backups_calls: int,
-    delete_calls: int,
-    delete_args_list: Any,
+    delete_calls: dict[str, Any],
 ) -> None:
     """Test config backup retention copies logic for manual backup."""
     created_backup: MagicMock = create_backup.return_value[1].result().backup
@@ -2713,12 +2668,15 @@ async def test_config_retention_copies_logic_manual_backup(
         "minor_version": store.STORAGE_VERSION_MINOR,
     }
     get_backups.return_value = (backups, get_backups_agent_errors)
-    delete_backup.return_value = delete_backup_agent_errors
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-11 12:00:00+01:00")
 
     await setup_backup_integration(hass, remote_agents=["test-agent"])
     await hass.async_block_till_done()
+
+    manager = hass.data[DATA_MANAGER]
+    for agent in manager.backup_agents.values():
+        agent.async_delete_backup = AsyncMock(autospec=True)
 
     await client.send_json_auto_id(config_command)
     result = await client.receive_json()
@@ -2734,8 +2692,10 @@ async def test_config_retention_copies_logic_manual_backup(
 
     assert create_backup.call_count == backup_calls
     assert get_backups.call_count == get_backups_calls
-    assert delete_backup.call_count == delete_calls
-    assert delete_backup.call_args_list == delete_args_list
+    for agent_id, agent in manager.backup_agents.items():
+        agent_delete_calls = delete_calls.get(agent_id, [])
+        assert agent.async_delete_backup.call_count == len(agent_delete_calls)
+        assert agent.async_delete_backup.call_args_list == agent_delete_calls
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert (
@@ -2754,13 +2714,12 @@ async def test_config_retention_copies_logic_manual_backup(
         "commands",
         "backups",
         "get_backups_agent_errors",
-        "delete_backup_agent_errors",
+        "agent_delete_backup_side_effects",
         "last_backup_time",
         "start_time",
         "next_time",
         "get_backups_calls",
         "delete_calls",
-        "delete_args_list",
     ),
     [
         # No config update - cleanup backups older than 2 days
@@ -2793,8 +2752,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            1,
-            [call("backup-1", agent_ids=["test.test-agent"])],
+            {"test.test-agent": [call("backup-1")]},
         ),
         # No config update - No cleanup
         (
@@ -2826,8 +2784,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             0,
-            0,
-            [],
+            {},
         ),
         # Unchanged config
         (
@@ -2866,8 +2823,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            1,
-            [call("backup-1", agent_ids=["test.test-agent"])],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             None,
@@ -2905,8 +2861,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            1,
-            [call("backup-1", agent_ids=["test.test-agent"])],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             None,
@@ -2944,8 +2899,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            0,
-            [],
+            {},
         ),
         (
             None,
@@ -2989,11 +2943,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            2,
-            [
-                call("backup-1", agent_ids=["test.test-agent"]),
-                call("backup-2", agent_ids=["test.test-agent"]),
-            ],
+            {"test.test-agent": [call("backup-1"), call("backup-2")]},
         ),
         (
             None,
@@ -3031,8 +2981,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            1,
-            [call("backup-1", agent_ids=["test.test-agent"])],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             None,
@@ -3070,8 +3019,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            1,
-            [call("backup-1", agent_ids=["test.test-agent"])],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             None,
@@ -3115,11 +3063,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            2,
-            [
-                call("backup-1", agent_ids=["test.test-agent"]),
-                call("backup-2", agent_ids=["test.test-agent"]),
-            ],
+            {"test.test-agent": [call("backup-1"), call("backup-2")]},
         ),
     ],
 )
@@ -3128,19 +3072,17 @@ async def test_config_retention_days_logic(
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     hass_storage: dict[str, Any],
-    delete_backup: AsyncMock,
     get_backups: AsyncMock,
     stored_retained_days: int | None,
     commands: list[dict[str, Any]],
     backups: dict[str, Any],
     get_backups_agent_errors: dict[str, Exception],
-    delete_backup_agent_errors: dict[str, Exception],
+    agent_delete_backup_side_effects: dict[str, Exception],
     last_backup_time: str,
     start_time: str,
     next_time: str,
     get_backups_calls: int,
-    delete_calls: int,
-    delete_args_list: list[Any],
+    delete_calls: dict[str, Any],
 ) -> None:
     """Test config backup retention logic."""
     client = await hass_ws_client(hass)
@@ -3175,12 +3117,17 @@ async def test_config_retention_days_logic(
         "minor_version": store.STORAGE_VERSION_MINOR,
     }
     get_backups.return_value = (backups, get_backups_agent_errors)
-    delete_backup.return_value = delete_backup_agent_errors
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to(start_time)
 
-    await setup_backup_integration(hass)
+    await setup_backup_integration(hass, remote_agents=["test-agent"])
     await hass.async_block_till_done()
+
+    manager = hass.data[DATA_MANAGER]
+    for agent_id, agent in manager.backup_agents.items():
+        agent.async_delete_backup = AsyncMock(
+            side_effect=agent_delete_backup_side_effects.get(agent_id), autospec=True
+        )
 
     for command in commands:
         await client.send_json_auto_id(command)
@@ -3191,8 +3138,10 @@ async def test_config_retention_days_logic(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert get_backups.call_count == get_backups_calls
-    assert delete_backup.call_count == delete_calls
-    assert delete_backup.call_args_list == delete_args_list
+    for agent_id, agent in manager.backup_agents.items():
+        agent_delete_calls = delete_calls.get(agent_id, [])
+        assert agent.async_delete_backup.call_count == len(agent_delete_calls)
+        assert agent.async_delete_backup.call_args_list == agent_delete_calls
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
 
