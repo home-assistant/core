@@ -83,6 +83,19 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         All inherited classes can update their own status in here.
         """
 
+    def _check_valid_step(self, target_data: float, step: float) -> bool:
+        """Check the target_data is validate."""
+        _LOGGER.warning("Check_valid_step target_data:%s, step:%s", target_data, step)
+        if target_data % step == 0:
+            return True
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="not_valid_step",
+            translation_placeholders={
+                "step": str(step),
+            },
+        )
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
