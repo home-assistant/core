@@ -47,6 +47,13 @@ SWITCHES: tuple[FlexitSwitchEntityDescription, ...] = (
         turn_on_fn=lambda data: data.trigger_fireplace_mode(),
         turn_off_fn=lambda data: data.trigger_fireplace_mode(),
     ),
+    FlexitSwitchEntityDescription(
+        key="cooker_hood_mode",
+        translation_key="cooker_hood_mode",
+        is_on_fn=lambda data: data.cooker_hood_status,
+        turn_on_fn=lambda data: data.activate_cooker_hood(),
+        turn_off_fn=lambda data: data.deactivate_cooker_hood(),
+    ),
 )
 
 
