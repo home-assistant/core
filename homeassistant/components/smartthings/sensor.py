@@ -16,12 +16,16 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
     EntityCategory,
+    UnitOfArea,
     UnitOfEnergy,
+    UnitOfMass,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -30,297 +34,11 @@ from homeassistant.util import dt as dt_util
 from .coordinator import SmartThingsConfigEntry, SmartThingsDeviceCoordinator
 from .entity import SmartThingsEntity
 
-# class Map(NamedTuple):
-#     """Tuple for mapping Smartthings capabilities to Home Assistant sensors."""
-#
-#     attribute: str
-#     name: str
-#     default_unit: str | None
-#     device_class: SensorDeviceClass | None
-#     state_class: SensorStateClass | None
-#     entity_category: EntityCategory | None
-#
-#
-# CAPABILITY_TO_SENSORS: dict[str, list[Map]] = {
-#     Capability.activity_lighting_mode: [
-#         Map(
-#             Attribute.lighting_mode,
-#             "Activity Lighting Mode",
-#             None,
-#             None,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
-#     ],
-#     Capability.body_mass_index_measurement: [
-#         Map(
-#             Attribute.bmi_measurement,
-#             "Body Mass Index",
-#             f"{UnitOfMass.KILOGRAMS}/{UnitOfArea.SQUARE_METERS}",
-#             None,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
-#     Capability.body_weight_measurement: [
-#         Map(
-#             Attribute.body_weight_measurement,
-#             "Body Weight",
-#             UnitOfMass.KILOGRAMS,
-#             SensorDeviceClass.WEIGHT,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
-#     Capability.carbon_dioxide_measurement: [
-#         Map(
-#             Attribute.carbon_dioxide,
-#             "Carbon Dioxide Measurement",
-#             CONCENTRATION_PARTS_PER_MILLION,
-#             SensorDeviceClass.CO2,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
-#     Capability.carbon_monoxide_detector: [
-#         Map(
-#             Attribute.carbon_monoxide,
-#             "Carbon Monoxide Detector",
-#             None,
-#             None,
-#             None,
-#             None,
-#         )
-#     ],
-#     Capability.carbon_monoxide_measurement: [
-#         Map(
-#             Attribute.carbon_monoxide_level,
-#             "Carbon Monoxide Measurement",
-#             CONCENTRATION_PARTS_PER_MILLION,
-#             SensorDeviceClass.CO,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
-#     Capability.dryer_mode: [
-#         Map(
-#             Attribute.dryer_mode,
-#             "Dryer Mode",
-#             None,
-#             None,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
-#     ],
-#     Capability.equivalent_carbon_dioxide_measurement: [
-#         Map(
-#             Attribute.equivalent_carbon_dioxide_measurement,
-#             "Equivalent Carbon Dioxide Measurement",
-#             CONCENTRATION_PARTS_PER_MILLION,
-#             SensorDeviceClass.CO2,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
-#     Capability.formaldehyde_measurement: [
-#         Map(
-#             Attribute.formaldehyde_level,
-#             "Formaldehyde Measurement",
-#             CONCENTRATION_PARTS_PER_MILLION,
-#             None,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
-#     Capability.gas_meter: [
-#         Map(
-#             Attribute.gas_meter,
-#             "Gas Meter",
-#             UnitOfEnergy.KILO_WATT_HOUR,
-#             SensorDeviceClass.ENERGY,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         ),
-#         Map(
-#             Attribute.gas_meter_calorific, "Gas Meter Calorific", None, None, None, None
-#         ),
-#         Map(
-#             Attribute.gas_meter_time,
-#             "Gas Meter Time",
-#             None,
-#             SensorDeviceClass.TIMESTAMP,
-#             None,
-#             None,
-#         ),
-#         Map(
-#             Attribute.gas_meter_volume,
-#             "Gas Meter Volume",
-#             UnitOfVolume.CUBIC_METERS,
-#             SensorDeviceClass.GAS,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         ),
-#     ],
-#     Capability.illuminance_measurement: [
-#         Map(
-#             Attribute.illuminance,
-#             "Illuminance",
-#             LIGHT_LUX,
-#             SensorDeviceClass.ILLUMINANCE,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
-#     Capability.infrared_level: [
-#         Map(
-#             Attribute.infrared_level,
-#             "Infrared Level",
-#             PERCENTAGE,
-#             None,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
-#     Capability.media_playback_repeat: [
-#         Map(
-#             Attribute.playback_repeat_mode,
-#             "Media Playback Repeat",
-#             None,
-#             None,
-#             None,
-#             None,
-#         )
-#     ],
-#     Capability.media_playback_shuffle: [
-#         Map(
-#             Attribute.playback_shuffle, "Media Playback Shuffle", None, None, None, None
-#         )
-#     ],
-#     Capability.oven_setpoint: [
-#         Map(Attribute.oven_setpoint, "Oven Set Point", None, None, None, None)
-#     ],
-#     Capability.power_source: [
-#         Map(
-#             Attribute.power_source,
-#             "Power Source",
-#             None,
-#             None,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
-#     ],
-#     Capability.refrigeration_setpoint: [
-#         Map(
-#             Attribute.refrigeration_setpoint,
-#             "Refrigeration Setpoint",
-#             None,
-#             SensorDeviceClass.TEMPERATURE,
-#             None,
-#             None,
-#         )
-#     ],
-#     Capability.signal_strength: [
-#         Map(
-#             Attribute.lqi,
-#             "LQI Signal Strength",
-#             None,
-#             None,
-#             SensorStateClass.MEASUREMENT,
-#             EntityCategory.DIAGNOSTIC,
-#         ),
-#         Map(
-#             Attribute.rssi,
-#             "RSSI Signal Strength",
-#             None,
-#             SensorDeviceClass.SIGNAL_STRENGTH,
-#             SensorStateClass.MEASUREMENT,
-#             EntityCategory.DIAGNOSTIC,
-#         ),
-#     ],
-#     Capability.smoke_detector: [
-#         Map(Attribute.smoke, "Smoke Detector", None, None, None, None)
-#     ],
-#     Capability.thermostat_fan_mode: [
-#         Map(
-#             Attribute.thermostat_fan_mode,
-#             "Thermostat Fan Mode",
-#             None,
-#             None,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
-#     ],
-#     Capability.thermostat_heating_setpoint: [
-#         Map(
-#             Attribute.heating_setpoint,
-#             "Thermostat Heating Setpoint",
-#             None,
-#             SensorDeviceClass.TEMPERATURE,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
-#     ],
-#     Capability.thermostat_mode: [
-#         Map(
-#             Attribute.thermostat_mode,
-#             "Thermostat Mode",
-#             None,
-#             None,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
-#     ],
-#     Capability.thermostat_operating_state: [
-#         Map(
-#             Attribute.thermostat_operating_state,
-#             "Thermostat Operating State",
-#             None,
-#             None,
-#             None,
-#             None,
-#         )
-#     ],
-#     Capability.thermostat_setpoint: [
-#         Map(
-#             Attribute.thermostat_setpoint,
-#             "Thermostat Setpoint",
-#             None,
-#             SensorDeviceClass.TEMPERATURE,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
-#     ],
-#     Capability.tvoc_measurement: [
-#         Map(
-#             Attribute.tvoc_level,
-#             "Tvoc Measurement",
-#             CONCENTRATION_PARTS_PER_MILLION,
-#             None,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
-#     Capability.ultraviolet_index: [
-#         Map(
-#             Attribute.ultraviolet_index,
-#             "Ultraviolet Index",
-#             None,
-#             None,
-#             SensorStateClass.MEASUREMENT,
-#             None,
-#         )
-#     ],
-#     Capability.washer_mode: [
-#         Map(
-#             Attribute.washer_mode,
-#             "Washer Mode",
-#             None,
-#             None,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
-#     ],
-# }
+THERMOSTAT_CAPABILITIES = {
+    Capability.TEMPERATURE_MEASUREMENT,
+    Capability.THERMOSTAT_HEATING_SETPOINT,
+    Capability.THERMOSTAT_MODE,
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -336,6 +54,58 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
 CAPABILITY_TO_SENSORS: dict[
     Capability, dict[Attribute, list[SmartThingsSensorEntityDescription]]
 ] = {
+    # no fixtures
+    Capability.ACTIVITY_LIGHTING_MODE: {
+        Attribute.LIGHTING_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.LIGHTING_MODE,
+                name="Activity Lighting Mode",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        ]
+    },
+    Capability.AIR_CONDITIONER_MODE: {
+        Attribute.AIR_CONDITIONER_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.AIR_CONDITIONER_MODE,
+                name="Air Conditioner Mode",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                capability_ignore_list=[
+                    {
+                        Capability.TEMPERATURE_MEASUREMENT,
+                        Capability.THERMOSTAT_COOLING_SETPOINT,
+                    }
+                ],
+            )
+        ]
+    },
+    Capability.AIR_QUALITY_SENSOR: {
+        Attribute.AIR_QUALITY: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.AIR_QUALITY,
+                name="Air Quality",
+                native_unit_of_measurement="CAQI",
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.ALARM: {
+        Attribute.ALARM: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ALARM,
+                name="Alarm",
+            )
+        ]
+    },
+    Capability.AUDIO_VOLUME: {
+        Attribute.VOLUME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.VOLUME,
+                name="Volume",
+                native_unit_of_measurement=PERCENTAGE,
+            )
+        ]
+    },
     Capability.BATTERY: {
         Attribute.BATTERY: [
             SmartThingsSensorEntityDescription(
@@ -347,24 +117,299 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    Capability.RELATIVE_HUMIDITY_MEASUREMENT: {
-        Attribute.HUMIDITY: [
+    # no fixtures
+    Capability.BODY_MASS_INDEX_MEASUREMENT: {
+        Attribute.BMI_MEASUREMENT: [
             SmartThingsSensorEntityDescription(
-                key=Attribute.HUMIDITY,
-                name="Relative Humidity Measurement",
-                native_unit_of_measurement=PERCENTAGE,
-                device_class=SensorDeviceClass.HUMIDITY,
+                key=Attribute.BMI_MEASUREMENT,
+                name="Body Mass Index",
+                native_unit_of_measurement=f"{UnitOfMass.KILOGRAMS}/{UnitOfArea.SQUARE_METERS}",
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ]
     },
-    Capability.TEMPERATURE_MEASUREMENT: {
-        Attribute.TEMPERATURE: [
+    # no fixtures
+    Capability.BODY_WEIGHT_MEASUREMENT: {
+        Attribute.BODY_WEIGHT_MEASUREMENT: [
             SmartThingsSensorEntityDescription(
-                key=Attribute.TEMPERATURE,
-                name="Temperature Measurement",
-                device_class=SensorDeviceClass.TEMPERATURE,
+                key=Attribute.BODY_WEIGHT_MEASUREMENT,
+                name="Body Weight",
+                native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+                device_class=SensorDeviceClass.WEIGHT,
                 state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    # no fixtures
+    Capability.CARBON_DIOXIDE_MEASUREMENT: {
+        Attribute.CARBON_DIOXIDE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.CARBON_DIOXIDE,
+                name="Carbon Dioxide Measurement",
+                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                device_class=SensorDeviceClass.CO2,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    # no fixtures
+    Capability.CARBON_MONOXIDE_DETECTOR: {
+        Attribute.CARBON_MONOXIDE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.CARBON_MONOXIDE,
+                name="Carbon Monoxide Detector",
+            )
+        ]
+    },
+    # no fixtures
+    Capability.CARBON_MONOXIDE_MEASUREMENT: {
+        Attribute.CARBON_MONOXIDE_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.CARBON_MONOXIDE_LEVEL,
+                name="Carbon Monoxide Measurement",
+                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                device_class=SensorDeviceClass.CO,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.DISHWASHER_OPERATING_STATE: {
+        Attribute.MACHINE_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.MACHINE_STATE,
+                name="Dishwasher Machine State",
+            )
+        ],
+        Attribute.DISHWASHER_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.DISHWASHER_JOB_STATE,
+                name="Dishwasher Job State",
+            )
+        ],
+        Attribute.COMPLETION_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COMPLETION_TIME,
+                name="Dishwasher Completion Time",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                value_fn=dt_util.parse_datetime,
+            )
+        ],
+    },
+    # part of the proposed spec
+    #     Capability.dryer_mode: [
+    #         Map(
+    #             Attribute.dryer_mode,
+    #             "Dryer Mode",
+    #             None,
+    #             None,
+    #             None,
+    #             EntityCategory.DIAGNOSTIC,
+    #         )
+    #     ],
+    Capability.DRYER_OPERATING_STATE: {
+        Attribute.MACHINE_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.MACHINE_STATE,
+                name="Dryer Machine State",
+            )
+        ],
+        Attribute.DRYER_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.DRYER_JOB_STATE,
+                name="Dryer Job State",
+            )
+        ],
+        Attribute.COMPLETION_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COMPLETION_TIME,
+                name="Dryer Completion Time",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                value_fn=dt_util.parse_datetime,
+            )
+        ],
+    },
+    Capability.DUST_SENSOR: {
+        Attribute.DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.DUST_LEVEL,
+                name="Dust Level",
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ],
+        Attribute.FINE_DUST_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.FINE_DUST_LEVEL,
+                name="Fine Dust Level",
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ],
+    },
+    Capability.ENERGY_METER: {
+        Attribute.ENERGY: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ENERGY,
+                name="Energy Meter",
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                device_class=SensorDeviceClass.ENERGY,
+                state_class=SensorStateClass.TOTAL_INCREASING,
+            )
+        ]
+    },
+    # no fixtures
+    Capability.EQUIVALENT_CARBON_DIOXIDE_MEASUREMENT: {
+        Attribute.EQUIVALENT_CARBON_DIOXIDE_MEASUREMENT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.EQUIVALENT_CARBON_DIOXIDE_MEASUREMENT,
+                name="Equivalent Carbon Dioxide Measurement",
+                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                device_class=SensorDeviceClass.CO2,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    # no fixtures
+    Capability.FORMALDEHYDE_MEASUREMENT: {
+        Attribute.FORMALDEHYDE_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.FORMALDEHYDE_LEVEL,
+                name="Formaldehyde Measurement",
+                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    # no fixtures
+    Capability.GAS_METER: {
+        Attribute.GAS_METER: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.GAS_METER,
+                name="Gas Meter",
+                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                device_class=SensorDeviceClass.ENERGY,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ],
+        Attribute.GAS_METER_CALORIFIC: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.GAS_METER_CALORIFIC,
+                name="Gas Meter Calorific",
+            )
+        ],
+        Attribute.GAS_METER_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.GAS_METER_TIME,
+                name="Gas Meter Time",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                value_fn=dt_util.parse_datetime,
+            )
+        ],
+        Attribute.GAS_METER_VOLUME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.GAS_METER_VOLUME,
+                name="Gas Meter Volume",
+                native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
+                device_class=SensorDeviceClass.GAS,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ],
+    },
+    # no fixtures
+    Capability.ILLUMINANCE_MEASUREMENT: {
+        Attribute.ILLUMINANCE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ILLUMINANCE,
+                name="Illuminance",
+                native_unit_of_measurement=LIGHT_LUX,
+                device_class=SensorDeviceClass.ILLUMINANCE,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    # no fixtures
+    Capability.INFRARED_LEVEL: {
+        Attribute.INFRARED_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.INFRARED_LEVEL,
+                name="Infrared Level",
+                native_unit_of_measurement=PERCENTAGE,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.MEDIA_INPUT_SOURCE: {
+        Attribute.INPUT_SOURCE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.INPUT_SOURCE,
+                name="Media Input Source",
+            )
+        ]
+    },
+    # part of the proposed spec
+    #     Capability.media_playback_repeat: [
+    #         Map(
+    #             Attribute.playback_repeat_mode,
+    #             "Media Playback Repeat",
+    #             None,
+    #             None,
+    #             None,
+    #             None,
+    #         )
+    #     ],
+    #     Capability.media_playback_shuffle: [
+    #         Map(
+    #             Attribute.playback_shuffle, "Media Playback Shuffle", None, None, None, None
+    #         )
+    #     ],
+    Capability.MEDIA_PLAYBACK: {
+        Attribute.PLAYBACK_STATUS: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.PLAYBACK_STATUS,
+                name="Media Playback Status",
+            )
+        ]
+    },
+    Capability.ODOR_SENSOR: {
+        Attribute.ODOR_LEVEL: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ODOR_LEVEL,
+                name="Odor Sensor",
+            )
+        ]
+    },
+    Capability.OVEN_MODE: {
+        Attribute.OVEN_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.OVEN_MODE,
+                name="Oven Mode",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        ]
+    },
+    Capability.OVEN_OPERATING_STATE: {
+        Attribute.MACHINE_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.MACHINE_STATE,
+                name="Oven Machine State",
+            )
+        ],
+        Attribute.OVEN_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.OVEN_JOB_STATE,
+                name="Oven Job State",
+            )
+        ],
+        Attribute.COMPLETION_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COMPLETION_TIME,
+                name="Oven Completion Time",
+            )
+        ],
+    },
+    Capability.OVEN_SETPOINT: {
+        Attribute.OVEN_SETPOINT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.OVEN_SETPOINT,
+                name="Oven Set Point",
             )
         ]
     },
@@ -412,50 +457,6 @@ CAPABILITY_TO_SENSORS: dict[
             ),
         ]
     },
-    Capability.DRYER_OPERATING_STATE: {
-        Attribute.MACHINE_STATE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.MACHINE_STATE,
-                name="Dryer Machine State",
-            )
-        ],
-        Attribute.DRYER_JOB_STATE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.DRYER_JOB_STATE,
-                name="Dryer Job State",
-            )
-        ],
-        Attribute.COMPLETION_TIME: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.COMPLETION_TIME,
-                name="Dryer Completion Time",
-                device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
-            )
-        ],
-    },
-    Capability.WASHER_OPERATING_STATE: {
-        Attribute.MACHINE_STATE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.MACHINE_STATE,
-                name="Washer Machine State",
-            )
-        ],
-        Attribute.WASHER_JOB_STATE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.WASHER_JOB_STATE,
-                name="Washer Job State",
-            )
-        ],
-        Attribute.COMPLETION_TIME: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.COMPLETION_TIME,
-                name="Washer Completion Time",
-                device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
-            )
-        ],
-    },
     Capability.POWER_METER: {
         Attribute.POWER: [
             SmartThingsSensorEntityDescription(
@@ -467,73 +468,35 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    Capability.ENERGY_METER: {
-        Attribute.ENERGY: [
+    # no fixtures
+    Capability.POWER_SOURCE: {
+        Attribute.POWER_SOURCE: [
             SmartThingsSensorEntityDescription(
-                key=Attribute.ENERGY,
-                name="Energy Meter",
-                native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                device_class=SensorDeviceClass.ENERGY,
-                state_class=SensorStateClass.TOTAL_INCREASING,
-            )
-        ]
-    },
-    Capability.DISHWASHER_OPERATING_STATE: {
-        Attribute.MACHINE_STATE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.MACHINE_STATE,
-                name="Dishwasher Machine State",
-            )
-        ],
-        Attribute.DISHWASHER_JOB_STATE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.DISHWASHER_JOB_STATE,
-                name="Dishwasher Job State",
-            )
-        ],
-        Attribute.COMPLETION_TIME: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.COMPLETION_TIME,
-                name="Dishwasher Completion Time",
-                device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
-            )
-        ],
-    },
-    Capability.OVEN_MODE: {
-        Attribute.OVEN_MODE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.OVEN_MODE,
-                name="Oven Mode",
+                key=Attribute.POWER_SOURCE,
+                name="Power Source",
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
         ]
     },
-    Capability.OVEN_OPERATING_STATE: {
-        Attribute.MACHINE_STATE: [
+    # part of the proposed spec
+    #     Capability.refrigeration_setpoint: [
+    #         Map(
+    #             Attribute.refrigeration_setpoint,
+    #             "Refrigeration Setpoint",
+    #             None,
+    #             SensorDeviceClass.TEMPERATURE,
+    #             None,
+    #             None,
+    #         )
+    #     ],
+    Capability.RELATIVE_HUMIDITY_MEASUREMENT: {
+        Attribute.HUMIDITY: [
             SmartThingsSensorEntityDescription(
-                key=Attribute.MACHINE_STATE,
-                name="Oven Machine State",
-            )
-        ],
-        Attribute.OVEN_JOB_STATE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.OVEN_JOB_STATE,
-                name="Oven Job State",
-            )
-        ],
-        Attribute.COMPLETION_TIME: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.COMPLETION_TIME,
-                name="Oven Completion Time",
-            )
-        ],
-    },
-    Capability.OVEN_SETPOINT: {
-        Attribute.OVEN_SETPOINT: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.OVEN_SETPOINT,
-                name="Oven Set Point",
+                key=Attribute.HUMIDITY,
+                name="Relative Humidity Measurement",
+                native_unit_of_measurement=PERCENTAGE,
+                device_class=SensorDeviceClass.HUMIDITY,
+                state_class=SensorStateClass.MEASUREMENT,
             )
         ]
     },
@@ -563,57 +526,117 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    Capability.ALARM: {
-        Attribute.ALARM: [
+    # no fixtures
+    Capability.SIGNAL_STRENGTH: {
+        Attribute.LQI: [
             SmartThingsSensorEntityDescription(
-                key=Attribute.ALARM,
-                name="Alarm",
-            )
-        ]
-    },
-    Capability.AUDIO_VOLUME: {
-        Attribute.VOLUME: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.VOLUME,
-                name="Volume",
-                native_unit_of_measurement=PERCENTAGE,
-            )
-        ]
-    },
-    Capability.MEDIA_PLAYBACK: {
-        Attribute.PLAYBACK_STATUS: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.PLAYBACK_STATUS,
-                name="Media Playback Status",
-            )
-        ]
-    },
-    Capability.AIR_QUALITY_SENSOR: {
-        Attribute.AIR_QUALITY: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.AIR_QUALITY,
-                name="Air Quality",
-                native_unit_of_measurement="CAQI",
+                key=Attribute.LQI,
+                name="LQI Signal Strength",
                 state_class=SensorStateClass.MEASUREMENT,
-            )
-        ]
-    },
-    Capability.DUST_SENSOR: {
-        Attribute.DUST_LEVEL: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.DUST_LEVEL,
-                name="Dust Level",
-                state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
             )
         ],
-        Attribute.FINE_DUST_LEVEL: [
+        Attribute.RSSI: [
             SmartThingsSensorEntityDescription(
-                key=Attribute.FINE_DUST_LEVEL,
-                name="Fine Dust Level",
+                key=Attribute.RSSI,
+                name="RSSI Signal Strength",
+                device_class=SensorDeviceClass.SIGNAL_STRENGTH,
                 state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
             )
         ],
     },
+    # no fixtures
+    Capability.SMOKE_DETECTOR: {
+        Attribute.SMOKE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.SMOKE,
+                name="Smoke Detector",
+            )
+        ]
+    },
+    Capability.TEMPERATURE_MEASUREMENT: {
+        Attribute.TEMPERATURE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.TEMPERATURE,
+                name="Temperature Measurement",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                state_class=SensorStateClass.MEASUREMENT,
+            )
+        ]
+    },
+    Capability.THERMOSTAT_COOLING_SETPOINT: {
+        Attribute.COOLING_SETPOINT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COOLING_SETPOINT,
+                name="Thermostat Cooling Setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                capability_ignore_list=[
+                    {
+                        Capability.AIR_CONDITIONER_FAN_MODE,
+                        Capability.TEMPERATURE_MEASUREMENT,
+                        Capability.AIR_CONDITIONER_MODE,
+                    },
+                    THERMOSTAT_CAPABILITIES,
+                ],
+            )
+        ]
+    },
+    # no fixtures
+    Capability.THERMOSTAT_FAN_MODE: {
+        Attribute.THERMOSTAT_FAN_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.THERMOSTAT_FAN_MODE,
+                name="Thermostat Fan Mode",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                capability_ignore_list=[THERMOSTAT_CAPABILITIES],
+            )
+        ]
+    },
+    # no fixtures
+    Capability.THERMOSTAT_HEATING_SETPOINT: {
+        Attribute.HEATING_SETPOINT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.HEATING_SETPOINT,
+                name="Thermostat Heating Setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                entity_category=EntityCategory.DIAGNOSTIC,
+                capability_ignore_list=[THERMOSTAT_CAPABILITIES],
+            )
+        ]
+    },
+    # no fixtures
+    Capability.THERMOSTAT_MODE: {
+        Attribute.THERMOSTAT_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.THERMOSTAT_MODE,
+                name="Thermostat Mode",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                capability_ignore_list=[THERMOSTAT_CAPABILITIES],
+            )
+        ]
+    },
+    # no fixtures
+    Capability.THERMOSTAT_OPERATING_STATE: {
+        Attribute.THERMOSTAT_OPERATING_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.THERMOSTAT_OPERATING_STATE,
+                name="Thermostat Operating State",
+                capability_ignore_list=[THERMOSTAT_CAPABILITIES],
+            )
+        ]
+    },
+    # deprecated capability
+    #     Capability.thermostat_setpoint: [
+    #         Map(
+    #             Attribute.thermostat_setpoint,
+    #             "Thermostat Setpoint",
+    #             None,
+    #             SensorDeviceClass.TEMPERATURE,
+    #             None,
+    #             EntityCategory.DIAGNOSTIC,
+    #         )
+    #     ],
     Capability.THREE_AXIS: {
         Attribute.THREE_AXIS: [
             SmartThingsSensorEntityDescription(
@@ -650,40 +673,24 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
-    Capability.THERMOSTAT_COOLING_SETPOINT: {
-        Attribute.COOLING_SETPOINT: [
+    # no fixtures
+    Capability.TVOC_MEASUREMENT: {
+        Attribute.TVOC_LEVEL: [
             SmartThingsSensorEntityDescription(
-                key=Attribute.COOLING_SETPOINT,
-                name="Thermostat Cooling Setpoint",
-                device_class=SensorDeviceClass.TEMPERATURE,
-                capability_ignore_list=[
-                    {
-                        Capability.AIR_CONDITIONER_FAN_MODE,
-                        Capability.TEMPERATURE_MEASUREMENT,
-                        Capability.AIR_CONDITIONER_MODE,
-                    },
-                    {
-                        Capability.TEMPERATURE_MEASUREMENT,
-                        Capability.THERMOSTAT_HEATING_SETPOINT,
-                        Capability.THERMOSTAT_MODE,
-                    },
-                ],
+                key=Attribute.TVOC_LEVEL,
+                name="Tvoc Measurement",
+                native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+                state_class=SensorStateClass.MEASUREMENT,
             )
         ]
     },
-    Capability.ODOR_SENSOR: {
-        Attribute.ODOR_LEVEL: [
+    # no fixtures
+    Capability.ULTRAVIOLET_INDEX: {
+        Attribute.ULTRAVIOLET_INDEX: [
             SmartThingsSensorEntityDescription(
-                key=Attribute.ODOR_LEVEL,
-                name="Odor Sensor",
-            )
-        ]
-    },
-    Capability.MEDIA_INPUT_SOURCE: {
-        Attribute.INPUT_SOURCE: [
-            SmartThingsSensorEntityDescription(
-                key=Attribute.INPUT_SOURCE,
-                name="Media Input Source",
+                key=Attribute.ULTRAVIOLET_INDEX,
+                name="Ultraviolet Index",
+                state_class=SensorStateClass.MEASUREMENT,
             )
         ]
     },
@@ -697,20 +704,38 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    Capability.AIR_CONDITIONER_MODE: {
-        Attribute.AIR_CONDITIONER_MODE: [
+    # part of the proposed spec
+    #     Capability.washer_mode: [
+    #         Map(
+    #             Attribute.washer_mode,
+    #             "Washer Mode",
+    #             None,
+    #             None,
+    #             None,
+    #             EntityCategory.DIAGNOSTIC,
+    #         )
+    #     ],
+    Capability.WASHER_OPERATING_STATE: {
+        Attribute.MACHINE_STATE: [
             SmartThingsSensorEntityDescription(
-                key=Attribute.AIR_CONDITIONER_MODE,
-                name="Air Conditioner Mode",
-                entity_category=EntityCategory.DIAGNOSTIC,
-                capability_ignore_list=[
-                    {
-                        Capability.TEMPERATURE_MEASUREMENT,
-                        Capability.THERMOSTAT_COOLING_SETPOINT,
-                    }
-                ],
+                key=Attribute.MACHINE_STATE,
+                name="Washer Machine State",
             )
-        ]
+        ],
+        Attribute.WASHER_JOB_STATE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WASHER_JOB_STATE,
+                name="Washer Job State",
+            )
+        ],
+        Attribute.COMPLETION_TIME: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.COMPLETION_TIME,
+                name="Washer Completion Time",
+                device_class=SensorDeviceClass.TIMESTAMP,
+                value_fn=dt_util.parse_datetime,
+            )
+        ],
     },
 }
 
@@ -743,35 +768,6 @@ async def async_setup_entry(
             for capability_list in description.capability_ignore_list
         )
     )
-    # broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    # entities: list[SensorEntity] = []
-    # for device in broker.devices.values():
-    #     for capability in broker.get_assigned(device.device_id, "sensor"):
-    #         else:
-    #             maps = CAPABILITY_TO_SENSORS[capability]
-    #             entities.extend(
-    #                 [
-    #                     SmartThingsSensor(
-    #                         device,
-    #                         m.attribute,
-    #                         m.name,
-    #                         m.default_unit,
-    #                         m.device_class,
-    #                         m.state_class,
-    #                         m.entity_category,
-    #                     )
-    #                     for m in maps
-    #                 ]
-    #             )
-    #
-    # async_add_entities(entities)
-
-
-# def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-#     """Return all capabilities supported if minimum required are present."""
-#     return [
-#         capability for capability in CAPABILITY_TO_SENSORS if capability in capabilities
-#     ]
 
 
 class SmartThingsSensor(SmartThingsEntity, SensorEntity):
