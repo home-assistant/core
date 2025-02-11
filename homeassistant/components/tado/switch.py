@@ -1,5 +1,6 @@
 """Module for Tado child lock switch entity."""
 
+import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
@@ -7,14 +8,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import TadoConfigEntry
-from .const import TADO_CHILD_LOCK_TRANSLATION_KEY
 from .entity import TadoDataUpdateCoordinator, TadoZoneEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
     """Representation of a Tado child lock switch entity."""
-
-    _attr_unique_id: str | None = None
 
     def __init__(
         self,
@@ -28,18 +28,8 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
 
         self._device_info = device_info
         self._device_id = self._device_info["shortSerialNo"]
-        self._state: bool | None = None
-        self._attr_unique_id = f"{zone_name}-child-lock"
-
-    @property
-    def translation_key(self) -> str:
-        """Return the translation key."""
-        return TADO_CHILD_LOCK_TRANSLATION_KEY
-
-    @property
-    def is_on(self) -> bool | None:
-        """Return true if the entity is on."""
-        return self._state
+        self._attr_unique_id = f"{zone_id} {coordinator.home_id} child-lock"
+        self._attr_translation_key = "child_lock"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -63,8 +53,12 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
         try:
             self._device_info = self.coordinator.data["device"][self._device_id]
         except KeyError:
-            return
-        self._state = self._device_info.get("childLockEnabled", False) is True
+            _LOGGER.error(
+                "Could not update child lock info for device %s in zone %s",
+                self._device_id,
+                self.zone_name,
+            )
+        self._attr_is_on = self._device_info.get("childLockEnabled", False) is True
 
 
 async def async_setup_entry(
