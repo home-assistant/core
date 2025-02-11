@@ -1872,6 +1872,7 @@ async def test_logout_view_dispatch_event(
     assert async_dispatcher_send_mock.mock_calls[0][1][2] == {"type": "logout"}
 
 
+@patch("homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3)
 async def test_download_support_package(
     hass: HomeAssistant,
     cloud: MagicMock,
@@ -1943,13 +1944,12 @@ async def test_download_support_package(
 
     now = dt_util.utcnow()
     freezer.move_to(datetime.datetime.fromisoformat("2025-02-10T12:00:00.0+00:00"))
-    with patch(
-        "homeassistant.components.cloud.helpers.FixedSizeQueueLogHandler.MAX_RECORDS", 3
-    ):
-        logging.getLogger("hass_nabucasa.iot").info("This message will be dropped")
-        logging.getLogger("hass_nabucasa.iot").info("Hass nabucasa log")
-        logging.getLogger("snitun.utils.aiohttp_client").warning("Snitun log")
-        logging.getLogger("homeassistant.components.cloud.client").error("Cloud log")
+    logging.getLogger("hass_nabucasa.iot").info(
+        "This message will be dropped since this test patches MAX_RECORDS"
+    )
+    logging.getLogger("hass_nabucasa.iot").info("Hass nabucasa log")
+    logging.getLogger("snitun.utils.aiohttp_client").warning("Snitun log")
+    logging.getLogger("homeassistant.components.cloud.client").error("Cloud log")
     freezer.move_to(now)  # Reset time otherwise hass_client auth fails
 
     cloud_client = await hass_client()

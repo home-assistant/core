@@ -1,7 +1,7 @@
 """Helpers for the cloud component."""
 
+from collections import deque
 import logging
-import threading
 
 from homeassistant.core import HomeAssistant
 
@@ -14,21 +14,16 @@ class FixedSizeQueueLogHandler(logging.Handler):
     def __init__(self) -> None:
         """Initialize a new LogHandler."""
         super().__init__()
-        self._records: list[logging.LogRecord] = []
-        self._lock = threading.Lock()
+        self._records: deque[logging.LogRecord] = deque(maxlen=self.MAX_RECORDS)
 
     def emit(self, record: logging.LogRecord) -> None:
         """Store log message."""
-        with self._lock:
-            if len(self._records) >= self.MAX_RECORDS:
-                self._records.pop(0)
-            self._records.append(record)
+        self._records.append(record)
 
     async def get_logs(self, hass: HomeAssistant) -> list[str]:
         """Get stored logs."""
 
         def _get_logs() -> list[str]:
-            with self._lock:
-                return [self.format(record) for record in self._records]
+            return [self.format(record) for record in self._records]
 
         return await hass.async_add_executor_job(_get_logs)
