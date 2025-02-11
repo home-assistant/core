@@ -426,7 +426,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     DSMRSensorEntityDescription(
         key="actual_threshold_electricity",
         translation_key="actual_threshold_electricity",
-        obis_reference="ACTUAL_TRESHOLD_ELECTRICITY", # Misspelled in external tool
+        obis_reference="ACTUAL_TRESHOLD_ELECTRICITY",  # Misspelled in external tool
         dsmr_versions={"5EONHU"},
         device_class=SensorDeviceClass.POWER,
         entity_registry_enabled_default=False,
