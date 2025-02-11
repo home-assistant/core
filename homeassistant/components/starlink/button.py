@@ -19,13 +19,14 @@ from .entity import StarlinkEntity
 
 
 async def async_setup_entry(
-    _: HomeAssistant,
-    e: StarlinkConfigEntry,
+    hass: HomeAssistant,
+    config_entry: StarlinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all binary sensors for this entry."""
     async_add_entities(
-        StarlinkButtonEntity(e.runtime_data, description) for description in BUTTONS
+        StarlinkButtonEntity(config_entry.runtime_data, description)
+        for description in BUTTONS
     )
 
 

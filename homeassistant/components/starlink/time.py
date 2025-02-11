@@ -17,13 +17,14 @@ from .entity import StarlinkEntity
 
 
 async def async_setup_entry(
-    _: HomeAssistant,
-    e: StarlinkConfigEntry,
+    hass: HomeAssistant,
+    config_entry: StarlinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all time entities for this entry."""
     async_add_entities(
-        StarlinkTimeEntity(e.runtime_data, description) for description in TIMES
+        StarlinkTimeEntity(config_entry.runtime_data, description)
+        for description in TIMES
     )
 
 

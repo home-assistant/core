@@ -17,15 +17,19 @@ PLATFORMS = [
 ]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: StarlinkConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: StarlinkConfigEntry
+) -> bool:
     """Set up Starlink from a config entry."""
-    entry.runtime_data = StarlinkUpdateCoordinator(hass, entry)
-    await entry.runtime_data.async_config_entry_first_refresh()
+    config_entry.runtime_data = StarlinkUpdateCoordinator(hass, config_entry)
+    await config_entry.runtime_data.async_config_entry_first_refresh()
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: StarlinkConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: StarlinkConfigEntry
+) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
