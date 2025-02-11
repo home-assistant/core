@@ -201,12 +201,19 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     # we have to assume it's the first version
                     # This check can be removed in HA Core 2025.9
                     unique_id = discovery_info.uuid
+
+                if unique_id != discovery_info.uuid:
+                    continue
+
                 if (
-                    unique_id != discovery_info.uuid
-                    or current_url.host != config["host"]
+                    current_url.host != config["host"]
                     or current_url.port == config["port"]
                 ):
+                    # Reload the entry since OTBR has restarted
+                    assert current_entry.unique_id is not None
+                    await self.hass.config_entries.async_reload(current_entry.unique_id)
                     continue
+
                 # Update URL with the new port
                 self.hass.config_entries.async_update_entry(
                     current_entry,
