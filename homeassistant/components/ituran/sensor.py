@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfSpeed,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import IturanConfigEntry
@@ -87,7 +87,7 @@ SENSOR_TYPES: list[IturanSensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IturanConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Ituran sensors from config entry."""
     coordinator = config_entry.runtime_data

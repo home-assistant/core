@@ -10,7 +10,7 @@ from homeassistant.components.camera import Camera, CameraEntityFeature
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_RTSP_PORT, CONF_STREAM, LOGGER, SERVICE_PTZ, SERVICE_PTZ_PRESET
 from .coordinator import FoscamConfigEntry, FoscamCoordinator
@@ -49,7 +49,7 @@ PTZ_GOTO_PRESET_COMMAND = "ptz_goto_preset"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: FoscamConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a Foscam IP camera from a config entry."""
     platform = entity_platform.async_get_current_platform()

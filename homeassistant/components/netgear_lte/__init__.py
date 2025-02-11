@@ -6,7 +6,7 @@ from aiohttp.cookiejar import CookieJar
 import eternalegypt
 from eternalegypt.eternalegypt import SMS
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -23,7 +23,7 @@ from .const import (
     DATA_SESSION,
     DOMAIN,
 )
-from .coordinator import NetgearLTEDataUpdateCoordinator
+from .coordinator import NetgearLTEConfigEntry, NetgearLTEDataUpdateCoordinator
 from .services import async_setup_services
 
 EVENT_SMS = "netgear_lte_sms"
@@ -55,7 +55,6 @@ PLATFORMS = [
     Platform.NOTIFY,
     Platform.SENSOR,
 ]
-type NetgearLTEConfigEntry = ConfigEntry[NetgearLTEDataUpdateCoordinator]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -94,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -
 
     await modem.add_sms_listener(fire_sms_event)
 
-    coordinator = NetgearLTEDataUpdateCoordinator(hass, modem)
+    coordinator = NetgearLTEDataUpdateCoordinator(hass, entry, modem)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
