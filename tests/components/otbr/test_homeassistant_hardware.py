@@ -34,11 +34,9 @@ async def test_get_firmware_info(hass: HomeAssistant) -> None:
         domain="otbr",
         unique_id="some_unique_id",
         data={
-            "device": DEVICE_PATH,
             "url": "http://core_openthread_border_router:8888",
         },
         version=1,
-        minor_version=2,
     )
     otbr.add_to_hass(hass)
     otbr.mock_state(hass, ConfigEntryState.LOADED)
@@ -49,10 +47,6 @@ async def test_get_firmware_info(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.otbr.homeassistant_hardware.is_hassio",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.otbr.homeassistant_hardware.valid_addon",
             return_value=True,
         ),
         patch(
@@ -93,7 +87,6 @@ async def test_get_firmware_info_ignored(hass: HomeAssistant) -> None:
         unique_id="some_unique_id",
         data={},
         version=1,
-        minor_version=2,
     )
     otbr.add_to_hass(hass)
 
@@ -108,11 +101,9 @@ async def test_get_firmware_info_no_coprocessor_version(hass: HomeAssistant) -> 
         domain="otbr",
         unique_id="some_unique_id",
         data={
-            "device": DEVICE_PATH,
             "url": "http://core_openthread_border_router:8888",
         },
         version=1,
-        minor_version=2,
     )
     otbr.add_to_hass(hass)
     otbr.mock_state(hass, ConfigEntryState.LOADED)
@@ -123,10 +114,6 @@ async def test_get_firmware_info_no_coprocessor_version(hass: HomeAssistant) -> 
     with (
         patch(
             "homeassistant.components.otbr.homeassistant_hardware.is_hassio",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.otbr.homeassistant_hardware.valid_addon",
             return_value=True,
         ),
         patch(
@@ -181,11 +168,9 @@ async def test_hardware_firmware_info_provider_notification(
         domain="otbr",
         unique_id="some_unique_id",
         data={
-            "device": DEVICE_PATH,
             "url": "http://core_openthread_border_router:8888",
         },
         version=1,
-        minor_version=2,
     )
     otbr.add_to_hass(hass)
 
@@ -197,10 +182,6 @@ async def test_hardware_firmware_info_provider_notification(
     with (
         patch(
             "homeassistant.components.otbr.homeassistant_hardware.is_hassio",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.otbr.homeassistant_hardware.valid_addon",
             return_value=True,
         ),
         patch(
@@ -245,11 +226,9 @@ async def test_get_firmware_info_remote_otbr(hass: HomeAssistant) -> None:
         domain="otbr",
         unique_id="some_unique_id",
         data={
-            "device": DEVICE_PATH,
             "url": "http://192.168.1.10:8888",
         },
         version=1,
-        minor_version=2,
     )
     otbr.add_to_hass(hass)
     otbr.mock_state(hass, ConfigEntryState.LOADED)
