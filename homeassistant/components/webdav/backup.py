@@ -149,6 +149,7 @@ class WebDavBackupAgent(BackupAgent):
         await self._client.upload_iter(
             await open_stream(),
             f"{self._backup_path}/{filename}",
+            timeout=BACKUP_TIMEOUT,
         )
 
         _LOGGER.debug(
