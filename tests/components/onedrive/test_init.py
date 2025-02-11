@@ -1,17 +1,23 @@
 """Test the OneDrive setup."""
 
+from copy import deepcopy
 from html import escape
 from json import dumps
 from unittest.mock import MagicMock
 
-from onedrive_personal_sdk.exceptions import AuthenticationError, OneDriveException
+from onedrive_personal_sdk.exceptions import (
+    AuthenticationError,
+    NotFoundError,
+    OneDriveException,
+)
 import pytest
 
+from homeassistant.components.onedrive.const import CONF_FOLDER_ID, CONF_FOLDER_NAME
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .const import BACKUP_METADATA, MOCK_BACKUP_FILE
+from .const import BACKUP_METADATA, MOCK_APPROOT, MOCK_BACKUP_FILE, MOCK_BACKUP_FOLDER
 
 from tests.common import MockConfigEntry
 
@@ -67,11 +73,46 @@ async def test_get_integration_folder_error(
     mock_onedrive_client: MagicMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test faulty approot retrieval."""
-    mock_onedrive_client.create_folder.side_effect = OneDriveException()
+    """Test faulty integration folder retrieval."""
+    mock_onedrive_client.get_drive_item.side_effect = OneDriveException()
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert "Failed to get backups_9f86d081 folder" in caplog.text
+    assert "Failed to get backups_123 folder" in caplog.text
+
+
+async def test_get_integration_folder_creation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test faulty integration folder creation."""
+    folder_name = deepcopy(mock_config_entry.data[CONF_FOLDER_NAME])
+    mock_onedrive_client.get_drive_item.side_effect = NotFoundError(404, "Not found")
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_onedrive_client.create_folder.assert_called_once_with(
+        parent_id=MOCK_APPROOT.id,
+        name=folder_name,
+    )
+    # ensure the folder id and name are updated
+    assert mock_config_entry.data[CONF_FOLDER_ID] == MOCK_BACKUP_FOLDER.id
+    assert mock_config_entry.data[CONF_FOLDER_NAME] == MOCK_BACKUP_FOLDER.name
+
+
+async def test_get_integration_folder_creation_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test faulty integration folder creation error."""
+    mock_onedrive_client.get_drive_item.side_effect = NotFoundError(404, "Not found")
+    mock_onedrive_client.create_folder.side_effect = OneDriveException()
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert "Failed to get backups_123 folder" in caplog.text
 
 
 async def test_migrate_metadata_files(

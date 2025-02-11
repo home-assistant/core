@@ -54,7 +54,7 @@ MOCK_APPROOT = AppRoot(
 )
 
 MOCK_BACKUP_FOLDER = Folder(
-    id="id",
+    id="my_folder_id",
     name="name",
     size=0,
     child_count=0,
