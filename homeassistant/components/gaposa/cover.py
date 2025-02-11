@@ -97,6 +97,25 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
 
+    # Add device actions support
+    @property
+    def device_actions(self) -> list[dict[str, str]]:
+        """Return the available actions for this cover."""
+        return [
+            {
+                "name": "Open",
+                "service": "cover.open_cover",
+            },
+            {
+                "name": "Close",
+                "service": "cover.close_cover",
+            },
+            {
+                "name": "Stop",
+                "service": "cover.stop_cover",
+            },
+        ]
+
     def __init__(
         self, coordinator: DataUpdateCoordinatorGaposa, coverid: str, motor: Motor
     ) -> None:
