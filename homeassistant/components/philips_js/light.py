@@ -18,11 +18,10 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import color_hsv_to_RGB, color_RGB_to_hsv
 
-from . import PhilipsTVConfigEntry
-from .coordinator import PhilipsTVDataUpdateCoordinator
+from .coordinator import PhilipsTVConfigEntry, PhilipsTVDataUpdateCoordinator
 from .entity import PhilipsJsEntity
 
 EFFECT_PARTITION = ": "
@@ -35,7 +34,7 @@ EFFECT_EXPERT_STYLES = {"FOLLOW_AUDIO", "FOLLOW_COLOR", "Lounge light"}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: PhilipsTVConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the configuration entry."""
     coordinator = config_entry.runtime_data

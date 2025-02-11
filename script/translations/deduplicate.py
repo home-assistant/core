@@ -70,8 +70,10 @@ def run():
         # If we want to only add references to own integrations
         # but not include entity integrations
         if (
-            args.limit_reference
-            and (key_integration != key_to_reference_integration and not is_common)
+            (
+                args.limit_reference
+                and (key_integration != key_to_reference_integration and not is_common)
+            )
             # Do not create self-references in entity integrations
             or key_integration in Platform.__members__.values()
         ):

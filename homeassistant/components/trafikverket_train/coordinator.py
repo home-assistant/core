@@ -7,15 +7,16 @@ from datetime import datetime, time, timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from pytrafikverket import TrafikverketTrain
-from pytrafikverket.exceptions import (
+from pytrafikverket import (
     InvalidAuthentication,
     MultipleTrainStationsFound,
     NoTrainAnnouncementFound,
     NoTrainStationFound,
+    StationInfoModel,
+    TrafikverketTrain,
+    TrainStopModel,
     UnknownError,
 )
-from pytrafikverket.models import StationInfoModel, TrainStopModel
 
 from homeassistant.const import CONF_API_KEY, CONF_WEEKDAY
 from homeassistant.core import HomeAssistant
@@ -93,11 +94,15 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
     async def _async_setup(self) -> None:
         """Initiate stations."""
         try:
-            self.to_station = await self._train_api.async_search_train_station(
-                self.config_entry.data[CONF_TO]
+            self.to_station = (
+                await self._train_api.async_get_train_station_from_signature(
+                    self.config_entry.data[CONF_TO]
+                )
             )
-            self.from_station = await self._train_api.async_search_train_station(
-                self.config_entry.data[CONF_FROM]
+            self.from_station = (
+                await self._train_api.async_get_train_station_from_signature(
+                    self.config_entry.data[CONF_FROM]
+                )
             )
         except InvalidAuthentication as error:
             raise ConfigEntryAuthFailed from error

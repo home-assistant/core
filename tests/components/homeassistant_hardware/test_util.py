@@ -1,18 +1,21 @@
 """Test hardware utilities."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_register_firmware_info_provider,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
-    FirmwareGuess,
-    FlasherApplicationType,
-    get_zha_device_path,
-    guess_firmware_type,
-    probe_silabs_firmware_type,
+    FirmwareInfo,
+    OwningAddon,
+    OwningIntegration,
+    guess_firmware_info,
 )
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -21,7 +24,21 @@ ZHA_CONFIG_ENTRY = MockConfigEntry(
     unique_id="some_unique_id",
     data={
         "device": {
-            "path": "socket://1.2.3.4:5678",
+            "path": "/dev/ttyUSB1",
+            "baudrate": 115200,
+            "flow_control": None,
+        },
+        "radio_type": "ezsp",
+    },
+    version=4,
+)
+
+ZHA_CONFIG_ENTRY2 = MockConfigEntry(
+    domain="zha",
+    unique_id="some_other_unique_id",
+    data={
+        "device": {
+            "path": "/dev/ttyUSB2",
             "baudrate": 115200,
             "flow_control": None,
         },
@@ -31,153 +48,202 @@ ZHA_CONFIG_ENTRY = MockConfigEntry(
 )
 
 
-def test_get_zha_device_path() -> None:
-    """Test extracting the ZHA device path from its config entry."""
-    assert (
-        get_zha_device_path(ZHA_CONFIG_ENTRY) == ZHA_CONFIG_ENTRY.data["device"]["path"]
-    )
-
-
-def test_get_zha_device_path_ignored_discovery() -> None:
-    """Test extracting the ZHA device path from an ignored ZHA discovery."""
-    config_entry = MockConfigEntry(
-        domain="zha",
-        unique_id="some_unique_id",
-        data={},
-        version=4,
-    )
-
-    assert get_zha_device_path(config_entry) is None
-
-
-async def test_guess_firmware_type_unknown(hass: HomeAssistant) -> None:
+async def test_guess_firmware_info_unknown(hass: HomeAssistant) -> None:
     """Test guessing the firmware type."""
 
-    assert (await guess_firmware_type(hass, "/dev/missing")) == FirmwareGuess(
-        is_running=False, firmware_type=ApplicationType.EZSP, source="unknown"
+    await async_setup_component(hass, "homeassistant_hardware", {})
+
+    assert (await guess_firmware_info(hass, "/dev/missing")) == FirmwareInfo(
+        device="/dev/missing",
+        firmware_type=ApplicationType.EZSP,
+        firmware_version=None,
+        source="unknown",
+        owners=[],
     )
 
 
-async def test_guess_firmware_type(hass: HomeAssistant) -> None:
-    """Test guessing the firmware."""
-    path = ZHA_CONFIG_ENTRY.data["device"]["path"]
+async def test_guess_firmware_info_integrations(hass: HomeAssistant) -> None:
+    """Test guessing the firmware via OTBR and ZHA."""
 
-    ZHA_CONFIG_ENTRY.add_to_hass(hass)
+    await async_setup_component(hass, "homeassistant_hardware", {})
 
-    ZHA_CONFIG_ENTRY.mock_state(hass, ConfigEntryState.NOT_LOADED)
-    assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-        is_running=False, firmware_type=ApplicationType.EZSP, source="zha"
+    # One instance of ZHA and two OTBRs
+    zha = MockConfigEntry(domain="zha", unique_id="some_unique_id_1")
+    zha.add_to_hass(hass)
+
+    otbr1 = MockConfigEntry(domain="otbr", unique_id="some_unique_id_2")
+    otbr1.add_to_hass(hass)
+
+    otbr2 = MockConfigEntry(domain="otbr", unique_id="some_unique_id_3")
+    otbr2.add_to_hass(hass)
+
+    # First ZHA is running with the stick
+    zha_firmware_info = FirmwareInfo(
+        device="/dev/serial/by-id/device1",
+        firmware_type=ApplicationType.EZSP,
+        firmware_version=None,
+        source="zha",
+        owners=[AsyncMock(is_running=AsyncMock(return_value=True))],
     )
 
-    # When ZHA is running, we indicate as such when guessing
-    ZHA_CONFIG_ENTRY.mock_state(hass, ConfigEntryState.LOADED)
-    assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-        is_running=True, firmware_type=ApplicationType.EZSP, source="zha"
+    # First OTBR: neither the addon or the integration are loaded
+    otbr_firmware_info1 = FirmwareInfo(
+        device="/dev/serial/by-id/device1",
+        firmware_type=ApplicationType.SPINEL,
+        firmware_version=None,
+        source="otbr",
+        owners=[
+            AsyncMock(is_running=AsyncMock(return_value=False)),
+            AsyncMock(is_running=AsyncMock(return_value=False)),
+        ],
     )
 
-    mock_otbr_addon_manager = AsyncMock()
-    mock_multipan_addon_manager = AsyncMock()
+    # Second OTBR: fully running but is with an unrelated device
+    otbr_firmware_info2 = FirmwareInfo(
+        device="/dev/serial/by-id/device2",  # An unrelated device
+        firmware_type=ApplicationType.SPINEL,
+        firmware_version=None,
+        source="otbr",
+        owners=[
+            AsyncMock(is_running=AsyncMock(return_value=True)),
+            AsyncMock(is_running=AsyncMock(return_value=True)),
+        ],
+    )
 
-    with (
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.is_hassio",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.get_otbr_addon_manager",
-            return_value=mock_otbr_addon_manager,
-        ),
-        patch(
-            "homeassistant.components.homeassistant_hardware.util.get_multiprotocol_addon_manager",
-            return_value=mock_multipan_addon_manager,
-        ),
-    ):
-        mock_otbr_addon_manager.async_get_addon_info.side_effect = AddonError()
-        mock_multipan_addon_manager.async_get_addon_info.side_effect = AddonError()
+    mock_zha_hardware_info = MagicMock(spec=["get_firmware_info"])
+    mock_zha_hardware_info.get_firmware_info = MagicMock(return_value=zha_firmware_info)
+    async_register_firmware_info_provider(hass, "zha", mock_zha_hardware_info)
 
-        # Hassio errors are ignored and we still go with ZHA
-        assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-            is_running=True, firmware_type=ApplicationType.EZSP, source="zha"
-        )
+    async def mock_otbr_async_get_firmware_info(
+        hass: HomeAssistant, config_entry: ConfigEntry
+    ) -> FirmwareInfo | None:
+        return {
+            otbr1.entry_id: otbr_firmware_info1,
+            otbr2.entry_id: otbr_firmware_info2,
+        }.get(config_entry.entry_id)
 
-        mock_otbr_addon_manager.async_get_addon_info.side_effect = None
-        mock_otbr_addon_manager.async_get_addon_info.return_value = AddonInfo(
-            available=True,
-            hostname=None,
-            options={"device": "/some/other/device"},
-            state=AddonState.RUNNING,
-            update_available=False,
-            version="1.0.0",
-        )
+    mock_otbr_hardware_info = MagicMock(spec=["async_get_firmware_info"])
+    mock_otbr_hardware_info.async_get_firmware_info = AsyncMock(
+        side_effect=mock_otbr_async_get_firmware_info
+    )
+    async_register_firmware_info_provider(hass, "otbr", mock_otbr_hardware_info)
 
-        # We will prefer ZHA, as it is running (and actually pointing to the device)
-        assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-            is_running=True, firmware_type=ApplicationType.EZSP, source="zha"
-        )
+    # ZHA wins for the first stick, since it's actually running
+    assert (
+        await guess_firmware_info(hass, "/dev/serial/by-id/device1")
+    ) == zha_firmware_info
 
-        mock_otbr_addon_manager.async_get_addon_info.return_value = AddonInfo(
-            available=True,
-            hostname=None,
-            options={"device": path},
-            state=AddonState.NOT_RUNNING,
-            update_available=False,
-            version="1.0.0",
-        )
+    # Second stick is communicating exclusively with the second OTBR
+    assert (
+        await guess_firmware_info(hass, "/dev/serial/by-id/device2")
+    ) == otbr_firmware_info2
 
-        # We will still prefer ZHA, as it is the one actually running
-        assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-            is_running=True, firmware_type=ApplicationType.EZSP, source="zha"
-        )
-
-        mock_otbr_addon_manager.async_get_addon_info.return_value = AddonInfo(
-            available=True,
-            hostname=None,
-            options={"device": path},
-            state=AddonState.RUNNING,
-            update_available=False,
-            version="1.0.0",
-        )
-
-        # Finally, ZHA loses out to OTBR
-        assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-            is_running=True, firmware_type=ApplicationType.SPINEL, source="otbr"
-        )
-
-        mock_multipan_addon_manager.async_get_addon_info.side_effect = None
-        mock_multipan_addon_manager.async_get_addon_info.return_value = AddonInfo(
-            available=True,
-            hostname=None,
-            options={"device": path},
-            state=AddonState.RUNNING,
-            update_available=False,
-            version="1.0.0",
-        )
-
-        # Which will lose out to multi-PAN
-        assert (await guess_firmware_type(hass, path)) == FirmwareGuess(
-            is_running=True, firmware_type=ApplicationType.CPC, source="multiprotocol"
-        )
+    # If we stop ZHA, OTBR will take priority
+    zha_firmware_info.owners[0].is_running.return_value = False
+    otbr_firmware_info1.owners[0].is_running.return_value = True
+    assert (
+        await guess_firmware_info(hass, "/dev/serial/by-id/device1")
+    ) == otbr_firmware_info1
 
 
-async def test_probe_silabs_firmware_type() -> None:
-    """Test probing Silabs firmware type."""
+async def test_owning_addon(hass: HomeAssistant) -> None:
+    """Test `OwningAddon`."""
 
+    owning_addon = OwningAddon(slug="some-addon-slug")
+
+    # Explicitly running
     with patch(
-        "homeassistant.components.homeassistant_hardware.util.Flasher.probe_app_type",
-        side_effect=RuntimeError,
-    ):
-        assert (await probe_silabs_firmware_type("/dev/ttyUSB0")) is None
-
-    with patch(
-        "homeassistant.components.homeassistant_hardware.util.Flasher.probe_app_type",
-        side_effect=lambda self: setattr(self, "app_type", FlasherApplicationType.EZSP),
-        autospec=True,
-    ) as mock_probe_app_type:
-        # The application type constant is converted back and forth transparently
-        result = await probe_silabs_firmware_type(
-            "/dev/ttyUSB0", probe_methods=[ApplicationType.EZSP]
+        "homeassistant.components.homeassistant_hardware.util.WaitingAddonManager"
+    ) as mock_manager:
+        mock_manager.return_value.async_get_addon_info = AsyncMock(
+            return_value=AddonInfo(
+                available=True,
+                hostname="core_some_addon_slug",
+                options={},
+                state=AddonState.RUNNING,
+                update_available=False,
+                version="1.0.0",
+            )
         )
-        assert result is ApplicationType.EZSP
+        assert (await owning_addon.is_running(hass)) is True
 
-        flasher = mock_probe_app_type.mock_calls[0].args[0]
-        assert flasher._probe_methods == [FlasherApplicationType.EZSP]
+    # Explicitly not running
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.WaitingAddonManager"
+    ) as mock_manager:
+        mock_manager.return_value.async_get_addon_info = AsyncMock(
+            return_value=AddonInfo(
+                available=True,
+                hostname="core_some_addon_slug",
+                options={},
+                state=AddonState.NOT_RUNNING,
+                update_available=False,
+                version="1.0.0",
+            )
+        )
+        assert (await owning_addon.is_running(hass)) is False
+
+    # Failed to get status
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.WaitingAddonManager"
+    ) as mock_manager:
+        mock_manager.return_value.async_get_addon_info = AsyncMock(
+            side_effect=AddonError()
+        )
+        assert (await owning_addon.is_running(hass)) is False
+
+
+async def test_owning_integration(hass: HomeAssistant) -> None:
+    """Test `OwningIntegration`."""
+    config_entry = MockConfigEntry(domain="mock_domain", unique_id="some_unique_id")
+    config_entry.add_to_hass(hass)
+
+    owning_integration = OwningIntegration(config_entry_id=config_entry.entry_id)
+
+    # Explicitly running
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    assert (await owning_integration.is_running(hass)) is True
+
+    # Explicitly not running
+    config_entry.mock_state(hass, ConfigEntryState.NOT_LOADED)
+    assert (await owning_integration.is_running(hass)) is False
+
+    # Missing config entry
+    owning_integration2 = OwningIntegration(config_entry_id="some_nonexistenct_id")
+    assert (await owning_integration2.is_running(hass)) is False
+
+
+async def test_firmware_info(hass: HomeAssistant) -> None:
+    """Test `FirmwareInfo`."""
+
+    owner1 = AsyncMock()
+    owner2 = AsyncMock()
+
+    firmware_info = FirmwareInfo(
+        device="/dev/ttyUSB1",
+        firmware_type=ApplicationType.EZSP,
+        firmware_version="1.0.0",
+        source="zha",
+        owners=[owner1, owner2],
+    )
+
+    # Both running
+    owner1.is_running.return_value = True
+    owner2.is_running.return_value = True
+    assert (await firmware_info.is_running(hass)) is True
+
+    # Only one running
+    owner1.is_running.return_value = True
+    owner2.is_running.return_value = False
+    assert (await firmware_info.is_running(hass)) is False
+
+    # No owners
+    firmware_info2 = FirmwareInfo(
+        device="/dev/ttyUSB1",
+        firmware_type=ApplicationType.EZSP,
+        firmware_version="1.0.0",
+        source="zha",
+        owners=[],
+    )
+
+    assert (await firmware_info2.is_running(hass)) is False

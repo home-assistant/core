@@ -8,7 +8,7 @@ import functools
 import logging
 from typing import TYPE_CHECKING, Any, Concatenate
 
-from aioautomower.exceptions import ApiException
+from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
 
 from homeassistant.core import callback
@@ -67,7 +67,7 @@ def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
         async def wrapper(self: _Entity, *args: _P.args, **kwargs: _P.kwargs) -> None:
             try:
                 await func(self, *args, **kwargs)
-            except ApiException as exception:
+            except ApiError as exception:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="command_send_failed",

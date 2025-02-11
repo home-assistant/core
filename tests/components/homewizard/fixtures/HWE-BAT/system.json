@@ -1,0 +1,7 @@
+{
+  "wifi_ssid": "My Wi-Fi",
+  "wifi_rssi_db": -77,
+  "cloud_enabled": false,
+  "uptime_s": 356,
+  "status_led_brightness_pct": 100
+}

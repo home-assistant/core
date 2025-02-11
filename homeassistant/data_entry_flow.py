@@ -12,9 +12,8 @@ from dataclasses import dataclass
 from enum import StrEnum
 import logging
 from types import MappingProxyType
-from typing import Any, Generic, Required, TypedDict, cast
+from typing import Any, Generic, Required, TypedDict, TypeVar, cast
 
-from typing_extensions import TypeVar
 import voluptuous as vol
 
 from .core import HomeAssistant, callback
@@ -562,7 +561,7 @@ class FlowManager(abc.ABC, Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         if not hasattr(flow, method):
             self._async_remove_flow_progress(flow.flow_id)
             raise UnknownStep(
-                f"Handler {self.__class__.__name__} doesn't support step {step_id}"
+                f"Handler {flow.__class__.__name__} doesn't support step {step_id}"
             )
 
     async def _async_setup_preview(
