@@ -226,6 +226,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_STEP
     )
     _attr_media_content_type = MediaType.MUSIC
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
