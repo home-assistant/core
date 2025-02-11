@@ -424,8 +424,8 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     DSMRSensorEntityDescription(
-        key="actual_treshold_electricity",
-        translation_key="actual_treshold_electricity",
+        key="actual_threshold_electricity",
+        translation_key="actual_threshold_electricity",
         obis_reference="ACTUAL_TRESHOLD_ELECTRICITY",
         dsmr_versions={"5EONHU"},
         device_class=SensorDeviceClass.POWER,
