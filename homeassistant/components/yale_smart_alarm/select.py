@@ -6,7 +6,7 @@ from yalesmartalarmclient import YaleLock, YaleLockVolume
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import YaleConfigEntry
 from .coordinator import YaleDataUpdateCoordinator
@@ -16,7 +16,9 @@ VOLUME_OPTIONS = {value.name.lower(): str(value.value) for value in YaleLockVolu
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: YaleConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: YaleConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Yale select entry."""
 
