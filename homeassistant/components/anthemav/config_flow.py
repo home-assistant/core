@@ -30,7 +30,10 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): cv.string,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_VOLUME_STEP, default=DEFAULT_VOLUME_STEP): cv.small_float,
+        vol.Optional(
+            CONF_VOLUME_STEP,
+            default=DEFAULT_VOLUME_STEP,
+        ): vol.All(cv.small_float, vol.Range(min=0, min_included=False)),
     }
 )
 
