@@ -19,7 +19,7 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EconetConfigEntry
 from .entity import EcoNetEntity
@@ -48,7 +48,7 @@ SUPPORT_FLAGS_HEATER = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EconetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EcoNet water heater based on a config entry."""
     equipment = entry.runtime_data

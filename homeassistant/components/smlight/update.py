@@ -20,7 +20,7 @@ from homeassistant.components.update import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import get_radio
 from .const import LOGGER
@@ -62,7 +62,9 @@ ZB_UPDATE_ENTITY = SmUpdateEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: SmConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: SmConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SMLIGHT update entities."""
     coordinator = entry.runtime_data.firmware

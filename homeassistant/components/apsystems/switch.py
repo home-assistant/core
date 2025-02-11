@@ -9,7 +9,7 @@ from APsystemsEZ1 import InverterReturnedError
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ApSystemsConfigEntry, ApSystemsData
 from .entity import ApSystemsEntity
@@ -18,7 +18,7 @@ from .entity import ApSystemsEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ApSystemsConfigEntry,
-    add_entities: AddEntitiesCallback,
+    add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
 

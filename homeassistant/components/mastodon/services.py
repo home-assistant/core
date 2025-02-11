@@ -16,6 +16,7 @@ from .const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_CONTENT_WARNING,
     ATTR_MEDIA,
+    ATTR_MEDIA_DESCRIPTION,
     ATTR_MEDIA_WARNING,
     ATTR_STATUS,
     ATTR_VISIBILITY,
@@ -42,6 +43,7 @@ SERVICE_POST_SCHEMA = vol.Schema(
         vol.Optional(ATTR_VISIBILITY): vol.In([x.lower() for x in StatusVisibility]),
         vol.Optional(ATTR_CONTENT_WARNING): str,
         vol.Optional(ATTR_MEDIA): str,
+        vol.Optional(ATTR_MEDIA_DESCRIPTION): str,
         vol.Optional(ATTR_MEDIA_WARNING): bool,
     }
 )
@@ -81,6 +83,7 @@ def setup_services(hass: HomeAssistant) -> None:
         )
         spoiler_text: str | None = call.data.get(ATTR_CONTENT_WARNING)
         media_path: str | None = call.data.get(ATTR_MEDIA)
+        media_description: str | None = call.data.get(ATTR_MEDIA_DESCRIPTION)
         media_warning: str | None = call.data.get(ATTR_MEDIA_WARNING)
 
         await hass.async_add_executor_job(
@@ -91,6 +94,7 @@ def setup_services(hass: HomeAssistant) -> None:
                 visibility=visibility,
                 spoiler_text=spoiler_text,
                 media_path=media_path,
+                media_description=media_description,
                 sensitive=media_warning,
             )
         )
@@ -112,9 +116,12 @@ def setup_services(hass: HomeAssistant) -> None:
                 )
 
             media_type = get_media_type(media_path)
+            media_description = kwargs.get("media_description")
             try:
                 media_data = client.media_post(
-                    media_file=media_path, mime_type=media_type
+                    media_file=media_path,
+                    mime_type=media_type,
+                    description=media_description,
                 )
 
             except MastodonAPIError as err:
@@ -125,6 +132,7 @@ def setup_services(hass: HomeAssistant) -> None:
                 ) from err
 
         kwargs.pop("media_path", None)
+        kwargs.pop("media_description", None)
 
         try:
             media_ids: str | None = None

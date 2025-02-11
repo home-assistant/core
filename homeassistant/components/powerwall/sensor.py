@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import POWERWALL_COORDINATOR
 from .entity import BatteryEntity, PowerWallEntity
@@ -213,7 +213,7 @@ BATTERY_INSTANT_SENSORS: list[PowerwallSensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PowerwallConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the powerwall sensors."""
     powerwall_data = entry.runtime_data

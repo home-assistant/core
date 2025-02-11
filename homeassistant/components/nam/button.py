@@ -11,7 +11,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import NAMConfigEntry, NAMDataUpdateCoordinator
@@ -28,7 +28,9 @@ RESTART_BUTTON: ButtonEntityDescription = ButtonEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: NAMConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NAMConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a Nettigo Air Monitor entities from a config_entry."""
     coordinator = entry.runtime_data

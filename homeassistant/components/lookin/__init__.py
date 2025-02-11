@@ -122,6 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         coordinator_class = LookinDataUpdateCoordinator[MeteoSensor]
         meteo_coordinator = coordinator_class(
             hass,
+            entry,
             push_coordinator,
             name=entry.title,
             update_method=lookin_protocol.get_meteo_sensor,
@@ -140,6 +141,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             updater = _async_remote_updater(lookin_protocol, uuid)
         coordinator = LookinDataUpdateCoordinator(
             hass,
+            entry,
             push_coordinator,
             name=f"{entry.title} {uuid}",
             update_method=updater,

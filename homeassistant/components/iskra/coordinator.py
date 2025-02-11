@@ -11,6 +11,7 @@ from pyiskra.exceptions import (
     NotAuthorised,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -18,21 +19,26 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type IskraConfigEntry = ConfigEntry[list[IskraDataUpdateCoordinator]]
+
 
 class IskraDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Class to manage fetching Iskra data."""
 
-    def __init__(self, hass: HomeAssistant, device: Device) -> None:
+    config_entry: IskraConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: IskraConfigEntry, device: Device
+    ) -> None:
         """Initialize."""
         self.device = device
-
-        update_interval = timedelta(seconds=60)
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=60),
         )
 
     async def _async_update_data(self) -> None:

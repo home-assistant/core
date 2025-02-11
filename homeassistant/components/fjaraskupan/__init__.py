@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Callable
-from dataclasses import dataclass
 import logging
 
 from fjaraskupan import Device
@@ -16,7 +15,6 @@ from homeassistant.components.bluetooth import (
     async_rediscover_address,
     async_register_callback,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -29,7 +27,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DISPATCH_DETECTION, DOMAIN
-from .coordinator import FjaraskupanCoordinator
+from .coordinator import FjaraskupanConfigEntry, FjaraskupanCoordinator
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -42,26 +40,17 @@ PLATFORMS = [
 _LOGGER = logging.getLogger(__name__)
 
 
-@dataclass
-class EntryState:
-    """Store state of config entry."""
-
-    coordinators: dict[str, FjaraskupanCoordinator]
-
-
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FjaraskupanConfigEntry) -> bool:
     """Set up Fjäråskupan from a config entry."""
 
-    state = EntryState({})
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = state
+    entry.runtime_data = {}
 
     def detection_callback(
         service_info: BluetoothServiceInfoBleak, change: BluetoothChange
     ) -> None:
         if change != BluetoothChange.ADVERTISEMENT:
             return
-        if data := state.coordinators.get(service_info.address):
+        if data := entry.runtime_data.get(service_info.address):
             _LOGGER.debug("Update: %s", service_info)
             data.detection_callback(service_info)
         else:
@@ -80,7 +69,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             )
             coordinator.detection_callback(service_info)
 
-            state.coordinators[service_info.address] = coordinator
+            entry.runtime_data[service_info.address] = coordinator
             async_dispatcher_send(
                 hass, f"{DISPATCH_DETECTION}.{entry.entry_id}", coordinator
             )
@@ -105,16 +94,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 @callback
 def async_setup_entry_platform(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: FjaraskupanConfigEntry,
     async_add_entities: AddEntitiesCallback,
     constructor: Callable[[FjaraskupanCoordinator], list[Entity]],
 ) -> None:
     """Set up a platform with added entities."""
 
-    entry_state: EntryState = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         entity
-        for coordinator in entry_state.coordinators.values()
+        for coordinator in entry.runtime_data.values()
         for entity in constructor(coordinator)
     )
 
@@ -129,12 +117,12 @@ def async_setup_entry_platform(
     )
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: FjaraskupanConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
         for device_entry in dr.async_entries_for_config_entry(
             dr.async_get(hass), entry.entry_id
         ):

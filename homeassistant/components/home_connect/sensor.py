@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
 from .common import setup_home_connect_entry
@@ -272,7 +272,7 @@ def _get_entities_for_appliance(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Home Connect sensor."""
     setup_home_connect_entry(

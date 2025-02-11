@@ -88,6 +88,7 @@ async def test_device_diagnostics(
             "created_at",
             "modified_at",
             "config_entries",
+            "config_entries_subentries",
             "id",
             "primary_config_entry",
             "config_entry_id",

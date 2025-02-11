@@ -16,7 +16,7 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SourceType
 from .coordinator import BraviaTVConfigEntry
@@ -26,7 +26,7 @@ from .entity import BraviaTVEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BraviaTVConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Bravia TV Media Player from a config_entry."""
 

@@ -8,7 +8,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from .api import OndiloClient
 from .config_flow import OndiloIcoOAuth2FlowHandler
 from .const import DOMAIN
-from .coordinator import OndiloIcoCoordinator
+from .coordinator import OndiloIcoPoolsCoordinator
 from .oauth_impl import OndiloOauth2Implementation
 
 PLATFORMS = [Platform.SENSOR]
@@ -28,7 +28,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
     )
 
-    coordinator = OndiloIcoCoordinator(
+    coordinator = OndiloIcoPoolsCoordinator(
         hass, entry, OndiloClient(hass, entry, implementation)
     )
 

@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import OhmeConfigEntry
 from .entity import OhmeEntity, OhmeEntityDescription
@@ -91,7 +91,7 @@ SENSOR_ADVANCED_SETTINGS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OhmeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
     coordinators = config_entry.runtime_data

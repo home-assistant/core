@@ -25,6 +25,7 @@ from .common import (
     TEST_BACKUP_ABC123,
     BackupAgentTest,
     aiter_from_iter,
+    mock_backup_agent,
     setup_backup_integration,
 )
 
@@ -112,16 +113,14 @@ async def test_downloading_local_encrypted_backup(
     await _test_downloading_encrypted_backup(hass_client, "backup.local")
 
 
-@patch.object(BackupAgentTest, "async_download_backup")
 async def test_downloading_remote_encrypted_backup(
-    download_mock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test downloading a local backup file."""
     backup_path = get_fixture_path("test_backups/c0cb53bd.tar", DOMAIN)
     await setup_backup_integration(hass)
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest(
+    mock_agent = mock_backup_agent(
         "test",
         [
             AgentBackup(
@@ -139,11 +138,12 @@ async def test_downloading_remote_encrypted_backup(
             )
         ],
     )
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = mock_agent
 
     async def download_backup(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
         return aiter_from_iter((backup_path.read_bytes(),))
 
-    download_mock.side_effect = download_backup
+    mock_agent.async_download_backup.side_effect = download_backup
     await _test_downloading_encrypted_backup(hass_client, "domain.test")
 
 
@@ -154,9 +154,7 @@ async def test_downloading_remote_encrypted_backup(
         (BackupNotFound, 404),
     ],
 )
-@patch.object(BackupAgentTest, "async_download_backup")
 async def test_downloading_remote_encrypted_backup_with_error(
-    download_mock,
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     error: Exception,
@@ -164,7 +162,7 @@ async def test_downloading_remote_encrypted_backup_with_error(
 ) -> None:
     """Test downloading a local backup file."""
     await setup_backup_integration(hass)
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest(
+    mock_agent = mock_backup_agent(
         "test",
         [
             AgentBackup(
@@ -182,8 +180,9 @@ async def test_downloading_remote_encrypted_backup_with_error(
             )
         ],
     )
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = mock_agent
 
-    download_mock.side_effect = error
+    mock_agent.async_download_backup.side_effect = error
     client = await hass_client()
     resp = await client.get(
         "/api/backup/download/abc123?agent_id=domain.test&password=blah"

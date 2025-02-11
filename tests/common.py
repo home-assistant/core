@@ -86,7 +86,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, ulid as ulid_util
@@ -1004,6 +1007,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
         reason=None,
         source=config_entries.SOURCE_USER,
         state=None,
+        subentries_data=None,
         title="Mock Title",
         unique_id=None,
         version=1,
@@ -1020,6 +1024,7 @@ class MockConfigEntry(config_entries.ConfigEntry):
             "options": options or {},
             "pref_disable_new_entities": pref_disable_new_entities,
             "pref_disable_polling": pref_disable_polling,
+            "subentries_data": subentries_data or (),
             "title": title,
             "unique_id": unique_id,
             "version": version,
@@ -1088,6 +1093,28 @@ class MockConfigEntry(config_entries.ConfigEntry):
             context={
                 "source": config_entries.SOURCE_RECONFIGURE,
                 "entry_id": self.entry_id,
+                "show_advanced_options": show_advanced_options,
+            },
+        )
+
+    async def start_subentry_reconfigure_flow(
+        self,
+        hass: HomeAssistant,
+        subentry_flow_type: str,
+        subentry_id: str,
+        *,
+        show_advanced_options: bool = False,
+    ) -> ConfigFlowResult:
+        """Start a subentry reconfiguration flow."""
+        if self.entry_id not in hass.config_entries._entries:
+            raise ValueError(
+                "Config entry must be added to hass to start reconfiguration flow"
+            )
+        return await hass.config_entries.subentries.async_init(
+            (self.entry_id, subentry_flow_type),
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "subentry_id": subentry_id,
                 "show_advanced_options": show_advanced_options,
             },
         )
@@ -1789,7 +1816,7 @@ def setup_test_component_platform(
         async def _async_setup_entry(
             hass: HomeAssistant,
             entry: ConfigEntry,
-            async_add_entities: AddEntitiesCallback,
+            async_add_entities: AddConfigEntryEntitiesCallback,
         ) -> None:
             """Set up a test component platform."""
             async_add_entities(entities)

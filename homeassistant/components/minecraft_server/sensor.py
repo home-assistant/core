@@ -10,7 +10,7 @@ from homeassistant.components.sensor import SensorEntity, SensorEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TYPE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .api import MinecraftServerData, MinecraftServerType
@@ -159,7 +159,7 @@ SENSOR_DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Minecraft Server sensor platform."""
     coordinator = hass.data[DOMAIN][config_entry.entry_id]

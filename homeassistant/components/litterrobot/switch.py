@@ -11,7 +11,7 @@ from pylitterbot import FeederRobot, LitterRobot
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry
 from .entity import LitterRobotEntity, _WhiskerEntityT
@@ -45,7 +45,7 @@ ROBOT_SWITCHES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot switches using config entry."""
     coordinator = entry.runtime_data

@@ -21,7 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SolaxConfigEntry
@@ -89,7 +89,7 @@ SENSOR_DESCRIPTIONS: dict[tuple[Units, bool], SensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SolaxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Entry setup."""
     api = entry.runtime_data.api

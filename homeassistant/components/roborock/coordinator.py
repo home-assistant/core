@@ -10,17 +10,26 @@ import logging
 from propcache.api import cached_property
 from roborock import HomeDataRoom
 from roborock.code_mappings import RoborockCategory
-from roborock.containers import DeviceData, HomeDataDevice, HomeDataProduct, NetworkInfo
+from roborock.containers import (
+    DeviceData,
+    HomeDataDevice,
+    HomeDataProduct,
+    HomeDataScene,
+    NetworkInfo,
+    UserData,
+)
 from roborock.exceptions import RoborockException
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 from roborock.roborock_typing import DeviceProp
 from roborock.version_1_apis.roborock_local_client_v1 import RoborockLocalClientV1
 from roborock.version_1_apis.roborock_mqtt_client_v1 import RoborockMqttClientV1
 from roborock.version_a01_apis import RoborockClientA01
+from roborock.web_api import RoborockApiClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import StateType
@@ -67,6 +76,8 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         product_info: HomeDataProduct,
         cloud_api: RoborockMqttClientV1,
         home_data_rooms: list[HomeDataRoom],
+        api_client: RoborockApiClient,
+        user_data: UserData,
     ) -> None:
         """Initialize."""
         super().__init__(
@@ -89,7 +100,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self.cloud_api = cloud_api
         self.device_info = DeviceInfo(
             name=self.roborock_device_info.device.name,
-            identifiers={(DOMAIN, self.roborock_device_info.device.duid)},
+            identifiers={(DOMAIN, self.duid)},
             manufacturer="Roborock",
             model=self.roborock_device_info.product.model,
             model_id=self.roborock_device_info.product.model,
@@ -103,8 +114,10 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
         self.maps: dict[int, RoborockMapInfo] = {}
         self._home_data_rooms = {str(room.id): room.name for room in home_data_rooms}
         self.map_storage = RoborockMapStorage(
-            hass, self.config_entry.entry_id, slugify(self.duid)
+            hass, self.config_entry.entry_id, self.duid_slug
         )
+        self._user_data = user_data
+        self._api_client = api_client
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -134,7 +147,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             except RoborockException:
                 _LOGGER.warning(
                     "Using the cloud API for device %s. This is not recommended as it can lead to rate limiting. We recommend making your vacuum accessible by your Home Assistant instance",
-                    self.roborock_device_info.device.duid,
+                    self.duid,
                 )
                 await self.api.async_disconnect()
                 # We use the cloud api if the local api fails to connect.
@@ -192,6 +205,34 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceProp]):
             room.segment_id: self._home_data_rooms.get(room.iot_id, "Unknown")
             for room in room_mapping or ()
         }
+
+    async def get_scenes(self) -> list[HomeDataScene]:
+        """Get scenes."""
+        try:
+            return await self._api_client.get_scenes(self._user_data, self.duid)
+        except RoborockException as err:
+            _LOGGER.error("Failed to get scenes %s", err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "get_scenes",
+                },
+            ) from err
+
+    async def execute_scene(self, scene_id: int) -> None:
+        """Execute scene."""
+        try:
+            await self._api_client.execute_scene(self._user_data, scene_id)
+        except RoborockException as err:
+            _LOGGER.error("Failed to execute scene %s %s", scene_id, err)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={
+                    "command": "execute_scene",
+                },
+            ) from err
 
     @cached_property
     def duid(self) -> str:

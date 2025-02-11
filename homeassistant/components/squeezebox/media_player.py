@@ -40,7 +40,7 @@ from homeassistant.helpers.device_registry import (
     format_mac,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.start import async_at_start
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
@@ -113,7 +113,7 @@ async def start_server_discovery(hass: HomeAssistant) -> None:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SqueezeboxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Squeezebox media_player platform from a server config entry."""
 

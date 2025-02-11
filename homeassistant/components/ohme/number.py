@@ -9,7 +9,7 @@ from homeassistant.components.number import NumberEntity, NumberEntityDescriptio
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import OhmeConfigEntry
@@ -43,7 +43,7 @@ NUMBER_DESCRIPTION = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OhmeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up numbers."""
     coordinators = config_entry.runtime_data

@@ -16,7 +16,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .const import EFFECT_DAYCL_MODE, EFFECT_TO_LIGHT_MODE
@@ -32,7 +32,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EheimDigitalConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the callbacks for the coordinator so lights can be added as devices are found."""
     coordinator = entry.runtime_data

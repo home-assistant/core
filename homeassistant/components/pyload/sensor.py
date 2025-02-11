@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import UNIT_DOWNLOADS
@@ -85,7 +85,7 @@ SENSOR_DESCRIPTIONS: tuple[PyLoadSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PyLoadConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the pyLoad sensors."""
 

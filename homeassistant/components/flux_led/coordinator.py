@@ -20,14 +20,16 @@ _LOGGER = logging.getLogger(__name__)
 
 REQUEST_REFRESH_DELAY: Final = 2.0
 
+type FluxLedConfigEntry = ConfigEntry[FluxLedUpdateCoordinator]
+
 
 class FluxLedUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific flux_led device."""
 
-    config_entry: ConfigEntry
+    config_entry: FluxLedConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, device: AIOWifiLedBulb, entry: ConfigEntry
+        self, hass: HomeAssistant, device: AIOWifiLedBulb, entry: FluxLedConfigEntry
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific device."""
         self.device = device

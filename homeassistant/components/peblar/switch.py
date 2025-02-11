@@ -11,7 +11,7 @@ from peblar import PeblarEVInterface
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import (
     PeblarConfigEntry,
@@ -71,7 +71,7 @@ DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PeblarConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Peblar switch based on a config entry."""
     async_add_entities(

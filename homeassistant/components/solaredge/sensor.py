@@ -16,7 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import PERCENTAGE, UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -201,7 +201,7 @@ SENSOR_TYPES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SolarEdgeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add an solarEdge entry."""
     # Add the needed sensors to hass

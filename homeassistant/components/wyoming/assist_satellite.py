@@ -24,18 +24,20 @@ from wyoming.tts import Synthesize, SynthesizeVoice
 from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
-from homeassistant.components import assist_pipeline, intent, tts
+from homeassistant.components import assist_pipeline, ffmpeg, intent, tts
 from homeassistant.components.assist_pipeline import PipelineEvent
 from homeassistant.components.assist_satellite import (
+    AssistSatelliteAnnouncement,
     AssistSatelliteConfiguration,
     AssistSatelliteEntity,
     AssistSatelliteEntityDescription,
+    AssistSatelliteEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, SAMPLE_CHANNELS, SAMPLE_WIDTH
 from .data import WyomingService
 from .devices import SatelliteDevice
 from .entity import WyomingSatelliteEntity
@@ -49,6 +51,8 @@ _RESTART_SECONDS: Final = 3
 _PING_TIMEOUT: Final = 5
 _PING_SEND_DELAY: Final = 2
 _PIPELINE_FINISH_TIMEOUT: Final = 1
+_TTS_SAMPLE_RATE: Final = 22050
+_ANNOUNCE_CHUNK_BYTES: Final = 2048  # 1024 samples
 
 # Wyoming stage -> Assist stage
 _STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
@@ -62,7 +66,7 @@ _STAGES: dict[PipelineStage, assist_pipeline.PipelineStage] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Wyoming Assist satellite entity."""
     domain_data: DomainDataItem = hass.data[DOMAIN][config_entry.entry_id]
@@ -83,6 +87,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
     entity_description = AssistSatelliteEntityDescription(key="assist_satellite")
     _attr_translation_key = "assist_satellite"
     _attr_name = None
+    _attr_supported_features = AssistSatelliteEntityFeature.ANNOUNCE
 
     def __init__(
         self,
@@ -116,6 +121,10 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self.device.set_pipeline_listener(self._pipeline_changed)
         self.device.set_audio_settings_listener(self._audio_settings_changed)
 
+        # For announcements
+        self._ffmpeg_manager: ffmpeg.FFmpegManager | None = None
+        self._played_event_received: asyncio.Event | None = None
+
     @property
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
@@ -131,9 +140,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         """Options passed for text-to-speech."""
         return {
             tts.ATTR_PREFERRED_FORMAT: "wav",
-            tts.ATTR_PREFERRED_SAMPLE_RATE: 16000,
-            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 1,
-            tts.ATTR_PREFERRED_SAMPLE_BYTES: 2,
+            tts.ATTR_PREFERRED_SAMPLE_RATE: _TTS_SAMPLE_RATE,
+            tts.ATTR_PREFERRED_SAMPLE_CHANNELS: SAMPLE_CHANNELS,
+            tts.ATTR_PREFERRED_SAMPLE_BYTES: SAMPLE_WIDTH,
         }
 
     async def async_added_to_hass(self) -> None:
@@ -243,6 +252,76 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                         ).event()
                     )
                 )
+
+    async def async_announce(self, announcement: AssistSatelliteAnnouncement) -> None:
+        """Announce media on the satellite.
+
+        Should block until the announcement is done playing.
+        """
+        assert self._client is not None
+
+        if self._ffmpeg_manager is None:
+            self._ffmpeg_manager = ffmpeg.get_ffmpeg_manager(self.hass)
+
+        if self._played_event_received is None:
+            self._played_event_received = asyncio.Event()
+
+        self._played_event_received.clear()
+        await self._client.write_event(
+            AudioStart(
+                rate=_TTS_SAMPLE_RATE,
+                width=SAMPLE_WIDTH,
+                channels=SAMPLE_CHANNELS,
+                timestamp=0,
+            ).event()
+        )
+
+        timestamp = 0
+        try:
+            # Use ffmpeg to convert to raw PCM audio with the appropriate format
+            proc = await asyncio.create_subprocess_exec(
+                self._ffmpeg_manager.binary,
+                "-i",
+                announcement.media_id,
+                "-f",
+                "s16le",
+                "-ac",
+                str(SAMPLE_CHANNELS),
+                "-ar",
+                str(_TTS_SAMPLE_RATE),
+                "-nostats",
+                "pipe:",
+                stdout=asyncio.subprocess.PIPE,
+                stderr=asyncio.subprocess.PIPE,
+                close_fds=False,  # use posix_spawn in CPython < 3.13
+            )
+            assert proc.stdout is not None
+            while True:
+                chunk_bytes = await proc.stdout.read(_ANNOUNCE_CHUNK_BYTES)
+                if not chunk_bytes:
+                    break
+
+                chunk = AudioChunk(
+                    rate=_TTS_SAMPLE_RATE,
+                    width=SAMPLE_WIDTH,
+                    channels=SAMPLE_CHANNELS,
+                    audio=chunk_bytes,
+                    timestamp=timestamp,
+                )
+                await self._client.write_event(chunk.event())
+
+                timestamp += chunk.milliseconds
+        finally:
+            await self._client.write_event(AudioStop().event())
+            if timestamp > 0:
+                # Wait the length of the audio or until we receive a played event
+                audio_seconds = timestamp / 1000
+                try:
+                    async with asyncio.timeout(audio_seconds + 0.5):
+                        await self._played_event_received.wait()
+                except TimeoutError:
+                    # Older satellite clients will wait longer than necessary
+                    _LOGGER.debug("Did not receive played event for announcement")
 
     # -------------------------------------------------------------------------
 
@@ -511,6 +590,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 elif Played.is_type(client_event.type):
                     # TTS response has finished playing on satellite
                     self.tts_response_finished()
+
+                    if self._played_event_received is not None:
+                        self._played_event_received.set()
                 else:
                     _LOGGER.debug("Unexpected event from satellite: %s", client_event)
 

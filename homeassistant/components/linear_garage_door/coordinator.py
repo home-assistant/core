@@ -34,15 +34,16 @@ class LinearUpdateCoordinator(DataUpdateCoordinator[dict[str, LinearDevice]]):
     _devices: list[dict[str, Any]] | None = None
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize DataUpdateCoordinator for Linear."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Linear Garage Door",
             update_interval=timedelta(seconds=60),
         )
-        self.site_id = self.config_entry.data["site_id"]
+        self.site_id = config_entry.data["site_id"]
 
     async def _async_update_data(self) -> dict[str, LinearDevice]:
         """Get the data for Linear."""

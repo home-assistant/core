@@ -13,7 +13,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DuotecnoConfigEntry
 from .entity import DuotecnoEntity, api_call
@@ -32,7 +32,7 @@ PRESETMODES_REVERSE: Final = {value: key for key, value in PRESETMODES.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DuotecnoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Duotecno climate based on config_entry."""
     async_add_entities(

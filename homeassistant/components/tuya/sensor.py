@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import TuyaConfigEntry
@@ -1222,7 +1222,9 @@ SENSORS["pc"] = SENSORS["kg"]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya sensor dynamically through Tuya discovery."""
     hass_data = entry.runtime_data
