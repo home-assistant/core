@@ -2636,13 +2636,19 @@
     'state': 'permanent',
   })
 # ---
-# name: test_room_sensors[sensor.model0_battery-entry]
+# name: test_all_entities[type:ventilation-vicare/Vitocal222G_Vitovent300W.json][sensor.model0_ventilation_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'options': list([
+        'standby',
+        'levelone',
+        'leveltwo',
+        'levelthree',
+        'levelfour',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2650,8 +2656,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.model0_battery',
+    'entity_category': None,
+    'entity_id': 'sensor.model0_ventilation_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2661,31 +2667,101 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Battery',
+    'original_name': 'Ventilation level',
     'platform': 'vicare',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': None,
-    'unique_id': 'gateway0_zigbee_d87a3bfffe5d844a-battery_level',
-    'unit_of_measurement': '%',
+    'translation_key': 'ventilation_level',
+    'unique_id': 'gateway0_################-ventilation_level',
+    'unit_of_measurement': None,
   })
 # ---
-# name: test_room_sensors[sensor.model0_battery-state]
+# name: test_all_entities[type:ventilation-vicare/Vitocal222G_Vitovent300W.json][sensor.model0_ventilation_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'model0 Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      'device_class': 'enum',
+      'friendly_name': 'model0 Ventilation level',
+      'options': list([
+        'standby',
+        'levelone',
+        'leveltwo',
+        'levelthree',
+        'levelfour',
+      ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.model0_battery',
+    'entity_id': 'sensor.model0_ventilation_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '89',
+    'state': 'levelthree',
+  })
+# ---
+# name: test_all_entities[type:ventilation-vicare/Vitocal222G_Vitovent300W.json][sensor.model0_ventilation_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'standby',
+        'permanent',
+        'schedule',
+        'sensordriven',
+        'silent',
+        'forcedlevelfour',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.model0_ventilation_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Ventilation reason',
+    'platform': 'vicare',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'ventilation_reason',
+    'unique_id': 'gateway0_################-ventilation_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[type:ventilation-vicare/Vitocal222G_Vitovent300W.json][sensor.model0_ventilation_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'model0 Ventilation reason',
+      'options': list([
+        'standby',
+        'permanent',
+        'schedule',
+        'sensordriven',
+        'silent',
+        'forcedlevelfour',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.model0_ventilation_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'schedule',
   })
 # ---
 # name: test_room_sensors[sensor.model0_humidity-entry]
