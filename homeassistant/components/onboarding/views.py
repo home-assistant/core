@@ -422,6 +422,11 @@ class RestoreBackupView(BackupOnboardingView):
             return self.json(
                 {"code": "incorrect_password"}, status_code=HTTPStatus.BAD_REQUEST
             )
+        except HomeAssistantError as err:
+            return self.json(
+                {"code": "restore_failed", "message": str(err)},
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
         return web.Response(status=HTTPStatus.OK)
 
 
