@@ -4,10 +4,13 @@ from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
 from onedrive_personal_sdk.exceptions import OneDriveException
+from onedrive_personal_sdk.models.items import ItemUpdate
 import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.onedrive.const import (
+    CONF_FOLDER_ID,
+    CONF_FOLDER_NAME,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
@@ -84,6 +87,11 @@ async def test_full_flow(
     token_callback = mock_onedrive_client_init.call_args[0][0]
     assert await token_callback() == "mock-access-token"
 
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_FOLDER_NAME: "myFolder"}
+    )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -91,6 +99,8 @@ async def test_full_flow(
     assert result["result"].unique_id == "mock_drive_id"
     assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
+    assert result["data"][CONF_FOLDER_NAME] == "myFolder"
+    assert result["data"][CONF_FOLDER_ID] == "id"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -111,6 +121,11 @@ async def test_full_flow_with_owner_not_found(
     await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
+    assert result["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_FOLDER_NAME: "myFolder"}
+    )
+
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert len(mock_setup_entry.mock_calls) == 1
@@ -118,6 +133,8 @@ async def test_full_flow_with_owner_not_found(
     assert result["result"].unique_id == "mock_drive_id"
     assert result["data"][CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert result["data"][CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
+    assert result["data"][CONF_FOLDER_NAME] == "myFolder"
+    assert result["data"][CONF_FOLDER_ID] == "id"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -223,3 +240,75 @@ async def test_reauth_flow_id_changed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_drive"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_onedrive_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Testing reconfgure flow."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_folder"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_FOLDER_NAME: "newFolder"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    mock_onedrive_client.update_drive_item.assert_called_once_with(
+        mock_config_entry.data[CONF_FOLDER_ID], ItemUpdate(name="newFolder")
+    )
+    assert mock_config_entry.data[CONF_FOLDER_NAME] == "newFolder"
+    assert mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
+    assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reconfigure_flow_error(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_onedrive_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Testing reconfgure flow errors."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_folder"
+
+    mock_onedrive_client.update_drive_item.side_effect = OneDriveException()
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_FOLDER_NAME: "newFolder"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure_folder"
+    assert result["errors"] == {"base": "folder_rename_error"}
+
+    # clear side effect
+    mock_onedrive_client.update_drive_item.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_FOLDER_NAME: "newFolder"}
+    )
+
+    assert mock_config_entry.data[CONF_FOLDER_NAME] == "newFolder"
+    assert mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
+    assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"

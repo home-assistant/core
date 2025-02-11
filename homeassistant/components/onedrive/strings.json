@@ -7,6 +7,26 @@
       "reauth_confirm": {
         "title": "[%key:common::config_flow::title::reauth%]",
         "description": "The OneDrive integration needs to re-authenticate your account"
+      },
+      "folder_name": {
+        "title": "Pick a folder name",
+        "description": "This name will be used to create an instance specific folder in your application folder. Will be put inside AppData/Home Assistant",
+        "data": {
+          "folder_name": "Folder name"
+        },
+        "data_description": {
+          "folder_name": "Name of the folder"
+        }
+      },
+      "reconfigure_folder": {
+        "title": "Change the folder name",
+        "description": "Rename the instance specific folder in AppData/Home Assistant",
+        "data": {
+          "folder_name": "[%key:component::onedrive::config::step::folder_name::data::folder_name%]"
+        },
+        "data_description": {
+          "folder_name": "[%key:component::onedrive::config::step::folder_name::data_description::folder_name%]"
+        }
       }
     },
     "abort": {
@@ -23,10 +43,14 @@
       "connection_error": "Failed to connect to OneDrive.",
       "wrong_drive": "New account does not contain previously configured OneDrive.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
+    },
+    "error": {
+      "folder_rename_error": "Failed to rename folder"
     }
   },
   "exceptions": {

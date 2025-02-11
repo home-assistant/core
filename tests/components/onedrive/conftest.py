@@ -11,7 +11,12 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.onedrive.const import DOMAIN, OAUTH_SCOPES
+from homeassistant.components.onedrive.const import (
+    CONF_FOLDER_ID,
+    CONF_FOLDER_NAME,
+    DOMAIN,
+    OAUTH_SCOPES,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -66,8 +71,11 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
                 "expires_at": expires_at,
                 "scope": " ".join(scopes),
             },
+            CONF_FOLDER_NAME: "backups_123",
+            CONF_FOLDER_ID: "my_folder_id",
         },
         unique_id="mock_drive_id",
+        minor_version=2,
     )
 
 

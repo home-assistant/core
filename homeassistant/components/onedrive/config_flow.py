@@ -12,6 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
+    SOURCE_USER,
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
@@ -68,11 +69,13 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         await self.async_set_unique_id(approot.parent_reference.drive_id)
 
-        if self.source == SOURCE_REAUTH:
-            reauth_entry = self._get_reauth_entry()
+        if self.source != SOURCE_USER:
             self._abort_if_unique_id_mismatch(
                 reason="wrong_drive",
             )
+
+        if self.source == SOURCE_REAUTH:
+            reauth_entry = self._get_reauth_entry()
             return self.async_update_reload_and_abort(
                 entry=reauth_entry,
                 data=data,
