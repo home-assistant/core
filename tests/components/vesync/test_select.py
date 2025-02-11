@@ -8,6 +8,7 @@ from homeassistant.components.select import (
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.components.vesync.const import NIGHT_LIGHT_LEVEL_DIM
+from homeassistant.components.vesync.select import HA_TO_VS_NIGHT_LIGHT_LEVEL_MAP
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
@@ -16,12 +17,9 @@ from .common import ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT
 
 
 async def test_set_nightlight_level(
-    hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    humidifier_300s,
-    manager,
+    hass: HomeAssistant, config_entry: ConfigEntry, humidifier_300s, manager
 ) -> None:
-    """Test update of display for sleep mode."""
+    """Test update of display for night light level."""
 
     with patch(
         "homeassistant.components.vesync.async_generate_device_list",
@@ -40,4 +38,8 @@ async def test_set_nightlight_level(
             },
             blocking=True,
         )
-        method_mock.assert_called_once()
+
+        # Assert that setter API was invoked with the expected translated value
+        method_mock.assert_called_once_with(
+            HA_TO_VS_NIGHT_LIGHT_LEVEL_MAP[NIGHT_LIGHT_LEVEL_DIM]
+        )
