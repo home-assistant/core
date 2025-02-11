@@ -7,7 +7,7 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-from google import genai
+from google import genai  # type: ignore[attr-defined]
 from google.genai.errors import APIError, ClientError
 from requests.exceptions import Timeout
 import voluptuous as vol
@@ -51,6 +51,7 @@ from .const import (
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_K,
     RECOMMENDED_TOP_P,
+    TIMEOUT_MILLIS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -67,12 +68,21 @@ RECOMMENDED_OPTIONS = {
     CONF_PROMPT: llm.DEFAULT_INSTRUCTIONS_PROMPT,
 }
 
-MILLISECONDS = 1000
 
+async def validate_input(data: dict[str, Any]) -> None:
+    """Validate the user input allows us to connect.
 
-async def validate_input(client: genai.Client) -> None:
-    """Validate the user input allows us to connect."""
-    await client.aio.models.list(config={"query_base": True})
+    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
+    """
+    client = genai.Client(api_key=data[CONF_API_KEY])
+    await client.aio.models.list(
+        config={
+            "http_options": {
+                "timeout": TIMEOUT_MILLIS,
+            },
+            "query_base": True,
+        }
+    )
 
 
 class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -86,13 +96,10 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            client = genai.Client(api_key=user_input[CONF_API_KEY])
             try:
-                await validate_input(client)
-            except Timeout:
-                errors["base"] = "cannot_connect"
-            except APIError as err:
-                if isinstance(err, ClientError) and err.code == 401:
+                await validate_input(user_input)
+            except (APIError, Timeout) as err:
+                if isinstance(err, ClientError) and "API_KEY_INVALID" in str(err):
                     errors["base"] = "invalid_auth"
                 else:
                     errors["base"] = "cannot_connect"
@@ -163,7 +170,7 @@ class GoogleGenerativeAIOptionsFlow(OptionsFlow):
         self.last_rendered_recommended = config_entry.options.get(
             CONF_RECOMMENDED, False
         )
-        self._genai_client = genai.Client(api_key=config_entry.data[CONF_API_KEY])
+        self._genai_client = config_entry.runtime_data
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None

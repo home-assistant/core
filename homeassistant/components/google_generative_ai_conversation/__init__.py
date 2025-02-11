@@ -5,7 +5,7 @@ from __future__ import annotations
 import mimetypes
 from pathlib import Path
 
-from google import genai
+from google import genai  # type: ignore[attr-defined]
 from google.genai.errors import APIError, ClientError
 from PIL import Image
 from requests.exceptions import Timeout
@@ -28,14 +28,19 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_CHAT_MODEL, CONF_PROMPT, DOMAIN, RECOMMENDED_CHAT_MODEL
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_PROMPT,
+    DOMAIN,
+    RECOMMENDED_CHAT_MODEL,
+    TIMEOUT_MILLIS,
+)
 
 SERVICE_GENERATE_CONTENT = "generate_content"
 CONF_IMAGE_FILENAME = "image_filename"
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = (Platform.CONVERSATION,)
-MILLISECONDS = 1000
 
 type GoogleGenerativeAIConfigEntry = ConfigEntry[genai.Client]
 
@@ -46,20 +51,24 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def generate_content(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
         prompt_parts = [call.data[CONF_PROMPT]]
-        image_filenames = call.data[CONF_IMAGE_FILENAME]
-        for image_filename in image_filenames:
-            if not hass.config.is_allowed_path(image_filename):
-                raise HomeAssistantError(
-                    f"Cannot read `{image_filename}`, no access to path; "
-                    "`allowlist_external_dirs` may need to be adjusted in "
-                    "`configuration.yaml`"
-                )
-            if not Path(image_filename).exists():
-                raise HomeAssistantError(f"`{image_filename}` does not exist")
-            mime_type, _ = mimetypes.guess_type(image_filename)
-            if mime_type is None or not mime_type.startswith("image"):
-                raise HomeAssistantError(f"`{image_filename}` is not an image")
-            prompt_parts.append(Image.open(image_filename))
+
+        def append_images_to_prompt():
+            image_filenames = call.data[CONF_IMAGE_FILENAME]
+            for image_filename in image_filenames:
+                if not hass.config.is_allowed_path(image_filename):
+                    raise HomeAssistantError(
+                        f"Cannot read `{image_filename}`, no access to path; "
+                        "`allowlist_external_dirs` may need to be adjusted in "
+                        "`configuration.yaml`"
+                    )
+                if not Path(image_filename).exists():
+                    raise HomeAssistantError(f"`{image_filename}` does not exist")
+                mime_type, _ = mimetypes.guess_type(image_filename)
+                if mime_type is None or not mime_type.startswith("image"):
+                    raise HomeAssistantError(f"`{image_filename}` is not an image")
+                prompt_parts.append(Image.open(image_filename))
+
+        await hass.async_add_executor_job(append_images_to_prompt)
 
         config_entry: GoogleGenerativeAIConfigEntry = hass.config_entries.async_entries(
             DOMAIN
@@ -112,11 +121,11 @@ async def async_setup_entry(
         client = genai.Client(api_key=entry.data[CONF_API_KEY])
         await client.aio.models.get(
             model=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-            config={"http_options": {"timeout": 10 * MILLISECONDS}},
+            config={"http_options": {"timeout": TIMEOUT_MILLIS}},
         )
     except (APIError, Timeout) as err:
-        if isinstance(err, ClientError) and err.code == 401:
-            raise ConfigEntryAuthFailed(err) from err
+        if isinstance(err, ClientError) and "API_KEY_INVALID" in str(err):
+            raise ConfigEntryAuthFailed(err.message) from err
         if isinstance(err, Timeout):
             raise ConfigEntryNotReady(err) from err
         raise ConfigEntryError(err) from err

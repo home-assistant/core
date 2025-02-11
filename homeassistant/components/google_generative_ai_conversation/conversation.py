@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import codecs
 from collections.abc import Callable
-import re
 from typing import Any, Literal, cast
 
 from google.genai.errors import APIError
@@ -151,11 +150,6 @@ def _format_tool(
     )
 
 
-def _fix_tool_name(tool_name: str) -> str:
-    """Correct the tool name."""
-    return re.sub(r"^Has(?=[A-Z])", "Hass", tool_name)
-
-
 def _escape_decode(value: Any) -> Any:
     """Recursively call codecs.escape_decode on all values."""
     if isinstance(value, str):
@@ -228,7 +222,7 @@ class GoogleGenerativeAIConversationEntity(
     def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the agent."""
         self.entry = entry
-        self._genAi_client = entry.runtime_data
+        self._genai_client = entry.runtime_data
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
@@ -384,7 +378,9 @@ class GoogleGenerativeAIConversationEntity(
             ],
             tools=tools or None,
             system_instruction=prompt if supports_system_instruction else None,
-            automatic_function_calling=AutomaticFunctionCallingConfig(disable=True),
+            automatic_function_calling=AutomaticFunctionCallingConfig(
+                disable=True, maximum_remote_calls=None
+            ),
         )
 
         if not supports_system_instruction:
@@ -393,7 +389,7 @@ class GoogleGenerativeAIConversationEntity(
                 Content(role="model", parts=[Part.from_text(text="Ok")]),
                 *messages,
             ]
-        chat = self._genAi_client.aio.chats.create(
+        chat = self._genai_client.aio.chats.create(
             model=model_name, history=messages, config=generateContentConfig
         )
         chat_request: str | Content = user_input.text
@@ -432,9 +428,7 @@ class GoogleGenerativeAIConversationEntity(
                 tool_name = tool_call.name
                 tool_args = _escape_decode(tool_call.args)
                 tool_calls.append(
-                    llm.ToolInput(
-                        tool_name=_fix_tool_name(tool_name), tool_args=tool_args
-                    )
+                    llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
                 )
 
             chat_request = _create_google_tool_response_content(
