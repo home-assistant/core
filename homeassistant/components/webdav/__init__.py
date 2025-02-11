@@ -5,11 +5,12 @@ from __future__ import annotations
 import logging
 
 from aiowebdav2.client import Client
+from aiowebdav2.exceptions import UnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS
 from .helpers import async_create_client, async_ensure_path_exists
@@ -29,9 +30,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
         verify_ssl=entry.data.get(CONF_VERIFY_SSL, True),
     )
 
+    try:
+        result = await client.check()
+    except UnauthorizedError as err:
+        raise ConfigEntryAuthFailed("Invalid username or password") from err
+
     # Check if we can connect to the WebDAV server
     # and access the root directory
-    if not await client.check():
+    if not result:
         raise ConfigEntryNotReady("Failed to connect to WebDAV server")
 
     # Ensure the backup directory exists
