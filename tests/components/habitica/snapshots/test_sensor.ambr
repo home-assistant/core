@@ -154,7 +154,12 @@
 # name: test_sensors[sensor.test_user_display_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'blurb': 'My mind is a swirling miasma of scintillating thoughts and turgid ideas.',
+      'entity_picture': 'https://pbs.twimg.com/profile_images/378800000771780608/a32e71fe6a64eba6773c20d289eddc8e.png',
       'friendly_name': 'test-user Display name',
+      'joined': datetime.date(2013, 12, 2),
+      'last_login': datetime.date(2025, 2, 1),
+      'total_logins': 241,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.test_user_display_name',
