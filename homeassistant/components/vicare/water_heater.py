@@ -179,5 +179,25 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             schedule_json = json_loads_object(schedule)
         except Exception as error:
             raise HomeAssistantError(error) from error
-
-        self._api.setDomesticHotWaterCirculationSchedule(schedule_json)
+        try:
+            self._api.setDomesticHotWaterCirculationSchedule(schedule_json)
+        except requests.exceptions.ConnectionError as error:
+            _LOGGER.error("Unable to retrieve data from ViCare server")
+            raise HomeAssistantError(
+                "Unable to retrieve data from ViCare server: {error}"
+            ) from error
+        except PyViCareRateLimitError as limit_exception:
+            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
+            raise HomeAssistantError(
+                "Vicare API rate limit exceeded: {error}"
+            ) from limit_exception
+        except ValueError as error:
+            _LOGGER.error("Unable to decode data from ViCare server")
+            raise HomeAssistantError(
+                "Unable to decode data from ViCare server: {error}"
+            ) from error
+        except PyViCareInvalidDataError as invalid_data_exception:
+            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+            raise HomeAssistantError(
+                "Invalid data from Vicare server: {error}"
+            ) from invalid_data_exception
