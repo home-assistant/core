@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import Sequence
 import logging
+from typing import Any
 
 from pyforked_daapd import ForkedDaapdAPI
 
@@ -131,8 +132,8 @@ class ForkedDaapdUpdater:
                 self.hass, SIGNAL_UPDATE_MASTER.format(self._entry_id), True
             )
 
-    def _add_zones(self, outputs):
-        outputs_to_add = []
+    def _add_zones(self, outputs: list[dict[str, Any]]) -> None:
+        outputs_to_add: list[dict[str, Any]] = []
         for output in outputs:
             if output["id"] not in self._all_output_ids:
                 self._all_output_ids.add(output["id"])
