@@ -16,12 +16,15 @@ from dynalite_devices_lib.dynalite_devices import (
     DynaliteNotification,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import ATTR_AREA, ATTR_HOST, ATTR_PACKET, ATTR_PRESET, LOGGER, PLATFORMS
 from .convert_config import convert_config
+
+type DynaliteConfigEntry = ConfigEntry[DynaliteBridge]
 
 
 class DynaliteBridge:

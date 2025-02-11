@@ -1,9 +1,6 @@
 """The tests for the LG webOS TV platform."""
 
-from unittest.mock import Mock
-
 from aiowebostv import WebOsTvPairError
-import pytest
 
 from homeassistant.components.media_player import ATTR_INPUT_SOURCE_LIST
 from homeassistant.components.webostv.const import CONF_SOURCES, DOMAIN
@@ -15,12 +12,10 @@ from . import setup_webostv
 from .const import ENTITY_ID
 
 
-async def test_reauth_setup_entry(
-    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
-) -> None:
+async def test_reauth_setup_entry(hass: HomeAssistant, client) -> None:
     """Test reauth flow triggered by setup entry."""
-    monkeypatch.setattr(client, "is_connected", Mock(return_value=False))
-    monkeypatch.setattr(client, "connect", Mock(side_effect=WebOsTvPairError))
+    client.is_connected.return_value = False
+    client.connect.side_effect = WebOsTvPairError
     entry = await setup_webostv(hass)
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
@@ -37,11 +32,9 @@ async def test_reauth_setup_entry(
     assert flow["context"].get("entry_id") == entry.entry_id
 
 
-async def test_key_update_setup_entry(
-    hass: HomeAssistant, client, monkeypatch: pytest.MonkeyPatch
-) -> None:
+async def test_key_update_setup_entry(hass: HomeAssistant, client) -> None:
     """Test key update from setup entry."""
-    monkeypatch.setattr(client, "client_key", "new_key")
+    client.client_key = "new_key"
     entry = await setup_webostv(hass)
 
     assert entry.state is ConfigEntryState.LOADED

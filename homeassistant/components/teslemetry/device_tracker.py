@@ -2,86 +2,175 @@
 
 from __future__ import annotations
 
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from teslemetry_stream import TeslemetryStreamVehicle
+from teslemetry_stream.const import TeslaLocation
+
+from homeassistant.components.device_tracker.config_entry import (
+    TrackerEntity,
+    TrackerEntityDescription,
+)
 from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import TeslemetryConfigEntry
-from .entity import TeslemetryVehicleEntity
+from .entity import TeslemetryVehicleEntity, TeslemetryVehicleStreamEntity
 from .models import TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
 
 
+@dataclass(frozen=True, kw_only=True)
+class TeslemetryDeviceTrackerEntityDescription(TrackerEntityDescription):
+    """Describe a Teslemetry device tracker entity."""
+
+    value_listener: Callable[
+        [TeslemetryStreamVehicle, Callable[[TeslaLocation | None], None]],
+        Callable[[], None],
+    ]
+    name_listener: (
+        Callable[
+            [TeslemetryStreamVehicle, Callable[[str | None], None]], Callable[[], None]
+        ]
+        | None
+    ) = None
+    streaming_firmware: str
+    polling_prefix: str | None = None
+
+
+DESCRIPTIONS: tuple[TeslemetryDeviceTrackerEntityDescription, ...] = (
+    TeslemetryDeviceTrackerEntityDescription(
+        key="location",
+        polling_prefix="drive_state",
+        value_listener=lambda x, y: x.listen_Location(y),
+        streaming_firmware="2024.26",
+    ),
+    TeslemetryDeviceTrackerEntityDescription(
+        key="route",
+        polling_prefix="drive_state_active_route",
+        value_listener=lambda x, y: x.listen_DestinationLocation(y),
+        name_listener=lambda x, y: x.listen_DestinationName(y),
+        streaming_firmware="2024.26",
+    ),
+    TeslemetryDeviceTrackerEntityDescription(
+        key="origin",
+        value_listener=lambda x, y: x.listen_OriginLocation(y),
+        streaming_firmware="2024.26",
+        entity_registry_enabled_default=False,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry device tracker platform from a config entry."""
 
-    async_add_entities(
-        klass(vehicle)
-        for klass in (
-            TeslemetryDeviceTrackerLocationEntity,
-            TeslemetryDeviceTrackerRouteEntity,
-        )
-        for vehicle in entry.runtime_data.vehicles
-    )
+    entities: list[
+        TeslemetryPollingDeviceTrackerEntity | TeslemetryStreamingDeviceTrackerEntity
+    ] = []
+    for vehicle in entry.runtime_data.vehicles:
+        for description in DESCRIPTIONS:
+            if vehicle.api.pre2021 or vehicle.firmware < description.streaming_firmware:
+                if description.polling_prefix:
+                    entities.append(
+                        TeslemetryPollingDeviceTrackerEntity(vehicle, description)
+                    )
+            else:
+                entities.append(
+                    TeslemetryStreamingDeviceTrackerEntity(vehicle, description)
+                )
+
+    async_add_entities(entities)
 
 
-class TeslemetryDeviceTrackerEntity(TeslemetryVehicleEntity, TrackerEntity):
-    """Base class for Teslemetry tracker entities."""
+class TeslemetryPollingDeviceTrackerEntity(TeslemetryVehicleEntity, TrackerEntity):
+    """Base class for Teslemetry Tracker Entities."""
 
-    lat_key: str
-    lon_key: str
+    entity_description: TeslemetryDeviceTrackerEntityDescription
 
     def __init__(
         self,
         vehicle: TeslemetryVehicleData,
+        description: TeslemetryDeviceTrackerEntityDescription,
     ) -> None:
         """Initialize the device tracker."""
-        super().__init__(vehicle, self.key)
+        self.entity_description = description
+        super().__init__(vehicle, description.key)
 
     def _async_update_attrs(self) -> None:
-        """Update the attributes of the device tracker."""
-
+        """Update the attributes of the entity."""
+        self._attr_latitude = self.get(
+            f"{self.entity_description.polling_prefix}_latitude"
+        )
+        self._attr_longitude = self.get(
+            f"{self.entity_description.polling_prefix}_longitude"
+        )
+        self._attr_location_name = self.get(
+            f"{self.entity_description.polling_prefix}_destination"
+        )
+        if self._attr_location_name == "Home":
+            self._attr_location_name = STATE_HOME
         self._attr_available = (
-            self.get(self.lat_key, False) is not None
-            and self.get(self.lon_key, False) is not None
+            self._attr_latitude is not None and self._attr_longitude is not None
         )
 
-    @property
-    def latitude(self) -> float | None:
-        """Return latitude value of the device."""
-        return self.get(self.lat_key)
 
-    @property
-    def longitude(self) -> float | None:
-        """Return longitude value of the device."""
-        return self.get(self.lon_key)
+class TeslemetryStreamingDeviceTrackerEntity(
+    TeslemetryVehicleStreamEntity, TrackerEntity, RestoreEntity
+):
+    """Base class for Teslemetry Tracker Entities."""
 
+    entity_description: TeslemetryDeviceTrackerEntityDescription
 
-class TeslemetryDeviceTrackerLocationEntity(TeslemetryDeviceTrackerEntity):
-    """Vehicle location device tracker class."""
+    def __init__(
+        self,
+        vehicle: TeslemetryVehicleData,
+        description: TeslemetryDeviceTrackerEntityDescription,
+    ) -> None:
+        """Initialize the device tracker."""
+        self.entity_description = description
+        super().__init__(vehicle, description.key)
 
-    key = "location"
-    lat_key = "drive_state_latitude"
-    lon_key = "drive_state_longitude"
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+        if (state := await self.async_get_last_state()) is not None:
+            self._attr_state = state.state
+            self._attr_latitude = state.attributes.get("latitude")
+            self._attr_longitude = state.attributes.get("longitude")
+            self._attr_location_name = state.attributes.get("location_name")
+        self.async_on_remove(
+            self.entity_description.value_listener(
+                self.vehicle.stream_vehicle, self._location_callback
+            )
+        )
+        if self.entity_description.name_listener:
+            self.async_on_remove(
+                self.entity_description.name_listener(
+                    self.vehicle.stream_vehicle, self._name_callback
+                )
+            )
 
+    def _location_callback(self, location: TeslaLocation | None) -> None:
+        """Update the value of the entity."""
+        if location is None:
+            self._attr_available = False
+        else:
+            self._attr_available = True
+            self._attr_latitude = location.latitude
+            self._attr_longitude = location.longitude
+        self.async_write_ha_state()
 
-class TeslemetryDeviceTrackerRouteEntity(TeslemetryDeviceTrackerEntity):
-    """Vehicle navigation device tracker class."""
-
-    key = "route"
-    lat_key = "drive_state_active_route_latitude"
-    lon_key = "drive_state_active_route_longitude"
-
-    @property
-    def location_name(self) -> str | None:
-        """Return a location name for the current location of the device."""
-        location = self.get("drive_state_active_route_destination")
-        if location == "Home":
-            return STATE_HOME
-        return location
+    def _name_callback(self, name: str | None) -> None:
+        """Update the value of the entity."""
+        self._attr_location_name = name
+        if self._attr_location_name == "Home":
+            self._attr_location_name = STATE_HOME
+        self.async_write_ha_state()

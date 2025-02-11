@@ -12,12 +12,14 @@ from homeassistant.components.openai_conversation.const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_REASONING_EFFORT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TOP_P,
 )
 from homeassistant.const import CONF_LLM_HASS_API
@@ -88,6 +90,27 @@ async def test_options(
     assert options["data"][CONF_CHAT_MODEL] == RECOMMENDED_CHAT_MODEL
 
 
+async def test_options_unsupported_model(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test the options form giving error about models not supported."""
+    options_flow = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
+    result = await hass.config_entries.options.async_configure(
+        options_flow["flow_id"],
+        {
+            CONF_RECOMMENDED: False,
+            CONF_PROMPT: "Speak like a pirate",
+            CONF_CHAT_MODEL: "o1-mini",
+            CONF_LLM_HASS_API: "assist",
+        },
+    )
+    await hass.async_block_till_done()
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"chat_model": "model_not_supported"}
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
@@ -148,6 +171,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_REASONING_EFFORT: RECOMMENDED_REASONING_EFFORT,
             },
         ),
         (
@@ -158,6 +182,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_REASONING_EFFORT: RECOMMENDED_REASONING_EFFORT,
             },
             {
                 CONF_RECOMMENDED: True,

@@ -28,13 +28,6 @@ def mock_hub_discover():
         yield mock_discover
 
 
-@pytest.fixture
-def mock_hub_run():
-    """Mock the hub run method."""
-    with patch("aiopulse.Hub.run") as mock_run:
-        yield mock_run
-
-
 async def async_generator(items):
     """Async yields items provided in a list."""
     for item in items:
@@ -56,9 +49,8 @@ async def test_show_form_no_hubs(hass: HomeAssistant, mock_hub_discover) -> None
     assert len(mock_hub_discover.mock_calls) == 1
 
 
-async def test_show_form_one_hub(
-    hass: HomeAssistant, mock_hub_discover, mock_hub_run
-) -> None:
+@pytest.mark.usefixtures("mock_hub_run")
+async def test_show_form_one_hub(hass: HomeAssistant, mock_hub_discover) -> None:
     """Test that a config is created when one hub discovered."""
 
     dummy_hub_1 = aiopulse.Hub(DUMMY_HOST1)
@@ -102,9 +94,8 @@ async def test_show_form_two_hubs(hass: HomeAssistant, mock_hub_discover) -> Non
     assert len(mock_hub_discover.mock_calls) == 1
 
 
-async def test_create_second_entry(
-    hass: HomeAssistant, mock_hub_run, mock_hub_discover
-) -> None:
+@pytest.mark.usefixtures("mock_hub_run")
+async def test_create_second_entry(hass: HomeAssistant, mock_hub_discover) -> None:
     """Test that a config is created when a second hub is discovered."""
 
     dummy_hub_1 = aiopulse.Hub(DUMMY_HOST1)

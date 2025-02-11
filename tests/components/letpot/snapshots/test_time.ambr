@@ -1,0 +1,95 @@
+# serializer version: 1
+# name: test_all_entities[time.garden_light_off-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.garden_light_off',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light off',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_schedule_end',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_light_schedule_end',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[time.garden_light_off-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garden Light off',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.garden_light_off',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '18:00:00',
+  })
+# ---
+# name: test_all_entities[time.garden_light_on-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.garden_light_on',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Light on',
+    'platform': 'letpot',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'light_schedule_start',
+    'unique_id': 'a1b2c3d4e5f6a1b2c3d4e5f6_LPH63ABCD_light_schedule_start',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[time.garden_light_on-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Garden Light on',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.garden_light_on',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '08:00:00',
+  })
+# ---
