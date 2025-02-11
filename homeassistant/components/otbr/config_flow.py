@@ -16,6 +16,7 @@ import yarl
 from homeassistant.components.hassio import AddonError, AddonManager
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.components.thread import async_get_preferred_dataset
+from homeassistant.components.usb import get_serial_by_id
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
@@ -80,6 +81,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Open Thread Border Router."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def _set_dataset(self, api: python_otbr_api.OTBR, otbr_url: str) -> None:
         """Connect to the OTBR and create or apply a dataset if it doesn't have one."""
@@ -187,33 +189,39 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle hassio discovery."""
         config = discovery_info.config
-        url = f"http://{config['host']}:{config['port']}"
-        config_entry_data = {"url": url}
 
-        if current_entries := self._async_current_entries():
-            for current_entry in current_entries:
-                if current_entry.source != SOURCE_HASSIO:
-                    continue
-                current_url = yarl.URL(current_entry.data["url"])
-                if not (unique_id := current_entry.unique_id):
-                    # The first version did not set a unique_id
-                    # so if the entry does not have a unique_id
-                    # we have to assume it's the first version
-                    # This check can be removed in HA Core 2025.9
-                    unique_id = discovery_info.uuid
-                if (
-                    unique_id != discovery_info.uuid
-                    or current_url.host != config["host"]
-                    or current_url.port == config["port"]
-                ):
-                    continue
-                # Update URL with the new port
-                self.hass.config_entries.async_update_entry(
-                    current_entry,
-                    data=config_entry_data,
-                    unique_id=unique_id,  # Remove in HA Core 2025.9
-                )
-                return self.async_abort(reason="already_configured")
+        if (device := config.get("device", None)) is not None:
+            device = await self.hass.async_add_executor_job(get_serial_by_id, device)
+
+        url = f"http://{config['host']}:{config['port']}"
+        config_entry_data = {
+            "url": url,
+            "device": device,
+        }
+
+        for current_entry in self._async_current_entries():
+            if current_entry.source != SOURCE_HASSIO:
+                continue
+            current_url = yarl.URL(current_entry.data["url"])
+            if not (unique_id := current_entry.unique_id):
+                # The first version did not set a unique_id
+                # so if the entry does not have a unique_id
+                # we have to assume it's the first version
+                # This check can be removed in HA Core 2025.9
+                unique_id = discovery_info.uuid
+            if (
+                unique_id != discovery_info.uuid
+                or current_url.host != config["host"]
+                or config_entry_data == current_entry.data
+            ):
+                continue
+            # Update URL with the new port
+            self.hass.config_entries.async_update_entry(
+                current_entry,
+                data=config_entry_data,
+                unique_id=unique_id,  # Remove in HA Core 2025.9
+            )
+            return self.async_abort(reason="already_configured")
 
         try:
             await self._connect_and_configure_router(url)

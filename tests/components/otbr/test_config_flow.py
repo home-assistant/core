@@ -372,6 +372,7 @@ async def test_hassio_discovery_flow(
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        "device": None,
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -411,6 +412,7 @@ async def test_hassio_discovery_flow_yellow(
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        "device": None,
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -464,6 +466,7 @@ async def test_hassio_discovery_flow_sky_connect(
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        "device": None,
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -525,9 +528,11 @@ async def test_hassio_discovery_flow_2x_addons(
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        "device": None,
     }
     expected_data_2 = {
         "url": f"http://{HASSIO_DATA_2.config['host']}:{HASSIO_DATA_2.config['port']}",
+        "device": None,
     }
 
     assert results[0]["type"] is FlowResultType.CREATE_ENTRY
@@ -609,6 +614,7 @@ async def test_hassio_discovery_flow_2x_addons_same_ext_address(
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        "device": None,
     }
 
     assert results[0]["type"] is FlowResultType.CREATE_ENTRY
@@ -673,6 +679,7 @@ async def test_hassio_discovery_flow_router_not_setup(
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        "device": None,
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -726,6 +733,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred(
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        "device": None,
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -790,6 +798,7 @@ async def test_hassio_discovery_flow_router_not_setup_has_preferred_2(
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        "device": None,
     }
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -850,6 +859,7 @@ async def test_hassio_discovery_flow_new_port_missing_unique_id(
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        "device": None,
     }
     config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
     assert config_entry.data == expected_data
@@ -884,6 +894,7 @@ async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
 
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+        "device": None,
     }
     config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
     assert config_entry.data == expected_data
@@ -921,6 +932,7 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
     # Make sure the data of the existing entry was not updated
     expected_data = {
         "url": f"http://openthread_border_router:{HASSIO_DATA.config['port'] + 1}",
+        "device": None,
     }
     config_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
     assert config_entry.data == expected_data
