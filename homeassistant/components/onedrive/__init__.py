@@ -10,7 +10,7 @@ from typing import cast
 from onedrive_personal_sdk import OneDriveClient
 from onedrive_personal_sdk.exceptions import (
     AuthenticationError,
-    HttpRequestException,
+    NotFoundError,
     OneDriveException,
 )
 from onedrive_personal_sdk.models.items import ItemUpdate
@@ -25,7 +25,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
-from .const import CONF_FOLDER_NAME, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_FOLDER_ID, CONF_FOLDER_NAME, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .coordinator import (
     OneDriveConfigEntry,
     OneDriveRuntimeData,
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="authentication_failed"
         ) from err
-    except (HttpRequestException, OneDriveException, TimeoutError) as err:
+    except (OneDriveException, TimeoutError) as err:
         _LOGGER.debug("Failed to get approot", exc_info=True)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
@@ -65,16 +65,37 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         ) from err
 
     try:
-        backup_folder = await client.create_folder(
-            parent_id=approot.id, name=entry.data[CONF_FOLDER_NAME]
+        backup_folder = await client.get_drive_item(
+            path_or_id=entry.data[CONF_FOLDER_ID]
         )
-    except (HttpRequestException, OneDriveException, TimeoutError) as err:
-        _LOGGER.debug("Failed to create backup folder", exc_info=True)
+    except NotFoundError:
+        try:
+            _LOGGER.debug("Creating backup folder %s", entry.data[CONF_FOLDER_NAME])
+            backup_folder = await client.create_folder(
+                parent_id=approot.id, name=entry.data[CONF_FOLDER_NAME]
+            )
+        except (OneDriveException, TimeoutError) as err:
+            _LOGGER.debug("Failed to create backup folder", exc_info=True)
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="failed_to_get_folder",
+                translation_placeholders={"folder": entry.data[CONF_FOLDER_NAME]},
+            ) from err
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_FOLDER_ID: backup_folder.id}
+        )
+    except (OneDriveException, TimeoutError) as err:
+        _LOGGER.debug("Failed to get backup folder", exc_info=True)
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="failed_to_get_folder",
             translation_placeholders={"folder": entry.data[CONF_FOLDER_NAME]},
         ) from err
+
+    # update in case folder was renamed manually
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, CONF_FOLDER_NAME: backup_folder.name}
+    )
 
     coordinator = OneDriveUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
@@ -147,22 +168,41 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
             _LOGGER.debug("Migrated backup file %s", file.name)
 
 
-async def async_migrate_entry(
-    hass: HomeAssistant, config_entry: OneDriveConfigEntry
-) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
     """Migrate old entry."""
-    if config_entry.version > 1:
+    if entry.version > 1:
         # This means the user has downgraded from a future version
         return False
 
-    if (version := config_entry.version) == 1 and (
-        minor_version := config_entry.minor_version
-    ) == 1:
+    if (version := entry.version) == 1 and (minor_version := entry.minor_version) == 1:
         _LOGGER.debug(
             "Migrating OneDrive config entry from version %s.%s", version, minor_version
         )
+        implementation = await async_get_config_entry_implementation(hass, entry)
+        session = OAuth2Session(hass, entry, implementation)
+
+        async def get_access_token() -> str:
+            await session.async_ensure_token_valid()
+            return cast(str, session.token[CONF_ACCESS_TOKEN])
+
+        client = OneDriveClient(get_access_token, async_get_clientsession(hass))
+
         instance_id = await async_get_instance_id(hass)
-        data = {**config_entry.data, CONF_FOLDER_NAME: f"backups_{instance_id[:8]}"}
-        hass.config_entries.async_update_entry(config_entry, data=data, minor_version=2)
+        try:
+            approot = await client.get_approot()
+            folder = await client.get_drive_item(
+                path_or_id=f"{approot.id}:/backups_{instance_id[:8]}:"
+            )
+        except OneDriveException:
+            _LOGGER.exception("Failed to migrate")
+            return False
+        hass.config_entries.async_update_entry(
+            entry,
+            data={
+                **entry.data,
+                CONF_FOLDER_ID: folder.id,
+                CONF_FOLDER_NAME: folder.name,
+            },
+        )
         _LOGGER.debug("Migration to version 1.2 successful")
     return True

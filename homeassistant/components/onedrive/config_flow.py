@@ -6,7 +6,7 @@ from typing import Any, cast
 
 from onedrive_personal_sdk.clients.client import OneDriveClient
 from onedrive_personal_sdk.exceptions import OneDriveException
-from onedrive_personal_sdk.models.items import ItemUpdate
+from onedrive_personal_sdk.models.items import Folder, ItemUpdate
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -19,8 +19,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
-from .const import CONF_FOLDER_NAME, DOMAIN, OAUTH_SCOPES
-from .coordinator import OneDriveConfigEntry
+from .const import CONF_FOLDER_ID, CONF_FOLDER_NAME, DOMAIN, OAUTH_SCOPES
 
 
 class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -31,6 +30,9 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     step_data: dict[str, Any] = {}
     title: str
+    client: OneDriveClient
+    approot_id: str
+    folder: Folder
 
     @property
     def logger(self) -> logging.Logger:
@@ -51,12 +53,12 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         async def get_access_token() -> str:
             return cast(str, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
 
-        graph_client = OneDriveClient(
+        self.client = OneDriveClient(
             get_access_token, async_get_clientsession(self.hass)
         )
 
         try:
-            approot = await graph_client.get_approot()
+            approot = await self.client.get_approot()
         except OneDriveException:
             self.logger.exception("Failed to connect to OneDrive")
             return self.async_abort(reason="connection_error")
@@ -76,54 +78,79 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 data=data,
             )
 
-        self._abort_if_unique_id_configured()
+        if self.source != SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_configured()
 
+        self.step_data = data
+        self.approot_id = approot.id
         self.title = (
             f"{approot.created_by.user.display_name}'s OneDrive"
             if approot.created_by.user and approot.created_by.user.display_name
             else "OneDrive"
         )
-        self.step_data = data
+
+        if self.source == SOURCE_RECONFIGURE:
+            return await self.async_step_reconfigure_folder()
+
         return await self.async_step_folder_name()
 
     async def async_step_folder_name(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Step to ask for the folder name."""
-        errors: dict[str, str] = {}
         if user_input is not None:
-            if self.source == SOURCE_RECONFIGURE:
-                reconfigure_entry: OneDriveConfigEntry = self._get_reconfigure_entry()
-                if (old_name := reconfigure_entry.data[CONF_FOLDER_NAME]) != (
-                    new_name := user_input[CONF_FOLDER_NAME]
-                ):
-                    self.logger.debug(
-                        "Renaming folder from %s to %s", old_name, new_name
-                    )
-                    client = reconfigure_entry.runtime_data.client
-                    try:
-                        approot = await client.get_approot()
-                        await client.update_drive_item(
-                            f"{approot.id}:/{old_name}", ItemUpdate(name=new_name)
-                        )
-                    except OneDriveException:
-                        errors["base"] = "update_error"
-                if not errors:
-                    return self.async_update_reload_and_abort(
-                        entry=reconfigure_entry,
-                        data={**reconfigure_entry.data, **user_input},
-                    )
-            else:
-                return self.async_create_entry(
-                    title=self.title, data={**self.step_data, **user_input}
-                )
+            return self.async_create_entry(
+                title=self.title,
+                data={
+                    **self.step_data,
+                    CONF_FOLDER_ID: "id",
+                    CONF_FOLDER_NAME: user_input[CONF_FOLDER_NAME],
+                },
+            )
 
         instance_id = await async_get_instance_id(self.hass)
         default_folder_name = f"backups_{instance_id[:8]}"
+
         return self.async_show_form(
             step_id="folder_name",
             data_schema=vol.Schema(
                 {vol.Required(CONF_FOLDER_NAME, default=default_folder_name): str},
+            ),
+        )
+
+    async def async_step_reconfigure_folder(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the folder name."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+        if user_input is not None:
+            if (
+                new_folder_name := user_input[CONF_FOLDER_NAME]
+            ) != reconfigure_entry.data[CONF_FOLDER_NAME]:
+                try:
+                    await self.client.update_drive_item(
+                        reconfigure_entry.data[CONF_FOLDER_ID],
+                        ItemUpdate(name=new_folder_name),
+                    )
+                except OneDriveException:
+                    self.logger.debug("Failed to update folder", exc_info=True)
+                    errors["base"] = "folder_rename_error"
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data={**reconfigure_entry.data, CONF_FOLDER_NAME: new_folder_name},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure_folder",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_FOLDER_NAME,
+                        default=reconfigure_entry.data[CONF_FOLDER_NAME],
+                    ): str
+                },
             ),
             errors=errors,
         )
@@ -146,4 +173,4 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Reconfigure the entry."""
-        return await self.async_step_folder_name()
+        return await self.async_step_user()
