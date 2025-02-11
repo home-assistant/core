@@ -1,29 +1,25 @@
 """The forked_daapd component."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN, HASS_DATA_UPDATER_KEY
+from .coordinator import ForkedDaapdConfigEntry
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ForkedDaapdConfigEntry) -> bool:
     """Set up forked-daapd from a config entry by forwarding to platform."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ForkedDaapdConfigEntry
+) -> bool:
     """Remove forked-daapd component."""
     status = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if status and hass.data.get(DOMAIN) and hass.data[DOMAIN].get(entry.entry_id):
-        if websocket_handler := hass.data[DOMAIN][entry.entry_id][
-            HASS_DATA_UPDATER_KEY
-        ].websocket_handler:
+    if status and hasattr(entry, "runtime_data"):
+        if websocket_handler := entry.runtime_data.websocket_handler:
             websocket_handler.cancel()
-        del hass.data[DOMAIN][entry.entry_id]
-        if not hass.data[DOMAIN]:
-            del hass.data[DOMAIN]
     return status

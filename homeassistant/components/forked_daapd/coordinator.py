@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -16,6 +17,8 @@ from .const import (
     SIGNAL_UPDATE_PLAYER,
     SIGNAL_UPDATE_QUEUE,
 )
+
+type ForkedDaapdConfigEntry = ConfigEntry[ForkedDaapdUpdater]
 
 _LOGGER = logging.getLogger(__name__)
 
