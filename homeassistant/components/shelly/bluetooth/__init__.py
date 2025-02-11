@@ -25,7 +25,7 @@ async def async_connect_scanner(
 ) -> CALLBACK_TYPE:
     """Connect scanner."""
     device = coordinator.device
-    entry = coordinator.entry
+    entry = coordinator.config_entry
     source = format_mac(coordinator.mac).upper()
     scanner = create_scanner(source, entry.title)
     unload_callbacks = [

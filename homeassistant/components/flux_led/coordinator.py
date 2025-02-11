@@ -24,17 +24,19 @@ REQUEST_REFRESH_DELAY: Final = 2.0
 class FluxLedUpdateCoordinator(DataUpdateCoordinator[None]):
     """DataUpdateCoordinator to gather data for a specific flux_led device."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, device: AIOWifiLedBulb, entry: ConfigEntry
     ) -> None:
         """Initialize DataUpdateCoordinator to gather data for specific device."""
         self.device = device
         self.title = entry.title
-        self.entry = entry
         self.force_next_update = False
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=self.device.ipaddr,
             update_interval=timedelta(seconds=10),
             # We don't want an immediate refresh since the device

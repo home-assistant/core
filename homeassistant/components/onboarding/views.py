@@ -357,7 +357,7 @@ def with_backup_manager[_ViewT: BackupOnboardingView, **_P](
             manager = async_get_backup_manager(request.app[KEY_HASS])
         except HomeAssistantError:
             return self.json(
-                {"error": "backup_disabled"},
+                {"code": "backup_disabled"},
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
@@ -378,7 +378,7 @@ class BackupInfoView(BackupOnboardingView):
         backups, _ = await manager.async_get_backups()
         return self.json(
             {
-                "backups": [backup.as_frontend_json() for backup in backups.values()],
+                "backups": list(backups.values()),
                 "state": manager.state,
                 "last_non_idle_event": manager.last_non_idle_event,
             }
@@ -420,7 +420,7 @@ class RestoreBackupView(BackupOnboardingView):
             )
         except IncorrectPasswordError:
             return self.json(
-                {"message": "incorrect_password"}, status_code=HTTPStatus.BAD_REQUEST
+                {"code": "incorrect_password"}, status_code=HTTPStatus.BAD_REQUEST
             )
         return web.Response(status=HTTPStatus.OK)
 

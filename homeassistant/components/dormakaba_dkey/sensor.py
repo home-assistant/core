@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DormakabaDkeyConfigEntry, DormakabaDkeyCoordinator
 from .entity import DormakabaDkeyEntity
@@ -28,7 +28,7 @@ BINARY_SENSOR_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DormakabaDkeyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the lock platform for Dormakaba dKey."""
     coordinator = entry.runtime_data
