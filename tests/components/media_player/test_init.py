@@ -406,6 +406,9 @@ async def test_media_browse_service(hass: HomeAssistant) -> None:
         assert browse_res.children[0].media_content_id == "album1 content id"
         assert browse_res.children[0].media_content_type == "album"
         assert browse_res.children[1].title == "Album 2"
+        assert browse_res.children[1].media_class == "album"
+        assert browse_res.children[1].media_content_id == "album2 content id"
+        assert browse_res.children[1].media_content_type == "album"
 
 
 async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
