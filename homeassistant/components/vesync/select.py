@@ -32,10 +32,9 @@ VS_TO_HA_NIGHT_LIGHT_LEVEL_MAP = {
     50: NIGHT_LIGHT_LEVEL_DIM,
     0: NIGHT_LIGHT_LEVEL_OFF,
 }
+
 HA_TO_VS_NIGHT_LIGHT_LEVEL_MAP = {
-    NIGHT_LIGHT_LEVEL_BRIGHT: 100,
-    NIGHT_LIGHT_LEVEL_DIM: 50,
-    NIGHT_LIGHT_LEVEL_OFF: 0,
+    v: k for k, v in VS_TO_HA_NIGHT_LIGHT_LEVEL_MAP.items()
 }
 
 
@@ -52,7 +51,7 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
     VeSyncSelectEntityDescription(
         key="night_light_level",
         translation_key="night_light_level",
-        options=["bright", "dim", "off"],
+        options=list(VS_TO_HA_NIGHT_LIGHT_LEVEL_MAP.values()),
         icon="mdi:brightness-6",
         exists_fn=lambda device: rgetattr(device, "night_light"),
         # The select_option service framework ensures that only options specified are
@@ -62,7 +61,7 @@ SELECT_DESCRIPTIONS: list[VeSyncSelectEntityDescription] = [
         ),
         # Reporting "off" as the choice for unhandled level.
         current_option_fn=lambda device: VS_TO_HA_NIGHT_LIGHT_LEVEL_MAP.get(
-            device.details.get("night_light_brightness"), "off"
+            device.details.get("night_light_brightness"), NIGHT_LIGHT_LEVEL_OFF
         ),
     ),
 ]
