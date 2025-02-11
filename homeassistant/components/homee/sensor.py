@@ -122,7 +122,7 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     AttributeType.LEVEL: HomeeSensorEntityDescription(
         key="level",
         device_class=SensorDeviceClass.VOLUME_STORAGE,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     AttributeType.LINK_QUALITY: HomeeSensorEntityDescription(
         key="link_quality",
@@ -149,15 +149,20 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         key="position",
         state_class=SensorStateClass.MEASUREMENT,
     ),
+    AttributeType.RAINFALL_INTENSITY: HomeeSensorEntityDescription(
+        key="precipitation_intensity",
+        device_class=SensorDeviceClass.PRECIPITATION_INTENSITY,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     AttributeType.RAIN_FALL_LAST_HOUR: HomeeSensorEntityDescription(
         key="rainfall_hour",
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL,
     ),
     AttributeType.RAIN_FALL_TODAY: HomeeSensorEntityDescription(
         key="rainfall_day",
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     AttributeType.RELATIVE_HUMIDITY: HomeeSensorEntityDescription(
         key="humidity",
