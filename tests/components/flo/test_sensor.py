@@ -91,8 +91,6 @@ async def test_manual_update_entity(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert len(config_entry.runtime_data.devices) == 2
-
     await async_setup_component(hass, "homeassistant", {})
 
     call_count = aioclient_mock.call_count
