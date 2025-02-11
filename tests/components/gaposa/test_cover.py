@@ -114,4 +114,35 @@ async def test_stop_cover(hass: HomeAssistant, cover, mock_motor) -> None:
         assert cover.lastCommandTime == mock_dt.utcnow()
 
 
-# Additional tests can be added for other methods and properties as needed.
+# Add these new test functions
+
+
+async def test_cover_unique_id(hass: HomeAssistant, cover) -> None:
+    """Test cover unique ID generation."""
+    assert cover.unique_id == COVER_ID
+
+
+async def test_cover_device_info(hass: HomeAssistant, cover, mock_motor) -> None:
+    """Test cover device info."""
+    device_info = cover.device_info
+    assert device_info is not None
+    assert device_info["identifiers"] == {("gaposa", COVER_ID)}
+    assert device_info["name"] == MOTOR_NAME
+    assert device_info["manufacturer"] == "Gaposa"
+
+
+@pytest.mark.parametrize(
+    ("motor_state", "expected_state"),
+    [
+        ("UP", False),
+        ("DOWN", True),
+        ("STOP", None),
+        ("UNKNOWN", None),
+    ],
+)
+async def test_cover_states(
+    hass: HomeAssistant, cover, motor_state, expected_state
+) -> None:
+    """Test different cover states."""
+    cover.motor.state = motor_state
+    assert cover.is_closed is expected_state

@@ -41,14 +41,13 @@ def mock_gaposa(device):
 def coordinator(hass: HomeAssistant, mock_gaposa):
     """Return an initialized Gaposa DataUpdateCoordinator."""
     logger = logging.getLogger("test")
-    coordinator = DataUpdateCoordinatorGaposa(
+    return DataUpdateCoordinatorGaposa(
         hass,
         logger,
         mock_gaposa,
         name="Test Coordinator",
         update_interval=timedelta(seconds=UPDATE_INTERVAL),
     )
-    return coordinator
 
 
 async def test_update_gateway_success(coordinator, mock_gaposa) -> None:
@@ -98,3 +97,28 @@ async def test_on_document_updated(coordinator, mock_gaposa, motors) -> None:
     assert data is not None
     assert data["serial.motors.7"] == motors[0]
     assert data["serial.motors.8"] == motors[1]
+
+
+async def test_coordinator_update_with_network_error(coordinator, mock_gaposa) -> None:
+    """Test coordinator update with network error."""
+    mock_gaposa.update.side_effect = ConnectionError
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+
+
+async def test_coordinator_refresh_interval(coordinator, mock_gaposa) -> None:
+    """Test coordinator refresh interval changes."""
+    # Test normal interval
+    assert coordinator.update_interval == timedelta(seconds=UPDATE_INTERVAL)
+
+    # Test fast interval after error
+    mock_gaposa.update.side_effect = Exception("Test error")
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
+    assert coordinator.update_interval == timedelta(seconds=UPDATE_INTERVAL_FAST)
+
+    # Test return to normal interval after successful update
+    mock_gaposa.update.side_effect = None
+    mock_gaposa.update.return_value = True
+    await coordinator._async_update_data()
+    assert coordinator.update_interval == timedelta(seconds=UPDATE_INTERVAL)
