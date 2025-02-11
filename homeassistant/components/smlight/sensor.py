@@ -17,13 +17,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfInformation, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utcnow
 
-from . import SmConfigEntry
 from .const import UPTIME_DEVIATION
-from .coordinator import SmDataUpdateCoordinator
+from .coordinator import SmConfigEntry, SmDataUpdateCoordinator
 from .entity import SmEntity
 
 
@@ -124,7 +123,7 @@ UPTIME: list[SmSensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SMLIGHT sensor based on a config entry."""
     coordinator = entry.runtime_data.data

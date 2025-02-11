@@ -5,8 +5,8 @@ from __future__ import annotations
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
-from . import ApSystemsData
 from .const import DOMAIN
+from .coordinator import ApSystemsData
 
 
 class ApSystemsEntity(Entity):

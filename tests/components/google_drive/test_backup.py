@@ -281,7 +281,7 @@ async def test_agents_upload(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test agent upload backup."""
-    mock_api.upload_file = AsyncMock(return_value=None)
+    mock_api.resumable_upload_file = AsyncMock(return_value=None)
 
     client = await hass_client()
 
@@ -306,7 +306,7 @@ async def test_agents_upload(
     assert f"Uploading backup: {TEST_AGENT_BACKUP.backup_id}" in caplog.text
     assert f"Uploaded backup: {TEST_AGENT_BACKUP.backup_id}" in caplog.text
 
-    mock_api.upload_file.assert_called_once()
+    mock_api.resumable_upload_file.assert_called_once()
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
 
 
@@ -322,7 +322,7 @@ async def test_agents_upload_create_folder_if_missing(
     mock_api.create_file = AsyncMock(
         return_value={"id": "new folder id", "name": "Home Assistant"}
     )
-    mock_api.upload_file = AsyncMock(return_value=None)
+    mock_api.resumable_upload_file = AsyncMock(return_value=None)
 
     client = await hass_client()
 
@@ -348,7 +348,7 @@ async def test_agents_upload_create_folder_if_missing(
     assert f"Uploaded backup: {TEST_AGENT_BACKUP.backup_id}" in caplog.text
 
     mock_api.create_file.assert_called_once()
-    mock_api.upload_file.assert_called_once()
+    mock_api.resumable_upload_file.assert_called_once()
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
 
 
@@ -359,7 +359,9 @@ async def test_agents_upload_fail(
     mock_api: MagicMock,
 ) -> None:
     """Test agent upload backup fails."""
-    mock_api.upload_file = AsyncMock(side_effect=GoogleDriveApiError("some error"))
+    mock_api.resumable_upload_file = AsyncMock(
+        side_effect=GoogleDriveApiError("some error")
+    )
 
     client = await hass_client()
 
