@@ -65,7 +65,7 @@
         },
         "incl_vat": {
           "name": "VAT included",
-          "description": "Whether the prices should be retrieved including value added tax."
+          "description": "Whether the prices should include VAT."
         },
         "start": {
           "name": "Start",
