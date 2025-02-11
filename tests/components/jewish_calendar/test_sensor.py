@@ -2,6 +2,7 @@
 
 from datetime import datetime as dt, timedelta
 
+from freezegun import freeze_time
 from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
@@ -19,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
+from . import make_jerusalem_test_params, make_nyc_test_params
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -244,7 +245,7 @@ async def test_jewish_calendar_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    with alter_time(test_time):
+    with freeze_time(test_time):
         entry = MockConfigEntry(
             title=DEFAULT_NAME,
             domain=DOMAIN,
@@ -586,7 +587,7 @@ async def test_shabbat_times_sensor(
     hass.config.latitude = latitude
     hass.config.longitude = longitude
 
-    with alter_time(test_time):
+    with freeze_time(test_time):
         entry = MockConfigEntry(
             title=DEFAULT_NAME,
             domain=DOMAIN,
@@ -648,7 +649,7 @@ async def test_omer_sensor(hass: HomeAssistant, test_time, result) -> None:
     """Test Omer Count sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
-    with alter_time(test_time):
+    with freeze_time(test_time):
         entry = MockConfigEntry(title=DEFAULT_NAME, domain=DOMAIN)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
@@ -683,7 +684,7 @@ async def test_dafyomi_sensor(hass: HomeAssistant, test_time, result) -> None:
     """Test Daf Yomi sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
-    with alter_time(test_time):
+    with freeze_time(test_time):
         entry = MockConfigEntry(title=DEFAULT_NAME, domain=DOMAIN)
         entry.add_to_hass(hass)
         await hass.config_entries.async_setup(entry.entry_id)
