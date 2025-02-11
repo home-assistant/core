@@ -1,36 +1,71 @@
 """Tests for the Smart Meter B-Route sensor."""
 
-from unittest.mock import Mock
-
 from freezegun.api import FrozenDateTimeFactory
 from momonga import MomongaError
 import pytest
 
-from homeassistant.components.smart_meter_b_route.const import DEFAULT_SCAN_INTERVAL
-from homeassistant.components.smart_meter_b_route.sensor import (
-    SENSOR_DESCRIPTIONS,
-    async_setup_entry,
+from homeassistant.components.smart_meter_b_route.const import (
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
 )
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_DEVICE, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from . import configure_integration
+from . import CONF_ID, configure_integration, user_input
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_async_setup_entry(hass: HomeAssistant, mock_momonga) -> None:
+async def test_async_setup_entry_with_non_existing_bid(
+    hass: HomeAssistant, mock_momonga
+) -> None:
     """Test async_setup_entry function."""
     config_entry = configure_integration(hass)
-    mock_async_add_entity = Mock()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    def mock_async_add_entities(entities: list):
-        for entity in entities:
-            mock_async_add_entity(entity)
+    assert (
+        hass.config_entries.async_get_entry(config_entry.entry_id).state
+        == ConfigEntryState.LOADED
+    )
 
-    await async_setup_entry(hass, config_entry, mock_async_add_entities)
 
-    assert len(mock_async_add_entity.mock_calls) is len(SENSOR_DESCRIPTIONS)
+async def test_async_setup_entry_with_existing_bid(
+    hass: HomeAssistant, mock_momonga
+) -> None:
+    """Test async_setup_entry function."""
+    config_entry = configure_integration(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        hass.config_entries.async_get_entry(config_entry.entry_id).state
+        == ConfigEntryState.LOADED
+    )
+
+    same_bid_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**user_input, CONF_DEVICE: "/dev/ttyUSB43"},
+        entry_id="987654",
+        unique_id="987654",
+    )
+    same_bid_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(same_bid_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert (
+        hass.config_entries.async_get_entry(config_entry.entry_id).data[CONF_ID]
+        == hass.config_entries.async_get_entry(same_bid_config_entry.entry_id).data[
+            CONF_ID
+        ]
+    )
+    assert (
+        hass.config_entries.async_get_entry(config_entry.entry_id).unique_id
+        != hass.config_entries.async_get_entry(same_bid_config_entry.entry_id).unique_id
+    )
+    assert (
+        hass.config_entries.async_get_entry(same_bid_config_entry.entry_id).state
+        == ConfigEntryState.SETUP_ERROR
+    )
 
 
 @pytest.mark.parametrize(

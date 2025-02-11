@@ -1,7 +1,6 @@
 """Smart Meter B Route."""
 
 from collections.abc import Callable
-import logging
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,8 +24,6 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import BRouteData, BRouteUpdateCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class SensorEntityDescriptionWithValueAccessor(
@@ -79,20 +76,6 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up Smart Meter B-route entry."""
-    existing_entries = hass.config_entries.async_entries(DOMAIN)
-    for existing_entry in existing_entries:
-        if (
-            existing_entry.runtime_data.bid == entry.runtime_data.bid
-            and existing_entry.unique_id != entry.unique_id
-        ):
-            _LOGGER.warning(
-                "Duplicate entry found: existing_entry.unique_id=%s, entry.unique_id=%s, entry.runtime_data.bid=%s",
-                existing_entry.unique_id,
-                entry.unique_id,
-                entry.runtime_data.bid,
-            )
-            return
-
     coordinator: BRouteUpdateCoordinator = entry.runtime_data
 
     async_add_entities(

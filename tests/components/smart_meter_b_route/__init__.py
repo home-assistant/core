@@ -1,9 +1,6 @@
 """Tests for the Smart Meter B-route integration."""
 
 from homeassistant.components.smart_meter_b_route.const import DOMAIN
-from homeassistant.components.smart_meter_b_route.coordinator import (
-    BRouteUpdateCoordinator,
-)
 from homeassistant.const import CONF_DEVICE, CONF_ID, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
@@ -21,7 +18,6 @@ def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
     entry = MockConfigEntry(
         domain=DOMAIN, data=user_input, entry_id="123456", unique_id="123456"
     )
-    entry.runtime_data = BRouteUpdateCoordinator(hass, "device", "id", "password")
     entry.add_to_hass(hass)
 
     return entry
