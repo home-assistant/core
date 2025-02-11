@@ -79,7 +79,7 @@ def main() -> int:
             ]
         )
 
-    # Always output sub commands as will contain useful information if the command fails.
+    # Always output sub commands as the output will contain useful information if a command fails.
     print("Running hassfest to pick up new information.")
     subprocess.run(hassfest_args, check=True)
     print()
