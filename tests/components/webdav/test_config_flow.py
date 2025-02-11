@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from aiowebdav2.exceptions import UnauthorizedError
 import pytest
 
 from homeassistant import config_entries
@@ -65,6 +66,39 @@ async def test_form_fail(hass: HomeAssistant, webdav_client: AsyncMock) -> None:
 
     # reset and test for success
     webdav_client.check.return_value = True
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: "https://webdav.demo",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "supersecretpassword",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "user@webdav.demo"
+    assert "errors" not in result
+
+
+async def test_form_unauthorized(hass: HomeAssistant, webdav_client: AsyncMock) -> None:
+    """Test to handle unauthorized."""
+    webdav_client.check.side_effect = UnauthorizedError("https://webdav.demo")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_URL: "https://webdav.demo",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "supersecretpassword",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    # reset and test for success
+    webdav_client.check.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {

@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aiowebdav2.exceptions import UnauthorizedError
 import voluptuous as vol
 import yarl
 
@@ -61,18 +62,23 @@ class WebDavConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
             # Check if we can connect to the WebDAV server
-            # .check() already does error handling and will return True
+            # .check() already does the most of the error handling and will return True
             # if we can access the root directory
-            if await client.check():
-                parsed_url = yarl.URL(user_input[CONF_URL])
-                unq_id = f"{user_input[CONF_USERNAME]}@{parsed_url.host}"
+            try:
+                result = await client.check()
+            except UnauthorizedError:
+                errors["base"] = "invalid_auth"
+            else:
+                if result:
+                    parsed_url = yarl.URL(user_input[CONF_URL])
+                    unq_id = f"{user_input[CONF_USERNAME]}@{parsed_url.host}"
 
-                await self.async_set_unique_id(slugify(unq_id))
-                self._abort_if_unique_id_configured()
+                    await self.async_set_unique_id(slugify(unq_id))
+                    self._abort_if_unique_id_configured()
 
-                return self.async_create_entry(title=unq_id, data=user_input)
+                    return self.async_create_entry(title=unq_id, data=user_input)
 
-            errors["base"] = "cannot_connect"
+                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
