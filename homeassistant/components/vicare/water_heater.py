@@ -25,7 +25,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemper
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback, AddConfigEntryEntitiesCallback
 from homeassistant.util.json import json_loads_object
 
 from .entity import ViCareEntity
@@ -87,7 +87,7 @@ def _build_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ViCareConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ViCare water heater platform."""
 

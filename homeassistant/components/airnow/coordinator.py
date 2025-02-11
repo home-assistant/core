@@ -10,6 +10,7 @@ from pyairnow import WebServiceAPI
 from pyairnow.conv import aqi_to_concentration
 from pyairnow.errors import AirNowError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -34,13 +35,18 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type AirNowConfigEntry = ConfigEntry[AirNowDataUpdateCoordinator]
+
 
 class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """The AirNow update coordinator."""
 
+    config_entry: AirNowConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: AirNowConfigEntry,
         session: ClientSession,
         api_key: str,
         latitude: float,
@@ -55,7 +61,13 @@ class AirNowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.airnow = WebServiceAPI(api_key, session=session)
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=update_interval)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=update_interval,
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""

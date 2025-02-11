@@ -28,7 +28,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
@@ -37,9 +37,8 @@ from homeassistant.helpers.issue_registry import (
 from homeassistant.helpers.typing import StateType
 
 from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaDataUpdateCoordinator
+from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
 from .util import get_attribute_points, get_attributes_total, inventory_list
 
 _LOGGER = logging.getLogger(__name__)
@@ -306,7 +305,7 @@ def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HabiticaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the habitica sensors."""
 

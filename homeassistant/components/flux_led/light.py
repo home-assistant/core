@@ -26,7 +26,7 @@ from homeassistant.components.light import (
 from homeassistant.const import CONF_EFFECT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -135,7 +135,7 @@ SET_ZONES_DICT: VolDictType = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flux lights."""
     coordinator: FluxLedUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]

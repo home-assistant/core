@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, TYPE_TO_PLATFORM
 from .coordinator import LookinDataUpdateCoordinator
@@ -44,7 +44,7 @@ _FUNCTION_NAME_TO_FEATURE = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the media_player platform for lookin from a config entry."""
     lookin_data: LookinData = hass.data[DOMAIN][config_entry.entry_id]

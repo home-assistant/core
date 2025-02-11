@@ -2609,7 +2609,8 @@
       "name": "Home Connect",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_push",
+      "single_config_entry": true
     },
     "home_plus_control": {
       "name": "Legrand Home+ Control",
@@ -4737,6 +4738,13 @@
       "name": "Pacific Gas & Electric (PG&E)",
       "integration_type": "virtual",
       "supported_by": "opower"
+    },
+    "pglab": {
+      "name": "PG LAB Electronics",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
     },
     "philips": {
       "name": "Philips",
