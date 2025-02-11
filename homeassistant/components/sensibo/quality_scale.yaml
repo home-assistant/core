@@ -1,15 +1,9 @@
 rules:
   # Bronze
-  config-flow:
-    status: todo
-    comment: |
-      Data descriptions. Expand errors strings (no_devices,no_username etc.)
+  config-flow: done
   test-before-configure: done
   unique-config-entry: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Refresh docstrings, example test_form, add test unique id, end in entry or abort
+  config-flow-test-coverage: done
   runtime-data: done
   test-before-setup: done
   appropriate-polling: done
@@ -60,7 +54,7 @@ rules:
   entity-category: done
   entity-disabled-by-default: done
   discovery: done
-  stale-devices: todo
+  stale-devices: done
   diagnostics:
     status: done
     comment: |
@@ -68,7 +62,7 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  dynamic-devices: todo
+  dynamic-devices: done
   discovery-update-info:
     status: exempt
     comment: |

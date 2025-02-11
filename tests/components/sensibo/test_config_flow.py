@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
-from pysensibo import AuthenticationError, SensiboError
+from pysensibo import AuthenticationError, SensiboData, SensiboError
 import pytest
 
 from homeassistant import config_entries
@@ -37,7 +37,6 @@ async def test_basic_setup(
             CONF_API_KEY: "1234567890",
         },
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["version"] == 2
@@ -69,18 +68,18 @@ async def test_flow_fails(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-        side_effect=error_message,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_API_KEY: "1234567890",
-            },
-        )
+    mock_client.async_get_devices.side_effect = error_message
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: "1234567890",
+        },
+    )
 
     assert result["errors"] == {"base": p_error}
+
+    mock_client.async_get_devices.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -96,7 +95,11 @@ async def test_flow_fails(
     }
 
 
-async def test_flow_get_no_devices(hass: HomeAssistant, mock_client: MagicMock) -> None:
+async def test_flow_get_no_devices(
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
+) -> None:
     """Test config flow get no devices from api."""
 
     result = await hass.config_entries.flow.async_init(
@@ -106,18 +109,18 @@ async def test_flow_get_no_devices(hass: HomeAssistant, mock_client: MagicMock) 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-        return_value={"result": {}},
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_API_KEY: "1234567890",
-            },
-        )
+    mock_client.async_get_devices.return_value = {"result": []}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: "1234567890",
+        },
+    )
 
     assert result["errors"] == {"base": "no_devices"}
+
+    mock_client.async_get_devices.return_value = get_data[2]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -134,7 +137,9 @@ async def test_flow_get_no_devices(hass: HomeAssistant, mock_client: MagicMock) 
 
 
 async def test_flow_get_no_username(
-    hass: HomeAssistant, mock_client: MagicMock
+    hass: HomeAssistant,
+    mock_client: MagicMock,
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
 ) -> None:
     """Test config flow get no username from api."""
 
@@ -145,18 +150,18 @@ async def test_flow_get_no_username(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
-        return_value={"result": {}},
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_API_KEY: "1234567890",
-            },
-        )
+    mock_client.async_get_me.return_value = {"result": {}}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: "1234567890",
+        },
+    )
 
     assert result2["errors"] == {"base": "no_username"}
+
+    mock_client.async_get_me.return_value = get_data[1]
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -191,7 +196,6 @@ async def test_reauth_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -219,25 +223,23 @@ async def test_reauth_flow_error(
 
     result = await entry.start_reauth_flow(hass)
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-        side_effect=sideeffect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_API_KEY: "1234567890"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["step_id"] == "reauth_confirm"
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": p_error}
+    mock_client.async_get_devices.side_effect = sideeffect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
+
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": p_error}
+
+    mock_client.async_get_devices.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "1234567890"},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -270,6 +272,7 @@ async def test_flow_reauth_no_username_or_device(
     get_me: dict[str, Any],
     p_error: str,
     mock_client: MagicMock,
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
 ) -> None:
     """Test reauth flow with errors from api."""
     entry = MockConfigEntry(
@@ -285,33 +288,27 @@ async def test_flow_reauth_no_username_or_device(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with (
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-            return_value=get_devices,
-        ),
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
-            return_value=get_me,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_API_KEY: "1234567890",
-            },
-        )
-        await hass.async_block_till_done()
+    mock_client.async_get_devices.return_value = get_devices
+    mock_client.async_get_me.return_value = get_me
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: "1234567890",
+        },
+    )
 
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": p_error}
 
+    mock_client.async_get_devices.return_value = get_data[2]
+    mock_client.async_get_me.return_value = get_data[1]
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -337,7 +334,6 @@ async def test_reconfigure_flow(hass: HomeAssistant, mock_client: MagicMock) -> 
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -352,7 +348,10 @@ async def test_reconfigure_flow(hass: HomeAssistant, mock_client: MagicMock) -> 
     ],
 )
 async def test_reconfigure_flow_error(
-    hass: HomeAssistant, sideeffect: Exception, p_error: str, mock_client: MagicMock
+    hass: HomeAssistant,
+    sideeffect: Exception,
+    p_error: str,
+    mock_client: MagicMock,
 ) -> None:
     """Test a reconfigure flow with error."""
     entry = MockConfigEntry(
@@ -365,25 +364,23 @@ async def test_reconfigure_flow_error(
 
     result = await entry.start_reconfigure_flow(hass)
 
-    with patch(
-        "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-        side_effect=sideeffect,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_API_KEY: "1234567890"},
-        )
-        await hass.async_block_till_done()
-
-    assert result["step_id"] == "reconfigure"
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": p_error}
+    mock_client.async_get_devices.side_effect = sideeffect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
+
+    assert result["step_id"] == "reconfigure"
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": p_error}
+
+    mock_client.async_get_devices.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "1234567890"},
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
@@ -416,6 +413,7 @@ async def test_flow_reconfigure_no_username_or_device(
     get_me: dict[str, Any],
     p_error: str,
     mock_client: MagicMock,
+    get_data: tuple[SensiboData, dict[str, Any], dict[str, Any]],
 ) -> None:
     """Test reconfigure flow with errors from api."""
     entry = MockConfigEntry(
@@ -431,33 +429,27 @@ async def test_flow_reconfigure_no_username_or_device(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    with (
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_get_devices",
-            return_value=get_devices,
-        ),
-        patch(
-            "homeassistant.components.sensibo.util.SensiboClient.async_get_me",
-            return_value=get_me,
-        ),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_API_KEY: "1234567890",
-            },
-        )
-        await hass.async_block_till_done()
+    mock_client.async_get_devices.return_value = get_devices
+    mock_client.async_get_me.return_value = get_me
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_API_KEY: "1234567890",
+        },
+    )
 
     assert result["step_id"] == "reconfigure"
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": p_error}
 
+    mock_client.async_get_devices.return_value = get_data[2]
+    mock_client.async_get_me.return_value = get_data[1]
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_API_KEY: "1234567890"},
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"

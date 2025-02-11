@@ -27,17 +27,17 @@
         "description": "Configure {name}",
         "data": {
           "volume_resolution": "Volume resolution",
-          "input_sources": "Input sources"
+          "input_sources": "[%key:component::onkyo::options::step::init::data::input_sources%]"
         },
         "data_description": {
           "volume_resolution": "Number of steps it takes for the receiver to go from the lowest to the highest possible volume.",
-          "input_sources": "List of input sources supported by the receiver."
+          "input_sources": "[%key:component::onkyo::options::step::init::data_description::input_sources%]"
         }
       }
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "empty_input_source_list": "Input source list cannot be empty",
+      "empty_input_source_list": "[%key:component::onkyo::options::error::empty_input_source_list%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
@@ -52,12 +52,25 @@
     "step": {
       "init": {
         "data": {
-          "max_volume": "Maximum volume limit (%)"
+          "max_volume": "Maximum volume limit (%)",
+          "input_sources": "Input sources"
         },
         "data_description": {
-          "max_volume": "Maximum volume limit as a percentage. This will associate Home Assistant's maximum volume to this value on the receiver, i.e., if you set this to 50%, then setting the volume to 100% in Home Assistant will cause the volume on the receiver to be set to 50% of its maximum value."
+          "max_volume": "Maximum volume limit as a percentage. This will associate Home Assistant's maximum volume to this value on the receiver, i.e., if you set this to 50%, then setting the volume to 100% in Home Assistant will cause the volume on the receiver to be set to 50% of its maximum value.",
+          "input_sources": "List of input sources supported by the receiver."
+        }
+      },
+      "names": {
+        "sections": {
+          "input_sources": {
+            "name": "Input source names",
+            "description": "Mappings of receiver's input sources to their names."
+          }
         }
       }
+    },
+    "error": {
+      "empty_input_source_list": "Input source list cannot be empty"
     }
   },
   "issues": {

@@ -95,42 +95,38 @@ async def test_light_update(
 async def test_light_turn_on(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ) -> None:
-    """Test light entity turn off."""
+    """Test light entity turn on."""
+
+    light._api = ufp.api
+    light.api.set_light_is_led_force_on = AsyncMock()
 
     await init_entry(hass, ufp, [light, unadopted_light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
     entity_id = "light.test_light"
-    light.__pydantic_fields__["set_light"] = Mock(final=False, frozen=False)
-    light.set_light = AsyncMock()
-
     await hass.services.async_call(
-        "light",
-        "turn_on",
-        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 128},
-        blocking=True,
+        "light", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
-    light.set_light.assert_called_once_with(True, 3)
+    assert light.api.set_light_is_led_force_on.called
+    assert light.api.set_light_is_led_force_on.call_args == ((light.id, True),)
 
 
 async def test_light_turn_off(
     hass: HomeAssistant, ufp: MockUFPFixture, light: Light, unadopted_light: Light
 ) -> None:
-    """Test light entity turn on."""
+    """Test light entity turn off."""
+
+    light._api = ufp.api
+    light.api.set_light_is_led_force_on = AsyncMock()
 
     await init_entry(hass, ufp, [light, unadopted_light])
     assert_entity_counts(hass, Platform.LIGHT, 1, 1)
 
     entity_id = "light.test_light"
-    light.__pydantic_fields__["set_light"] = Mock(final=False, frozen=False)
-    light.set_light = AsyncMock()
-
     await hass.services.async_call(
-        "light",
-        "turn_off",
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
+        "light", "turn_off", {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
-    light.set_light.assert_called_once_with(False)
+    assert light.api.set_light_is_led_force_on.called
+    assert light.api.set_light_is_led_force_on.call_args == ((light.id, False),)

@@ -2,28 +2,32 @@
 
 from __future__ import annotations
 
+import asyncio
 import base64
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
 import hashlib
-from typing import Any, Self
+import logging
+import random
+from typing import Any, Literal
 
-from aiohttp import ClientError, ClientTimeout, StreamReader
+from aiohttp import ClientError
 from hass_nabucasa import Cloud, CloudError
-from hass_nabucasa.cloud_api import (
-    async_files_delete_file,
-    async_files_download_details,
-    async_files_list,
-    async_files_upload_details,
-)
+from hass_nabucasa.api import CloudApiNonRetryableError
+from hass_nabucasa.cloud_api import async_files_delete_file, async_files_list
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import ChunkAsyncStreamIterator
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .client import CloudClient
 from .const import DATA_CLOUD, DOMAIN, EVENT_CLOUD_EVENT
 
-_STORAGE_BACKUP = "backup"
+_LOGGER = logging.getLogger(__name__)
+_STORAGE_BACKUP: Literal["backup"] = "backup"
+_RETRY_LIMIT = 5
+_RETRY_SECONDS_MIN = 60
+_RETRY_SECONDS_MAX = 600
 
 
 async def _b64md5(stream: AsyncIterator[bytes]) -> str:
@@ -71,36 +75,10 @@ def async_register_backup_agents_listener(
     return unsub
 
 
-class ChunkAsyncStreamIterator:
-    """Async iterator for chunked streams.
-
-    Based on aiohttp.streams.ChunkTupleAsyncStreamIterator, but yields
-    bytes instead of tuple[bytes, bool].
-    """
-
-    __slots__ = ("_stream",)
-
-    def __init__(self, stream: StreamReader) -> None:
-        """Initialize."""
-        self._stream = stream
-
-    def __aiter__(self) -> Self:
-        """Iterate."""
-        return self
-
-    async def __anext__(self) -> bytes:
-        """Yield next chunk."""
-        rv = await self._stream.readchunk()
-        if rv == (b"", False):
-            raise StopAsyncIteration
-        return rv[0]
-
-
 class CloudBackupAgent(BackupAgent):
     """Cloud backup agent."""
 
-    domain = DOMAIN
-    name = DOMAIN
+    domain = name = unique_id = DOMAIN
 
     def __init__(self, hass: HomeAssistant, cloud: Cloud[CloudClient]) -> None:
         """Initialize the cloud backup sync agent."""
@@ -127,21 +105,14 @@ class CloudBackupAgent(BackupAgent):
             raise BackupAgentError("Backup not found")
 
         try:
-            details = await async_files_download_details(
-                self._cloud,
+            content = await self._cloud.files.download(
                 storage_type=_STORAGE_BACKUP,
                 filename=self._get_backup_filename(),
             )
-        except (ClientError, CloudError) as err:
-            raise BackupAgentError("Failed to get download details") from err
+        except CloudError as err:
+            raise BackupAgentError(f"Failed to download backup: {err}") from err
 
-        try:
-            resp = await self._cloud.websession.get(details["url"])
-            resp.raise_for_status()
-        except ClientError as err:
-            raise BackupAgentError("Failed to download backup") from err
-
-        return ChunkAsyncStreamIterator(resp.content)
+        return ChunkAsyncStreamIterator(content)
 
     async def async_upload_backup(
         self,
@@ -159,29 +130,45 @@ class CloudBackupAgent(BackupAgent):
             raise BackupAgentError("Cloud backups must be protected")
 
         base64md5hash = await _b64md5(await open_stream())
+        filename = self._get_backup_filename()
+        metadata = backup.as_dict()
+        size = backup.size
 
-        try:
-            details = await async_files_upload_details(
-                self._cloud,
-                storage_type=_STORAGE_BACKUP,
-                filename=self._get_backup_filename(),
-                metadata=backup.as_dict(),
-                size=backup.size,
-                base64md5hash=base64md5hash,
-            )
-        except (ClientError, CloudError) as err:
-            raise BackupAgentError("Failed to get upload details") from err
-
-        try:
-            upload_status = await self._cloud.websession.put(
-                details["url"],
-                data=await open_stream(),
-                headers=details["headers"] | {"content-length": str(backup.size)},
-                timeout=ClientTimeout(connect=10.0, total=43200.0),  # 43200s == 12h
-            )
-            upload_status.raise_for_status()
-        except (TimeoutError, ClientError) as err:
-            raise BackupAgentError("Failed to upload backup") from err
+        tries = 1
+        while tries <= _RETRY_LIMIT:
+            try:
+                await self._cloud.files.upload(
+                    storage_type=_STORAGE_BACKUP,
+                    open_stream=open_stream,
+                    filename=filename,
+                    base64md5hash=base64md5hash,
+                    metadata=metadata,
+                    size=size,
+                )
+                break
+            except CloudApiNonRetryableError as err:
+                if err.code == "NC-SH-FH-03":
+                    raise BackupAgentError(
+                        translation_domain=DOMAIN,
+                        translation_key="backup_size_too_large",
+                        translation_placeholders={
+                            "size": str(round(size / (1024**3), 2))
+                        },
+                    ) from err
+                raise BackupAgentError(f"Failed to upload backup {err}") from err
+            except CloudError as err:
+                if tries == _RETRY_LIMIT:
+                    raise BackupAgentError(f"Failed to upload backup {err}") from err
+                tries += 1
+                retry_timer = random.randint(_RETRY_SECONDS_MIN, _RETRY_SECONDS_MAX)
+                _LOGGER.info(
+                    "Failed to upload backup, retrying (%s/%s) in %ss: %s",
+                    tries,
+                    _RETRY_LIMIT,
+                    retry_timer,
+                    err,
+                )
+                await asyncio.sleep(retry_timer)
 
     async def async_delete_backup(
         self,
@@ -208,6 +195,7 @@ class CloudBackupAgent(BackupAgent):
         """List backups."""
         try:
             backups = await async_files_list(self._cloud, storage_type=_STORAGE_BACKUP)
+            _LOGGER.debug("Cloud backups: %s", backups)
         except (ClientError, CloudError) as err:
             raise BackupAgentError("Failed to list backups") from err
 

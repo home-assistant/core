@@ -15,8 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 import yaml
 
-from homeassistant import loader
-import homeassistant.config as config_util
+from homeassistant import config as config_util, loader
 from homeassistant.const import CONF_PACKAGES, __version__
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import ConfigValidationError, HomeAssistantError

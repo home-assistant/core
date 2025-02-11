@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pysensibo.model import SensiboData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from voluptuous import MultipleInvalid
@@ -15,12 +13,14 @@ from voluptuous import MultipleInvalid
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     HVACMode,
@@ -45,6 +45,7 @@ from homeassistant.components.sensibo.climate import (
     SERVICE_ENABLE_PURE_BOOST,
     SERVICE_ENABLE_TIMER,
     SERVICE_FULL_STATE,
+    SERVICE_GET_DEVICE_CAPABILITIES,
     _find_valid_target_temp,
 )
 from homeassistant.components.sensibo.const import DOMAIN
@@ -109,9 +110,7 @@ async def test_climate(
 async def test_climate_fan(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate fan service."""
@@ -119,21 +118,21 @@ async def test_climate_fan(
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "high"
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "fan_modes",
-        ["quiet", "low", "medium", "not_in_ha"],
-    )
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "fan_modes_translated",
-        {
-            "low": "low",
-            "medium": "medium",
-            "quiet": "quiet",
-            "not_in_ha": "not_in_ha",
-        },
-    )
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].fan_modes = [
+        "quiet",
+        "low",
+        "medium",
+        "not_in_ha",
+    ]
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].fan_modes_translated = {
+        "low": "low",
+        "medium": "medium",
+        "quiet": "quiet",
+        "not_in_ha": "not_in_ha",
+    }
+
     with pytest.raises(
         HomeAssistantError,
         match="Climate fan mode not_in_ha is not supported by the integration",
@@ -159,25 +158,23 @@ async def test_climate_fan(
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "low"
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "active_features",
-        [
-            "timestamp",
-            "on",
-            "mode",
-            "swing",
-            "targetTemperature",
-            "horizontalSwing",
-            "light",
-        ],
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+        "swing",
+        "targetTemperature",
+        "horizontalSwing",
+        "light",
+    ]
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="service_not_supported"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
@@ -186,15 +183,13 @@ async def test_climate_fan(
         )
 
     state = hass.states.get("climate.hallway")
-    assert state.attributes["fan_mode"] == "low"
+    assert "fan_mode" not in state.attributes
 
 
 async def test_climate_swing(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate swing service."""
@@ -202,21 +197,21 @@ async def test_climate_swing(
     state = hass.states.get("climate.hallway")
     assert state.attributes["swing_mode"] == "stopped"
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "swing_modes",
-        ["stopped", "fixedtop", "fixedmiddletop", "not_in_ha"],
-    )
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "swing_modes_translated",
-        {
-            "fixedmiddletop": "fixedMiddleTop",
-            "fixedtop": "fixedTop",
-            "stopped": "stopped",
-            "not_in_ha": "not_in_ha",
-        },
-    )
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].swing_modes = [
+        "stopped",
+        "fixedtop",
+        "fixedmiddletop",
+        "not_in_ha",
+    ]
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].swing_modes_translated = {
+        "fixedmiddletop": "fixedMiddleTop",
+        "fixedtop": "fixedTop",
+        "stopped": "stopped",
+        "not_in_ha": "not_in_ha",
+    }
+
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -246,23 +241,21 @@ async def test_climate_swing(
     state = hass.states.get("climate.hallway")
     assert state.attributes["swing_mode"] == "fixedtop"
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "active_features",
-        [
-            "timestamp",
-            "on",
-            "mode",
-            "targetTemperature",
-            "horizontalSwing",
-            "light",
-        ],
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+        "targetTemperature",
+        "horizontalSwing",
+        "light",
+    ]
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="service_not_supported"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_SWING_MODE,
@@ -271,15 +264,102 @@ async def test_climate_swing(
         )
 
     state = hass.states.get("climate.hallway")
-    assert state.attributes["swing_mode"] == "fixedtop"
+    assert "swing_mode" not in state.attributes
+
+
+async def test_climate_horizontal_swing(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Sensibo climate horizontal swing service."""
+
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["swing_horizontal_mode"] == "stopped"
+
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].horizontal_swing_modes = [
+        "stopped",
+        "fixedleft",
+        "fixedcenter",
+        "fixedright",
+        "not_in_ha",
+    ]
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].swing_modes_translated = {
+        "stopped": "stopped",
+        "fixedleft": "fixedLeft",
+        "fixedcenter": "fixedCenter",
+        "fixedright": "fixedRight",
+        "not_in_ha": "not_in_ha",
+    }
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    with pytest.raises(
+        HomeAssistantError,
+        match="Climate horizontal swing mode not_in_ha is not supported by the integration",
+    ):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_HORIZONTAL_MODE: "not_in_ha"},
+            blocking=True,
+        )
+
+    mock_client.async_set_ac_state_property.return_value = {
+        "result": {"status": "Success"}
+    }
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_SWING_HORIZONTAL_MODE,
+        {ATTR_ENTITY_ID: state.entity_id, ATTR_SWING_HORIZONTAL_MODE: "fixedleft"},
+        blocking=True,
+    )
+
+    state = hass.states.get("climate.hallway")
+    assert state.attributes["swing_horizontal_mode"] == "fixedleft"
+
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+        "targetTemperature",
+        "swing",
+        "light",
+    ]
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError, match="service_not_supported"):
+        await hass.services.async_call(
+            CLIMATE_DOMAIN,
+            SERVICE_SET_SWING_HORIZONTAL_MODE,
+            {
+                ATTR_ENTITY_ID: state.entity_id,
+                ATTR_SWING_HORIZONTAL_MODE: "fixedcenter",
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("climate.hallway")
+    assert "swing_horizontal_mode" not in state.attributes
 
 
 async def test_climate_temperatures(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate temperature service."""
@@ -370,24 +450,22 @@ async def test_climate_temperatures(
     state = hass.states.get("climate.hallway")
     assert state.attributes["temperature"] == 20
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "active_features",
-        [
-            "timestamp",
-            "on",
-            "mode",
-            "swing",
-            "horizontalSwing",
-            "light",
-        ],
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+        "swing",
+        "horizontalSwing",
+        "light",
+    ]
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError, match="service_not_supported"):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,
@@ -396,38 +474,30 @@ async def test_climate_temperatures(
         )
 
     state = hass.states.get("climate.hallway")
-    assert state.attributes["temperature"] == 20
+    assert "temperature" not in state.attributes
 
 
 async def test_climate_temperature_is_none(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate temperature service no temperature provided."""
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "active_features",
-        [
-            "timestamp",
-            "on",
-            "mode",
-            "fanLevel",
-            "targetTemperature",
-            "swing",
-            "horizontalSwing",
-            "light",
-        ],
-    )
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "target_temp",
-        25,
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+        "fanLevel",
+        "targetTemperature",
+        "swing",
+        "horizontalSwing",
+        "light",
+    ]
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].target_temp = 25
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -455,27 +525,23 @@ async def test_climate_temperature_is_none(
 async def test_climate_hvac_mode(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate hvac mode service."""
 
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "active_features",
-        [
-            "timestamp",
-            "on",
-            "mode",
-            "fanLevel",
-            "targetTemperature",
-            "swing",
-            "horizontalSwing",
-            "light",
-        ],
-    )
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].active_features = [
+        "timestamp",
+        "on",
+        "mode",
+        "fanLevel",
+        "targetTemperature",
+        "swing",
+        "horizontalSwing",
+        "light",
+    ]
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -498,7 +564,9 @@ async def test_climate_hvac_mode(
     state = hass.states.get("climate.hallway")
     assert state.state == HVACMode.OFF
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "device_on", False)
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].device_on = False
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -518,15 +586,15 @@ async def test_climate_hvac_mode(
 async def test_climate_on_off(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate on/off service."""
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "hvac_mode", "heat")
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "device_on", True)
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].hvac_mode = "heat"
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].device_on = True
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -563,15 +631,15 @@ async def test_climate_on_off(
 async def test_climate_service_failed(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate service failed."""
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "hvac_mode", "heat")
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "device_on", True)
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].hvac_mode = "heat"
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].device_on = True
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -599,15 +667,15 @@ async def test_climate_service_failed(
 async def test_climate_assumed_state(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate assumed state service."""
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "hvac_mode", "heat")
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "device_on", True)
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].hvac_mode = "heat"
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].device_on = True
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -634,8 +702,7 @@ async def test_climate_assumed_state(
 async def test_climate_no_fan_no_swing(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
-    get_data: tuple[SensiboData, dict[str, Any]],
+    mock_client: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate fan."""
@@ -644,10 +711,14 @@ async def test_climate_no_fan_no_swing(
     assert state.attributes["fan_mode"] == "high"
     assert state.attributes["swing_mode"] == "stopped"
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "fan_mode", None)
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "swing_mode", None)
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "fan_modes", None)
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "swing_modes", None)
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].fan_mode = None
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].swing_mode = None
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].fan_modes = None
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].swing_modes = None
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -664,9 +735,7 @@ async def test_climate_no_fan_no_swing(
 async def test_climate_set_timer(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate Set Timer service."""
@@ -716,14 +785,16 @@ async def test_climate_set_timer(
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "timer_on", True)
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "timer_id", "SzTGE4oZ4D")
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "timer_state_on", False)
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "timer_time",
-        datetime(2022, 6, 6, 12, 00, 00, tzinfo=dt_util.UTC),
-    )
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].timer_on = True
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].timer_id = "SzTGE4oZ4D"
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].timer_state_on = False
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].timer_time = datetime(2022, 6, 6, 12, 00, 00, tzinfo=dt_util.UTC)
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -739,9 +810,7 @@ async def test_climate_set_timer(
 async def test_climate_pure_boost(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate pure boost service."""
@@ -795,12 +864,18 @@ async def test_climate_pure_boost(
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["AAZZAAZZ"], "pure_boost_enabled", True)
-    monkeypatch.setattr(get_data[0].parsed["AAZZAAZZ"], "pure_sensitivity", "s")
-    monkeypatch.setattr(
-        get_data[0].parsed["AAZZAAZZ"], "pure_measure_integration", True
-    )
-    monkeypatch.setattr(get_data[0].parsed["AAZZAAZZ"], "pure_prime_integration", True)
+    mock_client.async_get_devices_data.return_value.parsed[
+        "AAZZAAZZ"
+    ].pure_boost_enabled = True
+    mock_client.async_get_devices_data.return_value.parsed[
+        "AAZZAAZZ"
+    ].pure_sensitivity = "s"
+    mock_client.async_get_devices_data.return_value.parsed[
+        "AAZZAAZZ"
+    ].pure_measure_integration = True
+    mock_client.async_get_devices_data.return_value.parsed[
+        "AAZZAAZZ"
+    ].pure_prime_integration = True
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -826,9 +901,7 @@ async def test_climate_pure_boost(
 async def test_climate_climate_react(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate react custom service."""
@@ -881,7 +954,7 @@ async def test_climate_climate_react(
                 "light": "on",
             },
             "lowTemperatureThreshold": 5.5,
-            "type": "temperature",
+            "type": "feelsLike",
         },
     }
 
@@ -912,47 +985,45 @@ async def test_climate_climate_react(
                 "horizontalSwing": "stopped",
                 "light": "on",
             },
-            ATTR_SMART_TYPE: "temperature",
+            ATTR_SMART_TYPE: "feelslike",
         },
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "smart_on", True)
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "smart_type", "temperature")
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"], "smart_low_temp_threshold", 5.5
-    )
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"], "smart_high_temp_threshold", 30.5
-    )
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "smart_low_state",
-        {
-            "on": True,
-            "targetTemperature": 25,
-            "temperatureUnit": "C",
-            "mode": "heat",
-            "fanLevel": "low",
-            "swing": "stopped",
-            "horizontalSwing": "stopped",
-            "light": "on",
-        },
-    )
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "smart_high_state",
-        {
-            "on": True,
-            "targetTemperature": 15,
-            "temperatureUnit": "C",
-            "mode": "cool",
-            "fanLevel": "high",
-            "swing": "stopped",
-            "horizontalSwing": "stopped",
-            "light": "on",
-        },
-    )
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].smart_on = True
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].smart_type = "feelsLike"
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].smart_low_temp_threshold = 5.5
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].smart_high_temp_threshold = 30.5
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].smart_low_state = {
+        "on": True,
+        "targetTemperature": 25,
+        "temperatureUnit": "C",
+        "mode": "heat",
+        "fanLevel": "low",
+        "swing": "stopped",
+        "horizontalSwing": "stopped",
+        "light": "on",
+    }
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].smart_high_state = {
+        "on": True,
+        "targetTemperature": 15,
+        "temperatureUnit": "C",
+        "mode": "cool",
+        "fanLevel": "high",
+        "swing": "stopped",
+        "horizontalSwing": "stopped",
+        "light": "on",
+    }
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -967,16 +1038,14 @@ async def test_climate_climate_react(
         hass.states.get("sensor.hallway_climate_react_high_temperature_threshold").state
         == "30.5"
     )
-    assert hass.states.get("sensor.hallway_climate_react_type").state == "temperature"
+    assert hass.states.get("sensor.hallway_climate_react_type").state == "feelslike"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_climate_climate_react_fahrenheit(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate react custom service with fahrenheit."""
@@ -1050,40 +1119,40 @@ async def test_climate_climate_react_fahrenheit(
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "smart_on", True)
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "smart_type", "temperature")
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "smart_low_temp_threshold", 0)
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"], "smart_high_temp_threshold", 25
-    )
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "smart_low_state",
-        {
-            "on": True,
-            "targetTemperature": 85,
-            "temperatureUnit": "F",
-            "mode": "heat",
-            "fanLevel": "low",
-            "swing": "stopped",
-            "horizontalSwing": "stopped",
-            "light": "on",
-        },
-    )
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"],
-        "smart_high_state",
-        {
-            "on": True,
-            "targetTemperature": 65,
-            "temperatureUnit": "F",
-            "mode": "cool",
-            "fanLevel": "high",
-            "swing": "stopped",
-            "horizontalSwing": "stopped",
-            "light": "on",
-        },
-    )
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].smart_on = True
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].smart_type = "temperature"
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].smart_low_temp_threshold = 0
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].smart_high_temp_threshold = 25
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].smart_low_state = {
+        "on": True,
+        "targetTemperature": 85,
+        "temperatureUnit": "F",
+        "mode": "heat",
+        "fanLevel": "low",
+        "swing": "stopped",
+        "horizontalSwing": "stopped",
+        "light": "on",
+    }
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].smart_high_state = {
+        "on": True,
+        "targetTemperature": 65,
+        "temperatureUnit": "F",
+        "mode": "cool",
+        "fanLevel": "high",
+        "swing": "stopped",
+        "horizontalSwing": "stopped",
+        "light": "on",
+    }
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -1105,9 +1174,7 @@ async def test_climate_climate_react_fahrenheit(
 async def test_climate_full_ac_state(
     hass: HomeAssistant,
     load_int: ConfigEntry,
-    monkeypatch: pytest.MonkeyPatch,
     mock_client: MagicMock,
-    get_data: tuple[SensiboData, dict[str, Any]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test the Sensibo climate Full AC state service."""
@@ -1149,15 +1216,23 @@ async def test_climate_full_ac_state(
         blocking=True,
     )
 
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "hvac_mode", "cool")
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "device_on", True)
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "target_temp", 22)
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "fan_mode", "high")
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "swing_mode", "stopped")
-    monkeypatch.setattr(
-        get_data[0].parsed["ABC999111"], "horizontal_swing_mode", "stopped"
-    )
-    monkeypatch.setattr(get_data[0].parsed["ABC999111"], "light_mode", "on")
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].hvac_mode = "cool"
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].device_on = True
+    mock_client.async_get_devices_data.return_value.parsed["ABC999111"].target_temp = 22
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].fan_mode = "high"
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].swing_mode = "stopped"
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].horizontal_swing_mode = "stopped"
+    mock_client.async_get_devices_data.return_value.parsed[
+        "ABC999111"
+    ].light_mode = "on"
 
     freezer.tick(timedelta(minutes=5))
     async_fire_time_changed(hass)
@@ -1204,3 +1279,33 @@ async def test_climate_fan_mode_and_swing_mode_not_supported(
     state = hass.states.get("climate.hallway")
     assert state.attributes["fan_mode"] == "high"
     assert state.attributes["swing_mode"] == "stopped"
+
+
+async def test_climate_get_device_capabilities(
+    hass: HomeAssistant,
+    load_int: ConfigEntry,
+    mock_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Sensibo climate Get device capabilitites service."""
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_DEVICE_CAPABILITIES,
+        {ATTR_ENTITY_ID: "climate.hallway", ATTR_HVAC_MODE: "heat"},
+        blocking=True,
+        return_response=True,
+    )
+    assert response == snapshot
+
+    with pytest.raises(
+        ServiceValidationError, match="The entity does not support the chosen mode"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_DEVICE_CAPABILITIES,
+            {ATTR_ENTITY_ID: "climate.hallway", ATTR_HVAC_MODE: "heat_cool"},
+            blocking=True,
+            return_response=True,
+        )

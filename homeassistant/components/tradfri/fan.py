@@ -10,7 +10,7 @@ from pytradfri.command import Command
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_GATEWAY_ID, COORDINATOR, COORDINATOR_LIST, DOMAIN, KEY_API
 from .coordinator import TradfriDeviceDataUpdateCoordinator
@@ -33,7 +33,7 @@ def _from_fan_speed(fan_speed: int) -> int:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load Tradfri switches based on a config entry."""
     gateway_id = config_entry.data[CONF_GATEWAY_ID]

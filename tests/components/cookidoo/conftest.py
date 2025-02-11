@@ -8,6 +8,8 @@ from cookidoo_api import (
     CookidooAdditionalItem,
     CookidooAuthResponse,
     CookidooIngredientItem,
+    CookidooSubscription,
+    CookidooUserInfo,
 )
 import pytest
 
@@ -20,6 +22,8 @@ EMAIL = "test-email"
 PASSWORD = "test-password"
 COUNTRY = "CH"
 LANGUAGE = "de-CH"
+
+TEST_UUID = "sub_uuid"
 
 
 @pytest.fixture
@@ -34,16 +38,10 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture
 def mock_cookidoo_client() -> Generator[AsyncMock]:
     """Mock a Cookidoo client."""
-    with (
-        patch(
-            "homeassistant.components.cookidoo.Cookidoo",
-            autospec=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.cookidoo.config_flow.Cookidoo",
-            new=mock_client,
-        ),
-    ):
+    with patch(
+        "homeassistant.components.cookidoo.helpers.Cookidoo",
+        autospec=True,
+    ) as mock_client:
         client = mock_client.return_value
         client.login.return_value = cast(CookidooAuthResponse, {"name": "Cookidoo"})
         client.get_ingredient_items.return_value = [
@@ -58,7 +56,15 @@ def mock_cookidoo_client() -> Generator[AsyncMock]:
                 "data"
             ]
         ]
-        client.login.return_value = None
+        client.get_active_subscription.return_value = CookidooSubscription(
+            **load_json_object_fixture("subscriptions.json", DOMAIN)["data"]
+        )
+        client.get_user_info.return_value = CookidooUserInfo(
+            **load_json_object_fixture("user_info.json", DOMAIN)["data"]
+        )
+        client.login.return_value = CookidooAuthResponse(
+            **load_json_object_fixture("login.json", DOMAIN)
+        )
         yield client
 
 
@@ -67,6 +73,8 @@ def mock_cookidoo_config_entry() -> MockConfigEntry:
     """Mock cookidoo configuration entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        version=1,
+        minor_version=2,
         data={
             CONF_EMAIL: EMAIL,
             CONF_PASSWORD: PASSWORD,
@@ -74,4 +82,5 @@ def mock_cookidoo_config_entry() -> MockConfigEntry:
             CONF_LANGUAGE: LANGUAGE,
         },
         entry_id="01JBVVVJ87F6G5V0QJX6HBC94T",
+        unique_id=TEST_UUID,
     )
