@@ -23,7 +23,6 @@ from pyoverkiz.obfuscate import obfuscate_id
 from pyoverkiz.utils import generate_local_server, is_overkiz_gateway
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -34,6 +33,8 @@ from homeassistant.const import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_API_TYPE, CONF_HUB, DEFAULT_SERVER, DOMAIN, LOGGER
 
@@ -76,7 +77,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             for gateway in gateways:
                 if is_overkiz_gateway(gateway.id):
                     gateway_id = gateway.id
-                    await self.async_set_unique_id(gateway_id)
+                    await self.async_set_unique_id(gateway_id, raise_on_progress=False)
 
         return user_input
 
@@ -151,9 +152,11 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
             except BadCredentialsException as exception:
                 # If authentication with CozyTouch auth server is valid, but token is invalid
                 # for Overkiz API server, the hardware is not supported.
-                if user_input[CONF_HUB] == Server.ATLANTIC_COZYTOUCH and not isinstance(
-                    exception, CozyTouchBadCredentialsException
-                ):
+                if user_input[CONF_HUB] in {
+                    Server.ATLANTIC_COZYTOUCH,
+                    Server.SAUTER_COZYTOUCH,
+                    Server.THERMOR_COZYTOUCH,
+                } and not isinstance(exception, CozyTouchBadCredentialsException):
                     description_placeholders["unsupported_device"] = "CozyTouch"
                     errors["base"] = "unsupported_hardware"
                 else:
@@ -271,7 +274,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
         hostname = discovery_info.hostname
@@ -282,7 +285,7 @@ class OverkizConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self._process_discovery(gateway_id)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle ZeroConf discovery."""
         properties = discovery_info.properties

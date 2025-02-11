@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from apple_weatherkit import DataSetType
 from apple_weatherkit.client import WeatherKitApiClient, WeatherKitApiClientError
@@ -20,16 +20,20 @@ REQUESTED_DATA_SETS = [
     DataSetType.HOURLY_FORECAST,
 ]
 
+STALE_DATA_THRESHOLD = timedelta(hours=1)
+
 
 class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to manage fetching data from the API."""
 
     config_entry: ConfigEntry
     supported_data_sets: list[DataSetType] | None = None
+    last_updated_at: datetime | None = None
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         client: WeatherKitApiClient,
     ) -> None:
         """Initialize."""
@@ -37,6 +41,7 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=5),
         )
@@ -62,10 +67,20 @@ class WeatherKitDataUpdateCoordinator(DataUpdateCoordinator):
             if not self.supported_data_sets:
                 await self.update_supported_data_sets()
 
-            return await self.client.get_weather_data(
+            updated_data = await self.client.get_weather_data(
                 self.config_entry.data[CONF_LATITUDE],
                 self.config_entry.data[CONF_LONGITUDE],
                 self.supported_data_sets,
             )
         except WeatherKitApiClientError as exception:
-            raise UpdateFailed(exception) from exception
+            if self.data is None or (
+                self.last_updated_at is not None
+                and datetime.now() - self.last_updated_at > STALE_DATA_THRESHOLD
+            ):
+                raise UpdateFailed(exception) from exception
+
+            LOGGER.debug("Using stale data because update failed: %s", exception)
+            return self.data
+        else:
+            self.last_updated_at = datetime.now()
+            return updated_data

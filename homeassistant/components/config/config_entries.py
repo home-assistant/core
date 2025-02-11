@@ -17,7 +17,7 @@ from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_a
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import DependencyError, Unauthorized
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.data_entry_flow import (
     FlowManagerIndexView,
     FlowManagerResourceView,
@@ -326,6 +326,9 @@ class SubentryManagerFlowIndexView(
         """Return context."""
         context = super().get_context(data)
         context["source"] = config_entries.SOURCE_USER
+        if subentry_id := data.get("subentry_id"):
+            context["source"] = config_entries.SOURCE_RECONFIGURE
+            context["subentry_id"] = subentry_id
         return context
 
 
@@ -369,7 +372,8 @@ def config_entries_progress(
         [
             flw
             for flw in hass.config_entries.flow.async_progress()
-            if flw["context"]["source"] != config_entries.SOURCE_USER
+            if flw["context"]["source"]
+            not in (config_entries.SOURCE_RECONFIGURE, config_entries.SOURCE_USER)
         ],
     )
 
@@ -678,10 +682,11 @@ async def config_subentry_list(
     result = [
         {
             "subentry_id": subentry.subentry_id,
+            "subentry_type": subentry.subentry_type,
             "title": subentry.title,
             "unique_id": subentry.unique_id,
         }
-        for subentry_id, subentry in entry.subentries.items()
+        for subentry in entry.subentries.values()
     ]
     connection.send_result(msg["id"], result)
 

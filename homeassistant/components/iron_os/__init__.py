@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING
 from pynecil import IronOSUpdate, Pynecil
 
 from homeassistant.components import bluetooth
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -19,6 +18,7 @@ from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
 from .coordinator import (
+    IronOSConfigEntry,
     IronOSCoordinators,
     IronOSFirmwareUpdateCoordinator,
     IronOSLiveDataCoordinator,
@@ -27,8 +27,11 @@ from .coordinator import (
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.UPDATE,
 ]
 
@@ -36,7 +39,6 @@ PLATFORMS: list[Platform] = [
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-type IronOSConfigEntry = ConfigEntry[IronOSCoordinators]
 IRON_OS_KEY: HassKey[IronOSFirmwareUpdateCoordinator] = HassKey(DOMAIN)
 
 
@@ -70,10 +72,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IronOSConfigEntry) -> bo
 
     device = Pynecil(ble_device)
 
-    live_data = IronOSLiveDataCoordinator(hass, device)
+    live_data = IronOSLiveDataCoordinator(hass, entry, device)
     await live_data.async_config_entry_first_refresh()
 
-    settings = IronOSSettingsCoordinator(hass, device)
+    settings = IronOSSettingsCoordinator(hass, entry, device)
     await settings.async_config_entry_first_refresh()
 
     entry.runtime_data = IronOSCoordinators(

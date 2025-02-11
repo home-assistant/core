@@ -27,7 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -45,6 +45,12 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
     "operating_status_general": SensorEntityDescription(
         key="operating_status_general",
         name="Operating Status General",
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "operating_status": SensorEntityDescription(
+        key="operating_status",
+        name="Operating Status",
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -832,7 +838,7 @@ SENSOR_ENTITIES: dict[str, SensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SMA sensors."""
     sma_data = hass.data[DOMAIN][config_entry.entry_id]

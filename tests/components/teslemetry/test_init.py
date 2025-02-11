@@ -142,13 +142,13 @@ async def test_energy_history_refresh_error(
 
 async def test_vehicle_stream(
     hass: HomeAssistant,
-    mock_listen: AsyncMock,
+    mock_add_listener: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test vehicle stream events."""
 
-    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
-    mock_listen.assert_called_once()
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+    mock_add_listener.assert_called()
 
     state = hass.states.get("binary_sensor.test_status")
     assert state.state == STATE_ON
@@ -156,29 +156,37 @@ async def test_vehicle_stream(
     state = hass.states.get("binary_sensor.test_user_present")
     assert state.state == STATE_OFF
 
-    runtime_data: TeslemetryData = entry.runtime_data
-    for listener, _ in runtime_data.vehicles[0].stream._listeners.values():
-        listener(
-            {
-                "vin": VEHICLE_DATA_ALT["response"]["vin"],
-                "vehicle_data": VEHICLE_DATA_ALT["response"],
-                "createdAt": "2024-10-04T10:45:17.537Z",
-            }
-        )
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "vehicle_data": VEHICLE_DATA_ALT["response"],
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_user_present")
     assert state.state == STATE_ON
 
-    for listener, _ in runtime_data.vehicles[0].stream._listeners.values():
-        listener(
-            {
-                "vin": VEHICLE_DATA_ALT["response"]["vin"],
-                "state": "offline",
-                "createdAt": "2024-10-04T10:45:17.537Z",
-            }
-        )
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "state": "offline",
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.test_status")
     assert state.state == STATE_OFF
+
+
+async def test_no_live_status(
+    hass: HomeAssistant,
+    mock_live_status: AsyncMock,
+) -> None:
+    """Test coordinator refresh with an error."""
+    mock_live_status.side_effect = AsyncMock({"response": ""})
+    await setup_platform(hass)
+
+    assert hass.states.get("sensor.energy_site_grid_power") is None

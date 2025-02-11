@@ -4,14 +4,12 @@ from __future__ import annotations
 
 from typing import Any
 
-from fjaraskupan import COMMAND_LIGHT_ON_OFF
-
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import async_setup_entry_platform
@@ -21,7 +19,7 @@ from .coordinator import FjaraskupanCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up tuya sensors dynamically through tuya discovery."""
 
@@ -62,7 +60,6 @@ class Light(CoordinatorEntity[FjaraskupanCoordinator], LightEntity):
         if self.is_on:
             async with self.coordinator.async_connect_and_update() as device:
                 await device.send_dim(0)
-                await device.send_command(COMMAND_LIGHT_ON_OFF)
 
     @property
     def is_on(self) -> bool:

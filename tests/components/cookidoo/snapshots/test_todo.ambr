@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -28,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': <TodoListEntityFeature: 7>,
     'translation_key': 'additional_item_list',
-    'unique_id': '01JBVVVJ87F6G5V0QJX6HBC94T_additional_items',
+    'unique_id': 'sub_uuid_additional_items',
     'unit_of_measurement': None,
   })
 # ---
@@ -53,6 +54,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -75,7 +77,7 @@
     'previous_unique_id': None,
     'supported_features': <TodoListEntityFeature: 4>,
     'translation_key': 'ingredient_list',
-    'unique_id': '01JBVVVJ87F6G5V0QJX6HBC94T_ingredients',
+    'unique_id': 'sub_uuid_ingredients',
     'unit_of_measurement': None,
   })
 # ---

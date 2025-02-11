@@ -29,24 +29,30 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: todo
+  action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: No options to configure
   docs-installation-parameters: todo
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |
       This integration does not require authentication.
-  test-coverage: done
+  test-coverage: todo
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: done
-  discovery: done
+  discovery-update-info:
+    status: todo
+    comment: DHCP is still possible
+  discovery:
+    status: todo
+    comment: DHCP is still possible
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
@@ -62,9 +68,9 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |

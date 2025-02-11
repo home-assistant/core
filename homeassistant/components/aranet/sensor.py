@@ -22,6 +22,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_NAME,
     ATTR_SW_VERSION,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -34,7 +35,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AranetConfigEntry
 from .const import ARANET_MANUFACTURER_NAME
@@ -142,6 +143,7 @@ def _sensor_device_info_to_hass(
     if adv.readings and adv.readings.name:
         hass_device_info[ATTR_NAME] = adv.readings.name
         hass_device_info[ATTR_MANUFACTURER] = ARANET_MANUFACTURER_NAME
+        hass_device_info[ATTR_MODEL] = adv.readings.type.model
     if adv.manufacturer_data:
         hass_device_info[ATTR_SW_VERSION] = str(adv.manufacturer_data.version)
     return hass_device_info
@@ -174,7 +176,7 @@ def sensor_update_to_bluetooth_data_update(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AranetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Aranet sensors."""
     processor = PassiveBluetoothDataProcessor(sensor_update_to_bluetooth_data_update)

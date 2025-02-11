@@ -14,14 +14,14 @@ from goslideapi.goslideapi import (
 )
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_VERSION, CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DOMAIN
+from .coordinator import SlideConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,7 +63,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         except (AuthenticationFailed, DigestAuthCalcError):
             return {"base": "invalid_auth"}
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("Exception occurred during connection test")
             return {"base": "unknown"}
 
@@ -73,7 +73,6 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             return {}
 
         # API version 2 is not working, try API version 1 instead
-        await slide.slide_del(user_input[CONF_HOST])
         await slide.slide_add(
             user_input[CONF_HOST],
             user_input.get(CONF_PASSWORD, ""),
@@ -86,7 +85,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             return {"base": "cannot_connect"}
         except (AuthenticationFailed, DigestAuthCalcError):
             return {"base": "invalid_auth"}
-        except Exception:  # noqa: BLE001
+        except Exception:
             _LOGGER.exception("Exception occurred during connection test")
             return {"base": "unknown"}
 
@@ -103,7 +102,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the user step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             if not (errors := await self.async_test_connection(user_input)):
                 await self.async_set_unique_id(self._mac)
@@ -136,6 +135,45 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            if not (errors := await self.async_test_connection(user_input)):
+                await self.async_set_unique_id(self._mac)
+                self._abort_if_unique_id_mismatch(
+                    description_placeholders={CONF_MAC: self._mac}
+                )
+                user_input |= {
+                    CONF_API_VERSION: self._api_version,
+                }
+
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates=user_input,
+                )
+
+        entry: SlideConfigEntry = self._get_reconfigure_entry()
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_HOST): str,
+                    }
+                ),
+                {
+                    CONF_HOST: entry.data[CONF_HOST],
+                    CONF_PASSWORD: entry.data.get(CONF_PASSWORD, ""),
+                },
+            ),
+            errors=errors,
+        )
+
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -146,14 +184,15 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(self._mac)
 
-        self._abort_if_unique_id_configured(
-            {CONF_HOST: discovery_info.host}, reload_on_update=True
-        )
+        ip = str(discovery_info.ip_address)
+        _LOGGER.debug("Slide device discovered, ip %s", ip)
+
+        self._abort_if_unique_id_configured({CONF_HOST: ip}, reload_on_update=True)
 
         errors = {}
         if errors := await self.async_test_connection(
             {
-                CONF_HOST: self._host,
+                CONF_HOST: ip,
             }
         ):
             return self.async_abort(
@@ -163,7 +202,7 @@ class SlideConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        self._host = discovery_info.host
+        self._host = ip
 
         return await self.async_step_zeroconf_confirm()
 

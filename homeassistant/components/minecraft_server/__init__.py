@@ -10,18 +10,10 @@ import dns.rdataclass
 import dns.rdatatype
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ADDRESS,
-    CONF_HOST,
-    CONF_NAME,
-    CONF_PORT,
-    CONF_TYPE,
-    Platform,
-)
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.device_registry as dr
-import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
 from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
@@ -43,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Minecraft Server from a config entry."""
 
     # Workaround to avoid blocking imports from dnspython (https://github.com/rthalley/dnspython/issues/1083)
-    hass.async_add_executor_job(load_dnspython_rdata_classes)
+    await hass.async_add_executor_job(load_dnspython_rdata_classes)
 
     # Create API instance.
     api = MinecraftServer(
@@ -59,7 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         raise ConfigEntryNotReady(f"Initialization failed: {error}") from error
 
     # Create coordinator instance.
-    coordinator = MinecraftServerCoordinator(hass, entry.data[CONF_NAME], api)
+    coordinator = MinecraftServerCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
 
     # Store coordinator instance.

@@ -20,6 +20,7 @@ from dsmr_parser.objects import DSMRObject, MbusDevice, Telegram
 import serial
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -42,7 +43,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import Throttle
 
@@ -456,24 +457,29 @@ def rename_old_gas_to_mbus(
                 if entity.unique_id.endswith(
                     "belgium_5min_gas_meter_reading"
                 ) or entity.unique_id.endswith("hourly_gas_meter_reading"):
-                    try:
-                        ent_reg.async_update_entity(
-                            entity.entity_id,
-                            new_unique_id=mbus_device_id,
-                            device_id=mbus_device_id,
-                        )
-                    except ValueError:
+                    if ent_reg.async_get_entity_id(
+                        SENSOR_DOMAIN, DOMAIN, mbus_device_id
+                    ):
                         LOGGER.debug(
                             "Skip migration of %s because it already exists",
                             entity.entity_id,
                         )
-                    else:
-                        LOGGER.debug(
-                            "Migrated entity %s from unique id %s to %s",
-                            entity.entity_id,
-                            entity.unique_id,
-                            mbus_device_id,
-                        )
+                        continue
+                    new_device = dev_reg.async_get_or_create(
+                        config_entry_id=entry.entry_id,
+                        identifiers={(DOMAIN, mbus_device_id)},
+                    )
+                    ent_reg.async_update_entity(
+                        entity.entity_id,
+                        new_unique_id=mbus_device_id,
+                        device_id=new_device.id,
+                    )
+                    LOGGER.debug(
+                        "Migrated entity %s from unique id %s to %s",
+                        entity.entity_id,
+                        entity.unique_id,
+                        mbus_device_id,
+                    )
             # Cleanup old device
             dev_entities = er.async_entries_for_device(
                 ent_reg, device_id, include_disabled_entities=True
@@ -543,7 +549,9 @@ def get_dsmr_object(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: DsmrConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: DsmrConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the DSMR sensor."""
     dsmr_version = entry.data[CONF_DSMR_VERSION]

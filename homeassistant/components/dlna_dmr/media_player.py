@@ -32,7 +32,8 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_DEVICE_ID, CONF_MAC, CONF_TYPE, CONF_URL
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
 from .const import (
     CONF_BROWSE_UNFILTERED,
@@ -91,7 +92,7 @@ def catch_request_errors[_DlnaDmrEntityT: DlnaDmrEntity, **_P, _R](
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the DlnaDmrEntity from a config entry."""
     _LOGGER.debug("media_player.async_setup_entry %s (%s)", entry.entry_id, entry.title)
@@ -246,7 +247,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         await self._device_disconnect()
 
     async def async_ssdp_callback(
-        self, info: ssdp.SsdpServiceInfo, change: ssdp.SsdpChange
+        self, info: SsdpServiceInfo, change: ssdp.SsdpChange
     ) -> None:
         """Handle notification from SSDP of device state change."""
         _LOGGER.debug(

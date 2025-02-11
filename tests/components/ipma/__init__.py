@@ -6,6 +6,7 @@ from pyipma.forecast import Forecast, Forecast_Location, Weather_Type
 from pyipma.observation import Observation
 from pyipma.rcm import RCM
 from pyipma.uv import UV
+from pyipma.warnings import Warning
 
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_MODE, CONF_NAME
 
@@ -19,6 +20,20 @@ ENTRY_CONFIG = {
 
 class MockLocation:
     """Mock Location from pyipma."""
+
+    async def warnings(self, api):
+        """Mock Warnings."""
+        return [
+            Warning(
+                text="Na costa Sul, ondas de sueste com 2 a 2,5 metros, em especial "
+                "no barlavento.",
+                awarenessTypeName="Agitação Marítima",
+                idAreaAviso="FAR",
+                startTime=datetime(2024, 12, 26, 12, 24),
+                awarenessLevelID="yellow",
+                endTime=datetime(2024, 12, 28, 6, 0),
+            )
+        ]
 
     async def fire_risk(self, api):
         """Mock Fire Risk."""

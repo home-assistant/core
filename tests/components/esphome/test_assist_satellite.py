@@ -48,8 +48,11 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, intent as intent_helper
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    intent as intent_helper,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 
 from .conftest import MockESPHomeDevice

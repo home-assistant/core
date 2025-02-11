@@ -210,6 +210,12 @@ class NetgearRouter:
 
         for device in self.devices.values():
             device["active"] = now - device["last_seen"] <= self._consider_home
+            if not device["active"]:
+                device["link_rate"] = None
+                device["signal"] = None
+                device["ip"] = None
+                device["ssid"] = None
+                device["conn_ap_mac"] = None
 
         if new_device:
             _LOGGER.debug("Netgear tracker: new device found")
