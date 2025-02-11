@@ -1,5 +1,6 @@
 """Tests for the Elmax config flow."""
 
+from ipaddress import IPv4Address
 from unittest.mock import patch
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
@@ -41,8 +42,8 @@ from . import (
 from tests.common import MockConfigEntry
 
 MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
-    ip_address=MOCK_DIRECT_HOST,
-    ip_addresses=[MOCK_DIRECT_HOST],
+    ip_address=IPv4Address(address=MOCK_DIRECT_HOST),
+    ip_addresses=[IPv4Address(address=MOCK_DIRECT_HOST)],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
@@ -55,8 +56,8 @@ MOCK_ZEROCONF_DISCOVERY_INFO = ZeroconfServiceInfo(
     type="_elmax-ssl._tcp",
 )
 MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = ZeroconfServiceInfo(
-    ip_address=MOCK_DIRECT_HOST_CHANGED,
-    ip_addresses=[MOCK_DIRECT_HOST_CHANGED],
+    ip_address=IPv4Address(address=MOCK_DIRECT_HOST_CHANGED),
+    ip_addresses=[IPv4Address(address=MOCK_DIRECT_HOST_CHANGED)],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
@@ -69,8 +70,8 @@ MOCK_ZEROCONF_DISCOVERY_CHANGED_INFO = ZeroconfServiceInfo(
     type="_elmax-ssl._tcp",
 )
 MOCK_ZEROCONF_DISCOVERY_INFO_NOT_SUPPORTED = ZeroconfServiceInfo(
-    ip_address=MOCK_DIRECT_HOST,
-    ip_addresses=[MOCK_DIRECT_HOST],
+    ip_address=IPv4Address(MOCK_DIRECT_HOST),
+    ip_addresses=[IPv4Address(MOCK_DIRECT_HOST)],
     hostname="VideoBox.local",
     name="VideoBox",
     port=443,
