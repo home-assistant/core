@@ -372,6 +372,8 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "virtual_thermostat",
         "virtual_valve",
         "sensibo_airconditioner_1",
+        "ecobee_sensor",
+        "ecobee_thermostat",
     ]
 )
 def devices(
