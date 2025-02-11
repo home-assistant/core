@@ -24,7 +24,7 @@ class ApSystemsEntity(Entity):
         version_parts = (
             data.coordinator.device_version.split(" ")
             if data.coordinator.device_version
-            else ["None"]
+            else [None]
         )
         sw_version = version_parts[1] if len(version_parts) > 1 else version_parts[0]
 
