@@ -138,7 +138,7 @@ class BackupAgentTest(BackupAgent):
 def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mock:
     """Create a mock backup agent."""
 
-    async def get_backup(backup_id: str, **kwargs: Any) -> AgentBackup:
+    async def get_backup(backup_id: str, **kwargs: Any) -> AgentBackup | None:
         """Get a backup."""
         return next((b for b in backups if b.backup_id == backup_id), None)
 
@@ -147,7 +147,7 @@ def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mo
     mock_agent.domain = "test"
     mock_agent.name = name
     mock_agent.unique_id = name
-    mock_agent.agent_id = f"{mock_agent.domain}.{mock_agent.unique_id}"
+    type(mock_agent).agent_id = BackupAgent.agent_id
     mock_agent.async_delete_backup = AsyncMock(
         spec_set=[BackupAgent.async_delete_backup]
     )
