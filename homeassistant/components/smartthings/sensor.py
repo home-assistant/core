@@ -8,7 +8,7 @@ from datetime import datetime
 from typing import Any
 
 from pysmartthings import Attribute, Capability
-from pysmartthings.device import DeviceEntity
+from pysmartthings.device import DeviceEntity, DeviceStatus
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -38,12 +38,22 @@ from .const import DATA_BROKERS, DOMAIN
 from .entity import SmartThingsEntity
 
 
+def power_attributes(status: DeviceStatus) -> dict[str, Any]:
+    """Return the power attributes."""
+    state = {}
+    for attribute in ("power_consumption_start", "power_consumption_end"):
+        value = getattr(status, attribute)
+        if value is not None:
+            state[attribute] = value
+    return state
+
+
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSensorEntityDescription(SensorEntityDescription):
     """Describe a SmartThings sensor entity."""
 
     value_fn: Callable[[Any], str | float | int | datetime | None] = lambda value: value
-    extra_state_attributes_fn: Callable[[Any], dict[str, Any]] | None = None
+    extra_state_attributes_fn: Callable[[DeviceStatus], dict[str, Any]] | None = None
     unique_id_separator: str = "."
 
 
@@ -397,7 +407,9 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL_INCREASING,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["energy"] / 1000,
+                value_fn=lambda value: (
+                    val / 1000 if (val := value.get("energy")) is not None else None
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="power_meter",
@@ -405,7 +417,8 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.MEASUREMENT,
                 device_class=SensorDeviceClass.POWER,
                 native_unit_of_measurement=UnitOfPower.WATT,
-                value_fn=lambda value: value["power"],
+                value_fn=lambda value: value.get("power"),
+                extra_state_attributes_fn=power_attributes,
             ),
             SmartThingsSensorEntityDescription(
                 key="deltaEnergy_meter",
@@ -413,7 +426,11 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL_INCREASING,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["deltaEnergy"] / 1000,
+                value_fn=lambda value: (
+                    val / 1000
+                    if (val := value.get("deltaEnergy")) is not None
+                    else None
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="powerEnergy_meter",
@@ -421,7 +438,11 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL_INCREASING,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["powerEnergy"] / 1000,
+                value_fn=lambda value: (
+                    val / 1000
+                    if (val := value.get("powerEnergy")) is not None
+                    else None
+                ),
             ),
             SmartThingsSensorEntityDescription(
                 key="energySaved_meter",
@@ -429,7 +450,11 @@ CAPABILITY_TO_SENSORS: dict[
                 state_class=SensorStateClass.TOTAL_INCREASING,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-                value_fn=lambda value: value["energySaved"] / 1000,
+                value_fn=lambda value: (
+                    val / 1000
+                    if (val := value.get("energySaved")) is not None
+                    else None
+                ),
             ),
         ]
     },
@@ -700,15 +725,6 @@ UNITS = {
     "mG": None,
 }
 
-THREE_AXIS_NAMES = ["X Coordinate", "Y Coordinate", "Z Coordinate"]
-POWER_CONSUMPTION_REPORT_NAMES = [
-    "energy",
-    "power",
-    "deltaEnergy",
-    "powerEnergy",
-    "energySaved",
-]
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -724,41 +740,6 @@ async def async_setup_entry(
         for attribute, descriptions in CAPABILITY_TO_SENSORS[capability].items()
         for description in descriptions
     )
-    # entities: list[SensorEntity] = []
-    # for device in broker.devices.values():
-    #     for capability in broker.get_assigned(device.device_id, "sensor"):
-    #         if capability == Capability.three_axis:
-    #             entities.extend(
-    #                 [
-    #                     SmartThingsThreeAxisSensor(device, index)
-    #                     for index in range(len(THREE_AXIS_NAMES))
-    #                 ]
-    #             )
-    #         elif capability == Capability.power_consumption_report:
-    #             entities.extend(
-    #                 [
-    #                     SmartThingsPowerConsumptionSensor(device, report_name)
-    #                     for report_name in POWER_CONSUMPTION_REPORT_NAMES
-    #                 ]
-    #             )
-    #         else:
-    #             maps = CAPABILITY_TO_SENSORS[capability]
-    #             entities.extend(
-    #                 [
-    #                     SmartThingsSensor(
-    #                         device,
-    #                         m.attribute,
-    #                         m.name,
-    #                         m.default_unit,
-    #                         m.device_class,
-    #                         m.state_class,
-    #                         m.entity_category,
-    #                     )
-    #                     for m in maps
-    #                 ]
-    #             )
-    #
-    # async_add_entities(entities)
 
 
 def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
@@ -808,75 +789,6 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         """Return the state attributes."""
         if self.entity_description.extra_state_attributes_fn:
             return self.entity_description.extra_state_attributes_fn(
-                self._device.status.attributes[self._attribute].value
+                self._device.status
             )
-        return None
-
-
-class SmartThingsThreeAxisSensor(SmartThingsEntity, SensorEntity):
-    """Define a SmartThings Three Axis Sensor."""
-
-    def __init__(self, device, index):
-        """Init the class."""
-        super().__init__(device)
-        self._index = index
-        self._attr_name = f"{device.label} {THREE_AXIS_NAMES[index]}"
-        self._attr_unique_id = f"{device.device_id} {THREE_AXIS_NAMES[index]}"
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        three_axis = self._device.status.attributes[Attribute.three_axis].value
-        try:
-            return three_axis[self._index]
-        except (TypeError, IndexError):
-            return None
-
-
-class SmartThingsPowerConsumptionSensor(SmartThingsEntity, SensorEntity):
-    """Define a SmartThings Sensor."""
-
-    def __init__(
-        self,
-        device: DeviceEntity,
-        report_name: str,
-    ) -> None:
-        """Init the class."""
-        super().__init__(device)
-        self.report_name = report_name
-        self._attr_name = f"{device.label} {report_name}"
-        self._attr_unique_id = f"{device.device_id}.{report_name}_meter"
-        if self.report_name == "power":
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-            self._attr_device_class = SensorDeviceClass.POWER
-            self._attr_native_unit_of_measurement = UnitOfPower.WATT
-        else:
-            self._attr_state_class = SensorStateClass.TOTAL_INCREASING
-            self._attr_device_class = SensorDeviceClass.ENERGY
-            self._attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        value = self._device.status.attributes[Attribute.power_consumption].value
-        if value is None or value.get(self.report_name) is None:
-            return None
-        if self.report_name == "power":
-            return value[self.report_name]
-        return value[self.report_name] / 1000
-
-    @property
-    def extra_state_attributes(self):
-        """Return specific state attributes."""
-        if self.report_name == "power":
-            attributes = [
-                "power_consumption_start",
-                "power_consumption_end",
-            ]
-            state_attributes = {}
-            for attribute in attributes:
-                value = getattr(self._device.status, attribute)
-                if value is not None:
-                    state_attributes[attribute] = value
-            return state_attributes
         return None
