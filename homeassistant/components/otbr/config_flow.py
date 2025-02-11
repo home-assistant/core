@@ -16,7 +16,12 @@ import yarl
 from homeassistant.components.hassio import AddonError, AddonManager
 from homeassistant.components.homeassistant_yellow import hardware as yellow_hardware
 from homeassistant.components.thread import async_get_preferred_dataset
-from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_HASSIO,
+    ConfigEntryState,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -210,8 +215,12 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     or current_url.port == config["port"]
                 ):
                     # Reload the entry since OTBR has restarted
-                    assert current_entry.unique_id is not None
-                    await self.hass.config_entries.async_reload(current_entry.unique_id)
+                    if current_entry.state == ConfigEntryState.LOADED:
+                        assert current_entry.unique_id is not None
+                        await self.hass.config_entries.async_reload(
+                            current_entry.unique_id
+                        )
+
                     continue
 
                 # Update URL with the new port
