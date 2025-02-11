@@ -97,6 +97,7 @@ async def test_user_flow_additional_entry(
 @pytest.mark.usefixtures(
     "get_active_dataset_tlvs",
     "get_extended_address",
+    "get_coprocessor_version",
 )
 async def test_user_flow_additional_entry_fail_get_address(
     hass: HomeAssistant,
@@ -174,6 +175,7 @@ async def _finish_user_flow(
     "get_active_dataset_tlvs",
     "get_border_agent_id",
     "get_extended_address",
+    "get_coprocessor_version",
 )
 async def test_user_flow_additional_entry_same_address(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
@@ -563,7 +565,11 @@ async def test_hassio_discovery_flow_2x_addons(
     assert config_entry.unique_id == HASSIO_DATA_2.uuid
 
 
-@pytest.mark.usefixtures("get_active_dataset_tlvs", "get_extended_address")
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_extended_address",
+    "get_coprocessor_version",
+)
 async def test_hassio_discovery_flow_2x_addons_same_ext_address(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, otbr_addon_info
 ) -> None:
