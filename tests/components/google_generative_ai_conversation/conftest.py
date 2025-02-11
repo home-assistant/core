@@ -1,7 +1,7 @@
 """Tests helpers."""
 
 from collections.abc import Generator
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -31,18 +31,21 @@ def mock_config_entry(hass: HomeAssistant, mock_genai: None) -> MockConfigEntry:
             "api_key": "bla",
         },
     )
+    entry.runtime_data = Mock()
     entry.add_to_hass(hass)
     return entry
 
 
 @pytest.fixture
-def mock_config_entry_with_assist(
+async def mock_config_entry_with_assist(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> MockConfigEntry:
     """Mock a config entry with assist."""
-    hass.config_entries.async_update_entry(
-        mock_config_entry, options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST}
-    )
+    with patch("google.genai.models.AsyncModels.get"):
+        hass.config_entries.async_update_entry(
+            mock_config_entry, options={CONF_LLM_HASS_API: llm.LLM_API_ASSIST}
+        )
+        await hass.async_block_till_done()
     return mock_config_entry
 
 
@@ -51,8 +54,11 @@ async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: ConfigEntry
 ) -> None:
     """Initialize integration."""
-    assert await async_setup_component(hass, "google_generative_ai_conversation", {})
-    await hass.async_block_till_done()
+    with patch("google.genai.models.AsyncModels.get"):
+        assert await async_setup_component(
+            hass, "google_generative_ai_conversation", {}
+        )
+        await hass.async_block_till_done()
 
 
 @pytest.fixture(autouse=True)

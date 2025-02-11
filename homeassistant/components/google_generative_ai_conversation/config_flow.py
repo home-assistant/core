@@ -9,6 +9,7 @@ from typing import Any
 
 from google import genai
 from google.genai.errors import APIError, ClientError
+from requests.exceptions import Timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -88,6 +89,8 @@ class GoogleGenerativeAIConfigFlow(ConfigFlow, domain=DOMAIN):
             client = genai.Client(api_key=user_input[CONF_API_KEY])
             try:
                 await validate_input(client)
+            except Timeout:
+                errors["base"] = "cannot_connect"
             except APIError as err:
                 if isinstance(err, ClientError) and err.code == 401:
                     errors["base"] = "invalid_auth"
@@ -241,9 +244,7 @@ async def google_generative_ai_config_option_schema(
             label=api_model.display_name,
             value=api_model.name,
         )
-        for api_model in sorted(
-            api_models, key=lambda x: x.display_name if x.display_name else ""
-        )
+        for api_model in sorted(api_models, key=lambda x: x.display_name or "")
         if (
             api_model.name != "models/gemini-1.0-pro"  # duplicate of gemini-pro
             and api_model.display_name

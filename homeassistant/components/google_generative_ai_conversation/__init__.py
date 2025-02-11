@@ -8,7 +8,7 @@ from pathlib import Path
 from google import genai
 from google.genai.errors import APIError, ClientError
 from PIL import Image
-from requests.exceptions import Timeout as DeadlineExceeded
+from requests.exceptions import Timeout
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -61,8 +61,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 raise HomeAssistantError(f"`{image_filename}` is not an image")
             prompt_parts.append(Image.open(image_filename))
 
+        config_entry: GoogleGenerativeAIConfigEntry = hass.config_entries.async_entries(
+            DOMAIN
+        )[0]
+        client = config_entry.runtime_data
+
         try:
-            client = hass.config_entries.async_entries(DOMAIN)[0].runtime_data
             response = await client.aio.models.generate_content(
                 model=RECOMMENDED_CHAT_MODEL, contents=prompt_parts
             )
@@ -108,12 +112,12 @@ async def async_setup_entry(
         client = genai.Client(api_key=entry.data[CONF_API_KEY])
         await client.aio.models.get(
             model=entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
-            config={"http_options": {"timeout": 5 * MILLISECONDS}},
+            config={"http_options": {"timeout": 10 * MILLISECONDS}},
         )
-    except (APIError, DeadlineExceeded) as err:
+    except (APIError, Timeout) as err:
         if isinstance(err, ClientError) and err.code == 401:
             raise ConfigEntryAuthFailed(err) from err
-        if isinstance(err, DeadlineExceeded):
+        if isinstance(err, Timeout):
             raise ConfigEntryNotReady(err) from err
         raise ConfigEntryError(err) from err
     else:
