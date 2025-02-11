@@ -102,7 +102,7 @@ async def test_get_firmware_info_ignored(hass: HomeAssistant) -> None:
 
 
 async def test_get_firmware_info_no_coprocessor_version(hass: HomeAssistant) -> None:
-    """Test `async_get_firmware_info`."""
+    """Test `async_get_firmware_info` with no coprocessor version support."""
 
     otbr = MockConfigEntry(
         domain="otbr",
@@ -236,3 +236,40 @@ async def test_hardware_firmware_info_provider_notification(
             )
         )
     ]
+
+
+async def test_get_firmware_info_remote_otbr(hass: HomeAssistant) -> None:
+    """Test `async_get_firmware_info` with no coprocessor version support."""
+
+    otbr = MockConfigEntry(
+        domain="otbr",
+        unique_id="some_unique_id",
+        data={
+            "device": DEVICE_PATH,
+            "url": "http://192.168.1.10:8888",
+        },
+        version=1,
+        minor_version=2,
+    )
+    otbr.add_to_hass(hass)
+    otbr.mock_state(hass, ConfigEntryState.LOADED)
+
+    otbr.runtime_data = AsyncMock()
+    otbr.runtime_data.get_coprocessor_version.return_value = TEST_COPROCESSOR_VERSION
+
+    with (
+        patch(
+            "homeassistant.components.otbr.homeassistant_hardware.is_hassio",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.otbr.homeassistant_hardware.AddonManager",
+        ),
+        patch(
+            "homeassistant.components.otbr.homeassistant_hardware.get_otbr_addon_firmware_info",
+            return_value=None,
+        ),
+    ):
+        fw_info = await async_get_firmware_info(hass, otbr)
+
+    assert fw_info is None

@@ -5,10 +5,9 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, cast
 
-import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components.hassio import AddonManager, valid_addon
+from homeassistant.components.hassio import AddonManager
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
@@ -40,25 +39,20 @@ async def async_get_firmware_info(
     device = None
 
     if is_hassio(hass) and (host := URL(config_entry.data["url"]).host) is not None:
-        try:
-            valid_addon(host)
-        except vol.Invalid:
-            pass
-        else:
-            otbr_addon_manager = AddonManager(
-                hass=hass,
-                logger=_LOGGER,
-                addon_name="OpenThread Border Router",
-                addon_slug=host,
-            )
+        otbr_addon_manager = AddonManager(
+            hass=hass,
+            logger=_LOGGER,
+            addon_name="OpenThread Border Router",
+            addon_slug=host,
+        )
 
-            if (
-                addon_fw_info := await get_otbr_addon_firmware_info(
-                    hass, otbr_addon_manager
-                )
-            ) is not None:
-                device = addon_fw_info.device
-                owners.extend(addon_fw_info.owners)
+        if (
+            addon_fw_info := await get_otbr_addon_firmware_info(
+                hass, otbr_addon_manager
+            )
+        ) is not None:
+            device = addon_fw_info.device
+            owners.extend(addon_fw_info.owners)
 
     firmware_version = None
 
