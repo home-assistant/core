@@ -219,7 +219,7 @@ aiocomelit==0.10.1
 aiodhcpwatcher==1.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==2.2.2
+aiodiscover==2.6.0
 
 # homeassistant.components.dnsip
 aiodns==3.2.0
@@ -371,7 +371,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.4.1
+aioshelly==12.4.2
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -650,7 +650,7 @@ boto3==1.34.131
 botocore==1.34.131
 
 # homeassistant.components.bring
-bring-api==1.0.1
+bring-api==1.0.2
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
@@ -1024,7 +1024,7 @@ goodwe==0.3.6
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.23.0
+google-cloud-pubsub==2.28.0
 
 # homeassistant.components.google_cloud
 google-cloud-speech==2.27.0
@@ -1100,7 +1100,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habiticalib==0.3.5
+habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
 habluetooth==3.21.1
@@ -1146,7 +1146,7 @@ hole==0.8.0
 holidays==0.66
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250205.0
+home-assistant-frontend==20250210.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.2.5
@@ -1489,7 +1489,7 @@ nextcord==2.6.0
 nextdns==4.0.0
 
 # homeassistant.components.niko_home_control
-nhc==0.4.4
+nhc==0.4.10
 
 # homeassistant.components.nibe_heatpump
 nibe==2.14.0
@@ -1559,7 +1559,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.9
+onedrive-personal-sdk==0.0.10
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -1749,7 +1749,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.6.0
+py-synologydsm-api==2.6.2
 
 # homeassistant.components.atome
 pyAtome==0.1.1
@@ -1773,7 +1773,7 @@ pyEmby==1.10
 pyHik==0.3.2
 
 # homeassistant.components.homee
-pyHomee==1.2.5
+pyHomee==1.2.7
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -1825,7 +1825,7 @@ pyatv==0.16.0
 pyaussiebb==0.1.5
 
 # homeassistant.components.balboa
-pybalboa==1.0.2
+pybalboa==1.1.2
 
 # homeassistant.components.bbox
 pybbox==0.0.5-alpha
@@ -1900,7 +1900,7 @@ pydiscovergy==3.0.2
 pydoods==1.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2025.1.0
+pydrawise==2025.2.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1912,7 +1912,7 @@ pyebox==1.1.4
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.1.26
+pyeconet==0.1.27
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.3.1
@@ -1990,7 +1990,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.1
+pyheos==1.0.2
 
 # homeassistant.components.hive
 pyhive-integration==1.0.1
@@ -2207,6 +2207,9 @@ pypca==0.0.7
 # homeassistant.components.lcn
 pypck==0.8.5
 
+# homeassistant.components.pglab
+pypglab==0.0.3
+
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
 
@@ -2391,7 +2394,7 @@ python-gc100==1.0.3a0
 python-gitlab==1.6.0
 
 # homeassistant.components.google_drive
-python-google-drive-api==0.0.2
+python-google-drive-api==0.1.0
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.9.0

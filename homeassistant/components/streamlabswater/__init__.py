@@ -35,7 +35,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     api_key = entry.data[CONF_API_KEY]
     client = StreamlabsClient(api_key)
-    coordinator = StreamlabsCoordinator(hass, client)
+    coordinator = StreamlabsCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
 
