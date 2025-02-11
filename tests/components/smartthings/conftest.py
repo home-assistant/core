@@ -370,6 +370,7 @@ def mock_smartthings() -> Generator[AsyncMock]:
         "aeotec_home_energy_meter_gen5",
         "virtual_water_sensor",
         "virtual_thermostat",
+        "virtual_valve",
         "sensibo_airconditioner_1",
     ]
 )

@@ -20,12 +20,10 @@ from .entity import SmartThingsEntity
 # CAPABILITY_TO_ATTRIB = {
 #     Capability.filter_status: Attribute.filter_status,
 #     Capability.tamper_alert: Attribute.tamper,
-#     Capability.valve: Attribute.valve,
 # }
 # ATTRIB_TO_CLASS = {
 #     Attribute.filter_status: BinarySensorDeviceClass.PROBLEM,
 #     Attribute.tamper: BinarySensorDeviceClass.PROBLEM,
-#     Attribute.valve: BinarySensorDeviceClass.OPENING,
 # }
 # ATTRIB_TO_ENTITY_CATEGORY = {
 #     Attribute.tamper: EntityCategory.DIAGNOSTIC,
@@ -36,7 +34,6 @@ from .entity import SmartThingsEntity
 #     Attribute.playback_shuffle: "enabled",
 #     Attribute.switch: "on",
 #     Attribute.tamper: "detected",
-#     Attribute.valve: "open",
 # }
 
 
@@ -101,6 +98,15 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.WATER,
                 device_class=BinarySensorDeviceClass.MOISTURE,
                 is_on_key="wet",
+            )
+        ]
+    },
+    Capability.VALVE: {
+        Attribute.VALVE: [
+            SmartThingsBinarySensorEntityDescription(
+                key=Attribute.VALVE,
+                device_class=BinarySensorDeviceClass.OPENING,
+                is_on_key="open",
             )
         ]
     },
