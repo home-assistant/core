@@ -178,30 +178,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
         _LOGGER.debug(
             "Migrating OneDrive config entry from version %s.%s", version, minor_version
         )
-        implementation = await async_get_config_entry_implementation(hass, entry)
-        session = OAuth2Session(hass, entry, implementation)
-
-        async def get_access_token() -> str:
-            await session.async_ensure_token_valid()
-            return cast(str, session.token[CONF_ACCESS_TOKEN])
-
-        client = OneDriveClient(get_access_token, async_get_clientsession(hass))
 
         instance_id = await async_get_instance_id(hass)
-        try:
-            approot = await client.get_approot()
-            folder = await client.get_drive_item(
-                path_or_id=f"{approot.id}:/backups_{instance_id[:8]}:"
-            )
-        except OneDriveException:
-            _LOGGER.exception("Failed to migrate")
-            return False
         hass.config_entries.async_update_entry(
             entry,
             data={
                 **entry.data,
-                CONF_FOLDER_ID: folder.id,
-                CONF_FOLDER_NAME: folder.name,
+                CONF_FOLDER_ID: "id",  # will be updated during setup_entry
+                CONF_FOLDER_NAME: f"backups_{instance_id[:8]}",
             },
         )
         _LOGGER.debug("Migration to version 1.2 successful")
