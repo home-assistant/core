@@ -11,7 +11,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.onedrive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .const import BACKUP_METADATA, MOCK_BACKUP_FILE, MOCK_DRIVE
@@ -122,7 +122,6 @@ async def test_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the device."""
