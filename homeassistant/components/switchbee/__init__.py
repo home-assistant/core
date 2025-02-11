@@ -63,10 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     websession = async_get_clientsession(hass, verify_ssl=False)
     api = await get_api_object(central_unit, user, password, websession)
 
-    coordinator = SwitchBeeCoordinator(
-        hass,
-        api,
-    )
+    coordinator = SwitchBeeCoordinator(hass, entry, api)
 
     await coordinator.async_config_entry_first_refresh()
     entry.async_on_unload(entry.add_update_listener(update_listener))

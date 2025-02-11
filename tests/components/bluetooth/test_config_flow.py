@@ -20,7 +20,7 @@ from homeassistant.components.bluetooth.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import area_registry as ar, device_registry as dr
 from homeassistant.setup import async_setup_component
 
 from . import FakeRemoteScanner, MockBleakClient, _get_manager
@@ -517,8 +517,10 @@ async def test_options_flow_local_no_passive_support(hass: HomeAssistant) -> Non
 
 
 @pytest.mark.usefixtures("one_adapter")
-async def test_async_step_user_linux_adapter_is_ignored(hass: HomeAssistant) -> None:
-    """Test we give a hint that the adapter is ignored."""
+async def test_async_step_user_linux_adapter_replace_ignored(
+    hass: HomeAssistant,
+) -> None:
+    """Test we can replace an ignored adapter from user flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="00:00:00:00:00:01",
@@ -530,14 +532,26 @@ async def test_async_step_user_linux_adapter_is_ignored(hass: HomeAssistant) -> 
         context={"source": config_entries.SOURCE_USER},
         data={},
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_adapters"
-    assert result["description_placeholders"] == {"ignored_adapters": "1"}
+    with (
+        patch("homeassistant.components.bluetooth.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
+    assert result2["data"] == {}
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
 async def test_async_step_integration_discovery_remote_adapter(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
 ) -> None:
     """Test remote adapter configuration via integration discovery."""
     entry = MockConfigEntry(domain="test")
@@ -547,10 +561,12 @@ async def test_async_step_integration_discovery_remote_adapter(
     )
     scanner = FakeRemoteScanner("esp32", "esp32", connector, True)
     manager = _get_manager()
+    area_entry = area_registry.async_get_or_create("test")
     cancel_scanner = manager.async_register_scanner(scanner)
     device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={("test", "BB:BB:BB:BB:BB:BB")},
+        suggested_area=area_entry.id,
     )
 
     result = await hass.config_entries.flow.async_init(
@@ -585,6 +601,7 @@ async def test_async_step_integration_discovery_remote_adapter(
     )
     assert ble_device_entry is not None
     assert ble_device_entry.via_device_id == device_entry.id
+    assert ble_device_entry.area_id == area_entry.id
 
     await hass.config_entries.async_unload(new_entry.entry_id)
     await hass.config_entries.async_unload(entry.entry_id)

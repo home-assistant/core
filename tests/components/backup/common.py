@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Callable, Coroutine, Iterable
 from pathlib import Path
 from typing import Any
-from unittest.mock import ANY, AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from homeassistant.components.backup import (
     DOMAIN,
@@ -13,6 +13,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupAgentPlatformProtocol,
+    BackupNotFound,
     Folder,
 )
 from homeassistant.components.backup.const import DATA_MANAGER
@@ -29,7 +30,7 @@ TEST_BACKUP_ABC123 = AgentBackup(
     backup_id="abc123",
     database_included=True,
     date="1970-01-01T00:00:00.000Z",
-    extra_metadata={"instance_id": ANY, "with_automatic_settings": True},
+    extra_metadata={"instance_id": "our_uuid", "with_automatic_settings": True},
     folders=[Folder.MEDIA, Folder.SHARE],
     homeassistant_included=True,
     homeassistant_version="2024.12.0",
@@ -132,6 +133,37 @@ class BackupAgentTest(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
+
+
+def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mock:
+    """Create a mock backup agent."""
+
+    async def get_backup(backup_id: str, **kwargs: Any) -> AgentBackup | None:
+        """Get a backup."""
+        return next((b for b in backups if b.backup_id == backup_id), None)
+
+    backups = backups or []
+    mock_agent = Mock(spec=BackupAgent)
+    mock_agent.domain = "test"
+    mock_agent.name = name
+    mock_agent.unique_id = name
+    type(mock_agent).agent_id = BackupAgent.agent_id
+    mock_agent.async_delete_backup = AsyncMock(
+        spec_set=[BackupAgent.async_delete_backup]
+    )
+    mock_agent.async_download_backup = AsyncMock(
+        side_effect=BackupNotFound, spec_set=[BackupAgent.async_download_backup]
+    )
+    mock_agent.async_get_backup = AsyncMock(
+        side_effect=get_backup, spec_set=[BackupAgent.async_get_backup]
+    )
+    mock_agent.async_list_backups = AsyncMock(
+        return_value=backups, spec_set=[BackupAgent.async_list_backups]
+    )
+    mock_agent.async_upload_backup = AsyncMock(
+        spec_set=[BackupAgent.async_upload_backup]
+    )
+    return mock_agent
 
 
 async def setup_backup_integration(

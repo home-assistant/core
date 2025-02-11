@@ -110,6 +110,7 @@ def system_info_fixture() -> HeosSystem:
         "1.0.0",
         "127.0.0.1",
         NetworkType.WIRED,
+        True,
     )
     return HeosSystem(
         "user@user.com",
@@ -123,6 +124,7 @@ def system_info_fixture() -> HeosSystem:
                 "1.0.0",
                 "127.0.0.2",
                 NetworkType.WIFI,
+                True,
             ),
         ],
     )
@@ -140,6 +142,7 @@ def players_fixture() -> dict[int, HeosPlayer]:
             model="HEOS Drive HS2" if i == 1 else "Speaker",
             serial="123456",
             version="1.0.0",
+            supported_version=True,
             line_out=LineOutLevelType.VARIABLE,
             is_muted=False,
             available=True,

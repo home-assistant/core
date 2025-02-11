@@ -13,7 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import GeoJsonFeedEntityManager
 from .const import (
@@ -28,7 +28,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the GeoJSON Events platform."""
     manager: GeoJsonFeedEntityManager = hass.data[DOMAIN][entry.entry_id]
