@@ -17,7 +17,13 @@ CAPABILITIES = (
     Capability.SWITCH_LEVEL,
     Capability.COLOR_CONTROL,
     Capability.COLOR_TEMPERATURE,
+)
+
+AC_CAPABILITIES = (
     Capability.AIR_CONDITIONER_MODE,
+    Capability.AIR_CONDITIONER_FAN_MODE,
+    Capability.TEMPERATURE_MEASUREMENT,
+    Capability.THERMOSTAT_COOLING_SETPOINT,
 )
 
 
@@ -33,6 +39,7 @@ async def async_setup_entry(
         for device in devices
         if Capability.SWITCH in device.data
         and not any(capability in device.data for capability in CAPABILITIES)
+        and not all(capability in device.data for capability in AC_CAPABILITIES)
     )
 
 

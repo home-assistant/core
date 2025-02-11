@@ -52,16 +52,6 @@ from .entity import SmartThingsEntity
 #             EntityCategory.DIAGNOSTIC,
 #         )
 #     ],
-#     Capability.air_conditioner_mode: [
-#         Map(
-#             Attribute.air_conditioner_mode,
-#             "Air Conditioner Mode",
-#             None,
-#             None,
-#             None,
-#             EntityCategory.DIAGNOSTIC,
-#         )
-#     ],
 #     Capability.body_mass_index_measurement: [
 #         Map(
 #             Attribute.bmi_measurement,
@@ -666,7 +656,11 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COOLING_SETPOINT,
                 name="Thermostat Cooling Setpoint",
                 device_class=SensorDeviceClass.TEMPERATURE,
-                capability_ignore_list={Capability.AIR_CONDITIONER_MODE},
+                capability_ignore_list={
+                    Capability.AIR_CONDITIONER_FAN_MODE,
+                    Capability.TEMPERATURE_MEASUREMENT,
+                    Capability.AIR_CONDITIONER_MODE,
+                },
             )
         ]
     },
@@ -696,6 +690,20 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
+    Capability.AIR_CONDITIONER_MODE: {
+        Attribute.AIR_CONDITIONER_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.AIR_CONDITIONER_MODE,
+                name="Air Conditioner Mode",
+                entity_category=EntityCategory.DIAGNOSTIC,
+                capability_ignore_list={
+                    Capability.AIR_CONDITIONER_FAN_MODE,
+                    Capability.TEMPERATURE_MEASUREMENT,
+                    Capability.THERMOSTAT_COOLING_SETPOINT,
+                },
+            )
+        ]
+    },
 }
 
 
@@ -722,7 +730,7 @@ async def async_setup_entry(
         for attribute in attributes
         for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
         if not description.capability_ignore_list
-        or not any(
+        or not all(
             capability in device.data
             for capability in description.capability_ignore_list
         )
