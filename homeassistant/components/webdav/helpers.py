@@ -1,6 +1,5 @@
 """Helper functions for the WebDAV component."""
 
-from aiohttp import ClientTimeout
 from aiowebdav2.client import Client, ClientOptions
 
 from homeassistant.core import HomeAssistant, callback
@@ -22,7 +21,6 @@ def async_create_client(
         username=username,
         password=password,
         options=ClientOptions(
-            timeout=ClientTimeout(connect=10, total=43200),
             verify_ssl=verify_ssl,
             session=async_get_clientsession(hass),
         ),

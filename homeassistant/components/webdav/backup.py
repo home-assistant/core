@@ -7,6 +7,7 @@ from functools import wraps
 import logging
 from typing import Any, Concatenate
 
+from aiohttp import ClientTimeout
 from aiowebdav2 import Property, PropertyRequest
 from aiowebdav2.exceptions import UnauthorizedError, WebDavError
 from propcache.api import cached_property
@@ -27,6 +28,7 @@ from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 METADATA_VERSION = "1"
+BACKUP_TIMEOUT = ClientTimeout(connect=10, total=43200)
 
 
 async def async_get_backup_agents(
@@ -126,7 +128,8 @@ class WebDavBackupAgent(BackupAgent):
             raise BackupAgentError("Backup not found")
 
         return await self._client.download_iter(
-            f"{self._backup_path}/{suggested_filename(backup)}"
+            f"{self._backup_path}/{suggested_filename(backup)}",
+            timeout=BACKUP_TIMEOUT,
         )
 
     @handle_backup_errors
@@ -157,6 +160,7 @@ class WebDavBackupAgent(BackupAgent):
         await self._client.upload_iter(
             json_dumps(backup.as_dict()),
             f"{self._backup_path}/{metadata_filename}",
+            timeout=BACKUP_TIMEOUT,
         )
 
         await self._client.set_property_batch(
