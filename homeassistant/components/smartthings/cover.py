@@ -13,6 +13,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
+from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -82,15 +83,13 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         )
         if self.supports_capability(
             Capability.SWITCH_LEVEL
-        ):  # or self.supports_capability(Capability.WINDOW_SHADE_LEVEL)
+        ) or self.supports_capability(Capability.WINDOW_SHADE_LEVEL):
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
         if self.supports_capability(Capability.DOOR_CONTROL):
             self._attr_device_class = CoverDeviceClass.DOOR
         elif self.supports_capability(Capability.WINDOW_SHADE):
             self._attr_device_class = CoverDeviceClass.SHADE
-        # elif Capability.garage_door_control in device.capabilities:
-        #     self._attr_device_class = CoverDeviceClass.GARAGE
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
@@ -106,15 +105,14 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        # if Capability.window_shade_level in self._device.capabilities:
-        #     await self._device.set_window_shade_level(
-        #         kwargs[ATTR_POSITION], set_status=False
-        #     )
-        # else:
         await self.coordinator.client.execute_device_command(
             self.coordinator.device.device_id,
             self.capability,
-            Command.SET_LEVEL,
+            (
+                Command.SET_SHADE_LEVEL
+                if self.capability is Capability.WINDOW_SHADE_LEVEL
+                else Command.SET_LEVEL
+            ),
             argument=kwargs[ATTR_POSITION],
         )
 
@@ -127,12 +125,16 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         self._state = VALUE_TO_STATE.get(
             self.get_attribute_value(self.capability, attribute)
         )
-        # elif Capability.garage_door_control in self._device.capabilities:
-        #     self._state = VALUE_TO_STATE.get(self._device.status.door)
 
         if self.supports_capability(Capability.SWITCH_LEVEL):
             self._attr_current_cover_position = self.get_attribute_value(
                 Capability.SWITCH_LEVEL, Attribute.LEVEL
+            )
+
+        self._attr_extra_state_attributes = {}
+        if self.supports_capability(Capability.BATTERY):
+            self._attr_extra_state_attributes[ATTR_BATTERY_LEVEL] = (
+                self.get_attribute_value(Capability.BATTERY, Attribute.BATTERY)
             )
 
     @property
