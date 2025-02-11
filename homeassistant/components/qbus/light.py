@@ -8,7 +8,7 @@ from qbusmqttapi.state import QbusMqttAnalogState, StateType
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
 
 from .coordinator import QbusConfigEntry
@@ -18,7 +18,9 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: QbusConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: QbusConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up light entities."""
 
