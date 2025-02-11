@@ -1640,7 +1640,7 @@ pyicloud==1.0.0
 pyinsteon==1.6.3
 
 # homeassistant.components.ipma
-pyipma==3.0.8
+pyipma==3.0.9
 
 # homeassistant.components.ipp
 pyipp==0.17.0
