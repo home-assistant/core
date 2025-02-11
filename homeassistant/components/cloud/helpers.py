@@ -24,6 +24,8 @@ class FixedSizeQueueLogHandler(logging.Handler):
         """Get stored logs."""
 
         def _get_logs() -> list[str]:
-            return [self.format(record) for record in self._records]
+            # copy the queue since it can mutate while iterating
+            records = self._records.copy()
+            return [self.format(record) for record in records]
 
         return await hass.async_add_executor_job(_get_logs)
