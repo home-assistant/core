@@ -81,7 +81,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         self.update_method = update_method
         self.setup_method = setup_method
         self._update_interval_seconds: float | None = None
-        self.update_interval = update_interval
+        self._update_interval = update_interval
         self._shutdown_requested = False
         if config_entry is UNDEFINED:
             self.config_entry = config_entries.current_entry.get()
