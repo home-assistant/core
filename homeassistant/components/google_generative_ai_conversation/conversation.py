@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import codecs
 from collections.abc import Callable
+import re
 from typing import Any, Literal, cast
 
 from google.genai.errors import APIError
@@ -139,9 +140,6 @@ def _format_tool(
     else:
         parameters = None
 
-    LOGGER.warning("Tool: %s", tool.name)
-    LOGGER.warning("Parameters: %s", parameters)
-    LOGGER.warning("Description: %s", tool.description)
     return Tool(
         function_declarations=[
             FunctionDeclaration(
@@ -151,6 +149,11 @@ def _format_tool(
             )
         ]
     )
+
+
+def _fix_tool_name(tool_name: str) -> str:
+    """Correct the tool name."""
+    return re.sub(r"^Has(?=[A-Z])", "Hass", tool_name)
 
 
 def _escape_decode(value: Any) -> Any:
@@ -306,9 +309,7 @@ class GoogleGenerativeAIConversationEntity(
         )
 
         prompt_content = cast(
-            conversation.UserContent
-            | conversation.SystemContent
-            | conversation.AssistantContent,
+            conversation.SystemContent,
             chat_log.content[0],
         )
 
@@ -431,7 +432,9 @@ class GoogleGenerativeAIConversationEntity(
                 tool_name = tool_call.name
                 tool_args = _escape_decode(tool_call.args)
                 tool_calls.append(
-                    llm.ToolInput(tool_name=tool_name, tool_args=tool_args)
+                    llm.ToolInput(
+                        tool_name=_fix_tool_name(tool_name), tool_args=tool_args
+                    )
                 )
 
             chat_request = _create_google_tool_response_content(
