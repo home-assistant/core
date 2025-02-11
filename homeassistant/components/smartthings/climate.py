@@ -10,6 +10,8 @@ from pysmartthings.models import Attribute, Capability, Command
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -106,240 +108,198 @@ async def async_setup_entry(
         Capability.TEMPERATURE_MEASUREMENT,
         Capability.THERMOSTAT_COOLING_SETPOINT,
     ]
-    async_add_entities(
+    thermostat_capabilities = [
+        Capability.TEMPERATURE_MEASUREMENT,
+        Capability.THERMOSTAT_HEATING_SETPOINT,
+        Capability.THERMOSTAT_MODE,
+    ]
+    entities: list[ClimateEntity] = [
         SmartThingsAirConditioner(device)
         for device in devices
         if all(capability in device.data for capability in ac_capabilities)
+    ]
+    entities.extend(
+        SmartThingsThermostat(device)
+        for device in devices
+        if all(capability in device.data for capability in thermostat_capabilities)
     )
-
-    # broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
-    # entities: list[ClimateEntity] = []
-    # for device in broker.devices.values():
-    #     if not broker.any_assigned(device.device_id, CLIMATE_DOMAIN):
-    #         continue
-    #     if all(capability in device.capabilities for capability in ac_capabilities):
-    #         entities.append(SmartThingsAirConditioner(device))
-    #     else:
-    #         entities.append(SmartThingsThermostat(device))
-    # async_add_entities(entities, True)
+    async_add_entities(entities)
 
 
-# def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-#     """Return all capabilities supported if minimum required are present."""
-#     supported = [
-#         Capability.air_conditioner_mode,
-#         Capability.demand_response_load_control,
-#         Capability.air_conditioner_fan_mode,
-#         Capability.switch,
-#         Capability.thermostat,
-#         Capability.thermostat_cooling_setpoint,
-#         Capability.thermostat_fan_mode,
-#         Capability.thermostat_heating_setpoint,
-#         Capability.thermostat_mode,
-#         Capability.thermostat_operating_state,
-#     ]
-#     # Can have this legacy/deprecated capability
-#     if Capability.thermostat in capabilities:
-#         return supported
-#     # Or must have all of these thermostat capabilities
-#     thermostat_capabilities = [
-#         Capability.temperature_measurement,
-#         Capability.thermostat_heating_setpoint,
-#         Capability.thermostat_mode,
-#     ]
-#     if all(capability in capabilities for capability in thermostat_capabilities):
-#         return supported
-#     # Or must have all of these A/C capabilities
-#     ac_capabilities = [
-#         Capability.air_conditioner_mode,
-#         Capability.air_conditioner_fan_mode,
-#         Capability.switch,
-#         Capability.temperature_measurement,
-#         Capability.thermostat_cooling_setpoint,
-#     ]
-#     if all(capability in capabilities for capability in ac_capabilities):
-#         return supported
-#     return None
+class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
+    """Define a SmartThings climate entities."""
 
+    def __init__(self, device: SmartThingsDeviceCoordinator) -> None:
+        """Init the class."""
+        super().__init__(device)
+        self._attr_supported_features = self._determine_features()
 
-# class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
-#     """Define a SmartThings climate entities."""
-#
-#     def __init__(self, device):
-#         """Init the class."""
-#         super().__init__(device)
-#         self._attr_supported_features = self._determine_features()
-#         self._hvac_mode = None
-#         self._hvac_modes = None
-#
-#     def _determine_features(self):
-#         flags = (
-#             ClimateEntityFeature.TARGET_TEMPERATURE
-#             | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
-#             | ClimateEntityFeature.TURN_OFF
-#             | ClimateEntityFeature.TURN_ON
-#         )
-#         if self._device.get_capability(
-#             Capability.thermostat_fan_mode, Capability.thermostat
-#         ):
-#             flags |= ClimateEntityFeature.FAN_MODE
-#         return flags
-#
-#     async def async_set_fan_mode(self, fan_mode: str) -> None:
-#         """Set new target fan mode."""
-#         await self._device.set_thermostat_fan_mode(fan_mode, set_status=True)
-#
-#         # State is set optimistically in the command above, therefore update
-#         # the entity state ahead of receiving the confirming push updates
-#         self.async_schedule_update_ha_state(True)
-#
-#     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-#         """Set new target operation mode."""
-#         mode = STATE_TO_MODE[hvac_mode]
-#         await self._device.set_thermostat_mode(mode, set_status=True)
-#
-#         # State is set optimistically in the command above, therefore update
-#         # the entity state ahead of receiving the confirming push updates
-#         self.async_schedule_update_ha_state(True)
-#
-#     async def async_set_temperature(self, **kwargs: Any) -> None:
-#         """Set new operation mode and target temperatures."""
-#         # Operation state
-#         if operation_state := kwargs.get(ATTR_HVAC_MODE):
-#             mode = STATE_TO_MODE[operation_state]
-#             await self._device.set_thermostat_mode(mode, set_status=True)
-#             await self.async_update()
-#
-#         # Heat/cool setpoint
-#         heating_setpoint = None
-#         cooling_setpoint = None
-#         if self.hvac_mode == HVACMode.HEAT:
-#             heating_setpoint = kwargs.get(ATTR_TEMPERATURE)
-#         elif self.hvac_mode == HVACMode.COOL:
-#             cooling_setpoint = kwargs.get(ATTR_TEMPERATURE)
-#         else:
-#             heating_setpoint = kwargs.get(ATTR_TARGET_TEMP_LOW)
-#             cooling_setpoint = kwargs.get(ATTR_TARGET_TEMP_HIGH)
-#         tasks = []
-#         if heating_setpoint is not None:
-#             tasks.append(
-#                 self._device.set_heating_setpoint(
-#                     round(heating_setpoint, 3), set_status=True
-#                 )
-#             )
-#         if cooling_setpoint is not None:
-#             tasks.append(
-#                 self._device.set_cooling_setpoint(
-#                     round(cooling_setpoint, 3), set_status=True
-#                 )
-#             )
-#         await asyncio.gather(*tasks)
-#
-#         # State is set optimistically in the commands above, therefore update
-#         # the entity state ahead of receiving the confirming push updates
-#         self.async_schedule_update_ha_state(True)
-#
-#     async def async_update(self) -> None:
-#         """Update the attributes of the climate device."""
-#         thermostat_mode = self._device.status.thermostat_mode
-#         self._hvac_mode = MODE_TO_STATE.get(thermostat_mode)
-#         if self._hvac_mode is None:
-#             _LOGGER.debug(
-#                 "Device %s (%s) returned an invalid hvac mode: %s",
-#                 self._device.label,
-#                 self._device.device_id,
-#                 thermostat_mode,
-#             )
-#
-#         modes = set()
-#         supported_modes = self._device.status.supported_thermostat_modes
-#         if isinstance(supported_modes, Iterable):
-#             for mode in supported_modes:
-#                 if (state := MODE_TO_STATE.get(mode)) is not None:
-#                     modes.add(state)
-#                 else:
-#                     _LOGGER.debug(
-#                         (
-#                             "Device %s (%s) returned an invalid supported thermostat"
-#                             " mode: %s"
-#                         ),
-#                         self._device.label,
-#                         self._device.device_id,
-#                         mode,
-#                     )
-#         else:
-#             _LOGGER.debug(
-#                 "Device %s (%s) returned invalid supported thermostat modes: %s",
-#                 self._device.label,
-#                 self._device.device_id,
-#                 supported_modes,
-#             )
-#         self._hvac_modes = list(modes)
-#
-#     @property
-#     def current_humidity(self):
-#         """Return the current humidity."""
-#         return self._device.status.humidity
-#
-#     @property
-#     def current_temperature(self):
-#         """Return the current temperature."""
-#         return self._device.status.temperature
-#
-#     @property
-#     def fan_mode(self):
-#         """Return the fan setting."""
-#         return self._device.status.thermostat_fan_mode
-#
-#     @property
-#     def fan_modes(self):
-#         """Return the list of available fan modes."""
-#         return self._device.status.supported_thermostat_fan_modes
-#
-#     @property
-#     def hvac_action(self) -> HVACAction | None:
-#         """Return the current running hvac operation if supported."""
-#         return OPERATING_STATE_TO_ACTION.get(
-#             self._device.status.thermostat_operating_state
-#         )
-#
-#     @property
-#     def hvac_mode(self) -> HVACMode:
-#         """Return current operation ie. heat, cool, idle."""
-#         return self._hvac_mode
-#
-#     @property
-#     def hvac_modes(self) -> list[HVACMode]:
-#         """Return the list of available operation modes."""
-#         return self._hvac_modes
-#
-#     @property
-#     def target_temperature(self):
-#         """Return the temperature we try to reach."""
-#         if self.hvac_mode == HVACMode.COOL:
-#             return self._device.status.cooling_setpoint
-#         if self.hvac_mode == HVACMode.HEAT:
-#             return self._device.status.heating_setpoint
-#         return None
-#
-#     @property
-#     def target_temperature_high(self):
-#         """Return the highbound target temperature we try to reach."""
-#         if self.hvac_mode == HVACMode.HEAT_COOL:
-#             return self._device.status.cooling_setpoint
-#         return None
-#
-#     @property
-#     def target_temperature_low(self):
-#         """Return the lowbound target temperature we try to reach."""
-#         if self.hvac_mode == HVACMode.HEAT_COOL:
-#             return self._device.status.heating_setpoint
-#         return None
-#
-#     @property
-#     def temperature_unit(self):
-#         """Return the unit of measurement."""
-#         return UNIT_MAP.get(self._device.status.attributes[Attribute.temperature].unit)
+    def _determine_features(self) -> ClimateEntityFeature:
+        flags = (
+            ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            | ClimateEntityFeature.TURN_OFF
+            | ClimateEntityFeature.TURN_ON
+        )
+        if self.get_attribute_value(
+            Capability.THERMOSTAT_FAN_MODE, Attribute.THERMOSTAT_FAN_MODE
+        ):
+            flags |= ClimateEntityFeature.FAN_MODE
+        return flags
+
+    async def async_set_fan_mode(self, fan_mode: str) -> None:
+        """Set new target fan mode."""
+        await self.coordinator.client.execute_device_command(
+            self.coordinator.device.device_id,
+            Capability.THERMOSTAT_FAN_MODE,
+            Command.SET_THERMOSTAT_FAN_MODE,
+            argument=fan_mode,
+        )
+
+    async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
+        """Set new target operation mode."""
+        await self.coordinator.client.execute_device_command(
+            self.coordinator.device.device_id,
+            Capability.THERMOSTAT_MODE,
+            Command.SET_THERMOSTAT_MODE,
+            argument=STATE_TO_MODE[hvac_mode],
+        )
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new operation mode and target temperatures."""
+        # Operation state
+        if operation_state := kwargs.get(ATTR_HVAC_MODE):
+            await self.async_set_hvac_mode(operation_state)
+
+        # Heat/cool setpoint
+        heating_setpoint = None
+        cooling_setpoint = None
+        if self.hvac_mode == HVACMode.HEAT:
+            heating_setpoint = kwargs.get(ATTR_TEMPERATURE)
+        elif self.hvac_mode == HVACMode.COOL:
+            cooling_setpoint = kwargs.get(ATTR_TEMPERATURE)
+        else:
+            heating_setpoint = kwargs.get(ATTR_TARGET_TEMP_LOW)
+            cooling_setpoint = kwargs.get(ATTR_TARGET_TEMP_HIGH)
+        tasks = []
+        if heating_setpoint is not None:
+            tasks.append(
+                self.coordinator.client.execute_device_command(
+                    self.coordinator.device.device_id,
+                    Capability.THERMOSTAT_HEATING_SETPOINT,
+                    Command.SET_HEATING_SETPOINT,
+                    round(heating_setpoint, 3),
+                )
+            )
+        if cooling_setpoint is not None:
+            tasks.append(
+                self.coordinator.client.execute_device_command(
+                    self.coordinator.device.device_id,
+                    Capability.THERMOSTAT_COOLING_SETPOINT,
+                    Command.SET_COOLING_SETPOINT,
+                    round(cooling_setpoint, 3),
+                )
+            )
+        await asyncio.gather(*tasks)
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return the current humidity."""
+        if self.supports_capability(Capability.RELATIVE_HUMIDITY_MEASUREMENT):
+            return self.get_attribute_value(
+                Capability.RELATIVE_HUMIDITY_MEASUREMENT, Attribute.HUMIDITY
+            )
+        return None
+
+    @property
+    def current_temperature(self) -> float | None:
+        """Return the current temperature."""
+        return self.get_attribute_value(
+            Capability.TEMPERATURE_MEASUREMENT, Attribute.TEMPERATURE
+        )
+
+    @property
+    def fan_mode(self) -> str | None:
+        """Return the fan setting."""
+        return self.get_attribute_value(
+            Capability.THERMOSTAT_FAN_MODE, Attribute.THERMOSTAT_FAN_MODE
+        )
+
+    @property
+    def fan_modes(self) -> list[str]:
+        """Return the list of available fan modes."""
+        return self.get_attribute_value(
+            Capability.THERMOSTAT_FAN_MODE, Attribute.SUPPORTED_THERMOSTAT_FAN_MODES
+        )
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current running hvac operation if supported."""
+        return OPERATING_STATE_TO_ACTION.get(
+            self.get_attribute_value(
+                Capability.THERMOSTAT_OPERATING_STATE,
+                Attribute.THERMOSTAT_OPERATING_STATE,
+            )
+        )
+
+    @property
+    def hvac_mode(self) -> HVACMode | None:
+        """Return current operation ie. heat, cool, idle."""
+        return MODE_TO_STATE.get(
+            self.get_attribute_value(
+                Capability.THERMOSTAT_MODE, Attribute.THERMOSTAT_MODE
+            )
+        )
+
+    @property
+    def hvac_modes(self) -> list[HVACMode]:
+        """Return the list of available operation modes."""
+        return [
+            state
+            for mode in self.get_attribute_value(
+                Capability.THERMOSTAT_MODE, Attribute.SUPPORTED_THERMOSTAT_MODES
+            )
+            if (state := AC_MODE_TO_STATE.get(mode)) is not None
+        ]
+
+    @property
+    def target_temperature(self) -> float | None:
+        """Return the temperature we try to reach."""
+        if self.hvac_mode == HVACMode.COOL:
+            return self.get_attribute_value(
+                Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
+            )
+        if self.hvac_mode == HVACMode.HEAT:
+            return self.get_attribute_value(
+                Capability.THERMOSTAT_HEATING_SETPOINT, Attribute.HEATING_SETPOINT
+            )
+        return None
+
+    @property
+    def target_temperature_high(self) -> float | None:
+        """Return the highbound target temperature we try to reach."""
+        if self.hvac_mode == HVACMode.HEAT_COOL:
+            return self.get_attribute_value(
+                Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
+            )
+        return None
+
+    @property
+    def target_temperature_low(self):
+        """Return the lowbound target temperature we try to reach."""
+        if self.hvac_mode == HVACMode.HEAT_COOL:
+            return self.get_attribute_value(
+                Capability.THERMOSTAT_HEATING_SETPOINT, Attribute.HEATING_SETPOINT
+            )
+        return None
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit of measurement."""
+        unit = self.coordinator.data[Capability.TEMPERATURE_MEASUREMENT][
+            Attribute.TEMPERATURE
+        ].unit
+        return UNIT_MAP[unit]
 
 
 class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
@@ -369,7 +329,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        self.coordinator.client.execute_device_command(
+        await self.coordinator.client.execute_device_command(
             self.coordinator.device.device_id,
             Capability.AIR_CONDITIONER_FAN_MODE,
             Command.SET_FAN_MODE,

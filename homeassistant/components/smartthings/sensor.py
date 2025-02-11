@@ -330,7 +330,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[Any], str | float | int | datetime | None] = lambda value: value
     extra_state_attributes: Callable[[Any], dict[str, Any]] | None = None
     unique_id_separator: str = "."
-    capability_ignore_list: set[Capability] | None = None
+    capability_ignore_list: list[set[Capability]] | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -656,11 +656,18 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COOLING_SETPOINT,
                 name="Thermostat Cooling Setpoint",
                 device_class=SensorDeviceClass.TEMPERATURE,
-                capability_ignore_list={
-                    Capability.AIR_CONDITIONER_FAN_MODE,
-                    Capability.TEMPERATURE_MEASUREMENT,
-                    Capability.AIR_CONDITIONER_MODE,
-                },
+                capability_ignore_list=[
+                    {
+                        Capability.AIR_CONDITIONER_FAN_MODE,
+                        Capability.TEMPERATURE_MEASUREMENT,
+                        Capability.AIR_CONDITIONER_MODE,
+                    },
+                    {
+                        Capability.TEMPERATURE_MEASUREMENT,
+                        Capability.THERMOSTAT_HEATING_SETPOINT,
+                        Capability.THERMOSTAT_MODE,
+                    },
+                ],
             )
         ]
     },
@@ -696,11 +703,12 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.AIR_CONDITIONER_MODE,
                 name="Air Conditioner Mode",
                 entity_category=EntityCategory.DIAGNOSTIC,
-                capability_ignore_list={
-                    Capability.AIR_CONDITIONER_FAN_MODE,
-                    Capability.TEMPERATURE_MEASUREMENT,
-                    Capability.THERMOSTAT_COOLING_SETPOINT,
-                },
+                capability_ignore_list=[
+                    {
+                        Capability.TEMPERATURE_MEASUREMENT,
+                        Capability.THERMOSTAT_COOLING_SETPOINT,
+                    }
+                ],
             )
         ]
     },
@@ -730,9 +738,9 @@ async def async_setup_entry(
         for attribute in attributes
         for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
         if not description.capability_ignore_list
-        or not all(
-            capability in device.data
-            for capability in description.capability_ignore_list
+        or not any(
+            all(capability in device.data for capability in capability_list)
+            for capability_list in description.capability_ignore_list
         )
     )
     # broker = hass.data[DOMAIN][DATA_BROKERS][config_entry.entry_id]
