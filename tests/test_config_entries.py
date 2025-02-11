@@ -39,7 +39,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import entity_registry as er, frame, issue_registry as ir
 from homeassistant.helpers.discovery_flow import DiscoveryKey
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -469,7 +469,7 @@ async def test_remove_entry(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         async_add_entities([entity])
@@ -6625,7 +6625,7 @@ async def test_raise_wrong_exception_in_forwarded_platform(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         raise exc
@@ -6699,7 +6699,7 @@ async def test_config_entry_unloaded_during_platform_setups(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         await asyncio.sleep(0)
@@ -6771,7 +6771,7 @@ async def test_non_awaited_async_forward_entry_setups(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         await forward_event.wait()
@@ -6843,7 +6843,7 @@ async def test_non_awaited_async_forward_entry_setup(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         await forward_event.wait()
@@ -6918,7 +6918,7 @@ async def test_config_entry_unloaded_during_platform_setup(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         await asyncio.sleep(0)
@@ -6993,7 +6993,7 @@ async def test_config_entry_late_platform_setup(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         await asyncio.sleep(0)
