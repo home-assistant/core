@@ -722,7 +722,7 @@ UNITS = {
     "C": UnitOfTemperature.CELSIUS,
     "F": UnitOfTemperature.FAHRENHEIT,
     "lux": LIGHT_LUX,
-    "mG": None,
+    "mG": None,  # Three axis sensors never had a unit, so this removes it for now
 }
 
 
