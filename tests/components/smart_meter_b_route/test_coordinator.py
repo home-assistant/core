@@ -38,8 +38,6 @@ async def test_broute_fails_to_update_coordinator(
     hass: HomeAssistant,
     mock_momonga: Mock,
     freezer: FrozenDateTimeFactory,
-    entity_registry: EntityRegistry,
-    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the BRouteUpdateCoordinator when failing."""
 
