@@ -2887,9 +2887,7 @@ async def test_does_not_support_reconfigure(
 
     assert resp.status == HTTPStatus.BAD_REQUEST
     response = await resp.json()
-    assert response == {
-        "message": "Handler ConfigEntriesFlowManager doesn't support step reconfigure"
-    }
+    assert response == {"message": "Handler TestFlow doesn't support step reconfigure"}
 
 
 async def test_list_subentries(
