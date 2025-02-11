@@ -285,6 +285,15 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                     "user" if integration.integration_type == "helper" else None
                 ),
             ),
+            vol.Optional("config_subentries"): cv.schema_with_slug_keys(
+                gen_data_entry_schema(
+                    config=config,
+                    integration=integration,
+                    flow_title=REQUIRED,
+                    require_step_title=False,
+                ),
+                slug_validator=vol.Any("_", cv.slug),
+            ),
             vol.Optional("options"): gen_data_entry_schema(
                 config=config,
                 integration=integration,
@@ -454,7 +463,7 @@ ONBOARDING_SCHEMA = vol.Schema(
 )
 
 
-def validate_translation_file(  # noqa: C901
+def validate_translation_file(
     config: Config,
     integration: Integration,
     all_strings: dict[str, Any] | None,
@@ -510,8 +519,8 @@ def validate_translation_file(  # noqa: C901
                     ):
                         integration.add_error(
                             "translations",
-                            "Don't specify title in translation strings if it's a brand "
-                            "name or add exception to ALLOW_NAME_TRANSLATION",
+                            "Don't specify title in translation strings if it's "
+                            "a brand name or add exception to ALLOW_NAME_TRANSLATION",
                         )
 
     if config.specific_integrations:
@@ -532,12 +541,15 @@ def validate_translation_file(  # noqa: C901
         if parts or key not in search:
             integration.add_error(
                 "translations",
-                f"{reference['source']} contains invalid reference {reference['ref']}: Could not find {key}",
+                f"{reference['source']} contains invalid reference"
+                f"{reference['ref']}: Could not find {key}",
             )
         elif match := re.match(RE_REFERENCE, search[key]):
             integration.add_error(
                 "translations",
-                f"Lokalise supports only one level of references: \"{reference['source']}\" should point to directly to \"{match.groups()[0]}\"",
+                "Lokalise supports only one level of references: "
+                f'"{reference["source"]}" should point to directly '
+                f'to "{match.groups()[0]}"',
             )
 
 

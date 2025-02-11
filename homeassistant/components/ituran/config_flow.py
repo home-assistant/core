@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -9,7 +10,7 @@ from pyituran import Ituran
 from pyituran.exceptions import IturanApiError, IturanAuthError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 
 from .const import (
     CONF_ID_OR_PASSPORT,
@@ -43,11 +44,12 @@ class IturanConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the inial step."""
+        """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_ID_OR_PASSPORT])
-            self._abort_if_unique_id_configured()
+            if self.source != SOURCE_REAUTH:
+                self._abort_if_unique_id_configured()
 
             ituran = Ituran(
                 user_input[CONF_ID_OR_PASSPORT],
@@ -81,7 +83,7 @@ class IturanConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_otp(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the inial step."""
+        """Handle the OTP step."""
         errors: dict[str, str] = {}
         if user_input is not None:
             ituran = Ituran(
@@ -99,6 +101,10 @@ class IturanConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data=self._user_info
+                    )
                 return self.async_create_entry(
                     title=f"Ituran {self._user_info[CONF_ID_OR_PASSPORT]}",
                     data=self._user_info,
@@ -106,4 +112,26 @@ class IturanConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="otp", data_schema=STEP_OTP_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle configuration by re-auth."""
+        self._user_info = dict(entry_data)
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauth confirmation message."""
+        if user_input is not None:
+            return await self.async_step_user(self._user_info)
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders={
+                "phone_number": self._user_info[CONF_PHONE_NUMBER]
+            },
         )

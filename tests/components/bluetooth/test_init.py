@@ -18,6 +18,7 @@ from homeassistant.components.bluetooth import (
     BluetoothChange,
     BluetoothScanningMode,
     BluetoothServiceInfo,
+    HaBluetoothConnector,
     async_process_advertisements,
     async_rediscover_address,
     async_track_unavailable,
@@ -25,11 +26,16 @@ from homeassistant.components.bluetooth import (
 from homeassistant.components.bluetooth.const import (
     BLUETOOTH_DISCOVERY_COOLDOWN_SECONDS,
     CONF_PASSIVE,
+    CONF_SOURCE,
+    CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DOMAIN,
+    CONF_SOURCE_MODEL,
     DOMAIN,
     LINUX_FIRMWARE_LOAD_FALLBACK_SECONDS,
     SOURCE_LOCAL,
     UNAVAILABLE_TRACK_SECONDS,
 )
+from homeassistant.components.bluetooth.manager import HomeAssistantBluetoothManager
 from homeassistant.components.bluetooth.match import (
     ADDRESS,
     CONNECTABLE,
@@ -46,7 +52,9 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from . import (
+    FakeRemoteScanner,
     FakeScanner,
+    MockBleakClient,
     _get_manager,
     async_setup_with_default_adapter,
     async_setup_with_one_adapter,
@@ -3023,6 +3031,23 @@ async def test_scanner_count_connectable(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
+async def test_scanner_remove(hass: HomeAssistant) -> None:
+    """Test permanently removing a scanner."""
+    scanner = FakeScanner("any", "any")
+    cancel = bluetooth.async_register_scanner(hass, scanner)
+    assert bluetooth.async_scanner_count(hass, connectable=True) == 1
+    device = generate_ble_device("44:44:33:11:23:45", "name")
+    adv = generate_advertisement_data(local_name="name", service_uuids=[])
+    inject_advertisement_with_time_and_source_connectable(
+        hass, device, adv, time.monotonic(), scanner.source, True
+    )
+    cancel()
+    bluetooth.async_remove_scanner(hass, scanner.source)
+    manager: HomeAssistantBluetoothManager = _get_manager()
+    assert not manager.storage.async_get_advertisement_history(scanner.source)
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_scanner_count(hass: HomeAssistant) -> None:
     """Test getting the connectable and non-connectable scanner count."""
     scanner = FakeScanner("any", "any")
@@ -3245,3 +3270,33 @@ async def test_title_updated_if_mac_address(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.title == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_cleanup_orphened_remote_scanner_config_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test the remote scanner config entries get cleaned up when orphened."""
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeRemoteScanner("esp32", "esp32", connector, True)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOURCE: scanner.source,
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: "no_longer_exists",
+        },
+        unique_id=scanner.source,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Orphened remote scanner config entry should be cleaned up
+    assert not hass.config_entries.async_entry_for_domain_unique_id(
+        "bluetooth", scanner.source
+    )

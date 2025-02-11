@@ -322,8 +322,10 @@ class HueOneLightStateView(HomeAssistantView):
 
         if hass_entity_id is None:
             _LOGGER.error(
-                "Unknown entity number: %s not found in emulated_hue_ids.json",
+                "Unknown entity number: %s not found in emulated_hue_ids.json, "
+                "state request from %s",
                 entity_id,
+                request.remote,
             )
             return self.json_message("Entity not found", HTTPStatus.NOT_FOUND)
 
@@ -865,7 +867,7 @@ def state_supports_hue_brightness(
         return False
     features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
     enum = ENTITY_FEATURES_BY_DOMAIN[domain]
-    features = enum(features) if type(features) is int else features  # noqa: E721
+    features = enum(features) if type(features) is int else features
     return required_feature in features
 
 

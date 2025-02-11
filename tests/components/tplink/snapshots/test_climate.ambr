@@ -9,10 +9,11 @@
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 65536,
-      'min_temp': None,
+      'max_temp': 30,
+      'min_temp': 5,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -49,8 +50,8 @@
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 65536,
-      'min_temp': None,
+      'max_temp': 30,
+      'min_temp': 5,
       'supported_features': <ClimateEntityFeature: 385>,
       'temperature': 22.2,
     }),
@@ -66,6 +67,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -91,6 +93,6 @@
     'serial_number': None,
     'suggested_area': None,
     'sw_version': '1.0.0',
-    'via_device_id': None,
+    'via_device_id': <ANY>,
   })
 # ---

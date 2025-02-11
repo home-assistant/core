@@ -4,7 +4,8 @@ from asyncio import Event
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from govee_local_api import GoveeLightCapability
+from govee_local_api import GoveeLightCapabilities
+from govee_local_api.light_capabilities import COMMON_FEATURES
 import pytest
 
 from homeassistant.components.govee_light_local.coordinator import GoveeController
@@ -34,8 +35,6 @@ def fixture_mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
-DEFAULT_CAPABILITEIS: set[GoveeLightCapability] = {
-    GoveeLightCapability.COLOR_RGB,
-    GoveeLightCapability.COLOR_KELVIN_TEMPERATURE,
-    GoveeLightCapability.BRIGHTNESS,
-}
+DEFAULT_CAPABILITIES: GoveeLightCapabilities = GoveeLightCapabilities(
+    features=COMMON_FEATURES, segments=[], scenes={}
+)

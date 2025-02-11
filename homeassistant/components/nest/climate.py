@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any, cast
 
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_traits import FanTrait, TemperatureTrait
+from google_nest_sdm.device_traits import FanTrait, HumidityTrait, TemperatureTrait
 from google_nest_sdm.exceptions import ApiException
 from google_nest_sdm.thermostat_traits import (
     ThermostatEcoTrait,
@@ -30,7 +30,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .device_info import NestDeviceInfo
 from .types import NestConfigEntry
@@ -76,7 +76,9 @@ MIN_TEMP_RANGE = 1.66667
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: NestConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NestConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the client entities."""
 
@@ -132,6 +134,14 @@ class ThermostatEntity(ClimateEntity):
             return None
         trait: TemperatureTrait = self._device.traits[TemperatureTrait.NAME]
         return trait.ambient_temperature_celsius
+
+    @property
+    def current_humidity(self) -> float | None:
+        """Return the current humidity."""
+        if HumidityTrait.NAME not in self._device.traits:
+            return None
+        trait: HumidityTrait = self._device.traits[HumidityTrait.NAME]
+        return trait.ambient_humidity_percent
 
     @property
     def target_temperature(self) -> float | None:

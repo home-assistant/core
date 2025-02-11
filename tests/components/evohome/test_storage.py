@@ -7,22 +7,17 @@ from typing import Any, Final, NotRequired, TypedDict
 
 import pytest
 
-from homeassistant.components.evohome import (
-    CONF_USERNAME,
-    DOMAIN,
-    STORAGE_KEY,
-    STORAGE_VER,
-    dt_aware_to_naive,
-)
+from homeassistant.components.evohome.const import DOMAIN, STORAGE_KEY, STORAGE_VER
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import setup_evohome
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
 
 
 class _SessionDataT(TypedDict):
-    sessionId: str
+    session_id: str
+    session_id_expires: NotRequired[str]  # 2024-07-27T23:57:30+01:00
 
 
 class _TokenStoreT(TypedDict):
@@ -65,7 +60,7 @@ _TEST_STORAGE_BASE: Final[_TokenStoreT] = {
 TEST_STORAGE_DATA: Final[dict[str, _TokenStoreT]] = {
     "sans_session_id": _TEST_STORAGE_BASE,
     "null_session_id": _TEST_STORAGE_BASE | {SZ_USER_DATA: None},  # type: ignore[dict-item]
-    "with_session_id": _TEST_STORAGE_BASE | {SZ_USER_DATA: {"sessionId": SESSION_ID}},
+    "with_session_id": _TEST_STORAGE_BASE | {SZ_USER_DATA: {"session_id": SESSION_ID}},
 }
 
 TEST_STORAGE_NULL: Final[dict[str, _EmptyStoreT | None]] = {
@@ -89,15 +84,12 @@ async def test_auth_tokens_null(
     idx: str,
     install: str,
 ) -> None:
-    """Test loading/saving authentication tokens when no cached tokens in the store."""
+    """Test credentials manager when cache is empty."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_NULL[idx]}
 
-    async for mock_client in setup_evohome(hass, config, install=install):
-        # Confirm client was instantiated without tokens, as cache was empty...
-        assert SZ_REFRESH_TOKEN not in mock_client.call_args.kwargs
-        assert SZ_ACCESS_TOKEN not in mock_client.call_args.kwargs
-        assert SZ_ACCESS_TOKEN_EXPIRES not in mock_client.call_args.kwarg
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
 
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]
@@ -120,17 +112,12 @@ async def test_auth_tokens_same(
     idx: str,
     install: str,
 ) -> None:
-    """Test loading/saving authentication tokens when matching username."""
+    """Test credentials manager when cache contains valid data for this user."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
 
-    async for mock_client in setup_evohome(hass, config, install=install):
-        # Confirm client was instantiated with the cached tokens...
-        assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
-        assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
-        assert mock_client.call_args.kwargs[
-            SZ_ACCESS_TOKEN_EXPIRES
-        ] == dt_aware_to_naive(ACCESS_TOKEN_EXP_DTM)
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
 
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]
@@ -150,7 +137,7 @@ async def test_auth_tokens_past(
     idx: str,
     install: str,
 ) -> None:
-    """Test loading/saving authentication tokens with matching username, but expired."""
+    """Test credentials manager when cache contains expired data for this user."""
 
     dt_dtm, dt_str = dt_pair(dt_util.now() - timedelta(hours=1))
 
@@ -160,19 +147,14 @@ async def test_auth_tokens_past(
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": test_data}
 
-    async for mock_client in setup_evohome(hass, config, install=install):
-        # Confirm client was instantiated with the cached tokens...
-        assert mock_client.call_args.kwargs[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
-        assert mock_client.call_args.kwargs[SZ_ACCESS_TOKEN] == ACCESS_TOKEN
-        assert mock_client.call_args.kwargs[
-            SZ_ACCESS_TOKEN_EXPIRES
-        ] == dt_aware_to_naive(dt_dtm)
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
 
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]
 
     assert data[SZ_USERNAME] == USERNAME_SAME
-    assert data[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
+    assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
     assert data[SZ_ACCESS_TOKEN] == f"new_{ACCESS_TOKEN}"
     assert (
         dt_util.parse_datetime(data[SZ_ACCESS_TOKEN_EXPIRES], raise_on_error=True)
@@ -189,17 +171,13 @@ async def test_auth_tokens_diff(
     idx: str,
     install: str,
 ) -> None:
-    """Test loading/saving authentication tokens when unmatched username."""
+    """Test credentials manager when cache contains data for a different user."""
 
     hass_storage[DOMAIN] = DOMAIN_STORAGE_BASE | {"data": TEST_STORAGE_DATA[idx]}
+    config["username"] = USERNAME_DIFF
 
-    async for mock_client in setup_evohome(
-        hass, config | {CONF_USERNAME: USERNAME_DIFF}, install=install
-    ):
-        # Confirm client was instantiated without tokens, as username was different...
-        assert SZ_REFRESH_TOKEN not in mock_client.call_args.kwargs
-        assert SZ_ACCESS_TOKEN not in mock_client.call_args.kwargs
-        assert SZ_ACCESS_TOKEN_EXPIRES not in mock_client.call_args.kwarg
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
 
     # Confirm the expected tokens were cached to storage...
     data: _TokenStoreT = hass_storage[DOMAIN]["data"]

@@ -19,7 +19,7 @@ from homeassistant.components.stream.const import (
 from homeassistant.components.stream.core import Orientation, Part
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     FAKE_TIME,
@@ -119,13 +119,16 @@ def make_playlist(
         response.extend(
             [
                 f"#EXT-X-PART-INF:PART-TARGET={part_target_duration:.3f}",
-                f"#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK={2*part_target_duration:.3f}",
-                f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_LL_HLS*part_target_duration:.3f},PRECISE=YES",
+                "#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK="
+                f"{2 * part_target_duration:.3f}",
+                "#EXT-X-START:TIME-OFFSET=-"
+                f"{EXT_X_START_LL_HLS * part_target_duration:.3f},PRECISE=YES",
             ]
         )
     else:
         response.append(
-            f"#EXT-X-START:TIME-OFFSET=-{EXT_X_START_NON_LL_HLS*segment_duration:.3f},PRECISE=YES",
+            "#EXT-X-START:TIME-OFFSET=-"
+            f"{EXT_X_START_NON_LL_HLS * segment_duration:.3f},PRECISE=YES",
         )
     if segments:
         response.extend(segments)
@@ -278,8 +281,19 @@ async def test_stream_timeout_after_stop(
     await hass.async_block_till_done()
 
 
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        # pylint: disable-next=c-extension-no-member
+        (av.error.InvalidDataError(-2, "error")),
+        (av.HTTPBadRequestError(500, "error")),
+    ],
+)
 async def test_stream_retries(
-    hass: HomeAssistant, setup_component, should_retry
+    hass: HomeAssistant,
+    setup_component,
+    should_retry,
+    exception,
 ) -> None:
     """Test hls stream is retried on failure."""
     # Setup demo HLS track
@@ -309,8 +323,7 @@ async def test_stream_retries(
 
     def av_open_side_effect(*args, **kwargs):
         hass.loop.call_soon_threadsafe(futures.pop().set_result, None)
-        # pylint: disable-next=c-extension-no-member
-        raise av.error.InvalidDataError(-2, "error")
+        raise exception
 
     with (
         patch("av.open") as av_open,

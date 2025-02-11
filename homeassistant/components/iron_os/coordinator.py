@@ -4,20 +4,25 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from datetime import timedelta
+from enum import Enum
 import logging
-from typing import TYPE_CHECKING
+from typing import cast
 
-from aiogithubapi import GitHubAPI, GitHubException, GitHubReleaseModel
 from pynecil import (
+    CharSetting,
     CommunicationError,
     DeviceInfoResponse,
+    IronOSUpdate,
+    LatestRelease,
     LiveDataResponse,
     Pynecil,
     SettingsDataResponse,
+    UpdateException,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -38,15 +43,19 @@ class IronOSCoordinators:
     settings: IronOSSettingsCoordinator
 
 
+type IronOSConfigEntry = ConfigEntry[IronOSCoordinators]
+
+
 class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """IronOS base coordinator."""
 
     device_info: DeviceInfoResponse
-    config_entry: ConfigEntry
+    config_entry: IronOSConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: IronOSConfigEntry,
         device: Pynecil,
         update_interval: timedelta,
     ) -> None:
@@ -55,6 +64,7 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=update_interval,
             request_refresh_debouncer=Debouncer(
@@ -75,9 +85,11 @@ class IronOSBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
     """IronOS coordinator."""
 
-    def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: IronOSConfigEntry, device: Pynecil
+    ) -> None:
         """Initialize IronOS coordinator."""
-        super().__init__(hass, device=device, update_interval=SCAN_INTERVAL)
+        super().__init__(hass, config_entry, device, SCAN_INTERVAL)
 
     async def _async_update_data(self) -> LiveDataResponse:
         """Fetch data from Device."""
@@ -104,43 +116,14 @@ class IronOSLiveDataCoordinator(IronOSBaseCoordinator[LiveDataResponse]):
         return False
 
 
-class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[GitHubReleaseModel]):
-    """IronOS coordinator for retrieving update information from github."""
-
-    def __init__(self, hass: HomeAssistant, github: GitHubAPI) -> None:
-        """Initialize IronOS coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=None,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL_GITHUB,
-        )
-        self.github = github
-
-    async def _async_update_data(self) -> GitHubReleaseModel:
-        """Fetch data from Github."""
-
-        try:
-            release = await self.github.repos.releases.latest("Ralim/IronOS")
-
-        except GitHubException as e:
-            raise UpdateFailed(
-                "Failed to retrieve latest release data from Github"
-            ) from e
-
-        if TYPE_CHECKING:
-            assert release.data
-
-        return release.data
-
-
 class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
     """IronOS coordinator."""
 
-    def __init__(self, hass: HomeAssistant, device: Pynecil) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: IronOSConfigEntry, device: Pynecil
+    ) -> None:
         """Initialize IronOS coordinator."""
-        super().__init__(hass, device=device, update_interval=SCAN_INTERVAL_SETTINGS)
+        super().__init__(hass, config_entry, device, SCAN_INTERVAL_SETTINGS)
 
     async def _async_update_data(self) -> SettingsDataResponse:
         """Fetch data from Device."""
@@ -154,3 +137,48 @@ class IronOSSettingsCoordinator(IronOSBaseCoordinator[SettingsDataResponse]):
                 _LOGGER.debug("Failed to fetch settings", exc_info=e)
 
         return self.data or SettingsDataResponse()
+
+    async def write(
+        self,
+        characteristic: CharSetting,
+        value: bool | Enum | float,
+    ) -> None:
+        """Write value to the settings characteristic."""
+
+        try:
+            await self.device.write(characteristic, value)
+        except CommunicationError as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="submit_setting_failed",
+            ) from e
+
+        # prevent switch bouncing while waiting for coordinator to finish refresh
+        self.data.update(
+            cast(SettingsDataResponse, {characteristic.name.lower(): value})
+        )
+        self.async_update_listeners()
+        await self.async_request_refresh()
+
+
+class IronOSFirmwareUpdateCoordinator(DataUpdateCoordinator[LatestRelease]):
+    """IronOS coordinator for retrieving update information from github."""
+
+    def __init__(self, hass: HomeAssistant, github: IronOSUpdate) -> None:
+        """Initialize IronOS coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=None,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL_GITHUB,
+        )
+        self.github = github
+
+    async def _async_update_data(self) -> LatestRelease:
+        """Fetch data from Github."""
+
+        try:
+            return await self.github.latest_release()
+        except UpdateException as e:
+            raise UpdateFailed("Failed to check for latest IronOS update") from e

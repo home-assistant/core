@@ -9,7 +9,6 @@ from aiohttp import ClientError, ClientResponseError
 import jwt
 from myuplink import MyUplinkAPI, get_manufacturer, get_model, get_system_name
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -22,7 +21,7 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from .api import AsyncConfigEntryAuth
 from .const import DOMAIN, OAUTH2_SCOPES
-from .coordinator import MyUplinkDataCoordinator
+from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,8 +33,6 @@ PLATFORMS: list[Platform] = [
     Platform.SWITCH,
     Platform.UPDATE,
 ]
-
-type MyUplinkConfigEntry = ConfigEntry[MyUplinkDataCoordinator]
 
 
 async def async_setup_entry(
@@ -55,17 +52,29 @@ async def async_setup_entry(
         await auth.async_get_access_token()
     except ClientResponseError as err:
         if err.status in {HTTPStatus.UNAUTHORIZED, HTTPStatus.FORBIDDEN}:
-            raise ConfigEntryAuthFailed from err
-        raise ConfigEntryNotReady from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_auth_failed",
+            ) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_ready",
+        ) from err
     except ClientError as err:
-        raise ConfigEntryNotReady from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_ready",
+        ) from err
 
     if set(config_entry.data["token"]["scope"].split(" ")) != set(OAUTH2_SCOPES):
-        raise ConfigEntryAuthFailed("Incorrect OAuth2 scope")
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="incorrect_oauth2_scope",
+        )
 
     # Setup MyUplinkAPI and coordinator for data fetch
     api = MyUplinkAPI(auth)
-    coordinator = MyUplinkDataCoordinator(hass, api)
+    coordinator = MyUplinkDataCoordinator(hass, config_entry, api)
     await coordinator.async_config_entry_first_refresh()
     config_entry.runtime_data = coordinator
 
@@ -77,14 +86,16 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MyUplinkConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 @callback
 def create_devices(
-    hass: HomeAssistant, config_entry: ConfigEntry, coordinator: MyUplinkDataCoordinator
+    hass: HomeAssistant,
+    config_entry: MyUplinkConfigEntry,
+    coordinator: MyUplinkDataCoordinator,
 ) -> None:
     """Update all devices."""
     device_registry = dr.async_get(hass)

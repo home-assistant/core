@@ -466,3 +466,14 @@ async def test_intents_with_no_responses(hass: HomeAssistant) -> None:
     for intent_name in (intent.INTENT_NEVERMIND, intent.INTENT_RESPOND):
         response = await intent.async_handle(hass, "test", intent_name, {})
         assert not response.speech
+
+
+async def test_intents_respond_intent(hass: HomeAssistant) -> None:
+    """Test HassRespond intent with a response slot value."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    response = await intent.async_handle(
+        hass, "test", intent.INTENT_RESPOND, {"response": {"value": "Hello World"}}
+    )
+    assert response.speech["plain"]["speech"] == "Hello World"

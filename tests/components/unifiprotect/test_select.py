@@ -262,7 +262,7 @@ async def test_select_update_doorbell_settings(
 
     expected_length += 1
     new_nvr = copy(ufp.api.bootstrap.nvr)
-    new_nvr.__fields__["update_all_messages"] = Mock(final=False)
+    new_nvr.__pydantic_fields__["update_all_messages"] = Mock(final=False, frozen=False)
     new_nvr.update_all_messages = Mock()
 
     new_nvr.doorbell_settings.all_messages = [
@@ -304,7 +304,7 @@ async def test_select_update_doorbell_message(
     assert state
     assert state.state == "Default Message (Welcome)"
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.lcd_message = LCDMessage(
         type=DoorbellMessageType.CUSTOM_MESSAGE, text="Test"
     )
@@ -332,7 +332,7 @@ async def test_select_set_option_light_motion(
 
     _, entity_id = ids_from_device_description(Platform.SELECT, light, LIGHT_SELECTS[0])
 
-    light.__fields__["set_light_settings"] = Mock(final=False)
+    light.__pydantic_fields__["set_light_settings"] = Mock(final=False, frozen=False)
     light.set_light_settings = AsyncMock()
 
     await hass.services.async_call(
@@ -357,7 +357,7 @@ async def test_select_set_option_light_camera(
 
     _, entity_id = ids_from_device_description(Platform.SELECT, light, LIGHT_SELECTS[1])
 
-    light.__fields__["set_paired_camera"] = Mock(final=False)
+    light.__pydantic_fields__["set_paired_camera"] = Mock(final=False, frozen=False)
     light.set_paired_camera = AsyncMock()
 
     camera = list(light.api.bootstrap.cameras.values())[0]
@@ -393,7 +393,7 @@ async def test_select_set_option_camera_recording(
         Platform.SELECT, doorbell, CAMERA_SELECTS[0]
     )
 
-    doorbell.__fields__["set_recording_mode"] = Mock(final=False)
+    doorbell.__pydantic_fields__["set_recording_mode"] = Mock(final=False, frozen=False)
     doorbell.set_recording_mode = AsyncMock()
 
     await hass.services.async_call(
@@ -418,7 +418,7 @@ async def test_select_set_option_camera_ir(
         Platform.SELECT, doorbell, CAMERA_SELECTS[1]
     )
 
-    doorbell.__fields__["set_ir_led_model"] = Mock(final=False)
+    doorbell.__pydantic_fields__["set_ir_led_model"] = Mock(final=False, frozen=False)
     doorbell.set_ir_led_model = AsyncMock()
 
     await hass.services.async_call(
@@ -443,7 +443,7 @@ async def test_select_set_option_camera_doorbell_custom(
         Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    doorbell.__fields__["set_lcd_text"] = Mock(final=False)
+    doorbell.__pydantic_fields__["set_lcd_text"] = Mock(final=False, frozen=False)
     doorbell.set_lcd_text = AsyncMock()
 
     await hass.services.async_call(
@@ -470,7 +470,7 @@ async def test_select_set_option_camera_doorbell_unifi(
         Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    doorbell.__fields__["set_lcd_text"] = Mock(final=False)
+    doorbell.__pydantic_fields__["set_lcd_text"] = Mock(final=False, frozen=False)
     doorbell.set_lcd_text = AsyncMock()
 
     await hass.services.async_call(
@@ -512,7 +512,7 @@ async def test_select_set_option_camera_doorbell_default(
         Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    doorbell.__fields__["set_lcd_text"] = Mock(final=False)
+    doorbell.__pydantic_fields__["set_lcd_text"] = Mock(final=False, frozen=False)
     doorbell.set_lcd_text = AsyncMock()
 
     await hass.services.async_call(
@@ -541,7 +541,7 @@ async def test_select_set_option_viewer(
         Platform.SELECT, viewer, VIEWER_SELECTS[0]
     )
 
-    viewer.__fields__["set_liveview"] = Mock(final=False)
+    viewer.__pydantic_fields__["set_liveview"] = Mock(final=False, frozen=False)
     viewer.set_liveview = AsyncMock()
 
     liveview = list(viewer.api.bootstrap.liveviews.values())[0]
