@@ -429,10 +429,15 @@ class DownloadSupportPackageView(HomeAssistantView):
             )
 
         log_handler = hass.data[DATA_CLOUD_LOG_HANDLER]
-        markdown += "## Full logs:\n\n"
-        markdown += "```logs\n"
-        markdown += "\n".join(await log_handler.get_logs(hass))
-        markdown += "\n```\n"
+        logs = "\n".join(await log_handler.get_logs(hass))
+        markdown += (
+            "## Full logs\n\n"
+            "<details><summary>Logs</summary>\n\n"
+            "```logs\n"
+            f"{logs}\n"
+            "```\n\n"
+            "</details>\n"
+        )
 
         return markdown
 
