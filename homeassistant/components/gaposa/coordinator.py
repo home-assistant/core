@@ -81,6 +81,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
             raise
         except Exception as exp:
+            self.logger.exception("Error updating Gaposa data")
             self.update_interval = timedelta(seconds=UPDATE_INTERVAL_FAST)
             raise UpdateFailed from exp
 
