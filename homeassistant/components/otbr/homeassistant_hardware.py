@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import logging
-from typing import cast
+from typing import TYPE_CHECKING, cast
 
 import voluptuous as vol
 from yarl import URL
@@ -21,8 +21,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
 
-from . import OTBRConfigEntry
 from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from . import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -58,11 +60,14 @@ async def async_get_firmware_info(
                 device = addon_fw_info.device
                 owners.extend(addon_fw_info.owners)
 
-    if config_entry.state == ConfigEntryState.LOADED:
-        config_entry = cast(OTBRConfigEntry, config_entry)
+    firmware_version = None
 
-        if device is None:
-            device = config_entry.data.get("device", None)
+    if config_entry.state in (
+        ConfigEntryState.LOADED,
+        ConfigEntryState.SETUP_IN_PROGRESS,
+    ):
+        if TYPE_CHECKING:
+            config_entry = cast(OTBRConfigEntry, config_entry)
 
         try:
             firmware_version = await config_entry.runtime_data.get_coprocessor_version()
