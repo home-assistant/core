@@ -60,20 +60,32 @@ def main() -> int:
 
             generate.generate(template, info)
 
+    hassfest_args = [
+        "python",
+        "-m",
+        "script.hassfest",
+    ]
+
     # If we wanted a new integration, we've already done our work.
     if args.template != "integration":
         generate.generate(args.template, info)
+    else:
+        hassfest_args.extend(
+            [
+                "--integration-path",
+                info.integration_dir,
+                "--skip-plugins",
+                "quality_scale",  # Skip quality scale as it will fail for newly generated integrations.
+            ]
+        )
 
-    pipe_null = {} if args.develop else {"stdout": subprocess.DEVNULL}
-
+    # Always output sub commands as the output will contain useful information if a command fails.
     print("Running hassfest to pick up new information.")
-    subprocess.run(["python", "-m", "script.hassfest"], **pipe_null, check=True)
+    subprocess.run(hassfest_args, check=True)
     print()
 
     print("Running gen_requirements_all to pick up new information.")
-    subprocess.run(
-        ["python", "-m", "script.gen_requirements_all"], **pipe_null, check=True
-    )
+    subprocess.run(["python", "-m", "script.gen_requirements_all"], check=True)
     print()
 
     print("Running script/translations_develop to pick up new translation strings.")
@@ -86,7 +98,6 @@ def main() -> int:
             "--integration",
             info.domain,
         ],
-        **pipe_null,
         check=True,
     )
     print()
