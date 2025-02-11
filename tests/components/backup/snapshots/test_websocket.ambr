@@ -3482,13 +3482,15 @@
           'agents': dict({
             'domain.test': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
           ]),
@@ -3499,7 +3501,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
@@ -3543,13 +3545,15 @@
           'agents': dict({
             'domain.test': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
             'test.remote',
@@ -3561,7 +3565,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
@@ -3604,13 +3608,15 @@
           'agents': dict({
             'domain.test': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
           ]),
@@ -3621,7 +3627,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
@@ -3664,13 +3670,15 @@
           'agents': dict({
             'domain.test': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
           ]),
@@ -3681,7 +3689,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
@@ -3725,13 +3733,15 @@
           'agents': dict({
             'domain.test': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
           ]),
@@ -3742,7 +3752,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
@@ -3786,13 +3796,15 @@
           'agents': dict({
             'domain.test': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
             'test.remote',
@@ -3804,7 +3816,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
