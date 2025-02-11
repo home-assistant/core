@@ -6,7 +6,7 @@ from duotecno.unit import DimUnit
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DuotecnoConfigEntry
 from .entity import DuotecnoEntity, api_call
@@ -15,7 +15,7 @@ from .entity import DuotecnoEntity, api_call
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DuotecnoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Duotecno light based on config_entry."""
     async_add_entities(

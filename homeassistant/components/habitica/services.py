@@ -62,7 +62,7 @@ from .const import (
     SERVICE_START_QUEST,
     SERVICE_TRANSFORMATION,
 )
-from .types import HabiticaConfigEntry
+from .coordinator import HabiticaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -510,7 +510,9 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 or (task.notes and keyword in task.notes.lower())
                 or any(keyword in item.text.lower() for item in task.checklist)
             ]
-        result: dict[str, Any] = {"tasks": [task.to_dict() for task in response]}
+        result: dict[str, Any] = {
+            "tasks": [task.to_dict(omit_none=False) for task in response]
+        }
 
         return result
 

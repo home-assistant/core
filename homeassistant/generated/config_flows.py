@@ -467,6 +467,7 @@ FLOWS = {
         "peco",
         "pegel_online",
         "permobil",
+        "pglab",
         "philips_js",
         "pi_hole",
         "picnic",
