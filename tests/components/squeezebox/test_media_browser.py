@@ -79,6 +79,9 @@ async def test_async_browse_media_with_subitems(
         "Playlists",
         "Genres",
         "New Music",
+        "Album Artists",
+        "Apps",
+        "Radios",
     ):
         with patch(
             "homeassistant.components.squeezebox.browse_media.is_internal_request",
