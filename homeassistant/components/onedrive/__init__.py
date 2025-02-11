@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
 from html import unescape
 from json import dumps, loads
 import logging
@@ -13,7 +14,7 @@ from onedrive_personal_sdk.exceptions import (
     NotFoundError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import ItemUpdate
+from onedrive_personal_sdk.models.items import Item, ItemUpdate
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
@@ -50,47 +51,23 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
     client = OneDriveClient(get_access_token, async_get_clientsession(hass))
 
     # get approot, will be created automatically if it does not exist
-    try:
-        approot = await client.get_approot()
-    except AuthenticationError as err:
-        raise ConfigEntryAuthFailed(
-            translation_domain=DOMAIN, translation_key="authentication_failed"
-        ) from err
-    except (OneDriveException, TimeoutError) as err:
-        _LOGGER.debug("Failed to get approot", exc_info=True)
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="failed_to_get_folder",
-            translation_placeholders={"folder": "approot"},
-        ) from err
+    approot = await _handle_item_operation(client.get_approot, "approot")
+    folder_name = entry.data[CONF_FOLDER_NAME]
 
     try:
-        backup_folder = await client.get_drive_item(
-            path_or_id=entry.data[CONF_FOLDER_ID]
+        backup_folder = await _handle_item_operation(
+            lambda: client.get_drive_item(path_or_id=entry.data[CONF_FOLDER_ID]),
+            folder_name,
         )
     except NotFoundError:
-        try:
-            _LOGGER.debug("Creating backup folder %s", entry.data[CONF_FOLDER_NAME])
-            backup_folder = await client.create_folder(
-                parent_id=approot.id, name=entry.data[CONF_FOLDER_NAME]
-            )
-        except (OneDriveException, TimeoutError) as err:
-            _LOGGER.debug("Failed to create backup folder", exc_info=True)
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="failed_to_get_folder",
-                translation_placeholders={"folder": entry.data[CONF_FOLDER_NAME]},
-            ) from err
+        _LOGGER.debug("Creating backup folder %s", folder_name)
+        backup_folder = await _handle_item_operation(
+            lambda: client.create_folder(parent_id=approot.id, name=folder_name),
+            folder_name,
+        )
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_FOLDER_ID: backup_folder.id}
         )
-    except (OneDriveException, TimeoutError) as err:
-        _LOGGER.debug("Failed to get backup folder", exc_info=True)
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="failed_to_get_folder",
-            translation_placeholders={"folder": entry.data[CONF_FOLDER_NAME]},
-        ) from err
 
     # update in case folder was renamed manually
     hass.config_entries.async_update_entry(
@@ -190,3 +167,23 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
         )
         _LOGGER.debug("Migration to version 1.2 successful")
     return True
+
+
+async def _handle_item_operation(
+    func: Callable[[], Awaitable[Item]], folder: str
+) -> Item:
+    try:
+        return await func()
+    except NotFoundError:
+        raise
+    except AuthenticationError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN, translation_key="authentication_failed"
+        ) from err
+    except (OneDriveException, TimeoutError) as err:
+        _LOGGER.debug("Failed to get approot", exc_info=True)
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_get_folder",
+            translation_placeholders={"folder": folder},
+        ) from err
