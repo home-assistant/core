@@ -1,7 +1,10 @@
 """Weather data coordinator for the OpenWeatherMap (OWM) service."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from pyopenweathermap import (
     CurrentWeather,
@@ -17,10 +20,14 @@ from homeassistant.components.weather import (
     ATTR_CONDITION_SUNNY,
     Forecast,
 )
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import sun
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from . import OpenweathermapConfigEntry
 
 from .const import (
     ATTR_API_CLOUDS,
@@ -56,20 +63,25 @@ WEATHER_UPDATE_INTERVAL = timedelta(minutes=10)
 class WeatherUpdateCoordinator(DataUpdateCoordinator):
     """Weather data update coordinator."""
 
+    config_entry: OpenweathermapConfigEntry
+
     def __init__(
         self,
-        owm_client: OWMClient,
-        latitude,
-        longitude,
         hass: HomeAssistant,
+        config_entry: OpenweathermapConfigEntry,
+        owm_client: OWMClient,
     ) -> None:
         """Initialize coordinator."""
         self._owm_client = owm_client
-        self._latitude = latitude
-        self._longitude = longitude
+        self._latitude = config_entry.data.get(CONF_LATITUDE, hass.config.latitude)
+        self._longitude = config_entry.data.get(CONF_LONGITUDE, hass.config.longitude)
 
         super().__init__(
-            hass, _LOGGER, name=DOMAIN, update_interval=WEATHER_UPDATE_INTERVAL
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=WEATHER_UPDATE_INTERVAL,
         )
 
     async def _async_update_data(self):

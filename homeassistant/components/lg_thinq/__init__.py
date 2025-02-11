@@ -100,7 +100,7 @@ async def async_setup_coordinators(
 
     # Setup coordinator per device.
     task_list = [
-        hass.async_create_task(async_setup_device_coordinator(hass, bridge))
+        hass.async_create_task(async_setup_device_coordinator(hass, entry, bridge))
         for bridge in bridge_list
     ]
     task_result = await asyncio.gather(*task_list)

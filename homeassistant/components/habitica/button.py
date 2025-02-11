@@ -25,12 +25,15 @@ from homeassistant.components.button import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
+from .coordinator import (
+    HabiticaConfigEntry,
+    HabiticaData,
+    HabiticaDataUpdateCoordinator,
+)
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
 
 PARALLEL_UPDATES = 1
 
@@ -277,7 +280,7 @@ CLASS_SKILLS: tuple[HabiticaButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HabiticaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up buttons from a config entry."""
 

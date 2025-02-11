@@ -11,7 +11,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN as FLO_DOMAIN
 from .coordinator import FloDeviceDataUpdateCoordinator
@@ -28,7 +28,7 @@ SERVICE_RUN_HEALTH_TEST = "run_health_test"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flo switches from config entry."""
     devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][

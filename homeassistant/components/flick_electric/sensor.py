@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CURRENCY_CENT, UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_COMPONENTS, ATTR_END_AT, ATTR_START_AT
@@ -21,7 +21,7 @@ SCAN_INTERVAL = timedelta(minutes=5)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FlickConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Flick Sensor Setup."""
     coordinator = entry.runtime_data

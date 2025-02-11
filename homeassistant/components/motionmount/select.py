@@ -9,7 +9,7 @@ import motionmount
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MotionMountConfigEntry
 from .const import DOMAIN, WALL_PRESET_NAME
@@ -22,7 +22,7 @@ SCAN_INTERVAL = timedelta(seconds=60)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MotionMountConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Vogel's MotionMount from a config entry."""
     mm = entry.runtime_data

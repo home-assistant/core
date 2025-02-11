@@ -27,12 +27,13 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
     id: str
     hass: HomeAssistant
     devices: list[Sensor] | None = None
+    config_entry: ConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        api: LaCrosse,
         entry: ConfigEntry,
+        api: LaCrosse,
     ) -> None:
         """Initialize DataUpdateCoordinator for LaCrosse View."""
         self.api = api
@@ -45,6 +46,7 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name="LaCrosse View",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )

@@ -31,7 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         },
     )
 
-    coordinator = LinearUpdateCoordinator(hass)
+    coordinator = LinearUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 

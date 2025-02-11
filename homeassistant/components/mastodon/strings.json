@@ -89,6 +89,10 @@
           "name": "Media",
           "description": "Attach an image or video to the post."
         },
+        "media_description": {
+          "name": "Media description",
+          "description": "If an image or video is attached, will add a description for this media for people with visual impairments."
+        },
         "media_warning": {
           "name": "Media warning",
           "description": "If an image or video is attached, will mark the media as sensitive (default: no media warning)."

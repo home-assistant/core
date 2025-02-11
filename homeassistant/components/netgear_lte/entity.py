@@ -5,9 +5,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NetgearLTEConfigEntry
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import NetgearLTEDataUpdateCoordinator
+from .coordinator import NetgearLTEConfigEntry, NetgearLTEDataUpdateCoordinator
 
 
 class LTEEntity(CoordinatorEntity[NetgearLTEDataUpdateCoordinator]):

@@ -120,13 +120,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: WithingsConfigEntry) -> 
     client.refresh_token_function = _refresh_token
     withings_data = WithingsData(
         client=client,
-        measurement_coordinator=WithingsMeasurementDataUpdateCoordinator(hass, client),
-        sleep_coordinator=WithingsSleepDataUpdateCoordinator(hass, client),
-        bed_presence_coordinator=WithingsBedPresenceDataUpdateCoordinator(hass, client),
-        goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, client),
-        activity_coordinator=WithingsActivityDataUpdateCoordinator(hass, client),
-        workout_coordinator=WithingsWorkoutDataUpdateCoordinator(hass, client),
-        device_coordinator=WithingsDeviceDataUpdateCoordinator(hass, client),
+        measurement_coordinator=WithingsMeasurementDataUpdateCoordinator(
+            hass, entry, client
+        ),
+        sleep_coordinator=WithingsSleepDataUpdateCoordinator(hass, entry, client),
+        bed_presence_coordinator=WithingsBedPresenceDataUpdateCoordinator(
+            hass, entry, client
+        ),
+        goals_coordinator=WithingsGoalsDataUpdateCoordinator(hass, entry, client),
+        activity_coordinator=WithingsActivityDataUpdateCoordinator(hass, entry, client),
+        workout_coordinator=WithingsWorkoutDataUpdateCoordinator(hass, entry, client),
+        device_coordinator=WithingsDeviceDataUpdateCoordinator(hass, entry, client),
     )
 
     for coordinator in withings_data.coordinators:

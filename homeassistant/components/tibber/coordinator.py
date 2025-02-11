@@ -33,11 +33,17 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, tibber_connection: tibber.Tibber) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        tibber_connection: tibber.Tibber,
+    ) -> None:
         """Initialize the data handler."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"Tibber {tibber_connection.name}",
             update_interval=timedelta(minutes=20),
         )

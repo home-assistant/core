@@ -111,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     client = Vallox(host)
 
-    coordinator = ValloxDataUpdateCoordinator(hass, name, client)
+    coordinator = ValloxDataUpdateCoordinator(hass, entry, client)
 
     await coordinator.async_config_entry_first_refresh()
 

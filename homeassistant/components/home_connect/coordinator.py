@@ -1,5 +1,7 @@
 """Coordinator for Home Connect."""
 
+from __future__ import annotations
+
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable
@@ -24,12 +26,14 @@ from aiohomeconnect.model.error import (
     HomeConnectApiError,
     HomeConnectError,
     HomeConnectRequestError,
+    UnauthorizedError,
 )
 from aiohomeconnect.model.program import EnumerateProgram
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -53,7 +57,7 @@ class HomeConnectApplianceData:
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
 
-    def update(self, other: "HomeConnectApplianceData") -> None:
+    def update(self, other: HomeConnectApplianceData) -> None:
         """Update data with data from other instance."""
         self.events.update(other.events)
         self.info.connected = other.info.connected
@@ -268,6 +272,12 @@ class HomeConnectCoordinator(
         """Fetch data from Home Connect."""
         try:
             appliances = await self.client.get_home_appliances()
+        except UnauthorizedError as error:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_error",
+                translation_placeholders=get_dict_from_home_connect_error(error),
+            ) from error
         except HomeConnectError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,

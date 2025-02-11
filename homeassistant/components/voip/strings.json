@@ -53,7 +53,8 @@
     "step": {
       "init": {
         "data": {
-          "sip_port": "SIP port"
+          "sip_port": "SIP port",
+          "sip_user": "SIP user"
         }
       }
     }

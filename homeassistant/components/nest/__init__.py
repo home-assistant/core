@@ -198,7 +198,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: NestConfigEntry) -> bool
             entry, unique_id=entry.data[CONF_PROJECT_ID]
         )
 
-    subscriber = await api.new_subscriber(hass, entry)
+    auth = await api.new_auth(hass, entry)
+    try:
+        await auth.async_get_access_token()
+    except AuthException as err:
+        raise ConfigEntryAuthFailed(f"Authentication error: {err!s}") from err
+    except ConfigurationException as err:
+        _LOGGER.error("Configuration error: %s", err)
+        return False
+
+    subscriber = await api.new_subscriber(hass, entry, auth)
     if not subscriber:
         return False
     # Keep media for last N events in memory

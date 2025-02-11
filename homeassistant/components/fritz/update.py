@@ -13,7 +13,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AvmWrapper, FritzConfigEntry
 from .entity import FritzBoxBaseCoordinatorEntity, FritzEntityDescription
@@ -29,7 +29,7 @@ class FritzUpdateEntityDescription(UpdateEntityDescription, FritzEntityDescripti
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AVM FRITZ!Box update entities."""
     _LOGGER.debug("Setting up AVM FRITZ!Box update entities")

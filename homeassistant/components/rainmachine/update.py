@@ -16,7 +16,7 @@ from homeassistant.components.update import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RainMachineConfigEntry
 from .const import DATA_MACHINE_FIRMWARE_UPDATE_STATUS
@@ -60,7 +60,7 @@ UPDATE_DESCRIPTION = RainMachineUpdateEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RainMachineConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Rainmachine update based on a config entry."""
     data = entry.runtime_data

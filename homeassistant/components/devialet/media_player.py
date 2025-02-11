@@ -12,7 +12,7 @@ from homeassistant.components.media_player import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, SOUND_MODES
@@ -38,7 +38,7 @@ DEVIALET_TO_HA_FEATURE_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DevialetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Devialet entry."""
     async_add_entities([DevialetMediaPlayerEntity(entry.runtime_data)])

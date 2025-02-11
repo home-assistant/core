@@ -374,6 +374,7 @@ class PipelineEventType(StrEnum):
     STT_VAD_END = "stt-vad-end"
     STT_END = "stt-end"
     INTENT_START = "intent-start"
+    INTENT_PROGRESS = "intent-progress"
     INTENT_END = "intent-end"
     TTS_START = "tts-start"
     TTS_END = "tts-end"
@@ -1093,6 +1094,20 @@ class PipelineRun:
                     agent_id = conversation.HOME_ASSISTANT_AGENT
                     processed_locally = True
 
+            @callback
+            def chat_log_delta_listener(
+                chat_log: conversation.ChatLog, delta: dict
+            ) -> None:
+                """Handle chat log delta."""
+                self.process_event(
+                    PipelineEvent(
+                        PipelineEventType.INTENT_PROGRESS,
+                        {
+                            "chat_log_delta": delta,
+                        },
+                    )
+                )
+
             with (
                 chat_session.async_get_chat_session(
                     self.hass, user_input.conversation_id
@@ -1101,6 +1116,7 @@ class PipelineRun:
                     self.hass,
                     session,
                     user_input,
+                    chat_log_delta_listener=chat_log_delta_listener,
                 ) as chat_log,
             ):
                 # It was already handled, create response and add to chat history
