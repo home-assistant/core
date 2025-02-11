@@ -39,7 +39,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import entity_registry as er, frame, issue_registry as ir
 from homeassistant.helpers.discovery_flow import DiscoveryKey
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -469,7 +469,7 @@ async def test_remove_entry(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         async_add_entities([entity])
@@ -512,6 +512,7 @@ async def test_remove_entry(
     assert len(entity_registry.entities) == 1
     entity_entry = list(entity_registry.entities.values())[0]
     assert entity_entry.config_entry_id == entry.entry_id
+    assert entity_entry.config_subentry_id is None
 
     # Remove entry
     result = await manager.async_remove("test2")
@@ -1271,7 +1272,7 @@ async def test_discovery_notification(
         notifications = async_get_persistent_notifications(hass)
         assert "config_entry_discovery" not in notifications
 
-        # Start first discovery flow to assert that reconfigure notification fires
+        # Start first discovery flow to assert that discovery notification fires
         flow1 = await hass.config_entries.flow.async_init(
             "test", context={"source": config_entries.SOURCE_DISCOVERY}
         )
@@ -1994,7 +1995,7 @@ async def test_entry_subentry(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
             """Test subentry flow handler."""
 
         @classmethod
@@ -2050,7 +2051,7 @@ async def test_entry_subentry_non_string(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
             """Test subentry flow handler."""
 
         @classmethod
@@ -2092,7 +2093,7 @@ async def test_entry_subentry_no_context(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
             """Test subentry flow handler."""
 
         @classmethod
@@ -2139,7 +2140,7 @@ async def test_entry_subentry_duplicate(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
             """Test subentry flow handler."""
 
         @classmethod
@@ -2180,7 +2181,7 @@ async def test_entry_subentry_abort(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
             """Test subentry flow handler."""
 
         @classmethod
@@ -2227,7 +2228,7 @@ async def test_entry_subentry_deleted_config_entry(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
             """Test subentry flow handler."""
 
         @classmethod
@@ -2270,7 +2271,7 @@ async def test_entry_subentry_unsupported_subentry_type(
     class TestFlow(config_entries.ConfigFlow):
         """Test flow."""
 
-        class SubentryFlowHandler(data_entry_flow.FlowHandler):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
             """Test subentry flow handler."""
 
         @classmethod
@@ -6625,7 +6626,7 @@ async def test_raise_wrong_exception_in_forwarded_platform(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         raise exc
@@ -6699,7 +6700,7 @@ async def test_config_entry_unloaded_during_platform_setups(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         await asyncio.sleep(0)
@@ -6771,7 +6772,7 @@ async def test_non_awaited_async_forward_entry_setups(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         await forward_event.wait()
@@ -6843,7 +6844,7 @@ async def test_non_awaited_async_forward_entry_setup(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         await forward_event.wait()
@@ -6918,7 +6919,7 @@ async def test_config_entry_unloaded_during_platform_setup(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         await asyncio.sleep(0)
@@ -6993,7 +6994,7 @@ async def test_config_entry_late_platform_setup(
     async def mock_setup_entry_platform(
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setting up platform."""
         await asyncio.sleep(0)
@@ -7412,7 +7413,7 @@ async def test_get_reauth_entry(
 async def test_get_reconfigure_entry(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
-    """Test _get_context_entry behavior."""
+    """Test _get_reconfigure_entry behavior."""
     entry = MockConfigEntry(
         title="test_title",
         domain="test",
