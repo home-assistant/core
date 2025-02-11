@@ -1,10 +1,14 @@
 """Support for WebDAV backup."""
 
+from __future__ import annotations
+
 from collections.abc import AsyncIterator, Callable, Coroutine
+from functools import wraps
 import logging
-from typing import Any
+from typing import Any, Concatenate
 
 from aiowebdav2 import Property, PropertyRequest
+from aiowebdav2.exceptions import UnauthorizedError, WebDavError
 from propcache.api import cached_property
 
 from homeassistant.components.backup import (
@@ -56,6 +60,36 @@ def async_register_backup_agents_listener(
     return remove_listener
 
 
+def handle_backup_errors[_R, **P](
+    func: Callable[Concatenate[WebDavBackupAgent, P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[WebDavBackupAgent, P], Coroutine[Any, Any, _R]]:
+    """Handle backup errors."""
+
+    @wraps(func)
+    async def wrapper(self: WebDavBackupAgent, *args: P.args, **kwargs: P.kwargs) -> _R:
+        try:
+            return await func(self, *args, **kwargs)
+        except UnauthorizedError as err:
+            self._entry.async_start_reauth(self._hass)
+            raise BackupAgentError("Authentication error") from err
+        except WebDavError as err:
+            _LOGGER.error(
+                "Error during backup in %s:, message %s",
+                func.__name__,
+                err,
+            )
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
+            raise BackupAgentError("Backup operation failed") from err
+        except TimeoutError as err:
+            _LOGGER.error(
+                "Error during backup in %s: Timeout",
+                func.__name__,
+            )
+            raise BackupAgentError("Backup operation timed out") from err
+
+    return wrapper
+
+
 class WebDavBackupAgent(BackupAgent):
     """Backup agent interface."""
 
@@ -76,6 +110,7 @@ class WebDavBackupAgent(BackupAgent):
         """Return the path to the backup."""
         return self._entry.data.get(CONF_BACKUP_PATH, "")
 
+    @handle_backup_errors
     async def async_download_backup(
         self,
         backup_id: str,
@@ -94,6 +129,7 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{suggested_filename(backup)}"
         )
 
+    @handle_backup_errors
     async def async_upload_backup(
         self,
         *,
@@ -144,6 +180,7 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{filename}",
         )
 
+    @handle_backup_errors
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -167,6 +204,7 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{suggested_filename(backup)}",
         )
 
+    @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         metadata_files = await self._list_metadata_files()
@@ -175,6 +213,7 @@ class WebDavBackupAgent(BackupAgent):
             for metadata_file in metadata_files
         ]
 
+    @handle_backup_errors
     async def async_get_backup(
         self,
         backup_id: str,
