@@ -1,6 +1,5 @@
 """Test config entries API."""
 
-from collections import OrderedDict
 from collections.abc import Generator
 from http import HTTPStatus
 from typing import Any
@@ -411,9 +410,10 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
@@ -493,9 +493,10 @@ async def test_initialize_flow_unauth(
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
@@ -835,9 +836,10 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
@@ -873,9 +875,10 @@ async def test_get_progress_flow_unauth(
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
@@ -907,11 +910,9 @@ async def test_options_flow(hass: HomeAssistant, client: TestClient) -> None:
         def async_get_options_flow(config_entry):
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
                 async def async_step_init(self, user_input=None):
-                    schema = OrderedDict()
-                    schema[vol.Required("enabled")] = bool
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=vol.Schema(schema),
+                        data_schema=vol.Schema({vol.Required("enabled"): bool}),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -972,11 +973,9 @@ async def test_options_flow_unauth(
         def async_get_options_flow(config_entry):
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
                 async def async_step_init(self, user_input=None):
-                    schema = OrderedDict()
-                    schema[vol.Required("enabled")] = bool
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=vol.Schema(schema),
+                        data_schema=vol.Schema({vol.Required("enabled"): bool}),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -1150,11 +1149,9 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
                 raise NotImplementedError
 
             async def async_step_user(self, user_input=None):
-                schema = {}
-                schema[vol.Required("enabled")] = bool
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=vol.Schema(schema),
+                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
@@ -1206,11 +1203,9 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
                 raise NotImplementedError
 
             async def async_step_reconfigure(self, user_input=None):
-                schema = {}
-                schema[vol.Required("enabled")] = bool
                 return self.async_show_form(
                     step_id="reconfigure",
-                    data_schema=vol.Schema(schema),
+                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
@@ -1277,11 +1272,9 @@ async def test_subentry_flow_unauth(
     class TestFlow(core_ce.ConfigFlow):
         class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
             async def async_step_init(self, user_input=None):
-                schema = {}
-                schema[vol.Required("enabled")] = bool
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=vol.Schema(schema),
+                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
