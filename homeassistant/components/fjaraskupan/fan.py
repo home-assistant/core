@@ -13,7 +13,6 @@ from fjaraskupan import (
 )
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -25,7 +24,7 @@ from homeassistant.util.percentage import (
 )
 
 from . import async_setup_entry_platform
-from .coordinator import FjaraskupanCoordinator
+from .coordinator import FjaraskupanConfigEntry, FjaraskupanCoordinator
 
 ORDERED_NAMED_FAN_SPEEDS = ["1", "2", "3", "4", "5", "6", "7", "8"]
 
@@ -51,7 +50,7 @@ class UnsupportedPreset(HomeAssistantError):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: FjaraskupanConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors dynamically through discovery."""
