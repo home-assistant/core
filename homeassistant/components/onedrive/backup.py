@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from collections.abc import AsyncIterator, Callable, Coroutine
+from dataclasses import dataclass
 from functools import wraps
-import html
-import json
+from html import unescape
+from json import dumps, loads
 import logging
+from time import time
 from typing import Any, Concatenate
 
 from aiohttp import ClientTimeout
@@ -16,7 +18,7 @@ from onedrive_personal_sdk.exceptions import (
     HashMismatchError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import File, Folder, ItemUpdate
+from onedrive_personal_sdk.models.items import ItemUpdate
 from onedrive_personal_sdk.models.upload import FileInfo
 
 from homeassistant.components.backup import (
@@ -34,6 +36,8 @@ from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 UPLOAD_CHUNK_SIZE = 16 * 320 * 1024  # 5.2MB
 TIMEOUT = ClientTimeout(connect=10, total=43200)  # 12 hours
+METADATA_VERSION = 2
+CACHE_TTL = 300
 
 
 async def async_get_backup_agents(
@@ -98,6 +102,15 @@ def handle_backup_errors[_R, **P](
     return wrapper
 
 
+@dataclass(kw_only=True)
+class OneDriveBackup:
+    """Define a OneDrive backup."""
+
+    backup: AgentBackup
+    backup_file_id: str
+    metadata_file_id: str
+
+
 class OneDriveBackupAgent(BackupAgent):
     """OneDrive backup agent."""
 
@@ -109,22 +122,26 @@ class OneDriveBackupAgent(BackupAgent):
         self._hass = hass
         self._entry = entry
         self._client = entry.runtime_data.client
-        self._token_provider = entry.runtime_data.token_provider
+        self._token_function = entry.runtime_data.token_function
         self._folder_id = entry.runtime_data.backup_folder_id
         self.name = entry.title
         assert entry.unique_id
         self.unique_id = entry.unique_id
+        self._backup_cache: dict[str, OneDriveBackup] = {}
+        self._cache_expiration = time()
 
     @handle_backup_errors
     async def async_download_backup(
         self, backup_id: str, **kwargs: Any
     ) -> AsyncIterator[bytes]:
         """Download a backup file."""
-        item = await self._find_item_by_backup_id(backup_id)
-        if item is None:
+        backups = await self._list_cached_backups()
+        if backup_id not in backups:
             raise BackupAgentError("Backup not found")
 
-        stream = await self._client.download_drive_item(item.id, timeout=TIMEOUT)
+        stream = await self._client.download_drive_item(
+            backups[backup_id].backup_file_id, timeout=TIMEOUT
+        )
         return stream.iter_chunked(1024)
 
     @handle_backup_errors
@@ -136,32 +153,43 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
-
+        filename = suggested_filename(backup)
         file = FileInfo(
-            suggested_filename(backup),
+            filename,
             backup.size,
             self._folder_id,
             await open_stream(),
         )
         try:
-            item = await LargeFileUploadClient.upload(
-                self._token_provider, file, session=async_get_clientsession(self._hass)
+            backup_file = await LargeFileUploadClient.upload(
+                self._token_function, file, session=async_get_clientsession(self._hass)
             )
         except HashMismatchError as err:
             raise BackupAgentError(
                 "Hash validation failed, backup file might be corrupt"
             ) from err
 
-        # store metadata in description
-        backup_dict = backup.as_dict()
-        backup_dict["metadata_version"] = 1  # version of the backup metadata
-        description = json.dumps(backup_dict)
+        # store metadata in metadata file
+        description = dumps(backup.as_dict())
         _LOGGER.debug("Creating metadata: %s", description)
-
-        await self._client.update_drive_item(
-            path_or_id=item.id,
-            data=ItemUpdate(description=description),
+        metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
+        metadata_file = await self._client.upload_file(
+            self._folder_id,
+            metadata_filename,
+            description,
         )
+
+        # add metadata to the metadata file
+        metadata_description = {
+            "metadata_version": METADATA_VERSION,
+            "backup_id": backup.backup_id,
+            "backup_file_id": backup_file.id,
+        }
+        await self._client.update_drive_item(
+            path_or_id=metadata_file.id,
+            data=ItemUpdate(description=dumps(metadata_description)),
+        )
+        self._cache_expiration = time()
 
     @handle_backup_errors
     async def async_delete_backup(
@@ -170,18 +198,21 @@ class OneDriveBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> None:
         """Delete a backup file."""
-        item = await self._find_item_by_backup_id(backup_id)
-        if item is None:
+        backups = await self._list_cached_backups()
+        if backup_id not in backups:
             return
-        await self._client.delete_drive_item(item.id)
+
+        backup = backups[backup_id]
+
+        await self._client.delete_drive_item(backup.backup_file_id)
+        await self._client.delete_drive_item(backup.metadata_file_id)
+        self._cache_expiration = time()
 
     @handle_backup_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         return [
-            self._backup_from_description(item.description)
-            for item in await self._client.list_drive_items(self._folder_id)
-            if item.description and "homeassistant_version" in item.description
+            backup.backup for backup in (await self._list_cached_backups()).values()
         ]
 
     @handle_backup_errors
@@ -189,27 +220,34 @@ class OneDriveBackupAgent(BackupAgent):
         self, backup_id: str, **kwargs: Any
     ) -> AgentBackup | None:
         """Return a backup."""
-        item = await self._find_item_by_backup_id(backup_id)
-        return (
-            self._backup_from_description(item.description)
-            if item and item.description
-            else None
-        )
+        backups = await self._list_cached_backups()
+        return backups[backup_id].backup if backup_id in backups else None
 
-    def _backup_from_description(self, description: str) -> AgentBackup:
-        """Create a backup object from a description."""
-        description = html.unescape(
-            description
-        )  # OneDrive encodes the description on save automatically
-        return AgentBackup.from_dict(json.loads(description))
+    async def _list_cached_backups(self) -> dict[str, OneDriveBackup]:
+        """List backups with a cache."""
+        if time() <= self._cache_expiration:
+            return self._backup_cache
 
-    async def _find_item_by_backup_id(self, backup_id: str) -> File | Folder | None:
-        """Find an item by backup ID."""
-        return next(
-            (
-                item
-                for item in await self._client.list_drive_items(self._folder_id)
-                if item.description and backup_id in item.description
-            ),
-            None,
-        )
+        items = await self._client.list_drive_items(self._folder_id)
+
+        async def download_backup_metadata(item_id: str) -> AgentBackup:
+            metadata_stream = await self._client.download_drive_item(item_id)
+            metadata_json = loads(await metadata_stream.read())
+            return AgentBackup.from_dict(metadata_json)
+
+        backups: dict[str, OneDriveBackup] = {}
+        for item in items:
+            if item.description and f'"metadata_version": {METADATA_VERSION}' in (
+                metadata_description_json := unescape(item.description)
+            ):
+                backup = await download_backup_metadata(item.id)
+                metadata_description = loads(metadata_description_json)
+                backups[backup.backup_id] = OneDriveBackup(
+                    backup=backup,
+                    backup_file_id=metadata_description["backup_file_id"],
+                    metadata_file_id=item.id,
+                )
+
+        self._cache_expiration = time() + CACHE_TTL
+        self._backup_cache = backups
+        return backups

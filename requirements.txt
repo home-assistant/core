@@ -4,17 +4,17 @@
 
 # Home Assistant Core
 aiodns==3.2.0
-aiohasupervisor==0.2.2b6
-aiohttp==3.11.11
+aiohasupervisor==0.3.0
+aiohttp==3.11.12
 aiohttp_cors==0.7.0
-aiohttp-fast-zlib==0.2.0
-aiohttp-asyncmdnsresolver==0.0.3
+aiohttp-fast-zlib==0.2.2
+aiohttp-asyncmdnsresolver==0.1.0
 aiozoneinfo==0.2.3
 astral==2.2
-async-interrupt==1.2.0
+async-interrupt==1.2.1
 attrs==25.1.0
 atomicwrites-homeassistant==1.4.1
-audioop-lts==0.2.1;python_version>='3.13'
+audioop-lts==0.2.1
 awesomeversion==24.6.0
 bcrypt==4.2.0
 certifi>=2021.5.30
@@ -39,9 +39,9 @@ python-slugify==8.0.4
 PyYAML==6.0.2
 requests==2.32.3
 securetar==2025.1.4
-SQLAlchemy==2.0.37
-standard-aifc==3.13.0;python_version>='3.13'
-standard-telnetlib==3.13.0;python_version>='3.13'
+SQLAlchemy==2.0.38
+standard-aifc==3.13.0
+standard-telnetlib==3.13.0
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.2.0
 urllib3>=1.26.5,<2

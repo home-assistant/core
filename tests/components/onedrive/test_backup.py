@@ -152,7 +152,7 @@ async def test_agents_delete(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
-    mock_onedrive_client.delete_drive_item.assert_called_once()
+    assert mock_onedrive_client.delete_drive_item.call_count == 2
 
 
 async def test_agents_upload(

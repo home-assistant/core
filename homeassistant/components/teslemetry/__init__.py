@@ -112,7 +112,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             product.pop("cached_data", None)
             vin = product["vin"]
             api = VehicleSpecific(teslemetry.vehicle, vin)
-            coordinator = TeslemetryVehicleDataCoordinator(hass, api, product)
+            coordinator = TeslemetryVehicleDataCoordinator(hass, entry, api, product)
             device = DeviceInfo(
                 identifiers={(DOMAIN, vin)},
                 manufacturer="Tesla",
@@ -177,15 +177,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 TeslemetryEnergyData(
                     api=api,
                     live_coordinator=(
-                        TeslemetryEnergySiteLiveCoordinator(hass, api, live_status)
+                        TeslemetryEnergySiteLiveCoordinator(
+                            hass, entry, api, live_status
+                        )
                         if isinstance(live_status, dict)
                         else None
                     ),
                     info_coordinator=TeslemetryEnergySiteInfoCoordinator(
-                        hass, api, product
+                        hass, entry, api, product
                     ),
                     history_coordinator=(
-                        TeslemetryEnergyHistoryCoordinator(hass, api)
+                        TeslemetryEnergyHistoryCoordinator(hass, entry, api)
                         if powerwall
                         else None
                     ),
@@ -242,7 +244,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: TeslemetryConfigEntry
+) -> bool:
     """Migrate config entry."""
     if config_entry.version > 1:
         return False
@@ -282,7 +286,7 @@ def create_handle_vehicle_stream(vin: str, coordinator) -> Callable[[dict], None
 
 
 async def async_setup_stream(
-    hass: HomeAssistant, entry: ConfigEntry, vehicle: TeslemetryVehicleData
+    hass: HomeAssistant, entry: TeslemetryConfigEntry, vehicle: TeslemetryVehicleData
 ):
     """Set up the stream for a vehicle."""
 

@@ -8,7 +8,7 @@ from elkm1_lib.tasks import Task
 
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElkM1ConfigEntry
 from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
@@ -17,7 +17,7 @@ from .entity import ElkAttachedEntity, ElkEntity, create_elk_entities
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ElkM1ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the Elk-M1 scene platform."""
     elk_data = config_entry.runtime_data
