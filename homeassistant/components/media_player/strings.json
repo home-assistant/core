@@ -270,7 +270,7 @@
         },
         "media_content_type": {
           "name": "Content type",
-          "description": "The type of the content to browse. Such as image, music, tv show, video, episode, channel, or playlist."
+          "description": "The type of the content to browse, such as image, music, tv show, video, episode, channel, or playlist."
         }
       }
     },
