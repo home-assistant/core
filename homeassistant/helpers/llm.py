@@ -450,15 +450,15 @@ class AssistAPI(API):
             for intent_handler in intent_handlers
         ]
 
+        if exposed_domains and WEATHER_DOMAIN in exposed_domains:
+            tools.append(WeatherForecastTool())
+
         if exposed_entities:
             if exposed_entities[CALENDAR_DOMAIN]:
                 names = []
                 for info in exposed_entities[CALENDAR_DOMAIN].values():
                     names.extend(info["names"].split(", "))
                 tools.append(CalendarGetEventsTool(names))
-
-            if exposed_entities[WEATHER_DOMAIN]:
-                tools.append(WeatherForecastTool())
 
             tools.extend(
                 ScriptTool(self.hass, script_entity_id)
