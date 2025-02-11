@@ -86,7 +86,7 @@ async def test_brightness_sensor(
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test brightness sensors with unit lx & klx and naming of multi-instance sensors."""
+    """Test brightness sensor's lx & klx units and naming of multi-instance sensors."""
     mock_homee.nodes = [build_mock_node("sensors.json")]
     await setup_integration(hass, mock_config_entry)
 
