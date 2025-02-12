@@ -6,7 +6,7 @@ from typing import Any
 
 from pysmartthings import SmartThings
 
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -34,15 +34,22 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for SmartThings."""
-        client = SmartThings(session=async_get_clientsession(self.hass))
-        client.authenticate(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-        locations = await client.get_locations()
-        location = locations[0]
         await self.async_set_unique_id(data[CONF_TOKEN][CONF_INSTALLED_APP_ID])
-        self._abort_if_unique_id_configured()
+        if self.source != SOURCE_REAUTH:
+            client = SmartThings(session=async_get_clientsession(self.hass))
+            client.authenticate(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+            locations = await client.get_locations()
+            location = locations[0]
+            self._abort_if_unique_id_configured()
 
-        return self.async_create_entry(
-            title=location.name, data={**data, CONF_LOCATION_ID: location.location_id}
+            return self.async_create_entry(
+                title=location.name,
+                data={**data, CONF_LOCATION_ID: location.location_id},
+            )
+
+        self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
+        return self.async_update_reload_and_abort(
+            self._get_reauth_entry(), data_updates=data
         )
 
     async def async_step_reauth(
