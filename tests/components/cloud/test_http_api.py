@@ -1943,7 +1943,8 @@ async def test_download_support_package(
     )
 
     now = dt_util.utcnow()
-    freezer.move_to(datetime.datetime.fromisoformat("2025-02-10T12:00:00.0+00:00"))
+    tz = now.astimezone().tzinfo
+    freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
     logging.getLogger("hass_nabucasa.iot").info(
         "This message will be dropped since this test patches MAX_RECORDS"
     )
