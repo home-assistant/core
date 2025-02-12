@@ -167,16 +167,18 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new operation mode and target temperatures."""
+        hvac_mode = self.hvac_mode
         # Operation state
         if operation_state := kwargs.get(ATTR_HVAC_MODE):
             await self.async_set_hvac_mode(operation_state)
+            hvac_mode = operation_state
 
         # Heat/cool setpoint
         heating_setpoint = None
         cooling_setpoint = None
-        if self.hvac_mode == HVACMode.HEAT:
+        if hvac_mode == HVACMode.HEAT:
             heating_setpoint = kwargs.get(ATTR_TEMPERATURE)
-        elif self.hvac_mode == HVACMode.COOL:
+        elif hvac_mode == HVACMode.COOL:
             cooling_setpoint = kwargs.get(ATTR_TEMPERATURE)
         else:
             heating_setpoint = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -188,7 +190,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
                     self.coordinator.device.device_id,
                     Capability.THERMOSTAT_HEATING_SETPOINT,
                     Command.SET_HEATING_SETPOINT,
-                    round(heating_setpoint, 3),
+                    argument=round(heating_setpoint, 3),
                 )
             )
         if cooling_setpoint is not None:
@@ -197,7 +199,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
                     self.coordinator.device.device_id,
                     Capability.THERMOSTAT_COOLING_SETPOINT,
                     Command.SET_COOLING_SETPOINT,
-                    round(cooling_setpoint, 3),
+                    argument=round(cooling_setpoint, 3),
                 )
             )
         await asyncio.gather(*tasks)

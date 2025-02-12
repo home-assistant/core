@@ -1,5 +1,6 @@
 """Test for the SmartThings climate platform."""
 
+from typing import Any
 from unittest.mock import AsyncMock, call
 
 from pysmartthings.models import Attribute, Capability, Command
@@ -11,6 +12,8 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
@@ -419,3 +422,138 @@ async def test_ac_set_preset_mode(
         Command.SET_AC_OPTIONAL_MODE,
         argument="windFree",
     )
+
+
+@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+async def test_thermostat_set_fan_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test thermostat set fan mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_FAN_MODE,
+        {ATTR_ENTITY_ID: "climate.asd", ATTR_FAN_MODE: "on"},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+        Capability.THERMOSTAT_FAN_MODE,
+        Command.SET_THERMOSTAT_FAN_MODE,
+        argument="on",
+    )
+
+
+@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+async def test_thermostat_set_hvac_mode(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test thermostat set HVAC mode."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {ATTR_ENTITY_ID: "climate.asd", ATTR_HVAC_MODE: HVACMode.HEAT_COOL},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+        Capability.THERMOSTAT_MODE,
+        Command.SET_THERMOSTAT_MODE,
+        argument="auto",
+    )
+
+
+@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize(
+    ("state", "data", "calls"),
+    [
+        (
+            "auto",
+            {ATTR_TARGET_TEMP_LOW: 15, ATTR_TARGET_TEMP_HIGH: 23},
+            [
+                call(
+                    "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+                    Capability.THERMOSTAT_HEATING_SETPOINT,
+                    Command.SET_HEATING_SETPOINT,
+                    argument=59.0,
+                ),
+                call(
+                    "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+                    Capability.THERMOSTAT_COOLING_SETPOINT,
+                    Command.SET_COOLING_SETPOINT,
+                    argument=73.4,
+                ),
+            ],
+        ),
+        (
+            "cool",
+            {ATTR_TEMPERATURE: 15},
+            [
+                call(
+                    "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+                    Capability.THERMOSTAT_COOLING_SETPOINT,
+                    Command.SET_COOLING_SETPOINT,
+                    argument=59.0,
+                )
+            ],
+        ),
+        (
+            "heat",
+            {ATTR_TEMPERATURE: 23},
+            [
+                call(
+                    "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+                    Capability.THERMOSTAT_HEATING_SETPOINT,
+                    Command.SET_HEATING_SETPOINT,
+                    argument=73.4,
+                )
+            ],
+        ),
+        (
+            "heat",
+            {ATTR_TEMPERATURE: 23, ATTR_HVAC_MODE: HVACMode.COOL},
+            [
+                call(
+                    "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+                    Capability.THERMOSTAT_MODE,
+                    Command.SET_THERMOSTAT_MODE,
+                    argument="cool",
+                ),
+                call(
+                    "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+                    Capability.THERMOSTAT_COOLING_SETPOINT,
+                    Command.SET_COOLING_SETPOINT,
+                    argument=73.4,
+                ),
+            ],
+        ),
+    ],
+)
+async def test_thermostat_set_temperature(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    state: str,
+    data: dict[str, Any],
+    calls: list[call],
+) -> None:
+    """Test thermostat set temperature."""
+    set_attribute_value(
+        devices, Capability.THERMOSTAT_MODE, Attribute.THERMOSTAT_MODE, state
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {ATTR_ENTITY_ID: "climate.asd"} | data,
+        blocking=True,
+    )
+    assert devices.execute_device_command.mock_calls == calls
