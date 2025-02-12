@@ -118,3 +118,8 @@ class OneDriveDriveStateSensor(
             if self.coordinator.data.quota
             else None
         )
+
+    @property
+    def available(self) -> bool:
+        """Availability of the sensor."""
+        return super().available and self.coordinator.data.quota is not None
