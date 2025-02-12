@@ -18,11 +18,13 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: GeoJsonConfigEntry
 ) -> bool:
     """Set up the GeoJSON events component as config entry."""
+    # Create feed entity manager for all platforms.
     manager = GeoJsonFeedEntityManager(hass, config_entry)
-    config_entry.runtime_data = manager
-    config_entry.async_on_unload(manager.async_stop)
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await remove_orphaned_entities(hass, config_entry.entry_id)
+
+    config_entry.runtime_data = manager
+    config_entry.async_on_unload(manager.async_stop)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     await manager.async_init()
     return True
