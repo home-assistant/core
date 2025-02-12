@@ -16,7 +16,6 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
-from homeassistant.util import slugify
 
 from .const import CONF_BACKUP_PATH, DOMAIN
 from .helpers import async_create_client
@@ -68,13 +67,18 @@ class WebDavConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "invalid_auth"
             else:
                 if result:
+                    self._async_abort_entries_match(
+                        {
+                            CONF_URL: user_input[CONF_URL],
+                            CONF_USERNAME: user_input[CONF_USERNAME],
+                        }
+                    )
+
                     parsed_url = yarl.URL(user_input[CONF_URL])
-                    unq_id = f"{user_input[CONF_USERNAME]}@{parsed_url.host}"
-
-                    await self.async_set_unique_id(slugify(unq_id))
-                    self._abort_if_unique_id_configured()
-
-                    return self.async_create_entry(title=unq_id, data=user_input)
+                    return self.async_create_entry(
+                        title=f"{user_input[CONF_USERNAME]}@{parsed_url.host}",
+                        data=user_input,
+                    )
 
                 errors["base"] = "cannot_connect"
 
