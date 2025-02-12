@@ -44,7 +44,8 @@ SIRENS: dict[str, tuple[SirenEntityDescription, ...]] = {
             key=DPCode.SIREN_SWITCH,
         ),
     ),
-    # Smart Camera - Unsupported
+    # Smart Camera - Low power consumption camera
+    # Undocumented, see https://github.com/home-assistant/core/issues/132844
     "dghsxj": (
         SirenEntityDescription(
             key=DPCode.SIREN_SWITCH,

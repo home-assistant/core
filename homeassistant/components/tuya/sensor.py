@@ -632,7 +632,8 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
     ),
-    # Smart Camera - Unsupported
+    # Smart Camera - Low power consumption camera
+    # Undocumented, see https://github.com/home-assistant/core/issues/132844
     "dghsxj": (
         TuyaSensorEntityDescription(
             key=DPCode.SENSOR_TEMPERATURE,

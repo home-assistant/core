@@ -128,7 +128,8 @@ SELECTS: dict[str, tuple[SelectEntityDescription, ...]] = {
             translation_key="motion_sensitivity",
         ),
     ),
-    # Smart Camera - Unsupported
+    # Smart Camera - Low power consumption camera
+    # Undocumented, see https://github.com/home-assistant/core/issues/132844
     "dghsxj": (
         SelectEntityDescription(
             key=DPCode.IPC_WORK_MODE,

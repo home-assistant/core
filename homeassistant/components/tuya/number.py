@@ -174,7 +174,8 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Camera - Unsupported
+    # Smart Camera - Low power consumption camera
+    # Undocumented, see https://github.com/home-assistant/core/issues/132844
     "dghsxj": (
         NumberEntityDescription(
             key=DPCode.BASIC_DEVICE_VOLUME,
