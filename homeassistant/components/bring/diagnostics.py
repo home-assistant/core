@@ -14,4 +14,8 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
 
-    return {k: v.to_dict() for k, v in config_entry.runtime_data.data.items()}
+    return {
+        "data": {k: v.to_dict() for k, v in config_entry.runtime_data.data.items()},
+        "lists": [lst.to_dict() for lst in config_entry.runtime_data.lists],
+        "user_settings": config_entry.runtime_data.user_settings.to_dict(),
+    }
