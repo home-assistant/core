@@ -28,7 +28,7 @@ class CommandStore:
         """Register device response."""
         get_devices_command = gateway.get_devices()
         self.register_response(get_devices_command, [device_response.id])
-        get_device_command = gateway.get_device(device_response.id)
+        get_device_command = gateway.get_device(str(device_response.id))
         self.register_response(get_device_command, device_response.dict(by_alias=True))
 
     def register_response(self, command: Command, response: Any) -> None:

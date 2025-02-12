@@ -246,7 +246,9 @@ async def test_turn_on(
 ) -> None:
     """Test turning on a light."""
     # Make sure the light is off.
-    device.raw.light_control[0].state = 0
+    light_control = device.raw.light_control
+    assert light_control
+    light_control[0].state = 0
     await setup_integration(hass)
 
     await hass.services.async_call(
