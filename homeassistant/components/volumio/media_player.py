@@ -21,7 +21,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle
 
 from .browse_media import browse_node, browse_top_level
@@ -33,7 +33,7 @@ PLAYLIST_UPDATE_INTERVAL = timedelta(seconds=15)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Volumio media player platform."""
 

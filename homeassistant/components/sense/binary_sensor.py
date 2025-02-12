@@ -10,7 +10,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SenseConfigEntry
 from .const import DOMAIN
@@ -23,7 +23,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SenseConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sense binary sensor."""
     sense_monitor_id = config_entry.runtime_data.data.sense_monitor_id

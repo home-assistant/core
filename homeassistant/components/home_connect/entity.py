@@ -35,9 +35,6 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
         self._attr_unique_id = f"{appliance.info.ha_id}-{desc.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, appliance.info.ha_id)},
-            manufacturer=appliance.info.brand,
-            model=appliance.info.vib,
-            name=appliance.info.name,
         )
         self.update_native_value()
 
@@ -56,3 +53,10 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
     def bsh_key(self) -> str:
         """Return the BSH key."""
         return self.entity_description.key
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            self.appliance.info.connected and self._attr_available and super().available
+        )

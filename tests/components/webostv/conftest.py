@@ -42,7 +42,7 @@ def client_fixture():
         client = mock_client_class.return_value
         client.hello_info = {"deviceUUID": FAKE_UUID}
         client.software_info = {"major_ver": "major", "minor_ver": "minor"}
-        client.system_info = {"modelName": TV_MODEL}
+        client.system_info = {"modelName": TV_MODEL, "serialNumber": "1234567890"}
         client.client_key = CLIENT_KEY
         client.apps = MOCK_APPS
         client.inputs = MOCK_INPUTS

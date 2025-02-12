@@ -35,7 +35,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
@@ -88,7 +88,9 @@ HA_HEOS_REPEAT_TYPE_MAP = {v: k for k, v in HEOS_HA_REPEAT_TYPE_MAP.items()}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: HeosConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: HeosConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add media players for a config entry."""
     devices = [

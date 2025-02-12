@@ -22,6 +22,8 @@ _LOGGER = logging.getLogger(__name__)
 class AirQCoordinator(DataUpdateCoordinator):
     """Coordinator is responsible for querying the device at a specified route."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -33,6 +35,7 @@ class AirQCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )

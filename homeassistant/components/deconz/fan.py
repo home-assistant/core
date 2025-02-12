@@ -13,7 +13,7 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -34,7 +34,7 @@ ORDERED_NAMED_FAN_SPEEDS: list[LightFanSpeed] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DeconzConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up fans for deCONZ component."""
     hub = config_entry.runtime_data

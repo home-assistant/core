@@ -2521,6 +2521,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "heicko": {
+      "name": "Heicko",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "heiwa": {
       "name": "Heiwa",
       "integration_type": "virtual",
@@ -2604,7 +2609,8 @@
       "name": "Home Connect",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_push",
+      "single_config_entry": true
     },
     "home_plus_control": {
       "name": "Legrand Home+ Control",
@@ -2866,7 +2872,7 @@
       "iot_class": "local_polling"
     },
     "incomfort": {
-      "name": "Intergas InComfort/Intouch Lan2RF gateway",
+      "name": "Intergas gateway",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -2923,6 +2929,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "iometer": {
+      "name": "IOmeter",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "ios": {
       "name": "Home Assistant iOS",
@@ -3409,6 +3421,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_polling"
+    },
+    "linx": {
+      "name": "Linx",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
     },
     "lirc": {
       "name": "LIRC",
@@ -4722,6 +4739,13 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "pglab": {
+      "name": "PG LAB Electronics",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push",
+      "single_config_entry": true
+    },
     "philips": {
       "name": "Philips",
       "integrations": {
@@ -5801,6 +5825,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "smart_rollos": {
+      "name": "Smart Rollos",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
+    },
     "smarther": {
       "name": "Smarther",
       "integration_type": "virtual",
@@ -6735,6 +6764,11 @@
       "name": "Ubiwizz",
       "integration_type": "virtual",
       "supported_by": "overkiz"
+    },
+    "ublockout": {
+      "name": "Ublockout",
+      "integration_type": "virtual",
+      "supported_by": "motion_blinds"
     },
     "uk_transport": {
       "name": "UK Transport",

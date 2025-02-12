@@ -8,7 +8,7 @@ from qbusmqttapi.state import QbusMqttOnOffState, StateType
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import QbusConfigEntry
 from .entity import QbusEntity
@@ -17,7 +17,9 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: QbusConfigEntry, add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: QbusConfigEntry,
+    add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch entities."""
     coordinator = entry.runtime_data
