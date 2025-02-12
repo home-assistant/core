@@ -18,6 +18,7 @@ from homeassistant.const import CONF_NAME, CONF_TIME_ZONE, CONF_UNIT_SYSTEM
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import METRIC_SYSTEM
@@ -94,15 +95,24 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
 
     _attr_attribution = "Data provided by NOAA"
 
-    def __init__(self, name, station_id, timezone, unit_system, station) -> None:
+    def __init__(
+        self,
+        name: str | None,
+        station_id: str,
+        timezone: str | None,
+        unit_system: str,
+        station: coops.Station,
+        device_info: DeviceInfo | None = None,
+    ) -> None:
         """Initialize the sensor."""
-        self._name = name
+        self._name = name if name is not None else DEFAULT_NAME
         self._station_id = station_id
-        self._timezone = timezone
+        self._timezone = timezone if timezone is not None else DEFAULT_TIMEZONE
         self._unit_system = unit_system
         self._station = station
         self.data: NOAATidesData | None = None
         self._attr_unique_id = f"{get_station_unique_id(station_id)}_summary"
+        self._attr_device_info = device_info
 
     @property
     def name(self) -> str:
