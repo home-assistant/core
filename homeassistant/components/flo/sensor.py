@@ -7,7 +7,6 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfPressure,
@@ -16,22 +15,19 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN as FLO_DOMAIN
-from .coordinator import FloDeviceDataUpdateCoordinator
+from .coordinator import FloConfigEntry
 from .entity import FloEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FloConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flo sensors from config entry."""
-    devices: list[FloDeviceDataUpdateCoordinator] = hass.data[FLO_DOMAIN][
-        config_entry.entry_id
-    ]["devices"]
+    devices = config_entry.runtime_data.devices
     entities = []
     for device in devices:
         if device.device_type == "puck_oem":

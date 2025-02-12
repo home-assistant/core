@@ -22,7 +22,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .const import BLU_TRV_TIMEOUT, CONF_SLEEP_PERIOD, LOGGER, VIRTUAL_NUMBER_MODE_MAP
@@ -139,6 +139,24 @@ class RpcBluTrvNumber(RpcNumber):
         )
 
 
+class RpcBluTrvExtTempNumber(RpcBluTrvNumber):
+    """Represent a RPC BluTrv External Temperature number."""
+
+    _reported_value: float | None = None
+
+    @property
+    def native_value(self) -> float | None:
+        """Return value of number."""
+        return self._reported_value
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Change the value."""
+        await super().async_set_native_value(value)
+
+        self._reported_value = value
+        self.async_write_ha_state()
+
+
 NUMBERS: dict[tuple[str, str], BlockNumberDescription] = {
     ("device", "valvePos"): BlockNumberDescription(
         key="device|valvepos",
@@ -175,7 +193,7 @@ RPC_NUMBERS: Final = {
             "method": "Trv.SetExternalTemperature",
             "params": {"id": 0, "t_C": value},
         },
-        entity_class=RpcBluTrvNumber,
+        entity_class=RpcBluTrvExtTempNumber,
     ),
     "number": RpcNumberDescription(
         key="number",
@@ -220,7 +238,7 @@ RPC_NUMBERS: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up numbers for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:

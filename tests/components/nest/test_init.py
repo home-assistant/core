@@ -9,10 +9,12 @@ relevant modes.
 """
 
 from collections.abc import Generator
+import datetime
 from http import HTTPStatus
 import logging
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 from google_nest_sdm.exceptions import (
     ApiException,
     AuthException,
@@ -22,6 +24,7 @@ from google_nest_sdm.exceptions import (
 import pytest
 
 from homeassistant.components.nest import DOMAIN
+from homeassistant.components.nest.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -35,6 +38,8 @@ from .common import (
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 PLATFORM = "sensor"
+
+EXPIRED_TOKEN_TIMESTAMP = datetime.datetime(2022, 4, 8).timestamp()
 
 
 @pytest.fixture
@@ -137,6 +142,55 @@ async def test_setup_device_manager_failure(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize("token_expiration_time", [EXPIRED_TOKEN_TIMESTAMP])
+@pytest.mark.parametrize(
+    ("token_response_args", "expected_state", "expected_steps"),
+    [
+        # Cases that retry integration setup
+        (
+            {"status": HTTPStatus.INTERNAL_SERVER_ERROR},
+            ConfigEntryState.SETUP_RETRY,
+            [],
+        ),
+        ({"exc": aiohttp.ClientError("No internet")}, ConfigEntryState.SETUP_RETRY, []),
+        # Cases that require the user to reauthenticate in a config flow
+        (
+            {"status": HTTPStatus.BAD_REQUEST},
+            ConfigEntryState.SETUP_ERROR,
+            ["reauth_confirm"],
+        ),
+        (
+            {"status": HTTPStatus.FORBIDDEN},
+            ConfigEntryState.SETUP_ERROR,
+            ["reauth_confirm"],
+        ),
+    ],
+)
+async def test_expired_token_refresh_error(
+    hass: HomeAssistant,
+    setup_base_platform: PlatformSetup,
+    aioclient_mock: AiohttpClientMocker,
+    token_response_args: dict,
+    expected_state: ConfigEntryState,
+    expected_steps: list[str],
+) -> None:
+    """Test errors when attempting to refresh the auth token."""
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        **token_response_args,
+    )
+
+    await setup_base_platform()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].state is expected_state
+
+    flows = hass.config_entries.flow.async_progress()
+    assert expected_steps == [flow["step_id"] for flow in flows]
 
 
 @pytest.mark.parametrize("subscriber_side_effect", [AuthException()])

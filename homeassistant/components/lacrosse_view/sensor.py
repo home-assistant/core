@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -48,7 +48,7 @@ def get_value(sensor: Sensor, field: str) -> float | int | str | None:
     field_data = sensor.data.get(field) if sensor.data is not None else None
     if field_data is None:
         return None
-    value = field_data["values"][-1]["s"]
+    value = field_data["spot"]["value"]
     try:
         value = float(value)
     except ValueError:
@@ -149,7 +149,7 @@ UNIT_OF_MEASUREMENT_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LaCrosse View from a config entry."""
     coordinator: DataUpdateCoordinator[list[Sensor]] = hass.data[DOMAIN][
@@ -226,7 +226,6 @@ class LaCrosseViewSensor(
             name=sensor.name,
             manufacturer="LaCrosse Technology",
             model=sensor.model,
-            via_device=(DOMAIN, sensor.location.id),
         )
         self.index = index
 

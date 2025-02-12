@@ -56,11 +56,17 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
     current_user: UserProfile
     config_entry: SpotifyConfigEntry
 
-    def __init__(self, hass: HomeAssistant, client: SpotifyClient) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SpotifyConfigEntry,
+        client: SpotifyClient,
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
         )
