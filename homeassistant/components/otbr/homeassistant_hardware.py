@@ -43,7 +43,7 @@ async def async_get_firmware_info(
             hass=hass,
             logger=_LOGGER,
             addon_name="OpenThread Border Router",
-            addon_slug=host,
+            addon_slug=host.replace("-", "_"),
         )
 
         if (

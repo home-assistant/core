@@ -218,7 +218,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     if current_entry.state == ConfigEntryState.LOADED:
                         assert current_entry.unique_id is not None
                         await self.hass.config_entries.async_reload(
-                            current_entry.unique_id
+                            current_entry.entry_id
                         )
 
                     continue
