@@ -747,7 +747,7 @@ debugpy==1.8.11
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==12.0.0
+deebot-client==12.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -1103,7 +1103,7 @@ habiticalib==0.3.7
 habluetooth==3.21.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.88.1
+hass-nabucasa==0.90.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1930,7 +1930,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.23.1
+pyenphase==1.25.1
 
 # homeassistant.components.envisalink
 pyenvisalink==4.7
@@ -2694,7 +2694,7 @@ sensorpush-ble==1.7.1
 sensoterra==2.0.1
 
 # homeassistant.components.sentry
-sentry-sdk==1.40.3
+sentry-sdk==1.45.1
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.0.11
@@ -3125,7 +3125,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.143.0
+zeroconf==0.144.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
