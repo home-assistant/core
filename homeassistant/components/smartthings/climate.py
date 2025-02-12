@@ -343,7 +343,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             return
         tasks = []
         # Turn on the device if it's off before setting mode.
-        if not self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH):
+        if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
             tasks.append(self.async_turn_on())
 
         mode = STATE_TO_AC_MODE[hvac_mode]
@@ -372,7 +372,10 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             if operation_mode == HVACMode.OFF:
                 tasks.append(self.async_turn_off())
             else:
-                if not self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH):
+                if (
+                    self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
+                    == "off"
+                ):
                     tasks.append(self.async_turn_on())
                 tasks.append(self.async_set_hvac_mode(operation_mode))
         # temperature
