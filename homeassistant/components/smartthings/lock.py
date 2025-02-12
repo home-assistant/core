@@ -8,7 +8,7 @@ from pysmartthings.models import Attribute, Capability, Command
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SmartThingsConfigEntry
 from .entity import SmartThingsEntity
@@ -27,7 +27,7 @@ ST_LOCK_ATTR_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add lights for a config entry."""
     devices = entry.runtime_data.devices

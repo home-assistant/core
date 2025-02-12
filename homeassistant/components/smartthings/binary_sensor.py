@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SmartThingsConfigEntry, SmartThingsDeviceCoordinator
 from .entity import SmartThingsEntity
@@ -117,7 +117,7 @@ CAPABILITY_TO_SENSORS: dict[
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add binary sensors for a config entry."""
     devices = entry.runtime_data.devices

@@ -23,7 +23,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SmartThingsConfigEntry, SmartThingsDeviceCoordinator
 from .entity import SmartThingsEntity
@@ -97,7 +97,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add climate entities for a config entry."""
     devices = entry.runtime_data.devices
@@ -301,6 +301,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         unit = self.coordinator.data[Capability.TEMPERATURE_MEASUREMENT][
             Attribute.TEMPERATURE
         ].unit
+        assert unit
         return UNIT_MAP[unit]
 
 
@@ -472,6 +473,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         unit = self.coordinator.data[Capability.TEMPERATURE_MEASUREMENT][
             Attribute.TEMPERATURE
         ].unit
+        assert unit
         return UNIT_MAP[unit]
 
     def _determine_swing_modes(self) -> list[str] | None:

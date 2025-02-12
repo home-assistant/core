@@ -15,7 +15,7 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SmartThingsConfigEntry, SmartThingsDeviceCoordinator
 from .entity import SmartThingsEntity
@@ -35,7 +35,7 @@ CAPABILITIES = (Capability.WINDOW_SHADE, Capability.DOOR_CONTROL)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add covers for a config entry."""
     devices = entry.runtime_data.devices
@@ -105,7 +105,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         attribute = {
             Capability.WINDOW_SHADE: Attribute.WINDOW_SHADE,
             Capability.DOOR_CONTROL: Attribute.DOOR,
-        }.get(self.capability)
+        }[self.capability]
         self._state = VALUE_TO_STATE.get(
             self.get_attribute_value(self.capability, attribute)
         )
