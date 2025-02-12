@@ -4,9 +4,9 @@ import logging
 from typing import Any
 
 from azure.core.exceptions import ClientAuthenticationError, ResourceNotFoundError
-from azure.core.pipeline.transport import (  # pylint: disable=no-name-in-module
+from azure.core.pipeline.transport._aiohttp import (
     AioHttpTransport,
-)
+)  # need to import from private file, as it is not properly imported in the init
 from azure.storage.blob.aio import ContainerClient
 import voluptuous as vol
 

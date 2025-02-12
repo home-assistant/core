@@ -6,9 +6,9 @@ from azure.core.exceptions import (
     HttpResponseError,
     ResourceNotFoundError,
 )
-from azure.core.pipeline.transport import (  # pylint: disable=no-name-in-module
+from azure.core.pipeline.transport._aiohttp import (
     AioHttpTransport,
-)
+)  # need to import from private file, as it is not properly imported in the init
 from azure.storage.blob.aio import ContainerClient
 
 from homeassistant.config_entries import ConfigEntry
