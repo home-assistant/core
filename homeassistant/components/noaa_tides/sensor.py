@@ -22,6 +22,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from .const import CONF_STATION_ID, DEFAULT_TIMEZONE, TIMEZONES, UNIT_SYSTEMS
 from .helpers import get_station_unique_id
 
 if TYPE_CHECKING:
@@ -29,15 +30,9 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_STATION_ID = "station_id"
-
 DEFAULT_NAME = "NOAA Tides"
-DEFAULT_TIMEZONE = "lst_ldt"
 
 SCAN_INTERVAL = timedelta(minutes=60)
-
-TIMEZONES = ["gmt", "lst", "lst_ldt"]
-UNIT_SYSTEMS = ["english", "metric"]
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
