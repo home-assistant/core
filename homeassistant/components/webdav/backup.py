@@ -160,7 +160,6 @@ class WebDavBackupAgent(BackupAgent):
         await self._client.upload_iter(
             json_dumps(backup.as_dict()),
             f"{self._backup_path}/{metadata_filename}",
-            timeout=BACKUP_TIMEOUT,
         )
 
         await self._client.set_property_batch(
