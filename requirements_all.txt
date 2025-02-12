@@ -1547,7 +1547,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.2.9
+ohme==1.3.0
 
 # homeassistant.components.ollama
 ollama==0.4.7
