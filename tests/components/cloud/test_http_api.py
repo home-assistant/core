@@ -1943,6 +1943,8 @@ async def test_download_support_package(
     )
 
     now = dt_util.utcnow()
+    # The logging is done with local time according to the system timezone. Set the
+    # fake time to 12:00 local time
     tz = now.astimezone().tzinfo
     freezer.move_to(datetime.datetime(2025, 2, 10, 12, 0, 0, tzinfo=tz))
     logging.getLogger("hass_nabucasa.iot").info(
