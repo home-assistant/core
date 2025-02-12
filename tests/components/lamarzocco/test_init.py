@@ -38,9 +38,7 @@ async def test_load_unload_config_entry(
     mock_lamarzocco: MagicMock,
 ) -> None:
     """Test loading and unloading the integration."""
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -58,9 +56,7 @@ async def test_config_entry_not_ready(
     """Test the La Marzocco configuration entry not ready."""
     mock_lamarzocco.get_config.side_effect = RequestNotSuccessful("")
 
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_init_integration(hass, mock_config_entry)
 
     assert len(mock_lamarzocco.get_config.mock_calls) == 1
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
@@ -73,9 +69,7 @@ async def test_invalid_auth(
 ) -> None:
     """Test auth error during setup."""
     mock_lamarzocco.get_config.side_effect = AuthFail("")
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    await async_init_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert len(mock_lamarzocco.get_config.mock_calls) == 1

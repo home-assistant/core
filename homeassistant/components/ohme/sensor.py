@@ -13,11 +13,16 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfElectricCurrent, UnitOfEnergy, UnitOfPower
+from homeassistant.const import (
+    PERCENTAGE,
+    UnitOfElectricCurrent,
+    UnitOfEnergy,
+    UnitOfPower,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import OhmeConfigEntry
+from .coordinator import OhmeConfigEntry
 from .entity import OhmeEntity, OhmeEntityDescription
 
 PARALLEL_UPDATES = 0
@@ -61,6 +66,14 @@ SENSOR_CHARGE_SESSION = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda client: client.energy,
     ),
+    OhmeSensorDescription(
+        key="battery",
+        translation_key="vehicle_battery",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
+        suggested_display_precision=0,
+        value_fn=lambda client: client.battery,
+    ),
 ]
 
 SENSOR_ADVANCED_SETTINGS = [
@@ -78,7 +91,7 @@ SENSOR_ADVANCED_SETTINGS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OhmeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensors."""
     coordinators = config_entry.runtime_data

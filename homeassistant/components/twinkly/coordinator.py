@@ -9,6 +9,7 @@ from aiohttp import ClientError
 from awesomeversion import AwesomeVersion
 from ttls.client import Twinkly, TwinklyError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -16,6 +17,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DEV_NAME, DOMAIN, MIN_EFFECT_VERSION
 
 _LOGGER = logging.getLogger(__name__)
+
+type TwinklyConfigEntry = ConfigEntry[TwinklyCoordinator]
 
 
 @dataclass
@@ -27,20 +30,25 @@ class TwinklyData:
     is_on: bool
     movies: dict[int, str]
     current_movie: int | None
+    current_mode: str | None
 
 
 class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
     """Class to manage fetching Twinkly data from API."""
 
+    config_entry: TwinklyConfigEntry
     software_version: str
     supports_effects: bool
     device_name: str
 
-    def __init__(self, hass: HomeAssistant, client: Twinkly) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: TwinklyConfigEntry, client: Twinkly
+    ) -> None:
         """Initialize global Twinkly data updater."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
@@ -66,6 +74,8 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             device_info = await self.client.get_details()
             brightness = await self.client.get_brightness()
             is_on = await self.client.is_on()
+            mode_data = await self.client.get_mode()
+            current_mode = mode_data.get("mode")
             if self.supports_effects:
                 movies = (await self.client.get_saved_movies())["movies"]
         except (TimeoutError, ClientError) as exception:
@@ -87,6 +97,7 @@ class TwinklyCoordinator(DataUpdateCoordinator[TwinklyData]):
             is_on,
             {movie["id"]: movie["name"] for movie in movies},
             current_movie.get("id"),
+            current_mode,
         )
 
     def _async_update_device_info(self, name: str) -> None:

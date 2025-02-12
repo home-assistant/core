@@ -5,9 +5,8 @@ from __future__ import annotations
 from collections.abc import Mapping
 import logging
 import types
-from typing import Any, Generic
+from typing import Any
 
-from typing_extensions import TypeVar
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
@@ -46,8 +45,6 @@ AUTH_PROVIDER_SCHEMA = vol.Schema(
     },
     extra=vol.ALLOW_EXTRA,
 )
-
-_AuthProviderT = TypeVar("_AuthProviderT", bound="AuthProvider", default="AuthProvider")
 
 
 class AuthProvider:
@@ -195,9 +192,8 @@ async def load_auth_provider_module(
     return module
 
 
-class LoginFlow(
+class LoginFlow[_AuthProviderT: AuthProvider = AuthProvider](
     FlowHandler[AuthFlowContext, AuthFlowResult, tuple[str, str]],
-    Generic[_AuthProviderT],
 ):
     """Handler for the login flow."""
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, cast
 
 from chip.clusters import Objects as clusters
-from matter_server.client.models.device_types import BridgedDevice
+from matter_server.client.models.device_types import BridgedNode
 from matter_server.common.models import EventType, ServerInfoMessage
 
 from homeassistant.config_entries import ConfigEntry
@@ -162,7 +162,7 @@ class MatterAdapter:
             (
                 x
                 for x in endpoint.device_types
-                if x.device_type != BridgedDevice.device_type
+                if x.device_type != BridgedNode.device_type
             ),
             None,
         )
