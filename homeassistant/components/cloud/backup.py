@@ -3,9 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
-import hashlib
 import logging
 import random
 from typing import Any
@@ -14,7 +12,7 @@ from aiohttp import ClientError
 from hass_nabucasa import Cloud, CloudError
 from hass_nabucasa.api import CloudApiNonRetryableError
 from hass_nabucasa.cloud_api import async_files_delete_file, async_files_list
-from hass_nabucasa.files import StorageType
+from hass_nabucasa.files import StorageType, calculate_b64md5
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -28,14 +26,6 @@ _LOGGER = logging.getLogger(__name__)
 _RETRY_LIMIT = 5
 _RETRY_SECONDS_MIN = 60
 _RETRY_SECONDS_MAX = 600
-
-
-async def _b64md5(stream: AsyncIterator[bytes]) -> str:
-    """Calculate the MD5 hash of a file."""
-    file_hash = hashlib.md5()
-    async for chunk in stream:
-        file_hash.update(chunk)
-    return base64.b64encode(file_hash.digest()).decode()
 
 
 async def async_get_backup_agents(
@@ -129,7 +119,7 @@ class CloudBackupAgent(BackupAgent):
         if not backup.protected:
             raise BackupAgentError("Cloud backups must be protected")
 
-        base64md5hash = await _b64md5(await open_stream())
+        base64md5hash = await calculate_b64md5(open_stream, backup.size)
         filename = self._get_backup_filename()
         metadata = backup.as_dict()
         size = backup.size

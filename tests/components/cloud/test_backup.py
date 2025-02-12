@@ -285,6 +285,7 @@ async def test_agents_upload(
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
+    backup_data = "test"
     backup_id = "test-backup"
     test_backup = AgentBackup(
         addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
@@ -297,7 +298,7 @@ async def test_agents_upload(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=True,
-        size=0,
+        size=len(backup_data),
     )
     with (
         patch(
@@ -309,11 +310,11 @@ async def test_agents_upload(
         ),
         patch("pathlib.Path.open") as mocked_open,
     ):
-        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        mocked_open.return_value.read = Mock(side_effect=[backup_data.encode(), b""])
         fetch_backup.return_value = test_backup
         resp = await client.post(
             "/api/backup/upload?agent_id=cloud.cloud",
-            data={"file": StringIO("test")},
+            data={"file": StringIO(backup_data)},
         )
 
     assert len(cloud.files.upload.mock_calls) == 1
@@ -336,6 +337,7 @@ async def test_agents_upload_fail(
 ) -> None:
     """Test agent upload backup fails."""
     client = await hass_client()
+    backup_data = "test"
     backup_id = "test-backup"
     test_backup = AgentBackup(
         addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
@@ -348,7 +350,7 @@ async def test_agents_upload_fail(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=True,
-        size=0,
+        size=len(backup_data),
     )
 
     cloud.files.upload.side_effect = side_effect
@@ -366,11 +368,11 @@ async def test_agents_upload_fail(
         patch("homeassistant.components.cloud.backup.random.randint", return_value=60),
         patch("homeassistant.components.cloud.backup._RETRY_LIMIT", 2),
     ):
-        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        mocked_open.return_value.read = Mock(side_effect=[backup_data.encode(), b""])
         fetch_backup.return_value = test_backup
         resp = await client.post(
             "/api/backup/upload?agent_id=cloud.cloud",
-            data={"file": StringIO("test")},
+            data={"file": StringIO(backup_data)},
         )
         await hass.async_block_till_done()
 
@@ -409,6 +411,7 @@ async def test_agents_upload_fail_non_retryable(
 ) -> None:
     """Test agent upload backup fails with non-retryable error."""
     client = await hass_client()
+    backup_data = "test"
     backup_id = "test-backup"
     test_backup = AgentBackup(
         addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
@@ -435,12 +438,13 @@ async def test_agents_upload_fail_non_retryable(
             return_value=test_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
+        patch("homeassistant.components.cloud.backup.calculate_b64md5"),
     ):
-        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        mocked_open.return_value.read = Mock(side_effect=[backup_data.encode(), b""])
         fetch_backup.return_value = test_backup
         resp = await client.post(
             "/api/backup/upload?agent_id=cloud.cloud",
-            data={"file": StringIO("test")},
+            data={"file": StringIO(backup_data)},
         )
         await hass.async_block_till_done()
 
@@ -461,6 +465,7 @@ async def test_agents_upload_not_protected(
 ) -> None:
     """Test agent upload backup, when cloud user is logged in."""
     client = await hass_client()
+    backup_data = "test"
     backup_id = "test-backup"
     test_backup = AgentBackup(
         addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
@@ -473,7 +478,7 @@ async def test_agents_upload_not_protected(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=False,
-        size=0,
+        size=len(backup_data),
     )
     with (
         patch("pathlib.Path.open"),
@@ -484,7 +489,7 @@ async def test_agents_upload_not_protected(
     ):
         resp = await client.post(
             "/api/backup/upload?agent_id=cloud.cloud",
-            data={"file": StringIO("test")},
+            data={"file": StringIO(backup_data)},
         )
         await hass.async_block_till_done()
 
