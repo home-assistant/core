@@ -351,7 +351,9 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         # The conversion make the mode change working
         # The conversion is made only for device that wrongly has capability "wind" instead "fan_only"
         if hvac_mode == HVACMode.FAN_ONLY:
-            if WIND in self._attr_hvac_modes:
+            if WIND in self.get_attribute_value(
+                Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+            ):
                 mode = WIND
 
         tasks.append(
