@@ -151,7 +151,13 @@ def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
                     "exc": str(ex),
                 },
             ) from ex
-        await self.coordinator.async_request_refresh()
+        coordinator = self.coordinator
+        if coordinator.parent_coordinator:
+            # If there is a parent coordinator we need to refresh
+            # the parent as its what provides the power state data
+            # for the child entities.
+            coordinator = coordinator.parent_coordinator
+        await coordinator.async_request_refresh()
 
     return _async_wrap
 

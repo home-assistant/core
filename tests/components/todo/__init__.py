@@ -3,7 +3,7 @@
 from homeassistant.components.todo import DOMAIN, TodoItem, TodoListEntity
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from tests.common import MockConfigEntry, MockPlatform, mock_platform
 
@@ -44,7 +44,7 @@ async def create_mock_platform(
     async def async_setup_entry_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test event platform via config entry."""
         async_add_entities(entities)

@@ -207,7 +207,7 @@ aiocomelit==0.10.1
 aiodhcpwatcher==1.1.0
 
 # homeassistant.components.dhcp
-aiodiscover==2.2.2
+aiodiscover==2.6.0
 
 # homeassistant.components.dnsip
 aiodns==3.2.0
@@ -353,7 +353,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.4.1
+aioshelly==12.4.2
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -570,7 +570,7 @@ boschshcpy==0.2.91
 botocore==1.34.131
 
 # homeassistant.components.bring
-bring-api==1.0.1
+bring-api==1.0.2
 
 # homeassistant.components.broadlink
 broadlink==0.19.0
@@ -759,7 +759,7 @@ eternalegypt==0.0.16
 eufylife-ble-client==0.1.8
 
 # homeassistant.components.evohome
-evohome-async==0.4.21
+evohome-async==1.0.2
 
 # homeassistant.components.bryant_evolution
 evolutionhttp==0.0.18
@@ -874,7 +874,7 @@ goodwe==0.3.6
 google-api-python-client==2.71.0
 
 # homeassistant.components.google_pubsub
-google-cloud-pubsub==2.23.0
+google-cloud-pubsub==2.28.0
 
 # homeassistant.components.google_cloud
 google-cloud-speech==2.27.0
@@ -941,7 +941,7 @@ ha-iotawattpy==0.1.2
 ha-philipsjs==3.2.2
 
 # homeassistant.components.habitica
-habiticalib==0.3.5
+habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
 habluetooth==3.21.1
@@ -975,7 +975,7 @@ hole==0.8.0
 holidays==0.66
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250205.0
+home-assistant-frontend==20250210.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.2.5
@@ -1252,7 +1252,7 @@ nextcord==2.6.0
 nextdns==4.0.0
 
 # homeassistant.components.niko_home_control
-nhc==0.4.4
+nhc==0.4.10
 
 # homeassistant.components.nibe_heatpump
 nibe==2.14.0
@@ -1307,7 +1307,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.9
+onedrive-personal-sdk==0.0.10
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -1376,7 +1376,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.6.4
+plugwise==1.7.1
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1447,7 +1447,7 @@ py-nightscout==1.2.2
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.6.0
+py-synologydsm-api==2.6.2
 
 # homeassistant.components.hdmi_cec
 pyCEC==0.5.2
@@ -1462,7 +1462,7 @@ pyDuotecno==2024.10.1
 pyElectra==1.2.4
 
 # homeassistant.components.homee
-pyHomee==1.2.5
+pyHomee==1.2.7
 
 # homeassistant.components.rfxtrx
 pyRFXtrx==0.31.1
@@ -1505,7 +1505,7 @@ pyatv==0.16.0
 pyaussiebb==0.1.5
 
 # homeassistant.components.balboa
-pybalboa==1.0.2
+pybalboa==1.1.2
 
 # homeassistant.components.blackbird
 pyblackbird==0.6
@@ -1550,7 +1550,7 @@ pydexcom==0.2.3
 pydiscovergy==3.0.2
 
 # homeassistant.components.hydrawise
-pydrawise==2025.1.0
+pydrawise==2025.2.0
 
 # homeassistant.components.android_ip_webcam
 pydroid-ipcam==2.0.0
@@ -1559,7 +1559,7 @@ pydroid-ipcam==2.0.0
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.1.26
+pyeconet==0.1.27
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.3.1
@@ -1577,7 +1577,7 @@ pyeiscp==0.0.7
 pyemoncms==0.1.1
 
 # homeassistant.components.enphase_envoy
-pyenphase==1.23.1
+pyenphase==1.25.1
 
 # homeassistant.components.everlights
 pyeverlights==0.1.0
@@ -1619,7 +1619,7 @@ pygti==0.9.4
 pyhaversion==22.8.0
 
 # homeassistant.components.heos
-pyheos==1.0.1
+pyheos==1.0.2
 
 # homeassistant.components.hive
 pyhive-integration==1.0.1
@@ -1640,7 +1640,7 @@ pyicloud==1.0.0
 pyinsteon==1.6.3
 
 # homeassistant.components.ipma
-pyipma==3.0.8
+pyipma==3.0.9
 
 # homeassistant.components.ipp
 pyipp==0.17.0
@@ -1800,6 +1800,9 @@ pypalazzetti==0.1.19
 # homeassistant.components.lcn
 pypck==0.8.5
 
+# homeassistant.components.pglab
+pypglab==0.0.3
+
 # homeassistant.components.pjlink
 pypjlink2==1.2.1
 
@@ -1936,7 +1939,7 @@ python-fullykiosk==0.0.14
 # python-gammu==3.2.4
 
 # homeassistant.components.google_drive
-python-google-drive-api==0.0.2
+python-google-drive-api==0.1.0
 
 # homeassistant.components.analytics_insights
 python-homeassistant-analytics==0.9.0
@@ -2179,7 +2182,7 @@ sensorpush-ble==1.7.1
 sensoterra==2.0.1
 
 # homeassistant.components.sentry
-sentry-sdk==1.40.3
+sentry-sdk==1.45.1
 
 # homeassistant.components.sfr_box
 sfrbox-api==0.0.11
