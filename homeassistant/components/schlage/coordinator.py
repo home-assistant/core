@@ -13,7 +13,7 @@ from pyschlage.log import LockLog
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
@@ -34,15 +34,28 @@ class SchlageData:
     locks: dict[str, LockData]
 
 
+type SchlageConfigEntry = ConfigEntry[SchlageDataUpdateCoordinator]
+
+
 class SchlageDataUpdateCoordinator(DataUpdateCoordinator[SchlageData]):
     """The Schlage data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: SchlageConfigEntry
 
-    def __init__(self, hass: HomeAssistant, username: str, api: Schlage) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SchlageConfigEntry,
+        username: str,
+        api: Schlage,
+    ) -> None:
         """Initialize the class."""
         super().__init__(
-            hass, LOGGER, name=f"{DOMAIN} ({username})", update_interval=UPDATE_INTERVAL
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN} ({username})",
+            update_interval=UPDATE_INTERVAL,
         )
         self.data = SchlageData(locks={})
         self.api = api

@@ -5,14 +5,14 @@
       "title": "Manual YAML fix required for Bayesian"
     },
     "no_prob_given_false": {
-      "description": "In the Bayesian integration `prob_given_false` is now a required configuration variable as there was no mathematical rationale for the previous default value. Please add this to your `configuration.yml` for `bayesian/{entity}`. These observations will be ignored until you do.",
+      "description": "In the Bayesian integration `prob_given_false` is now a required configuration variable as there was no mathematical rationale for the previous default value. Please add this to your `configuration.yaml` for `bayesian/{entity}`. These observations will be ignored until you do.",
       "title": "Manual YAML addition required for Bayesian"
     }
   },
   "services": {
     "reload": {
       "name": "[%key:common::action::reload%]",
-      "description": "Reloads bayesian sensors from the YAML-configuration."
+      "description": "Reloads Bayesian sensors from the YAML-configuration."
     }
   }
 }

@@ -9,21 +9,20 @@ from pydeconz.models.light.lock import Lock
 from pydeconz.models.sensor.door_lock import DoorLock
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import DeconzConfigEntry
 from .entity import DeconzDevice
-from .hub import DeconzHub
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DeconzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up locks for deCONZ component."""
-    hub = DeconzHub.get_hub(hass, config_entry)
+    hub = config_entry.runtime_data
     hub.entities[LOCK_DOMAIN] = set()
 
     @callback

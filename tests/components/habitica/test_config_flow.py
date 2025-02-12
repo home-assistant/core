@@ -9,6 +9,7 @@ from homeassistant.components.habitica.const import (
     CONF_API_USER,
     DEFAULT_URL,
     DOMAIN,
+    SECTION_DANGER_ZONE,
     SECTION_REAUTH_API_KEY,
     SECTION_REAUTH_LOGIN,
 )
@@ -53,6 +54,13 @@ USER_INPUT_REAUTH_LOGIN = {
 USER_INPUT_REAUTH_API_KEY = {
     SECTION_REAUTH_LOGIN: {},
     SECTION_REAUTH_API_KEY: {CONF_API_KEY: "cd0e5985-17de-4b4f-849e-5d506c5e4382"},
+}
+USER_INPUT_RECONFIGURE = {
+    CONF_API_KEY: "cd0e5985-17de-4b4f-849e-5d506c5e4382",
+    SECTION_DANGER_ZONE: {
+        CONF_URL: DEFAULT_URL,
+        CONF_VERIFY_SSL: True,
+    },
 }
 
 
@@ -447,5 +455,81 @@ async def test_flow_reauth_unique_id_mismatch(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "unique_id_mismatch"
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("habitica")
+async def test_flow_reconfigure(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure flow."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT_RECONFIGURE,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_API_KEY] == "cd0e5985-17de-4b4f-849e-5d506c5e4382"
+    assert config_entry.data[CONF_URL] == DEFAULT_URL
+    assert config_entry.data[CONF_VERIFY_SSL] is True
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("raise_error", "text_error"),
+    [
+        (ERROR_NOT_AUTHORIZED, "invalid_auth"),
+        (ERROR_BAD_REQUEST, "cannot_connect"),
+        (KeyError, "unknown"),
+    ],
+)
+async def test_flow_reconfigure_errors(
+    hass: HomeAssistant,
+    habitica: AsyncMock,
+    config_entry: MockConfigEntry,
+    raise_error: Exception,
+    text_error: str,
+) -> None:
+    """Test reconfigure flow errors."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    habitica.get_user.side_effect = raise_error
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT_RECONFIGURE,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
+
+    habitica.get_user.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT_RECONFIGURE,
+    )
+
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data[CONF_API_KEY] == "cd0e5985-17de-4b4f-849e-5d506c5e4382"
+    assert config_entry.data[CONF_URL] == DEFAULT_URL
+    assert config_entry.data[CONF_VERIFY_SSL] is True
 
     assert len(hass.config_entries.async_entries()) == 1
