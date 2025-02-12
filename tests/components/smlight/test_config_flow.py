@@ -66,6 +66,46 @@ async def test_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_user_flow_auth(
+    hass: HomeAssistant, mock_smlight_client: MagicMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test the full manual user flow with authentication."""
+
+    mock_smlight_client.check_auth_needed.return_value = True
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {}
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "slzb-06p7.local",
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "auth"
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+        },
+    )
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result3["title"] == "SLZB-06p7"
+    assert result3["data"] == {
+        CONF_USERNAME: MOCK_USERNAME,
+        CONF_PASSWORD: MOCK_PASSWORD,
+        CONF_HOST: MOCK_HOST,
+    }
+    assert result3["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
 async def test_zeroconf_flow(
     hass: HomeAssistant,
     mock_smlight_client: MagicMock,
@@ -145,7 +185,7 @@ async def test_zeroconf_flow_auth(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert result3["context"]["source"] == "zeroconf"
     assert result3["context"]["unique_id"] == "aa:bb:cc:dd:ee:ff"
-    assert result3["title"] == "slzb-06"
+    assert result3["title"] == "SLZB-06p7"
     assert result3["data"] == {
         CONF_USERNAME: MOCK_USERNAME,
         CONF_PASSWORD: MOCK_PASSWORD,
@@ -162,6 +202,7 @@ async def test_zeroconf_unsupported_abort(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test we abort zeroconf flow if device unsupported."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(model="SLZB-X")
 
     result = await hass.config_entries.flow.async_init(
@@ -186,6 +227,7 @@ async def test_user_unsupported_abort(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test we abort user flow if unsupported device."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(model="SLZB-X")
 
     result = await hass.config_entries.flow.async_init(
