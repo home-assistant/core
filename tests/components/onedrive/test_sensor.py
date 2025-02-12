@@ -1,10 +1,13 @@
 """Tests for OneDrive sensors."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from onedrive_personal_sdk.const import DriveType
 from onedrive_personal_sdk.exceptions import HttpRequestException
+from onedrive_personal_sdk.models.items import Drive
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -30,11 +33,20 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("attr", "side_effect"),
+    [
+        ("side_effect", HttpRequestException(503, "Service Unavailable")),
+        ("return_value", Drive(id="id", name="name", drive_type=DriveType.PERSONAL)),
+    ],
+)
 async def test_update_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
     freezer: FrozenDateTimeFactory,
+    attr: str,
+    side_effect: Any,
 ) -> None:
     """Ensure sensors are going unavailable on update failure."""
     await setup_integration(hass, mock_config_entry)
@@ -42,9 +54,7 @@ async def test_update_failure(
     state = hass.states.get("sensor.my_drive_remaining_storage")
     assert state.state == "0.75"
 
-    mock_onedrive_client.get_drive.side_effect = HttpRequestException(
-        503, "Service Unavailable"
-    )
+    setattr(mock_onedrive_client.get_drive, attr, side_effect)
 
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)

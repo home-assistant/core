@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import EntityCategory, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -73,7 +73,7 @@ DRIVE_STATE_ENTITIES: tuple[OneDriveSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OneDriveConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OneDrive sensors based on a config entry."""
     coordinator = entry.runtime_data.coordinator
@@ -113,8 +113,10 @@ class OneDriveDriveStateSensor(
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return (
-            self.entity_description.value_fn(self.coordinator.data.quota)
-            if self.coordinator.data.quota
-            else None
-        )
+        assert self.coordinator.data.quota
+        return self.entity_description.value_fn(self.coordinator.data.quota)
+
+    @property
+    def available(self) -> bool:
+        """Availability of the sensor."""
+        return super().available and self.coordinator.data.quota is not None

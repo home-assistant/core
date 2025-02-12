@@ -11,6 +11,7 @@ from onedrive_personal_sdk.exceptions import (
     OneDriveException,
 )
 import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.onedrive.const import (
     CONF_FOLDER_ID,
@@ -19,9 +20,16 @@ from homeassistant.components.onedrive.const import (
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import BACKUP_METADATA, MOCK_APPROOT, MOCK_BACKUP_FILE, MOCK_BACKUP_FOLDER
+from .const import (
+    BACKUP_METADATA,
+    MOCK_APPROOT,
+    MOCK_BACKUP_FILE,
+    MOCK_BACKUP_FOLDER,
+    MOCK_DRIVE,
+)
 
 from tests.common import MockConfigEntry
 
@@ -158,6 +166,21 @@ async def test_auth_error_during_update(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device({(DOMAIN, MOCK_DRIVE.id)})
+    assert device
+    assert device == snapshot
 
 
 async def test_1_1_to_1_2_migration(
