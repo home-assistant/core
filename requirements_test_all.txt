@@ -2022,7 +2022,7 @@ pytouchlinesl==0.3.0
 pytraccar==2.1.1
 
 # homeassistant.components.tradfri
-pytradfri[async]==12.0.0
+pytradfri[async]==14.0.0
 
 # homeassistant.components.trafikverket_camera
 # homeassistant.components.trafikverket_ferry

@@ -9,5 +9,5 @@
   },
   "iot_class": "local_polling",
   "loggers": ["pytradfri"],
-  "requirements": ["pytradfri[async]==12.0.0"]
+  "requirements": ["pytradfri[async]==14.0.0"]
 }
