@@ -146,10 +146,7 @@ def humidifier_300s_fixture():
             "display": "true",
             "automatic_stop": "true",
         },
-        details={
-            "humidity": 35,
-            "mode": "manual",
-        },
+        details={"humidity": 35, "mode": "manual", "night_light_brightness": 50},
         device_type="Classic300S",
         device_name="Humidifier 300s",
         device_status="on",

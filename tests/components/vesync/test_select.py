@@ -19,11 +19,16 @@ from .common import ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT
 async def test_set_nightlight_level(
     hass: HomeAssistant, config_entry: ConfigEntry, humidifier_300s, manager
 ) -> None:
-    """Test update of display for night light level."""
+    """Test set of night light level."""
 
-    with patch(
-        "homeassistant.components.vesync.async_generate_device_list",
-        return_value=[humidifier_300s],
+    with (
+        patch(
+            "homeassistant.components.vesync.async_generate_device_list",
+            return_value=[humidifier_300s],
+        ),
+        patch(
+            "homeassistant.helpers.update_coordinator.DataUpdateCoordinator.async_request_refresh"
+        ) as coordinator_refresh,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -42,4 +47,27 @@ async def test_set_nightlight_level(
         # Assert that setter API was invoked with the expected translated value
         method_mock.assert_called_once_with(
             HA_TO_VS_NIGHT_LIGHT_LEVEL_MAP[NIGHT_LIGHT_LEVEL_DIM]
+        )
+        # Assert that coordinator refresh was invoked
+        assert coordinator_refresh.assert_called
+
+
+async def test_nightlight_level(
+    hass: HomeAssistant, config_entry: ConfigEntry, humidifier_300s, manager
+) -> None:
+    """Test the state of night light level select entity."""
+
+    # The mocked device has night_light_brightness=50 which is "dim"
+    with (
+        patch(
+            "homeassistant.components.vesync.async_generate_device_list",
+            return_value=[humidifier_300s],
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert (
+            hass.states.get(ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT).state
+            == NIGHT_LIGHT_LEVEL_DIM
         )
