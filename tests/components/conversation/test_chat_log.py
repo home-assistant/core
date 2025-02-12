@@ -1,6 +1,7 @@
 """Test the conversation session."""
 
 from collections.abc import Generator
+from dataclasses import asdict
 from datetime import timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -282,7 +283,7 @@ async def test_extra_systen_prompt(
 @pytest.mark.parametrize(
     "prerun_tool_tasks",
     [
-        None,
+        (),
         ("mock-tool-call-id",),
         ("mock-tool-call-id", "mock-tool-call-id-2"),
     ],
@@ -290,7 +291,7 @@ async def test_extra_systen_prompt(
 async def test_tool_call(
     hass: HomeAssistant,
     mock_conversation_input: ConversationInput,
-    prerun_tool_tasks: tuple[str] | None,
+    prerun_tool_tasks: tuple[str],
 ) -> None:
     """Test using the session tool calling API."""
 
@@ -334,15 +335,13 @@ async def test_tool_call(
                 ],
             )
 
-            tool_call_tasks = None
-            if prerun_tool_tasks:
-                tool_call_tasks = {
-                    tool_call_id: hass.async_create_task(
-                        chat_log.llm_api.async_call_tool(content.tool_calls[0]),
-                        tool_call_id,
-                    )
-                    for tool_call_id in prerun_tool_tasks
-                }
+            tool_call_tasks = {
+                tool_call_id: hass.async_create_task(
+                    chat_log.llm_api.async_call_tool(content.tool_calls[0]),
+                    tool_call_id,
+                )
+                for tool_call_id in prerun_tool_tasks
+            }
 
             with pytest.raises(ValueError):
                 chat_log.async_add_assistant_content_without_tools(content)
@@ -350,7 +349,7 @@ async def test_tool_call(
             results = [
                 tool_result_content
                 async for tool_result_content in chat_log.async_add_assistant_content(
-                    content, tool_call_tasks=tool_call_tasks
+                    content, tool_call_tasks=tool_call_tasks or None
                 )
             ]
 
@@ -382,37 +381,36 @@ async def test_tool_call_exception(
     )
     mock_tool.async_call.side_effect = HomeAssistantError("Test error")
 
-    with patch(
-        "homeassistant.helpers.llm.AssistAPI._async_get_tools", return_value=[]
-    ) as mock_get_tools:
+    with (
+        patch(
+            "homeassistant.helpers.llm.AssistAPI._async_get_tools", return_value=[]
+        ) as mock_get_tools,
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
         mock_get_tools.return_value = [mock_tool]
-
-        with (
-            chat_session.async_get_chat_session(hass) as session,
-            async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
-        ):
-            await chat_log.async_update_llm_data(
-                conversing_domain="test",
-                user_input=mock_conversation_input,
-                user_llm_hass_api="assist",
-                user_llm_prompt=None,
+        await chat_log.async_update_llm_data(
+            conversing_domain="test",
+            user_input=mock_conversation_input,
+            user_llm_hass_api="assist",
+            user_llm_prompt=None,
+        )
+        result = None
+        async for tool_result_content in chat_log.async_add_assistant_content(
+            AssistantContent(
+                agent_id=mock_conversation_input.agent_id,
+                content="",
+                tool_calls=[
+                    llm.ToolInput(
+                        id="mock-tool-call-id",
+                        tool_name="test_tool",
+                        tool_args={"param1": "Test Param"},
+                    )
+                ],
             )
-            result = None
-            async for tool_result_content in chat_log.async_add_assistant_content(
-                AssistantContent(
-                    agent_id=mock_conversation_input.agent_id,
-                    content="",
-                    tool_calls=[
-                        llm.ToolInput(
-                            id="mock-tool-call-id",
-                            tool_name="test_tool",
-                            tool_args={"param1": "Test Param"},
-                        )
-                    ],
-                )
-            ):
-                assert result is None
-                result = tool_result_content
+        ):
+            assert result is None
+            result = tool_result_content
 
     assert result == ToolResultContent(
         agent_id=mock_conversation_input.agent_id,
@@ -420,3 +418,226 @@ async def test_tool_call_exception(
         tool_result={"error": "HomeAssistantError", "error_text": "Test error"},
         tool_name="test_tool",
     )
+
+
+@pytest.mark.parametrize(
+    "deltas",
+    [
+        [],
+        # With content
+        [
+            {"role": "assistant"},
+            {"content": "Test"},
+        ],
+        # With 2 content
+        [
+            {"role": "assistant"},
+            {"content": "Test"},
+            {"role": "assistant"},
+            {"content": "Test 2"},
+        ],
+        # With 1 tool call
+        [
+            {"role": "assistant"},
+            {
+                "tool_calls": [
+                    llm.ToolInput(
+                        id="mock-tool-call-id",
+                        tool_name="test_tool",
+                        tool_args={"param1": "Test Param 1"},
+                    )
+                ]
+            },
+        ],
+        # With content and 1 tool call
+        [
+            {"role": "assistant"},
+            {"content": "Test"},
+            {
+                "tool_calls": [
+                    llm.ToolInput(
+                        id="mock-tool-call-id",
+                        tool_name="test_tool",
+                        tool_args={"param1": "Test Param 1"},
+                    )
+                ]
+            },
+        ],
+        # With 2 contents and 1 tool call
+        [
+            {"role": "assistant"},
+            {"content": "Test"},
+            {
+                "tool_calls": [
+                    llm.ToolInput(
+                        id="mock-tool-call-id",
+                        tool_name="test_tool",
+                        tool_args={"param1": "Test Param 1"},
+                    )
+                ]
+            },
+            {"role": "assistant"},
+            {"content": "Test 2"},
+        ],
+        # With 2 tool calls
+        [
+            {"role": "assistant"},
+            {
+                "tool_calls": [
+                    llm.ToolInput(
+                        id="mock-tool-call-id",
+                        tool_name="test_tool",
+                        tool_args={"param1": "Test Param 1"},
+                    )
+                ]
+            },
+            {
+                "tool_calls": [
+                    llm.ToolInput(
+                        id="mock-tool-call-id-2",
+                        tool_name="test_tool",
+                        tool_args={"param1": "Test Param 2"},
+                    )
+                ]
+            },
+        ],
+    ],
+)
+async def test_add_delta_content_stream(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+    snapshot: SnapshotAssertion,
+    deltas: list[dict],
+) -> None:
+    """Test streaming deltas."""
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+
+    async def tool_call(
+        hass: HomeAssistant, tool_input: llm.ToolInput, llm_context: llm.LLMContext
+    ) -> str:
+        """Call the tool."""
+        return tool_input.tool_args["param1"]
+
+    mock_tool.async_call.side_effect = tool_call
+    expected_delta = []
+
+    async def stream():
+        """Yield deltas."""
+        for d in deltas:
+            yield d
+            expected_delta.append(d)
+
+    captured_deltas = []
+
+    with (
+        patch(
+            "homeassistant.helpers.llm.AssistAPI._async_get_tools", return_value=[]
+        ) as mock_get_tools,
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(
+            hass,
+            session,
+            mock_conversation_input,
+            chat_log_delta_listener=lambda chat_log, delta: captured_deltas.append(
+                delta
+            ),
+        ) as chat_log,
+    ):
+        mock_get_tools.return_value = [mock_tool]
+        await chat_log.async_update_llm_data(
+            conversing_domain="test",
+            user_input=mock_conversation_input,
+            user_llm_hass_api="assist",
+            user_llm_prompt=None,
+        )
+
+        results = []
+        async for content in chat_log.async_add_delta_content_stream(
+            "mock-agent-id", stream()
+        ):
+            results.append(content)
+
+            # Interweave the tool results with the source deltas into expected_delta
+            if content.role == "tool_result":
+                expected_delta.append(asdict(content))
+
+        assert captured_deltas == expected_delta
+        assert results == snapshot
+        assert chat_log.content[2:] == results
+
+
+async def test_add_delta_content_stream_errors(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test streaming deltas error handling."""
+
+    async def stream(deltas):
+        """Yield deltas."""
+        for d in deltas:
+            yield d
+
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session, mock_conversation_input) as chat_log,
+    ):
+        # Stream content without LLM API set
+        with pytest.raises(ValueError):  # noqa: PT012
+            async for _tool_result_content in chat_log.async_add_delta_content_stream(
+                "mock-agent-id",
+                stream(
+                    [
+                        {"role": "assistant"},
+                        {
+                            "tool_calls": [
+                                llm.ToolInput(
+                                    id="mock-tool-call-id",
+                                    tool_name="test_tool",
+                                    tool_args={},
+                                )
+                            ]
+                        },
+                    ]
+                ),
+            ):
+                pass
+
+        # Non assistant role
+        for role in "system", "user":
+            with pytest.raises(ValueError):  # noqa: PT012
+                async for (
+                    _tool_result_content
+                ) in chat_log.async_add_delta_content_stream(
+                    "mock-agent-id",
+                    stream([{"role": role}]),
+                ):
+                    pass
+
+
+async def test_chat_log_reuse(
+    hass: HomeAssistant,
+    mock_conversation_input: ConversationInput,
+) -> None:
+    """Test that we can reuse a chat log."""
+    with (
+        chat_session.async_get_chat_session(hass) as session,
+        async_get_chat_log(hass, session) as chat_log,
+    ):
+        assert chat_log.conversation_id == session.conversation_id
+        assert len(chat_log.content) == 1
+
+        with async_get_chat_log(hass, session) as chat_log2:
+            assert chat_log2 is chat_log
+            assert len(chat_log.content) == 1
+
+        with async_get_chat_log(hass, session, mock_conversation_input) as chat_log2:
+            assert chat_log2 is chat_log
+            assert len(chat_log.content) == 2
+            assert chat_log.content[1].role == "user"
+            assert chat_log.content[1].content == mock_conversation_input.text
