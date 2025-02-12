@@ -72,7 +72,6 @@ def handle_backup_errors[_R, **P](
         try:
             return await func(self, *args, **kwargs)
         except UnauthorizedError as err:
-            self._entry.async_start_reauth(self._hass)
             raise BackupAgentError("Authentication error") from err
         except WebDavError as err:
             _LOGGER.error(

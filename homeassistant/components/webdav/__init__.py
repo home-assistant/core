@@ -33,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
     try:
         result = await client.check()
     except UnauthorizedError as err:
-        raise ConfigEntryAuthFailed("Invalid username or password") from err
+        raise ConfigEntryError("Invalid username or password") from err
 
     # Check if we can connect to the WebDAV server
     # and access the root directory
