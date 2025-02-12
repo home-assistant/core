@@ -15,7 +15,7 @@ from homeassistant.components.alarm_control_panel import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CODE_REQUIRED, DOMAIN
 from .coordinator import TotalConnectConfigEntry, TotalConnectDataUpdateCoordinator
@@ -28,7 +28,7 @@ SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TotalConnectConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
     coordinator = entry.runtime_data

@@ -110,6 +110,9 @@
       },
       "fireplace_mode": {
         "name": "Fireplace mode"
+      },
+      "cooker_hood_mode": {
+        "name": "Cooker hood mode"
       }
     }
   }

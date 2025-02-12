@@ -2402,3 +2402,41 @@ async def test_device_type_error_checking(
     assert len(device_registry.devices) == 0
     assert len(entity_registry.entities) == number_of_entities
     assert len(hass.states.async_all()) == number_of_entities
+
+
+async def test_add_entity_unknown_subentry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test adding an entity to an unknown subentry."""
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities(
+            [MockEntity(name="test", unique_id="unique")],
+            config_subentry_id="unknown-subentry",
+        )
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(entry_id="super-mock-id")
+    config_entry.add_to_hass(hass)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert not await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+    full_name = f"{config_entry.domain}.{entity_platform.domain}"
+    assert full_name not in hass.config.components
+    assert len(hass.states.async_entity_ids()) == 0
+    assert len(entity_registry.entities) == 0
+
+    assert (
+        "Can't add entities to unknown subentry unknown-subentry "
+        "of config entry super-mock-id"
+    ) in caplog.text
