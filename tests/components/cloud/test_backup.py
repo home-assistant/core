@@ -502,6 +502,53 @@ async def test_agents_upload_not_protected(
 
 
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_upload_wrong_size(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    cloud: Mock,
+) -> None:
+    """Test agent upload backup."""
+    client = await hass_client()
+    backup_data = "test"
+    backup_id = "test-backup"
+    test_backup = AgentBackup(
+        addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
+        backup_id=backup_id,
+        database_included=True,
+        date="1970-01-01T00:00:00.000Z",
+        extra_metadata={},
+        folders=[Folder.MEDIA, Folder.SHARE],
+        homeassistant_included=True,
+        homeassistant_version="2024.12.0",
+        name="Test",
+        protected=True,
+        size=len(backup_data) - 1,
+    )
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=test_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[backup_data.encode(), b""])
+        fetch_backup.return_value = test_backup
+        resp = await client.post(
+            "/api/backup/upload?agent_id=cloud.cloud",
+            data={"file": StringIO(backup_data)},
+        )
+
+    assert len(cloud.files.upload.mock_calls) == 0
+
+    assert resp.status == 201
+    assert "Upload failed for cloud.cloud" in caplog.text
+
+
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
 async def test_agents_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

@@ -12,7 +12,7 @@ from aiohttp import ClientError
 from hass_nabucasa import Cloud, CloudError
 from hass_nabucasa.api import CloudApiNonRetryableError
 from hass_nabucasa.cloud_api import async_files_delete_file, async_files_list
-from hass_nabucasa.files import StorageType, calculate_b64md5
+from hass_nabucasa.files import FilesError, StorageType, calculate_b64md5
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -119,7 +119,10 @@ class CloudBackupAgent(BackupAgent):
         if not backup.protected:
             raise BackupAgentError("Cloud backups must be protected")
 
-        base64md5hash = await calculate_b64md5(open_stream, backup.size)
+        try:
+            base64md5hash = await calculate_b64md5(open_stream, backup.size)
+        except FilesError as err:
+            raise BackupAgentError(err) from err
         filename = self._get_backup_filename()
         metadata = backup.as_dict()
         size = backup.size
