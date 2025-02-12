@@ -12,7 +12,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcowittConfigEntry
 from .entity import EcowittEntity
@@ -32,7 +32,7 @@ ECOWITT_BINARYSENSORS_MAPPING: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EcowittConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add sensors if new."""
     ecowitt = entry.runtime_data

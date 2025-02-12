@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from smhi.smhi_lib import Smhi, SmhiForecastException
+from pysmhi import SmhiForecastException, SMHIPointForecast
 import voluptuous as vol
 
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
@@ -26,9 +26,9 @@ async def async_check_location(
 ) -> bool:
     """Return true if location is ok."""
     session = aiohttp_client.async_get_clientsession(hass)
-    smhi_api = Smhi(longitude, latitude, session=session)
+    smhi_api = SMHIPointForecast(str(longitude), str(latitude), session=session)
     try:
-        await smhi_api.async_get_forecast()
+        await smhi_api.async_get_daily_forecast()
     except SmhiForecastException:
         return False
 

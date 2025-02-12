@@ -6,7 +6,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from bring_api import BringUserSettingsResponse
+from bring_api import BringList, BringUserSettingsResponse
 from bring_api.const import BRING_SUPPORTED_LOCALES
 
 from homeassistant.components.sensor import (
@@ -15,12 +15,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
 )
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import BringConfigEntry
-from .coordinator import BringData, BringDataUpdateCoordinator
+from .coordinator import BringConfigEntry, BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 from .util import list_language, sum_attributes
 
@@ -86,20 +85,32 @@ SENSOR_DESCRIPTIONS: tuple[BringSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BringConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
     coordinator = config_entry.runtime_data
+    lists_added: set[str] = set()
 
-    async_add_entities(
-        BringSensorEntity(
-            coordinator,
-            bring_list,
-            description,
-        )
-        for description in SENSOR_DESCRIPTIONS
-        for bring_list in coordinator.data.values()
-    )
+    @callback
+    def add_entities() -> None:
+        """Add sensor entities."""
+        nonlocal lists_added
+
+        if new_lists := {lst.listUuid for lst in coordinator.lists} - lists_added:
+            async_add_entities(
+                BringSensorEntity(
+                    coordinator,
+                    bring_list,
+                    description,
+                )
+                for description in SENSOR_DESCRIPTIONS
+                for bring_list in coordinator.lists
+                if bring_list.listUuid in new_lists
+            )
+            lists_added |= new_lists
+
+    coordinator.async_add_listener(add_entities)
+    add_entities()
 
 
 class BringSensorEntity(BringBaseEntity, SensorEntity):
@@ -110,7 +121,7 @@ class BringSensorEntity(BringBaseEntity, SensorEntity):
     def __init__(
         self,
         coordinator: BringDataUpdateCoordinator,
-        bring_list: BringData,
+        bring_list: BringList,
         entity_description: BringSensorEntityDescription,
     ) -> None:
         """Initialize the entity."""

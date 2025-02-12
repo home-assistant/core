@@ -5,8 +5,8 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 from aiohomeconnect.const import OAUTH2_TOKEN
-from aiohomeconnect.model import SettingKey, StatusKey
-from aiohomeconnect.model.error import HomeConnectError
+from aiohomeconnect.model import OptionKey, ProgramKey, SettingKey, StatusKey
+from aiohomeconnect.model.error import HomeConnectError, UnauthorizedError
 import pytest
 import requests_mock
 import respx
@@ -41,9 +41,9 @@ SERVICE_KV_CALL_PARAMS = [
         "service": "set_option_active",
         "service_data": {
             "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
-            "unit": "",
+            "key": OptionKey.BSH_COMMON_FINISH_IN_RELATIVE.value,
+            "value": 43200,
+            "unit": "seconds",
         },
         "blocking": True,
     },
@@ -52,8 +52,8 @@ SERVICE_KV_CALL_PARAMS = [
         "service": "set_option_selected",
         "service_data": {
             "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
+            "key": OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE.value,
+            "value": "LaundryCare.Washer.EnumType.Temperature.GC40",
         },
         "blocking": True,
     },
@@ -62,8 +62,8 @@ SERVICE_KV_CALL_PARAMS = [
         "service": "change_setting",
         "service_data": {
             "device_id": "DEVICE_ID",
-            "key": "",
-            "value": "",
+            "key": SettingKey.BSH_COMMON_CHILD_LOCK.value,
+            "value": True,
         },
         "blocking": True,
     },
@@ -95,9 +95,9 @@ SERVICE_PROGRAM_CALL_PARAMS = [
         "service": "select_program",
         "service_data": {
             "device_id": "DEVICE_ID",
-            "program": "",
-            "key": "",
-            "value": "",
+            "program": ProgramKey.LAUNDRY_CARE_WASHER_COTTON.value,
+            "key": OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE.value,
+            "value": "LaundryCare.Washer.EnumType.Temperature.GC40",
         },
         "blocking": True,
     },
@@ -106,10 +106,10 @@ SERVICE_PROGRAM_CALL_PARAMS = [
         "service": "start_program",
         "service_data": {
             "device_id": "DEVICE_ID",
-            "program": "",
-            "key": "",
-            "value": "",
-            "unit": "C",
+            "program": ProgramKey.LAUNDRY_CARE_WASHER_COTTON.value,
+            "key": OptionKey.BSH_COMMON_FINISH_IN_RELATIVE.value,
+            "value": 43200,
+            "unit": "seconds",
         },
         "blocking": True,
     },
@@ -216,7 +216,16 @@ async def test_token_refresh_success(
     )
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_state"),
+    [
+        (HomeConnectError(), ConfigEntryState.SETUP_RETRY),
+        (UnauthorizedError("error.key"), ConfigEntryState.SETUP_ERROR),
+    ],
+)
 async def test_client_error(
+    exception: HomeConnectError,
+    expected_state: ConfigEntryState,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
@@ -224,10 +233,10 @@ async def test_client_error(
 ) -> None:
     """Test client errors during setup integration."""
     client_with_exception.get_home_appliances.return_value = None
-    client_with_exception.get_home_appliances.side_effect = HomeConnectError()
+    client_with_exception.get_home_appliances.side_effect = exception
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert not await integration_setup(client_with_exception)
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state == expected_state
     assert client_with_exception.get_home_appliances.call_count == 1
 
 
