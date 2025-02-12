@@ -732,7 +732,7 @@ energyzero==2.1.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.7.2
+env-canada==0.8.0
 
 # homeassistant.components.season
 ephem==4.1.6
