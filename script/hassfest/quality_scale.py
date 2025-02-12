@@ -1454,7 +1454,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "fjaraskupan",
     "fleetgo",
     "flexit",
-    "flexit_bacnet",
     "flic",
     "flick_electric",
     "flipr",
