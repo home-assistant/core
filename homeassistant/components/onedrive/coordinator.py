@@ -81,9 +81,11 @@ class OneDriveUpdateCoordinator(DataUpdateCoordinator[Drive]):
                 DOMAIN,
                 key,
                 is_fixable=False,
-                severity=ir.IssueSeverity.ERROR
-                if state is DriveState.EXCEEDED
-                else ir.IssueSeverity.WARNING,
+                severity=(
+                    ir.IssueSeverity.ERROR
+                    if state is DriveState.EXCEEDED
+                    else ir.IssueSeverity.WARNING
+                ),
                 translation_key=key,
                 translation_placeholders={
                     "total": str(drive.quota.total),
