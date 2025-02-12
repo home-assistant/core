@@ -66,6 +66,12 @@ async def aiter_from_iter(iterable: Iterable) -> AsyncIterator:
 def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mock:
     """Create a mock backup agent."""
 
+    async def download_backup(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
+        """Mock download."""
+        if not await get_backup(backup_id):
+            raise BackupNotFound
+        return aiter_from_iter((backups_data.get(backup_id, b"backup data"),))
+
     async def get_backup(backup_id: str, **kwargs: Any) -> AgentBackup | None:
         """Get a backup."""
         return next((b for b in backups if b.backup_id == backup_id), None)
@@ -78,8 +84,14 @@ def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mo
     ) -> None:
         """Upload a backup."""
         backups.append(backup)
+        backup_stream = await open_stream()
+        backup_data = bytearray()
+        async for chunk in backup_stream:
+            backup_data += chunk
+        backups_data[backup.backup_id] = backup_data
 
     backups = backups or []
+    backups_data: dict[str, bytes] = {}
     mock_agent = Mock(spec=BackupAgent)
     mock_agent.domain = TEST_DOMAIN
     mock_agent.name = name
@@ -89,7 +101,7 @@ def mock_backup_agent(name: str, backups: list[AgentBackup] | None = None) -> Mo
         spec_set=[BackupAgent.async_delete_backup]
     )
     mock_agent.async_download_backup = AsyncMock(
-        side_effect=BackupNotFound, spec_set=[BackupAgent.async_download_backup]
+        side_effect=download_backup, spec_set=[BackupAgent.async_download_backup]
     )
     mock_agent.async_get_backup = AsyncMock(
         side_effect=get_backup, spec_set=[BackupAgent.async_get_backup]

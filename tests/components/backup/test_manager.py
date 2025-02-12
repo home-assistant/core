@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import AsyncIterator, Callable, Coroutine, Generator
+from collections.abc import Callable, Generator
 from dataclasses import replace
 from io import StringIO
 import json
@@ -1410,20 +1410,7 @@ async def test_initiate_backup_file_error(
     agent_ids = ["test.remote"]
     local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
 
-    async def upload_backup(
-        *,
-        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
-        backup: AgentBackup,
-        **kwargs: Any,
-    ) -> None:
-        """Upload a backup."""
-        backup_stream = await open_stream()
-        backup_data = bytearray()
-        async for chunk in backup_stream:
-            backup_data += chunk
-
     remote_agent = mock_backup_agent("remote")
-    remote_agent.async_upload_backup.side_effect = upload_backup
     with patch(
         "homeassistant.components.backup.backup.async_get_backup_agents"
     ) as core_get_backup_agents:
@@ -1687,7 +1674,7 @@ async def test_exception_platform_post(hass: HomeAssistant) -> None:
             2,
             1,
             ["Test_1970-01-01_00.00_00000000.tar"],
-            {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123},
+            {TEST_BACKUP_ABC123.backup_id: (TEST_BACKUP_ABC123, b"test")},
             b"test",
             0,
         ),
@@ -1705,7 +1692,7 @@ async def test_exception_platform_post(hass: HomeAssistant) -> None:
             2,
             0,
             [],
-            {TEST_BACKUP_ABC123.backup_id: TEST_BACKUP_ABC123},
+            {TEST_BACKUP_ABC123.backup_id: (TEST_BACKUP_ABC123, b"test")},
             b"test",
             1,
         ),
@@ -1723,25 +1710,7 @@ async def test_receive_backup(
     temp_file_unlink_call_count: int,
 ) -> None:
     """Test receive backup and upload to the local and a remote agent."""
-    backups = {}
-    backup_data = None
-
-    async def upload_backup(
-        *,
-        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
-        backup: AgentBackup,
-        **kwargs: Any,
-    ) -> None:
-        """Upload a backup."""
-        nonlocal backup_data
-        backups[backup.backup_id] = backup
-        backup_stream = await open_stream()
-        backup_data = bytearray()
-        async for chunk in backup_stream:
-            backup_data += chunk
-
     remote_agent = mock_backup_agent("remote")
-    remote_agent.async_upload_backup.side_effect = upload_backup
     await setup_backup_platform(
         hass,
         domain="test",
@@ -1781,8 +1750,12 @@ async def test_receive_backup(
     assert move_mock.call_count == move_call_count
     for index, name in enumerate(move_path_names):
         assert move_mock.call_args_list[index].args[1].name == name
-    assert backups == remote_agent_backups
-    assert backup_data == remote_agent_backup_data
+    for backup_id, (backup, expected_backup_data) in remote_agent_backups.items():
+        assert await remote_agent.async_get_backup(backup_id) == backup
+        backup_data = bytearray()
+        async for chunk in await remote_agent.async_download_backup(backup_id):
+            backup_data += chunk
+        assert backup_data == expected_backup_data
     assert unlink_mock.call_count == temp_file_unlink_call_count
 
 
@@ -2512,20 +2485,7 @@ async def test_receive_backup_file_read_error(
     """Test file read error during backup receive."""
     local_agent = local_backup_platform.CoreLocalBackupAgent(hass)
 
-    async def upload_backup(
-        *,
-        open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
-        backup: AgentBackup,
-        **kwargs: Any,
-    ) -> None:
-        """Upload a backup."""
-        backup_stream = await open_stream()
-        backup_data = bytearray()
-        async for chunk in backup_stream:
-            backup_data += chunk
-
     remote_agent = mock_backup_agent("remote")
-    remote_agent.async_upload_backup.side_effect = upload_backup
     with patch(
         "homeassistant.components.backup.backup.async_get_backup_agents"
     ) as core_get_backup_agents:

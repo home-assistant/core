@@ -65,14 +65,9 @@ async def test_downloading_remote_backup(
 ) -> None:
     """Test downloading a remote backup."""
 
-    async def download_backup(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
-        """Mock download."""
-        return aiter_from_iter((b"backup data",))
-
-    mock_agents = await setup_backup_integration(
+    await setup_backup_integration(
         hass, backups={"test.test": [TEST_BACKUP_ABC123]}, remote_agents=["test.test"]
     )
-    mock_agents["test.test"].async_download_backup.side_effect = download_backup
 
     client = await hass_client()
 

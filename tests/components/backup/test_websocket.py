@@ -1,6 +1,6 @@
 """Tests for the Backup integration."""
 
-from collections.abc import AsyncIterator, Generator
+from collections.abc import Generator
 from typing import Any
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 
@@ -34,7 +34,6 @@ from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
-    aiter_from_iter,
     mock_backup_agent,
     setup_backup_integration,
     setup_backup_platform,
@@ -703,14 +702,9 @@ async def test_restore_remote_agent(
 ) -> None:
     """Test calling the restore command."""
 
-    async def download_backup(backup_id: str, **kwargs: Any) -> AsyncIterator[bytes]:
-        """Mock download."""
-        return aiter_from_iter((b"backup data",))
-
-    mock_agents = await setup_backup_integration(
+    await setup_backup_integration(
         hass, with_hassio=False, backups=backups, remote_agents=remote_agents
     )
-    mock_agents["test.remote"].async_download_backup.side_effect = download_backup
     restart_calls = async_mock_service(hass, "homeassistant", "restart")
 
     client = await hass_ws_client(hass)
