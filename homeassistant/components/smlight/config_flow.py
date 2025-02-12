@@ -79,6 +79,8 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 if not await self._async_check_auth_required(user_input):
                     info = await self.client.get_info()
+                    self._host = str(info.device_ip)
+                    self._device_name = str(info.hostname)
 
                     if info.model not in Devices:
                         return self.async_abort(reason="unsupported_device")
