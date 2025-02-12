@@ -19,7 +19,7 @@ from homeassistant.const import ATTR_TEMPERATURE, CONF_API_KEY, UnitOfTemperatur
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -45,7 +45,7 @@ SUPPORTED_HVAC_MODES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FreedomproConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Freedompro climate."""
     api_key: str = entry.data[CONF_API_KEY]
