@@ -47,7 +47,7 @@ from .const import (
 from .coordinator import NexiaDataUpdateCoordinator
 from .entity import NexiaThermostatZoneEntity
 from .types import NexiaConfigEntry
-from .util import percent_conv
+from .util import closest_value, percent_conv
 
 PARALLEL_UPDATES = 1  # keep data in sync with only one connection at a time
 
@@ -233,12 +233,38 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
         """Preset that is active."""
         return self._zone.get_preset()
 
+    # async def async_set_humidity(self, humidity: int) -> None:
+    #     """Dehumidify target."""
+    #     if self._thermostat.has_dehumidify_support():
+    #         await self.async_set_dehumidify_setpoint(humidity)
+    #     else:
+    #         await self.async_set_humidify_setpoint(humidity)
+    #     self._signal_thermostat_update()
+
     async def async_set_humidity(self, humidity: int) -> None:
         """Dehumidify target."""
-        if self._thermostat.has_dehumidify_support():
-            await self.async_set_dehumidify_setpoint(humidity)
+
+        if self._zone.get_current_mode() == OPERATION_MODE_HEAT:
+            if self._thermostat.has_humidify_support():
+                await self.async_set_humidify_setpoint(humidity)
+        elif self._zone.get_current_mode() == OPERATION_MODE_COOL:
+            if self._thermostat.has_dehumidify_support():
+                await self.async_set_dehumidify_setpoint(humidity)
         else:
-            await self.async_set_humidify_setpoint(humidity)
+            if self._thermostat.has_humidify_support():
+                humidify_vals: tuple[int, ...] = tuple(
+                    int(x * 100)
+                    for x in self._thermostat.get_humidify_setpoint_limits()
+                )
+                humidity = closest_value(humidify_vals, 5, humidity)
+                await self.async_set_humidify_setpoint(humidity)
+            if self._thermostat.has_dehumidify_support():
+                dehumidify_vals: tuple[int, ...] = tuple(
+                    int(x * 100)
+                    for x in self._thermostat.get_dehumidify_setpoint_limits()
+                )
+                humidity = closest_value(dehumidify_vals, 5, humidity)
+                await self.async_set_humidify_setpoint(humidity)
         self._signal_thermostat_update()
 
     @property
