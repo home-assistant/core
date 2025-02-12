@@ -87,10 +87,14 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         """Move the cover to a specific position."""
         await self.coordinator.client.execute_device_command(
             self.coordinator.device.device_id,
-            self.capability,
+            (
+                Capability.WINDOW_SHADE_LEVEL
+                if self.supports_capability(Capability.WINDOW_SHADE_LEVEL)
+                else Capability.SWITCH_LEVEL
+            ),
             (
                 Command.SET_SHADE_LEVEL
-                if self.capability is Capability.WINDOW_SHADE_LEVEL
+                if self.supports_capability(Capability.WINDOW_SHADE_LEVEL)
                 else Command.SET_LEVEL
             ),
             argument=kwargs[ATTR_POSITION],
