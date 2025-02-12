@@ -37,7 +37,8 @@ ECONET_STATE_TO_HA = {
     ThermostatOperationMode.FAN_ONLY: HVACMode.FAN_ONLY,
     ThermostatOperationMode.EMERGENCY_HEAT: HVACMode.HEAT,
 }
-HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
+HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()
+                      if key != ThermostatOperationMode.EMERGENCY_HEAT}
 
 ECONET_FAN_STATE_TO_HA = {
     ThermostatFanMode.AUTO: FAN_AUTO,
