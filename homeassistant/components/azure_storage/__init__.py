@@ -31,9 +31,9 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: AzureStorageConfigEntry
 ) -> bool:
     """Set up Azure Storage integration."""
-    # set increase aiohttp timeout
+    # set increase aiohttp timeout for long running operations (up/download)
     session = async_create_clientsession(
-        hass, timeout=ClientTimeout(connect=10, total=43200)
+        hass, timeout=ClientTimeout(connect=10, total=12 * 60 * 60)
     )
     container_client = ContainerClient(
         account_url=f"https://{entry.data[CONF_ACCOUNT_NAME]}.blob.core.windows.net/",

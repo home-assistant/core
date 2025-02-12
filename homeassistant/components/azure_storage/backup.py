@@ -15,6 +15,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupAgentError,
+    BackupNotFound,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -99,7 +100,7 @@ class AzureStorageBackupAgent(BackupAgent):
         """Download a backup file."""
         blob = await self._find_blob_by_backup_id(backup_id)
         if blob is None:
-            raise BackupAgentError(f"Backup {backup_id} not found")
+            raise BackupNotFound(f"Backup {backup_id} not found")
         download_stream = await self._client.download_blob(blob.name)
         return download_stream.chunks()
 

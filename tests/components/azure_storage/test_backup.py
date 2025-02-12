@@ -7,9 +7,16 @@ from io import StringIO
 from unittest.mock import ANY, Mock, patch
 
 from azure.core.exceptions import HttpResponseError
+from azure.storage.blob import BlobProperties
 import pytest
 
-from homeassistant.components.azure_storage.const import DOMAIN
+from homeassistant.components.azure_storage.backup import (
+    async_register_backup_agents_listener,
+)
+from homeassistant.components.azure_storage.const import (
+    DATA_BACKUP_AGENT_LISTENERS,
+    DOMAIN,
+)
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -132,6 +139,21 @@ async def test_agents_get_backup(
     }
 
 
+async def test_agents_get_backup_does_not_throw_on_not_found(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test agent get backup does not throw on a backup not found."""
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/details", "backup_id": "random"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["agent_errors"] == {}
+    assert response["result"]["backup"] is None
+
+
 async def test_agents_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -151,6 +173,27 @@ async def test_agents_delete(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
     mock_client.delete_blob.assert_called_once()
+
+
+async def test_agents_delete_not_throwing_on_not_found(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_client: MagicMock,
+) -> None:
+    """Test agent delete backup does not throw on a backup not found."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": "random",
+        }
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {"agent_errors": {}}
+    assert mock_client.delete_blob.call_count == 0
 
 
 async def test_agents_upload(
@@ -205,6 +248,32 @@ async def test_agents_download(
     mock_client.download_blob.assert_called_once()
 
 
+async def test_agents_error_on_download_not_found(
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test agent download backup."""
+
+    async def async_list_blobs(
+        metadata: dict[str, str],
+    ) -> AsyncGenerator[BlobProperties]:
+        yield BlobProperties(metadata=metadata)
+
+    mock_client.list_blobs.side_effect = [
+        async_list_blobs(BACKUP_METADATA),
+        async_list_blobs({}),
+    ]
+    client = await hass_client()
+    backup_id = BACKUP_METADATA["backup_id"]
+
+    resp = await client.get(
+        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
+    )
+    assert resp.status == 404
+    assert mock_client.download_blob.call_count == 0
+
+
 async def test_error_during_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -230,3 +299,16 @@ async def test_error_during_delete(
             f"{DOMAIN}.{mock_config_entry.entry_id}": "Error during backup operation"
         }
     }
+
+
+async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
+    """Test listener gets cleaned up."""
+    listener = MagicMock()
+    remove_listener = async_register_backup_agents_listener(hass, listener=listener)
+
+    hass.data[DATA_BACKUP_AGENT_LISTENERS] = [
+        listener
+    ]  # make sure it's the last listener
+    remove_listener()
+
+    assert hass.data.get(DATA_BACKUP_AGENT_LISTENERS) is None
