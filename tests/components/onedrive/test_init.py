@@ -182,7 +182,7 @@ async def test_device(
     assert device
     assert device == snapshot
 
-    
+
 async def test_1_1_to_1_2_migration(
     hass: HomeAssistant,
     mock_onedrive_client: MagicMock,
