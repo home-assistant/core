@@ -75,13 +75,19 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         try:
             # Fetch last hour of data
             for sensor in self.devices:
-                sensor.data = (
-                    await self.api.get_sensor_status(
-                        sensor=sensor,
-                        tz=self.hass.config.time_zone,
-                    )
-                )["data"]["current"]
-                _LOGGER.debug("Got data: %s", sensor.data)
+                data = await self.api.get_sensor_status(
+                    sensor=sensor,
+                    tz=self.hass.config.time_zone,
+                )
+                _LOGGER.debug("Got data: %s", data)
+
+                if data_error := data.get("error"):
+                    if data_error == "no_readings":
+                        sensor.data = None
+                        continue
+                    raise UpdateFailed(data_error)
+
+                sensor.data = data["data"]["current"]
 
         except HTTPError as error:
             raise UpdateFailed from error
