@@ -47,26 +47,6 @@ async def async_setup_entry(
     )
 
 
-# def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-#     """Return all capabilities supported if minimum required are present."""
-#     min_required = [
-#         Capability.door_control,
-#         Capability.garage_door_control,
-#         Capability.window_shade,
-#     ]
-#     # Must have one of the min_required
-#     if any(capability in capabilities for capability in min_required):
-#         # Return all capabilities supported/consumed
-#         return [
-#             *min_required,
-#             Capability.battery,
-#             Capability.switch_level,
-#             Capability.window_shade_level,
-#         ]
-#
-#     return None
-
-
 class SmartThingsCover(SmartThingsEntity, CoverEntity):
     """Define a SmartThings cover."""
 

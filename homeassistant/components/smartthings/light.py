@@ -45,28 +45,6 @@ async def async_setup_entry(
     )
 
 
-# def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-#     """Return all capabilities supported if minimum required are present."""
-#     supported = [
-#         Capability.switch,
-#         Capability.switch_level,
-#         Capability.color_control,
-#         Capability.color_temperature,
-#     ]
-#     # Must be able to be turned on/off.
-#     if Capability.switch not in capabilities:
-#         return None
-#     # Must have one of these
-#     light_capabilities = [
-#         Capability.color_control,
-#         Capability.color_temperature,
-#         Capability.switch_level,
-#     ]
-#     if any(capability in capabilities for capability in light_capabilities):
-#         return supported
-#     return None
-
-
 def convert_scale(
     value: float, value_scale: int, target_scale: int, round_digits: int = 4
 ) -> float:
