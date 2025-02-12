@@ -750,7 +750,7 @@ debugpy==1.8.11
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==12.0.0
+deebot-client==12.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -2796,7 +2796,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.5.1
+stookwijzer==1.5.2
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
