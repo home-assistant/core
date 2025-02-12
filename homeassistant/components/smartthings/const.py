@@ -5,6 +5,22 @@ import re
 
 DOMAIN = "smartthings"
 
+SCOPES = [
+    "r:devices:*",
+    "w:devices:*",
+    "x:devices:*",
+    "r:hubs:*",
+    "r:locations:*",
+    "w:locations:*",
+    "x:locations:*",
+    "r:scenes:*",
+    "x:scenes:*",
+    "r:rules:*",
+    "w:rules:*",
+    "r:installedapps",
+    "w:installedapps",
+]
+
 APP_OAUTH_CLIENT_NAME = "Home Assistant"
 APP_OAUTH_SCOPES = ["r:devices:*"]
 APP_NAME_PREFIX = "homeassistant."

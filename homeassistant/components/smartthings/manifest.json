@@ -1,10 +1,9 @@
 {
   "domain": "smartthings",
   "name": "SmartThings",
-  "after_dependencies": ["cloud"],
   "codeowners": [],
   "config_flow": true,
-  "dependencies": ["webhook"],
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "hostname": "st*",
