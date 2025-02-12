@@ -206,15 +206,13 @@ async def test_user_unsupported_abort(
     assert result2["reason"] == "unsupported_device"
 
 
-async def test_user_unsupported_abort_auth(
+async def test_user_unsupported_device_abort_auth(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test we abort user flow if unsupported device (with auth)."""
     mock_smlight_client.check_auth_needed.return_value = True
-    mock_smlight_client.authenticate.side_effect = SmlightAuthError
-    mock_smlight_client.get_info.side_effect = SmlightAuthError
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -366,7 +364,7 @@ async def test_user_invalid_auth(
     }
 
     assert len(mock_setup_entry.mock_calls) == 1
-    assert len(mock_smlight_client.get_info.mock_calls) == 4
+    assert len(mock_smlight_client.get_info.mock_calls) == 3
 
 
 async def test_user_cannot_connect(
