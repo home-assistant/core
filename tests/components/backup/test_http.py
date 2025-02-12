@@ -23,7 +23,6 @@ from homeassistant.core import HomeAssistant
 
 from .common import (
     TEST_BACKUP_ABC123,
-    BackupAgentTest,
     aiter_from_iter,
     mock_backup_agent,
     setup_backup_integration,
@@ -65,19 +64,16 @@ async def test_downloading_remote_backup(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test downloading a remote backup."""
+
     await setup_backup_integration(
-        hass, backups={"test.test": [TEST_BACKUP_ABC123]}, remote_agents=["test"]
+        hass, backups={"test.test": [TEST_BACKUP_ABC123]}, remote_agents=["test.test"]
     )
 
     client = await hass_client()
 
-    with (
-        patch.object(BackupAgentTest, "async_download_backup") as download_mock,
-    ):
-        download_mock.return_value.__aiter__.return_value = iter((b"backup data",))
-        resp = await client.get("/api/backup/download/abc123?agent_id=test.test")
-        assert resp.status == 200
-        assert await resp.content.read() == b"backup data"
+    resp = await client.get("/api/backup/download/abc123?agent_id=test.test")
+    assert resp.status == 200
+    assert await resp.content.read() == b"backup data"
 
 
 async def test_downloading_local_encrypted_backup_file_not_found(

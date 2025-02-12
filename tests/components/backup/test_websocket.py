@@ -34,7 +34,7 @@ from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
-    BackupAgentTest,
+    mock_backup_agent,
     setup_backup_integration,
     setup_backup_platform,
 )
@@ -112,9 +112,9 @@ def mock_get_backups() -> Generator[AsyncMock]:
     ("remote_agents", "remote_backups"),
     [
         ([], {}),
-        (["remote"], {}),
-        (["remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
-        (["remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
+        (["test.remote"], {}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
     ],
 )
 async def test_info(
@@ -153,25 +153,26 @@ async def test_info_with_errors(
     await setup_backup_integration(
         hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}
     )
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
+    mock_agent = mock_backup_agent("test")
+    mock_agent.async_list_backups.side_effect = side_effect
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = mock_agent
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch.object(BackupAgentTest, "async_list_backups", side_effect=side_effect):
-        await client.send_json_auto_id({"type": "backup/info"})
-        assert await client.receive_json() == snapshot
+    await client.send_json_auto_id({"type": "backup/info"})
+    assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
     ("remote_agents", "backups"),
     [
         ([], {}),
-        (["remote"], {LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}),
-        (["remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
-        (["remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
+        (["test.remote"], {LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
         (
-            ["remote"],
+            ["test.remote"],
             {
                 LOCAL_AGENT_ID: [TEST_BACKUP_ABC123],
                 "test.remote": [TEST_BACKUP_ABC123],
@@ -215,15 +216,14 @@ async def test_details_with_errors(
     await setup_backup_integration(
         hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}
     )
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
+    mock_agent = mock_backup_agent("test")
+    mock_agent.async_get_backup.side_effect = side_effect
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = mock_agent
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch.object(BackupAgentTest, "async_get_backup", side_effect=side_effect),
-    ):
+    with patch("pathlib.Path.exists", return_value=True):
         await client.send_json_auto_id(
             {"type": "backup/details", "backup_id": "abc123"}
         )
@@ -234,11 +234,11 @@ async def test_details_with_errors(
     ("remote_agents", "backups"),
     [
         ([], {}),
-        (["remote"], {LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}),
-        (["remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
-        (["remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
+        (["test.remote"], {LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
         (
-            ["remote"],
+            ["test.remote"],
             {
                 LOCAL_AGENT_ID: [TEST_BACKUP_ABC123],
                 "test.remote": [TEST_BACKUP_ABC123],
@@ -307,14 +307,15 @@ async def test_delete_with_errors(
     await setup_backup_integration(
         hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}
     )
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
+    mock_agent = mock_backup_agent("test", [TEST_BACKUP_ABC123])
+    mock_agent.async_delete_backup.side_effect = side_effect
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = mock_agent
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch.object(BackupAgentTest, "async_delete_backup", side_effect=side_effect):
-        await client.send_json_auto_id({"type": "backup/delete", "backup_id": "abc123"})
-        assert await client.receive_json() == snapshot
+    await client.send_json_auto_id({"type": "backup/delete", "backup_id": "abc123"})
+    assert await client.receive_json() == snapshot
 
     await client.send_json_auto_id({"type": "backup/info"})
     assert await client.receive_json() == snapshot
@@ -327,21 +328,21 @@ async def test_agent_delete_backup(
 ) -> None:
     """Test deleting a backup file with a mock agent."""
     await setup_backup_integration(hass)
-    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
+    mock_agent = mock_backup_agent("test")
+    hass.data[DATA_MANAGER].backup_agents = {"domain.test": mock_agent}
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch.object(BackupAgentTest, "async_delete_backup") as delete_mock:
-        await client.send_json_auto_id(
-            {
-                "type": "backup/delete",
-                "backup_id": "abc123",
-            }
-        )
-        assert await client.receive_json() == snapshot
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": "abc123",
+        }
+    )
+    assert await client.receive_json() == snapshot
 
-    assert delete_mock.call_args == call("abc123")
+    assert mock_agent.async_delete_backup.call_args == call("abc123")
 
 
 @pytest.mark.parametrize(
@@ -588,7 +589,7 @@ async def test_generate_with_default_settings_calls_create(
     client = await hass_ws_client(hass)
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-13T12:01:00+01:00")
-    remote_agent = BackupAgentTest("remote", backups=[])
+    remote_agent = mock_backup_agent("remote")
     await setup_backup_platform(
         hass,
         domain="test",
@@ -688,8 +689,8 @@ async def test_restore_local_agent(
 @pytest.mark.parametrize(
     ("remote_agents", "backups"),
     [
-        (["remote"], {}),
-        (["remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
     ],
 )
 async def test_restore_remote_agent(
@@ -700,6 +701,7 @@ async def test_restore_remote_agent(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test calling the restore command."""
+
     await setup_backup_integration(
         hass, with_hassio=False, backups=backups, remote_agents=remote_agents
     )
@@ -892,7 +894,7 @@ async def test_agents_info(
 ) -> None:
     """Test getting backup agents info."""
     await setup_backup_integration(hass, with_hassio=False)
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
+    hass.data[DATA_MANAGER].backup_agents["domain.test"] = mock_backup_agent("test")
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -1730,7 +1732,7 @@ async def test_config_schedule_logic(
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-11 12:00:00+01:00")
 
-    await setup_backup_integration(hass, remote_agents=["test-agent"])
+    await setup_backup_integration(hass, remote_agents=["test.test-agent"])
     await hass.async_block_till_done()
 
     for command in commands:
@@ -1773,7 +1775,7 @@ async def test_config_schedule_logic(
         "command",
         "backups",
         "get_backups_agent_errors",
-        "agent_delete_backup_side_effects",
+        "delete_backup_side_effects",
         "last_backup_time",
         "next_time",
         "backup_time",
@@ -2345,7 +2347,7 @@ async def test_config_retention_copies_logic(
     command: dict[str, Any],
     backups: dict[str, Any],
     get_backups_agent_errors: dict[str, Exception],
-    agent_delete_backup_side_effects: dict[str, Exception],
+    delete_backup_side_effects: dict[str, Exception],
     last_backup_time: str,
     next_time: str,
     backup_time: str,
@@ -2392,14 +2394,13 @@ async def test_config_retention_copies_logic(
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-11 12:00:00+01:00")
 
-    await setup_backup_integration(hass, remote_agents=["test-agent", "test-agent2"])
+    mock_agents = await setup_backup_integration(
+        hass, remote_agents=["test.test-agent", "test.test-agent2"]
+    )
     await hass.async_block_till_done()
 
-    manager = hass.data[DATA_MANAGER]
-    for agent_id, agent in manager.backup_agents.items():
-        agent.async_delete_backup = AsyncMock(
-            side_effect=agent_delete_backup_side_effects.get(agent_id), autospec=True
-        )
+    for agent_id, agent in mock_agents.items():
+        agent.async_delete_backup.side_effect = delete_backup_side_effects.get(agent_id)
 
     await client.send_json_auto_id(command)
     result = await client.receive_json()
@@ -2411,7 +2412,7 @@ async def test_config_retention_copies_logic(
     await hass.async_block_till_done()
     assert create_backup.call_count == backup_calls
     assert get_backups.call_count == get_backups_calls
-    for agent_id, agent in manager.backup_agents.items():
+    for agent_id, agent in mock_agents.items():
         agent_delete_calls = delete_calls.get(agent_id, [])
         assert agent.async_delete_backup.call_count == len(agent_delete_calls)
         assert agent.async_delete_backup.call_args_list == agent_delete_calls
@@ -2671,12 +2672,10 @@ async def test_config_retention_copies_logic_manual_backup(
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-11 12:00:00+01:00")
 
-    await setup_backup_integration(hass, remote_agents=["test-agent"])
+    mock_agents = await setup_backup_integration(
+        hass, remote_agents=["test.test-agent"]
+    )
     await hass.async_block_till_done()
-
-    manager = hass.data[DATA_MANAGER]
-    for agent in manager.backup_agents.values():
-        agent.async_delete_backup = AsyncMock(autospec=True)
 
     await client.send_json_auto_id(config_command)
     result = await client.receive_json()
@@ -2692,7 +2691,7 @@ async def test_config_retention_copies_logic_manual_backup(
 
     assert create_backup.call_count == backup_calls
     assert get_backups.call_count == get_backups_calls
-    for agent_id, agent in manager.backup_agents.items():
+    for agent_id, agent in mock_agents.items():
         agent_delete_calls = delete_calls.get(agent_id, [])
         assert agent.async_delete_backup.call_count == len(agent_delete_calls)
         assert agent.async_delete_backup.call_args_list == agent_delete_calls
@@ -2714,7 +2713,7 @@ async def test_config_retention_copies_logic_manual_backup(
         "commands",
         "backups",
         "get_backups_agent_errors",
-        "agent_delete_backup_side_effects",
+        "delete_backup_side_effects",
         "last_backup_time",
         "start_time",
         "next_time",
@@ -3077,7 +3076,7 @@ async def test_config_retention_days_logic(
     commands: list[dict[str, Any]],
     backups: dict[str, Any],
     get_backups_agent_errors: dict[str, Exception],
-    agent_delete_backup_side_effects: dict[str, Exception],
+    delete_backup_side_effects: dict[str, Exception],
     last_backup_time: str,
     start_time: str,
     next_time: str,
@@ -3120,14 +3119,13 @@ async def test_config_retention_days_logic(
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to(start_time)
 
-    await setup_backup_integration(hass, remote_agents=["test-agent"])
+    mock_agents = await setup_backup_integration(
+        hass, remote_agents=["test.test-agent"]
+    )
     await hass.async_block_till_done()
 
-    manager = hass.data[DATA_MANAGER]
-    for agent_id, agent in manager.backup_agents.items():
-        agent.async_delete_backup = AsyncMock(
-            side_effect=agent_delete_backup_side_effects.get(agent_id), autospec=True
-        )
+    for agent_id, agent in mock_agents.items():
+        agent.async_delete_backup.side_effect = delete_backup_side_effects.get(agent_id)
 
     for command in commands:
         await client.send_json_auto_id(command)
@@ -3138,7 +3136,7 @@ async def test_config_retention_days_logic(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert get_backups.call_count == get_backups_calls
-    for agent_id, agent in manager.backup_agents.items():
+    for agent_id, agent in mock_agents.items():
         agent_delete_calls = delete_calls.get(agent_id, [])
         assert agent.async_delete_backup.call_count == len(agent_delete_calls)
         assert agent.async_delete_backup.call_args_list == agent_delete_calls
@@ -3222,21 +3220,21 @@ async def test_can_decrypt_on_download_with_agent_error(
 ) -> None:
     """Test can decrypt on download."""
 
-    await setup_backup_integration(
+    mock_agents = await setup_backup_integration(
         hass,
         with_hassio=False,
         backups={"test.remote": [TEST_BACKUP_ABC123]},
-        remote_agents=["remote"],
+        remote_agents=["test.remote"],
     )
     client = await hass_ws_client(hass)
 
-    with patch.object(BackupAgentTest, "async_download_backup", side_effect=error):
-        await client.send_json_auto_id(
-            {
-                "type": "backup/can_decrypt_on_download",
-                "backup_id": TEST_BACKUP_ABC123.backup_id,
-                "agent_id": "test.remote",
-                "password": "hunter2",
-            }
-        )
-        assert await client.receive_json() == snapshot
+    mock_agents["test.remote"].async_download_backup.side_effect = error
+    await client.send_json_auto_id(
+        {
+            "type": "backup/can_decrypt_on_download",
+            "backup_id": TEST_BACKUP_ABC123.backup_id,
+            "agent_id": "test.remote",
+            "password": "hunter2",
+        }
+    )
+    assert await client.receive_json() == snapshot
