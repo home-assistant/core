@@ -857,6 +857,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'AC Office Granit power',
+      'power_consumption_end': '2025-02-09T16:15:33Z',
+      'power_consumption_start': '2025-02-09T15:45:29Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -1467,6 +1469,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Aire Dormitorio Principal power',
+      'power_consumption_end': '2025-02-09T17:02:44Z',
+      'power_consumption_start': '2025-02-09T16:08:15Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -2166,6 +2170,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Refrigerator power',
+      'power_consumption_end': '2025-02-09T17:49:00Z',
+      'power_consumption_start': '2025-02-09T17:38:01Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -2857,6 +2863,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Dishwasher power',
+      'power_consumption_end': '2025-02-08T20:21:26Z',
+      'power_consumption_start': '2025-02-08T20:21:21Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -3259,6 +3267,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Dryer power',
+      'power_consumption_end': '2025-02-08T18:10:11Z',
+      'power_consumption_start': '2025-02-07T04:00:19Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
@@ -3519,6 +3529,8 @@
     'attributes': ReadOnlyDict({
       'device_class': 'power',
       'friendly_name': 'Washer power',
+      'power_consumption_end': '2025-02-07T03:09:45Z',
+      'power_consumption_start': '2025-02-07T03:09:24Z',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),

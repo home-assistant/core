@@ -41,12 +41,21 @@ THERMOSTAT_CAPABILITIES = {
 }
 
 
+def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
+    """Return the power attributes."""
+    state = {}
+    for attribute in ("start", "end"):
+        if (value := status.get(attribute)) is not None:
+            state[f"power_consumption_{attribute}"] = value
+    return state
+
+
 @dataclass(frozen=True, kw_only=True)
 class SmartThingsSensorEntityDescription(SensorEntityDescription):
     """Describe a SmartThings sensor entity."""
 
     value_fn: Callable[[Any], str | float | int | datetime | None] = lambda value: value
-    extra_state_attributes: Callable[[Any], dict[str, Any]] | None = None
+    extra_state_attributes_fn: Callable[[Any], dict[str, Any]] | None = None
     unique_id_separator: str = "."
     capability_ignore_list: list[set[Capability]] | None = None
 
@@ -430,6 +439,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.POWER,
                 native_unit_of_measurement=UnitOfPower.WATT,
                 value_fn=lambda value: value["power"],
+                extra_state_attributes_fn=power_attributes,
             ),
             SmartThingsSensorEntityDescription(
                 key="deltaEnergy_meter",
@@ -809,8 +819,8 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
-        if self.entity_description.extra_state_attributes:
-            return self.entity_description.extra_state_attributes(
+        if self.entity_description.extra_state_attributes_fn:
+            return self.entity_description.extra_state_attributes_fn(
                 self.get_attribute_value(self.capability, self._attribute)
             )
         return None

@@ -36,13 +36,6 @@ async def async_setup_entry(
     )
 
 
-# def get_capabilities(capabilities: Sequence[str]) -> Sequence[str] | None:
-#     """Return all capabilities supported if minimum required are present."""
-#     if Capability.lock in capabilities:
-#         return [Capability.lock]
-#     return None
-
-
 class SmartThingsLock(SmartThingsEntity, LockEntity):
     """Define a SmartThings lock."""
 
