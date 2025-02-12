@@ -16,12 +16,12 @@
     'result': dict({
       'agents': list([
         dict({
-          'agent_id': 'backup.local',
-          'name': 'local',
+          'agent_id': 'test.remote',
+          'name': 'remote',
         }),
         dict({
-          'agent_id': 'test.test',
-          'name': 'test',
+          'agent_id': 'backup.local',
+          'name': 'local',
         }),
       ]),
     }),
@@ -3457,7 +3457,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'The backup agent is unreachable.',
+        'test.remote': 'The backup agent is unreachable.',
       }),
     }),
     'success': True,
@@ -3480,15 +3480,17 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
           ]),
@@ -3499,7 +3501,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
@@ -3518,7 +3520,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'The backup agent is unreachable.',
+        'test.remote': 'The backup agent is unreachable.',
       }),
     }),
     'success': True,
@@ -3541,15 +3543,17 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
             'test.remote',
@@ -3561,7 +3565,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
@@ -3602,15 +3606,17 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
           ]),
@@ -3621,7 +3627,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
@@ -3662,15 +3668,17 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
           ]),
@@ -3681,7 +3689,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
@@ -3700,7 +3708,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Boom!',
+        'test.remote': 'Boom!',
       }),
     }),
     'success': True,
@@ -3723,15 +3731,17 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
           ]),
@@ -3742,7 +3752,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
@@ -3761,7 +3771,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Boom!',
+        'test.remote': 'Boom!',
       }),
     }),
     'success': True,
@@ -3784,15 +3794,17 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
-              'size': 13,
+              'size': 0,
             }),
           }),
           'backup_id': 'abc123',
           'database_included': True,
-          'date': '1970-01-01T00:00:00Z',
+          'date': '1970-01-01T00:00:00.000Z',
           'extra_metadata': dict({
+            'instance_id': 'our_uuid',
+            'with_automatic_settings': True,
           }),
           'failed_agent_ids': list([
             'test.remote',
@@ -3804,7 +3816,7 @@
           'homeassistant_included': True,
           'homeassistant_version': '2024.12.0',
           'name': 'Test',
-          'with_automatic_settings': None,
+          'with_automatic_settings': True,
         }),
       ]),
       'last_attempted_automatic_backup': None,
@@ -3980,7 +3992,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'The backup agent is unreachable.',
+        'test.remote': 'The backup agent is unreachable.',
       }),
       'backup': dict({
         'addons': list([
@@ -4024,7 +4036,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Oops',
+        'test.remote': 'Oops',
       }),
       'backup': dict({
         'addons': list([
@@ -4068,7 +4080,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Boom!',
+        'test.remote': 'Boom!',
       }),
       'backup': dict({
         'addons': list([
@@ -4572,7 +4584,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'The backup agent is unreachable.',
+        'test.remote': 'The backup agent is unreachable.',
       }),
       'backups': list([
         dict({
@@ -4624,7 +4636,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Oops',
+        'test.remote': 'Oops',
       }),
       'backups': list([
         dict({
@@ -4676,7 +4688,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Boom!',
+        'test.remote': 'Boom!',
       }),
       'backups': list([
         dict({

@@ -509,7 +509,7 @@
     },
     "vacuum_remote_control_start": {
       "name": "Vacuum remote control start",
-      "description": "Starts remote control of the vacuum cleaner. You can then move it with `remote_control_move`, when done call `remote_control_stop`."
+      "description": "Starts remote control of the vacuum cleaner. You can then move it with the 'Vacuum remote control move' action, when done use 'Vacuum remote control stop'."
     },
     "vacuum_remote_control_stop": {
       "name": "Vacuum remote control stop",
@@ -517,7 +517,7 @@
     },
     "vacuum_remote_control_move": {
       "name": "Vacuum remote control move",
-      "description": "Remote controls the vacuum cleaner, make sure you first set it in remote control mode with `remote_control_start`.",
+      "description": "Remote controls the vacuum cleaner, make sure you first set it in remote control mode with the 'Vacuum remote control start' action.",
       "fields": {
         "velocity": {
           "name": "Velocity",

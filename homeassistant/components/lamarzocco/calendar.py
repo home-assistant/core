@@ -7,7 +7,7 @@ from pylamarzocco.models import LaMarzoccoWakeUpSleepEntry
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
@@ -32,7 +32,7 @@ DAY_OF_WEEK = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LaMarzoccoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch entities and services."""
 

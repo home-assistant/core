@@ -35,7 +35,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from tests.common import (
@@ -986,7 +986,7 @@ async def _test_friendly_name(
     async def async_setup_entry(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setup entry method."""
         async_add_entities([ent])
@@ -1314,7 +1314,7 @@ async def test_entity_name_translation_placeholder_errors(
     async def async_setup_entry(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setup entry method."""
         async_add_entities([ent])
@@ -1542,7 +1542,7 @@ async def test_friendly_name_updated(
     async def async_setup_entry(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Mock setup entry method."""
         async_add_entities(
