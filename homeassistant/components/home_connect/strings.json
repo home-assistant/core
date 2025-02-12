@@ -89,7 +89,7 @@
       "message": "Error obtaining data from the API: {error}"
     },
     "required_program_or_one_option_at_least": {
-      "message": "The program to set or at least one of the possible options should be specified"
+      "message": "A program or at least one of the possible options for a program should be specified"
     }
   },
   "issues": {
@@ -103,7 +103,7 @@
     },
     "deprecated_set_program_and_option_actions": {
       "title": "The executed action is deprecated",
-      "description": "`start_program`, `select_program`, `set_option_active`, and `set_option_selected` actions are deprecated and will be deleted on 2025.9.0, please use `set_program_and_options`. For the executed action:\n{old_action}\nyou can do the following transformation using the recoginezed options:\n  {action_options}\nIf the option is not in the recognized options, please submit an issue or a pull request requesting the addition of the option at (MartinHjelmare/aiohomeconnect)[https://github.com/MartinHjelmare/aiohomeconnect]."
+      "description": "`start_program`, `select_program`, `set_option_active`, and `set_option_selected` actions are deprecated and will be removed in the {remove_release} release, please use the `{new_action_key}` action instead. For the executed action:\n{deprecated_action_yaml}\nyou can do the following transformation using the recognized options:\n  {new_action_yaml}\nIf the option is not in the recognized options, please submit an issue or a pull request requesting the addition of the option at {repo_link}."
     }
   },
   "selector": {

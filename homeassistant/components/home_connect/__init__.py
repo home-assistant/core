@@ -181,10 +181,10 @@ SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = vol.All(
     )
     .extend(
         {
-            vol.Optional(translation_key): vol.In(allowed_valued.keys())
+            vol.Optional(translation_key): vol.In(allowed_values.keys())
             for translation_key, (
                 key,
-                allowed_valued,
+                allowed_values,
             ) in PROGRAM_ENUM_OPTIONS.items()
         }
     )
@@ -280,7 +280,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_set_program_and_option_actions",
             translation_placeholders={
-                "old_action": "\n".join(
+                "new_action_key": SERVICE_SET_PROGRAM_AND_OPTIONS,
+                "remove_release": "2025.9.0",
+                "deprecated_action_yaml": "\n".join(
                     [
                         "```yaml",
                         f"action: {DOMAIN}.{SERVICE_START_PROGRAM if start else SERVICE_SELECT_PROGRAM}",
@@ -297,7 +299,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                         "```",
                     ]
                 ),
-                "action_options": "\n  ".join(
+                "new_action_yaml": "\n  ".join(
                     [
                         "```yaml",
                         f"action: {DOMAIN}.{SERVICE_SET_PROGRAM_AND_OPTIONS}",
@@ -315,6 +317,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                         "```",
                     ]
                 ),
+                "repo_link": "https://github.com/MartinHjelmare/aiohomeconnect",
             },
         )
 
@@ -351,7 +354,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_set_program_and_option_actions",
             translation_placeholders={
-                "old_action": "\n".join(
+                "new_action_key": SERVICE_SET_PROGRAM_AND_OPTIONS,
+                "remove_release": "2025.9.0",
+                "deprecated_action_yaml": "\n".join(
                     [
                         "```yaml",
                         f"action: {DOMAIN}.{SERVICE_OPTION_ACTIVE if active else SERVICE_OPTION_SELECTED}",
@@ -363,7 +368,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                         "```",
                     ]
                 ),
-                "action_options": "\n  ".join(
+                "new_action_yaml": "\n  ".join(
                     [
                         "```yaml",
                         f"action: {DOMAIN}.{SERVICE_SET_PROGRAM_AND_OPTIONS}",
@@ -374,6 +379,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                         "```",
                     ]
                 ),
+                "repo_link": "https://github.com/MartinHjelmare/aiohomeconnect",
             },
         )
         try:
