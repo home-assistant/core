@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 import logging
+import numbers
 
 from lacrosse_view import Sensor
 
@@ -228,6 +229,9 @@ class LaCrosseViewSensor(
             model=sensor.model,
         )
         self.index = index
+        self._attr_suggested_display_precision = (
+            2 if isinstance(self.native_value, numbers.Number) else None
+        )
 
     @property
     def native_value(self) -> int | float | str | None:
