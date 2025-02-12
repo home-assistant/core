@@ -45,7 +45,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class WebDavConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for WebDAV."""
 
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
