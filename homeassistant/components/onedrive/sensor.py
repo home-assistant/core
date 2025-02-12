@@ -113,11 +113,8 @@ class OneDriveDriveStateSensor(
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return (
-            self.entity_description.value_fn(self.coordinator.data.quota)
-            if self.coordinator.data.quota
-            else None
-        )
+        assert self.coordinator.data.quota
+        return self.entity_description.value_fn(self.coordinator.data.quota)
 
     @property
     def available(self) -> bool:
