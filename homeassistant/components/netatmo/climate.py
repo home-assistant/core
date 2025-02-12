@@ -147,7 +147,7 @@ async def async_setup_entry(
         SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
         {
             vol.Required(ATTR_PRESET_MODE): vol.In(THERM_MODES),
-            vol.Required(ATTR_END_DATETIME): cv.datetime,
+            vol.Optional(ATTR_END_DATETIME): cv.datetime,
         },
         "_async_service_set_preset_mode_with_end_datetime",
     )
@@ -462,8 +462,11 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self, **kwargs: Any
     ) -> None:
         preset_mode = kwargs[ATTR_PRESET_MODE]
-        end_datetime = kwargs[ATTR_END_DATETIME]
-        end_timestamp = int(dt_util.as_timestamp(end_datetime))
+        end_datetime = kwargs.get(ATTR_END_DATETIME)
+        if end_datetime:
+            end_timestamp = int(dt_util.as_timestamp(end_datetime))
+        else:
+            end_timestamp = None
 
         await self.home.async_set_thermmode(
             mode=PRESET_MAP_NETATMO[preset_mode], end_time=end_timestamp
