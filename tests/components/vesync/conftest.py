@@ -183,6 +183,21 @@ async def humidifier_config_entry(
     return entry
 
 
+@pytest.fixture
+async def install_humidifier_device(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    manager,
+    request: pytest.FixtureRequest,
+) -> None:
+    """Create a mock VeSync config entry with the specified humidifier device."""
+
+    # Install the defined humidifier
+    manager._dev_list["fans"].append(request.getfixturevalue(request.param))
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+
 @pytest.fixture(name="switch_old_id_config_entry")
 async def switch_old_id_config_entry(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
