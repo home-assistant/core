@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import Required, TypedDict, cast
 
 from stookwijzer import Stookwijzer
 
@@ -14,9 +15,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import UnitOfSpeed
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -28,6 +29,14 @@ class StookwijzerSensorDescription(SensorEntityDescription):
     """Class describing Stookwijzer sensor entities."""
 
     value_fn: Callable[[Stookwijzer], int | float | str | None]
+
+
+class Forecast(TypedDict):
+    """Typed Stookwijzer forecast dict."""
+
+    datetime: Required[str]
+    advice: str | None
+    final: bool | None
 
 
 STOOKWIJZER_SENSORS = [
@@ -59,11 +68,20 @@ STOOKWIJZER_SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: StookwijzerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: entity_platform.AddEntitiesCallback,
 ) -> None:
     """Set up Stookwijzer sensor from a config entry."""
     async_add_entities(
         StookwijzerSensor(description, entry) for description in STOOKWIJZER_SENSORS
+    )
+
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        "get_forecast",
+        None,
+        "async_get_forecast",
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -94,3 +112,11 @@ class StookwijzerSensor(CoordinatorEntity[StookwijzerCoordinator], SensorEntity)
     def native_value(self) -> int | float | str | None:
         """Return the state of the device."""
         return self.entity_description.value_fn(self.coordinator.client)
+
+    async def async_get_forecast(self) -> list[Forecast] | None:
+        """Get the forecast from API endpoint."""
+        if self.device_class != SensorDeviceClass.ENUM:
+            return None
+        return cast(
+            list[Forecast] | None, await self.coordinator.client.async_get_forecast()
+        )

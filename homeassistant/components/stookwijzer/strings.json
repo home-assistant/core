@@ -27,6 +27,12 @@
       }
     }
   },
+  "services": {
+    "get_forecast": {
+      "name": "Get forecast",
+      "description": "Get the Stookwijzer forecast."
+    }
+  },
   "issues": {
     "location_migration_failed": {
       "description": "The Stookwijzer integration was unable to automatically migrate your location to a new format the updated integrations uses.\n\nMake sure you are connected to the internet and restart Home Assistant to try again.\n\nIf this doesn't resolve the error, remove and re-add the integration.",

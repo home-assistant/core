@@ -1,0 +1,6 @@
+get_forecast:
+  target:
+    entity:
+      integration: stookwijzer
+      domain: sensor
+      device_class: enum
