@@ -127,9 +127,8 @@ class EvohomeConfigFlow(ConfigFlow, domain=DOMAIN):
             async_get_clientsession(self.hass),
         )
 
-        # fetch a new access token, using the credentials, not any refresh_token
-        assert not token_manager._refresh_token  # noqa: SLF001
-
+        # fetch a new access token from the vendor (i.e. not from the cache)
+        assert not token_manager.refresh_token
         await token_manager.fetch_access_token()  # ? raise ec2.BadUserCredentialsError:
 
         return token_manager
