@@ -24,6 +24,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .converters import aqi_to_concentration
 from .coordinator import WAQIDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -133,6 +134,60 @@ SENSORS: list[WAQISensorEntityDescription] = [
         device_class=SensorDeviceClass.ENUM,
         options=[pollutant.value for pollutant in Pollutant],
         value_fn=lambda aq: aq.dominant_pollutant,
+    ),
+    WAQISensorEntityDescription(
+        key="pm25_concentration",
+        translation_key="pm25_concentration",
+        native_unit_of_measurement="µg/m³",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aqi_to_concentration(aq.extended_air_quality.pm25, "pm25")
+        if aq.extended_air_quality.pm25 is not None
+        else None,
+        available_fn=lambda aq: aq.extended_air_quality.pm25 is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="pm10_concentration",
+        translation_key="pm10_concentration",
+        native_unit_of_measurement="µg/m³",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aqi_to_concentration(aq.extended_air_quality.pm10, "pm10")
+        if aq.extended_air_quality.pm10 is not None
+        else None,
+        available_fn=lambda aq: aq.extended_air_quality.pm10 is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="o3_concentration",
+        translation_key="o3_concentration",
+        native_unit_of_measurement="ppb",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aqi_to_concentration(aq.extended_air_quality.ozone, "o38")
+        if aq.extended_air_quality.ozone is not None
+        else None,
+        available_fn=lambda aq: aq.extended_air_quality.ozone is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="no2_concentration",
+        translation_key="no2_concentration",
+        native_unit_of_measurement="ppb",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aqi_to_concentration(
+            aq.extended_air_quality.nitrogen_dioxide, "no2"
+        )
+        if aq.extended_air_quality.nitrogen_dioxide is not None
+        else None,
+        available_fn=lambda aq: aq.extended_air_quality.nitrogen_dioxide is not None,
+    ),
+    WAQISensorEntityDescription(
+        key="so2_concentration",
+        translation_key="so2_concentration",
+        native_unit_of_measurement="ppb",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda aq: aqi_to_concentration(
+            aq.extended_air_quality.sulfur_dioxide, "so21"
+        )
+        if aq.extended_air_quality.sulfur_dioxide is not None
+        else None,
+        available_fn=lambda aq: aq.extended_air_quality.sulfur_dioxide is not None,
     ),
 ]
 
