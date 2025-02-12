@@ -14,15 +14,16 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE, CONF_UNIT_SYSTEM
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .const import (
     CONF_STATION_ID,
@@ -44,6 +45,8 @@ DEFAULT_NAME = "NOAA Tides"
 
 SCAN_INTERVAL = timedelta(minutes=60)
 
+DEPRECATE_YAML_IN_HA_VERSION = "2025.7.0"
+
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_STATION_ID): cv.string,
@@ -54,41 +57,93 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the NOAA Tides and Currents sensor."""
+
+    _LOGGER.debug("Importing from configuration.yaml: %s", config)
+
     station_id = config[CONF_STATION_ID]
-    name = config.get(CONF_NAME)
-    timezone = config.get(CONF_TIME_ZONE)
+    timezone = config.get(CONF_TIME_ZONE, DEFAULT_TIMEZONE)
+    unit_system = config.get(CONF_UNIT_SYSTEM, get_default_unit_system(hass))
 
-    if CONF_UNIT_SYSTEM in config:
-        unit_system = config[CONF_UNIT_SYSTEM]
-    elif hass.config.units is METRIC_SYSTEM:
-        unit_system = UNIT_SYSTEMS[1]
-    else:
-        unit_system = UNIT_SYSTEMS[0]
+    user_data = {
+        CONF_STATION_ID: station_id,
+        CONF_TIME_ZONE: timezone,
+        CONF_UNIT_SYSTEM: unit_system,
+    }
 
-    try:
-        station = coops.Station(station_id, unit_system)
-    except KeyError:
-        _LOGGER.error("NOAA Tides Sensor station_id %s does not exist", station_id)
-        return
-    except requests.exceptions.ConnectionError as exception:
-        _LOGGER.error(
-            "Connection error during setup in NOAA Tides Sensor for station_id: %s",
-            station_id,
-        )
-        raise PlatformNotReady from exception
-
-    noaa_sensor = NOAATidesAndCurrentsSensor(
-        name, station_id, timezone, unit_system, station
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data=user_data,
     )
 
-    add_entities([noaa_sensor], True)
+    if result["type"] is FlowResultType.CREATE_ENTRY or (
+        result["type"] is FlowResultType.ABORT
+        and result["reason"] == "already_configured"
+    ):
+        async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version=DEPRECATE_YAML_IN_HA_VERSION,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": NAME,
+            },
+        )
+        return
+
+    if (
+        result["type"] is FlowResultType.FORM
+        and result["errors"] is not None
+        and result["errors"]["base"] is not None
+    ):
+        _LOGGER.error(
+            "Cannot import %s from configuration.yaml (station_id = %s): %s",
+            DOMAIN,
+            station_id,
+            result["errors"]["base"],
+        )
+        async_create_issue(
+            hass,
+            DOMAIN,
+            f"deprecated_yaml_import_issue_{result['errors']['base']}",
+            breaks_in_ha_version=DEPRECATE_YAML_IN_HA_VERSION,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=IssueSeverity.WARNING,
+            translation_key=f"deprecated_yaml_import_issue_{result['errors']['base']}",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": NAME,
+            },
+        )
+        return
+
+    async_create_issue(
+        hass,
+        DOMAIN,
+        "deprecated_yaml_import_issue_unknown",
+        breaks_in_ha_version="2025.2.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_yaml_import_issue_unknown",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": NAME,
+        },
+    )
 
 
 async def async_setup_entry(
