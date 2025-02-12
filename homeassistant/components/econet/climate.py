@@ -23,7 +23,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
 from . import EconetConfigEntry
 from .const import DOMAIN
@@ -214,7 +214,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        async_create_issue(
+        create_issue(
             self.hass,
             DOMAIN,
             "migrate_aux_heat",
@@ -228,7 +228,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        async_create_issue(
+        create_issue(
             self.hass,
             DOMAIN,
             "migrate_aux_heat",
