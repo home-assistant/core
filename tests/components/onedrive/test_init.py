@@ -209,7 +209,6 @@ async def test_1_1_to_1_2_migration(
 
 async def test_migration_guard_against_major_downgrade(
     hass: HomeAssistant,
-    mock_onedrive_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test migration guards against major downgrades."""
