@@ -1,5 +1,9 @@
 """Tests for the SmartThings integration."""
 
+from typing import Any
+from unittest.mock import AsyncMock
+
+from pysmartthings.models import Attribute, Capability
 from syrupy import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -29,3 +33,14 @@ def snapshot_smartthings_entities(
         entity_entry = entity_registry.async_get(entity_state.entity_id)
         assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-entry")
         assert entity_state == snapshot(name=f"{entity_entry.entity_id}-state")
+
+
+def set_attribute_value(
+    mock: AsyncMock,
+    capability: Capability,
+    attribute: Attribute,
+    value: Any,
+    component: str = "main",
+) -> None:
+    """Set the value of an attribute."""
+    mock.get_device_status.return_value[component][capability][attribute].value = value
