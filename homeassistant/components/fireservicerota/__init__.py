@@ -27,6 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     if client.token_refresh_failure:
         return False
 
+    entry.async_on_unload(client.async_stop_listener)
     coordinator = FireServiceUpdateCoordinator(hass, client, entry)
 
     await coordinator.async_config_entry_first_refresh()
@@ -43,10 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload FireServiceRota config entry."""
-
-    await hass.async_add_executor_job(
-        hass.data[DOMAIN][entry.entry_id][DATA_CLIENT].websocket.stop_listener
-    )
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         del hass.data[DOMAIN][entry.entry_id]
