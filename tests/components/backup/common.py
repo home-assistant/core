@@ -20,7 +20,7 @@ from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockPlatform, mock_platform
+from tests.common import mock_platform
 
 LOCAL_AGENT_ID = f"{DOMAIN}.local"
 
@@ -138,15 +138,15 @@ async def setup_backup_integration(
                 raise ValueError(f"Invalid agent_id: {agent}")
             name = agent.partition(".")[2]
             remote_agents_dict[agent] = mock_backup_agent(name, backups.get(agent))
-        platform = Mock(
-            async_get_backup_agents=AsyncMock(
-                return_value=list(remote_agents_dict.values())
-            ),
-            spec_set=BackupAgentPlatformProtocol,
-        )
+        if remote_agents:
+            platform = Mock(
+                async_get_backup_agents=AsyncMock(
+                    return_value=list(remote_agents_dict.values())
+                ),
+                spec_set=BackupAgentPlatformProtocol,
+            )
+            await setup_backup_platform(hass, domain=TEST_DOMAIN, platform=platform)
 
-        mock_platform(hass, f"{TEST_DOMAIN}.backup", platform or MockPlatform())
-        assert await async_setup_component(hass, TEST_DOMAIN, {})
         assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
 

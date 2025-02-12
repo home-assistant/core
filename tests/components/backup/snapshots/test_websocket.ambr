@@ -16,12 +16,12 @@
     'result': dict({
       'agents': list([
         dict({
-          'agent_id': 'backup.local',
-          'name': 'local',
+          'agent_id': 'test.remote',
+          'name': 'remote',
         }),
         dict({
-          'agent_id': 'test.test',
-          'name': 'test',
+          'agent_id': 'backup.local',
+          'name': 'local',
         }),
       ]),
     }),
@@ -3457,7 +3457,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'The backup agent is unreachable.',
+        'test.remote': 'The backup agent is unreachable.',
       }),
     }),
     'success': True,
@@ -3480,7 +3480,7 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
               'size': 0,
             }),
@@ -3520,7 +3520,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'The backup agent is unreachable.',
+        'test.remote': 'The backup agent is unreachable.',
       }),
     }),
     'success': True,
@@ -3543,7 +3543,7 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
               'size': 0,
             }),
@@ -3606,7 +3606,7 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
               'size': 0,
             }),
@@ -3668,7 +3668,7 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
               'size': 0,
             }),
@@ -3708,7 +3708,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Boom!',
+        'test.remote': 'Boom!',
       }),
     }),
     'success': True,
@@ -3731,7 +3731,7 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
               'size': 0,
             }),
@@ -3771,7 +3771,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Boom!',
+        'test.remote': 'Boom!',
       }),
     }),
     'success': True,
@@ -3794,7 +3794,7 @@
             }),
           ]),
           'agents': dict({
-            'domain.test': dict({
+            'test.remote': dict({
               'protected': False,
               'size': 0,
             }),
@@ -3992,7 +3992,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'The backup agent is unreachable.',
+        'test.remote': 'The backup agent is unreachable.',
       }),
       'backup': dict({
         'addons': list([
@@ -4036,7 +4036,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Oops',
+        'test.remote': 'Oops',
       }),
       'backup': dict({
         'addons': list([
@@ -4080,7 +4080,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Boom!',
+        'test.remote': 'Boom!',
       }),
       'backup': dict({
         'addons': list([
@@ -4584,7 +4584,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'The backup agent is unreachable.',
+        'test.remote': 'The backup agent is unreachable.',
       }),
       'backups': list([
         dict({
@@ -4636,7 +4636,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Oops',
+        'test.remote': 'Oops',
       }),
       'backups': list([
         dict({
@@ -4688,7 +4688,7 @@
     'id': 1,
     'result': dict({
       'agent_errors': dict({
-        'domain.test': 'Boom!',
+        'test.remote': 'Boom!',
       }),
       'backups': list([
         dict({
