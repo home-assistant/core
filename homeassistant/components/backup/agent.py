@@ -10,18 +10,14 @@ from typing import Any, Protocol
 from propcache.api import cached_property
 
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 
-from .models import AgentBackup
-
-
-class BackupAgentError(HomeAssistantError):
-    """Base class for backup agent errors."""
+from .models import AgentBackup, BackupAgentError
 
 
 class BackupAgentUnreachableError(BackupAgentError):
     """Raised when the agent can't reach its API."""
 
+    error_code = "backup_agent_unreachable"
     _message = "The backup agent is unreachable."
 
 
@@ -92,10 +88,15 @@ class LocalBackupAgent(BackupAgent):
 
     @abc.abstractmethod
     def get_backup_path(self, backup_id: str) -> Path:
-        """Return the local path to a backup.
+        """Return the local path to an existing backup.
 
         The method should return the path to the backup file with the specified id.
+        Raises BackupAgentError if the backup does not exist.
         """
+
+    @abc.abstractmethod
+    def get_new_backup_path(self, backup: AgentBackup) -> Path:
+        """Return the local path to a new backup."""
 
 
 class BackupAgentPlatformProtocol(Protocol):

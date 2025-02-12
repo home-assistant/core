@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Callable, Coroutine
 from contextlib import suppress
 from datetime import timedelta
 from functools import wraps
@@ -23,12 +23,12 @@ from homeassistant.components.media_player import (
     MediaType,
 )
 from homeassistant.const import ATTR_COMMAND, ATTR_SUPPORTED_FEATURES
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.typing import VolDictType
@@ -78,35 +78,54 @@ COMMAND_SCHEMA: VolDictType = {
 SOUND_OUTPUT_SCHEMA: VolDictType = {vol.Required(ATTR_SOUND_OUTPUT): cv.string}
 
 SERVICES = (
-    (SERVICE_BUTTON, BUTTON_SCHEMA, "async_button"),
-    (SERVICE_COMMAND, COMMAND_SCHEMA, "async_command"),
-    (SERVICE_SELECT_SOUND_OUTPUT, SOUND_OUTPUT_SCHEMA, "async_select_sound_output"),
+    (
+        SERVICE_BUTTON,
+        BUTTON_SCHEMA,
+        "async_button",
+        SupportsResponse.NONE,
+    ),
+    (
+        SERVICE_COMMAND,
+        COMMAND_SCHEMA,
+        "async_command",
+        SupportsResponse.OPTIONAL,
+    ),
+    (
+        SERVICE_SELECT_SOUND_OUTPUT,
+        SOUND_OUTPUT_SCHEMA,
+        "async_select_sound_output",
+        SupportsResponse.OPTIONAL,
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WebOsTvConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the LG webOS TV platform."""
     platform = entity_platform.async_get_current_platform()
 
-    for service_name, schema, method in SERVICES:
-        platform.async_register_entity_service(service_name, schema, method)
+    for service_name, schema, method, supports_response in SERVICES:
+        platform.async_register_entity_service(
+            service_name, schema, method, supports_response=supports_response
+        )
 
     async_add_entities([LgWebOSMediaPlayerEntity(entry)])
 
 
-def cmd[_T: LgWebOSMediaPlayerEntity, **_P](
-    func: Callable[Concatenate[_T, _P], Awaitable[None]],
-) -> Callable[Concatenate[_T, _P], Coroutine[Any, Any, None]]:
+def cmd[_R, **_P](
+    func: Callable[Concatenate[LgWebOSMediaPlayerEntity, _P], Coroutine[Any, Any, _R]],
+) -> Callable[Concatenate[LgWebOSMediaPlayerEntity, _P], Coroutine[Any, Any, _R]]:
     """Catch command exceptions."""
 
     @wraps(func)
-    async def cmd_wrapper(self: _T, *args: _P.args, **kwargs: _P.kwargs) -> None:
+    async def cmd_wrapper(
+        self: LgWebOSMediaPlayerEntity, *args: _P.args, **kwargs: _P.kwargs
+    ) -> _R:
         """Wrap all command methods."""
-        if self.state is MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF and func.__name__ != "async_turn_off":
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_off",
@@ -116,7 +135,7 @@ def cmd[_T: LgWebOSMediaPlayerEntity, **_P](
                 },
             )
         try:
-            await func(self, *args, **kwargs)
+            return await func(self, *args, **kwargs)
         except WEBOSTV_EXCEPTIONS as error:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -228,7 +247,7 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
         if self.state != MediaPlayerState.OFF or not self._supported_features:
             supported = SUPPORT_WEBOSTV
-            if self._client.sound_output in ("external_arc", "external_speaker"):
+            if self._client.sound_output == "external_speaker":
                 supported = supported | SUPPORT_WEBOSTV_VOLUME
             elif self._client.sound_output != "lineout":
                 supported = (
@@ -264,6 +283,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
             if model := self._client.system_info.get("modelName"):
                 self._attr_device_info["model"] = model
+
+            if serial_number := self._client.system_info.get("serialNumber"):
+                self._attr_device_info["serial_number"] = serial_number
 
         self._attr_extra_state_attributes = {}
         if self._client.sound_output is not None or self.state != MediaPlayerState.OFF:
@@ -376,9 +398,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         await self._client.set_mute(mute)
 
     @cmd
-    async def async_select_sound_output(self, sound_output: str) -> None:
+    async def async_select_sound_output(self, sound_output: str) -> ServiceResponse:
         """Select the sound output."""
-        await self._client.change_sound_output(sound_output)
+        return await self._client.change_sound_output(sound_output)
 
     @cmd
     async def async_media_play_pause(self) -> None:
@@ -481,9 +503,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
         await self._client.button(button)
 
     @cmd
-    async def async_command(self, command: str, **kwargs: Any) -> None:
+    async def async_command(self, command: str, **kwargs: Any) -> ServiceResponse:
         """Send a command."""
-        await self._client.request(command, payload=kwargs.get(ATTR_PAYLOAD))
+        return await self._client.request(command, payload=kwargs.get(ATTR_PAYLOAD))
 
     async def _async_fetch_image(self, url: str) -> tuple[bytes | None, str | None]:
         """Retrieve an image.

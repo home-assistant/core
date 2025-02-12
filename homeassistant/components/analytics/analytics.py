@@ -11,6 +11,7 @@ import uuid
 
 import aiohttp
 
+from homeassistant import config as conf_util
 from homeassistant.components import hassio
 from homeassistant.components.api import ATTR_INSTALLATION_TYPE
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
@@ -22,7 +23,6 @@ from homeassistant.components.recorder import (
     DOMAIN as RECORDER_DOMAIN,
     get_instance as get_recorder_instance,
 )
-import homeassistant.config as conf_util
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import ATTR_DOMAIN, __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback

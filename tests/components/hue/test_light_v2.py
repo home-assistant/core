@@ -392,7 +392,7 @@ async def test_light_availability(
     assert test_light is not None
     assert test_light.state == "on"
 
-    # Change availability by modififying the zigbee_connectivity status
+    # Change availability by modifying the zigbee_connectivity status
     for status in ("connectivity_issue", "disconnected", "connected"):
         mock_bridge_v2.api.emit_event(
             "update",

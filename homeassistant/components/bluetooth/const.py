@@ -22,7 +22,7 @@ CONF_SOURCE: Final = "source"
 CONF_SOURCE_DOMAIN: Final = "source_domain"
 CONF_SOURCE_MODEL: Final = "source_model"
 CONF_SOURCE_CONFIG_ENTRY_ID: Final = "source_config_entry_id"
-
+CONF_SOURCE_DEVICE_ID: Final = "source_device_id"
 
 SOURCE_LOCAL: Final = "local"
 

@@ -229,17 +229,30 @@ async def test_button(hass: HomeAssistant, client) -> None:
     client.button.assert_called_with("test")
 
 
-async def test_command(hass: HomeAssistant, client) -> None:
+async def test_command(
+    hass: HomeAssistant,
+    client,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test generic command functionality."""
     await setup_webostv(hass)
+    client.request.return_value = {
+        "returnValue": True,
+        "scenario": "mastervolume_tv_speaker_ext",
+        "volume": 1,
+        "muted": False,
+    }
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
-        ATTR_COMMAND: "test",
+        ATTR_COMMAND: "audio/getVolume",
     }
-    await hass.services.async_call(DOMAIN, SERVICE_COMMAND, data, True)
+    response = await hass.services.async_call(
+        DOMAIN, SERVICE_COMMAND, data, True, return_response=True
+    )
     await hass.async_block_till_done()
-    client.request.assert_called_with("test", payload=None)
+    client.request.assert_called_with("audio/getVolume", payload=None)
+    assert response == snapshot
 
 
 async def test_command_with_optional_arg(hass: HomeAssistant, client) -> None:
@@ -258,17 +271,32 @@ async def test_command_with_optional_arg(hass: HomeAssistant, client) -> None:
     )
 
 
-async def test_select_sound_output(hass: HomeAssistant, client) -> None:
+async def test_select_sound_output(
+    hass: HomeAssistant,
+    client,
+    snapshot: SnapshotAssertion,
+) -> None:
     """Test select sound output service."""
     await setup_webostv(hass)
+    client.change_sound_output.return_value = {
+        "returnValue": True,
+        "method": "setSystemSettings",
+    }
 
     data = {
         ATTR_ENTITY_ID: ENTITY_ID,
         ATTR_SOUND_OUTPUT: "external_speaker",
     }
-    await hass.services.async_call(DOMAIN, SERVICE_SELECT_SOUND_OUTPUT, data, True)
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SELECT_SOUND_OUTPUT,
+        data,
+        True,
+        return_response=True,
+    )
     await hass.async_block_till_done()
     client.change_sound_output.assert_called_once_with("external_speaker")
+    assert response == snapshot
 
 
 async def test_device_info_startup_off(
@@ -523,6 +551,17 @@ async def test_control_error_handling(
         await hass.services.async_call(MP_DOMAIN, SERVICE_MEDIA_PLAY, data, True)
 
     assert client.play.call_count == int(is_on)
+
+
+async def test_turn_off_when_device_is_off(hass: HomeAssistant, client) -> None:
+    """Test no error when turning off device that is already off."""
+    await setup_webostv(hass)
+    client.is_on = False
+    await client.mock_state_update()
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID}
+    await hass.services.async_call(MP_DOMAIN, SERVICE_TURN_OFF, data, True)
+    assert client.power_off.call_count == 1
 
 
 async def test_supported_features(hass: HomeAssistant, client) -> None:
