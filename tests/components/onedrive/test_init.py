@@ -132,7 +132,7 @@ async def test_migrate_metadata_files(
     await hass.async_block_till_done()
 
     mock_onedrive_client.upload_file.assert_called_once()
-    assert mock_onedrive_client.update_drive_item.call_count == 2
+    assert mock_onedrive_client.update_drive_item.call_count == 3
     assert mock_onedrive_client.update_drive_item.call_args[1]["data"].description == ""
 
 

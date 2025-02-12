@@ -50,7 +50,9 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     },
     "error": {
-      "folder_rename_error": "Failed to rename folder"
+      "folder_rename_error": "Failed to rename folder",
+      "folder_creation_error": "Failed to create folder",
+      "folder_already_in_use": "Folder already in use by another instance"
     }
   },
   "exceptions": {

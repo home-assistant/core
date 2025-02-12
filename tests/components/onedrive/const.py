@@ -58,6 +58,7 @@ MOCK_BACKUP_FOLDER = Folder(
     name="name",
     size=0,
     child_count=0,
+    description="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
     parent_reference=ItemParentReference(
         drive_id="mock_drive_id", id="id", path="path"
     ),
@@ -75,7 +76,7 @@ MOCK_BACKUP_FILE = File(
         quick_xor_hash="hash",
     ),
     mime_type="application/x-tar",
-    description="",
+    description="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
     created_by=IDENTITY_SET,
 )
 

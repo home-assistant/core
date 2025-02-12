@@ -101,17 +101,29 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Step to ask for the folder name."""
-        if user_input is not None:
-            return self.async_create_entry(
-                title=self.title,
-                data={
-                    **self.step_data,
-                    CONF_FOLDER_ID: "id",
-                    CONF_FOLDER_NAME: user_input[CONF_FOLDER_NAME],
-                },
-            )
-
+        errors: dict[str, str] = {}
         instance_id = await async_get_instance_id(self.hass)
+        if user_input is not None:
+            try:
+                folder = await self.client.create_folder(
+                    self.approot_id, user_input[CONF_FOLDER_NAME]
+                )
+            except OneDriveException:
+                self.logger.debug("Failed to create folder", exc_info=True)
+                errors["base"] = "folder_creation_error"
+            else:
+                if folder.description and folder.description != instance_id:
+                    errors[CONF_FOLDER_NAME] = "folder_already_in_use"
+            if not errors:
+                return self.async_create_entry(
+                    title=self.title,
+                    data={
+                        **self.step_data,
+                        CONF_FOLDER_ID: folder.id,
+                        CONF_FOLDER_NAME: user_input[CONF_FOLDER_NAME],
+                    },
+                )
+
         default_folder_name = f"backups_{instance_id[:8]}"
 
         return self.async_show_form(
@@ -119,6 +131,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required(CONF_FOLDER_NAME, default=default_folder_name): str},
             ),
+            errors=errors,
         )
 
     async def async_step_reconfigure_folder(

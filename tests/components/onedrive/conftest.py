@@ -139,8 +139,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 @pytest.fixture(autouse=True)
 def mock_instance_id() -> Generator[AsyncMock]:
     """Mock the instance ID."""
-    with patch(
-        "homeassistant.components.onedrive.async_get_instance_id",
-        return_value="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
+    with (
+        patch(
+            "homeassistant.components.onedrive.async_get_instance_id",
+            return_value="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
+        ) as mock_instance_id,
+        patch(
+            "homeassistant.components.onedrive.config_flow.async_get_instance_id",
+            new=mock_instance_id,
+        ),
     ):
         yield

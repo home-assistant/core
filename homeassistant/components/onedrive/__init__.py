@@ -69,6 +69,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
             entry, data={**entry.data, CONF_FOLDER_ID: backup_folder.id}
         )
 
+    # write instance id to description
+    if backup_folder.description != (instance_id := await async_get_instance_id(hass)):
+        await _handle_item_operation(
+            lambda: client.update_drive_item(
+                backup_folder.id, ItemUpdate(description=instance_id)
+            ),
+            folder_name,
+        )
     # update in case folder was renamed manually
     hass.config_entries.async_update_entry(
         entry, data={**entry.data, CONF_FOLDER_NAME: backup_folder.name}
