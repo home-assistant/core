@@ -27,17 +27,21 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type TransmissionConfigEntry = ConfigEntry[TransmissionDataUpdateCoordinator]
+
 
 class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
     """Transmission dataupdate coordinator class."""
 
-    config_entry: ConfigEntry
+    config_entry: TransmissionConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, api: transmission_rpc.Client
+        self,
+        hass: HomeAssistant,
+        entry: TransmissionConfigEntry,
+        api: transmission_rpc.Client,
     ) -> None:
         """Initialize the Transmission RPC API."""
-        self.config_entry = entry
         self.api = api
         self.host = entry.data[CONF_HOST]
         self._session: transmission_rpc.Session | None = None
@@ -47,6 +51,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         self.torrents: list[transmission_rpc.Torrent] = []
         super().__init__(
             hass,
+            config_entry=entry,
             name=f"{DOMAIN} - {self.host}",
             logger=_LOGGER,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),

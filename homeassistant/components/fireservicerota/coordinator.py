@@ -213,3 +213,7 @@ class FireServiceRotaClient:
         )
 
         await self.update_call(self.fsr.set_incident_response, self.incident_id, value)
+
+    async def async_stop_listener(self) -> None:
+        """Stop listener."""
+        await self._hass.async_add_executor_job(self.websocket.stop_listener)

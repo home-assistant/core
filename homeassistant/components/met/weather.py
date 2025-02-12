@@ -34,10 +34,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from . import MetWeatherConfigEntry
 from .const import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_SUNNY,
@@ -47,7 +46,7 @@ from .const import (
     DOMAIN,
     FORECAST_MAP,
 )
-from .coordinator import MetDataUpdateCoordinator
+from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
 
 DEFAULT_NAME = "Met.no"
 
@@ -55,7 +54,7 @@ DEFAULT_NAME = "Met.no"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MetWeatherConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
     coordinator = config_entry.runtime_data

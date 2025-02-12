@@ -71,12 +71,17 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         heatpump: HeatPump,
         connection: Connection,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
-            hass, LOGGER, name="Nibe Heat Pump", update_interval=timedelta(seconds=60)
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name="Nibe Heat Pump",
+            update_interval=timedelta(seconds=60),
         )
 
         self.data = {}
