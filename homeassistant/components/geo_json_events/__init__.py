@@ -4,23 +4,23 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import DOMAIN, PLATFORMS
-from .manager import GeoJsonFeedEntityManager
+from .const import PLATFORMS
+from .manager import GeoJsonConfigEntry, GeoJsonFeedEntityManager
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: GeoJsonConfigEntry
+) -> bool:
     """Set up the GeoJSON events component as config entry."""
-    feeds = hass.data.setdefault(DOMAIN, {})
-    # Create feed entity manager for all platforms.
     manager = GeoJsonFeedEntityManager(hass, config_entry)
-    feeds[config_entry.entry_id] = manager
+    config_entry.runtime_data = manager
+    config_entry.async_on_unload(manager.async_stop)
     _LOGGER.debug("Feed entity manager added for %s", config_entry.entry_id)
     await remove_orphaned_entities(hass, config_entry.entry_id)
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
@@ -46,10 +46,6 @@ async def remove_orphaned_entities(hass: HomeAssistant, entry_id: str) -> None:
                 entity_registry.async_remove(entry.entity_id)
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: GeoJsonConfigEntry) -> bool:
     """Unload the GeoJSON events config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        manager: GeoJsonFeedEntityManager = hass.data[DOMAIN].pop(entry.entry_id)
-        await manager.async_stop()
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
