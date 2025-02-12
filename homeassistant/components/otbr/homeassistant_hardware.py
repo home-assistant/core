@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import TYPE_CHECKING, cast
 
 from yarl import URL
 
@@ -15,21 +14,19 @@ from homeassistant.components.homeassistant_hardware.util import (
     OwningIntegration,
     get_otbr_addon_firmware_info,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.hassio import is_hassio
 
 from .const import DOMAIN
-
-if TYPE_CHECKING:
-    from . import OTBRConfigEntry
+from .types import OTBRConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_firmware_info(
-    hass: HomeAssistant, config_entry: ConfigEntry
+    hass: HomeAssistant, config_entry: OTBRConfigEntry
 ) -> FirmwareInfo | None:
     """Return firmware information for the OpenThread Border Router."""
     owners: list[OwningIntegration | OwningAddon] = [
@@ -62,9 +59,6 @@ async def async_get_firmware_info(
         ConfigEntryState.LOADED,
         ConfigEntryState.SETUP_IN_PROGRESS,
     ):
-        if TYPE_CHECKING:
-            config_entry = cast(OTBRConfigEntry, config_entry)
-
         try:
             firmware_version = await config_entry.runtime_data.get_coprocessor_version()
         except HomeAssistantError:

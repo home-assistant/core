@@ -12,7 +12,6 @@ from homeassistant.components.homeassistant_hardware.helpers import (
     async_register_firmware_info_provider,
 )
 from homeassistant.components.thread import async_add_dataset
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -21,6 +20,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import homeassistant_hardware, websocket_api
 from .const import DOMAIN
+from .types import OTBRConfigEntry
 from .util import (
     GetBorderAgentIdNotSupported,
     OTBRData,
@@ -31,8 +31,6 @@ from .util import (
 _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-
-type OTBRConfigEntry = ConfigEntry[OTBRData]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
