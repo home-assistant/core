@@ -13,13 +13,11 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FlexitCoordinator
-from .const import DOMAIN
+from .coordinator import FlexitConfigEntry, FlexitCoordinator
 from .entity import FlexitEntity
 
 
@@ -47,16 +45,23 @@ SWITCHES: tuple[FlexitSwitchEntityDescription, ...] = (
         turn_on_fn=lambda data: data.trigger_fireplace_mode(),
         turn_off_fn=lambda data: data.trigger_fireplace_mode(),
     ),
+    FlexitSwitchEntityDescription(
+        key="cooker_hood_mode",
+        translation_key="cooker_hood_mode",
+        is_on_fn=lambda data: data.cooker_hood_status,
+        turn_on_fn=lambda data: data.activate_cooker_hood(),
+        turn_off_fn=lambda data: data.deactivate_cooker_hood(),
+    ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: FlexitConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Flexit (bacnet) switch from a config entry."""
-    coordinator: FlexitCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         FlexitSwitch(coordinator, description) for description in SWITCHES

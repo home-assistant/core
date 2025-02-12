@@ -12,6 +12,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import MotionMountConfigEntry
 from .entity import MotionMountEntity
 
+PARALLEL_UPDATES = 0
+
 ERROR_MESSAGES: Final = {
     MotionMountSystemError.MotorError: "motor",
     MotionMountSystemError.ObstructionDetected: "obstruction",
