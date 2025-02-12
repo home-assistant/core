@@ -40,6 +40,16 @@ def get_window_value(attribute: HomeeAttribute) -> str | None:
     return vals.get(attribute.current_value)
 
 
+def get_brightness_value(attribute: HomeeAttribute) -> float:
+    """Return the value for a brightness sensor."""
+    if attribute.unit == "klx":
+        return attribute.current_value * 1000
+    if attribute.unit == "%":
+        return attribute.current_value * 500
+
+    return attribute.current_value
+
+
 @dataclass(frozen=True, kw_only=True)
 class HomeeSensorEntityDescription(SensorEntityDescription):
     """A class that describes Homee sensor entities."""
@@ -68,11 +78,8 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         key="brightness",
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=(
-            lambda attribute: attribute.current_value * 1000
-            if attribute.unit == "klx"
-            else attribute.current_value
-        ),
+        value_fn=get_brightness_value,
+        native_unit_of_measurement_fn=lambda unit: "lx",
     ),
     AttributeType.CURRENT: HomeeSensorEntityDescription(
         key="current",
