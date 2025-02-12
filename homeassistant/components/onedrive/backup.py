@@ -25,6 +25,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupAgentError,
+    BackupNotFound,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -137,7 +138,7 @@ class OneDriveBackupAgent(BackupAgent):
         """Download a backup file."""
         backups = await self._list_cached_backups()
         if backup_id not in backups:
-            raise BackupAgentError("Backup not found")
+            raise BackupNotFound("Backup not found")
 
         stream = await self._client.download_drive_item(
             backups[backup_id].backup_file_id, timeout=TIMEOUT
