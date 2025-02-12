@@ -103,8 +103,7 @@ class WebDavBackupAgent(BackupAgent):
         self._entry = entry
         self._client = entry.runtime_data
         self.name = entry.title
-        assert entry.unique_id
-        self.unique_id = entry.unique_id
+        self.unique_id = entry.entry_id
 
     @cached_property
     def _backup_path(self) -> str:
