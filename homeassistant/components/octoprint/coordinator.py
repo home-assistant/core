@@ -39,10 +39,10 @@ class OctoprintDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"octoprint-{config_entry.entry_id}",
             update_interval=timedelta(seconds=interval),
         )
-        self.config_entry = config_entry
         self._octoprint = octoprint
         self._printer_offline = False
         self.data = {"printer": None, "job": None, "last_read_time": None}
