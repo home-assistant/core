@@ -7,6 +7,7 @@ from typing import Any
 from nexia.const import (
     HOLD_PERMANENT,
     HOLD_RESUME_SCHEDULE,
+    HUMIDITY_STEP,
     OPERATION_MODE_AUTO,
     OPERATION_MODE_COOL,
     OPERATION_MODE_HEAT,
@@ -242,7 +243,7 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
     #     self._signal_thermostat_update()
 
     async def async_set_humidity(self, humidity: int) -> None:
-        """Dehumidify target."""
+        """Set Dehumidify target."""
 
         if self._zone.get_current_mode() == OPERATION_MODE_HEAT:
             if self._thermostat.has_humidify_support():
@@ -256,24 +257,39 @@ class NexiaZone(NexiaThermostatZoneEntity, ClimateEntity):
                     int(x * 100)
                     for x in self._thermostat.get_humidify_setpoint_limits()
                 )
-                humidity = closest_value(humidify_vals, 5, humidity)
+                humidity = closest_value(humidify_vals, HUMIDITY_STEP, humidity)
                 await self.async_set_humidify_setpoint(humidity)
             if self._thermostat.has_dehumidify_support():
                 dehumidify_vals: tuple[int, ...] = tuple(
                     int(x * 100)
                     for x in self._thermostat.get_dehumidify_setpoint_limits()
                 )
-                humidity = closest_value(dehumidify_vals, 5, humidity)
+                humidity = closest_value(dehumidify_vals, HUMIDITY_STEP, humidity)
                 await self.async_set_humidify_setpoint(humidity)
         self._signal_thermostat_update()
 
     @property
-    def target_humidity(self):
-        """Humidity indoors setpoint."""
-        if self._has_dehumidify_support:
-            return percent_conv(self._thermostat.get_dehumidify_setpoint())
-        if self._has_humidify_support:
-            return percent_conv(self._thermostat.get_humidify_setpoint())
+    def target_humidity(self) -> float | None:
+        """Humidity indoors setpoint.
+
+        In systems that support both humidification and dehumidification,
+        two values for target exist. We must choose one to return.
+
+        :return: The target humidity setpoint.
+        """
+        if self._zone.get_current_mode() == OPERATION_MODE_HEAT:
+            if self._has_humidify_support:
+                return percent_conv(self._thermostat.get_humidify_setpoint())
+        if self._zone.get_current_mode() == OPERATION_MODE_COOL:
+            if self._has_dehumidify_support:
+                return percent_conv(self._thermostat.get_dehumidify_setpoint())
+        else:
+            # Fall back to previous behavior of returning dehumidify value then humidify
+            if self._has_dehumidify_support:
+                return percent_conv(self._thermostat.get_dehumidify_setpoint())
+            if self._has_humidify_support:
+                return percent_conv(self._thermostat.get_humidify_setpoint())
+
         return None
 
     @property

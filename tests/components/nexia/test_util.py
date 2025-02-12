@@ -23,7 +23,10 @@ async def test_percent_conv() -> None:
 async def test_closest_value() -> None:
     """Test closest value."""
 
-    assert util.closest_value((1, 10), 2, 6) == 5
-    assert util.closest_value((1, 10), 2, 0) == 1
-    assert util.closest_value((1, 10), 2, 11) != 10
-    assert util.closest_value((1, 10), 3, 5) != 6
+    assert util.closest_value((10, 35), 5, 18) == 20
+    assert util.closest_value((10, 35), 5, 15) == 15
+    assert util.closest_value((0, 100), 5, 89) == 90
+
+    # Test edge cases
+    assert util.closest_value((35, 65), 5, 15) == 35
+    assert util.closest_value((10, 35), 5, 55) == 35

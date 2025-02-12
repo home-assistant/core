@@ -27,7 +27,8 @@ def closest_value(range_tuple, step, target):
     :return: Closest value
     """
     # Generate values in the specified range with the given step
-    values = list(range(range_tuple[0], range_tuple[1] + 1, step))
+    values = list(range(range_tuple[0], range_tuple[1] + step, step))
+    values.append(range_tuple[1])  # Ensure maximum value is included
 
     # Find the closest value
     return min(values, key=lambda v: abs(v - target))
