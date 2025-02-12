@@ -2668,23 +2668,6 @@
       "apiVersion": 1,
       "commands": {},
       "deviceId": "0",
-      "feature": "ventilation.operating.modes.standby",
-      "gatewayId": "################",
-      "isEnabled": true,
-      "isReady": true,
-      "properties": {
-        "active": {
-          "type": "boolean",
-          "value": false
-        }
-      },
-      "timestamp": "2025-02-10T14:01:48.216Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.standby"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {},
-      "deviceId": "0",
       "feature": "ventilation.operating.modes.ventilation",
       "gatewayId": "################",
       "isEnabled": true,
