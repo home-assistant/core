@@ -57,6 +57,8 @@ async def async_get_firmware_info(
     firmware_version = None
 
     if config_entry.state in (
+        # This function is called during OTBR config entry setup so we need to account
+        # for both config entry states
         ConfigEntryState.LOADED,
         ConfigEntryState.SETUP_IN_PROGRESS,
     ):
