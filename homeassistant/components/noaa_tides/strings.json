@@ -1,0 +1,45 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Search [NOAA Tide Predictions](https://tidesandcurrents.noaa.gov/tide_predictions.html) to find a Station ID.",
+        "data": {
+          "station_id": "Station ID",
+          "unit_system": "Unit System",
+          "time_zone": "Time Zone"
+        }
+      }
+    },
+    "error": {
+      "station_not_found": "Station not found"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "unit_system": "Unit System",
+          "time_zone": "Time Zone"
+        }
+      }
+    }
+  },
+  "selector": {
+    "timezones": {
+      "options": {
+        "gmt": "GMT",
+        "lst": "Local Standard Time",
+        "lst_ldt": "Local Standard Time / Local Daylight Time"
+      }
+    },
+    "unit_systems": {
+      "options": {
+        "metric": "Metric",
+        "english": "English"
+      }
+    }
+  }
+}
