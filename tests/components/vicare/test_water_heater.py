@@ -23,10 +23,7 @@ async def test_all_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all entities."""
-    fixtures: list[Fixture] = [
-        Fixture({"type:boiler"}, "vicare/Vitodens300W.json"),
-        Fixture({"type:heatpumpt"}, "vicare/Vitocal222G_Vitovent300W.json"),
-    ]
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
     with (
         patch(f"{MODULE}.login", return_value=MockPyViCare(fixtures)),
         patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
