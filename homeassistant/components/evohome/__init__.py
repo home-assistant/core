@@ -23,6 +23,7 @@ from evohomeasync2.schemas.const import (
 )
 import voluptuous as vol
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PASSWORD,
@@ -103,7 +104,15 @@ class EvoData:
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up evohome integration from YAML (deprecated)."""
+    # Return True but do nothing else to avoid old YAML configs interfering
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up the Evohome integration."""
+
+    config = {DOMAIN: dict(entry.data)}
 
     token_manager = TokenManager(
         hass,
@@ -135,6 +144,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         loc_idx=coordinator.loc_idx,
         tcs=coordinator.tcs,
     )
+
+    entry.runtime_data = coordinator
+
+    # await hass.config_entries.async_forward_entry_setups(
+    #     entry, (Platform.CLIMATE, Platform.WATER_HEATER)
+    # )
 
     hass.async_create_task(
         async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)

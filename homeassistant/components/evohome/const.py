@@ -12,11 +12,12 @@ STORAGE_VER: Final = 1
 STORAGE_KEY: Final = DOMAIN
 
 CONF_LOCATION_IDX: Final = "location_idx"
+DEFAULT_LOCATION_IDX: Final = 0
 
 USER_DATA: Final = "user_data"
 
 SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
-SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
+SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=180)  # NOTE: breaking change (was 60)
 
 ATTR_SYSTEM_MODE: Final = "mode"
 ATTR_DURATION_DAYS: Final = "period"
