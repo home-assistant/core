@@ -15,9 +15,9 @@ rules:
   docs-installation-instructions: done
   docs-removal-instructions: done
   entity-event-setup:
-    status: done
+    status: exempt
     comment: |
-      Not used
+      Entities don't subscribe to events explicitly
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
