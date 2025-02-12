@@ -536,6 +536,118 @@ async def test_remove_entry(
     assert not entity_entry_list
 
 
+async def test_remove_subentry(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that we can remove a subentry."""
+    subentry_id = "blabla"
+    update_listener_calls = []
+
+    async def mock_setup_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock setting up entry."""
+        await hass.config_entries.async_forward_entry_setups(entry, ["light"])
+        return True
+
+    mock_remove_entry = AsyncMock(return_value=None)
+
+    entry_entity = MockEntity(unique_id="0001", name="Test Entry Entity")
+    subentry_entity = MockEntity(unique_id="0002", name="Test Subentry Entity")
+
+    async def mock_setup_entry_platform(
+        hass: HomeAssistant,
+        entry: config_entries.ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setting up platform."""
+        async_add_entities([entry_entity])
+        async_add_entities([subentry_entity], config_subentry_id=subentry_id)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "test",
+            async_setup_entry=mock_setup_entry,
+            async_remove_entry=mock_remove_entry,
+        ),
+    )
+    mock_platform(
+        hass, "test.light", MockPlatform(async_setup_entry=mock_setup_entry_platform)
+    )
+    mock_platform(hass, "test.config_flow", None)
+
+    entry = MockConfigEntry(
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={"first": True},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                unique_id="unique",
+                title="Mock title",
+            )
+        ]
+    )
+
+    async def update_listener(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> None:
+        """Test function."""
+        assert entry.subentries == {}
+        update_listener_calls.append(None)
+
+    entry.add_update_listener(update_listener)
+    entry.add_to_manager(manager)
+
+    # Setup entry
+    await manager.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check entity states got added
+    assert hass.states.get("light.test_entry_entity") is not None
+    assert hass.states.get("light.test_subentry_entity") is not None
+    assert len(hass.states.async_all()) == 2
+
+    # Check entities got added to entity registry
+    assert len(entity_registry.entities) == 2
+    entry_entity_entry = entity_registry.entities["light.test_entry_entity"]
+    assert entry_entity_entry.config_entry_id == entry.entry_id
+    assert entry_entity_entry.config_subentry_id is None
+    subentry_entity_entry = entity_registry.entities["light.test_subentry_entity"]
+    assert subentry_entity_entry.config_entry_id == entry.entry_id
+    assert subentry_entity_entry.config_subentry_id == subentry_id
+
+    # Remove subentry
+    result = manager.async_remove_subentry(entry, subentry_id)
+    assert len(update_listener_calls) == 1
+    await hass.async_block_till_done()
+
+    # Check that remove went well
+    assert result is True
+
+    # Check the remove callback was not invoked.
+    assert mock_remove_entry.call_count == 0
+
+    # Check that the config subentry was removed.
+    assert entry.subentries == {}
+
+    # Check that entity state has been removed
+    assert hass.states.get("light.test_entry_entity") is not None
+    assert hass.states.get("light.test_subentry_entity") is None
+    assert len(hass.states.async_all()) == 1
+
+    # Check that entity registry entry has been removed
+    entity_entry_list = list(entity_registry.entities)
+    assert entity_entry_list == ["light.test_entry_entity"]
+
+    # Try to remove the subentry again
+    with pytest.raises(config_entries.UnknownSubEntry):
+        manager.async_remove_subentry(entry, subentry_id)
+    assert len(update_listener_calls) == 1
+
+
 async def test_remove_entry_non_unique_unique_id(
     hass: HomeAssistant,
     manager: config_entries.ConfigEntries,
@@ -1544,6 +1656,63 @@ async def test_update_entry_options_and_trigger_listener(
     assert len(update_listener_calls) == 1
 
 
+async def test_updating_subentry_data(
+    manager: config_entries.ConfigEntries, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that we can update an entry data."""
+    created = dt_util.utcnow()
+    subentry_id = "blabla"
+    entry = MockConfigEntry(
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={"first": True},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                unique_id="unique",
+                title="Mock title",
+            )
+        ]
+    )
+    subentry = entry.subentries[subentry_id]
+    entry.add_to_manager(manager)
+
+    assert len(manager.async_entries()) == 1
+    assert manager.async_entries()[0] == entry
+    assert entry.created_at == created
+    assert entry.modified_at == created
+
+    freezer.tick()
+
+    assert manager.async_update_subentry(entry, subentry) is False
+    assert entry.subentries == {
+        subentry_id: config_entries.ConfigSubentry(
+            data={"first": True},
+            subentry_id=subentry_id,
+            subentry_type="test",
+            title="Mock title",
+            unique_id="unique",
+        )
+    }
+    assert entry.modified_at == created
+    assert manager.async_entries()[0].modified_at == created
+
+    freezer.tick()
+    modified = dt_util.utcnow()
+
+    assert manager.async_update_subentry(entry, subentry, data={"second": True}) is True
+    assert entry.subentries == {
+        subentry_id: config_entries.ConfigSubentry(
+            data={"second": True},
+            subentry_id=subentry_id,
+            subentry_type="test",
+            title="Mock title",
+            unique_id="unique",
+        )
+    }
+    assert entry.modified_at == modified
+    assert manager.async_entries()[0].modified_at == modified
+
+
 async def test_update_subentry_and_trigger_listener(
     hass: HomeAssistant, manager: config_entries.ConfigEntries
 ) -> None:
@@ -1575,12 +1744,27 @@ async def test_update_subentry_and_trigger_listener(
     assert entry.subentries == expected_subentries
     assert len(update_listener_calls) == 1
 
+    assert (
+        manager.async_update_subentry(
+            entry,
+            subentry,
+            data={"test": "test2"},
+            title="New title",
+            unique_id="test2",
+        )
+        is True
+    )
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert entry.subentries == expected_subentries
+    assert len(update_listener_calls) == 2
+
     expected_subentries = {}
     assert manager.async_remove_subentry(entry, subentry.subentry_id) is True
 
     await hass.async_block_till_done(wait_background_tasks=True)
     assert entry.subentries == expected_subentries
-    assert len(update_listener_calls) == 2
+    assert len(update_listener_calls) == 3
 
 
 async def test_setup_raise_not_ready(
@@ -2021,6 +2205,58 @@ async def test_entry_subentry(
                 "unique_id": "test",
             },
         )
+
+        assert entry.data == {"first": True}
+        assert entry.options == {}
+        subentry_id = list(entry.subentries)[0]
+        assert entry.subentries == {
+            subentry_id: config_entries.ConfigSubentry(
+                data={"second": True},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            )
+        }
+        assert entry.supported_subentry_types == {
+            "test": {"supports_reconfigure": False}
+        }
+
+
+async def test_subentry_flow(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test that we can execute a subentry flow."""
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    entry = MockConfigEntry(domain="test", data={"first": True})
+    entry.add_to_manager(manager)
+
+    class TestFlow(config_entries.ConfigFlow):
+        """Test flow."""
+
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
+            """Test subentry flow handler."""
+
+            async def async_step_user(self, user_input=None):
+                return self.async_create_entry(
+                    title="Mock title",
+                    data={"second": True},
+                    unique_id="test",
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: ConfigEntry
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    with mock_config_flow("test", TestFlow):
+        result = await manager.subentries.async_init(
+            (entry.entry_id, "test"), context={"source": "user"}
+        )
+        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
 
         assert entry.data == {"first": True}
         assert entry.options == {}
@@ -6002,6 +6238,207 @@ async def test_update_entry_and_reload(
     assert len(comp.async_unload_entry.mock_calls) == calls_entry_load_unload[1]
 
 
+@pytest.mark.parametrize(
+    (
+        "kwargs",
+        "expected_title",
+        "expected_unique_id",
+        "expected_data",
+        "raises",
+    ),
+    [
+        (
+            {
+                "unique_id": "5678",
+                "title": "Updated title",
+                "data": {"vendor": "data2"},
+            },
+            "Updated title",
+            "5678",
+            {"vendor": "data2"},
+            None,
+        ),
+        (
+            {
+                "unique_id": "1234",
+                "title": "Test",
+                "data": {"vendor": "data"},
+            },
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            None,
+        ),
+        (
+            {},
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            None,
+        ),
+        (
+            {
+                "data": {"buyer": "me"},
+            },
+            "Test",
+            "1234",
+            {"buyer": "me"},
+            None,
+        ),
+        (
+            {"data_updates": {"buyer": "me"}},
+            "Test",
+            "1234",
+            {"vendor": "data", "buyer": "me"},
+            None,
+        ),
+        (
+            {
+                "unique_id": "5678",
+                "title": "Updated title",
+                "data": {"vendor": "data2"},
+                "data_updates": {"buyer": "me"},
+            },
+            "Test",
+            "1234",
+            {"vendor": "data"},
+            ValueError,
+        ),
+    ],
+    ids=[
+        "changed_entry_default",
+        "unchanged_entry_default",
+        "no_kwargs",
+        "replace_data",
+        "update_data",
+        "update_and_data_raises",
+    ],
+)
+async def test_update_subentry_and_abort(
+    hass: HomeAssistant,
+    expected_title: str,
+    expected_unique_id: str,
+    expected_data: dict[str, Any],
+    kwargs: dict[str, Any],
+    raises: type[Exception] | None,
+) -> None:
+    """Test updating an entry and reloading."""
+    subentry_id = "blabla"
+    entry = MockConfigEntry(
+        domain="comp",
+        unique_id="entry_unique_id",
+        title="entry_title",
+        data={},
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={"vendor": "data"},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                unique_id="1234",
+                title="Test",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+    subentry = entry.subentries[subentry_id]
+
+    comp = MockModule("comp")
+    mock_integration(hass, comp)
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
+            async def async_step_reconfigure(self, user_input=None):
+                return self.async_update_and_abort(
+                    self._get_reconfigure_entry(),
+                    self._get_reconfigure_subentry(),
+                    **kwargs,
+                )
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: config_entries.ConfigEntry
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    err: Exception
+    with mock_config_flow("comp", TestFlow):
+        try:
+            result = await entry.start_subentry_reconfigure_flow(
+                hass, "test", subentry_id
+            )
+        except Exception as ex:  # noqa: BLE001
+            err = ex
+
+    await hass.async_block_till_done()
+
+    subentry = entry.subentries[subentry_id]
+    assert subentry.title == expected_title
+    assert subentry.unique_id == expected_unique_id
+    assert subentry.data == expected_data
+    if raises:
+        assert isinstance(err, raises)
+    else:
+        assert result["type"] == FlowResultType.ABORT
+        assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_subentry_create_subentry(hass: HomeAssistant) -> None:
+    """Test it's not allowed to create a subentry from a subentry reconfigure flow."""
+    subentry_id = "blabla"
+    entry = MockConfigEntry(
+        domain="comp",
+        unique_id="entry_unique_id",
+        title="entry_title",
+        data={},
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={"vendor": "data"},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                unique_id="1234",
+                title="Test",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    comp = MockModule("comp")
+    mock_integration(hass, comp)
+    mock_platform(hass, "comp.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
+            async def async_step_reconfigure(self, user_input=None):
+                return self.async_create_entry(title="New Subentry", data={})
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: config_entries.ConfigEntry
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    with (
+        mock_config_flow("comp", TestFlow),
+        pytest.raises(ValueError, match="Source is reconfigure, expected user"),
+    ):
+        await entry.start_subentry_reconfigure_flow(hass, "test", subentry_id)
+
+    await hass.async_block_till_done()
+
+    assert entry.subentries == {
+        subentry_id: config_entries.ConfigSubentry(
+            data={"vendor": "data"},
+            subentry_id=subentry_id,
+            subentry_type="test",
+            title="Test",
+            unique_id="1234",
+        )
+    }
+
+
 @pytest.mark.parametrize("unique_id", [["blah", "bleh"], {"key": "value"}])
 async def test_unhashable_unique_id_fails(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, unique_id: Any
@@ -6543,6 +6980,23 @@ async def test_updating_non_added_entry_raises(hass: HomeAssistant) -> None:
 
     with pytest.raises(config_entries.UnknownEntry, match=entry.entry_id):
         hass.config_entries.async_update_entry(entry, unique_id="new_id")
+
+
+async def test_updating_non_added_subentry_raises(hass: HomeAssistant) -> None:
+    """Test updating a non added entry raises UnknownEntry."""
+    entry = MockConfigEntry(domain="test")
+    subentry = config_entries.ConfigSubentry(
+        data={},
+        subentry_type="test",
+        title="Mock title",
+        unique_id="unique",
+    )
+
+    with pytest.raises(config_entries.UnknownEntry, match=entry.entry_id):
+        hass.config_entries.async_update_subentry(entry, subentry, unique_id="new_id")
+    entry.add_to_hass(hass)
+    with pytest.raises(config_entries.UnknownSubEntry, match=subentry.subentry_id):
+        hass.config_entries.async_update_subentry(entry, subentry, unique_id="new_id")
 
 
 async def test_reload_during_setup(hass: HomeAssistant) -> None:
@@ -7486,6 +7940,114 @@ async def test_get_reconfigure_entry(
             "test", context={"source": config_entries.SOURCE_USER}
         )
         assert result["reason"] == "Source is user, expected reconfigure: -"
+
+
+async def test_subentry_get_reconfigure_entry(
+    hass: HomeAssistant, manager: config_entries.ConfigEntries
+) -> None:
+    """Test subentry _get_reconfigure_entry and _get_reconfigure_subentry behavior."""
+    subentry_id = "mock_subentry_id"
+    entry = MockConfigEntry(
+        data={},
+        domain="test",
+        entry_id="mock_entry_id",
+        title="entry_title",
+        unique_id="entry_unique_id",
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={"vendor": "data"},
+                subentry_id=subentry_id,
+                subentry_type="test",
+                unique_id="1234",
+                title="Test",
+            )
+        ],
+    )
+
+    entry.add_to_hass(hass)
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+
+    class TestFlow(config_entries.ConfigFlow):
+        class SubentryFlowHandler(config_entries.ConfigSubentryFlow):
+            async def async_step_user(self, user_input=None):
+                """Test user step."""
+                return await self._async_step_confirm()
+
+            async def async_step_reconfigure(self, user_input=None):
+                """Test reauth step."""
+                return await self._async_step_confirm()
+
+            async def _async_step_confirm(self):
+                """Confirm input."""
+                try:
+                    entry = self._get_reconfigure_entry()
+                except ValueError as err:
+                    reason = str(err)
+                else:
+                    reason = f"Found entry {entry.title}"
+                try:
+                    entry_id = self._reconfigure_entry_id
+                except ValueError:
+                    reason = f"{reason}: -"
+                else:
+                    reason = f"{reason}: {entry_id}"
+
+                try:
+                    subentry = self._get_reconfigure_subentry()
+                except ValueError as err:
+                    reason = f"{reason}/{err}"
+                except config_entries.UnknownSubEntry:
+                    reason = f"{reason}/Subentry not found"
+                else:
+                    reason = f"{reason}/Found subentry {subentry.title}"
+                try:
+                    subentry_id = self._reconfigure_subentry_id
+                except ValueError:
+                    reason = f"{reason}: -"
+                else:
+                    reason = f"{reason}: {subentry_id}"
+                return self.async_abort(reason=reason)
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: config_entries.ConfigEntry
+        ) -> dict[str, type[config_entries.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    # A reconfigure flow finds the config entry
+    with mock_config_flow("test", TestFlow):
+        result = await entry.start_subentry_reconfigure_flow(hass, "test", subentry_id)
+        assert (
+            result["reason"]
+            == "Found entry entry_title: mock_entry_id/Found subentry Test: mock_subentry_id"
+        )
+
+    # The subentry_id does not exist
+    with mock_config_flow("test", TestFlow):
+        result = await manager.subentries.async_init(
+            (entry.entry_id, "test"),
+            context={
+                "source": config_entries.SOURCE_RECONFIGURE,
+                "subentry_id": "01JRemoved",
+            },
+        )
+        assert (
+            result["reason"]
+            == "Found entry entry_title: mock_entry_id/Subentry not found: 01JRemoved"
+        )
+
+    # A user flow does not have access to the config entry or subentry
+    with mock_config_flow("test", TestFlow):
+        result = await manager.subentries.async_init(
+            (entry.entry_id, "test"), context={"source": config_entries.SOURCE_USER}
+        )
+        assert (
+            result["reason"]
+            == "Source is user, expected reconfigure: -/Source is user, expected reconfigure: -"
+        )
 
 
 async def test_reauth_helper_alignment(
