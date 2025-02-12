@@ -69,7 +69,7 @@ STOOKWIJZER_SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: StookwijzerConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Stookwijzer sensor from a config entry."""
     async_add_entities(
