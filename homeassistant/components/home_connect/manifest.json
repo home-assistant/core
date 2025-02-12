@@ -6,6 +6,7 @@
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/home_connect",
   "iot_class": "cloud_push",
-  "loggers": ["homeconnect"],
-  "requirements": ["aiohomeconnect==0.12.1"]
+  "loggers": ["aiohomeconnect"],
+  "requirements": ["aiohomeconnect==0.12.3"],
+  "single_config_entry": true
 }

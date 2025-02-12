@@ -1,14 +1,15 @@
 """Test the cloud backup platform."""
 
-from collections.abc import AsyncGenerator, AsyncIterator, Generator
+from collections.abc import AsyncGenerator, Generator
 from io import StringIO
 from typing import Any
 from unittest.mock import Mock, PropertyMock, patch
 
 from aiohttp import ClientError
 from hass_nabucasa import CloudError
+from hass_nabucasa.api import CloudApiNonRetryableError
+from hass_nabucasa.files import FilesError
 import pytest
-from yarl import URL
 
 from homeassistant.components.backup import (
     DOMAIN as BACKUP_DOMAIN,
@@ -22,9 +23,18 @@ from homeassistant.components.cloud.const import EVENT_CLOUD_EVENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
+from homeassistant.util.aiohttp import MockStreamReader
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
+
+
+class MockStreamReaderChunked(MockStreamReader):
+    """Mock a stream reader with simulated chunked data."""
+
+    async def readchunk(self) -> tuple[bytes, bool]:
+        """Read bytes."""
+        return (self._content.read(), False)
 
 
 @pytest.fixture(autouse=True)
@@ -53,49 +63,6 @@ def mock_delete_file() -> Generator[MagicMock]:
         spec_set=True,
     ) as delete_file:
         yield delete_file
-
-
-@pytest.fixture
-def mock_get_download_details() -> Generator[MagicMock]:
-    """Mock list files."""
-    with patch(
-        "homeassistant.components.cloud.backup.async_files_download_details",
-        spec_set=True,
-    ) as download_details:
-        download_details.return_value = {
-            "url": (
-                "https://blabla.cloudflarestorage.com/blabla/backup/"
-                "462e16810d6841228828d9dd2f9e341e.tar?X-Amz-Algorithm=blah"
-            ),
-        }
-        yield download_details
-
-
-@pytest.fixture
-def mock_get_upload_details() -> Generator[MagicMock]:
-    """Mock list files."""
-    with patch(
-        "homeassistant.components.cloud.backup.async_files_upload_details",
-        spec_set=True,
-    ) as download_details:
-        download_details.return_value = {
-            "url": (
-                "https://blabla.cloudflarestorage.com/blabla/backup/"
-                "ea5c969e492c49df89d432a1483b8dc3.tar?X-Amz-Algorithm=blah"
-            ),
-            "headers": {
-                "content-md5": "HOhSM3WZkpHRYGiz4YRGIQ==",
-                "x-amz-meta-storage-type": "backup",
-                "x-amz-meta-b64json": (
-                    "eyJhZGRvbnMiOltdLCJiYWNrdXBfaWQiOiJjNDNiNWU2MCIsImRhdGUiOiIyMDI0LT"
-                    "EyLTAzVDA0OjI1OjUwLjMyMDcwMy0wNTowMCIsImRhdGFiYXNlX2luY2x1ZGVkIjpm"
-                    "YWxzZSwiZm9sZGVycyI6W10sImhvbWVhc3Npc3RhbnRfaW5jbHVkZWQiOnRydWUsIm"
-                    "hvbWVhc3Npc3RhbnRfdmVyc2lvbiI6IjIwMjQuMTIuMC5kZXYwIiwibmFtZSI6ImVy"
-                    "aWsiLCJwcm90ZWN0ZWQiOnRydWUsInNpemUiOjM1NjI0OTYwfQ=="
-                ),
-            },
-        }
-        yield download_details
 
 
 @pytest.fixture
@@ -174,6 +141,7 @@ async def test_agents_list_backups(
             "backup_id": "23e64aec",
             "date": "2024-11-22T11:48:48.727189+01:00",
             "database_included": True,
+            "extra_metadata": {},
             "folders": [],
             "homeassistant_included": True,
             "homeassistant_version": "2024.12.0.dev0",
@@ -223,6 +191,7 @@ async def test_agents_list_backups_fail_cloud(
                 "backup_id": "23e64aec",
                 "date": "2024-11-22T11:48:48.727189+01:00",
                 "database_included": True,
+                "extra_metadata": {},
                 "folders": [],
                 "homeassistant_included": True,
                 "homeassistant_version": "2024.12.0.dev0",
@@ -262,52 +231,30 @@ async def test_agents_download(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    mock_get_download_details: Mock,
+    cloud: Mock,
 ) -> None:
     """Test agent download backup."""
     client = await hass_client()
     backup_id = "23e64aec"
 
-    aioclient_mock.get(
-        mock_get_download_details.return_value["url"], content=b"backup data"
-    )
+    cloud.files.download.return_value = MockStreamReaderChunked(b"backup data")
 
     resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=cloud.cloud")
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
 
 
-@pytest.mark.parametrize("side_effect", [ClientError, CloudError])
-@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
-async def test_agents_download_fail_cloud(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-    mock_get_download_details: Mock,
-    side_effect: Exception,
-) -> None:
-    """Test agent download backup, when cloud user is logged in."""
-    client = await hass_client()
-    backup_id = "23e64aec"
-    mock_get_download_details.side_effect = side_effect
-
-    resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=cloud.cloud")
-    assert resp.status == 500
-    content = await resp.content.read()
-    assert "Failed to get download details" in content.decode()
-
-
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
 async def test_agents_download_fail_get(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_get_download_details: Mock,
+    cloud: Mock,
 ) -> None:
     """Test agent download backup, when cloud user is logged in."""
     client = await hass_client()
     backup_id = "23e64aec"
 
-    aioclient_mock.get(mock_get_download_details.return_value["url"], status=500)
+    cloud.files.download.side_effect = FilesError("Oh no :(")
 
     resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=cloud.cloud")
     assert resp.status == 500
@@ -334,8 +281,7 @@ async def test_agents_upload(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
-    aioclient_mock: AiohttpClientMocker,
-    mock_get_upload_details: Mock,
+    cloud: Mock,
 ) -> None:
     """Test agent upload backup."""
     client = await hass_client()
@@ -353,8 +299,6 @@ async def test_agents_upload(
         protected=True,
         size=0,
     )
-    aioclient_mock.put(mock_get_upload_details.return_value["url"])
-
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
@@ -372,26 +316,22 @@ async def test_agents_upload(
             data={"file": StringIO("test")},
         )
 
-    assert len(aioclient_mock.mock_calls) == 1
-    assert aioclient_mock.mock_calls[-1][0] == "PUT"
-    assert aioclient_mock.mock_calls[-1][1] == URL(
-        mock_get_upload_details.return_value["url"]
-    )
-    assert isinstance(aioclient_mock.mock_calls[-1][2], AsyncIterator)
+    assert len(cloud.files.upload.mock_calls) == 1
+    metadata = cloud.files.upload.mock_calls[-1].kwargs["metadata"]
+    assert metadata["backup_id"] == backup_id
 
     assert resp.status == 201
     assert f"Uploading backup {backup_id}" in caplog.text
 
 
-@pytest.mark.parametrize("put_mock_kwargs", [{"status": 500}, {"exc": TimeoutError}])
+@pytest.mark.parametrize("side_effect", [FilesError("Boom!"), CloudError("Boom!")])
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
-async def test_agents_upload_fail_put(
+async def test_agents_upload_fail(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_storage: dict[str, Any],
-    aioclient_mock: AiohttpClientMocker,
-    mock_get_upload_details: Mock,
-    put_mock_kwargs: dict[str, Any],
+    side_effect: Exception,
+    cloud: Mock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test agent upload backup fails."""
@@ -410,7 +350,8 @@ async def test_agents_upload_fail_put(
         protected=True,
         size=0,
     )
-    aioclient_mock.put(mock_get_upload_details.return_value["url"], **put_mock_kwargs)
+
+    cloud.files.upload.side_effect = side_effect
 
     with (
         patch(
@@ -433,9 +374,9 @@ async def test_agents_upload_fail_put(
         )
         await hass.async_block_till_done()
 
-    assert len(aioclient_mock.mock_calls) == 2
     assert "Failed to upload backup, retrying (2/2) in 60s" in caplog.text
     assert resp.status == 201
+    assert cloud.files.upload.call_count == 2
     store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
     assert len(store_backups) == 1
     stored_backup = store_backups[0]
@@ -443,19 +384,32 @@ async def test_agents_upload_fail_put(
     assert stored_backup["failed_agent_ids"] == ["cloud.cloud"]
 
 
-@pytest.mark.parametrize("side_effect", [ClientError, CloudError])
-@pytest.mark.usefixtures("cloud_logged_in")
-async def test_agents_upload_fail_cloud(
+@pytest.mark.parametrize(
+    ("side_effect", "logmsg"),
+    [
+        (
+            CloudApiNonRetryableError("Boom!", code="NC-SH-FH-03"),
+            "The backup size of 13.37GB is too large to be uploaded to Home Assistant Cloud",
+        ),
+        (
+            CloudApiNonRetryableError("Boom!", code="NC-CE-01"),
+            "Failed to upload backup Boom!",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
+async def test_agents_upload_fail_non_retryable(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     hass_storage: dict[str, Any],
-    mock_get_upload_details: Mock,
     side_effect: Exception,
+    logmsg: str,
+    cloud: Mock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test agent upload backup, when cloud user is logged in."""
+    """Test agent upload backup fails with non-retryable error."""
     client = await hass_client()
     backup_id = "test-backup"
-    mock_get_upload_details.side_effect = side_effect
     test_backup = AgentBackup(
         addons=[AddonInfo(name="Test", slug="test", version="1.0.0")],
         backup_id=backup_id,
@@ -467,8 +421,11 @@ async def test_agents_upload_fail_cloud(
         homeassistant_version="2024.12.0",
         name="Test",
         protected=True,
-        size=0,
+        size=14358124749,
     )
+
+    cloud.files.upload.side_effect = side_effect
+
     with (
         patch(
             "homeassistant.components.backup.manager.BackupManager.async_get_backup",
@@ -478,7 +435,6 @@ async def test_agents_upload_fail_cloud(
             return_value=test_backup,
         ),
         patch("pathlib.Path.open") as mocked_open,
-        patch("homeassistant.components.cloud.backup.asyncio.sleep"),
     ):
         mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
         fetch_backup.return_value = test_backup
@@ -488,7 +444,9 @@ async def test_agents_upload_fail_cloud(
         )
         await hass.async_block_till_done()
 
+    assert logmsg in caplog.text
     assert resp.status == 201
+    assert cloud.files.upload.call_count == 1
     store_backups = hass_storage[BACKUP_DOMAIN]["data"]["backups"]
     assert len(store_backups) == 1
     stored_backup = store_backups[0]

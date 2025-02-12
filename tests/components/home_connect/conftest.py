@@ -18,9 +18,14 @@ from aiohomeconnect.model import (
     EventKey,
     EventMessage,
     EventType,
+    GetSetting,
+    HomeAppliance,
     Option,
+    Program,
+    SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
+from aiohomeconnect.model.program import EnumerateProgram
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -143,6 +148,14 @@ async def mock_integration_setup(
     return run
 
 
+def _get_specific_appliance_side_effect(ha_id: str) -> HomeAppliance:
+    """Get specific appliance side effect."""
+    for appliance in copy.deepcopy(MOCK_APPLIANCES).homeappliances:
+        if appliance.ha_id == ha_id:
+            return appliance
+    raise HomeConnectApiError("error.key", "error description")
+
+
 def _get_set_program_side_effect(
     event_queue: asyncio.Queue[list[EventMessage]], event_key: EventKey
 ):
@@ -227,7 +240,14 @@ async def _get_all_programs_side_effect(ha_id: str) -> ArrayOfPrograms:
     if appliance_type not in MOCK_PROGRAMS:
         raise HomeConnectApiError("error.key", "error description")
 
-    return ArrayOfPrograms.from_dict(MOCK_PROGRAMS[appliance_type]["data"])
+    return ArrayOfPrograms(
+        [
+            EnumerateProgram.from_dict(program)
+            for program in MOCK_PROGRAMS[appliance_type]["data"]["programs"]
+        ],
+        Program.from_dict(MOCK_PROGRAMS[appliance_type]["data"]["programs"][0]),
+        Program.from_dict(MOCK_PROGRAMS[appliance_type]["data"]["programs"][0]),
+    )
 
 
 async def _get_settings_side_effect(ha_id: str) -> ArrayOfSettings:
@@ -242,6 +262,24 @@ async def _get_settings_side_effect(ha_id: str) -> ArrayOfSettings:
             {},
         ).get("data", {"settings": []})
     )
+
+
+async def _get_setting_side_effect(ha_id: str, setting_key: SettingKey):
+    """Get setting."""
+    for appliance in MOCK_APPLIANCES.homeappliances:
+        if appliance.ha_id == ha_id:
+            settings = MOCK_SETTINGS.get(
+                next(
+                    appliance
+                    for appliance in MOCK_APPLIANCES.homeappliances
+                    if appliance.ha_id == ha_id
+                ).type,
+                {},
+            ).get("data", {"settings": []})
+            for setting_dict in cast(list[dict], settings["settings"]):
+                if setting_dict["key"] == setting_key:
+                    return GetSetting.from_dict(setting_dict)
+    raise HomeConnectApiError("error.key", "error description")
 
 
 @pytest.fixture(name="client")
@@ -265,7 +303,10 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
             for event in await event_queue.get():
                 yield event
 
-    mock.get_home_appliances = AsyncMock(return_value=MOCK_APPLIANCES)
+    mock.get_home_appliances = AsyncMock(return_value=copy.deepcopy(MOCK_APPLIANCES))
+    mock.get_specific_appliance = AsyncMock(
+        side_effect=_get_specific_appliance_side_effect
+    )
     mock.stream_all_events = stream_all_events
     mock.start_program = AsyncMock(
         side_effect=_get_set_program_side_effect(
@@ -287,6 +328,7 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
         side_effect=_get_set_key_value_side_effect(event_queue, "setting_key"),
     )
     mock.get_settings = AsyncMock(side_effect=_get_settings_side_effect)
+    mock.get_setting = AsyncMock(side_effect=_get_setting_side_effect)
     mock.get_status = AsyncMock(return_value=copy.deepcopy(MOCK_STATUS))
     mock.get_all_programs = AsyncMock(side_effect=_get_all_programs_side_effect)
     mock.put_command = AsyncMock()
@@ -314,7 +356,7 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
             for event in await event_queue.get():
                 yield event
 
-    mock.get_home_appliances = AsyncMock(return_value=MOCK_APPLIANCES)
+    mock.get_home_appliances = AsyncMock(return_value=copy.deepcopy(MOCK_APPLIANCES))
     mock.stream_all_events = stream_all_events
 
     mock.start_program = AsyncMock(side_effect=exception)

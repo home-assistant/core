@@ -1,18 +1,10 @@
 """Fixtures for OneDrive tests."""
 
 from collections.abc import AsyncIterator, Generator
-from html import escape
 from json import dumps
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from httpx import Response
-from msgraph.generated.models.drive_item import DriveItem
-from msgraph.generated.models.drive_item_collection_response import (
-    DriveItemCollectionResponse,
-)
-from msgraph.generated.models.upload_session import UploadSession
-from msgraph_core.models import LargeFileUploadSession
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -23,7 +15,15 @@ from homeassistant.components.onedrive.const import DOMAIN, OAUTH_SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import BACKUP_METADATA, CLIENT_ID, CLIENT_SECRET
+from .const import (
+    BACKUP_METADATA,
+    CLIENT_ID,
+    CLIENT_SECRET,
+    MOCK_APPROOT,
+    MOCK_BACKUP_FILE,
+    MOCK_BACKUP_FOLDER,
+    MOCK_METADATA_FILE,
+)
 
 from tests.common import MockConfigEntry
 
@@ -71,95 +71,51 @@ def mock_config_entry(expires_at: int, scopes: list[str]) -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_adapter() -> Generator[MagicMock]:
-    """Return a mocked GraphAdapter."""
-    with (
-        patch(
-            "homeassistant.components.onedrive.config_flow.GraphRequestAdapter",
-            autospec=True,
-        ) as mock_adapter,
-        patch(
-            "homeassistant.components.onedrive.backup.GraphRequestAdapter",
-            new=mock_adapter,
-        ),
-    ):
-        adapter = mock_adapter.return_value
-        adapter.get_http_response_message.return_value = Response(
-            status_code=200,
-            json={
-                "parentReference": {"driveId": "mock_drive_id"},
-                "createdBy": {"user": {"displayName": "John Doe"}},
-            },
-        )
-        yield adapter
-        adapter.send_async.return_value = LargeFileUploadSession(
-            next_expected_ranges=["2-"]
-        )
-
-
-@pytest.fixture(autouse=True)
-def mock_graph_client(mock_adapter: MagicMock) -> Generator[MagicMock]:
+def mock_onedrive_client_init() -> Generator[MagicMock]:
     """Return a mocked GraphServiceClient."""
     with (
         patch(
-            "homeassistant.components.onedrive.config_flow.GraphServiceClient",
+            "homeassistant.components.onedrive.config_flow.OneDriveClient",
             autospec=True,
-        ) as graph_client,
+        ) as onedrive_client,
         patch(
-            "homeassistant.components.onedrive.GraphServiceClient",
-            new=graph_client,
+            "homeassistant.components.onedrive.OneDriveClient",
+            new=onedrive_client,
         ),
     ):
-        client = graph_client.return_value
+        yield onedrive_client
 
-        client.request_adapter = mock_adapter
 
-        drives = client.drives.by_drive_id.return_value
-        drives.special.by_drive_item_id.return_value.get = AsyncMock(
-            return_value=DriveItem(id="approot")
-        )
+@pytest.fixture(autouse=True)
+def mock_onedrive_client(mock_onedrive_client_init: MagicMock) -> Generator[MagicMock]:
+    """Return a mocked GraphServiceClient."""
+    client = mock_onedrive_client_init.return_value
+    client.get_approot.return_value = MOCK_APPROOT
+    client.create_folder.return_value = MOCK_BACKUP_FOLDER
+    client.list_drive_items.return_value = [MOCK_BACKUP_FILE, MOCK_METADATA_FILE]
+    client.get_drive_item.return_value = MOCK_BACKUP_FILE
+    client.upload_file.return_value = MOCK_METADATA_FILE
 
-        drive_items = drives.items.by_drive_item_id.return_value
-        drive_items.get = AsyncMock(return_value=DriveItem(id="folder_id"))
-        drive_items.children.post = AsyncMock(return_value=DriveItem(id="folder_id"))
-        drive_items.children.get = AsyncMock(
-            return_value=DriveItemCollectionResponse(
-                value=[
-                    DriveItem(
-                        id=BACKUP_METADATA["backup_id"],
-                        description=escape(dumps(BACKUP_METADATA)),
-                    ),
-                    DriveItem(),
-                ]
-            )
-        )
-        drive_items.delete = AsyncMock(return_value=None)
-        drive_items.create_upload_session.post = AsyncMock(
-            return_value=UploadSession(upload_url="https://test.tld")
-        )
-        drive_items.patch = AsyncMock(return_value=None)
-
-        async def generate_bytes() -> AsyncIterator[bytes]:
-            """Asynchronous generator that yields bytes."""
+    class MockStreamReader:
+        async def iter_chunked(self, chunk_size: int) -> AsyncIterator[bytes]:
             yield b"backup data"
 
-        drive_items.content.get = AsyncMock(
-            return_value=Response(status_code=200, content=generate_bytes())
-        )
+        async def read(self) -> bytes:
+            return dumps(BACKUP_METADATA).encode()
 
-        yield client
+    client.download_drive_item.return_value = MockStreamReader()
 
-
-@pytest.fixture
-def mock_drive_items(mock_graph_client: MagicMock) -> MagicMock:
-    """Return a mocked DriveItems."""
-    return mock_graph_client.drives.by_drive_id.return_value.items.by_drive_item_id.return_value
+    return client
 
 
 @pytest.fixture
-def mock_get_special_folder(mock_graph_client: MagicMock) -> MagicMock:
-    """Mock the get special folder method."""
-    return mock_graph_client.drives.by_drive_id.return_value.special.by_drive_item_id.return_value.get
+def mock_large_file_upload_client() -> Generator[AsyncMock]:
+    """Return a mocked LargeFileUploadClient upload."""
+    with patch(
+        "homeassistant.components.onedrive.backup.LargeFileUploadClient.upload"
+    ) as mock_upload:
+        mock_upload.return_value = MOCK_BACKUP_FILE
+        yield mock_upload
 
 
 @pytest.fixture
@@ -178,11 +134,4 @@ def mock_instance_id() -> Generator[AsyncMock]:
         "homeassistant.components.onedrive.async_get_instance_id",
         return_value="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
     ):
-        yield
-
-
-@pytest.fixture(autouse=True)
-def mock_asyncio_sleep() -> Generator[AsyncMock]:
-    """Mock asyncio.sleep."""
-    with patch("homeassistant.components.onedrive.backup.asyncio.sleep", AsyncMock()):
         yield

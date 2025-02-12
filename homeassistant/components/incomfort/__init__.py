@@ -5,14 +5,18 @@ from __future__ import annotations
 from aiohttp import ClientResponseError
 from incomfortclient import InvalidGateway, InvalidHeaterList
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
-from .coordinator import InComfortData, InComfortDataCoordinator, async_connect_gateway
+from .coordinator import (
+    InComfortConfigEntry,
+    InComfortData,
+    InComfortDataCoordinator,
+    async_connect_gateway,
+)
 from .errors import InComfortTimeout, InComfortUnknownError, NoHeaters, NotFound
 
 PLATFORMS = (
@@ -23,8 +27,6 @@ PLATFORMS = (
 )
 
 INTEGRATION_TITLE = "Intergas InComfort/Intouch Lan2RF gateway"
-
-type InComfortConfigEntry = ConfigEntry[InComfortDataCoordinator]
 
 
 @callback
@@ -93,7 +95,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: InComfortConfigEntry) ->
         name="RFGateway",
     )
     async_cleanup_stale_devices(hass, entry, data, gateway_device)
-    coordinator = InComfortDataCoordinator(hass, data, entry.entry_id)
+    coordinator = InComfortDataCoordinator(hass, entry, data)
     entry.runtime_data = coordinator
     await coordinator.async_config_entry_first_refresh()
 
