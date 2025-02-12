@@ -508,7 +508,7 @@ async def test_agents_upload_wrong_size(
     caplog: pytest.LogCaptureFixture,
     cloud: Mock,
 ) -> None:
-    """Test agent upload backup."""
+    """Test agent upload backup with the wrong size."""
     client = await hass_client()
     backup_data = "test"
     backup_id = "test-backup"
