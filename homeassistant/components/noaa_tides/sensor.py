@@ -14,17 +14,26 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA as SENSOR_PLATFORM_SCHEMA,
     SensorEntity,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_TIME_ZONE, CONF_UNIT_SYSTEM
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import CONF_STATION_ID, DEFAULT_TIMEZONE, TIMEZONES, UNIT_SYSTEMS
-from .helpers import get_station_unique_id
+from .const import (
+    CONF_STATION_ID,
+    DEFAULT_TIMEZONE,
+    DOMAIN,
+    NAME,
+    TIMEZONES,
+    UNIT_SYSTEMS,
+)
+from .errors import StationNotFound
+from .helpers import get_default_unit_system, get_station_unique_id
 
 if TYPE_CHECKING:
     from pandas import Timestamp
@@ -80,6 +89,51 @@ def setup_platform(
     )
 
     add_entities([noaa_sensor], True)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Add NOAA Tides sensor entry."""
+
+    station_id = entry.data.get(CONF_STATION_ID)
+    name = entry.title
+    timezone = entry.options.get(CONF_TIME_ZONE, DEFAULT_TIMEZONE)
+    unit_system = entry.options.get(CONF_UNIT_SYSTEM, get_default_unit_system(hass))
+
+    if station_id is None:
+        _LOGGER.error("Station ID is required")
+        raise StationNotFound
+
+    try:
+        station = await hass.async_add_executor_job(
+            coops.Station, station_id, unit_system
+        )
+    except KeyError as exception:
+        _LOGGER.error("%s sensor station_id %s does not exist", NAME, station_id)
+        raise StationNotFound from exception
+    except requests.exceptions.ConnectionError as exception:
+        _LOGGER.error(
+            "Connection error during setup in %s sensor for station_id: %s",
+            NAME,
+            station_id,
+        )
+        raise PlatformNotReady from exception
+
+    device_id = get_station_unique_id(station_id)
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, device_id)},
+        name=name,
+        entry_type=DeviceEntryType.SERVICE,
+    )
+
+    summary_sensor = NOAATidesAndCurrentsSensor(
+        name, station_id, timezone, unit_system, station, device_info=device_info
+    )
+
+    async_add_entities([summary_sensor], True)
 
 
 class NOAATidesData(TypedDict):
@@ -186,5 +240,5 @@ class NOAATidesAndCurrentsSensor(SensorEntity):
                 begin.strftime("%m-%d-%Y %H:%M"),
             )
         except ValueError as err:
-            _LOGGER.error("Check NOAA Tides and Currents: %s", err.args)
+            _LOGGER.error("Check %s and Currents: %s", NAME, err.args)
             self.data = None
