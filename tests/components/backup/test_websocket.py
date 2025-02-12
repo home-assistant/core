@@ -55,6 +55,7 @@ DEFAULT_STORAGE_DATA: dict[str, Any] = {
     "backups": [],
     "config": {
         "agents": {},
+        "automatic_backups_configured": False,
         "create_backup": {
             "agent_ids": [],
             "include_addons": None,
@@ -907,6 +908,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": ["test-addon"],
@@ -938,6 +940,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": True,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -969,6 +972,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1000,6 +1004,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1031,6 +1036,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1062,6 +1068,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1096,6 +1103,7 @@ async def test_agents_info(
                             "test-agent1": {"protected": True},
                             "test-agent2": {"protected": False},
                         },
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1271,6 +1279,18 @@ async def test_config_info(
                     "test-agent2": {"protected": True},
                 },
             },
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "automatic_backups_configured": False,
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "automatic_backups_configured": True,
+            }
         ],
     ],
 )
@@ -1695,6 +1715,7 @@ async def test_config_schedule_logic(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test.test-agent"],
                 "include_addons": ["test-addon"],
@@ -2357,6 +2378,7 @@ async def test_config_retention_copies_logic(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],
@@ -2635,6 +2657,7 @@ async def test_config_retention_copies_logic_manual_backup(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],
@@ -3082,6 +3105,7 @@ async def test_config_retention_days_logic(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],

@@ -39,6 +39,7 @@ class StoredBackupConfig(TypedDict):
     """Represent the stored backup config."""
 
     agents: dict[str, StoredAgentConfig]
+    automatic_backups_configured: bool
     create_backup: StoredCreateBackupConfig
     last_attempted_automatic_backup: str | None
     last_completed_automatic_backup: str | None
@@ -51,6 +52,7 @@ class BackupConfigData:
     """Represent loaded backup config data."""
 
     agents: dict[str, AgentConfig]
+    automatic_backups_configured: bool
     create_backup: CreateBackupConfig
     last_attempted_automatic_backup: datetime | None = None
     last_completed_automatic_backup: datetime | None = None
@@ -88,6 +90,7 @@ class BackupConfigData:
                 agent_id: AgentConfig(protected=agent_data["protected"])
                 for agent_id, agent_data in data["agents"].items()
             },
+            automatic_backups_configured=data["automatic_backups_configured"],
             create_backup=CreateBackupConfig(
                 agent_ids=data["create_backup"]["agent_ids"],
                 include_addons=data["create_backup"]["include_addons"],
@@ -127,6 +130,7 @@ class BackupConfigData:
             agents={
                 agent_id: agent.to_dict() for agent_id, agent in self.agents.items()
             },
+            automatic_backups_configured=self.automatic_backups_configured,
             create_backup=self.create_backup.to_dict(),
             last_attempted_automatic_backup=last_attempted,
             last_completed_automatic_backup=last_completed,
@@ -142,6 +146,7 @@ class BackupConfig:
         """Initialize backup config."""
         self.data = BackupConfigData(
             agents={},
+            automatic_backups_configured=False,
             create_backup=CreateBackupConfig(),
             retention=RetentionConfig(),
             schedule=BackupSchedule(),
@@ -158,6 +163,7 @@ class BackupConfig:
         self,
         *,
         agents: dict[str, AgentParametersDict] | UndefinedType = UNDEFINED,
+        automatic_backups_configured: bool | UndefinedType = UNDEFINED,
         create_backup: CreateBackupParametersDict | UndefinedType = UNDEFINED,
         retention: RetentionParametersDict | UndefinedType = UNDEFINED,
         schedule: ScheduleParametersDict | UndefinedType = UNDEFINED,
@@ -171,6 +177,8 @@ class BackupConfig:
                     self.data.agents[agent_id] = replace(
                         self.data.agents[agent_id], **agent_config
                     )
+        if automatic_backups_configured is not UNDEFINED:
+            self.data.automatic_backups_configured = automatic_backups_configured
         if create_backup is not UNDEFINED:
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
         if retention is not UNDEFINED:

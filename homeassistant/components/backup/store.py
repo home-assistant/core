@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 STORE_DELAY_SAVE = 30
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 3
+STORAGE_VERSION_MINOR = 4
 
 
 class StoredBackupData(TypedDict):
@@ -60,6 +60,11 @@ class _BackupStore(Store[StoredBackupData]):
                 else:
                     data["config"]["schedule"]["days"] = [state]
                     data["config"]["schedule"]["recurrence"] = "custom_days"
+            if old_minor_version < 4:
+                # Version 1.4 adds automatic_backups_configured
+                data["config"]["automatic_backups_configured"] = (
+                    data["config"]["create_backup"]["password"] is not None
+                )
 
         # Note: We allow reading data with major version 2.
         # Reject if major version is higher than 2.
