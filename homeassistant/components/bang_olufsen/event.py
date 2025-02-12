@@ -148,9 +148,11 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
         if TYPE_CHECKING:
             assert remote.serial_number
 
-        self._attr_unique_id = f"{remote.serial_number}_{key_type}"
+        self._attr_unique_id = (
+            f"{remote.serial_number}_{config_entry.unique_id}_{key_type}"
+        )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, remote.serial_number)}
+            identifiers={(DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")}
         )
         # Make the native key name Home Assistant compatible
         self._attr_translation_key = key_type.lower().replace("/", "_")

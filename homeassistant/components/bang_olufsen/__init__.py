@@ -54,8 +54,10 @@ async def _handle_remote_devices(
             device_registry = dr.async_get(hass)
             device_registry.async_get_or_create(
                 config_entry_id=config_entry.entry_id,
-                identifiers={(DOMAIN, remote.serial_number)},
-                name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}",
+                identifiers={
+                    (DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")
+                },
+                name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}-{config_entry.unique_id}",
                 model=BangOlufsenModel.BEOREMOTE_ONE,
                 serial_number=remote.serial_number,
                 sw_version=remote.app_version,
