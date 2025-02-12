@@ -423,7 +423,7 @@ async def _setup_log_handler(hass: HomeAssistant) -> FixedSizeQueueLogHandler:
     handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
 
     integration = await async_get_integration(hass, DOMAIN)
-    loggers: set[str] = {"snitun", integration.pkg_path, *(integration.loggers or [])}
+    loggers: set[str] = {integration.pkg_path, *(integration.loggers or [])}
 
     for logger_name in loggers:
         logging.getLogger(logger_name).addHandler(handler)
