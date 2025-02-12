@@ -119,13 +119,13 @@ class CloudBackupAgent(BackupAgent):
         if not backup.protected:
             raise BackupAgentError("Cloud backups must be protected")
 
+        size = backup.size
         try:
-            base64md5hash = await calculate_b64md5(open_stream, backup.size)
+            base64md5hash = await calculate_b64md5(open_stream, size)
         except FilesError as err:
             raise BackupAgentError(err) from err
         filename = self._get_backup_filename()
         metadata = backup.as_dict()
-        size = backup.size
 
         tries = 1
         while tries <= _RETRY_LIMIT:
