@@ -22,6 +22,9 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
     "Humidifier 200s": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-200s.json")
     ],
+    "Humidifier 300s": [
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
+    ],
     "Humidifier 600S": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
     ],
@@ -29,6 +32,9 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
         ("post", "/131airPurifier/v1/device/deviceDetail", "purifier-detail.json")
     ],
     "Air Purifier 200s": [
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
+    ],
+    "Air Purifier 300s": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "device-detail.json")
     ],
     "Air Purifier 400s": [
@@ -43,9 +49,21 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
     "Temperature Light": [
         ("post", "/cloud/v1/deviceManaged/bypass", "device-detail.json")
     ],
-    "Outlet": [
-        ("get", "/v1/device/outlet/detail", "outlet-detail.json"),
-        ("get", "/v1/device/outlet/energy/week", "outlet-energy-week.json"),
+    "Outlet 7A": [
+        ("get", "/v1/device/7a-outlet/detail", "outlet-detail.json"),
+        ("get", "/v1/device/7a-outlet/energy/week", "outlet-energy-week.json"),
+    ],
+    "Outlet 10A": [
+        ("post", "/10a/v1/device/devicedetail", "outlet-detail.json"),
+        ("post", "/10a/v1/device/energyweek", "outlet-energy-week.json"),
+    ],
+    "Outlet Outdoor Plug": [
+        (
+            "post",
+            "/outdoorsocket15a/v1/device/devicedetail",
+            "outlet-outdoor-detail.json",
+        ),
+        ("post", "/outdoorsocket15a/v1/device/energyweek", "outlet-energy-week.json"),
     ],
     "Wall Switch": [
         ("post", "/inwallswitch/v1/device/devicedetail", "device-detail.json")

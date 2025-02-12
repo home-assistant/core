@@ -1,0 +1,25 @@
+{
+  "code": 0,
+  "msg": null,
+  "connectionStatus": "online",
+  "activeTime": 20,
+  "energy": 200,
+  "power": 50,
+  "voltage": 240,
+  "deviceStatus": "on",
+  "deviceName": "Outlet Outdoor Plug",
+  "subDevices": [
+    {
+      "subDeviceNo": 1,
+      "defaultName": "Socket A",
+      "subDeviceName": "Outlet Outdoor Plug",
+      "subDeviceStatus": "on"
+    },
+    {
+      "subDeviceNo": 2,
+      "defaultName": "Socket B",
+      "subDeviceName": "Outlet Outdoor Plug",
+      "subDeviceStatus": "on"
+    }
+  ]
+}

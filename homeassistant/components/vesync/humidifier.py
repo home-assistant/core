@@ -28,7 +28,6 @@ from .const import (
     VS_HUMIDIFIER_MODE_HUMIDITY,
     VS_HUMIDIFIER_MODE_MANUAL,
     VS_HUMIDIFIER_MODE_SLEEP,
-    VeSyncHumidifierDevice,
 )
 from .coordinator import VeSyncDataCoordinator
 from .entity import VeSyncBaseEntity
@@ -96,8 +95,6 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
     _attr_max_humidity = MAX_HUMIDITY
     _attr_min_humidity = MIN_HUMIDITY
     _attr_supported_features = HumidifierEntityFeature.MODES
-
-    device: VeSyncHumidifierDevice
 
     def __init__(
         self,
