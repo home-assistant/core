@@ -28,7 +28,11 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import ConfigType
 
 from .api import AsyncConfigEntryAuth
@@ -272,7 +276,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             DOMAIN,
             "deprecated_set_program_and_option_actions",
             breaks_in_ha_version="2025.9.0",
-            is_fixable=False,
+            is_fixable=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_set_program_and_option_actions",
             translation_placeholders={
@@ -343,7 +347,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             DOMAIN,
             "deprecated_set_program_and_option_actions",
             breaks_in_ha_version="2025.9.0",
-            is_fixable=False,
+            is_fixable=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_set_program_and_option_actions",
             translation_placeholders={
@@ -614,6 +618,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: HomeConnectConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    async_delete_issue(hass, DOMAIN, "deprecated_set_program_and_option_actions")
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

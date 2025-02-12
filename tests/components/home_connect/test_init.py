@@ -342,6 +342,7 @@ async def test_programs_and_options_actions_deprecation(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test deprecated service keys."""
+    issue_id = "deprecated_set_program_and_option_actions"
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
@@ -356,9 +357,14 @@ async def test_programs_and_options_actions_deprecation(
     await hass.async_block_till_done()
 
     assert len(issue_registry.issues) == 1
-    assert issue_registry.async_get_issue(
-        DOMAIN, "deprecated_set_program_and_option_actions"
-    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Assert the issue is no longer present
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
 
 
 @pytest.mark.parametrize(
