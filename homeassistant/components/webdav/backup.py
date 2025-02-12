@@ -16,6 +16,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupAgentError,
+    BackupNotFound,
     suggested_filename,
 )
 from homeassistant.core import HomeAssistant, callback
@@ -123,7 +124,7 @@ class WebDavBackupAgent(BackupAgent):
         """
         backup = await self._find_backup_by_id(backup_id)
         if backup is None:
-            raise BackupAgentError("Backup not found")
+            raise BackupNotFound("Backup not found")
 
         return await self._client.download_iter(
             f"{self._backup_path}/{suggested_filename(backup)}",
