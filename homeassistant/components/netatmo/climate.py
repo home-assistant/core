@@ -507,7 +507,7 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         )
 
         now_timestamp = dt_util.as_timestamp(dt_util.utcnow())
-        end_timestamp = int(now_timestamp + time_period.seconds)
+        end_timestamp = int(now_timestamp + time_period.total_seconds())
         await self.device.async_therm_manual(target_temperature, end_timestamp)
 
     async def _async_service_clear_temperature_setting(self, **kwargs: Any) -> None:
