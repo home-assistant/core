@@ -15,11 +15,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import EntityCategory, UnitOfPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import InComfortConfigEntry
-from .coordinator import InComfortDataCoordinator
+from .coordinator import InComfortConfigEntry, InComfortDataCoordinator
 from .entity import IncomfortBoilerEntity
 
 PARALLEL_UPDATES = 0
@@ -68,7 +67,7 @@ SENSOR_TYPES: tuple[IncomfortSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: InComfortConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up InComfort/InTouch sensor entities."""
     incomfort_coordinator = entry.runtime_data
@@ -99,7 +98,7 @@ class IncomfortSensor(IncomfortBoilerEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return self._heater.status[self.entity_description.value_key]
+        return self._heater.status[self.entity_description.value_key]  # type: ignore [no-any-return]
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:

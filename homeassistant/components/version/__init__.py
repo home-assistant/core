@@ -6,7 +6,6 @@ import logging
 
 from pyhaversion import HaVersion
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -18,11 +17,9 @@ from .const import (
     CONF_SOURCE,
     PLATFORMS,
 )
-from .coordinator import VersionDataUpdateCoordinator
+from .coordinator import VersionConfigEntry, VersionDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-type VersionConfigEntry = ConfigEntry[VersionDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: VersionConfigEntry) -> bool:
@@ -40,6 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VersionConfigEntry) -> b
 
     coordinator = VersionDataUpdateCoordinator(
         hass=hass,
+        config_entry=entry,
         api=HaVersion(
             session=async_get_clientsession(hass),
             source=entry.data[CONF_SOURCE],

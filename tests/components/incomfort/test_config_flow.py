@@ -4,7 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientResponseError
-from incomfortclient import IncomfortError, InvalidHeaterList
+from incomfortclient import InvalidGateway, InvalidHeaterList
 import pytest
 
 from homeassistant.components.incomfort.const import DOMAIN
@@ -81,24 +81,22 @@ async def test_entry_already_configured(
     ("exc", "error", "base"),
     [
         (
-            IncomfortError(ClientResponseError(None, None, status=401)),
+            InvalidGateway,
             "auth_error",
-            CONF_PASSWORD,
-        ),
-        (
-            IncomfortError(ClientResponseError(None, None, status=404)),
-            "not_found",
             "base",
         ),
         (
-            IncomfortError(ClientResponseError(None, None, status=500)),
+            InvalidHeaterList,
+            "no_heaters",
+            "base",
+        ),
+        (
+            ClientResponseError(None, None, status=500),
             "unknown",
             "base",
         ),
-        (IncomfortError, "unknown", "base"),
-        (ValueError, "unknown", "base"),
         (TimeoutError, "timeout_error", "base"),
-        (InvalidHeaterList, "no_heaters", "base"),
+        (ValueError, "unknown", "base"),
     ],
 )
 async def test_form_validation(
@@ -243,7 +241,7 @@ async def test_dhcp_flow_wih_auth(
     with patch.object(
         mock_incomfort(),
         "heaters",
-        side_effect=IncomfortError(ClientResponseError(None, None, status=401)),
+        side_effect=InvalidGateway,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_HOST: "192.168.1.12"}
@@ -251,7 +249,7 @@ async def test_dhcp_flow_wih_auth(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "dhcp_auth"
-    assert result["errors"] == {CONF_PASSWORD: "auth_error"}
+    assert result["errors"] == {"base": "auth_error"}
 
     # Submit the form with added credentials
     result = await hass.config_entries.flow.async_configure(
@@ -300,14 +298,14 @@ async def test_reauth_flow_failure(
     with patch.object(
         mock_incomfort(),
         "heaters",
-        side_effect=IncomfortError(ClientResponseError(None, None, status=401)),
+        side_effect=InvalidGateway,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_PASSWORD: "incorrect-password"},
         )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_PASSWORD: "auth_error"}
+    assert result["errors"] == {"base": "auth_error"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -352,14 +350,14 @@ async def test_reconfigure_flow_failure(
     with patch.object(
         mock_incomfort(),
         "heaters",
-        side_effect=IncomfortError(ClientResponseError(None, None, status=401)),
+        side_effect=InvalidGateway,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=MOCK_CONFIG | {CONF_PASSWORD: "wrong-password"},
         )
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {CONF_PASSWORD: "auth_error"}
+    assert result["errors"] == {"base": "auth_error"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

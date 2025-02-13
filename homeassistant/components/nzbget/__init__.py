@@ -31,10 +31,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up NZBGet from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    coordinator = NZBGetDataUpdateCoordinator(
-        hass,
-        config=entry.data,
-    )
+    coordinator = NZBGetDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 
