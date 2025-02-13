@@ -22,8 +22,8 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
 from . import EconetConfigEntry
 from .const import DOMAIN
@@ -35,8 +35,13 @@ ECONET_STATE_TO_HA = {
     ThermostatOperationMode.OFF: HVACMode.OFF,
     ThermostatOperationMode.AUTO: HVACMode.HEAT_COOL,
     ThermostatOperationMode.FAN_ONLY: HVACMode.FAN_ONLY,
+    ThermostatOperationMode.EMERGENCY_HEAT: HVACMode.HEAT,
 }
-HA_STATE_TO_ECONET = {value: key for key, value in ECONET_STATE_TO_HA.items()}
+HA_STATE_TO_ECONET = {
+    value: key
+    for key, value in ECONET_STATE_TO_HA.items()
+    if key != ThermostatOperationMode.EMERGENCY_HEAT
+}
 
 ECONET_FAN_STATE_TO_HA = {
     ThermostatFanMode.AUTO: FAN_AUTO,
@@ -57,7 +62,7 @@ SUPPORT_FLAGS_THERMOSTAT = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EconetConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EcoNet thermostat based on a config entry."""
     equipment = entry.runtime_data
@@ -209,7 +214,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        async_create_issue(
+        create_issue(
             self.hass,
             DOMAIN,
             "migrate_aux_heat",
@@ -223,7 +228,7 @@ class EcoNetThermostat(EcoNetEntity[Thermostat], ClimateEntity):
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        async_create_issue(
+        create_issue(
             self.hass,
             DOMAIN,
             "migrate_aux_heat",

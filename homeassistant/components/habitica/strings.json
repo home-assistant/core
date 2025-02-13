@@ -199,7 +199,21 @@
     },
     "sensor": {
       "display_name": {
-        "name": "Display name"
+        "name": "Display name",
+        "state_attributes": {
+          "blurb": {
+            "name": "About"
+          },
+          "joined": {
+            "name": "Joined"
+          },
+          "last_login": {
+            "name": "Last login"
+          },
+          "total_logins": {
+            "name": "Total logins"
+          }
+        }
       },
       "health": {
         "name": "Health",
