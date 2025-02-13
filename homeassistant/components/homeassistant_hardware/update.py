@@ -90,24 +90,18 @@ class BaseFirmwareUpdateEntity(
     )
     _attr_has_entity_name = True
 
-    _current_device: str
-
     def __init__(
         self,
+        device: str,
         config_entry: ConfigEntry,
         update_coordinator: FirmwareUpdateCoordinator,
     ) -> None:
         """Initialize the Hardware firmware update entity."""
         super().__init__(update_coordinator)
 
+        self._current_device = device
         self._config_entry = config_entry
         self._current_firmware_info: FirmwareInfo | None = None
-
-        self.async_on_remove(
-            async_register_firmware_info_callback(
-                self.hass, self._current_device, self._firmware_info_callback
-            )
-        )
 
         self._latest_manifest: FirmwareManifest | None = None
         self._latest_firmware: FirmwareMetadata | None = None
@@ -128,6 +122,14 @@ class BaseFirmwareUpdateEntity(
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_register_firmware_info_callback(
+                self.hass,
+                self._current_device,
+                self._firmware_info_callback,
+            )
+        )
 
         self.async_on_remove(
             async_dispatcher_connect(
