@@ -56,7 +56,7 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Single device per config entry
-  entity-category: todo
+  entity-category: done
   entity-device-class: todo
   entity-disabled-by-default: todo
   entity-translations: done
