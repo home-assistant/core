@@ -5,11 +5,10 @@ from __future__ import annotations
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PlugwiseConfigEntry
-from .const import GATEWAY_ID, REBOOT
-from .coordinator import PlugwiseDataUpdateCoordinator
+from .const import REBOOT
+from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 from .entity import PlugwiseEntity
 from .util import plugwise_command
 
@@ -19,16 +18,15 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PlugwiseConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Plugwise buttons from a ConfigEntry."""
     coordinator = entry.runtime_data
 
-    gateway = coordinator.data.gateway
     async_add_entities(
         PlugwiseButtonEntity(coordinator, device_id)
-        for device_id in coordinator.data.devices
-        if device_id == gateway[GATEWAY_ID] and REBOOT in gateway
+        for device_id in coordinator.data
+        if device_id == coordinator.api.gateway_id and coordinator.api.reboot
     )
 
 

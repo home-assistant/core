@@ -7,7 +7,7 @@ from collections.abc import Callable
 from google_drive_api.exceptions import GoogleDriveApiError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -49,6 +49,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleDriveConfigEntry) 
     except GoogleDriveApiError as err:
         raise ConfigEntryNotReady from err
 
+    _async_notify_backup_listeners_soon(hass)
+
     return True
 
 
@@ -56,10 +58,15 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleDriveConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    hass.loop.call_soon(_notify_backup_listeners, hass)
+    _async_notify_backup_listeners_soon(hass)
     return True
 
 
-def _notify_backup_listeners(hass: HomeAssistant) -> None:
+def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
     for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
         listener()
+
+
+@callback
+def _async_notify_backup_listeners_soon(hass: HomeAssistant) -> None:
+    hass.loop.call_soon(_async_notify_backup_listeners, hass)
