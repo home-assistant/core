@@ -131,11 +131,11 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         # Bump last updated every third time the coordinator runs, so that async_image
         # will be called and we will evaluate on the new coordinator data if we should
         # update the cache.
-        if self.cached_map == b"" or (
-            (dt_util.utcnow() - self.image_last_updated).total_seconds()
+        if (
+            self.cached_map == b""
+            or (dt_util.utcnow() - self.image_last_updated).total_seconds()
             > IMAGE_CACHE_INTERVAL
-            and self.is_map_valid()
-        ):
+        ) and self.is_map_valid():
             self._attr_image_last_updated = dt_util.utcnow()
         super()._handle_coordinator_update()
 
