@@ -19,7 +19,7 @@ async def test_service_get_forecast(
 ) -> None:
     """Test the Stookwijzer entities."""
 
-    response = await hass.services.async_call(
+    assert snapshot == await hass.services.async_call(
         DOMAIN,
         "get_forecast",
         {
@@ -28,5 +28,3 @@ async def test_service_get_forecast(
         blocking=True,
         return_response=True,
     )
-
-    assert response == snapshot
