@@ -26,6 +26,15 @@
       "upload_speed": {
         "name": "Upload speed"
       },
+      "alltime_download": {
+        "name": "Alltime download"
+      },
+      "alltime_upload": {
+        "name": "Alltime upload"
+      },
+      "global_ratio": {
+        "name": "Global ratio"
+      },
       "current_status": {
         "name": "Status",
         "state": {
@@ -33,6 +42,12 @@
           "up_down": "Up/Down",
           "seeding": "Seeding",
           "downloading": "Downloading"
+        }
+      },
+      "connection_status": {
+        "name": "Connection status",
+        "state": {
+          "connected": "Conencted"
         }
       },
       "active_torrents": {
