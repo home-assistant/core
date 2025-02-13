@@ -36,6 +36,7 @@ class StatisticMixIn(TypedDict, total=False):
     min: float
     max: float
     mean: float
+    circular_mean: float
 
 
 class StatisticData(StatisticDataBase, StatisticMixIn, total=False):

@@ -77,7 +77,7 @@ class LegacyBase(DeclarativeBase):
     """Base class for tables, used for schema migration."""
 
 
-SCHEMA_VERSION = 48
+SCHEMA_VERSION = 49
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -719,6 +719,7 @@ class StatisticsBase:
     start: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
     start_ts: Mapped[float | None] = mapped_column(TIMESTAMP_TYPE, index=True)
     mean: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
+    circular_mean: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     min: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     max: Mapped[float | None] = mapped_column(DOUBLE_TYPE)
     last_reset: Mapped[datetime | None] = mapped_column(UNUSED_LEGACY_DATETIME_COLUMN)
@@ -740,6 +741,7 @@ class StatisticsBase:
             start=None,
             start_ts=stats["start"].timestamp(),
             mean=stats.get("mean"),
+            circular_mean=stats.get("circular_mean"),
             min=stats.get("min"),
             max=stats.get("max"),
             last_reset=None,
@@ -763,6 +765,7 @@ class StatisticsBase:
             start=None,
             start_ts=stats["start_ts"],
             mean=stats.get("mean"),
+            circular_mean=stats.get("circular_mean"),
             min=stats.get("min"),
             max=stats.get("max"),
             last_reset=None,

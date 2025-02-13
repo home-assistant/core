@@ -143,24 +143,28 @@ class _ColumnTypesForDialect:
     big_int_type: str
     timestamp_type: str
     context_bin_type: str
+    double_type: str
 
 
 _MYSQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER(20)",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type=f"BLOB({CONTEXT_ID_BIN_MAX_LENGTH})",
+    double_type=DOUBLE_PRECISION_TYPE_SQL,
 )
 
 _POSTGRESQL_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type=DOUBLE_PRECISION_TYPE_SQL,
     context_bin_type="BYTEA",
+    double_type=DOUBLE_PRECISION_TYPE_SQL,
 )
 
 _SQLITE_COLUMN_TYPES = _ColumnTypesForDialect(
     big_int_type="INTEGER",
     timestamp_type="FLOAT",
     context_bin_type="BLOB",
+    double_type="FLOAT",
 )
 
 _COLUMN_TYPES_FOR_DIALECT: dict[SupportedDialect | None, _ColumnTypesForDialect] = {
@@ -1985,6 +1989,21 @@ class _SchemaVersion48Migrator(_SchemaVersionMigrator, target_version=48):
         # queries can be used. For most systems, this should
         # be very fast and nothing will be migrated.
         _migrate_columns_to_timestamp(self.instance, self.session_maker, self.engine)
+
+
+class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        _add_columns(
+            self.session_maker,
+            "statistics",
+            [f"circular_mean {self.column_types.double_type}"],
+        )
+        _add_columns(
+            self.session_maker,
+            "statistics_short_term",
+            [f"circular_mean {self.column_types.double_type}"],
+        )
 
 
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(

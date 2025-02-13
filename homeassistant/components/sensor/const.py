@@ -484,6 +484,9 @@ class SensorStateClass(StrEnum):
     MEASUREMENT = "measurement"
     """The state represents a measurement in present time."""
 
+    MEASUREMENT_CIRCULAR = "measurement_circular"
+    """The state represents a circular measurement in present time. Currently only degrees are supported."""
+
     TOTAL = "total"
     """The state represents a total amount.
 
