@@ -79,6 +79,7 @@ async def test_diagnostics_with_bluetooth(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
+            "subentries": [],
             "title": "Mock Title",
             "unique_id": "11:22:33:44:55:aa",
             "version": 1,

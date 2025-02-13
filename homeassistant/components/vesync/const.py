@@ -52,6 +52,9 @@ VS_FAN_MODE_PRESET_LIST_HA = [
     VS_FAN_MODE_PET,
     VS_FAN_MODE_NORMAL,
 ]
+NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
+NIGHT_LIGHT_LEVEL_DIM = "dim"
+NIGHT_LIGHT_LEVEL_OFF = "off"
 
 VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
 """Humidifier device types"""

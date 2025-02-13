@@ -236,7 +236,7 @@ CONFIG_SCHEMA = vol.Schema(
 MQTT_PUBLISH_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_TOPIC): valid_publish_topic,
-        vol.Required(ATTR_PAYLOAD): cv.string,
+        vol.Required(ATTR_PAYLOAD, default=None): vol.Any(cv.string, None),
         vol.Optional(ATTR_EVALUATE_PAYLOAD): cv.boolean,
         vol.Optional(ATTR_QOS, default=DEFAULT_QOS): valid_qos_schema,
         vol.Optional(ATTR_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
