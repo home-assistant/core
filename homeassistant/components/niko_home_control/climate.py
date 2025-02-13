@@ -46,10 +46,7 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     _attr_translation_key = "nhc_thermostat"
 
-    @property
-    def hvac_modes(self):
-        """Return the list of available hvac modes."""
-        return [HVACMode.OFF, HVACMode.COOL, HVACMode.AUTO]
+    _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.AUTO]
 
     @property
     def preset_modes(self):
