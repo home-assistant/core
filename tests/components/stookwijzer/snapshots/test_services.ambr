@@ -4,5 +4,7 @@
     'sensor.stookwijzer_advice_code': tuple(
       list[{'datetime': '2025-02-12T17:00:00+01:00', 'advice': 'code_yellow', 'final': True}, {'datetime': '2025-02-12T23:00:00+01:00', 'advice': 'code_yellow', 'final': True}, {'datetime': '2025-02-13T05:00:00+01:00', 'advice': 'code_orange', 'final': False}, {'datetime': '2025-02-13T11:00:00+01:00', 'advice': 'code_orange', 'final': False}],
     ),
+    'sensor.stookwijzer_air_quality_index': None,
+    'sensor.stookwijzer_wind_speed': None,
   })
 # ---

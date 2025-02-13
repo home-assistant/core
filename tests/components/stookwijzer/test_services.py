@@ -5,12 +5,17 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.stookwijzer.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("init_integration")
 async def test_service_get_forecast(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Stookwijzer entities."""
 
@@ -18,7 +23,7 @@ async def test_service_get_forecast(
         DOMAIN,
         "get_forecast",
         {
-            "entity_id": "sensor.stookwijzer_advice_code",
+            "device_id": entity_registry.async_device_ids()[0],
         },
         blocking=True,
         return_response=True,
