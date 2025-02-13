@@ -21,6 +21,7 @@ from homeassistant.config_entries import (
     ConfigEntryChange,
 )
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import ExtraStoredData
@@ -28,7 +29,12 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import FirmwareUpdateCoordinator
 from .models import FirmwareManifest, FirmwareMetadata
-from .util import FirmwareInfo, FirmwareType, guess_firmware_type, probe_silabs_firmware
+from .util import (
+    ApplicationType,
+    FirmwareInfo,
+    guess_firmware_info,
+    probe_silabs_firmware_info,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +46,7 @@ class FirmwareUpdateEntityDescription(UpdateEntityDescription):
     version_parser: Callable[[str], str]
     fw_type: str
     version_key: str
-    expected_firmware_type: FirmwareType
+    expected_firmware_type: ApplicationType
     firmware_name: str
 
 
@@ -76,7 +82,7 @@ class BaseFirmwareUpdateEntity(
 
     # Subclasses provide the mapping between firmware types and entity descriptions
     entity_description: FirmwareUpdateEntityDescription
-    firmware_entity_descriptions: dict[FirmwareType, FirmwareUpdateEntityDescription]
+    firmware_entity_descriptions: dict[ApplicationType, FirmwareUpdateEntityDescription]
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
@@ -170,7 +176,7 @@ class BaseFirmwareUpdateEntity(
                 "Unexpected firmware type %r, assuming Zigbee firmware instead",
                 firmware_type,
             )
-            firmware_type = FirmwareType.ZIGBEE
+            firmware_type = ApplicationType.EZSP
 
         self.entity_description = self.firmware_entity_descriptions[firmware_type]
         if self._latest_manifest is None:
@@ -216,7 +222,7 @@ class BaseFirmwareUpdateEntity(
     ) -> AsyncIterator[None]:
         """Temporarily stop owning addons and integrations."""
 
-        firmware_info = await guess_firmware_type(self.hass, device)
+        firmware_info = await guess_firmware_info(self.hass, device)
         _LOGGER.debug("Identified firmware info: %s", firmware_info)
 
         async with AsyncExitStack() as stack:
@@ -247,10 +253,10 @@ class BaseFirmwareUpdateEntity(
         flasher = Flasher(
             device=device,
             probe_methods=(
-                FirmwareType.BOOTLOADER.as_application_type(),
-                FirmwareType.ZIGBEE.as_application_type(),
-                FirmwareType.THREAD.as_application_type(),
-                FirmwareType.MULTIPROTOCOL.as_application_type(),
+                ApplicationType.GECKO_BOOTLOADER.as_flasher_application_type(),
+                ApplicationType.EZSP.as_flasher_application_type(),
+                ApplicationType.SPINEL.as_flasher_application_type(),
+                ApplicationType.CPC.as_flasher_application_type(),
             ),
         )
 
@@ -270,12 +276,17 @@ class BaseFirmwareUpdateEntity(
                 # Probe the running application type with indeterminate progress
                 self._attr_update_percentage = None
                 self.async_write_ha_state()
-                firmware_info = await probe_silabs_firmware(
+                firmware_info = await probe_silabs_firmware_info(
                     device,
                     probe_methods=(
-                        self.entity_description.expected_firmware_type.as_application_type(),
+                        self.entity_description.expected_firmware_type.as_flasher_application_type(),
                     ),
                 )
+
+                if firmware_info is None:
+                    raise HomeAssistantError(
+                        "Failed to probe the firmware after flashing"
+                    )
 
                 self._update_config_entry_after_install(firmware_info)
             finally:
