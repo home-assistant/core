@@ -3,6 +3,12 @@
   dict({
     'advice': 'code_yellow',
     'air_quality_index': 2,
+    'forecast': list([
+      dict({
+        '__type': "<class 'types.GenericAlias'>",
+        'repr': "list[{'datetime': '2025-02-12T17:00:00+01:00', 'advice': 'code_yellow', 'final': True}, {'datetime': '2025-02-12T23:00:00+01:00', 'advice': 'code_yellow', 'final': True}, {'datetime': '2025-02-13T05:00:00+01:00', 'advice': 'code_orange', 'final': False}, {'datetime': '2025-02-13T11:00:00+01:00', 'advice': 'code_orange', 'final': False}]",
+      }),
+    ]),
     'windspeed_ms': 2.5,
   })
 # ---
