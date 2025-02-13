@@ -640,7 +640,7 @@ dbus-fast==2.33.0
 debugpy==1.8.11
 
 # homeassistant.components.ecovacs
-deebot-client==12.0.0
+deebot-client==12.1.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -947,7 +947,7 @@ habiticalib==0.3.7
 habluetooth==3.21.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.89.0
+hass-nabucasa==0.90.0
 
 # homeassistant.components.conversation
 hassil==2.2.3
@@ -1295,7 +1295,7 @@ objgraph==3.5.0
 odp-amsterdam==6.0.2
 
 # homeassistant.components.ohme
-ohme==1.2.9
+ohme==1.3.0
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -1954,7 +1954,7 @@ python-izone==1.2.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.10.1
+python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
 python-linkplay==0.1.3
@@ -2257,7 +2257,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.5.1
+stookwijzer==1.5.2
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
@@ -2520,7 +2520,7 @@ yt-dlp[default]==2025.01.26
 zamg==0.3.6
 
 # homeassistant.components.zeroconf
-zeroconf==0.143.0
+zeroconf==0.144.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
