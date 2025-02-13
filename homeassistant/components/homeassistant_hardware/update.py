@@ -28,6 +28,7 @@ from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import FirmwareUpdateCoordinator
+from .helpers import async_register_firmware_info_callback
 from .models import FirmwareManifest, FirmwareMetadata
 from .util import (
     ApplicationType,
@@ -89,6 +90,8 @@ class BaseFirmwareUpdateEntity(
     )
     _attr_has_entity_name = True
 
+    _current_device: str
+
     def __init__(
         self,
         config_entry: ConfigEntry,
@@ -98,10 +101,20 @@ class BaseFirmwareUpdateEntity(
         super().__init__(update_coordinator)
 
         self._config_entry = config_entry
+        self._current_firmware_info: FirmwareInfo | None = None
+
+        self.async_on_remove(
+            async_register_firmware_info_callback(
+                self.hass, self._current_device, self._firmware_info_callback
+            )
+        )
 
         self._latest_manifest: FirmwareManifest | None = None
         self._latest_firmware: FirmwareMetadata | None = None
         self._maybe_recompute_state()
+
+    def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
+        self._current_firmware_info = firmware_info
 
     @property
     def title(self) -> str:
@@ -156,20 +169,16 @@ class BaseFirmwareUpdateEntity(
             config_entry_id=self._config_entry.entry_id, **self.device_info
         )
 
-    @property
-    def _current_firmware_info(self) -> FirmwareInfo:
-        raise NotImplementedError
-
-    @property
-    def _current_device(self) -> str:
-        raise NotImplementedError
-
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
         raise NotImplementedError
 
     def _maybe_recompute_state(self) -> None:
         """Recompute the state of the entity."""
-        firmware_type = self._current_firmware_info.firmware_type
+
+        if self._current_firmware_info is None:
+            firmware_type = None
+        else:
+            firmware_type = self._current_firmware_info.firmware_type
 
         if firmware_type not in self.firmware_entity_descriptions:
             _LOGGER.warning(
@@ -205,8 +214,10 @@ class BaseFirmwareUpdateEntity(
     @property
     def installed_version(self) -> str | None:
         """Version installed and in use."""
-        version = self._current_firmware_info.firmware_version
-        if version is None:
+        if self._current_firmware_info is None:
+            return None
+
+        if (version := self._current_firmware_info.firmware_version) is None:
             return None
 
         return self.entity_description.version_parser(version)

@@ -12,17 +12,15 @@ from homeassistant.components.homeassistant_hardware.update import (
     FirmwareUpdateEntityDescription,
 )
 from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
     FirmwareInfo,
-    FirmwareType,
 )
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-
-from . import SkyConnectConfigEntry
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the firmware update config entry."""
 
@@ -50,7 +48,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
     """Base firmware update entity."""
 
     firmware_entity_descriptions = {
-        FirmwareType.ZIGBEE: FirmwareUpdateEntityDescription(
+        ApplicationType.EZSP: FirmwareUpdateEntityDescription(
             key="firmware",
             display_precision=0,
             device_class=UpdateDeviceClass.FIRMWARE,
@@ -58,10 +56,10 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             version_parser=lambda fw: fw.split(" ", 1)[0],
             fw_type="skyconnect_zigbee_ncp",
             version_key="ezsp_version",
-            expected_firmware_type=FirmwareType.ZIGBEE,
+            expected_firmware_type=ApplicationType.EZSP,
             firmware_name="EmberZNet",
         ),
-        FirmwareType.THREAD: FirmwareUpdateEntityDescription(
+        ApplicationType.SPINEL: FirmwareUpdateEntityDescription(
             key="firmware",
             display_precision=0,
             device_class=UpdateDeviceClass.FIRMWARE,
@@ -69,31 +67,24 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             version_parser=lambda fw: fw.split("/", 1)[1].split("_", 1)[0],
             fw_type="skyconnect_openthread_rcp",
             version_key="ot_rcp_version",
-            expected_firmware_type=FirmwareType.THREAD,
+            expected_firmware_type=ApplicationType.SPINEL,
             firmware_name="OpenThread RCP",
         ),
     }
 
-    _config_entry: SkyConnectConfigEntry
+    _config_entry: ConfigEntry
 
     def __init__(
         self,
-        config_entry: SkyConnectConfigEntry,
+        config_entry: ConfigEntry,
         update_coordinator: FirmwareUpdateCoordinator,
     ) -> None:
         """Initialize the SkyConnect firmware update entity."""
-        super().__init__(config_entry, update_coordinator)
         self._attr_unique_id = (
             f"{config_entry.data['serial_number']}_{self.entity_description.key}"
         )
-
-    @property
-    def _current_firmware_info(self) -> FirmwareInfo:
-        return self._config_entry.runtime_data.firmware_info
-
-    @property
-    def _current_device(self) -> str:
-        return self._config_entry.runtime_data.device
+        self._current_device = config_entry.data["device"]
+        super().__init__(config_entry, update_coordinator)
 
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
         self.hass.config_entries.async_update_entry(
