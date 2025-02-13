@@ -160,7 +160,7 @@ class PingDataSubProcess(PingData):
             )
 
             if pinger:
-                with suppress(TypeError):
+                with suppress(TypeError, ProcessLookupError):
                     await pinger.kill()  # type: ignore[func-returns-value]
                 del pinger
 

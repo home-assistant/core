@@ -44,7 +44,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -264,7 +264,7 @@ class SnmpSwitch(SwitchEntity):
             _LOGGER.error(
                 "SNMP error: %s at %s",
                 errstatus.prettyPrint(),
-                errindex and restable[-1][int(errindex) - 1] or "?",
+                (errindex and restable[-1][int(errindex) - 1]) or "?",
             )
         else:
             for resrow in restable:

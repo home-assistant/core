@@ -14,7 +14,7 @@ from homeassistant.components.alarm_control_panel import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, CONF_CODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType

@@ -61,6 +61,8 @@ TOM = {
 }
 
 
+@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -80,6 +82,8 @@ async def test_load_unload_config_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize(
     ("side_effect", "entry_state"),
     [
@@ -109,6 +113,10 @@ async def test_gateway_config_entry_not_ready(
     assert mock_config_entry.state is entry_state
 
 
+@pytest.mark.parametrize("chosen_env", ["p1v4_442_single"], indirect=True)
+@pytest.mark.parametrize(
+    "gateway_id", ["a455b61e52394b2db5081ce025a430f3"], indirect=True
+)
 async def test_device_in_dr(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -131,6 +139,8 @@ async def test_device_in_dr(
     assert device_entry.sw_version == "4.4.2"
 
 
+@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 @pytest.mark.parametrize(
     ("entitydata", "old_unique_id", "new_unique_id"),
     [
@@ -224,16 +234,18 @@ async def test_migrate_unique_id_relay(
     assert entity_migrated.unique_id == new_unique_id
 
 
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 async def test_update_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_smile_adam_2: MagicMock,
+    mock_smile_adam_heat_cool: MagicMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a clean-up of the device_registry."""
-    data = mock_smile_adam_2.async_update.return_value
+    data = mock_smile_adam_heat_cool.async_update.return_value
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -257,8 +269,8 @@ async def test_update_device(
     )
 
     # Add a 2nd Tom/Floor
-    data.devices.update(TOM)
-    data.devices["f871b8c4d63549319221e294e4f88074"]["thermostats"].update(
+    data.update(TOM)
+    data["f871b8c4d63549319221e294e4f88074"]["thermostats"].update(
         {
             "secondary": [
                 "01234567890abcdefghijklmnopqrstu",
@@ -293,10 +305,10 @@ async def test_update_device(
         assert "01234567890abcdefghijklmnopqrstu" in item_list
 
     # Remove the existing Tom/Floor
-    data.devices["f871b8c4d63549319221e294e4f88074"]["thermostats"].update(
+    data["f871b8c4d63549319221e294e4f88074"]["thermostats"].update(
         {"secondary": ["01234567890abcdefghijklmnopqrstu"]}
     )
-    data.devices.pop("1772a4ea304041adb83f357b751341ff")
+    data.pop("1772a4ea304041adb83f357b751341ff")
     with patch(HA_PLUGWISE_SMILE_ASYNC_UPDATE, return_value=data):
         freezer.tick(timedelta(minutes=1))
         async_fire_time_changed(hass)

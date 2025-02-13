@@ -11,7 +11,7 @@ from peblar import Peblar, PeblarUserConfiguration, SmartChargingMode
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PeblarConfigEntry, PeblarUserConfigurationDataUpdateCoordinator
 from .entity import PeblarEntity
@@ -49,7 +49,7 @@ DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PeblarConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Peblar select based on a config entry."""
     async_add_entities(

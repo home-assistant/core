@@ -22,7 +22,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -114,7 +114,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirthingsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Airthings sensor."""
 
@@ -155,8 +155,7 @@ class AirthingsHeaterEnergySensor(
         self._id = airthings_device.device_id
         self._attr_device_info = DeviceInfo(
             configuration_url=(
-                "https://dashboard.airthings.com/devices/"
-                f"{airthings_device.device_id}"
+                f"https://dashboard.airthings.com/devices/{airthings_device.device_id}"
             ),
             identifiers={(DOMAIN, airthings_device.device_id)},
             name=airthings_device.name,

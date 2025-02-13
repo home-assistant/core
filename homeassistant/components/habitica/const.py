@@ -56,3 +56,4 @@ X_CLIENT = f"{DEVELOPER_ID} - {APPLICATION_NAME} {__version__}"
 
 SECTION_REAUTH_LOGIN = "reauth_login"
 SECTION_REAUTH_API_KEY = "reauth_api_key"
+SECTION_DANGER_ZONE = "danger_zone"

@@ -954,7 +954,7 @@ async def test_climate_climate_react(
                 "light": "on",
             },
             "lowTemperatureThreshold": 5.5,
-            "type": "temperature",
+            "type": "feelsLike",
         },
     }
 
@@ -985,7 +985,7 @@ async def test_climate_climate_react(
                 "horizontalSwing": "stopped",
                 "light": "on",
             },
-            ATTR_SMART_TYPE: "temperature",
+            ATTR_SMART_TYPE: "feelslike",
         },
         blocking=True,
     )
@@ -993,7 +993,7 @@ async def test_climate_climate_react(
     mock_client.async_get_devices_data.return_value.parsed["ABC999111"].smart_on = True
     mock_client.async_get_devices_data.return_value.parsed[
         "ABC999111"
-    ].smart_type = "temperature"
+    ].smart_type = "feelsLike"
     mock_client.async_get_devices_data.return_value.parsed[
         "ABC999111"
     ].smart_low_temp_threshold = 5.5
@@ -1038,7 +1038,7 @@ async def test_climate_climate_react(
         hass.states.get("sensor.hallway_climate_react_high_temperature_threshold").state
         == "30.5"
     )
-    assert hass.states.get("sensor.hallway_climate_react_type").state == "temperature"
+    assert hass.states.get("sensor.hallway_climate_react_type").state == "feelslike"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

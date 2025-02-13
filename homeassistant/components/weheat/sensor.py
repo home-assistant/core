@@ -19,17 +19,19 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import WeheatConfigEntry
 from .const import (
     DISPLAY_PRECISION_COP,
     DISPLAY_PRECISION_WATER_TEMP,
     DISPLAY_PRECISION_WATTS,
 )
-from .coordinator import WeheatDataUpdateCoordinator
+from .coordinator import WeheatConfigEntry, WeheatDataUpdateCoordinator
 from .entity import WeheatEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -198,7 +200,7 @@ DHW_SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WeheatConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors for weheat heat pump."""
     entities = [

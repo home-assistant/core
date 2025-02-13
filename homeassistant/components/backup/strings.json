@@ -13,6 +13,10 @@
     "create": {
       "name": "Create backup",
       "description": "Creates a new backup."
+    },
+    "create_automatic": {
+      "name": "Create automatic backup",
+      "description": "Creates a new backup with automatic backup settings."
     }
   }
 }

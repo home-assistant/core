@@ -21,7 +21,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.const import CONF_API_KEY, CONF_DEVICES, CONF_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant

@@ -133,9 +133,9 @@ def climate_radio_thermostat_ct100_plus_state_fixture() -> dict[str, Any]:
     name="climate_radio_thermostat_ct100_plus_different_endpoints_state",
     scope="package",
 )
-def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture() -> (
-    dict[str, Any]
-):
+def climate_radio_thermostat_ct100_plus_different_endpoints_state_fixture() -> dict[
+    str, Any
+]:
     """Load the thermostat fixture state with values on different endpoints.
 
     This device is a radio thermostat ct100.
@@ -336,9 +336,9 @@ def lock_id_lock_as_id150_state_fixture() -> dict[str, Any]:
 @pytest.fixture(
     name="climate_radio_thermostat_ct101_multiple_temp_units_state", scope="package"
 )
-def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture() -> (
-    dict[str, Any]
-):
+def climate_radio_thermostat_ct101_multiple_temp_units_state_fixture() -> dict[
+    str, Any
+]:
     """Load the climate multiple temp units node state fixture data."""
     return load_json_object_fixture(
         "climate_radio_thermostat_ct101_multiple_temp_units_state.json", DOMAIN

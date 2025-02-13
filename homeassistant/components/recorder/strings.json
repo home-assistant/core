@@ -16,10 +16,6 @@
     "backup_failed_out_of_resources": {
       "title": "Database backup failed due to lack of resources",
       "description": "The database backup stated at {start_time} failed due to lack of resources. The backup cannot be trusted and must be restarted. This can happen if the database is too large or if the system is under heavy load. Consider upgrading the system hardware or reducing the size of the database by decreasing the number of history days to keep or creating a filter."
-    },
-    "sqlite_too_old": {
-      "title": "Update SQLite to {min_version} or later to continue using the recorder",
-      "description": "Support for version {server_version} of SQLite is ending; the minimum supported version is {min_version}. Please upgrade your database software."
     }
   },
   "services": {
