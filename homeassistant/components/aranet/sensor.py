@@ -170,7 +170,8 @@ def sensor_update_to_bluetooth_data_update(
             continue
         if key == "status":
             val = val.name.lower()
-        val = val * desc.scale
+        else:
+            val = val * desc.scale
         data[tag] = val
         names[tag] = desc.name
         descs[tag] = desc
