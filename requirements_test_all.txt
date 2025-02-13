@@ -1772,7 +1772,7 @@ pyoctoprintapi==0.1.12
 pyopenuv==2023.02.0
 
 # homeassistant.components.openweathermap
-pyopenweathermap==0.3.0
+pyopenweathermap==0.2.2
 
 # homeassistant.components.opnsense
 pyopnsense==0.4.0
