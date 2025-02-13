@@ -111,9 +111,12 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         Update this map if it is the currently active map, and the
         vacuum is cleaning, or if it has never been set at all.
         """
-        return (self.is_selected and self.cached_map == b"") or (
-            self.coordinator.roborock_device_info.props.status is not None
-            and bool(self.coordinator.roborock_device_info.props.status.in_cleaning)
+        return self.is_selected and (
+            self.cached_map == b""
+            or (
+                self.coordinator.roborock_device_info.props.status is not None
+                and bool(self.coordinator.roborock_device_info.props.status.in_cleaning)
+            )
         )
 
     async def async_added_to_hass(self) -> None:
