@@ -111,10 +111,8 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         Update this map if it is the currently active map, and the
         vacuum is cleaning, or if it has never been set at all.
         """
-        return self.cached_map == b"" or (
-            self.is_selected
-            and self.image_last_updated is not None
-            and self.coordinator.roborock_device_info.props.status is not None
+        return (self.is_selected and self.cached_map == b"") or (
+            self.coordinator.roborock_device_info.props.status is not None
             and bool(self.coordinator.roborock_device_info.props.status.in_cleaning)
         )
 
@@ -130,9 +128,11 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         # Bump last updated every third time the coordinator runs, so that async_image
         # will be called and we will evaluate on the new coordinator data if we should
         # update the cache.
-        if (
-            dt_util.utcnow() - self.image_last_updated
-        ).total_seconds() > IMAGE_CACHE_INTERVAL and self.is_map_valid():
+        if self.cached_map == b"" or (
+            (dt_util.utcnow() - self.image_last_updated).total_seconds()
+            > IMAGE_CACHE_INTERVAL
+            and self.is_map_valid()
+        ):
             self._attr_image_last_updated = dt_util.utcnow()
         super()._handle_coordinator_update()
 
