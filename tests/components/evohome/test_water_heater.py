@@ -7,7 +7,7 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
-from evohomeasync2 import EvohomeClient
+import evohomeasync2 as ec2
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy import SnapshotAssertion
@@ -57,7 +57,7 @@ async def test_setup_platform(
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
 async def test_set_operation_mode(
     hass: HomeAssistant,
-    evohome: EvohomeClient,
+    evohome: ec2.EvohomeClient,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -124,7 +124,7 @@ async def test_set_operation_mode(
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> None:
+async def test_set_away_mode(hass: HomeAssistant, evohome: ec2.EvohomeClient) -> None:
     """Test SERVICE_SET_AWAY_MODE of an evohome DHW zone."""
 
     # set_away_mode: off
@@ -157,7 +157,7 @@ async def test_set_away_mode(hass: HomeAssistant, evohome: EvohomeClient) -> Non
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_off(hass: HomeAssistant, evohome: EvohomeClient) -> None:
+async def test_turn_off(hass: HomeAssistant, evohome: ec2.EvohomeClient) -> None:
     """Test SERVICE_TURN_OFF of an evohome DHW zone."""
 
     # Entity water_heater.xxx does not support this service
@@ -173,7 +173,7 @@ async def test_turn_off(hass: HomeAssistant, evohome: EvohomeClient) -> None:
 
 
 @pytest.mark.parametrize("install", TEST_INSTALLS_WITH_DHW)
-async def test_turn_on(hass: HomeAssistant, evohome: EvohomeClient) -> None:
+async def test_turn_on(hass: HomeAssistant, evohome: ec2.EvohomeClient) -> None:
     """Test SERVICE_TURN_ON of an evohome DHW zone."""
 
     # Entity water_heater.xxx does not support this service
