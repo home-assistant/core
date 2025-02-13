@@ -8,7 +8,7 @@ from bond_async import Action
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BondConfigEntry
 from .entity import BondEntity
@@ -257,7 +257,7 @@ BUTTONS: tuple[BondButtonEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BondConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Bond button devices."""
     data = entry.runtime_data

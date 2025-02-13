@@ -82,7 +82,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
     # Get a Coordinator if the device is available or if we have connected to the device before
     coordinators = await asyncio.gather(
         *build_setup_functions(
-            hass, entry, device_map, user_data, product_info, home_data.rooms
+            hass,
+            entry,
+            device_map,
+            user_data,
+            product_info,
+            home_data.rooms,
+            api_client,
         ),
         return_exceptions=True,
     )
@@ -134,6 +140,7 @@ def build_setup_functions(
     user_data: UserData,
     product_info: dict[str, HomeDataProduct],
     home_data_rooms: list[HomeDataRoom],
+    api_client: RoborockApiClient,
 ) -> list[
     Coroutine[
         Any,
@@ -150,6 +157,7 @@ def build_setup_functions(
             device,
             product_info[device.product_id],
             home_data_rooms,
+            api_client,
         )
         for device in device_map.values()
     ]
@@ -162,11 +170,12 @@ async def setup_device(
     device: HomeDataDevice,
     product_info: HomeDataProduct,
     home_data_rooms: list[HomeDataRoom],
+    api_client: RoborockApiClient,
 ) -> RoborockDataUpdateCoordinator | RoborockDataUpdateCoordinatorA01 | None:
     """Set up a coordinator for a given device."""
     if device.pv == "1.0":
         return await setup_device_v1(
-            hass, entry, user_data, device, product_info, home_data_rooms
+            hass, entry, user_data, device, product_info, home_data_rooms, api_client
         )
     if device.pv == "A01":
         return await setup_device_a01(hass, entry, user_data, device, product_info)
@@ -186,6 +195,7 @@ async def setup_device_v1(
     device: HomeDataDevice,
     product_info: HomeDataProduct,
     home_data_rooms: list[HomeDataRoom],
+    api_client: RoborockApiClient,
 ) -> RoborockDataUpdateCoordinator | None:
     """Set up a device Coordinator."""
     mqtt_client = await hass.async_add_executor_job(
@@ -207,7 +217,15 @@ async def setup_device_v1(
         await mqtt_client.async_release()
         raise
     coordinator = RoborockDataUpdateCoordinator(
-        hass, entry, device, networking, product_info, mqtt_client, home_data_rooms
+        hass,
+        entry,
+        device,
+        networking,
+        product_info,
+        mqtt_client,
+        home_data_rooms,
+        api_client,
+        user_data,
     )
     try:
         await coordinator.async_config_entry_first_refresh()
