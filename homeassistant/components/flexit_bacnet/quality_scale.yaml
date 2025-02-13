@@ -35,10 +35,7 @@ rules:
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable:
-    statue: exempt
-    comment: |
-      This is on the todo list
+  entity-unavailable: todo
   integration-owner: done
   log-when-unavailable:
     status: exempt
@@ -58,14 +55,8 @@ rules:
   entity-translations: done
   entity-device-class: done
   devices: done
-  entity-category:
-    status: exempt
-    comment: |
-      This is on the todo list.
-  entity-disabled-by-default:
-    status: exempt
-    comment: |
-      This is on the todo list.
+  entity-category: todo
+  entity-disabled-by-default: todo
   discovery:
     status: exempt
     comment: >
@@ -77,39 +68,21 @@ rules:
     status: exempt
     comment: |
       This is not applicable for this integration.
-  diagnostics:
-    status: exempt
-    comment: |
-      This is on the todo list.
+  diagnostics: todo
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: |
-      This is on the todo list.
-  reconfiguration-flow:
-    status: exempt
-    comment: |
-      This is on the todo list.
+  icon-translations: todo
+  reconfiguration-flow: todo
   dynamic-devices:
     status: exempt
     comment: |
       This is not applicable for this integration.
-  discovery-update-info:
-    status: exempt
-    comment: |
-      This is on the todo list.
+  discovery-update-info: todo
   repair-issues:
     status: exempt
     comment: |
       Unclear if this is applicable for this integration.
-  docs-use-cases:
-    status: exempt
-    comment: |
-      This is on the todo list.
-  docs-supported-devices:
-    status: exempt
-    comment: |
-      This is on the todo list.
+  docs-use-cases: todo
+  docs-supported-devices: todo
   docs-supported-functions: done
   docs-data-update: done
   docs-known-limitations:
@@ -117,14 +90,8 @@ rules:
     comment: >
       Documenting known limitations as lack of some features like "Free cooling"
       and "Calendar Preset" is on the todo list.
-  docs-troubleshooting:
-    status: exempt
-    comment: |
-      This is on the todo list.
-  docs-examples:
-    status: exempt
-    comment: |
-      This is on the todo list.
+  docs-troubleshooting: todo
+  docs-examples: todo
 
   # Platinum
   async-dependency: done
