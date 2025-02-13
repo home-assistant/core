@@ -81,4 +81,3 @@ class SmartTubPump(SmartTubEntity, SwitchEntity):
         """Toggle the pump on or off."""
         async with asyncio.timeout(API_TIMEOUT):
             await self.pump.toggle()
-        await self.coordinator.async_request_refresh()

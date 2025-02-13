@@ -139,7 +139,6 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
             duration=kwargs.get(ATTR_DURATION),
             start_hour=kwargs.get(ATTR_START_HOUR),
         )
-        await self.coordinator.async_request_refresh()
 
 
 class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
@@ -175,4 +174,3 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
             kwargs[ATTR_MODE].upper()
         ]
         await self.cycle.set_mode(mode)
-        await self.coordinator.async_request_refresh()

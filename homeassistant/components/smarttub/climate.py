@@ -124,10 +124,8 @@ class SmartTubThermostat(SmartTubEntity, ClimateEntity):
         """Set new target temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
         await self.spa.set_temperature(temperature)
-        await self.coordinator.async_refresh()
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Activate the specified preset mode."""
         heat_mode = HEAT_MODES[preset_mode]
         await self.spa.set_heat_mode(heat_mode)
-        await self.coordinator.async_refresh()
