@@ -154,7 +154,7 @@ LOGGING_AND_HTTP_DEPS_INTEGRATIONS = {
     "logger",
     # Ensure network config is available
     # before hassio or any other integration is
-    # loaded and creates an aiohttp client session
+    # loaded that might create an aiohttp client session
     "network",
     # Error logging
     "system_log",
