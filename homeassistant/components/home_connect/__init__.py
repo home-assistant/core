@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from datetime import timedelta
 import logging
 from typing import Any, cast
@@ -458,7 +459,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         """Service for setting a program and options."""
         data = dict(call.data)
         program = data.pop(ATTR_PROGRAM, None)
-        affects_to = data.pop(ATTR_AFFECTS_TO, None)
+        affects_to = data.pop(ATTR_AFFECTS_TO)
         client, ha_id = await _get_client_and_ha_id(hass, data.pop(ATTR_DEVICE_ID))
 
         options: list[Option] = []
@@ -481,8 +482,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                         int(cast(timedelta, value).total_seconds()),
                     )
                 )
-        method_call = None
-        exception_translation_key = None
+        method_call: Awaitable[Any]
+        exception_translation_key: str
         if program:
             program = (
                 program
@@ -507,14 +508,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                     ha_id, array_of_options=array_of_options
                 )
                 exception_translation_key = "set_options_active_program"
-            elif affects_to == AFFECTS_TO_SELECTED_PROGRAM:
+            else:
+                # affects_to is AFFECTS_TO_SELECTED_PROGRAM
                 method_call = client.set_selected_program_options(
                     ha_id, array_of_options=array_of_options
                 )
                 exception_translation_key = "set_options_selected_program"
 
-        assert method_call
-        assert exception_translation_key
         try:
             await method_call
         except HomeConnectError as err:
