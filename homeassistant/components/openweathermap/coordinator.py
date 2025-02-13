@@ -249,7 +249,7 @@ class AirPollutionUpdateCoordinator(DataUpdateCoordinator):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=AIRPOLLUTION_UPDATE_INTERVAL
+            update_interval=AIRPOLLUTION_UPDATE_INTERVAL,
         )
 
     async def _async_update_data(self):
