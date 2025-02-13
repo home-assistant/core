@@ -47,7 +47,9 @@
       "connection_status": {
         "name": "Connection status",
         "state": {
-          "connected": "Conencted"
+          "connected": "Conencted",
+          "firewalled": "Firewalled",
+          "disconnected": "Disconnected"
         }
       },
       "active_torrents": {
