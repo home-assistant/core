@@ -1,6 +1,6 @@
 """Test the Home Assistant hardware firmware config flow failure cases."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -9,7 +9,11 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
 )
-from homeassistant.components.homeassistant_hardware.util import ApplicationType
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    FirmwareInfo,
+    OwningIntegration,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -548,21 +552,28 @@ async def test_options_flow_zigbee_to_thread_zha_configured(
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
-    # Set up ZHA as well
-    zha_config_entry = MockConfigEntry(
-        domain="zha",
-        data={"device": {"path": TEST_DEVICE}},
-    )
-    zha_config_entry.add_to_hass(hass)
+    # Pretend ZHA is using the stick
+    with patch(
+        "homeassistant.components.homeassistant_hardware.firmware_config_flow.guess_hardware_owners",
+        return_value=[
+            FirmwareInfo(
+                device=TEST_DEVICE,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="1.2.3.4",
+                source="zha",
+                owners=[OwningIntegration(config_entry_id="some_config_entry_id")],
+            )
+        ],
+    ):
+        # Confirm options flow
+        result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-    # Confirm options flow
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+        # Pick Thread
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
+        )
 
-    # Pick Thread
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"next_step_id": STEP_PICK_FIRMWARE_THREAD},
-    )
     assert result["type"] == FlowResultType.ABORT
     assert result["reason"] == "zha_still_using_stick"
 
