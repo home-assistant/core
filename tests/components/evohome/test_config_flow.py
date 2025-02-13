@@ -4,13 +4,17 @@ from __future__ import annotations
 
 from unittest.mock import patch
 
+import evohomeasync2 as ec2
 import pytest
 
+from homeassistant.components.evohome import CONFIG_SCHEMA
 from homeassistant.components.evohome.const import (
+    CONF_HIGH_PRECISION,
     CONF_LOCATION_IDX,
+    DEFAULT_HIGH_PRECISION,
     DEFAULT_LOCATION_IDX,
     DOMAIN,
-    SCAN_INTERVAL_MINIMUM,
+    SCAN_INTERVAL_DEFAULT,
 )
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
@@ -21,6 +25,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryAuthFailed  # , ConfigEntryNotReady
 
 from .conftest import mock_make_request, mock_post_request
 
@@ -33,8 +38,7 @@ async def test_import_flow(
 ) -> None:
     """Test an import flow."""
 
-    # Mock the config data that would normally come from a YAML file or similar
-    import_config = config.copy()
+    result: ConfigFlowResult
 
     with (
         patch(
@@ -47,10 +51,10 @@ async def test_import_flow(
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result: ConfigFlowResult = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=import_config,
+            data=CONFIG_SCHEMA(config.copy()),
         )
 
         await hass.async_block_till_done()
@@ -59,12 +63,12 @@ async def test_import_flow(
 
     assert result["handler"] == DOMAIN
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert entry.source == SOURCE_IMPORT
-    assert entry.state is ConfigEntryState.LOADED
+    assert entry.state == ConfigEntryState.LOADED
 
     assert entry.domain == DOMAIN
     assert entry.title == "Evohome"
@@ -73,12 +77,15 @@ async def test_import_flow(
         CONF_USERNAME: config[CONF_USERNAME],
         CONF_PASSWORD: config[CONF_PASSWORD],
         CONF_LOCATION_IDX: DEFAULT_LOCATION_IDX,
-        CONF_SCAN_INTERVAL: SCAN_INTERVAL_MINIMUM,
+    }
+    assert entry.options == {
+        CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION,
+        CONF_SCAN_INTERVAL: SCAN_INTERVAL_DEFAULT,
     }
 
 
 @pytest.mark.parametrize("install", ["minimal"])
-async def test_form(
+async def test_config_flow(
     hass: HomeAssistant,
     config: dict[str, str],
     install: str,
@@ -92,9 +99,9 @@ async def test_form(
 
     assert result["handler"] == DOMAIN
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] is None  # == {}
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert result.get("errors") == {}
 
     with patch(
         "evohomeasync2.auth.CredentialsManagerBase._post_request",
@@ -105,18 +112,6 @@ async def test_form(
             {
                 CONF_USERNAME: config[CONF_USERNAME],
                 CONF_PASSWORD: config[CONF_PASSWORD],
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "location"
-    assert result["errors"] is None  # == {}
-
-    with patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_LOCATION_IDX: DEFAULT_LOCATION_IDX,
             },
         )
 
@@ -132,18 +127,21 @@ async def test_form(
         #     "step_id",
         # ]
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "scan_interval"
-    assert result["errors"] is None  # == {}
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "location"
+    assert result.get("errors") == {}
 
-    with patch(
-        "homeassistant.components.evohome.async_setup_entry",
-        return_value=True,
-    ) as mock_setup_entry:
+    with (
+        patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
+        patch(
+            "homeassistant.components.evohome.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_SCAN_INTERVAL: SCAN_INTERVAL_MINIMUM,
+                CONF_LOCATION_IDX: DEFAULT_LOCATION_IDX,
             },
         )
 
@@ -166,12 +164,12 @@ async def test_form(
 
         assert mock_setup_entry.await_count == 1
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result.get("type") == FlowResultType.CREATE_ENTRY
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
     assert entry.source == SOURCE_USER
-    assert entry.state is ConfigEntryState.LOADED
+    assert entry.state == ConfigEntryState.LOADED
 
     assert entry.domain == DOMAIN
     assert entry.title == "Evohome"
@@ -180,24 +178,31 @@ async def test_form(
         CONF_USERNAME: config[CONF_USERNAME],
         CONF_PASSWORD: config[CONF_PASSWORD],
         CONF_LOCATION_IDX: DEFAULT_LOCATION_IDX,
-        CONF_SCAN_INTERVAL: SCAN_INTERVAL_MINIMUM,
     }
+    # assert entry.options == {
+    #     CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION,
+    #     CONF_SCAN_INTERVAL: SCAN_INTERVAL_DEFAULT,
+    # }
 
 
-# async def test_login_error(hass: HomeAssistant) -> None:
-#     """Test login error."""
+async def test_login_error(
+    hass: HomeAssistant,
+    config: dict[str, str],
+) -> None:
+    """Test login error."""
 
-#     with patch(
-#         "homeassistant.components.airzone_cloud.AirzoneCloudApi.login",
-#         side_effect=LoginError,
-#     ):
-#         result = await hass.config_entries.flow.async_init(
-#             DOMAIN,
-#             context={"source": SOURCE_USER},
-#             data={
-#                 CONF_USERNAME: CONFIG[CONF_USERNAME],
-#                 CONF_PASSWORD: CONFIG[CONF_PASSWORD],
-#             },
-#         )
-
-#         assert result["errors"] == {"base": "cannot_connect"}
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            side_effect=ec2.BadUserCredentialsError("Bad user credentials"),
+        ),
+        pytest.raises(ConfigEntryAuthFailed),
+    ):
+        await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_USERNAME: config[CONF_USERNAME],
+                CONF_PASSWORD: config[CONF_PASSWORD],
+            },
+        )
