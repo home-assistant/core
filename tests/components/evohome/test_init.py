@@ -7,7 +7,8 @@ import logging
 from unittest.mock import Mock, patch
 
 import aiohttp
-from evohomeasync2 import EvohomeClient, exceptions as exc
+import evohomeasync2 as ec2
+from evohomeasync2 import exceptions as exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -178,7 +179,7 @@ async def test_client_request_failure_v2(
 @pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
 async def test_setup(
     hass: HomeAssistant,
-    evohome: EvohomeClient,
+    evohome: ec2.EvohomeClient,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test services after setup of evohome.
@@ -192,7 +193,7 @@ async def test_setup(
 @pytest.mark.parametrize("install", ["default"])
 async def test_service_refresh_system(
     hass: HomeAssistant,
-    evohome: EvohomeClient,
+    evohome: ec2.EvohomeClient,
 ) -> None:
     """Test EvoService.REFRESH_SYSTEM of an evohome system."""
 
@@ -211,7 +212,7 @@ async def test_service_refresh_system(
 @pytest.mark.parametrize("install", ["default"])
 async def test_service_reset_system(
     hass: HomeAssistant,
-    evohome: EvohomeClient,
+    evohome: ec2.EvohomeClient,
 ) -> None:
     """Test EvoService.RESET_SYSTEM of an evohome system."""
 
