@@ -26,6 +26,7 @@
     "sensor": {
       "concentration_level": {
         "state": {
+          "error": "Error",
           "green": "Normal",
           "yellow": "Elevated",
           "red": "Unhealthy"
