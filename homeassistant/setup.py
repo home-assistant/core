@@ -132,7 +132,13 @@ def async_set_domains_to_be_loaded(hass: core.HomeAssistant, domains: set[str]) 
      - Keep track of domains which will load but have not yet finished loading
     """
     setup_done_futures = hass.data.setdefault(DATA_SETUP_DONE, {})
-    setup_done_futures.update({domain: hass.loop.create_future() for domain in domains})
+    setup_futures = hass.data.setdefault(DATA_SETUP, {})
+    old_domains = set(setup_futures) | set(setup_done_futures) | hass.config.components
+    if overlap := old_domains & domains:
+        _LOGGER.debug("Domains to be loaded %s already loaded or pending", overlap)
+    setup_done_futures.update(
+        {domain: hass.loop.create_future() for domain in domains - old_domains}
+    )
 
 
 def setup_component(hass: core.HomeAssistant, domain: str, config: ConfigType) -> bool:
@@ -425,8 +431,8 @@ async def _async_setup_component(
             )
             return False
         # pylint: disable-next=broad-except
-        except (asyncio.CancelledError, SystemExit, Exception):
-            _LOGGER.exception("Error during setup of component %s", domain)
+        except (asyncio.CancelledError, SystemExit, Exception) as exc:
+            _LOGGER.exception("Error during setup of component %s: %s", domain, exc)  # noqa: TRY401
             async_notify_setup_error(hass, domain, integration.documentation)
             return False
         finally:

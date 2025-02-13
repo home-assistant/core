@@ -5,7 +5,7 @@ from pybalboa.enums import LowHighRange
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BalboaConfigEntry
 from .entity import BalboaEntity
@@ -14,7 +14,7 @@ from .entity import BalboaEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BalboaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the spa select entity."""
     spa = entry.runtime_data

@@ -13,11 +13,11 @@ from music_assistant_client.exceptions import (
 from music_assistant_models.api import ServerInfoMessage
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, LOGGER
 
@@ -93,7 +93,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(step_id="user", data_schema=get_manual_schema({}))
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Mass server.
 

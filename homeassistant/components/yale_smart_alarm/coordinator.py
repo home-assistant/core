@@ -84,7 +84,7 @@ class YaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             contact["address"]: contact["_state"] for contact in door_windows
         }
         _sensor_battery_map = {
-            f"{contact["address"]}-battery": contact["_battery"]
+            f"{contact['address']}-battery": contact["_battery"]
             for contact in door_windows
         }
         _temp_map = {temp["address"]: temp["status_temp"] for temp in temp_sensors}

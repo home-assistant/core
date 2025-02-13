@@ -16,7 +16,7 @@
       "access": true,
       "polling": true,
       "proxy": true,
-      "firmware": "2024.38.7"
+      "firmware": "2024.44.25"
     }
   }
 }

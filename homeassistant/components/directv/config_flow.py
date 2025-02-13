@@ -9,11 +9,11 @@ from urllib.parse import urlparse
 from directv import DIRECTV, DIRECTVError
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL, SsdpServiceInfo
 
 from .const import CONF_RECEIVER_ID, DOMAIN
 
@@ -67,7 +67,7 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle SSDP discovery."""
         # We can cast the hostname to str because the ssdp_location is not bytes and
@@ -75,10 +75,8 @@ class DirecTVConfigFlow(ConfigFlow, domain=DOMAIN):
         host = cast(str, urlparse(discovery_info.ssdp_location).hostname)
         receiver_id = None
 
-        if discovery_info.upnp.get(ssdp.ATTR_UPNP_SERIAL):
-            receiver_id = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL][
-                4:
-            ]  # strips off RID-
+        if discovery_info.upnp.get(ATTR_UPNP_SERIAL):
+            receiver_id = discovery_info.upnp[ATTR_UPNP_SERIAL][4:]  # strips off RID-
 
         self.context.update({"title_placeholders": {"name": host}})
 

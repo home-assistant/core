@@ -9,7 +9,7 @@ from typing import Any
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
@@ -29,7 +29,7 @@ SPEED_RANGE = (1, 3)  # off is not included
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Smarty Fan Platform."""
 

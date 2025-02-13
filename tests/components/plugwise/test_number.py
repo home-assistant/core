@@ -16,6 +16,8 @@ from homeassistant.exceptions import ServiceValidationError
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 async def test_anna_number_entities(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
 ) -> None:
@@ -25,6 +27,8 @@ async def test_anna_number_entities(
     assert float(state.state) == 60.0
 
 
+@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 async def test_anna_max_boiler_temp_change(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
 ) -> None:
@@ -45,19 +49,18 @@ async def test_anna_max_boiler_temp_change(
     )
 
 
-async def test_adam_number_entities(
-    hass: HomeAssistant, mock_smile_adam_2: MagicMock, init_integration: MockConfigEntry
+@pytest.mark.parametrize("chosen_env", ["m_adam_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [False], indirect=True)
+async def test_adam_dhw_setpoint_change(
+    hass: HomeAssistant,
+    mock_smile_adam_heat_cool: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
-    """Test creation of a number."""
+    """Test changing of number entities."""
     state = hass.states.get("number.opentherm_domestic_hot_water_setpoint")
     assert state
     assert float(state.state) == 60.0
 
-
-async def test_adam_dhw_setpoint_change(
-    hass: HomeAssistant, mock_smile_adam_2: MagicMock, init_integration: MockConfigEntry
-) -> None:
-    """Test changing of number entities."""
     await hass.services.async_call(
         NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
@@ -68,8 +71,8 @@ async def test_adam_dhw_setpoint_change(
         blocking=True,
     )
 
-    assert mock_smile_adam_2.set_number.call_count == 1
-    mock_smile_adam_2.set_number.assert_called_with(
+    assert mock_smile_adam_heat_cool.set_number.call_count == 1
+    mock_smile_adam_heat_cool.set_number.assert_called_with(
         "056ee145a816487eaa69243c3280f8bf", "max_dhw_temperature", 55.0
     )
 

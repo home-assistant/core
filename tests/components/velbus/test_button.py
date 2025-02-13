@@ -38,6 +38,9 @@ async def test_button_press(
     """Test button press."""
     await init_integration(hass, config_entry)
     await hass.services.async_call(
-        BUTTON_DOMAIN, SERVICE_PRESS, {ATTR_ENTITY_ID: "button.buttonon"}, blocking=True
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: "button.bedroom_kid_1_buttonon"},
+        blocking=True,
     )
     mock_button.press.assert_called_once_with()
