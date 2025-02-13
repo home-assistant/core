@@ -152,10 +152,6 @@ LOGGING_AND_HTTP_DEPS_INTEGRATIONS = {
     "isal",
     # Set log levels
     "logger",
-    # Ensure network config is available
-    # before hassio is loaded and creates
-    # an aiohttp client session
-    "network",
     # Error logging
     "system_log",
     "sentry",
