@@ -281,7 +281,7 @@ class ArcamFmj(MediaPlayerEntity):
         """Return the current input source."""
         if (value := self._state.get_source()) is None:
             return None
-        return value.name
+        return str(value.name)
 
     @property
     def source_list(self) -> list[str]:
@@ -293,7 +293,7 @@ class ArcamFmj(MediaPlayerEntity):
         """Name of the current sound mode."""
         if (value := self._state.get_decode_mode()) is None:
             return None
-        return value.name
+        return str(value.name)
 
     @property
     def sound_mode_list(self) -> list[str] | None:
@@ -307,14 +307,14 @@ class ArcamFmj(MediaPlayerEntity):
         """Boolean if volume is currently muted."""
         if (value := self._state.get_mute()) is None:
             return None
-        return value
+        return bool(value)
 
     @property
     def volume_level(self) -> float | None:
         """Volume level of device."""
         if (value := self._state.get_volume()) is None:
             return None
-        return value / 99.0
+        return float(value) / 99.0
 
     @property
     def media_content_type(self) -> MediaType | None:
@@ -345,9 +345,9 @@ class ArcamFmj(MediaPlayerEntity):
         """Channel currently playing."""
         source = self._state.get_source()
         if source == SourceCodes.DAB:
-            value = self._state.get_dab_station()
+            value = str(self._state.get_dab_station())
         elif source == SourceCodes.FM:
-            value = self._state.get_rds_information()
+            value = str(self._state.get_rds_information())
         else:
             value = None
         return value
@@ -356,7 +356,7 @@ class ArcamFmj(MediaPlayerEntity):
     def media_artist(self) -> str | None:
         """Artist of current playing media, music track only."""
         if self._state.get_source() == SourceCodes.DAB:
-            value = self._state.get_dls_pdt()
+            value = str(self._state.get_dls_pdt())
         else:
             value = None
         return value
