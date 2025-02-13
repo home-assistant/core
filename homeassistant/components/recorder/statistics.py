@@ -108,6 +108,7 @@ QUERY_STATISTICS = (
     Statistics.last_reset_ts,
     Statistics.state,
     Statistics.sum,
+    Statistics.circular_mean,
 )
 
 QUERY_STATISTICS_SHORT_TERM = (
@@ -119,7 +120,7 @@ QUERY_STATISTICS_SHORT_TERM = (
     StatisticsShortTerm.last_reset_ts,
     StatisticsShortTerm.state,
     StatisticsShortTerm.sum,
-    Statistics.circular_mean,
+    StatisticsShortTerm.circular_mean,
 )
 
 

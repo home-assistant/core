@@ -165,7 +165,14 @@ def _ws_get_statistics_during_period(
     units: dict[str, str],
     types: set[
         Literal[
-            "change", "last_reset", "max", "mean", "min", "state", "sum", "circular_mean"
+            "change",
+            "last_reset",
+            "max",
+            "mean",
+            "min",
+            "state",
+            "sum",
+            "circular_mean",
         ]
     ],
 ) -> bytes:
