@@ -1310,6 +1310,36 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_freebsd(
     )
 
 
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_async_detect_interfaces_explicitly_before_setup(
+    hass: HomeAssistant,
+) -> None:
+    """Test interfaces are explicitly set when IPv6 before setup is called."""
+    with (
+        patch("homeassistant.components.zeroconf.sys.platform", "linux"),
+        patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc,
+        patch.object(hass.config_entries.flow, "async_init"),
+        patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
+        patch(
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
+            return_value=_ADAPTER_WITH_DEFAULT_ENABLED_AND_IPV6,
+        ),
+        patch(
+            "homeassistant.components.zeroconf.AsyncServiceInfo",
+            side_effect=get_service_info_mock,
+        ),
+    ):
+        # Call before async_setup has been called
+        await zeroconf.async_get_async_instance(hass)
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
+
+    assert mock_zc.mock_calls[0] == call(
+        interfaces=["192.168.1.5", "fe80::dead:beef:dead:beef%3"],
+        ip_version=IPVersion.All,
+    )
+
+
 async def test_no_name(hass: HomeAssistant, mock_async_zeroconf: MagicMock) -> None:
     """Test fallback to Home for mDNS announcement if the name is missing."""
     hass.config.location_name = ""
