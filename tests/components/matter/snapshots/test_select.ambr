@@ -1804,7 +1804,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Off',
+    'state': 'Manual',
   })
 # ---
 # name: test_selects[switch_unit][select.mock_switchunit_power_on_behavior_on_startup-entry]
