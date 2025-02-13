@@ -30,3 +30,109 @@ rules:
     comment: |
       Done implicitly with `await coordinator.async_config_entry_first_refresh()`.
   unique-config-entry: done
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
+  entity-unavailable:
+    statue: exempt
+    comment: |
+      This is on the todo list
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: |
+      This is done for the coordinator, but not for entities.
+  parallel-updates:
+    status: done
+    comment: |
+      Done implicitly using a coordinator.
+  reauthentication-flow:
+    status: exempt
+    comment: >
+      This integration has a configured IP address that possibly could change. 
+      Adding this is on the todo list.
+  test-coverage: done
+  # Gold
+  entity-translations: done
+  entity-device-class: done
+  devices: done
+  entity-category:
+    status: exempt
+    comment: |
+      This is on the todo list.
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      This is on the todo list.
+  discovery:
+    status: exempt
+    comment: >
+      This is not possible with built-in discovery methods. Although the underlying
+      library has a discovery method, this will be implemented in the future so
+      that the config flow will initialize a discovery and make it easier for
+      a user to add devices.
+  stale-devices:
+    status: exempt
+    comment: |
+      This is not applicable for this integration.
+  diagnostics:
+    status: exempt
+    comment: |
+      This is on the todo list.
+  exception-translations: done
+  icon-translations:
+    status: exempt
+    comment: |
+      This is on the todo list.
+  reconfiguration-flow:
+    status: exempt
+    comment: |
+      This is on the todo list.
+  dynamic-devices:
+    status: exempt
+    comment: |
+      This is not applicable for this integration.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      This is on the todo list.
+  repair-issues:
+    status: exempt
+    comment: |
+      Unclear if this is applicable for this integration.
+  docs-use-cases:
+    status: exempt
+    comment: |
+      This is on the todo list.
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      This is on the todo list.
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations:
+    status: exempt
+    comment: >
+      Documenting known limitations as lack of some features like "Free cooling"
+      and "Calendar Preset" is on the todo list.
+  docs-troubleshooting:
+    status: exempt
+    comment: |
+      This is on the todo list.
+  docs-examples:
+    status: exempt
+    comment: |
+      This is on the todo list.
+
+  # Platinum
+  async-dependency: done
+  inject-websession:
+    status: exempt
+    comment: |
+      Not applicable for this integration.
+  strict-typing:
+    status: exempt
+    comment: |
+      The library is typed but it is unknown if it follows PEP-561.
