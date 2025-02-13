@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 import logging
-import numbers
 
 from lacrosse_view import Sensor
 
@@ -65,6 +64,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=2,
     ),
     "Humidity": LaCrosseSensorEntityDescription(
         key="Humidity",
@@ -72,6 +72,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
     ),
     "HeatIndex": LaCrosseSensorEntityDescription(
         key="HeatIndex",
@@ -80,6 +81,7 @@ SENSOR_DESCRIPTIONS = {
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_value,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        suggested_display_precision=2,
     ),
     "WindSpeed": LaCrosseSensorEntityDescription(
         key="WindSpeed",
@@ -87,6 +89,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         native_unit_of_measurement=UnitOfSpeed.KILOMETERS_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
+        suggested_display_precision=2,
     ),
     "Rain": LaCrosseSensorEntityDescription(
         key="Rain",
@@ -94,12 +97,14 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         native_unit_of_measurement=UnitOfPrecipitationDepth.MILLIMETERS,
         device_class=SensorDeviceClass.PRECIPITATION,
+        suggested_display_precision=2,
     ),
     "WindHeading": LaCrosseSensorEntityDescription(
         key="WindHeading",
         translation_key="wind_heading",
         value_fn=get_value,
         native_unit_of_measurement=DEGREE,
+        suggested_display_precision=2,
     ),
     "WetDry": LaCrosseSensorEntityDescription(
         key="WetDry",
@@ -118,6 +123,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         device_class=SensorDeviceClass.ATMOSPHERIC_PRESSURE,
         native_unit_of_measurement=UnitOfPressure.HPA,
+        suggested_display_precision=2,
     ),
     "FeelsLike": LaCrosseSensorEntityDescription(
         key="FeelsLike",
@@ -126,6 +132,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        suggested_display_precision=2,
     ),
     "WindChill": LaCrosseSensorEntityDescription(
         key="WindChill",
@@ -134,6 +141,7 @@ SENSOR_DESCRIPTIONS = {
         value_fn=get_value,
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        suggested_display_precision=2,
     ),
 }
 # map of API returned unit of measurement strings to their corresponding unit of measurement
@@ -229,9 +237,6 @@ class LaCrosseViewSensor(
             model=sensor.model,
         )
         self.index = index
-        self._attr_suggested_display_precision = (
-            2 if isinstance(self.native_value, numbers.Number) else None
-        )
 
     @property
     def native_value(self) -> int | float | str | None:
