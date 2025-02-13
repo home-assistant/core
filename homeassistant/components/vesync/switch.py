@@ -57,8 +57,8 @@ SENSOR_DESCRIPTIONS: Final[tuple[VeSyncSwitchEntityDescription, ...]] = (
     VeSyncSwitchEntityDescription(
         # Screen for humidifer
         key="display",
-        is_on=lambda device: device.details["display"],
-        exists_fn=lambda device: rgetattr(device, "details.display") is not None,
+        is_on=lambda device: device.display_state,
+        exists_fn=lambda device: rgetattr(device, "display_state") is not None,
         translation_key="display",
         on_fn=lambda device: device.turn_on_display(),
         off_fn=lambda device: device.turn_off_display(),
