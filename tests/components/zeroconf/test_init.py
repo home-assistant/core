@@ -1314,7 +1314,7 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_freebsd(
 async def test_async_detect_interfaces_explicitly_before_setup(
     hass: HomeAssistant,
 ) -> None:
-    """Test interfaces are explicitly set when IPv6 before setup is called."""
+    """Test interfaces are explicitly set with IPv6 before setup is called."""
     with (
         patch("homeassistant.components.zeroconf.sys.platform", "linux"),
         patch("homeassistant.components.zeroconf.HaZeroconf") as mock_zc,
