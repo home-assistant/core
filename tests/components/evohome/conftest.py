@@ -8,10 +8,8 @@ from http import HTTPMethod
 from typing import Any
 from unittest.mock import MagicMock, patch
 
-from evohomeasync2 import EvohomeClient
+import evohomeasync2 as ec2
 from evohomeasync2.auth import AbstractTokenManager, Auth
-from evohomeasync2.control_system import ControlSystem
-from evohomeasync2.zone import Zone
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -170,11 +168,11 @@ async def setup_evohome(
         ),
         patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
     ):
-        evo: EvohomeClient | None = None
+        evo: ec2.EvohomeClient | None = None
 
-        def evohome_client(*args, **kwargs) -> EvohomeClient:
+        def evohome_client(*args, **kwargs) -> ec2.EvohomeClient:
             nonlocal evo
-            evo = EvohomeClient(*args, **kwargs)
+            evo = ec2.EvohomeClient(*args, **kwargs)
             return evo
 
         mock_client.side_effect = evohome_client
@@ -184,7 +182,7 @@ async def setup_evohome(
 
         mock_client.assert_called_once()
 
-        assert isinstance(evo, EvohomeClient)
+        assert isinstance(evo, ec2.EvohomeClient)
         assert evo._token_manager.client_id == config[CONF_USERNAME]
         assert evo._token_manager._secret == config[CONF_PASSWORD]
 
@@ -213,8 +211,8 @@ async def evohome(
 def ctl_id(evohome: MagicMock) -> str:
     """Return the entity_id of the evohome integration's controller."""
 
-    evo: EvohomeClient = evohome.return_value
-    ctl: ControlSystem = evo.tcs
+    evo: ec2.EvohomeClient = evohome.return_value
+    ctl: ec2.ControlSystem = evo.tcs
 
     return f"{Platform.CLIMATE}.{slugify(ctl.location.name)}"
 
@@ -223,7 +221,7 @@ def ctl_id(evohome: MagicMock) -> str:
 def zone_id(evohome: MagicMock) -> str:
     """Return the entity_id of the evohome integration's first zone."""
 
-    evo: EvohomeClient = evohome.return_value
-    zone: Zone = evo.tcs.zones[0]
+    evo: ec2.EvohomeClient = evohome.return_value
+    zone: ec2.Zone = evo.tcs.zones[0]
 
     return f"{Platform.CLIMATE}.{slugify(zone.name)}"
