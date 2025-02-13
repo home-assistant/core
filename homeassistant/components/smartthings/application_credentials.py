@@ -11,10 +11,11 @@ from homeassistant.components.application_credentials import (
     AuthorizationServer,
     ClientCredential,
 )
-from homeassistant.components.smartthings.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2Implementation
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 

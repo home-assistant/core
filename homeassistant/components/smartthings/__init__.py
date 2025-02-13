@@ -10,7 +10,7 @@ from aiohttp import ClientError
 from pysmartthings import SmartThings
 from pysmartthings.exceptions import SmartThingsAuthenticationFailedError
 
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
