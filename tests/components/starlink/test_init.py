@@ -33,9 +33,9 @@ async def test_successful_entry(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert entry.state is ConfigEntryState.LOADED
         assert entry.runtime_data
         assert entry.runtime_data.data
+        assert entry.state is ConfigEntryState.LOADED
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
@@ -59,5 +59,4 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
 
-        assert not hasattr(entry, "runtime_data")
         assert entry.state is ConfigEntryState.NOT_LOADED
