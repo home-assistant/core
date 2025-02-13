@@ -1106,7 +1106,7 @@ habiticalib==0.3.7
 habluetooth==3.21.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.90.0
+hass-nabucasa==0.91.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1595,7 +1595,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.2
 
 # homeassistant.components.opower
-opower==0.8.9
+opower==0.9.0
 
 # homeassistant.components.oralb
 oralb-ble==0.17.6
@@ -2415,7 +2415,7 @@ python-join-api==0.0.9
 python-juicenet==1.1.0
 
 # homeassistant.components.tplink
-python-kasa[speedups]==0.10.1
+python-kasa[speedups]==0.10.2
 
 # homeassistant.components.linkplay
 python-linkplay==0.1.3
@@ -3131,7 +3131,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.143.0
+zeroconf==0.144.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
