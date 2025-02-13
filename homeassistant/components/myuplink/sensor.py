@@ -21,11 +21,11 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .const import F_SERIES
+from .coordinator import MyUplinkConfigEntry, MyUplinkDataCoordinator
 from .entity import MyUplinkEntity
 from .helpers import find_matching_platform, skip_entity, transform_model_series
 
@@ -214,7 +214,7 @@ def get_description(device_point: DevicePoint) -> SensorEntityDescription | None
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MyUplinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up myUplink sensor."""
 
@@ -325,10 +325,10 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
         }
 
     @property
-    def native_value(self) -> str:
+    def native_value(self) -> str | None:
         """Sensor state value for enum sensor."""
         device_point = self.coordinator.data.points[self.device_id][self.point_id]
-        return self.options_map[str(int(device_point.value))]  # type: ignore[no-any-return]
+        return self.options_map.get(str(int(device_point.value)))
 
 
 class MyUplinkEnumRawSensor(MyUplinkDevicePointSensor):

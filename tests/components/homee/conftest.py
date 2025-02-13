@@ -18,6 +18,15 @@ TESTPASS = "testpass"
 
 
 @pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.homee.async_setup_entry", return_value=True
+    ) as mock_setup:
+        yield mock_setup
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
@@ -33,15 +42,6 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock]:
-    """Mock setting up a config entry."""
-    with patch(
-        "homeassistant.components.homee.async_setup_entry", return_value=True
-    ) as mock_setup:
-        yield mock_setup
-
-
-@pytest.fixture
 def mock_homee() -> Generator[AsyncMock]:
     """Return a mock Homee instance."""
     with (
@@ -50,7 +50,7 @@ def mock_homee() -> Generator[AsyncMock]:
         ) as mocked_homee,
         patch(
             "homeassistant.components.homee.Homee",
-            autospec=True,
+            new=mocked_homee,
         ),
     ):
         homee = mocked_homee.return_value
@@ -61,7 +61,10 @@ def mock_homee() -> Generator[AsyncMock]:
         homee.settings = MagicMock()
         homee.settings.uid = HOMEE_ID
         homee.settings.homee_name = HOMEE_NAME
+        homee.settings.version = "1.2.3"
+        homee.settings.mac_address = "00:05:55:11:ee:cc"
         homee.reconnect_interval = 10
+        homee.connected = True
 
         homee.get_access_token.return_value = "test_token"
 

@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(
@@ -40,8 +41,14 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'available_tones': tuple(
+        'Foo',
+        'Bar',
+      ),
+    }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -62,7 +69,7 @@
     'original_name': None,
     'platform': 'tplink',
     'previous_unique_id': None,
-    'supported_features': <SirenEntityFeature: 3>,
+    'supported_features': <SirenEntityFeature: 31>,
     'translation_key': None,
     'unique_id': '123456789ABCDEFGH',
     'unit_of_measurement': None,
@@ -71,8 +78,12 @@
 # name: test_states[siren.hub-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'available_tones': tuple(
+        'Foo',
+        'Bar',
+      ),
       'friendly_name': 'hub',
-      'supported_features': <SirenEntityFeature: 3>,
+      'supported_features': <SirenEntityFeature: 31>,
     }),
     'context': <ANY>,
     'entity_id': 'siren.hub',

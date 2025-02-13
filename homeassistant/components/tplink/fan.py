@@ -1,5 +1,6 @@
 """Support for TPLink Fan devices."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 import math
@@ -8,19 +9,20 @@ from typing import Any
 from kasa import Device, Module
 
 from homeassistant.components.fan import (
+    DOMAIN as FAN_DOMAIN,
     FanEntity,
     FanEntityDescription,
     FanEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     percentage_to_ranged_value,
     ranged_value_to_percentage,
 )
 from homeassistant.util.scaling import int_states_in_range
 
-from . import TPLinkConfigEntry
+from . import TPLinkConfigEntry, legacy_device_id
 from .coordinator import TPLinkDataUpdateCoordinator
 from .entity import (
     CoordinatedTPLinkModuleEntity,
@@ -39,6 +41,12 @@ _LOGGER = logging.getLogger(__name__)
 class TPLinkFanEntityDescription(FanEntityDescription, TPLinkModuleEntityDescription):
     """Base class for fan entity description."""
 
+    unique_id_fn: Callable[[Device, TPLinkModuleEntityDescription], str] = (
+        lambda device, desc: legacy_device_id(device)
+        if desc.key == "fan"
+        else f"{legacy_device_id(device)}-{desc.key}"
+    )
+
 
 FAN_DESCRIPTIONS: tuple[TPLinkFanEntityDescription, ...] = (
     TPLinkFanEntityDescription(
@@ -51,7 +59,7 @@ FAN_DESCRIPTIONS: tuple[TPLinkFanEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up fans."""
     data = config_entry.runtime_data
@@ -68,6 +76,7 @@ async def async_setup_entry(
             coordinator=parent_coordinator,
             entity_class=TPLinkFanEntity,
             descriptions=FAN_DESCRIPTIONS,
+            platform_domain=FAN_DOMAIN,
             known_child_device_ids=known_child_device_ids,
             first_check=first_check,
         )

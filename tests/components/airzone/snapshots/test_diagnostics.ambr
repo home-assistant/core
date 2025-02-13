@@ -275,6 +275,7 @@
     'config_entry': dict({
       'data': dict({
         'host': '192.168.1.100',
+        'id': 0,
         'port': 3000,
       }),
       'disabled_by': None,
@@ -282,12 +283,14 @@
       }),
       'domain': 'airzone',
       'entry_id': '6e7a0798c1734ba81d26ced0e690eaec',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': '**REDACTED**',
       'version': 1,
