@@ -44,7 +44,8 @@ async def async_setup_entry(
     )
 
     async_add_entities(
-        StarlinkRestoreSensor(coordinator, description) for description in RESTORES
+        StarlinkRestoreSensor(config_entry.runtime_data, description)
+        for description in RESTORE_SENSORS
     )
 
 
@@ -159,7 +160,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         value_fn=lambda data: data.consumption["latest_power"],
     ),
 )
-RESTORES: tuple[StarlinkSensorEntityDescription, ...] = (
+RESTORE_SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     StarlinkSensorEntityDescription(
         key="energy",
         device_class=SensorDeviceClass.ENERGY,
