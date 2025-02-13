@@ -47,6 +47,7 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
         "internal",
     ]
     _attr_translation_key = "motionmount_error_status"
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self, mm: motionmount.MotionMount, config_entry: MotionMountConfigEntry

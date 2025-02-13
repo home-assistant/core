@@ -31,6 +31,7 @@ class MotionMountMovingSensor(MotionMountEntity, BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.MOVING
     _attr_translation_key = "motionmount_is_moving"
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self, mm: motionmount.MotionMount, config_entry: MotionMountConfigEntry
