@@ -1090,7 +1090,7 @@ async def test_async_detect_interfaces_setting_non_loopback_route(
         patch.object(hass.config_entries.flow, "async_init"),
         patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
         patch(
-            "homeassistant.components.zeroconf.network.async_get_adapters",
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
             return_value=_ADAPTER_WITH_DEFAULT_ENABLED,
         ),
         patch(
@@ -1178,7 +1178,7 @@ async def test_async_detect_interfaces_setting_empty_route_linux(
         patch.object(hass.config_entries.flow, "async_init"),
         patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
         patch(
-            "homeassistant.components.zeroconf.network.async_get_adapters",
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
             return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
         ),
         patch(
@@ -1212,7 +1212,7 @@ async def test_async_detect_interfaces_setting_empty_route_freebsd(
         patch.object(hass.config_entries.flow, "async_init"),
         patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
         patch(
-            "homeassistant.components.zeroconf.network.async_get_adapters",
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
             return_value=_ADAPTERS_WITH_MANUAL_CONFIG,
         ),
         patch(
@@ -1263,7 +1263,7 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_linux(
         patch.object(hass.config_entries.flow, "async_init"),
         patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
         patch(
-            "homeassistant.components.zeroconf.network.async_get_adapters",
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
             return_value=_ADAPTER_WITH_DEFAULT_ENABLED_AND_IPV6,
         ),
         patch(
@@ -1292,7 +1292,7 @@ async def test_async_detect_interfaces_explicitly_set_ipv6_freebsd(
         patch.object(hass.config_entries.flow, "async_init"),
         patch.object(zeroconf, "AsyncServiceBrowser", side_effect=service_update_mock),
         patch(
-            "homeassistant.components.zeroconf.network.async_get_adapters",
+            "homeassistant.components.zeroconf.network.async_get_loaded_adapters",
             return_value=_ADAPTER_WITH_DEFAULT_ENABLED_AND_IPV6,
         ),
         patch(
