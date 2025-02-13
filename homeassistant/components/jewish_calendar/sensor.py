@@ -130,7 +130,7 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         icon="mdi:weather-sunset",
     ),
     SensorEntityDescription(
-        key="tset_hakohavim",
+        key="tset_hakohavim_tsom",
         name="T'set Hakochavim",
         icon="mdi:weather-night",
         entity_registry_enabled_default=False,
@@ -328,5 +328,5 @@ class JewishCalendarTimeSensor(JewishCalendarSensor):
             )
             return times.havdalah
 
-        times = self.make_zmanim(dt.date.today())
+        times = self.make_zmanim(dt_util.now().date())
         return times.zmanim[self.entity_description.key].local

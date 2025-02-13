@@ -139,7 +139,7 @@ TEST_PARAMS = [
         "hebrew",
         "t_set_hakochavim",
         True,
-        dt(2018, 9, 8, 19, 45),
+        dt(2018, 9, 8, 19, 47),
         None,
     ),
     (
@@ -150,7 +150,7 @@ TEST_PARAMS = [
         "hebrew",
         "t_set_hakochavim",
         False,
-        dt(2018, 9, 8, 19, 19),
+        dt(2018, 9, 8, 19, 21),
         None,
     ),
     (
