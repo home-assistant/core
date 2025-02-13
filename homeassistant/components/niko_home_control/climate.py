@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import NikoHomeControlConfigEntry
+from .const import NIKO_MODE_AUTO, NIKO_MODE_COOL, NIKO_MODE_OFF
 from .entity import NikoHomeControlEntity
 
 
@@ -78,11 +79,11 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.OFF:
-            mode = 3
+            mode = NIKO_MODE_OFF
         elif hvac_mode == HVACMode.COOL:
-            mode = 4
+            mode = NIKO_MODE_COOL
         else:
-            mode = 5
+            mode = NIKO_MODE_AUTO
         await self._action.set_mode(mode)
 
     def update_state(self) -> None:
