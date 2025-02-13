@@ -8,7 +8,6 @@
             "state": {
               "day": "mdi:weather-sunny",
               "night": "mdi:weather-night",
-              "eco": "mdi:leaf",
               "off": "mdi:power",
               "cool": "mdi:snowflake"
             }
