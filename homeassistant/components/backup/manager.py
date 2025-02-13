@@ -688,8 +688,8 @@ class BackupManager:
 
         delete_backup_results = await asyncio.gather(
             *(
-                agent.async_delete_backup(backup_id)
-                for agent in self.backup_agents.values()
+                self.backup_agents[agent_id].async_delete_backup(backup_id)
+                for agent_id in agent_ids
             ),
             return_exceptions=True,
         )

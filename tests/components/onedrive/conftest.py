@@ -22,6 +22,7 @@ from .const import (
     MOCK_APPROOT,
     MOCK_BACKUP_FILE,
     MOCK_BACKUP_FOLDER,
+    MOCK_DRIVE,
     MOCK_METADATA_FILE,
 )
 
@@ -104,7 +105,7 @@ def mock_onedrive_client(mock_onedrive_client_init: MagicMock) -> Generator[Magi
             return dumps(BACKUP_METADATA).encode()
 
     client.download_drive_item.return_value = MockStreamReader()
-
+    client.get_drive.return_value = MOCK_DRIVE
     return client
 
 
