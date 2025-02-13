@@ -10,11 +10,12 @@ from aiowebdav2.exceptions import UnauthorizedError, WebDavError
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
-from homeassistant.components.webdav.const import DOMAIN
+from homeassistant.components.webdav.backup import async_register_backup_agents_listener
+from homeassistant.components.webdav.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import BACKUP_METADATA
+from .const import BACKUP_METADATA, MOCK_LIST_WITH_INFOS
 
 from tests.common import AsyncMock, MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -199,6 +200,22 @@ async def test_agents_download(
     assert await resp.content.read() == b"backup data"
 
 
+async def test_error_on_agents_download(
+    hass_client: ClientSessionGenerator,
+    webdav_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test we get not found on a not existing backup on download."""
+    client = await hass_client()
+    backup_id = BACKUP_METADATA["backup_id"]
+    webdav_client.list_with_infos.side_effect = [MOCK_LIST_WITH_INFOS, []]
+
+    resp = await client.get(
+        f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
+    )
+    assert resp.status == 404
+
+
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
@@ -292,3 +309,15 @@ async def test_raises_on_403(
     assert response["result"]["agent_errors"] == {
         f"{DOMAIN}.{mock_config_entry.entry_id}": "Authentication error"
     }
+
+
+async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
+    """Test listener gets cleaned up."""
+    listener = AsyncMock()
+    remove_listener = async_register_backup_agents_listener(hass, listener=listener)
+
+    # make sure it's the last listener
+    hass.data[DATA_BACKUP_AGENT_LISTENERS] = [listener]
+    remove_listener()
+
+    assert hass.data.get(DATA_BACKUP_AGENT_LISTENERS) is None
