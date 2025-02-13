@@ -3,17 +3,16 @@
 from __future__ import annotations
 
 import asyncio
-import base64
 from collections.abc import AsyncIterator, Callable, Coroutine, Mapping
-import hashlib
 import logging
 import random
-from typing import Any, Literal
+from typing import Any
 
 from aiohttp import ClientError
 from hass_nabucasa import Cloud, CloudError
 from hass_nabucasa.api import CloudApiNonRetryableError
 from hass_nabucasa.cloud_api import async_files_delete_file, async_files_list
+from hass_nabucasa.files import FilesError, StorageType, calculate_b64md5
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
@@ -24,18 +23,9 @@ from .client import CloudClient
 from .const import DATA_CLOUD, DOMAIN, EVENT_CLOUD_EVENT
 
 _LOGGER = logging.getLogger(__name__)
-_STORAGE_BACKUP: Literal["backup"] = "backup"
 _RETRY_LIMIT = 5
 _RETRY_SECONDS_MIN = 60
 _RETRY_SECONDS_MAX = 600
-
-
-async def _b64md5(stream: AsyncIterator[bytes]) -> str:
-    """Calculate the MD5 hash of a file."""
-    file_hash = hashlib.md5()
-    async for chunk in stream:
-        file_hash.update(chunk)
-    return base64.b64encode(file_hash.digest()).decode()
 
 
 async def async_get_backup_agents(
@@ -106,7 +96,7 @@ class CloudBackupAgent(BackupAgent):
 
         try:
             content = await self._cloud.files.download(
-                storage_type=_STORAGE_BACKUP,
+                storage_type=StorageType.BACKUP,
                 filename=self._get_backup_filename(),
             )
         except CloudError as err:
@@ -129,16 +119,19 @@ class CloudBackupAgent(BackupAgent):
         if not backup.protected:
             raise BackupAgentError("Cloud backups must be protected")
 
-        base64md5hash = await _b64md5(await open_stream())
+        size = backup.size
+        try:
+            base64md5hash = await calculate_b64md5(open_stream, size)
+        except FilesError as err:
+            raise BackupAgentError(err) from err
         filename = self._get_backup_filename()
         metadata = backup.as_dict()
-        size = backup.size
 
         tries = 1
         while tries <= _RETRY_LIMIT:
             try:
                 await self._cloud.files.upload(
-                    storage_type=_STORAGE_BACKUP,
+                    storage_type=StorageType.BACKUP,
                     open_stream=open_stream,
                     filename=filename,
                     base64md5hash=base64md5hash,
@@ -185,7 +178,7 @@ class CloudBackupAgent(BackupAgent):
         try:
             await async_files_delete_file(
                 self._cloud,
-                storage_type=_STORAGE_BACKUP,
+                storage_type=StorageType.BACKUP,
                 filename=self._get_backup_filename(),
             )
         except (ClientError, CloudError) as err:
@@ -194,7 +187,9 @@ class CloudBackupAgent(BackupAgent):
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         try:
-            backups = await async_files_list(self._cloud, storage_type=_STORAGE_BACKUP)
+            backups = await async_files_list(
+                self._cloud, storage_type=StorageType.BACKUP
+            )
             _LOGGER.debug("Cloud backups: %s", backups)
         except (ClientError, CloudError) as err:
             raise BackupAgentError("Failed to list backups") from err
