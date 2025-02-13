@@ -13,6 +13,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Home Assistant SkyConnect config entry."""
+
+    await hass.config_entries.async_forward_entry_setups(entry, ["update"])
+
     return True
 
 

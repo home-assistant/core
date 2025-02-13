@@ -37,6 +37,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             FirmwareUpdateEntity(
+                device=config_entry.data["device"],
                 config_entry=config_entry,
                 update_coordinator=FirmwareUpdateCoordinator(hass, session),
             )
@@ -76,15 +77,15 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
 
     def __init__(
         self,
+        device: str,
         config_entry: ConfigEntry,
         update_coordinator: FirmwareUpdateCoordinator,
     ) -> None:
         """Initialize the SkyConnect firmware update entity."""
+        super().__init__(device, config_entry, update_coordinator)
         self._attr_unique_id = (
-            f"{config_entry.data['serial_number']}_{self.entity_description.key}"
+            f"{self._config_entry.data['serial_number']}_{self.entity_description.key}"
         )
-        self._current_device = config_entry.data["device"]
-        super().__init__(config_entry, update_coordinator)
 
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
         self.hass.config_entries.async_update_entry(
