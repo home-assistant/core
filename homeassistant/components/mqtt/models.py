@@ -420,5 +420,24 @@ class MqttComponentConfig:
     discovery_payload: MQTTDiscoveryPayload
 
 
+class MqttDeviceData(TypedDict, total=False):
+    """Hold the data for an MQTT device."""
+
+    name: str
+    identifiers: str
+    configuration_url: str
+    sw_version: str
+    hw_version: str
+    model: str
+    model_id: str
+
+
+class MqttSubentryData(TypedDict):
+    """Hold the data for a MQTT subentry."""
+
+    device: MqttDeviceData
+    components: dict[str, dict[str, Any]]
+
+
 DATA_MQTT: HassKey[MqttData] = HassKey("mqtt")
 DATA_MQTT_AVAILABLE: HassKey[asyncio.Future[bool]] = HassKey("mqtt_client_available")

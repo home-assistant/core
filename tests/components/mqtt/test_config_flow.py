@@ -2,6 +2,7 @@
 
 from collections.abc import Generator, Iterator
 from contextlib import contextmanager
+from copy import deepcopy
 from pathlib import Path
 from ssl import SSLError
 from typing import Any
@@ -17,6 +18,7 @@ from homeassistant import config_entries
 from homeassistant.components import mqtt
 from homeassistant.components.hassio import AddonError
 from homeassistant.components.mqtt.config_flow import PWD_NOT_CHANGED
+from homeassistant.config_entries import ConfigSubentry, ConfigSubentryData
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_PASSWORD,
@@ -26,7 +28,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+
+from .test_common import MOCK_SUBENTRY_DATA, MOCK_SUBENTRY_DATA_SINGLE
 
 from tests.common import MockConfigEntry, MockMqttReasonCode
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
@@ -2598,3 +2603,720 @@ async def test_migrate_of_incompatible_config_entry(
         await mqtt_mock_entry()
 
     assert config_entry.state is config_entries.ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_subentry_configflow(
+    hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
+) -> None:
+    """Test the subentry ConfigFlow."""
+    await mqtt_mock_entry()
+    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+
+    result = await hass.config_entries.subentries.async_init(
+        (config_entry.entry_id, "device"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device"
+
+    # Test the URL validation
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "name": "Milk notifier",
+            "configuration_url": "http:/badurl.example.com",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device"
+    assert result["errors"]["configuration_url"] == "invalid_url"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "name": "Milk notifier",
+            "sw_version": "1.0",
+            "hw_version": "2.1 rev a",
+            "model": "Bottle XL",
+            "model_id": "mn002",
+            "configuration_url": "https://example.com",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity"
+    assert result["errors"] == {}
+
+    # Process entity flow
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "platform": "notify",
+            "object_id": "bla123",
+            "name": "Milkman alert",
+            "encoding": "utf-8",
+            "qos": 0,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
+    assert result["errors"] == {}
+    assert result["description_placeholders"] == {
+        "mqtt_device": "`Milk notifier`",
+        "platform": "notify",
+        "object_id": "bla123",
+    }
+
+    # Process entity platform config flow
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "command_topic": "test-topic",
+            "command_template": "{{ value_json.value }}",
+            "icon": "mdi:cow",
+            "entity_picture": "https://example.com",
+            "entity_category": "config",
+            "retain": False,
+        },
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == ["entity", "update_entity", "device", "finish"]
+    assert result["step_id"] == "summary_menu"
+    assert result["description_placeholders"] == {
+        "mqtt_device": "`Milk notifier`",
+        "mqtt_items": "`notify_bla123`",
+    }
+
+    # Try to add another entity with the same object_id
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "entity"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "platform": "notify",
+            "object_id": "bla123",
+            "name": "Not going to add me",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity"
+    assert result["errors"] == {"object_id": "object_id_not_unique"}
+
+    # Add second entity with a unique object ID
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "platform": "notify",
+            "object_id": "bla456",
+            "name": "The second notifier",
+            "encoding": "None",
+        },
+    )
+    # Use an invalid topic an test validation
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"command_topic": "test-topic2#invalid"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"]["command_topic"] == "invalid_publish_topic"
+    # Try again with a valid configuration
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"command_topic": "test-topic2"},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == [
+        "entity",
+        "update_entity",
+        "delete_entity",
+        "device",
+        "finish",
+    ]
+    assert result["step_id"] == "summary_menu"
+    assert result["description_placeholders"] == {
+        "mqtt_device": "`Milk notifier`",
+        "mqtt_items": "`notify_bla123`, `notify_bla456`",
+    }
+    # Finish the subentry flow
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {"next_step_id": "finish"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Milk notifier"
+    expected_data = MOCK_SUBENTRY_DATA
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == expected_data
+
+    subentry_id = next(iter(config_entry.subentries.keys()))
+    assert config_entry.subentries == {
+        subentry_id: config_entries.ConfigSubentry(
+            data=expected_data,
+            subentry_id=subentry_id,
+            subentry_type="device",
+            title=expected_data["device"]["name"],
+            unique_id=None,
+        )
+    }
+
+    await hass.async_block_till_done()
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_SUBENTRY_DATA,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+async def test_subentry_reconfigure_remove_entity(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the subentry ConfigFlow reconfigure removing an entity."""
+    await mqtt_mock_entry()
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    subentry_id: str
+    subentry: ConfigSubentry
+    subentry_id, subentry = next(iter(config_entry.subentries.items()))
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, "device", subentry_id
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    # assert we have a device for the subentry
+    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    assert device is not None
+
+    # assert we have an entity for all subentry components
+    # Check we have "notify_bla123" and "notify_bla456" in our mock data
+    components = deepcopy(dict(subentry.data))["components"]
+    assert "notify_bla123" in components
+    assert "notify_bla456" in components
+
+    for key in ("notify_bla123", "notify_bla456"):
+        unique_entity_id = f"{subentry_id}_{key}"
+        entity_id = entity_registry.async_get_entity_id(
+            domain="notify", platform=mqtt.DOMAIN, unique_id=unique_entity_id
+        )
+        assert entity_id is not None
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry is not None
+        assert entity_entry.config_subentry_id == subentry_id
+
+    # assert menu options, we have the option to delete one entity
+    assert result["menu_options"] == [
+        "entity",
+        "update_entity",
+        "delete_entity",
+        "device",
+        "finish_reconfigure",
+    ]
+
+    # assert we can delete an entity
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "delete_entity"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "delete_entity"
+    assert result["data_schema"].schema["component"].config["options"] == [
+        "notify_bla123",
+        "notify_bla456",
+    ]
+    # remove notify_bla456
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "component": "notify_bla456",
+        },
+    )
+
+    # assert menu options, we have only one item left, we cannot delete it
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+    assert result["menu_options"] == [
+        "entity",
+        "update_entity",
+        "device",
+        "finish_reconfigure",
+    ]
+
+    # finish reconfigure flow
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "finish_reconfigure"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # check if the entity for component notify_bla456
+    # was removed from the subentry and entity registry
+    unique_entity_id = f"{subentry_id}_notify_bla456"
+    entity_id = entity_registry.async_get_entity_id(
+        domain="notify", platform=mqtt.DOMAIN, unique_id=unique_entity_id
+    )
+    assert entity_id is None
+    components = deepcopy(dict(subentry.data))["components"]
+    assert "notify_bla123" in components
+    assert "notify_bla456" not in components
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_SUBENTRY_DATA,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+async def test_subentry_reconfigure_edit_entity_multi_entitites(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the subentry ConfigFlow reconfigure with multi entities."""
+    await mqtt_mock_entry()
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    subentry_id: str
+    subentry: ConfigSubentry
+    subentry_id, subentry = next(iter(config_entry.subentries.items()))
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, "device", subentry_id
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    # assert we have a device for the subentry
+    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    assert device is not None
+
+    # assert we have an entity for all subentry components
+    # Check we have "notify_bla123" and "notify_bla456" in our mock data
+    components = deepcopy(dict(subentry.data))["components"]
+    assert "notify_bla123" in components
+    assert "notify_bla456" in components
+
+    for key in ("notify_bla123", "notify_bla456"):
+        unique_entity_id = f"{subentry_id}_{key}"
+        entity_id = entity_registry.async_get_entity_id(
+            domain="notify", platform=mqtt.DOMAIN, unique_id=unique_entity_id
+        )
+        assert entity_id is not None
+        entity_entry = entity_registry.async_get(entity_id)
+        assert entity_entry is not None
+        assert entity_entry.config_subentry_id == subentry_id
+
+    # assert menu options, we have the option to delete one entity
+    assert result["menu_options"] == [
+        "entity",
+        "update_entity",
+        "delete_entity",
+        "device",
+        "finish_reconfigure",
+    ]
+
+    # assert we can update an entity
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "update_entity"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "update_entity"
+    assert result["data_schema"].schema["component"].config["options"] == [
+        "notify_bla123",
+        "notify_bla456",
+    ]
+    # select notify_bla456
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "component": "notify_bla456",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity"
+
+    # submit the new common entity data and try to change the object_id
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "platform": "notify",
+            "object_id": "bla456_changed",
+            "name": "The second notifier updated",
+            "encoding": "None",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity"
+    assert result["errors"] == {"object_id": "object_id_not_mutable"}
+
+    # submit the new common entity data
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "platform": "notify",
+            "object_id": "bla456",
+            "name": "The second notifier updated",
+            "encoding": "None",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
+
+    # submit the new platform specific entity data
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"command_topic": "test-topic2-updated"},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    # finish reconfigure flow
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "finish_reconfigure"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Check we still have out components
+    components = deepcopy(dict(subentry.data))["components"]
+    assert "notify_bla123" in components
+    assert "notify_bla456" in components
+
+    # Check out update was successful
+    assert components["notify_bla456"]["name"] == "The second notifier updated"
+    assert components["notify_bla456"]["command_topic"] == "test-topic2-updated"
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_SUBENTRY_DATA_SINGLE,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+async def test_subentry_reconfigure_edit_entity_single_entity(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the subentry ConfigFlow reconfigure with single entity."""
+    await mqtt_mock_entry()
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    subentry_id: str
+    subentry: ConfigSubentry
+    subentry_id, subentry = next(iter(config_entry.subentries.items()))
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, "device", subentry_id
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    # assert we have a device for the subentry
+    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    assert device is not None
+
+    # assert we have an entity for the subentry component
+    # Check we have "notify_bla123" in our mock data
+    components = deepcopy(dict(subentry.data))["components"]
+    assert len(components) == 1
+    assert "notify_bla123" in components
+    unique_entity_id = f"{subentry_id}_notify_bla123"
+    entity_id = entity_registry.async_get_entity_id(
+        domain="notify", platform=mqtt.DOMAIN, unique_id=unique_entity_id
+    )
+    assert entity_id is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.config_subentry_id == subentry_id
+
+    # assert menu options, we do not have the option to delete an entity
+    assert result["menu_options"] == [
+        "entity",
+        "update_entity",
+        "device",
+        "finish_reconfigure",
+    ]
+
+    # assert we can update the entity, there is no select step
+    assert components["notify_bla123"]["icon"] == "mdi:cow"
+    assert components["notify_bla123"]["encoding"] == "utf-8"
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "update_entity"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity"
+
+    # submit the new common entity data,
+    # but omit the name to be reset
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "platform": "notify",
+            "object_id": "bla123",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
+
+    # submit the new platform specific entity data,
+    # but omit the icon, to reset it
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"command_topic": "test-topic1-updated"},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    # finish reconfigure flow
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "finish_reconfigure"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Check we still have out components
+    components = deepcopy(dict(subentry.data))["components"]
+    assert "notify_bla123" in components
+    assert len(components) == 1
+
+    # Check out update was successful
+    assert "name" not in components["notify_bla123"]
+    assert "icon" not in components["notify_bla123"]
+    assert components["notify_bla123"]["command_topic"] == "test-topic1-updated"
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_SUBENTRY_DATA_SINGLE,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+async def test_subentry_reconfigure_add_entity(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the subentry ConfigFlow reconfigure and add an entity."""
+    await mqtt_mock_entry()
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    subentry_id: str
+    subentry: ConfigSubentry
+    subentry_id, subentry = next(iter(config_entry.subentries.items()))
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, "device", subentry_id
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    # assert we have a device for the subentry
+    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    assert device is not None
+
+    # assert we have an entity for the subentry component
+    # Check we have "notify_bla123" and "notify_bla456" in our mock data
+    components = deepcopy(dict(subentry.data))["components"]
+    assert len(components) == 1
+    assert "notify_bla123" in components
+    unique_entity_id = f"{subentry_id}_notify_bla123"
+    entity_id = entity_registry.async_get_entity_id(
+        domain="notify", platform=mqtt.DOMAIN, unique_id=unique_entity_id
+    )
+    assert entity_id is not None
+    entity_entry = entity_registry.async_get(entity_id)
+    assert entity_entry is not None
+    assert entity_entry.config_subentry_id == subentry_id
+
+    # assert menu options, we do not have the option to delete an entity
+    assert result["menu_options"] == [
+        "entity",
+        "update_entity",
+        "device",
+        "finish_reconfigure",
+    ]
+
+    # assert we can update the entity, there is no select step
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "entity"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity"
+
+    # submit the new common entity but not with a unique object_id
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "platform": "notify",
+            "object_id": "bla123",
+            "name": "This is not going to work",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity"
+    assert result["errors"] == {"object_id": "object_id_not_unique"}
+
+    # submit the new common entity data, with unique object_id
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "platform": "notify",
+            "object_id": "bla456",
+            "name": "The second notifier added",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "entity_platform_config"
+
+    # submit the new platform specific entity data
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={"command_topic": "test-topic2-added"},
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    # finish reconfigure flow
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "finish_reconfigure"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Check we still have out components
+    components = deepcopy(dict(subentry.data))["components"]
+    assert "notify_bla123" in components
+    assert "notify_bla456" in components
+    assert len(components) == 2
+
+    # Check out update was successful
+    assert components["notify_bla456"]["name"] == "The second notifier added"
+    assert components["notify_bla456"]["command_topic"] == "test-topic2-added"
+
+
+@pytest.mark.parametrize(
+    "mqtt_config_subentries_data",
+    [
+        (
+            ConfigSubentryData(
+                data=MOCK_SUBENTRY_DATA,
+                subentry_type="device",
+                title="Mock subentry",
+            ),
+        )
+    ],
+)
+async def test_subentry_reconfigure_update_device_properties(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the subentry ConfigFlow reconfigure and update device properties."""
+    await mqtt_mock_entry()
+    config_entry: MockConfigEntry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    subentry_id: str
+    subentry: ConfigSubentry
+    subentry_id, subentry = next(iter(config_entry.subentries.items()))
+    result = await config_entry.start_subentry_reconfigure_flow(
+        hass, "device", subentry_id
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    # assert we have a device for the subentry
+    device = device_registry.async_get_device(identifiers={(mqtt.DOMAIN, subentry_id)})
+    assert device is not None
+
+    # assert we have an entity for all subentry components
+    # Check we have "notify_bla123" and "notify_bla456" in our mock data
+    components = deepcopy(dict(subentry.data))["components"]
+    assert "notify_bla123" in components
+    assert "notify_bla456" in components
+
+    # Assert initial data
+    device = deepcopy(dict(subentry.data))["device"]
+    assert device["name"] == "Milk notifier"
+    assert device["sw_version"] == "1.0"
+    assert device["hw_version"] == "2.1 rev a"
+    assert device["model"] == "Bottle XL"
+    assert device["model_id"] == "mn002"
+
+    # assert menu options, we have the option to delete one entity
+    assert result["menu_options"] == [
+        "entity",
+        "update_entity",
+        "delete_entity",
+        "device",
+        "finish_reconfigure",
+    ]
+
+    # assert we can update an entity
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "device"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device"
+
+    # Update the device details
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "name": "Beer notifier",
+            "sw_version": "1.1",
+            "model": "Beer bottle XL",
+            "model_id": "bn003",
+            "configuration_url": "https://example.com",
+        },
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    # finish reconfigure flow
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "finish_reconfigure"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    # Check our device was updated
+    device = deepcopy(dict(subentry.data))["device"]
+    assert device["name"] == "Beer notifier"
+    assert "hw_version" not in device
+    assert device["model"] == "Beer bottle XL"
+    assert device["model"] == "Beer bottle XL"
+    assert device["model_id"] == "bn003"
