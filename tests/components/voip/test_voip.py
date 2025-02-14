@@ -1171,22 +1171,3 @@ async def test_start_conversation_user_doesnt_pick_up(
         satellite.on_chunk(bytes(_ONE_SECOND))
         async with asyncio.timeout(1):
             await pipeline_started.wait()
-
-
-@pytest.mark.usefixtures("socket_enabled")
-async def test_get_configuration(
-    hass: HomeAssistant,
-    voip_devices: VoIPDevices,
-    voip_device: VoIPDevice,
-) -> None:
-    """Test async_get_configuration."""
-    assert await async_setup_component(hass, "voip", {})
-
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite)
-    assert (
-        satellite.async_get_configuration()
-        == assist_satellite.AssistSatelliteConfiguration(
-            available_wake_words=[], active_wake_words=[], max_active_wake_words=1
-        )
-    )

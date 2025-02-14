@@ -171,9 +171,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         self,
     ) -> AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
-        return AssistSatelliteConfiguration(
-            available_wake_words=[], active_wake_words=[], max_active_wake_words=1
-        )
+        raise NotImplementedError
 
     async def async_set_configuration(
         self, config: AssistSatelliteConfiguration

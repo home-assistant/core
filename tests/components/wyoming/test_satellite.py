@@ -27,10 +27,9 @@ from wyoming.wake import Detect, Detection
 from homeassistant.components import assist_pipeline, assist_satellite, wyoming
 from homeassistant.components.wyoming.assist_satellite import WyomingAssistSatellite
 from homeassistant.components.wyoming.devices import SatelliteDevice
-from homeassistant.const import STATE_ON, Platform
+from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er, intent as intent_helper
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
 from . import SATELLITE_INFO, WAKE_WORD_INFO, MockAsyncTcpClient
@@ -71,24 +70,6 @@ def get_test_wav() -> bytes:
             wav_file.writeframes(b"1234")
 
         return wav_io.getvalue()
-
-
-def async_get_satellite_entity(
-    hass: HomeAssistant, domain: str, unique_id_prefix: str
-) -> assist_satellite.AssistSatelliteEntity | None:
-    """Get Assist satellite entity."""
-    ent_reg = er.async_get(hass)
-    satellite_entity_id = ent_reg.async_get_entity_id(
-        Platform.ASSIST_SATELLITE, domain, f"{unique_id_prefix}-assist_satellite"
-    )
-    if satellite_entity_id is None:
-        return None
-    assert not satellite_entity_id.endswith("none")
-
-    component: EntityComponent[assist_satellite.AssistSatelliteEntity] = hass.data[
-        assist_satellite.DOMAIN
-    ]
-    return component.get_entity(satellite_entity_id)
 
 
 class SatelliteAsyncTcpClient(MockAsyncTcpClient):
@@ -1395,29 +1376,3 @@ async def test_announce(
         # Stop the satellite
         await hass.config_entries.async_unload(entry.entry_id)
         await hass.async_block_till_done()
-
-
-async def test_get_configuration(hass: HomeAssistant) -> None:
-    """Test async_get_media_source_audio."""
-    with (
-        patch(
-            "homeassistant.components.wyoming.data.load_wyoming_info",
-            return_value=SATELLITE_INFO,
-        ),
-        patch(
-            "homeassistant.components.wyoming.assist_satellite.AsyncTcpClient",
-            SatelliteAsyncTcpClient(responses=[], block_until_inject=True),
-        ),
-    ):
-        entry = await setup_config_entry(hass)
-        device: SatelliteDevice = hass.data[wyoming.DOMAIN][entry.entry_id].device
-
-        satellite = async_get_satellite_entity(
-            hass, wyoming.DOMAIN, device.satellite_id
-        )
-        assert (
-            satellite.async_get_configuration()
-            == assist_satellite.AssistSatelliteConfiguration(
-                available_wake_words=[], active_wake_words=[], max_active_wake_words=1
-            )
-        )
