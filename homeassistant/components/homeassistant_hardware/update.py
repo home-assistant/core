@@ -84,6 +84,7 @@ class BaseFirmwareUpdateEntity(
     # Subclasses provide the mapping between firmware types and entity descriptions
     entity_description: FirmwareUpdateEntityDescription
     firmware_entity_descriptions: dict[ApplicationType, FirmwareUpdateEntityDescription]
+    bootloader_reset_type: str | None = None
 
     _attr_supported_features = (
         UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
@@ -296,6 +297,7 @@ class BaseFirmwareUpdateEntity(
                 ApplicationType.SPINEL.as_flasher_application_type(),
                 ApplicationType.CPC.as_flasher_application_type(),
             ),
+            bootloader_reset=self.bootloader_reset_type,
         )
 
         async with self._temporarily_stop_owning_software(device):
