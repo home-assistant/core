@@ -1,0 +1,60 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of your Bosch Alarm Panel",
+          "port": "The port used to connect to your Bosch Alarm Panel. This is usually 7700"
+        }
+      },
+      "auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "installer_code": "Installer Code",
+          "user_code": "User Code"
+        },
+        "data_description": {
+          "password": "The Mode 2 automation code from your panel",
+          "installer_code": "The Installer Code from your panel",
+          "user_code": "The User Code from your panel"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "code": "Arming Code"
+        },
+        "data_description": {
+          "code": "Code used when arming the panel from within Home Assistant. Leave this empty if you don't want to require a code for this."
+        }
+      }
+    }
+  },
+  "services": {
+    "set_date_time": {
+      "name": "Set the Date & Time on the panel",
+      "description": "Set the Date & Time on the panel",
+      "fields": {
+        "datetime": {
+          "name": "Date & Time to set",
+          "description": "The date/time to set. The time zone of the Home Assistant instance is assumed. Defaults to current date/time if unset."
+        }
+      }
+    }
+  }
+}
