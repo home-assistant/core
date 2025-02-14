@@ -1175,6 +1175,5 @@ async def test_start_conversation_user_doesnt_pick_up(
     ):
         satellite.connection_made(Mock())
 
-        # Error should clear system prompt
         with pytest.raises(TimeoutError):
             await satellite.async_start_conversation(announcement)
