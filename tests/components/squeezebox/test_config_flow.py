@@ -6,7 +6,6 @@ from unittest.mock import patch
 from pysqueezebox import Server
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.squeezebox.const import (
     CONF_BROWSE_LIMIT,
     CONF_HTTPS,
