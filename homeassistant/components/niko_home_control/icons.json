@@ -7,9 +7,7 @@
             "default": "mdi:calendar-clock",
             "state": {
               "day": "mdi:weather-sunny",
-              "night": "mdi:weather-night",
-              "off": "mdi:power",
-              "cool": "mdi:snowflake"
+              "night": "mdi:weather-night"
             }
           }
         }
