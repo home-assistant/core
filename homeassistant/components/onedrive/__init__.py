@@ -87,9 +87,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
     coordinator = OneDriveUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
-    coordinator = OneDriveUpdateCoordinator(hass, entry, client)
-    await coordinator.async_config_entry_first_refresh()
-
     entry.runtime_data = OneDriveRuntimeData(
         client=client,
         token_function=get_access_token,
