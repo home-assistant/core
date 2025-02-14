@@ -7,6 +7,7 @@ Uses locked async operations to ensure data consistency and respects upload inte
 from __future__ import annotations
 
 import asyncio
+from asyncio import timeout
 import datetime as dt
 import logging
 from typing import TypeVar
@@ -33,7 +34,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-# Define our config entry type that stores the client in runtime_data
 T = TypeVar("T", bound=WebhookClientAsync)
 EnergyIDConfigEntry = ConfigEntry[T]
 
@@ -42,7 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
     """Set up EnergyID from a config entry."""
     hass.data.setdefault(DOMAIN, {})
 
-    # Create and validate the webhook client
     client = WebhookClientAsync(
         webhook_url=entry.data[CONF_WEBHOOK_URL],
         session=async_get_clientsession(hass),
@@ -53,14 +52,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) -> 
         _LOGGER.error("Could not validate webhook client")
         raise ConfigEntryError from error
 
-    # Store client in runtime_data
     entry.runtime_data = client
 
-    # Create the webhook dispatcher
     dispatcher = WebhookDispatcher(hass, entry)
     hass.data[DOMAIN][entry.entry_id] = dispatcher
 
-    # Register the webhook dispatcher
+    if not await dispatcher.async_check_connection():
+        _LOGGER.warning(
+            "Initial connection to EnergyID webhook service failed. Will retry on state changes"
+        )
+
     async_track_state_change_event(
         hass=hass,
         entity_ids=dispatcher.entity_id,
@@ -79,14 +80,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: EnergyIDConfigEntry) ->
 class WebhookDispatcher:
     """Handles state changes and uploads data to EnergyID.
 
-    Manages webhooks, enforces upload intervals, and handles data validation.
-    Uses asyncio locks to prevent concurrent uploads of the same state.
+    Manages webhook communication, upload intervals, and data validation.
+    Uses asyncio.Lock to prevent concurrent uploads for data consistency.
     """
 
     def __init__(self, hass: HomeAssistant, entry: EnergyIDConfigEntry) -> None:
         """Initialize the dispatcher."""
         self.hass = hass
-        self.client = entry.runtime_data  # Get client from runtime_data
+        self.client = entry.runtime_data
         self.entity_id = entry.data[CONF_ENTITY_ID]
         self.metric = entry.data[CONF_METRIC]
         self.metric_kind = entry.data[CONF_METRIC_KIND]
@@ -95,33 +96,47 @@ class WebhookDispatcher:
         self.upload_interval = dt.timedelta(seconds=DEFAULT_UPLOAD_INTERVAL)
 
         self.last_upload: dt.datetime | None = None
-
         self._upload_lock = asyncio.Lock()
+        self._connected = False
+
+    async def async_check_connection(self) -> bool:
+        """Check connection to EnergyID and log status changes."""
+        try:
+            await self.client.get_policy()
+            if not self._connected:
+                _LOGGER.info("Successfully connected to EnergyID webhook service")
+                self._connected = True
+        except (aiohttp.ClientConnectionError, aiohttp.ClientResponseError) as err:
+            if self._connected:
+                _LOGGER.info("Lost connection to EnergyID webhook service: %s", err)
+                self._connected = False
+            return False
+        return True
 
     async def async_handle_state_change(
         self, event: Event[EventStateChangedData]
     ) -> bool:
-        """Handle a state change."""
+        """Handle a state change event."""
+        if not await self.async_check_connection():
+            return False
+
         async with self._upload_lock:
             return await self._async_handle_state_change(event)
 
     async def _async_handle_state_change(
         self, event: Event[EventStateChangedData]
     ) -> bool:
-        """Handle a state change."""
+        """Process and upload a state change event."""
         _LOGGER.debug("Handling state change event %s", event)
         new_state = event.data["new_state"]
 
-        # Check if enough time has passed since the last upload
         if new_state is None or not self.upload_allowed(new_state.last_changed):
             _LOGGER.debug(
-                "Not uploading state %s because of last upload %s",
+                "Not uploading state %s due to upload interval or None state",
                 new_state,
-                self.last_upload,
             )
             return False
 
-        # Check if the new state is a valid float
         try:
             value = float(new_state.state)
         except ValueError:
@@ -132,40 +147,57 @@ class WebhookDispatcher:
             )
             return False
 
-        # Upload the new state
-        try:
-            data: list[list] = [[new_state.last_changed.isoformat(), value]]
-            payload = WebhookPayload(
-                remote_id=self.entity_id,
-                remote_name=new_state.attributes.get("friendly_name", self.entity_id),
-                metric=self.metric,
-                metric_kind=self.metric_kind,
-                unit=self.unit,
-                interval=self.data_interval,
-                data=data,
-            )
-            _LOGGER.debug("Uploading data %s", payload)
-            await self.client.post_payload(payload)
-        except aiohttp.ClientResponseError as e:
-            _LOGGER.error("Client response error while saving data %s: %s", payload, e)
-            return False
-        except aiohttp.ClientConnectionError as e:
+        retries = 3
+        for attempt in range(retries):
+            try:
+                data: list[list] = [[new_state.last_changed.isoformat(), value]]
+                payload = WebhookPayload(
+                    remote_id=self.entity_id,
+                    remote_name=new_state.attributes.get(
+                        "friendly_name", self.entity_id
+                    ),
+                    metric=self.metric,
+                    metric_kind=self.metric_kind,
+                    unit=self.unit,
+                    interval=self.data_interval,
+                    data=data,
+                )
+                _LOGGER.debug(
+                    "Uploading data %s, attempt %s/%s", payload, attempt + 1, retries
+                )
+                async with timeout(10):
+                    await self.client.post_payload(payload)
+                break
+            except (
+                TimeoutError,
+                aiohttp.ClientConnectionError,
+                aiohttp.ClientResponseError,
+                aiohttp.ClientError,
+            ) as err:
+                _LOGGER.warning(
+                    "Upload to EnergyID failed (attempt %s/%s): %s",
+                    attempt + 1,
+                    retries,
+                    err,
+                )
+                if attempt < retries - 1:
+                    delay = 2**attempt
+                    _LOGGER.debug("Waiting %s seconds before retrying", delay)
+                    await asyncio.sleep(delay)
+        else:
             _LOGGER.error(
-                "Client connection error while saving data %s: %s", payload, e
+                "Failed to upload data to EnergyID after %s retries. Payload: %s",
+                retries,
+                payload,
             )
-            return False
-        except aiohttp.ClientError as e:
-            _LOGGER.error("Client error while saving data %s: %s", payload, e)
             return False
 
-        # Update the last upload time
         self.last_upload = new_state.last_changed
-        _LOGGER.debug("Updated last upload time to %s", self.last_upload)
+        _LOGGER.debug("Last upload time updated to %s", self.last_upload)
         return True
 
     def upload_allowed(self, state_change_time: dt.datetime) -> bool:
-        """Check if an upload is allowed."""
+        """Check if upload is allowed based on the upload interval."""
         if self.last_upload is None:
             return True
-
         return state_change_time - self.last_upload > self.upload_interval
