@@ -29,6 +29,7 @@ from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
     UnitOfEnergy,
+    UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
     UnitOfTemperature,
@@ -922,6 +923,15 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_getter=lambda api: api.getBatteryLevel(),
+    ),
+    ViCareSensorEntityDescription(
+        key="fuel_need",
+        translation_key="fuel_need",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=UnitOfMass.KILOGRAMS,
+        value_getter=lambda api: api.getFuelNeed(),
+        unit_getter=lambda api: api.getFuelUnit(),
     ),
 )
 

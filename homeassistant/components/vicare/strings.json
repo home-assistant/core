@@ -490,6 +490,9 @@
       },
       "spf_heating": {
         "name": "Seasonal performance factor - heating"
+      },
+      "fuel_need": {
+        "name": "Fuel need"
       }
     },
     "water_heater": {
