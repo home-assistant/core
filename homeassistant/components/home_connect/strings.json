@@ -485,7 +485,7 @@
     },
     "set_program_and_options": {
       "name": "Set program and options",
-      "description": "Start or select a program with options or set the options for the active or the selected program.",
+      "description": "Starts or selects a program with options or sets the options for the active or the selected program.",
       "fields": {
         "device_id": {
           "name": "Device ID",
