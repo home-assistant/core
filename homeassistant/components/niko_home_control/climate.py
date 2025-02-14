@@ -14,17 +14,20 @@ from homeassistant.components.climate import (
 from homeassistant.components.sensor import UnitOfTemperature
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import NikoHomeControlConfigEntry
-from .const import NIKO_THERMOSTAT_MODES_MAP
+from .const import (
+    NIKO_HOME_CONTROL_THERMOSTAT_MODES,
+    NIKO_HOME_CONTROL_THERMOSTAT_MODES_MAP,
+)
 from .entity import NikoHomeControlEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NikoHomeControlConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Niko Home Control thermostat entry."""
     controller = entry.runtime_data
@@ -39,7 +42,9 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
     """Representation of a Niko Home Control thermostat."""
 
     _attr_supported_features: ClimateEntityFeature = (
-        ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
+        ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.TURN_OFF
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_name = None
@@ -66,7 +71,7 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
         for key, value in THERMOSTAT_MODES.items():
             if value == mode:
                 return key
-        return 3
+        return NIKO_HOME_CONTROL_THERMOSTAT_MODES.OFF
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -78,13 +83,19 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
-        await self._action.set_mode(NIKO_THERMOSTAT_MODES_MAP.get(hvac_mode))
+        await self._action.set_mode(
+            NIKO_HOME_CONTROL_THERMOSTAT_MODES_MAP.get(hvac_mode)
+        )
+
+    async def async_turn_off(self):
+        """Turn thermostat off."""
+        await self._action.set_mode(NIKO_HOME_CONTROL_THERMOSTAT_MODES.OFF)
 
     def update_state(self) -> None:
         """Update the state of the entity."""
-        if self._action.state = NIKO_THERMOSTAT_MODES_MAP.off:
+        if self._action.state == NIKO_HOME_CONTROL_THERMOSTAT_MODES.OFF:
             self._attr_hvac_mode = HVACMode.OFF
-        elif self._action.state == NIKO_THERMOSTAT_MODES_MAP.cool:
+        elif self._action.state == NIKO_HOME_CONTROL_THERMOSTAT_MODES.COOL:
             self._attr_hvac_mode = HVACMode.COOL
         else:
             self._attr_hvac_mode = HVACMode.AUTO
