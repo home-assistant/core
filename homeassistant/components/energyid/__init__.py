@@ -111,7 +111,8 @@ class WebhookDispatcher:
                 _LOGGER.info("Lost connection to EnergyID webhook service: %s", err)
                 self._connected = False
             return False
-        return True
+        else:
+            return True
 
     async def async_handle_state_change(
         self, event: Event[EventStateChangedData]
