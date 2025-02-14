@@ -52,7 +52,7 @@
     "error": {
       "folder_rename_error": "Failed to rename folder",
       "folder_creation_error": "Failed to create folder",
-      "folder_already_in_use": "Folder already in use by another instance"
+      "folder_already_in_use": "Folder already used for backups from another Home Assistant instance"
     }
   },
   "exceptions": {
