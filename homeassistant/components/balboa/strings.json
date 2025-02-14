@@ -78,6 +78,14 @@
           "high": "High"
         }
       }
+    },
+    "time": {
+      "filter_cycle_start": {
+        "name": "Filter cycle {index} start"
+      },
+      "filter_cycle_end": {
+        "name": "Filter cycle {index} end"
+      }
     }
   }
 }
