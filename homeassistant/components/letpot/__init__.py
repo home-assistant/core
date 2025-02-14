@@ -22,7 +22,7 @@ from .const import (
 )
 from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SWITCH, Platform.TIME]
+PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.SWITCH, Platform.TIME]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bool:
