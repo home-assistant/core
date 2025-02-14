@@ -1855,7 +1855,7 @@ pysensibo==1.1.0
 pyserial==3.5
 
 # homeassistant.components.seventeentrack
-pyseventeentrack==1.0.1
+pyseventeentrack==1.0.2
 
 # homeassistant.components.sia
 pysiaalarm==3.1.1
