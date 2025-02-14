@@ -478,8 +478,8 @@
       }
     },
     "set_program_and_options": {
-      "name": "Start program",
-      "description": "Selects a program, sets the options, and starts it.",
+      "name": "Set program and options",
+      "description": "Start or select a program with options or set the options for the active or the selected program",
       "fields": {
         "device_id": {
           "name": "Device ID",
@@ -487,7 +487,7 @@
         },
         "program": {
           "name": "Program",
-          "description": "Program to select. You can use the listed programs or use a custom program key such \"Dishcare.Dishwasher.Program.Auto2\""
+          "description": "Program to select"
         },
         "consumer_products_cleaning_robot_option_reference_map_id": {
           "name": "Reference map ID",
