@@ -15,6 +15,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.mark.parametrize("device_type", ["LPH63", "LPH31"])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
