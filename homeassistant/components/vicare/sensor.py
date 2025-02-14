@@ -636,22 +636,6 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
-        key="buffer main temperature",
-        translation_key="buffer_main_temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getBufferMainTemperature(),
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    ViCareSensorEntityDescription(
-        key="buffer_top_temperature",
-        translation_key="buffer_top_temperature",
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getBufferTopTemperature(),
-    ),
-    ViCareSensorEntityDescription(
         key="buffer_mid_top_temperature",
         translation_key="buffer_mid_top_temperature",
         state_class=SensorStateClass.MEASUREMENT,
@@ -682,6 +666,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         value_getter=lambda api: api.getBufferBottomTemperature(),
+    ),
+    ViCareSensorEntityDescription(
+        key="buffer main temperature",
+        translation_key="buffer_main_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getBufferMainTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
         key="volumetric_flow",
