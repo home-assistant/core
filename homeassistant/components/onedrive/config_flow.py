@@ -6,7 +6,7 @@ from typing import Any, cast
 
 from onedrive_personal_sdk.clients.client import OneDriveClient
 from onedrive_personal_sdk.exceptions import OneDriveException
-from onedrive_personal_sdk.models.items import Folder, ItemUpdate
+from onedrive_personal_sdk.models.items import AppRoot, ItemUpdate
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -30,10 +30,8 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     MINOR_VERSION = 2
 
     step_data: dict[str, Any] = {}
-    title: str
     client: OneDriveClient
-    approot_id: str
-    folder: Folder
+    approot: AppRoot
 
     @property
     def logger(self) -> logging.Logger:
@@ -59,7 +57,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         )
 
         try:
-            approot = await self.client.get_approot()
+            self.approot = await self.client.get_approot()
         except OneDriveException:
             self.logger.exception("Failed to connect to OneDrive")
             return self.async_abort(reason="connection_error")
@@ -67,7 +65,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self.logger.exception("Unknown error")
             return self.async_abort(reason="unknown")
 
-        await self.async_set_unique_id(approot.parent_reference.drive_id)
+        await self.async_set_unique_id(self.approot.parent_reference.drive_id)
 
         if self.source != SOURCE_USER:
             self._abort_if_unique_id_mismatch(
@@ -85,12 +83,6 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
         self.step_data = data
-        self.approot_id = approot.id
-        self.title = (
-            f"{approot.created_by.user.display_name}'s OneDrive"
-            if approot.created_by.user and approot.created_by.user.display_name
-            else "OneDrive"
-        )
 
         if self.source == SOURCE_RECONFIGURE:
             return await self.async_step_reconfigure_folder()
@@ -106,7 +98,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         if user_input is not None:
             try:
                 folder = await self.client.create_folder(
-                    self.approot_id, user_input[CONF_FOLDER_NAME]
+                    self.approot.id, user_input[CONF_FOLDER_NAME]
                 )
             except OneDriveException:
                 self.logger.debug("Failed to create folder", exc_info=True)
@@ -115,8 +107,14 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 if folder.description and folder.description != instance_id:
                     errors[CONF_FOLDER_NAME] = "folder_already_in_use"
             if not errors:
+                title = (
+                    f"{self.approot.created_by.user.display_name}'s OneDrive"
+                    if self.approot.created_by.user
+                    and self.approot.created_by.user.display_name
+                    else "OneDrive"
+                )
                 return self.async_create_entry(
-                    title=self.title,
+                    title=title,
                     data={
                         **self.step_data,
                         CONF_FOLDER_ID: folder.id,
