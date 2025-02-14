@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
 )
-from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
@@ -55,9 +54,7 @@ STEP_AUTH_DATA_SCHEMA_BG = vol.Schema(
 STEP_INIT_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_CODE): str})
 
 
-async def try_connect(
-    hass: HomeAssistant, data: dict[str, Any], load_selector: int = 0
-):
+async def try_connect(data: dict[str, Any], load_selector: int = 0):
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
@@ -71,20 +68,6 @@ async def try_connect(
 
     try:
         await panel.connect(load_selector)
-    except (PermissionError, ValueError) as err:
-        _LOGGER.exception("Authentication Error")
-        raise RuntimeError("invalid_auth") from err
-    except (
-        OSError,
-        ConnectionRefusedError,
-        ssl.SSLError,
-        asyncio.exceptions.TimeoutError,
-    ) as err:
-        _LOGGER.exception("Connection Error")
-        raise RuntimeError("cannot_connect") from err
-    except Exception as err:  # pylint: disable=broad-except
-        _LOGGER.exception("Unknown Error")
-        raise RuntimeError("unknown") from err
     finally:
         await panel.disconnect()
 
@@ -102,31 +85,42 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        if user_input is None:
-            return self.async_show_form(
-                step_id="user", data_schema=STEP_USER_DATA_SCHEMA
-            )
-        self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
-        try:
-            # Use load_selector = 0 to fetch the panel model without authentication.
-            (model, _) = await try_connect(self.hass, user_input, 0)
-            self.data = user_input
-            self.data[CONF_MODEL] = model
-            return await self.async_step_auth()
-        except RuntimeError as ex:
-            _LOGGER.info(user_input)
-            return self.async_show_form(
-                step_id="user",
-                data_schema=self.add_suggested_values_to_schema(
-                    STEP_USER_DATA_SCHEMA, user_input
-                ),
-                errors={"base": ex.args[0]},
-            )
+        errors = {}
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+            try:
+                # Use load_selector = 0 to fetch the panel model without authentication.
+                (model, _) = await try_connect(user_input, 0)
+            except (
+                OSError,
+                ConnectionRefusedError,
+                ssl.SSLError,
+                asyncio.exceptions.TimeoutError,
+            ):
+                _LOGGER.exception("Connection Error")
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self.data = user_input
+                self.data[CONF_MODEL] = model
+                return await self.async_step_auth()
+        return self.async_show_form(
+            step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
 
     async def async_step_auth(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the auth step."""
+        errors = {}
+
+        # Each model variant requires a different authentication flow
         if "Solution" in self.data[CONF_MODEL]:
             schema = STEP_AUTH_DATA_SCHEMA_SOLUTION
         elif "AMAX" in self.data[CONF_MODEL]:
@@ -134,19 +128,33 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             schema = STEP_AUTH_DATA_SCHEMA_BG
 
-        if user_input is None:
-            return self.async_show_form(step_id="auth", data_schema=schema)
-        self.data.update(user_input)
-        try:
-            (model, serial_number) = await try_connect(
-                self.hass, self.data, Panel.LOAD_EXTENDED_INFO
-            )
-            await self.async_set_unique_id(str(serial_number))
-            self._abort_if_unique_id_configured()
-            return self.async_create_entry(title=f"Bosch {model}", data=self.data)
-        except RuntimeError as ex:
-            return self.async_show_form(
-                step_id="auth",
-                data_schema=self.add_suggested_values_to_schema(schema, user_input),
-                errors={"base": ex.args[0]},
-            )
+        if user_input is not None:
+            self.data.update(user_input)
+            try:
+                (model, serial_number) = await try_connect(
+                    self.data, Panel.LOAD_EXTENDED_INFO
+                )
+            except (PermissionError, ValueError):
+                errors["base"] = "invalid_auth"
+                _LOGGER.exception("Authentication Error")
+            except (
+                OSError,
+                ConnectionRefusedError,
+                ssl.SSLError,
+                asyncio.exceptions.TimeoutError,
+            ):
+                _LOGGER.exception("Connection Error")
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                await self.async_set_unique_id(str(serial_number))
+                self._abort_if_unique_id_configured()
+                return self.async_create_entry(title=f"Bosch {model}", data=self.data)
+
+        return self.async_show_form(
+            step_id="auth",
+            data_schema=self.add_suggested_values_to_schema(schema, user_input),
+            errors=errors,
+        )
