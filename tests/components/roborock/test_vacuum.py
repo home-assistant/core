@@ -117,6 +117,30 @@ async def test_commands(
         assert mock_send_command.call_args[0][1] == called_params
 
 
+async def test_cloud_command(
+    hass: HomeAssistant,
+    bypass_api_fixture,
+    setup_entry: MockConfigEntry,
+) -> None:
+    """Test sending commands to the vacuum."""
+
+    vacuum = hass.states.get(ENTITY_ID)
+    assert vacuum
+
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "command": "get_map_v1"}
+    with patch(
+        "homeassistant.components.roborock.coordinator.RoborockMqttClientV1.send_command"
+    ) as mock_send_command:
+        await hass.services.async_call(
+            Platform.VACUUM,
+            SERVICE_SEND_COMMAND,
+            data,
+            blocking=True,
+        )
+        assert mock_send_command.call_count == 1
+        assert mock_send_command.call_args[0][0] == RoborockCommand.GET_MAP_V1
+
+
 @pytest.mark.parametrize(
     ("in_cleaning_int", "expected_command"),
     [
