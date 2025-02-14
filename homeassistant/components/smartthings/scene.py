@@ -9,7 +9,7 @@ from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import SmartThingsConfigEntry
+from . import SmartThingsConfigEntry
 
 
 async def async_setup_entry(

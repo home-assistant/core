@@ -16,6 +16,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
+from homeassistant.components.smartthings import CONF_INSTALLED_APP_ID
 from homeassistant.components.smartthings.const import CONF_LOCATION_ID, DOMAIN, SCOPES
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -145,6 +146,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
                 "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
             },
             CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+            CONF_INSTALLED_APP_ID: "123",
         },
         version=3,
     )

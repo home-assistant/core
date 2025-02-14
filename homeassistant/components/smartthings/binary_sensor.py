@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from pysmartthings import SmartThings
 from pysmartthings.models import Attribute, Capability
 
 from homeassistant.components.binary_sensor import (
@@ -15,7 +16,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import SmartThingsConfigEntry, SmartThingsDeviceCoordinator
+from . import FullDevice, SmartThingsConfigEntry
 from .entity import SmartThingsEntity
 
 
@@ -120,11 +121,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add binary sensors for a config entry."""
-    devices = entry.runtime_data.devices
+    entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsBinarySensor(device, description, capability, attribute)
-        for device in devices
-        for capability, attributes in device.data.items()
+        SmartThingsBinarySensor(
+            entry_data.client, device, description, capability, attribute
+        )
+        for device in entry_data.devices.values()
+        for capability, attributes in device.status["main"].items()
         if capability in CAPABILITY_TO_SENSORS
         for attribute in attributes
         for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
@@ -138,13 +141,14 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        device: SmartThingsDeviceCoordinator,
+        client: SmartThings,
+        device: FullDevice,
         entity_description: SmartThingsBinarySensorEntityDescription,
         capability: Capability,
         attribute: Attribute,
     ) -> None:
         """Init the class."""
-        super().__init__(device)
+        super().__init__(client, device, [capability])
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description

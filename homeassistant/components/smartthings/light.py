@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
+from pysmartthings import SmartThings
 from pysmartthings.models import Attribute, Capability, Command
 
 from homeassistant.components.light import (
@@ -20,7 +21,7 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import SmartThingsConfigEntry, SmartThingsDeviceCoordinator
+from . import FullDevice, SmartThingsConfigEntry
 from .entity import SmartThingsEntity
 
 CAPABILITIES = (
@@ -36,12 +37,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add lights for a config entry."""
-    devices = entry.runtime_data.devices
+    entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsLight(device)
-        for device in devices
-        if Capability.SWITCH in device.data
-        and any(capability in device.data for capability in CAPABILITIES)
+        SmartThingsLight(entry_data.client, device)
+        for device in entry_data.devices.values()
+        if Capability.SWITCH in device.status["main"]
+        and any(capability in device.status["main"] for capability in CAPABILITIES)
     )
 
 
@@ -67,9 +68,18 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
     # highest kelvin found supported across 20+ handlers.
     _attr_max_color_temp_kelvin = 9000  # 111 mireds
 
-    def __init__(self, device: SmartThingsDeviceCoordinator) -> None:
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize a SmartThingsLight."""
-        super().__init__(device)
+        super().__init__(
+            client,
+            device,
+            [
+                Capability.COLOR_CONTROL,
+                Capability.COLOR_TEMPERATURE,
+                Capability.SWITCH_LEVEL,
+                Capability.SWITCH,
+            ],
+        )
         color_modes = set()
         if self.supports_capability(Capability.COLOR_TEMPERATURE):
             color_modes.add(ColorMode.COLOR_TEMP)
@@ -104,8 +114,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
                 kwargs[ATTR_BRIGHTNESS], kwargs.get(ATTR_TRANSITION, 0)
             )
         else:
-            await self.coordinator.client.execute_device_command(
-                self.coordinator.device.device_id,
+            await self.execute_device_command(
                 Capability.SWITCH,
                 Command.ON,
             )
@@ -116,8 +125,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         if ATTR_TRANSITION in kwargs:
             await self.async_set_level(0, int(kwargs[ATTR_TRANSITION]))
         else:
-            await self.coordinator.client.execute_device_command(
-                self.coordinator.device.device_id,
+            await self.execute_device_command(
                 Capability.SWITCH,
                 Command.OFF,
             )
@@ -157,8 +165,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         hue = convert_scale(float(hs_color[0]), 360, 100)
         hue = max(min(hue, 100.0), 0.0)
         saturation = max(min(float(hs_color[1]), 100.0), 0.0)
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.COLOR_CONTROL,
             Command.SET_COLOR,
             argument={"hue": hue, "saturation": saturation},
@@ -167,8 +174,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
     async def async_set_color_temp(self, value: int):
         """Set the color temperature of the device."""
         kelvin = max(min(value, 30000), 1)
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.COLOR_TEMPERATURE,
             Command.SET_COLOR_TEMPERATURE,
             argument=kelvin,
@@ -182,8 +188,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         level = 1 if level == 0 and brightness > 0 else level
         level = max(min(level, 100), 0)
         duration = int(transition)
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.SWITCH_LEVEL,
             Command.SET_LEVEL,
             argument=[level, duration],
