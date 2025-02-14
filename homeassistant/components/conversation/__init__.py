@@ -30,6 +30,17 @@ from .agent_manager import (
     async_get_agent,
     get_agent_manager,
 )
+from .chat_log import (
+    AssistantContent,
+    AssistantContentDeltaDict,
+    ChatLog,
+    Content,
+    ConverseError,
+    SystemContent,
+    ToolResultContent,
+    UserContent,
+    async_get_chat_log,
+)
 from .const import (
     ATTR_AGENT_ID,
     ATTR_CONVERSATION_ID,
@@ -48,25 +59,29 @@ from .default_agent import DefaultAgent, async_setup_default_agent
 from .entity import ConversationEntity
 from .http import async_setup as async_setup_conversation_http
 from .models import AbstractConversationAgent, ConversationInput, ConversationResult
-from .session import ChatMessage, ChatSession, ConverseError, async_get_chat_session
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 __all__ = [
     "DOMAIN",
     "HOME_ASSISTANT_AGENT",
     "OLD_HOME_ASSISTANT_AGENT",
-    "ChatMessage",
-    "ChatSession",
+    "AssistantContent",
+    "AssistantContentDeltaDict",
+    "ChatLog",
+    "Content",
     "ConversationEntity",
     "ConversationEntityFeature",
     "ConversationInput",
     "ConversationResult",
     "ConversationTraceEventType",
     "ConverseError",
+    "SystemContent",
+    "ToolResultContent",
+    "UserContent",
     "async_conversation_trace_append",
     "async_converse",
     "async_get_agent_info",
-    "async_get_chat_session",
+    "async_get_chat_log",
     "async_set_agent",
     "async_setup",
     "async_unset_agent",

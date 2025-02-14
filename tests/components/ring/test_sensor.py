@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .common import MockConfigEntry, setup_platform
+from .common import MockConfigEntry, async_check_entity_translations, setup_platform
 from .device_mocks import (
     DOWNSTAIRS_DEVICE_ID,
     FRONT_DEVICE_ID,
@@ -57,6 +57,10 @@ def create_deprecated_and_disabled_sensor_entities(
     create_entry("ingress", "doorbell_volume", INGRESS_DEVICE_ID)
     create_entry("ingress", "mic_volume", INGRESS_DEVICE_ID)
     create_entry("ingress", "voice_volume", INGRESS_DEVICE_ID)
+    for desc in ("last_motion", "last_ding"):
+        create_entry("front", desc, FRONT_DEVICE_ID)
+        create_entry("front_door", desc, FRONT_DOOR_DEVICE_ID)
+        create_entry("internal", desc, INTERNAL_DEVICE_ID)
 
     # Disabled
     for desc in ("wifi_signal_category", "wifi_signal_strength"):
@@ -78,6 +82,9 @@ async def test_states(
     """Test states."""
     mock_config_entry.add_to_hass(hass)
     await setup_platform(hass, Platform.SENSOR)
+    await async_check_entity_translations(
+        hass, entity_registry, mock_config_entry.entry_id, SENSOR_DOMAIN
+    )
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 

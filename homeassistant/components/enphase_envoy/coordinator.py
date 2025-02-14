@@ -16,7 +16,7 @@ from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, INVALID_AUTH_ERRORS
 
@@ -55,6 +55,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=entry_data[CONF_NAME],
             update_interval=SCAN_INTERVAL,
             always_update=False,

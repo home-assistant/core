@@ -295,6 +295,8 @@ def async_remove_addons_from_dev_reg(
 class HassioDataUpdateCoordinator(DataUpdateCoordinator):
     """Class to retrieve Hass.io status."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self, hass: HomeAssistant, config_entry: ConfigEntry, dev_reg: dr.DeviceRegistry
     ) -> None:
@@ -302,6 +304,7 @@ class HassioDataUpdateCoordinator(DataUpdateCoordinator):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=HASSIO_UPDATE_INTERVAL,
             # We don't want an immediate refresh since we want to avoid

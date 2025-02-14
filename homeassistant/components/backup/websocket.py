@@ -15,7 +15,7 @@ from .manager import (
     IncorrectPasswordError,
     ManagerStateEvent,
 )
-from .models import Folder
+from .models import BackupNotFound, Folder
 
 
 @callback
@@ -57,11 +57,13 @@ async def handle_info(
             "agent_errors": {
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
-            "backups": [backup.as_frontend_json() for backup in backups.values()],
+            "backups": list(backups.values()),
             "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
             "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
+            "last_non_idle_event": manager.last_non_idle_event,
             "next_automatic_backup": manager.config.data.schedule.next_automatic_backup,
             "next_automatic_backup_additional": manager.config.data.schedule.next_automatic_backup_additional,
+            "state": manager.state,
         },
     )
 
@@ -89,7 +91,7 @@ async def handle_details(
             "agent_errors": {
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
-            "backup": backup.as_frontend_json() if backup else None,
+            "backup": backup,
         },
     )
 
@@ -149,6 +151,8 @@ async def handle_restore(
             restore_folders=msg.get("restore_folders"),
             restore_homeassistant=msg["restore_homeassistant"],
         )
+    except BackupNotFound:
+        connection.send_error(msg["id"], "backup_not_found", "Backup not found")
     except IncorrectPasswordError:
         connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
     else:
@@ -177,6 +181,8 @@ async def handle_can_decrypt_on_download(
             agent_id=msg["agent_id"],
             password=msg.get("password"),
         )
+    except BackupNotFound:
+        connection.send_error(msg["id"], "backup_not_found", "Backup not found")
     except IncorrectPasswordError:
         connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
     except DecryptOnDowloadNotSupported:
@@ -197,8 +203,8 @@ async def handle_can_decrypt_on_download(
         vol.Optional("include_database", default=True): bool,
         vol.Optional("include_folders"): [vol.Coerce(Folder)],
         vol.Optional("include_homeassistant", default=True): bool,
-        vol.Optional("name"): str,
-        vol.Optional("password"): str,
+        vol.Optional("name"): vol.Any(str, None),
+        vol.Optional("password"): vol.Any(str, None),
     }
 )
 @websocket_api.async_response
@@ -306,7 +312,10 @@ async def backup_agents_info(
     connection.send_result(
         msg["id"],
         {
-            "agents": [{"agent_id": agent_id} for agent_id in manager.backup_agents],
+            "agents": [
+                {"agent_id": agent.agent_id, "name": agent.name}
+                for agent in manager.backup_agents.values()
+            ],
         },
     )
 
@@ -341,6 +350,7 @@ async def handle_config_info(
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/config/update",
+        vol.Optional("agents"): vol.Schema({str: {"protected": bool}}),
         vol.Optional("create_backup"): vol.Schema(
             {
                 vol.Optional("agent_ids"): vol.All([str], vol.Unique()),

@@ -25,7 +25,7 @@ from homeassistant.const import (
     STATE_PLAYING,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_DATA, DEFAULT_OPTIONS, PLEX_DIRECT_URL
 from .helpers import trigger_plex_update, wait_for_debouncer

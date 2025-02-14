@@ -35,7 +35,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
@@ -88,7 +88,9 @@ HA_HEOS_REPEAT_TYPE_MAP = {v: k for k, v in HEOS_HA_REPEAT_TYPE_MAP.items()}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: HeosConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: HeosConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add media players for a config entry."""
     devices = [
@@ -135,7 +137,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
 
     def __init__(self, coordinator: HeosCoordinator, player: HeosPlayer) -> None:
         """Initialize."""
-        self._media_position_updated_at = None
+        self._media_position_updated_at: datetime | None = None
         self._player: HeosPlayer = player
         self._attr_unique_id = str(player.player_id)
         model_parts = player.model.split(maxsplit=1)
@@ -151,7 +153,7 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         )
         super().__init__(coordinator, context=player.player_id)
 
-    async def _player_update(self, event):
+    async def _player_update(self, event: str) -> None:
         """Handle player attribute updated."""
         if event == heos_const.EVENT_PLAYER_NOW_PLAYING_PROGRESS:
             self._media_position_updated_at = utcnow()

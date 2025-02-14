@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -32,7 +32,7 @@ from .models import MatterDiscoverySchema
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Number Input from Config Entry."""
     matter = get_matter(hass)
@@ -86,6 +86,8 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
+        # allow None value to account for 'default' value
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -103,6 +105,8 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnTransitionTime,),
+        # allow None value to account for 'default' value
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -120,6 +124,8 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OffTransitionTime,),
+        # allow None value to account for 'default' value
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,
@@ -137,6 +143,8 @@ DISCOVERY_SCHEMAS = [
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnOffTransitionTime,),
+        # allow None value to account for 'default' value
+        allow_none_value=True,
     ),
     MatterDiscoverySchema(
         platform=Platform.NUMBER,

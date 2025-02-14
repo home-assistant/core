@@ -3,8 +3,8 @@
 from unittest.mock import MagicMock, patch
 
 import aiohttp
-from aiohttp.client_exceptions import ClientConnectionError
 import pytest
+from whirlpool.auth import AccountLockedError
 
 from homeassistant import config_entries
 from homeassistant.components.whirlpool.const import CONF_BRAND, DOMAIN
@@ -20,9 +20,22 @@ CONFIG_INPUT = {
 }
 
 
+@pytest.fixture(name="mock_whirlpool_setup_entry")
+def fixture_mock_whirlpool_setup_entry():
+    """Set up async_setup_entry fixture."""
+    with patch(
+        "homeassistant.components.whirlpool.async_setup_entry", return_value=True
+    ) as mock_setup_entry:
+        yield mock_setup_entry
+
+
 @pytest.mark.usefixtures("mock_auth_api", "mock_appliances_manager_api")
 async def test_form(
-    hass: HomeAssistant, region, brand, mock_backend_selector_api: MagicMock
+    hass: HomeAssistant,
+    region,
+    brand,
+    mock_backend_selector_api: MagicMock,
+    mock_whirlpool_setup_entry: MagicMock,
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -32,14 +45,10 @@ async def test_form(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == config_entries.SOURCE_USER
 
-    with patch(
-        "homeassistant.components.whirlpool.async_setup_entry", return_value=True
-    ) as mock_setup_entry:
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
+    )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == "test-username"
@@ -49,7 +58,7 @@ async def test_form(
         "region": region[0],
         "brand": brand[0],
     }
-    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(mock_whirlpool_setup_entry.mock_calls) == 1
     mock_backend_selector_api.assert_called_once_with(brand[1], region[1])
 
 
@@ -70,19 +79,32 @@ async def test_form_invalid_auth(
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-async def test_form_cannot_connect(
+@pytest.mark.usefixtures("mock_appliances_manager_api")
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (AccountLockedError, "account_locked"),
+        (aiohttp.ClientConnectionError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_form_auth_error(
     hass: HomeAssistant,
+    exception: Exception,
+    expected_error: str,
     region,
     brand,
     mock_auth_api: MagicMock,
+    mock_whirlpool_setup_entry: MagicMock,
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_auth_api.return_value.do_auth.side_effect = aiohttp.ClientConnectionError
-    result2 = await hass.config_entries.flow.async_configure(
+    mock_auth_api.return_value.do_auth.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         CONFIG_INPUT
         | {
@@ -90,56 +112,25 @@ async def test_form_cannot_connect(
             "brand": brand[0],
         },
     )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
 
-
-async def test_form_auth_timeout(
-    hass: HomeAssistant,
-    region,
-    brand,
-    mock_auth_api: MagicMock,
-) -> None:
-    """Test we handle auth timeout error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mock_auth_api.return_value.do_auth.side_effect = TimeoutError
-    result2 = await hass.config_entries.flow.async_configure(
+    # Test that it succeeds after the error is cleared
+    mock_auth_api.return_value.do_auth.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        CONFIG_INPUT
-        | {
-            "region": region[0],
-            "brand": brand[0],
-        },
-    )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
-
-
-async def test_form_generic_auth_exception(
-    hass: HomeAssistant,
-    region,
-    brand,
-    mock_auth_api: MagicMock,
-) -> None:
-    """Test we handle cannot connect error."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
+        CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
     )
 
-    mock_auth_api.return_value.do_auth.side_effect = Exception
-    result2 = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        CONFIG_INPUT
-        | {
-            "region": region[0],
-            "brand": brand[0],
-        },
-    )
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "unknown"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test-username"
+    assert result["data"] == {
+        "username": "test-username",
+        "password": "test-password",
+        "region": region[0],
+        "brand": brand[0],
+    }
+    assert len(mock_whirlpool_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_auth_api", "mock_appliances_manager_api")
@@ -167,7 +158,6 @@ async def test_form_already_configured(hass: HomeAssistant, region, brand) -> No
             "brand": brand[0],
         },
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
@@ -191,13 +181,14 @@ async def test_no_appliances_flow(
         result["flow_id"],
         CONFIG_INPUT | {"region": region[0], "brand": brand[0]},
     )
-    await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "no_appliances"}
 
 
-@pytest.mark.usefixtures("mock_auth_api", "mock_appliances_manager_api")
+@pytest.mark.usefixtures(
+    "mock_auth_api", "mock_appliances_manager_api", "mock_whirlpool_setup_entry"
+)
 async def test_reauth_flow(hass: HomeAssistant, region, brand) -> None:
     """Test a successful reauth flow."""
     mock_entry = MockConfigEntry(
@@ -213,14 +204,10 @@ async def test_reauth_flow(hass: HomeAssistant, region, brand) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "homeassistant.components.whirlpool.async_setup_entry", return_value=True
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
+    )
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"
@@ -232,8 +219,8 @@ async def test_reauth_flow(hass: HomeAssistant, region, brand) -> None:
     }
 
 
-@pytest.mark.usefixtures("mock_appliances_manager_api")
-async def test_reauth_flow_auth_error(
+@pytest.mark.usefixtures("mock_appliances_manager_api", "mock_whirlpool_setup_entry")
+async def test_reauth_flow_invalid_auth(
     hass: HomeAssistant, region, brand, mock_auth_api: MagicMock
 ) -> None:
     """Test an authorization error reauth flow."""
@@ -251,22 +238,32 @@ async def test_reauth_flow_auth_error(
     assert result["errors"] == {}
 
     mock_auth_api.return_value.is_access_token_valid.return_value = False
-    with patch(
-        "homeassistant.components.whirlpool.async_setup_entry", return_value=True
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
-        )
-        await hass.async_block_till_done()
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
+    )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
 
-@pytest.mark.usefixtures("mock_appliances_manager_api")
-async def test_reauth_flow_connnection_error(
-    hass: HomeAssistant, region, brand, mock_auth_api: MagicMock
+@pytest.mark.usefixtures("mock_appliances_manager_api", "mock_whirlpool_setup_entry")
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (AccountLockedError, "account_locked"),
+        (aiohttp.ClientConnectionError, "cannot_connect"),
+        (TimeoutError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reauth_flow_auth_error(
+    hass: HomeAssistant,
+    exception: Exception,
+    expected_error: str,
+    region,
+    brand,
+    mock_auth_api: MagicMock,
 ) -> None:
     """Test a connection error reauth flow."""
 
@@ -283,14 +280,10 @@ async def test_reauth_flow_connnection_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_auth_api.return_value.do_auth.side_effect = ClientConnectionError
-    with patch(
-        "homeassistant.components.whirlpool.async_setup_entry", return_value=True
-    ):
-        result2 = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
-        )
-        await hass.async_block_till_done()
+    mock_auth_api.return_value.do_auth.side_effect = exception
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "new-password", CONF_BRAND: brand[0]},
+    )
     assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result2["errors"] == {"base": expected_error}

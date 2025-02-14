@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiohasupervisor import SupervisorClient, SupervisorError
+from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import OSUpdate
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 
@@ -17,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ICON, ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ADDONS_COORDINATOR,
@@ -47,7 +47,7 @@ ENTITY_DESCRIPTION = UpdateEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Supervisor update based on a config entry."""
     coordinator = hass.data[ADDONS_COORDINATOR]
@@ -297,10 +297,3 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         await update_core(self.hass, version, backup)
-
-
-async def _default_agent(client: SupervisorClient) -> str:
-    """Return the default agent for creating a backup."""
-    mounts = await client.mounts.info()
-    default_mount = mounts.default_backup_mount
-    return f"hassio.{default_mount if default_mount is not None else 'local'}"
