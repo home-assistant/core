@@ -6,11 +6,11 @@
       "user": {
         "title": "Set up VegeHub",
         "description": "Do you want to set up this VegeHub?",
-        "data_description": {
-          "ip_address": "IP address of target VegeHub"
-        },
         "data": {
           "ip_address": "Enter the IP address of target VegeHub"
+        },
+        "data_description": {
+          "ip_address": "IP address of target VegeHub"
         }
       },
       "zeroconf_confirm": {
