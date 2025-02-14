@@ -22,7 +22,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "timeout": "Connection timed out]",
       "duplicate_entry": "Duplicate configuration entry: {error_detail}",
-      "invalid_host": "Invalid host name",
+      "invalid_host": "Invalid hostname",
       "invalid_mac": "Invalid MAC address",
       "mismatched_mac": "Configured MAC mismatch: {error_detail}",
       "connection_refused": "Connection refused",
