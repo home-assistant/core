@@ -1,12 +1,27 @@
-Home Assistant |Chat Status|
+**Grid Connect Intergration**
 =================================================================================
 
-Open source home automation that puts local control and privacy first. Powered by a worldwide community of tinkerers and DIY enthusiasts. Perfect to run on a Raspberry Pi or a local server.
+I’m excited to introduce a new integration that I’ve been working on: Grid Connect Integration for Home Assistant. This project allows you to connect your Grid Connect devices directly to Home Assistant without relying on third-party integrations or cloud services.
 
-Check out `home-assistant.io <https://home-assistant.io>`__ for `a
-demo <https://demo.home-assistant.io>`__, `installation instructions <https://home-assistant.io/getting-started/>`__,
-`tutorials <https://home-assistant.io/getting-started/automation/>`__ and `documentation <https://home-assistant.io/docs/>`__.
+💡 What is it?
 
+This integration provides a seamless way to control your Grid Connect devices directly from Home Assistant. No more workarounds or complicated setups — just a straightforward solution for integrating your devices into your smart home.
+
+🛠️ Features:
+
+Direct connection between Grid Connect devices and Home Assistant
+No need for other integrations or external services
+Easy setup through your Home Assistant instance
+Local control for better performance and reliability
+📦 GitHub Repository:
+The integration is available now on GitHub! Check it out, give it a try, and let me know your feedback:
+https://https://github.com/charleybarley2000/Grid-connect-integration
+
+💬 Feedback & Contributions:
+I’m eager to hear your thoughts! Whether it’s feature requests, bug reports, or general feedback, please feel free to contribute via GitHub or reply to this post. I’m looking forward to improving the integration based on your suggestions.
+
+Thanks for your support,
+Danger :smile:
 |screenshot-states|
 
 Featured integrations
