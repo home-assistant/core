@@ -10,7 +10,7 @@
       },
       "folder_name": {
         "title": "Pick a folder name",
-        "description": "This name will be used to create a folder that is specific for this Home Assistant instance. This folder will be created inside `Apps/{appfolder}`",
+        "description": "This name will be used to create a folder that is specific for this Home Assistant instance. This folder will be created inside `{approot}/{appfolder}`",
         "data": {
           "folder_name": "Folder name"
         },
@@ -20,7 +20,7 @@
       },
       "reconfigure_folder": {
         "title": "Change the folder name",
-        "description": "Rename the instance specific folder inside `Apps/{appfolder}`. This will only rename the folder (and does not select another folder), so make sure the new name is not already in use.",
+        "description": "Rename the instance specific folder inside `{approot}/{appfolder}`. This will only rename the folder (and does not select another folder), so make sure the new name is not already in use.",
         "data": {
           "folder_name": "[%key:component::onedrive::config::step::folder_name::data::folder_name%]"
         },
