@@ -1,6 +1,7 @@
 """Test the integration init functionality."""
 
 from collections.abc import Awaitable, Callable
+from http import HTTPStatus
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -36,6 +37,7 @@ from .conftest import (
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 DEPRECATED_SERVICE_KV_CALL_PARAMS = [
     {
@@ -340,6 +342,7 @@ async def test_programs_and_options_actions_deprecation(
     client: MagicMock,
     appliance_ha_id: str,
     issue_registry: ir.IssueRegistry,
+    hass_client: ClientSessionGenerator,
 ) -> None:
     """Test deprecated service keys."""
     issue_id = "deprecated_set_program_and_option_actions"
@@ -353,6 +356,25 @@ async def test_programs_and_options_actions_deprecation(
     )
 
     service_call["service_data"]["device_id"] = device_entry.id
+    await hass.services.async_call(**service_call)
+    await hass.async_block_till_done()
+
+    assert len(issue_registry.issues) == 1
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert issue
+
+    _client = await hass_client()
+    resp = await _client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": DOMAIN, "issue_id": issue.issue_id},
+    )
+    assert resp.status == HTTPStatus.OK
+    flow_id = (await resp.json())["flow_id"]
+    resp = await _client.post(f"/api/repairs/issues/fix/{flow_id}")
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
+
     await hass.services.async_call(**service_call)
     await hass.async_block_till_done()
 
