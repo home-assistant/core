@@ -160,7 +160,9 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         self,
     ) -> AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
-        raise NotImplementedError
+        return AssistSatelliteConfiguration(
+            available_wake_words=[], active_wake_words=[], max_active_wake_words=1
+        )
 
     async def async_set_configuration(
         self, config: AssistSatelliteConfiguration
