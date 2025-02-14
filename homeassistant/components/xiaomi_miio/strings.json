@@ -365,7 +365,7 @@
     },
     "light_set_delayed_turn_off": {
       "name": "Light set delayed turn off",
-      "description": "Sets the delayed turn off on a light.",
+      "description": "Sets the delayed turn off of a light.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -447,7 +447,7 @@
         },
         "timeout": {
           "name": "Timeout",
-          "description": "Define the timeout, before which the command must be learned."
+          "description": "Define the timeout before which the command must be learned."
         }
       }
     },
