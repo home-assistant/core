@@ -175,7 +175,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_display_precision=2,
-        suggested_unit_of_measurement="TiB",
+        suggested_unit_of_measurement=UnitOfInformation.TEBIBYTES,
         value_fn=get_alltime_download,
     ),
     QBittorrentSensorEntityDescription(
