@@ -45,6 +45,15 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Extra data that needs to be appended to the authorize url."""
         return {"scope": " ".join(OAUTH_SCOPES)}
 
+    @property
+    def apps_folder(self) -> str:
+        """Return the approot name."""
+        return (
+            path.split("/")[-1]
+            if (path := self.approot.parent_reference.path)
+            else "Apps"
+        )
+
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],
@@ -136,12 +145,8 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 FOLDER_NAME_SCHEMA, {CONF_FOLDER_NAME: default_folder_name}
             ),
             description_placeholders={
-                "approot": (
-                    path.split("/")[-1]
-                    if (path := self.approot.parent_reference.path)
-                    else "Apps"
-                ),
-                "appfolder": self.approot.name,
+                "apps_folder": self.apps_folder,
+                "approot": self.approot.name,
             },
             errors=errors,
         )
@@ -178,12 +183,8 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                 {CONF_FOLDER_NAME: reconfigure_entry.data[CONF_FOLDER_NAME]},
             ),
             description_placeholders={
-                "approot": (
-                    path.split("/")[-1]
-                    if (path := self.approot.parent_reference.path)
-                    else "Apps"
-                ),
-                "appfolder": self.approot.name,
+                "apps_folder": self.apps_folder,
+                "approot": self.approot.name,
             },
             errors=errors,
         )
