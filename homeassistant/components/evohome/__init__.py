@@ -100,12 +100,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Load the Evohome config entry."""
 
-    config = {DOMAIN: dict(config_entry.data)}
-
     token_manager = TokenManager(
         hass,
-        config[DOMAIN][CONF_USERNAME],
-        config[DOMAIN][CONF_PASSWORD],
+        config_entry.data[CONF_USERNAME],
+        config_entry.data[CONF_PASSWORD],
         async_get_clientsession(hass),
     )
     coordinator = EvoDataUpdateCoordinator(
@@ -113,8 +111,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         _LOGGER,
         ec2.EvohomeClient(token_manager),
         name=f"{DOMAIN}_coordinator",
-        update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
-        location_idx=config[DOMAIN][CONF_LOCATION_IDX],
+        update_interval=config_entry.data[CONF_SCAN_INTERVAL],
+        location_idx=config_entry.data[CONF_LOCATION_IDX],
         client_v1=ec1.EvohomeClient(token_manager),
     )
 
