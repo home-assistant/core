@@ -6,7 +6,13 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
-from habiticalib import Direction, HabiticaTasksResponse, Task, TaskType
+from habiticalib import (
+    Direction,
+    HabiticaTaskOrderResponse,
+    HabiticaTasksResponse,
+    Task,
+    TaskType,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -601,19 +607,21 @@ async def test_delete_completed_todo_items_exception(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "uid", "second_pos", "third_pos"),
+    ("entity_id", "uid", "second_pos", "third_pos", "fixture"),
     [
         (
             "todo.test_user_to_do_s",
             "1aa3137e-ef72-4d1f-91ee-41933602f438",
             "88de7cd9-af2b-49ce-9afd-bf941d87336b",
             "2f6fcabc-f670-4ec3-ba65-817e8deea490",
+            "reorder_todos_response.json",
         ),
         (
             "todo.test_user_dailies",
             "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1",
-            "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
-            "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
+            "f21fa608-cfc6-4413-9fc7-0eb1b48ca43a",
+            "bc1d1855-b2b8-4663-98ff-62e7b763dfc4",
+            "reorder_dailies_response.json",
         ),
     ],
     ids=["todo", "daily"],
@@ -627,9 +635,12 @@ async def test_move_todo_item(
     uid: str,
     second_pos: str,
     third_pos: str,
+    fixture: str,
 ) -> None:
     """Test move todo items."""
-
+    habitica.reorder_task.return_value = HabiticaTaskOrderResponse.from_json(
+        load_fixture(fixture, DOMAIN)
+    )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
