@@ -7,7 +7,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 NIKO_HOME_CONTROL_THERMOSTAT_MODES = {
-    "off": 3,
+    "OFF": 3,
     "cool": 4,
     "auto": 5,
 }
