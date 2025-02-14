@@ -32,7 +32,15 @@ if TYPE_CHECKING:
     from . import OpenweathermapConfigEntry
 
 from .const import (
+    ATTR_API_AIRPOLLUTION_AQI,
+    ATTR_API_AIRPOLLUTION_CO,
+    ATTR_API_AIRPOLLUTION_NH3,
+    ATTR_API_AIRPOLLUTION_NO,
+    ATTR_API_AIRPOLLUTION_NO2,
+    ATTR_API_AIRPOLLUTION_O3,
     ATTR_API_AIRPOLLUTION_PM2_5,
+    ATTR_API_AIRPOLLUTION_PM10,
+    ATTR_API_AIRPOLLUTION_SO2,
     ATTR_API_CLOUDS,
     ATTR_API_CONDITION,
     ATTR_API_CURRENT,
@@ -280,5 +288,13 @@ class AirPollutionUpdateCoordinator(DataUpdateCoordinator):
         self, current_air_pollution: CurrentAirPollution
     ):
         return {
+            ATTR_API_AIRPOLLUTION_AQI: current_air_pollution.aqi,
+            ATTR_API_AIRPOLLUTION_CO: current_air_pollution.co,
+            ATTR_API_AIRPOLLUTION_NO: current_air_pollution.no,
+            ATTR_API_AIRPOLLUTION_NO2: current_air_pollution.no2,
+            ATTR_API_AIRPOLLUTION_O3: current_air_pollution.o3,
+            ATTR_API_AIRPOLLUTION_SO2: current_air_pollution.so2,
             ATTR_API_AIRPOLLUTION_PM2_5: current_air_pollution.pm2_5,
+            ATTR_API_AIRPOLLUTION_PM10: current_air_pollution.pm10,
+            ATTR_API_AIRPOLLUTION_NH3: current_air_pollution.nh3,
         }
