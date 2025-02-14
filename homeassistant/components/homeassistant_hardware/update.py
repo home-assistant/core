@@ -270,6 +270,11 @@ class BaseFirmwareUpdateEntity(
         """Install an update."""
         assert self._latest_firmware is not None
 
+        # Start off by setting the progress bar to an indeterminate state
+        self._attr_in_progress = True
+        self._attr_update_percentage = None
+        self.async_write_ha_state()
+
         async with self.coordinator.session.get(
             self._latest_firmware.url, raise_for_status=True
         ) as fw_rsp:
@@ -296,9 +301,6 @@ class BaseFirmwareUpdateEntity(
         async with self._temporarily_stop_owning_software(device):
             try:
                 # Enter the bootloader with indeterminate progress
-                self._attr_in_progress = True
-                self._attr_update_percentage = None
-                self.async_write_ha_state()
                 await flasher.enter_bootloader()
 
                 # Flash the firmware, with progress
@@ -321,6 +323,7 @@ class BaseFirmwareUpdateEntity(
                     )
 
                 self._update_config_entry_after_install(firmware_info)
+                self._firmware_info_callback(firmware_info)
             finally:
                 self._attr_in_progress = False
                 self.async_write_ha_state()
