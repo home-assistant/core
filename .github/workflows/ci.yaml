@@ -993,17 +993,17 @@ jobs:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true'
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: test-results-full-${{ matrix.python-version }}-${{ matrix.group }}
+          path: junit.xml
       - name: Remove pytest_buckets
         run: rm pytest_buckets.txt
       - name: Check dirty
         run: |
           ./script/check_dirty
-      - name: Upload test results to Codecov
-        if: ${{ needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
-        uses: codecov/test-results-action@v1
-        with:
-          fail_ci_if_error: true
-          verbose: true
 
   pytest-mariadb:
     runs-on: ubuntu-24.04
@@ -1130,15 +1130,16 @@ jobs:
             steps.pytest-partial.outputs.mariadb }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true'
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: test-results-mariadb-${{ matrix.python-version }}-${{
+            steps.pytest-partial.outputs.mariadb }}
+          path: junit.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
-      - name: Upload test results to Codecov
-        if: ${{ needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
-        uses: codecov/test-results-action@v1
-        with:
-          fail_ci_if_error: true
-          verbose: true
 
   pytest-postgres:
     runs-on: ubuntu-24.04
@@ -1268,15 +1269,16 @@ jobs:
             steps.pytest-partial.outputs.postgresql }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true'
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: test-results-postgres-${{ matrix.python-version }}-${{
+            steps.pytest-partial.outputs.postgresql }}
+          path: junit.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
-      - name: Upload test results to Codecov
-        if: ${{ needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
-        uses: codecov/test-results-action@v1
-        with:
-          fail_ci_if_error: true
-          verbose: true
 
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
@@ -1416,15 +1418,15 @@ jobs:
           name: coverage-${{ matrix.python-version }}-${{ matrix.group }}
           path: coverage.xml
           overwrite: true
+      - name: Upload test results artifact
+        if: needs.info.outputs.skip_coverage != 'true'
+        uses: actions/upload-artifact@v4.6.0
+        with:
+          name: test-results-partial-${{ matrix.python-version }}-${{ matrix.group }}
+          path: junit.xml
       - name: Check dirty
         run: |
           ./script/check_dirty
-      - name: Upload test results to Codecov
-        if: ${{ needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
-        uses: codecov/test-results-action@v1
-        with:
-          fail_ci_if_error: true
-          verbose: true
 
   coverage-partial:
     name: Upload test coverage to Codecov (partial suite)
@@ -1446,4 +1448,27 @@ jobs:
         uses: codecov/codecov-action@v5.3.1
         with:
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+  upload-test-results:
+    name: Upload test results to Codecov
+    if: needs.info.outputs.skip_coverage != 'true' && !cancelled()
+    runs-on: ubuntu-24.04
+    needs:
+      - info
+      - pytest-partial
+      - pytest-full
+      - pytest-postgres
+      - pytest-mariadb
+    timeout-minutes: 10
+    steps:
+      - name: Download all coverage artifacts
+        uses: actions/download-artifact@v4.1.8
+        with:
+          pattern: test-results-*
+      - name: Upload test results to Codecov
+        uses: codecov/test-results-action@v1
+        with:
+          fail_ci_if_error: true
+          verbose: true
           token: ${{ secrets.CODECOV_TOKEN }}
