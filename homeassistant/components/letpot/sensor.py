@@ -42,13 +42,17 @@ SENSORS: tuple[LetPotSensorEntityDescription, ...] = (
         key="temperature",
         translation_key="temperature",
         value_fn=lambda status: status.temperature_value,
-        native_unit_of_measurement_fn=lambda status: LETPOT_TEMPERATURE_UNIT_HA_UNIT[
-            status.temperature_unit or TemperatureUnit.CELSIUS
-        ],
+        native_unit_of_measurement_fn=(
+            lambda status: LETPOT_TEMPERATURE_UNIT_HA_UNIT[
+                status.temperature_unit or TemperatureUnit.CELSIUS
+            ]
+        ),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        supported_fn=lambda coordinator: DeviceFeature.TEMPERATURE
-        in coordinator.device_client.device_features,
+        supported_fn=(
+            lambda coordinator: DeviceFeature.TEMPERATURE
+            in coordinator.device_client.device_features
+        ),
     ),
     LetPotSensorEntityDescription(
         key="water_level",
@@ -56,8 +60,10 @@ SENSORS: tuple[LetPotSensorEntityDescription, ...] = (
         value_fn=lambda status: status.water_level,
         native_unit_of_measurement_fn=lambda _: PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
-        supported_fn=lambda coordinator: DeviceFeature.WATER_LEVEL
-        in coordinator.device_client.device_features,
+        supported_fn=(
+            lambda coordinator: DeviceFeature.WATER_LEVEL
+            in coordinator.device_client.device_features
+        ),
     ),
 )
 
