@@ -37,6 +37,7 @@ class MockEnergyIDConfigEntry(MockConfigEntry):
         *,
         data: dict[str, Any] | None = None,
         options: dict[str, Any] | None = None,
+        runtime_data: Any = None,  # Add this parameter
     ) -> None:
         """Initialize the config entry."""
         super().__init__(
@@ -44,6 +45,7 @@ class MockEnergyIDConfigEntry(MockConfigEntry):
             data=data or MOCK_CONFIG_ENTRY_DATA,
             options=options or {},
         )
+        self.runtime_data = runtime_data  # Set runtime_data
 
 
 class MockMeterCatalog(MeterCatalog):

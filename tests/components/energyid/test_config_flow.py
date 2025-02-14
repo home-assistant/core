@@ -17,7 +17,7 @@ from homeassistant.components.energyid.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .common import MOCK_CONFIG_ENTRY_DATA, MockHass, MockMeterCatalog
+from .common import MOCK_CONFIG_ENTRY_DATA, MockConfigEntry, MockHass, MockMeterCatalog
 
 
 async def test_form(hass: HomeAssistant) -> None:
@@ -122,3 +122,39 @@ async def test_hass_entity_ids() -> None:
     ids = hass_entity_ids(MockHass())  # type: ignore[arg-type]
     assert isinstance(ids, list)
     assert isinstance(ids[0], str)
+
+
+async def test_duplicate_service_config(hass: HomeAssistant) -> None:
+    """Test when trying to set up the same service configuration twice."""
+    # First, create an existing config entry
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_ENTRY_DATA,
+        title=f"Send {MOCK_CONFIG_ENTRY_DATA[CONF_ENTITY_ID]} to EnergyID",
+    )
+    entry.add_to_hass(hass)
+
+    # Now try to configure the same thing again
+    with (
+        patch(
+            "homeassistant.components.energyid.config_flow.hass_entity_ids",
+            return_value=[MOCK_CONFIG_ENTRY_DATA[CONF_ENTITY_ID]],
+        ),
+        patch(
+            "homeassistant.components.energyid.config_flow.WebhookClientAsync.get_meter_catalog",
+            return_value=MockMeterCatalog(),
+        ),
+    ):
+        # Start the config flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["errors"] == {}
+
+        # Try to submit the same configuration
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], MOCK_CONFIG_ENTRY_DATA
+        )
+        assert result2["type"] == FlowResultType.ABORT
+        assert result2["reason"] == "already_configured_service"
