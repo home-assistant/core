@@ -1,4 +1,4 @@
-"""Home Assistant Hardware base firmware update entity."""
+"""Home Assistant SkyConnect firmware update entity."""
 
 from __future__ import annotations
 
@@ -49,7 +49,7 @@ async def async_setup_entry(
 
 
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
-    """Base firmware update entity."""
+    """SkyConnect firmware update entity."""
 
     firmware_entity_descriptions = {
         ApplicationType.EZSP: FirmwareUpdateEntityDescription(
@@ -105,12 +105,3 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
                 "firmware": firmware_info.firmware_type,
             },
         )
-
-    @property
-    def title(self) -> str:
-        """Title of the software.
-
-        This helps to differentiate between the device or entity name
-        versus the title of the software installed.
-        """
-        return self.entity_description.firmware_name
