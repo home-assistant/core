@@ -32,4 +32,4 @@ async def async_get_device_diagnostics(
     """Return diagnostics for a device."""
     mm = config_entry.runtime_data
 
-    return {"details": async_redact_data(mm.__dict__, TO_REDACT)}
+    return {"details": mm.__dict__}
