@@ -81,7 +81,9 @@ rules:
 
   log-when-unavailable: done
 
-  parallel-updates: todo
+  parallel-updates:
+    status: done
+    comment: "Uses asyncio.Lock in WebhookDispatcher to prevent concurrent uploads and ensure data consistency."
 
   reauthentication-flow:
     status: exempt

@@ -10,11 +10,11 @@
           "unit": "Unit of measurement"
         },
         "data_description": {
-          "webhook_url": "The URL to receive webhook data from EnergyID",
-          "entity_id": "The ID of the entity to be monitored",
-          "metric": "The metric to be monitored",
-          "metric_kind": "The kind of metric to be monitored",
-          "unit": "The unit of measurement for the metric"
+          "webhook_url": "The unique URL provided by EnergyID to receive webhook data. You'll find this in your EnergyID account settings under 'Webhooks' or 'Integrations'. **Important:** Ensure this URL is correctly copied.",
+          "entity_id": "The ID of the Home Assistant entity (e.g., sensor.power_meter) that you want to send data from to EnergyID. Select an entity that provides numerical state values.",
+          "metric": "The EnergyID metric name that best describes the data you are sending (e.g., 'electricity_consumption', 'gas_consumption'). Choose from the dropdown list provided.",
+          "metric_kind": "The kind of metric. Select the option that matches your data: 'cumulative' (total increasing value), 'delta' (change in value), 'gauge' (instantaneous value), or 'total' (total value).",
+          "unit": "The unit of measurement for the chosen metric (e.g., 'kWh', 'm³'). Select a unit that is compatible with the selected EnergyID metric and matches the unit of your Home Assistant entity."
         }
       }
     },
