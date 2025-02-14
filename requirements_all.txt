@@ -2337,7 +2337,7 @@ pyspcwebgw==0.7.0
 pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.11.1
+pysqueezebox==0.12.0
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
