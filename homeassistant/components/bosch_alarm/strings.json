@@ -47,11 +47,11 @@
   },
   "services": {
     "set_date_time": {
-      "name": "Set the Date & Time on the panel",
-      "description": "Set the Date & Time on the panel",
+      "name": "Set the date/time on the panel",
+      "description": "Set the date/time on the panel",
       "fields": {
         "datetime": {
-          "name": "Date & Time to set",
+          "name": "Date/time to set",
           "description": "The date/time to set. The time zone of the Home Assistant instance is assumed. Defaults to current date/time if unset."
         }
       }
