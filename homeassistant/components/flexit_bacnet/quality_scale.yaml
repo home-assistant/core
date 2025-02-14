@@ -48,7 +48,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: >
-      This integration has a configured IP address that possibly could change. 
+      This integration has a configured IP address that possibly could change.
       Adding this is on the todo list.
   test-coverage: done
   # Gold
