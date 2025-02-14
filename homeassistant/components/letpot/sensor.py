@@ -40,7 +40,6 @@ class LetPotSensorEntityDescription(LetPotEntityDescription, SensorEntityDescrip
 SENSORS: tuple[LetPotSensorEntityDescription, ...] = (
     LetPotSensorEntityDescription(
         key="temperature",
-        translation_key="temperature",
         value_fn=lambda status: status.temperature_value,
         native_unit_of_measurement_fn=(
             lambda status: LETPOT_TEMPERATURE_UNIT_HA_UNIT[
