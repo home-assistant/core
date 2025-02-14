@@ -17,6 +17,8 @@ from .const import DOMAIN
 class SmartThingsEntity(Entity):
     """Defines a SmartThings entity."""
 
+    _attr_should_poll = False
+
     def __init__(
         self, client: SmartThings, device: FullDevice, capabilities: list[Capability]
     ) -> None:

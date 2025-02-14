@@ -6,19 +6,25 @@ from pysmartthings.models import Attribute, Capability, Command, Status
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.cover import ATTR_POSITION, DOMAIN as COVER_DOMAIN
+from homeassistant.components.cover import (
+    ATTR_CURRENT_POSITION,
+    ATTR_POSITION,
+    DOMAIN as COVER_DOMAIN,
+)
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
+    STATE_OPEN,
+    STATE_OPENING,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration, snapshot_smartthings_entities
+from . import setup_integration, snapshot_smartthings_entities, trigger_update
 
 from tests.common import MockConfigEntry
 
@@ -64,6 +70,7 @@ async def test_cover_open_close(
         "571af102-15db-4030-b76b-245a691f74a5",
         Capability.WINDOW_SHADE,
         command,
+        "main",
     )
 
 
@@ -86,6 +93,7 @@ async def test_cover_set_position(
         "571af102-15db-4030-b76b-245a691f74a5",
         Capability.SWITCH_LEVEL,
         Command.SET_LEVEL,
+        "main",
         argument=25,
     )
 
@@ -105,3 +113,79 @@ async def test_cover_battery(
     state = hass.states.get("cover.curtain_1a")
     assert state
     assert state.attributes[ATTR_BATTERY_LEVEL] == 50
+
+
+@pytest.mark.parametrize("fixture", ["c2c_shade"])
+async def test_cover_battery_updating(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test battery extra state attribute."""
+    devices.get_device_status.return_value["main"][Capability.BATTERY] = {
+        Attribute.BATTERY: Status(50)
+    }
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("cover.curtain_1a")
+    assert state
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 50
+
+    await trigger_update(
+        hass,
+        devices,
+        "571af102-15db-4030-b76b-245a691f74a5",
+        Capability.BATTERY,
+        Attribute.BATTERY,
+        49,
+    )
+
+    state = hass.states.get("cover.curtain_1a")
+    assert state
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 49
+
+
+@pytest.mark.parametrize("fixture", ["c2c_shade"])
+async def test_state_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("cover.curtain_1a").state == STATE_OPEN
+
+    await trigger_update(
+        hass,
+        devices,
+        "571af102-15db-4030-b76b-245a691f74a5",
+        Capability.WINDOW_SHADE,
+        Attribute.WINDOW_SHADE,
+        "opening",
+    )
+
+    assert hass.states.get("cover.curtain_1a").state == STATE_OPENING
+
+
+@pytest.mark.parametrize("fixture", ["c2c_shade"])
+async def test_position_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test position update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("cover.curtain_1a").attributes[ATTR_CURRENT_POSITION] == 100
+
+    await trigger_update(
+        hass,
+        devices,
+        "571af102-15db-4030-b76b-245a691f74a5",
+        Capability.SWITCH_LEVEL,
+        Attribute.LEVEL,
+        50,
+    )
+
+    assert hass.states.get("cover.curtain_1a").attributes[ATTR_CURRENT_POSITION] == 50
