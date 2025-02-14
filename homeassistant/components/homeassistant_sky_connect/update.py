@@ -20,7 +20,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,6 +90,13 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             f"{self._config_entry.data['serial_number']}_{self.entity_description.key}"
         )
 
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._config_entry.data["serial_number"])},
+            manufacturer=self._config_entry.data["manufacturer"],
+            model=self._config_entry.data["product"],
+            serial_number=self._config_entry.data["serial_number"][:16],
+        )
+
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
         self.hass.config_entries.async_update_entry(
             self._config_entry,
@@ -96,3 +106,12 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
                 "firmware_version": firmware_info.firmware_version,
             },
         )
+
+    @property
+    def title(self) -> str:
+        """Title of the software.
+
+        This helps to differentiate between the device or entity name
+        versus the title of the software installed.
+        """
+        return self.entity_description.firmware_name

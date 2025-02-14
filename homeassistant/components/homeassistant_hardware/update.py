@@ -109,6 +109,8 @@ class BaseFirmwareUpdateEntity(
 
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
         self._current_firmware_info = firmware_info
+        self._maybe_recompute_state()
+        self.async_write_ha_state()
 
     @property
     def title(self) -> str:
@@ -206,6 +208,24 @@ class BaseFirmwareUpdateEntity(
         self._attr_release_summary = self._latest_firmware.release_notes
         self._attr_release_url = str(self._latest_manifest.html_url)
 
+        firmware_name = self.entity_description.firmware_name
+
+        if (
+            self._current_firmware_info is None
+            or self._current_firmware_info.firmware_version is None
+        ):
+            sw_version = None
+        else:
+            firmware_version = self.entity_description.version_parser(
+                self._current_firmware_info.firmware_version
+            )
+            sw_version = f"{firmware_name} {firmware_version}"
+
+        if self.device_entry is not None:
+            dr.async_get(self.hass).async_update_device(
+                self.device_entry.id, sw_version=sw_version
+            )
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
@@ -289,11 +309,10 @@ class BaseFirmwareUpdateEntity(
                 # Probe the running application type with indeterminate progress
                 self._attr_update_percentage = None
                 self.async_write_ha_state()
+
                 firmware_info = await probe_silabs_firmware_info(
                     device,
-                    probe_methods=(
-                        self.entity_description.expected_firmware_type.as_flasher_application_type(),
-                    ),
+                    probe_methods=(self.entity_description.expected_firmware_type,),
                 )
 
                 if firmware_info is None:
