@@ -32,6 +32,11 @@
     }
   },
   "entity": {
+    "sensor": {
+      "water_level": {
+        "name": "Water level"
+      }
+    },
     "switch": {
       "alarm_sound": {
         "name": "Alarm sound"
