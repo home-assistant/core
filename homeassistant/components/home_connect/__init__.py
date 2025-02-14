@@ -277,6 +277,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             "deprecated_set_program_and_option_actions",
             breaks_in_ha_version="2025.9.0",
             is_fixable=True,
+            is_persistent=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_set_program_and_option_actions",
             translation_placeholders={
@@ -317,7 +318,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                         "```",
                     ]
                 ),
-                "repo_link": "https://github.com/MartinHjelmare/aiohomeconnect",
+                "repo_link": "[aiohomeconnect](https://github.com/MartinHjelmare/aiohomeconnect)",
             },
         )
 
@@ -351,6 +352,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             "deprecated_set_program_and_option_actions",
             breaks_in_ha_version="2025.9.0",
             is_fixable=True,
+            is_persistent=True,
             severity=IssueSeverity.WARNING,
             translation_key="deprecated_set_program_and_option_actions",
             translation_placeholders={
@@ -379,7 +381,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                         "```",
                     ]
                 ),
-                "repo_link": "https://github.com/MartinHjelmare/aiohomeconnect",
+                "repo_link": "[aiohomeconnect](https://github.com/MartinHjelmare/aiohomeconnect)",
             },
         )
         try:

@@ -103,7 +103,14 @@
     },
     "deprecated_set_program_and_option_actions": {
       "title": "The executed action is deprecated",
-      "description": "`start_program`, `select_program`, `set_option_active`, and `set_option_selected` actions are deprecated and will be removed in the {remove_release} release, please use the `{new_action_key}` action instead. For the executed action:\n{deprecated_action_yaml}\nyou can do the following transformation using the recognized options:\n  {new_action_yaml}\nIf the option is not in the recognized options, please submit an issue or a pull request requesting the addition of the option at {repo_link}."
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::home_connect::issues::deprecated_set_program_and_option_actions::title%]",
+            "description": "`start_program`, `select_program`, `set_option_active`, and `set_option_selected` actions are deprecated and will be removed in the {remove_release} release, please use the `{new_action_key}` action instead. For the executed action:\n{deprecated_action_yaml}\nyou can do the following transformation using the recognized options:\n  {new_action_yaml}\nIf the option is not in the recognized options, please submit an issue or a pull request requesting the addition of the option at {repo_link}."
+          }
+        }
+      }
     }
   },
   "selector": {
