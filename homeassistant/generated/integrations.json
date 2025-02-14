@@ -2622,6 +2622,12 @@
       "integration_type": "hub",
       "config_flow": true
     },
+    "homeassistant_yellow": {
+      "name": "Home Assistant Yellow",
+      "integration_type": "hub",
+      "config_flow": false,
+      "single_config_entry": true
+    },
     "homee": {
       "name": "Homee",
       "integration_type": "hub",
