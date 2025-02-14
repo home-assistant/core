@@ -43,6 +43,27 @@
         "observes": [75],
         "automations": ["toggle"]
       }
+    },
+    {
+      "id": 2,
+      "node_id": 3,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 0,
+      "current_value": 0.0,
+      "target_value": 0.0,
+      "last_value": 0.0,
+      "unit": "text",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 45,
+      "state": 1,
+      "last_changed": 0,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "1.45",
+      "name": ""
     }
   ]
 }
