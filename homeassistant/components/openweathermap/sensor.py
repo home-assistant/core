@@ -165,55 +165,47 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 AIRPOLLUTION_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key=ATTR_API_AIRPOLLUTION_AQI,
-        name="AQI",
         device_class=SensorDeviceClass.AQI,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_AIRPOLLUTION_CO,
-        name="CO",
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         device_class=SensorDeviceClass.CO,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_AIRPOLLUTION_NO,
-        name="NO",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.NITROGEN_MONOXIDE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_AIRPOLLUTION_NO2,
-        name="NO2",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.NITROGEN_DIOXIDE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_AIRPOLLUTION_O3,
-        name="O3",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.OZONE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_AIRPOLLUTION_SO2,
-        name="SO2",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.SULPHUR_DIOXIDE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_AIRPOLLUTION_PM2_5,
-        name="PM 2.5",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM25,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=ATTR_API_AIRPOLLUTION_PM10,
-        name="PM 10",
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
@@ -228,7 +220,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up OpenWeatherMap sensor entities based on a config entry."""
     domain_data = config_entry.runtime_data
-    name = domain_data.name
     coordinator = domain_data.coordinator
 
     if domain_data.mode == OWM_MODE_FREE_FORECAST:
@@ -241,8 +232,6 @@ async def async_setup_entry(
     else:
         async_add_entities(
             OpenWeatherMapSensor(
-                name,
-                f"{config_entry.unique_id}-{description.key}",
                 description,
                 coordinator,
             )
@@ -259,11 +248,10 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
 
     _attr_should_poll = False
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        name: str,
-        unique_id: str,
         description: SensorEntityDescription,
         coordinator: DataUpdateCoordinator,
     ) -> None:
@@ -271,12 +259,13 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         self.entity_description = description
         self._coordinator = coordinator
 
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = unique_id
-        split_unique_id = unique_id.split("-")
+        site_id = (
+            coordinator.config_entry.unique_id if coordinator.config_entry else "OWM"
+        )
+        self._attr_unique_id = f"{site_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
+            identifiers={(DOMAIN, str(site_id))},
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
         )
