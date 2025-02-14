@@ -157,6 +157,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
+        suggested_display_precision=0,
         value_fn=lambda data: data.consumption["latest_power"],
     ),
 )
@@ -166,6 +167,7 @@ RESTORE_SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        suggested_display_precision=3,
         value_fn=lambda data: data.consumption["total_energy"],
     ),
     StarlinkSensorEntityDescription(
@@ -174,6 +176,7 @@ RESTORE_SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=3,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
         value_fn=lambda data: data.usage["download_usage"],
     ),
@@ -183,6 +186,7 @@ RESTORE_SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_display_precision=3,
         suggested_unit_of_measurement=UnitOfInformation.GIGABYTES,
         value_fn=lambda data: data.usage["upload_usage"],
     ),
