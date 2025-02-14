@@ -1,5 +1,10 @@
 {
   "entity": {
+    "sensor": {
+      "water_level": {
+        "default": "mdi:water-percent"
+      }
+    },
     "switch": {
       "alarm_sound": {
         "default": "mdi:bell-ring",
