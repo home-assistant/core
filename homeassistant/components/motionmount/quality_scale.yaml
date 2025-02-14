@@ -57,7 +57,7 @@ rules:
     status: exempt
     comment: Single device per config entry
   entity-category: todo
-  entity-device-class: todo
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
