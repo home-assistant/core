@@ -22,7 +22,11 @@ from homeassistant.util.json import JsonArrayType, JsonObjectType
 
 from .const import ACCESS_TOKEN, REFRESH_TOKEN, SESSION_ID, USERNAME
 
-from tests.common import load_json_array_fixture, load_json_object_fixture
+from tests.common import (
+    MockConfigEntry,
+    load_json_array_fixture,
+    load_json_object_fixture,
+)
 
 
 def user_account_config_fixture(install: str) -> JsonObjectType:
@@ -225,3 +229,20 @@ def zone_id(evohome: MagicMock) -> str:
     zone: ec2.Zone = evo.tcs.zones[0]
 
     return f"{Platform.CLIMATE}.{slugify(zone.name)}"
+
+
+@pytest.fixture(name="config_entry")
+def config_entry_fixture(config: dict[str, Any]) -> MockConfigEntry:
+    """Define a config entry fixture."""
+
+    config |= {
+        "location_idx": 0,
+        "scan_interval": timedelta(seconds=300),
+    }
+
+    return MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="uuid",
+        unique_id="1234",
+        data=config,
+    )

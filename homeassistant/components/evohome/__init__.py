@@ -35,7 +35,6 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType
@@ -93,6 +92,8 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 
 EVOHOME_KEY: HassKey[EvoData] = HassKey(DOMAIN)
 
+PLATFORMS = (Platform.CLIMATE, Platform.WATER_HEATER)
+
 
 @dataclass
 class EvoData:
@@ -109,10 +110,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up the Evohome integration."""
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Load the Evohome config entry."""
 
-    config = {DOMAIN: dict(entry.data)}
+    config = {DOMAIN: dict(config_entry.data)}
 
     token_manager = TokenManager(
         hass,
@@ -137,31 +138,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error(f"Failed to fetch initial data: {coordinator.last_exception}")  # noqa: G004
         return False
 
-    assert coordinator.tcs is not None  # mypy
+    config_entry.runtime_data = coordinator
 
-    hass.data[EVOHOME_KEY] = EvoData(
-        coordinator=coordinator,
-        loc_idx=coordinator.loc_idx,
-        tcs=coordinator.tcs,
-    )
-
-    entry.runtime_data = coordinator
-
-    # await hass.config_entries.async_forward_entry_setups(
-    #     entry, (Platform.CLIMATE, Platform.WATER_HEATER)
-    # )
-
-    hass.async_create_task(
-        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
-    )
-    if coordinator.tcs.hotwater:
-        hass.async_create_task(
-            async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
-        )
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     setup_service_functions(hass, coordinator)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload the Evohome config entry."""
+
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 @callback

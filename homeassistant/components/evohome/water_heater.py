@@ -13,6 +13,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PRECISION_TENTHS,
     PRECISION_WHOLE,
@@ -21,11 +22,9 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import EVOHOME_KEY
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild
 
@@ -37,20 +36,18 @@ HA_STATE_TO_EVO = {STATE_AUTO: "", STATE_ON: EvoDhwState.ON, STATE_OFF: EvoDhwSt
 EVO_STATE_TO_HA = {v: k for k, v in HA_STATE_TO_EVO.items() if k != ""}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Create a DHW controller."""
-    if discovery_info is None:
+    """Create an Evohome DHW controller (if any)."""
+
+    coordinator: EvoDataUpdateCoordinator = config_entry.runtime_data
+    tcs = coordinator.tcs
+
+    if tcs.hotwater is None:  # not all systems have DHW
         return
-
-    coordinator = hass.data[EVOHOME_KEY].coordinator
-    tcs = hass.data[EVOHOME_KEY].tcs
-
-    assert tcs.hotwater is not None  # mypy check
 
     _LOGGER.debug(
         "Adding: DhwController (%s), id=%s",

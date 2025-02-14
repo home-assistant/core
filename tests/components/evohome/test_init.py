@@ -12,12 +12,15 @@ from evohomeasync2 import exceptions as exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.evohome.const import DOMAIN
+from homeassistant.components.evohome.const import DOMAIN, EvoService
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .conftest import mock_post_request
+from .conftest import mock_make_request, mock_post_request
 from .const import TEST_INSTALLS
+
+from tests.common import MockConfigEntry
 
 _MSG_429 = (
     "You have exceeded the server's API rate limit. Wait a while "
@@ -226,3 +229,29 @@ async def test_service_reset_system(
         )
 
         mock_fcn.assert_awaited_once_with("AutoWithReset", until=None)
+
+
+@pytest.mark.parametrize("install", ["default"])
+async def test_load_unload_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    install: str,
+) -> None:
+    """Test load and unload entry."""
+
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
+        ),
+        patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
+    ):
+        config_entry.add_to_hass(hass)
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.LOADED
+
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.NOT_LOADED
