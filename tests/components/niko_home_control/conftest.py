@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from nhc.cover import NHCCover
 from nhc.light import NHCLight
 import pytest
 
@@ -49,8 +50,20 @@ def dimmable_light() -> NHCLight:
 
 
 @pytest.fixture
+def cover() -> NHCCover:
+    """Return a cover mock."""
+    mock = AsyncMock(spec=NHCCover)
+    mock.id = 3
+    mock.type = 4
+    mock.name = "cover"
+    mock.suggested_area = "room"
+    mock.state = 100
+    return mock
+
+
+@pytest.fixture
 def mock_niko_home_control_connection(
-    light: NHCLight, dimmable_light: NHCLight
+    light: NHCLight, dimmable_light: NHCLight, cover: NHCCover
 ) -> Generator[AsyncMock]:
     """Mock a NHC client."""
     with (
@@ -65,6 +78,7 @@ def mock_niko_home_control_connection(
     ):
         client = mock_client.return_value
         client.lights = [light, dimmable_light]
+        client.covers = [cover]
         yield client
 
 

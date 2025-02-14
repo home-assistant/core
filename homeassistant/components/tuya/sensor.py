@@ -23,7 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import TuyaConfigEntry
@@ -45,7 +45,7 @@ class TuyaSensorEntityDescription(SensorEntityDescription):
     subkey: str | None = None
 
 
-# Commonly used battery sensors, that are re-used in the sensors down below.
+# Commonly used battery sensors, that are reused in the sensors down below.
 BATTERY_SENSORS: tuple[TuyaSensorEntityDescription, ...] = (
     TuyaSensorEntityDescription(
         key=DPCode.BATTERY_PERCENTAGE,
@@ -612,6 +612,29 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
     # Smart Camera
     # https://developer.tuya.com/en/docs/iot/categorysp?id=Kaiuz35leyo12
     "sp": (
+        TuyaSensorEntityDescription(
+            key=DPCode.SENSOR_TEMPERATURE,
+            translation_key="temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.SENSOR_HUMIDITY,
+            translation_key="humidity",
+            device_class=SensorDeviceClass.HUMIDITY,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.WIRELESS_ELECTRICITY,
+            translation_key="battery",
+            device_class=SensorDeviceClass.BATTERY,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+    ),
+    # Smart Camera - Low power consumption camera
+    # Undocumented, see https://github.com/home-assistant/core/issues/132844
+    "dghsxj": (
         TuyaSensorEntityDescription(
             key=DPCode.SENSOR_TEMPERATURE,
             translation_key="temperature",
@@ -1222,7 +1245,9 @@ SENSORS["pc"] = SENSORS["kg"]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TuyaConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TuyaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tuya sensor dynamically through Tuya discovery."""
     hass_data = entry.runtime_data

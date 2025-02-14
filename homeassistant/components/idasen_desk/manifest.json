@@ -12,5 +12,6 @@
   "documentation": "https://www.home-assistant.io/integrations/idasen_desk",
   "integration_type": "device",
   "iot_class": "local_push",
+  "quality_scale": "bronze",
   "requirements": ["idasen-ha==2.6.3"]
 }

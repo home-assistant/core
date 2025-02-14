@@ -18,7 +18,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration
+from . import find_update_callback, setup_integration
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -42,11 +42,11 @@ async def test_entities(
 @pytest.mark.parametrize(
     ("light_id", "data", "set_brightness"),
     [
-        (0, {ATTR_ENTITY_ID: "light.light"}, 100.0),
+        (0, {ATTR_ENTITY_ID: "light.light"}, 100),
         (
             1,
             {ATTR_ENTITY_ID: "light.dimmable_light", ATTR_BRIGHTNESS: 50},
-            19.607843137254903,
+            20,
         ),
     ],
 )
@@ -113,7 +113,7 @@ async def test_updating(
     assert hass.states.get("light.light").state == STATE_ON
 
     light.state = 0
-    await mock_niko_home_control_connection.register_callback.call_args_list[0][0][1](0)
+    await find_update_callback(mock_niko_home_control_connection, 1)(0)
     await hass.async_block_till_done()
 
     assert hass.states.get("light.light").state == STATE_OFF
@@ -122,16 +122,14 @@ async def test_updating(
     assert hass.states.get("light.dimmable_light").attributes[ATTR_BRIGHTNESS] == 255
 
     dimmable_light.state = 80
-    await mock_niko_home_control_connection.register_callback.call_args_list[1][0][1](
-        80
-    )
+    await find_update_callback(mock_niko_home_control_connection, 2)(80)
     await hass.async_block_till_done()
 
     assert hass.states.get("light.dimmable_light").state == STATE_ON
     assert hass.states.get("light.dimmable_light").attributes[ATTR_BRIGHTNESS] == 204
 
     dimmable_light.state = 0
-    await mock_niko_home_control_connection.register_callback.call_args_list[1][0][1](0)
+    await find_update_callback(mock_niko_home_control_connection, 2)(0)
     await hass.async_block_till_done()
 
     assert hass.states.get("light.dimmable_light").state == STATE_OFF

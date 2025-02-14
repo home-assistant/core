@@ -15,6 +15,7 @@ from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
 
 from .const import (
     COMMAND_OK,
+    ENERGY_HISTORY,
     LIVE_STATUS,
     PRODUCTS,
     SITE_INFO,
@@ -33,7 +34,9 @@ def mock_expires_at() -> int:
     return time.time() + 3600
 
 
-def create_config_entry(expires_at: int, scopes: list[Scope]) -> MockConfigEntry:
+def create_config_entry(
+    expires_at: int, scopes: list[Scope], implementation: str = DOMAIN
+) -> MockConfigEntry:
     """Create Tesla Fleet entry in Home Assistant."""
     access_token = jwt.encode(
         {
@@ -51,7 +54,7 @@ def create_config_entry(expires_at: int, scopes: list[Scope]) -> MockConfigEntry
         title=UID,
         unique_id=UID,
         data={
-            "auth_implementation": DOMAIN,
+            "auth_implementation": implementation,
             "token": {
                 "status": 0,
                 "userid": UID,
@@ -88,6 +91,12 @@ def readonly_config_entry(expires_at: int) -> MockConfigEntry:
             Scope.ENERGY_DEVICE_DATA,
         ],
     )
+
+
+@pytest.fixture
+def bad_config_entry(expires_at: int) -> MockConfigEntry:
+    """Create Tesla Fleet entry in Home Assistant."""
+    return create_config_entry(expires_at, SCOPES, "bad")
 
 
 @pytest.fixture(autouse=True)
@@ -167,6 +176,16 @@ def mock_request():
         return_value=COMMAND_OK,
     ) as mock_request:
         yield mock_request
+
+
+@pytest.fixture(autouse=True)
+def mock_energy_history():
+    """Mock Teslemetry Energy Specific site_info method."""
+    with patch(
+        "homeassistant.components.teslemetry.EnergySpecific.energy_history",
+        return_value=ENERGY_HISTORY,
+    ) as mock_live_status:
+        yield mock_live_status
 
 
 @pytest.fixture(autouse=True)

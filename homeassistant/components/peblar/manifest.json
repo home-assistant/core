@@ -6,7 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/peblar",
   "integration_type": "device",
   "iot_class": "local_polling",
-  "quality_scale": "bronze",
-  "requirements": ["peblar==0.3.0"],
+  "quality_scale": "platinum",
+  "requirements": ["peblar==0.4.0"],
   "zeroconf": [{ "type": "_http._tcp.local.", "name": "pblr-*" }]
 }

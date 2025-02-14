@@ -100,6 +100,7 @@ async def test_entity_entry_migration(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test successful migration of entry data."""
+    mock_config_entry.add_to_hass(hass)
     entity = entity_registry.async_get_or_create(
         suggested_object_id="advice",
         disabled_by=None,

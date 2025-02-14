@@ -23,9 +23,7 @@ rules:
     comment: No coordinator is used, data update is centrally handled by the library.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
-    status: todo
-    comment: removal instructions missing
+  docs-removal-instructions: done
   docs-actions: done
   brands: done
   # Silver

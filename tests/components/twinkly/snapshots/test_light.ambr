@@ -6,12 +6,15 @@
     'area_id': None,
     'capabilities': dict({
       'effect_list': list([
+        '1 Rainbow',
+        '2 Flare',
       ]),
       'supported_color_modes': list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -43,8 +46,10 @@
     'attributes': ReadOnlyDict({
       'brightness': 26,
       'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': None,
+      'effect': '1 Rainbow',
       'effect_list': list([
+        '1 Rainbow',
+        '2 Flare',
       ]),
       'friendly_name': 'Tree 1',
       'hs_color': tuple(

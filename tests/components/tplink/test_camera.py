@@ -11,6 +11,9 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import stream
 from homeassistant.components.camera import (
+    DOMAIN as CAMERA_DOMAIN,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     CameraEntityFeature,
     StreamType,
     async_get_image,
@@ -23,14 +26,8 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import (
-    IP_ADDRESS3,
-    MAC_ADDRESS3,
-    SMALLEST_VALID_JPEG_BYTES,
-    _mocked_device,
-    setup_platform_for_device,
-    snapshot_platform,
-)
+from . import _mocked_device, setup_platform_for_device, snapshot_platform
+from .const import DEVICE_ID, IP_ADDRESS3, MAC_ADDRESS3, SMALLEST_VALID_JPEG_BYTES
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
@@ -43,7 +40,7 @@ async def test_states(
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test states."""
+    """Test camera states."""
     mock_camera_config_entry.add_to_hass(hass)
 
     mock_device = _mocked_device(
@@ -68,10 +65,37 @@ async def test_states(
     )
 
 
+async def test_camera_unique_id(
+    hass: HomeAssistant,
+    mock_camera_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test camera unique id."""
+    mock_device = _mocked_device(
+        modules=[Module.Camera],
+        alias="my_camera",
+        ip_address=IP_ADDRESS3,
+        mac=MAC_ADDRESS3,
+        device_id=DEVICE_ID,
+    )
+
+    await setup_platform_for_device(
+        hass, mock_camera_config_entry, Platform.CAMERA, mock_device
+    )
+
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_camera_config_entry.entry_id
+    )
+    assert device_entries
+    entity_id = "camera.my_camera_live_view"
+
+    assert entity_registry.async_get(entity_id).unique_id == f"{DEVICE_ID}-live_view"
+
+
 async def test_handle_mjpeg_stream(
     hass: HomeAssistant,
     mock_camera_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test handle_async_mjpeg_stream."""
     mock_device = _mocked_device(
@@ -98,9 +122,8 @@ async def test_handle_mjpeg_stream(
 async def test_handle_mjpeg_stream_not_supported(
     hass: HomeAssistant,
     mock_camera_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test handle_async_mjpeg_stream."""
+    """Test no stream if stream_rtsp_url is None after creation."""
     mock_device = _mocked_device(
         modules=[Module.Camera],
         alias="my_camera",
@@ -109,17 +132,17 @@ async def test_handle_mjpeg_stream_not_supported(
     )
     mock_camera = mock_device.modules[Module.Camera]
 
-    mock_camera.stream_rtsp_url.return_value = None
+    mock_camera.stream_rtsp_url.side_effect = ("foo", None)
 
     await setup_platform_for_device(
         hass, mock_camera_config_entry, Platform.CAMERA, mock_device
     )
 
     mock_request = make_mocked_request("GET", "/", headers={"token": "x"})
-    stream = await async_get_mjpeg_stream(
+    mjpeg_stream = await async_get_mjpeg_stream(
         hass, mock_request, "camera.my_camera_live_view"
     )
-    assert stream is None
+    assert mjpeg_stream is None
 
 
 async def test_camera_image(
@@ -188,7 +211,7 @@ async def test_no_camera_image_when_streaming(
     mock_camera_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test async_get_image."""
+    """Test no camera image when streaming."""
     mock_device = _mocked_device(
         modules=[Module.Camera],
         alias="my_camera",
@@ -244,9 +267,8 @@ async def test_no_camera_image_when_streaming(
 async def test_no_concurrent_camera_image(
     hass: HomeAssistant,
     mock_camera_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test async_get_image."""
+    """Test async_get_image doesn't make concurrent requests."""
     mock_device = _mocked_device(
         modules=[Module.Camera],
         alias="my_camera",
@@ -293,7 +315,7 @@ async def test_camera_image_auth_error(
     mock_connect: AsyncMock,
     mock_discovery: AsyncMock,
 ) -> None:
-    """Test async_get_image."""
+    """Test async_get_image auth error."""
     mock_device = _mocked_device(
         modules=[Module.Camera],
         alias="my_camera",
@@ -318,7 +340,8 @@ async def test_camera_image_auth_error(
         patch(
             "homeassistant.components.stream.async_check_stream_client_error",
             side_effect=stream.StreamOpenClientError(
-                stream_client_error=stream.StreamClientError.Unauthorized
+                "Request was unauthorized",
+                error_code=stream.StreamClientError.Unauthorized,
             ),
         ),
         pytest.raises(HomeAssistantError),
@@ -338,7 +361,7 @@ async def test_camera_stream_source(
     mock_camera_config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test async_get_image.
+    """Test camera stream source.
 
     This test would fail if the integration didn't properly
     put stream in the dependencies.
@@ -415,16 +438,16 @@ async def test_camera_turn_on_off(
     assert state is not None
 
     await hass.services.async_call(
-        "camera",
-        "turn_on",
+        CAMERA_DOMAIN,
+        SERVICE_TURN_ON,
         {"entity_id": "camera.my_camera_live_view"},
         blocking=True,
     )
     mock_camera.set_state.assert_called_with(True)
 
     await hass.services.async_call(
-        "camera",
-        "turn_off",
+        CAMERA_DOMAIN,
+        SERVICE_TURN_OFF,
         {"entity_id": "camera.my_camera_live_view"},
         blocking=True,
     )

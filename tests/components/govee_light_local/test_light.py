@@ -10,7 +10,7 @@ from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import DEFAULT_CAPABILITEIS
+from .conftest import DEFAULT_CAPABILITIES
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +26,7 @@ async def test_light_known_device(
             ip="192.168.1.100",
             fingerprint="asdawdqwdqwd",
             sku="H615A",
-            capabilities=DEFAULT_CAPABILITEIS,
+            capabilities=DEFAULT_CAPABILITIES,
         )
     ]
 
@@ -96,7 +96,7 @@ async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
             ip="192.168.1.100",
             fingerprint="asdawdqwdqwd1",
             sku="H615A",
-            capabilities=DEFAULT_CAPABILITEIS,
+            capabilities=DEFAULT_CAPABILITIES,
         )
     ]
 
@@ -152,7 +152,7 @@ async def test_light_setup_retry_eaddrinuse(
             ip="192.168.1.100",
             fingerprint="asdawdqwdqwd",
             sku="H615A",
-            capabilities=DEFAULT_CAPABILITEIS,
+            capabilities=DEFAULT_CAPABILITIES,
         )
     ]
 
@@ -180,7 +180,7 @@ async def test_light_setup_error(
             ip="192.168.1.100",
             fingerprint="asdawdqwdqwd",
             sku="H615A",
-            capabilities=DEFAULT_CAPABILITEIS,
+            capabilities=DEFAULT_CAPABILITIES,
         )
     ]
 
@@ -204,7 +204,7 @@ async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> N
             ip="192.168.1.100",
             fingerprint="asdawdqwdqwd",
             sku="H615A",
-            capabilities=DEFAULT_CAPABILITEIS,
+            capabilities=DEFAULT_CAPABILITIES,
         )
     ]
 
@@ -260,7 +260,7 @@ async def test_light_brightness(hass: HomeAssistant, mock_govee_api: MagicMock) 
             ip="192.168.1.100",
             fingerprint="asdawdqwdqwd",
             sku="H615A",
-            capabilities=DEFAULT_CAPABILITEIS,
+            capabilities=DEFAULT_CAPABILITIES,
         )
     ]
 
@@ -335,7 +335,7 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
             ip="192.168.1.100",
             fingerprint="asdawdqwdqwd",
             sku="H615A",
-            capabilities=DEFAULT_CAPABILITEIS,
+            capabilities=DEFAULT_CAPABILITIES,
         )
     ]
 

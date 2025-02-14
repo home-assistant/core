@@ -38,6 +38,7 @@ from homeassistant.util.unit_conversion import (
     ElectricCurrentConverter,
     ElectricPotentialConverter,
     EnergyConverter,
+    EnergyDistanceConverter,
     InformationConverter,
     MassConverter,
     PowerConverter,
@@ -147,6 +148,7 @@ STATISTIC_UNIT_TO_UNIT_CONVERTER: dict[str | None, type[BaseUnitConverter]] = {
         for unit in ElectricPotentialConverter.VALID_UNITS
     },
     **{unit: EnergyConverter for unit in EnergyConverter.VALID_UNITS},
+    **{unit: EnergyDistanceConverter for unit in EnergyDistanceConverter.VALID_UNITS},
     **{unit: InformationConverter for unit in InformationConverter.VALID_UNITS},
     **{unit: MassConverter for unit in MassConverter.VALID_UNITS},
     **{unit: PowerConverter for unit in PowerConverter.VALID_UNITS},
@@ -968,12 +970,10 @@ def _reduce_statistics(
     return result
 
 
-def reduce_day_ts_factory() -> (
-    tuple[
-        Callable[[float, float], bool],
-        Callable[[float], tuple[float, float]],
-    ]
-):
+def reduce_day_ts_factory() -> tuple[
+    Callable[[float, float], bool],
+    Callable[[float], tuple[float, float]],
+]:
     """Return functions to match same day and day start end."""
     _lower_bound: float = 0
     _upper_bound: float = 0
@@ -1017,12 +1017,10 @@ def _reduce_statistics_per_day(
     )
 
 
-def reduce_week_ts_factory() -> (
-    tuple[
-        Callable[[float, float], bool],
-        Callable[[float], tuple[float, float]],
-    ]
-):
+def reduce_week_ts_factory() -> tuple[
+    Callable[[float, float], bool],
+    Callable[[float], tuple[float, float]],
+]:
     """Return functions to match same week and week start end."""
     _lower_bound: float = 0
     _upper_bound: float = 0
@@ -1075,12 +1073,10 @@ def _find_month_end_time(timestamp: datetime) -> datetime:
     )
 
 
-def reduce_month_ts_factory() -> (
-    tuple[
-        Callable[[float, float], bool],
-        Callable[[float], tuple[float, float]],
-    ]
-):
+def reduce_month_ts_factory() -> tuple[
+    Callable[[float, float], bool],
+    Callable[[float], tuple[float, float]],
+]:
     """Return functions to match same month and month start end."""
     _lower_bound: float = 0
     _upper_bound: float = 0

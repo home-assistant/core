@@ -6,6 +6,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -28,7 +29,7 @@
     'previous_unique_id': None,
     'supported_features': <CameraEntityFeature: 3>,
     'translation_key': 'live_view',
-    'unique_id': "123456789ABCDEFGH-TPLinkCameraEntityDescription(key='live_view', device_class=None, entity_category=None, entity_registry_enabled_default=True, entity_registry_visible_default=True, force_update=False, icon=None, has_entity_name=False, name=<UndefinedType._singleton: 0>, translation_key='live_view', translation_placeholders=None, unit_of_measurement=None, deprecated_info=None)",
+    'unique_id': '123456789ABCDEFGH-live_view',
     'unit_of_measurement': None,
   })
 # ---
@@ -53,6 +54,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
       tuple(

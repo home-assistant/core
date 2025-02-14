@@ -40,17 +40,17 @@ class ActiveConnection:
     """Handle an active websocket client connection."""
 
     __slots__ = (
-        "logger",
-        "hass",
-        "send_message",
-        "user",
-        "refresh_token_id",
-        "subscriptions",
-        "last_id",
-        "can_coalesce",
-        "supported_features",
-        "handlers",
         "binary_handlers",
+        "can_coalesce",
+        "handlers",
+        "hass",
+        "last_id",
+        "logger",
+        "refresh_token_id",
+        "send_message",
+        "subscriptions",
+        "supported_features",
+        "user",
     )
 
     def __init__(
@@ -189,13 +189,13 @@ class ActiveConnection:
         if (
             # Not using isinstance as we don't care about children
             # as these are always coming from JSON
-            type(msg) is not dict  # noqa: E721
+            type(msg) is not dict
             or (
                 not (cur_id := msg.get("id"))
-                or type(cur_id) is not int  # noqa: E721
+                or type(cur_id) is not int
                 or cur_id < 0
                 or not (type_ := msg.get("type"))
-                or type(type_) is not str  # noqa: E721
+                or type(type_) is not str
             )
         ):
             self.logger.error("Received invalid command: %s", msg)

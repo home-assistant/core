@@ -641,3 +641,147 @@ async def test_no_album_images(
     state = hass.states.get("media_player.spotify_spotify_1")
     assert state
     assert ATTR_ENTITY_PICTURE not in state.attributes
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_normal_polling_interval(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Spotify media player polling interval."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_spotify.return_value.get_playback.return_value.is_playing is True
+    assert (
+        mock_spotify.return_value.get_playback.return_value.progress_ms
+        - mock_spotify.return_value.get_playback.return_value.item.duration_ms
+        < 30000
+    )
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    mock_spotify.return_value.get_playback.reset_mock()
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_smart_polling_interval(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Spotify media player polling interval."""
+    freezer.move_to("2023-10-21")
+    mock_spotify.return_value.get_playback.return_value.progress_ms = 10000
+    mock_spotify.return_value.get_playback.return_value.item.duration_ms = 30000
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    mock_spotify.return_value.get_playback.reset_mock()
+
+    freezer.tick(timedelta(seconds=20))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_not_called()
+
+    mock_spotify.return_value.get_playback.return_value.progress_ms = 10000
+    mock_spotify.return_value.get_playback.return_value.item.duration_ms = 50000
+
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    mock_spotify.return_value.get_playback.reset_mock()
+
+    freezer.tick(timedelta(seconds=21))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_not_called()
+
+    freezer.tick(timedelta(seconds=9))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    mock_spotify.return_value.get_playback.reset_mock()
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_smart_polling_interval_handles_errors(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Spotify media player polling interval."""
+    mock_spotify.return_value.get_playback.return_value.progress_ms = 10000
+    mock_spotify.return_value.get_playback.return_value.item.duration_ms = 30000
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    mock_spotify.return_value.get_playback.reset_mock()
+
+    mock_spotify.return_value.get_playback.side_effect = SpotifyConnectionError
+
+    freezer.tick(timedelta(seconds=21))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    mock_spotify.return_value.get_playback.reset_mock()
+
+    freezer.tick(timedelta(seconds=21))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_not_called()
+
+    freezer.tick(timedelta(seconds=9))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    mock_spotify.return_value.get_playback.reset_mock()
+
+
+@pytest.mark.usefixtures("setup_credentials")
+async def test_smart_polling_interval_handles_paused(
+    hass: HomeAssistant,
+    mock_spotify: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the Spotify media player polling interval."""
+    mock_spotify.return_value.get_playback.return_value.progress_ms = 10000
+    mock_spotify.return_value.get_playback.return_value.item.duration_ms = 30000
+    mock_spotify.return_value.get_playback.return_value.is_playing = False
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    mock_spotify.return_value.get_playback.reset_mock()
+
+    freezer.tick(timedelta(seconds=21))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_not_called()
+
+    freezer.tick(timedelta(seconds=9))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_spotify.return_value.get_playback.assert_called_once()
+    mock_spotify.return_value.get_playback.reset_mock()

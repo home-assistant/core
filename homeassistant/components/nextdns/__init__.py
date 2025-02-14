@@ -98,7 +98,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NextDnsConfigEntry) -> b
     # Independent DataUpdateCoordinator is used for each API endpoint to avoid
     # unnecessary requests when entities using this endpoint are disabled.
     for coordinator_name, coordinator_class, update_interval in COORDINATORS:
-        coordinator = coordinator_class(hass, nextdns, profile_id, update_interval)
+        coordinator = coordinator_class(
+            hass, entry, nextdns, profile_id, update_interval
+        )
         tasks.append(coordinator.async_config_entry_first_refresh())
         coordinators[coordinator_name] = coordinator
 

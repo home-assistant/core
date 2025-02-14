@@ -38,6 +38,7 @@ class OpenUvCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=entry,
             name=name,
             update_method=update_method,
             request_refresh_debouncer=Debouncer(
@@ -48,7 +49,6 @@ class OpenUvCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ),
         )
 
-        self._entry = entry
         self.latitude = latitude
         self.longitude = longitude
 

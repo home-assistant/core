@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 import os
-from typing import Any, NamedTuple
+from typing import TYPE_CHECKING, Any, NamedTuple
 
 from psutil import Process
 from psutil._common import sdiskusage, shwtemp, snetio, snicaddr, sswap
@@ -16,6 +16,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util import dt as dt_util
+
+if TYPE_CHECKING:
+    from . import SystemMonitorConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,6 +86,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: SystemMonitorConfigEntry,
         psutil_wrapper: ha_psutil.PsutilWrapper,
         arguments: list[str],
     ) -> None:
@@ -90,6 +94,7 @@ class SystemMonitorCoordinator(TimestampDataUpdateCoordinator[SensorData]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="System Monitor update coordinator",
             update_interval=DEFAULT_SCAN_INTERVAL,
             always_update=False,

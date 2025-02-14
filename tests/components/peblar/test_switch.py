@@ -36,7 +36,7 @@ async def test_entities(
     """Test the switch entities."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
-    # Ensure all entities are correctly assigned to the Peblar device
+    # Ensure all entities are correctly assigned to the Peblar EV charger
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, "23-45-A4O-MOF")}
     )
@@ -49,10 +49,32 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("service", "force_single_phase"),
+    ("service", "entity_id", "parameter", "parameter_value"),
     [
-        (SERVICE_TURN_ON, True),
-        (SERVICE_TURN_OFF, False),
+        (
+            SERVICE_TURN_ON,
+            "switch.peblar_ev_charger_force_single_phase",
+            "force_single_phase",
+            True,
+        ),
+        (
+            SERVICE_TURN_OFF,
+            "switch.peblar_ev_charger_force_single_phase",
+            "force_single_phase",
+            False,
+        ),
+        (
+            SERVICE_TURN_ON,
+            "switch.peblar_ev_charger_charge",
+            "charge_current_limit",
+            16,
+        ),
+        (
+            SERVICE_TURN_OFF,
+            "switch.peblar_ev_charger_charge",
+            "charge_current_limit",
+            0,
+        ),
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -60,10 +82,11 @@ async def test_switch(
     hass: HomeAssistant,
     mock_peblar: MagicMock,
     service: str,
-    force_single_phase: bool,
+    entity_id: str,
+    parameter: str,
+    parameter_value: bool | int,
 ) -> None:
     """Test the Peblar EV charger switches."""
-    entity_id = "switch.peblar_ev_charger_force_single_phase"
     mocked_method = mock_peblar.rest_api.return_value.ev_interface
     mocked_method.reset_mock()
 
@@ -76,9 +99,7 @@ async def test_switch(
     )
 
     assert len(mocked_method.mock_calls) == 2
-    mocked_method.mock_calls[0].assert_called_with(
-        {"force_single_phase": force_single_phase}
-    )
+    mocked_method.mock_calls[0].assert_called_with({parameter: parameter_value})
 
 
 @pytest.mark.parametrize(
@@ -88,7 +109,7 @@ async def test_switch(
             PeblarConnectionError("Could not connect"),
             (
                 r"An error occurred while communicating "
-                r"with the Peblar device: Could not connect"
+                r"with the Peblar EV charger: Could not connect"
             ),
             "communication_error",
             {"error": "Could not connect"},
@@ -97,7 +118,7 @@ async def test_switch(
             PeblarError("Unknown error"),
             (
                 r"An unknown error occurred while communicating "
-                r"with the Peblar device: Unknown error"
+                r"with the Peblar EV charger: Unknown error"
             ),
             "unknown_error",
             {"error": "Unknown error"},
@@ -152,7 +173,7 @@ async def test_switch_authentication_error(
         HomeAssistantError,
         match=(
             r"An authentication failure occurred while communicating "
-            r"with the Peblar device"
+            r"with the Peblar EV charger"
         ),
     ) as excinfo:
         await hass.services.async_call(

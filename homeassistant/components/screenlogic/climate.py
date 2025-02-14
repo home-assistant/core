@@ -21,7 +21,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .entity import ScreenLogicPushEntity, ScreenLogicPushEntityDescription
@@ -42,7 +42,7 @@ SUPPORTED_PRESETS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ScreenLogicConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     coordinator = config_entry.runtime_data
@@ -93,7 +93,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
             )
         self._configured_heat_modes.append(HEAT_MODE.HEATER)
         self._attr_preset_modes = [
-            HEAT_MODE(mode_num).title for mode_num in self._configured_heat_modes
+            HEAT_MODE(mode_num).name.lower() for mode_num in self._configured_heat_modes
         ]
 
         self._attr_min_temp = self.entity_data[ATTR.MIN_SETPOINT]
@@ -137,8 +137,8 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
     def preset_mode(self) -> str:
         """Return current/last preset mode."""
         if self.hvac_mode == HVACMode.OFF:
-            return HEAT_MODE(self._last_preset).title
-        return HEAT_MODE(self.entity_data[VALUE.HEAT_MODE][ATTR.VALUE]).title
+            return HEAT_MODE(self._last_preset).name.lower()
+        return HEAT_MODE(self.entity_data[VALUE.HEAT_MODE][ATTR.VALUE]).name.lower()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Change the setpoint of the heater."""

@@ -523,7 +523,7 @@ async def test_callback_view(
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
         client = await hass_client_no_auth()
-        forward_url = f'{config_flow.AUTH_CALLBACK_PATH}?flow_id={result["flow_id"]}'
+        forward_url = f"{config_flow.AUTH_CALLBACK_PATH}?flow_id={result['flow_id']}"
 
         resp = await client.get(forward_url)
         assert resp.status == HTTPStatus.OK
