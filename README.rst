@@ -15,7 +15,7 @@ Easy setup through your Home Assistant instance
 Local control for better performance and reliability
 📦 GitHub Repository:
 The integration is available now on GitHub! Check it out, give it a try, and let me know your feedback:
-https://https://github.com/charleybarley2000/Grid-connect-integration
+https://github.com/charleybarley2000/Grid-connect-integration
 
 💬 Feedback & Contributions:
 I’m eager to hear your thoughts! Whether it’s feature requests, bug reports, or general feedback, please feel free to contribute via GitHub or reply to this post. I’m looking forward to improving the integration based on your suggestions.
