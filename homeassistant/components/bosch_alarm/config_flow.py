@@ -11,7 +11,7 @@ from bosch_alarm_mode2 import Panel
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import (
     CONF_CODE,
     CONF_HOST,
@@ -19,7 +19,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
@@ -94,15 +94,9 @@ async def try_connect(
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch Alarm."""
 
-    VERSION = 4
+    VERSION = 1
     entry: config_entries.ConfigEntry | None = None
     data: dict[str, Any] = {}
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Provide a handler for the options flow."""
-        return OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -156,21 +150,3 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=self.add_suggested_values_to_schema(schema, user_input),
                 errors={"base": ex.args[0]},
             )
-
-
-class OptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle a options flow for Bosch Alarm."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=self.add_suggested_values_to_schema(
-                STEP_INIT_DATA_SCHEMA, self.config_entry.options
-            ),
-        )
