@@ -16,8 +16,9 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
     EVENT_HOMEASSISTANT_STOP,
+    EVENT_LOGGING_CHANGED,
 )
-from homeassistant.core import CoreState, HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.core import Event, CoreState, HassJob, HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -25,6 +26,7 @@ from homeassistant.helpers.dispatcher import (
 )
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.start import async_at_started
 
 from .const import (
     DATA_DEVICE_REGISTER,
@@ -41,6 +43,7 @@ from .entity import RflinkCommand
 from .utils import identify_event_type
 
 _LOGGER = logging.getLogger(__name__)
+LIB_LOGGER = logging.getLogger("rflink")
 
 CONF_IGNORE_DEVICES = "ignore_devices"
 CONF_RECONNECT_INTERVAL = "reconnect_interval"
@@ -277,4 +280,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     hass.async_create_task(connect(), eager_start=False)
     async_dispatcher_connect(hass, SIGNAL_EVENT, event_callback)
+
+    async def handle_logging_changed(_: Event | None = None) -> None:
+        """Handle logging changed event."""
+        if LIB_LOGGER.isEnabledFor(logging.DEBUG):
+            await RflinkCommand.send_command("rfdebug", "on")
+            _LOGGER.info("RFDEBUG enabled")
+        else:
+            await RflinkCommand.send_command("rfdebug", "off")
+            _LOGGER.info("RFDEBUG disabled")
+
+    # Set up RFDEBUG logging on setup if needed
+    async_at_started(hass, handle_logging_changed)
+
+    hass.bus.async_listen(EVENT_LOGGING_CHANGED, handle_logging_changed)
+
     return True

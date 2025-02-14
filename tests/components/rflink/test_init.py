@@ -556,3 +556,29 @@ async def test_unique_id(
     temperature_entry = entity_registry.async_get("sensor.temperature_device")
     assert temperature_entry
     assert temperature_entry.unique_id == "my_temperature_device_unique_id"
+
+
+async def test_enable_debug_logs(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that changing debug level enables RFDEBUG."""
+
+    domain = RFLINK_DOMAIN
+    config = {RFLINK_DOMAIN: {CONF_HOST: "10.10.0.1", CONF_PORT: 1234}}
+
+    # setup mocking rflink module
+    _, mock_create, _, _ = await mock_rflink(hass, config, domain, monkeypatch)
+
+    logging.getLogger("rflink").setLevel(logging.DEBUG)
+    hass.bus.async_fire(EVENT_LOGGING_CHANGED)
+    await hass.async_block_till_done()
+
+    assert "RFDEBUG enabled" in caplog.text
+
+    logging.getLogger("rflink").setLevel(logging.INFO)
+    hass.bus.async_fire(EVENT_LOGGING_CHANGED)
+    await hass.async_block_till_done()
+
+    assert "RFDEBUG disabled" not in caplog.text
