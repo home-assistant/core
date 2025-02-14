@@ -164,16 +164,18 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
             return None
 
-        distance_to_zone = distance(
+        distance_to_center = distance(
             zone.attributes[ATTR_LATITUDE],
             zone.attributes[ATTR_LONGITUDE],
             latitude,
             longitude,
         )
+        assert distance_to_center is not None
 
-        # it is ensured, that distance can't be None, since zones must have lat/lon coordinates
-        assert distance_to_zone is not None
-        return round(distance_to_zone)
+        zone_radius = zone.attributes.get("radius", 0)
+
+        adjusted_distance = max(distance_to_center - zone_radius, 0)
+        return round(adjusted_distance)
 
     def _calc_direction_of_travel(
         self,
