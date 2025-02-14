@@ -17,6 +17,7 @@ from homeassistant.components.hue import light as hue_light
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import frame
 from homeassistant.helpers.json import json_dumps
+from homeassistant.loader import Integration
 from homeassistant.util.json import json_loads
 
 from .common import MockModule, async_get_persistent_notifications, mock_integration
@@ -72,13 +73,35 @@ async def test_circular_component_dependencies(hass: HomeAssistant) -> None:
         await mod_4._do_resolve_dependencies(
             possible_after_dependencies=all_domains, ignore_exceptions=False
         )
+    result = await mod_4._do_resolve_dependencies(
+        possible_after_dependencies=all_domains, ignore_exceptions=True
+    )
+    assert result == all_domains
 
 
 async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
     """Test if we can detect nonexistent dependencies of components."""
     mod_1 = mock_integration(hass, MockModule("mod1", dependencies=["nonexistent"]))
+    mod_2 = mock_integration(hass, MockModule("mod2", dependencies=["mod1"]))
+
+    assert await mod_2.resolve_dependencies() is None
+    assert mod_2.all_dependencies_resolved
     with pytest.raises(loader.IntegrationNotFound):
-        await mod_1._do_resolve_dependencies(ignore_exceptions=False)
+        mod_2.all_dependencies  # noqa: B018
+
+    assert mod_1.all_dependencies_resolved
+    assert await mod_1.resolve_dependencies() is None
+    with pytest.raises(loader.IntegrationNotFound):
+        mod_1.all_dependencies  # noqa: B018
+
+    mod_1 = mock_integration(
+        hass,
+        MockModule("mod1", partial_manifest={"after_dependencies": ["nonexistent"]}),
+    )
+    mod_2 = mock_integration(hass, MockModule("mod2", dependencies=["mod1"]))
+
+    result = await Integration.resolve_multiple_after_dependencies(hass, (mod_2, mod_1))
+    assert result == {}
 
 
 def test_component_loader(hass: HomeAssistant) -> None:
