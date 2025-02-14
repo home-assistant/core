@@ -2637,7 +2637,8 @@ async def test_entry_unload(
     """Test that we can unload an entry."""
     unload_entry_calls = []
 
-    async def verify_runtime_data() -> None:
+    @callback
+    def verify_runtime_data() -> None:
         """Verify runtime data."""
         assert entry.runtime_data == 2
 
@@ -2646,7 +2647,7 @@ async def test_entry_unload(
     ) -> bool:
         """Mock unload entry."""
         unload_entry_calls.append(None)
-        await verify_runtime_data()
+        verify_runtime_data()
         assert entry.state is config_entries.ConfigEntryState.LOADED
         return unload_result
 
