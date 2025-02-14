@@ -1557,30 +1557,50 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
         if "recorder" in integrations:
             break
 
-    integrations_or_execs = await loader.async_get_integrations(
+    integrations_or_excs = await loader.async_get_integrations(
         hass, integrations_before_recorder
     )
-    integrations: list[Integration] = []
-    resolve_deps_tasks: list[asyncio.Task[bool]] = []
-    for integration in integrations_or_execs.values():
-        assert not isinstance(integrations_or_execs, Exception)
-        integrations.append(integration)
-        resolve_deps_tasks.append(integration.resolve_dependencies())
+    integrations: dict[str, Integration] = {}
+    for domain, integration in integrations_or_excs.items():
+        assert not isinstance(integrations_or_excs, Exception)
+        integrations[domain] = integration
 
-    await asyncio.gather(*resolve_deps_tasks)
-    base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
-    for integration in integrations:
+    integrations_all_dependencies = await loader.resolve_integrations_dependencies(
+        hass, integrations.values()
+    )
+    all_integrations = integrations.copy()
+    all_integrations.update(
+        (domain, loader.async_get_loaded_integration(hass, domain))
+        for domains in integrations_all_dependencies.values()
+        for domain in domains
+    )
+
+    problems: dict[str, set[str]] = {}
+    for domain in integrations:
         domain_with_base_platforms_deps = BASE_PLATFORMS.intersection(
-            integration.all_dependencies
+            integrations_all_dependencies[domain]
         )
-        assert not domain_with_base_platforms_deps, (
-            f"{integration.domain} has base platforms in dependencies: "
-            f"{domain_with_base_platforms_deps}"
-        )
+        if domain_with_base_platforms_deps:
+            problems[domain] = domain_with_base_platforms_deps
+    assert not problems, f"Integrations have base platforms in dependencies: {problems}"
+
+    base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
+    exceptions = {
+        # config/scene.py is not a platform
+        "config": {"scene.py"},
+        # websocket_api/sensor.py is using the platform YAML schema
+        # we must not migrate it to an integration key until
+        # we remove the platform YAML schema support for sensors
+        "websocket_api": {"sensor.py"},
+    }
+
+    for domain, integration in all_integrations.items():
         integration_top_level_files = base_platform_py_files.intersection(
             integration._top_level_files
         )
-        assert not integration_top_level_files, (
-            f"{integration.domain} has base platform files in top level files: "
-            f"{integration_top_level_files}"
-        )
+        integration_top_level_files -= exceptions.get(domain, set())
+        if integration_top_level_files:
+            problems[domain] = integration_top_level_files
+    assert not problems, (
+        f"Integrations have base platform files in top level files: {problems}"
+    )
