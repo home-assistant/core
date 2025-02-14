@@ -3,8 +3,8 @@
     "step": {
       "user": {
         "data": {
-          "webhook_url": "EnergyID webhook url",
-          "entity_id": "Home Assistant entity id",
+          "webhook_url": "EnergyID webhook URL",
+          "entity_id": "Home Assistant entity ID",
           "metric": "EnergyID metric",
           "metric_kind": "EnergyID metric kind",
           "unit": "Unit of measurement"
