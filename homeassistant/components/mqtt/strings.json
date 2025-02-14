@@ -1,13 +1,5 @@
 {
   "issues": {
-    "deprecated_color_handling": {
-      "title": "Deprecated color handling used for MQTT light",
-      "description": "An MQTT light config (with `json` schema) found in `configuration.yaml` uses deprecated color handling flags.\n\nConfiguration found:\n```yaml\n{config}\n```\nDeprecated flags: **{deprecated_flags}**.\n\nUse the `supported_color_modes` option instead and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
-    },
-    "deprecated_color_mode_flag": {
-      "title": "Deprecated color_mode option flag used for MQTT light",
-      "description": "An MQTT light config (with `json` schema) found in `configuration.yaml` uses a deprecated `color_mode` flag.\n\nConfiguration found:\n```yaml\n{config}\n```\n\nRemove the option from your config and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
-    },
     "invalid_platform_config": {
       "title": "Invalid config found for mqtt {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
@@ -246,11 +238,7 @@
         },
         "payload": {
           "name": "Payload",
-          "description": "The payload to publish."
-        },
-        "payload_template": {
-          "name": "Payload template",
-          "description": "Template to render as a payload value. If a payload is provided, the template is ignored."
+          "description": "The payload to publish. Publishes an empty message if not provided."
         },
         "qos": {
           "name": "QoS",

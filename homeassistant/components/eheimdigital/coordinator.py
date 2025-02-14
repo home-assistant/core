@@ -22,18 +22,26 @@ type AsyncSetupDeviceEntitiesCallback = Callable[
     [str | dict[str, EheimDigitalDevice]], None
 ]
 
+type EheimDigitalConfigEntry = ConfigEntry[EheimDigitalUpdateCoordinator]
+
 
 class EheimDigitalUpdateCoordinator(
     DataUpdateCoordinator[dict[str, EheimDigitalDevice]]
 ):
     """The EHEIM Digital data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: EheimDigitalConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: EheimDigitalConfigEntry
+    ) -> None:
         """Initialize the EHEIM Digital data update coordinator."""
         super().__init__(
-            hass, LOGGER, name=DOMAIN, update_interval=DEFAULT_SCAN_INTERVAL
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.hub = EheimDigitalHub(
             host=self.config_entry.data[CONF_HOST],

@@ -5,7 +5,7 @@ from __future__ import annotations
 import datetime
 import logging
 import platform
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from bleak_retry_connector import BleakSlotManager
 from bluetooth_adapters import (
@@ -302,7 +302,6 @@ async def async_update_device(
     entry: ConfigEntry,
     adapter: str,
     details: AdapterDetails,
-    via_device_domain: str | None = None,
     via_device_id: str | None = None,
 ) -> None:
     """Update device registry entry.
@@ -322,10 +321,11 @@ async def async_update_device(
         sw_version=details.get(ADAPTER_SW_VERSION),
         hw_version=details.get(ADAPTER_HW_VERSION),
     )
-    if via_device_id:
-        device_registry.async_update_device(
-            device_entry.id, via_device_id=via_device_id
-        )
+    if via_device_id and (via_device_entry := device_registry.async_get(via_device_id)):
+        kwargs: dict[str, Any] = {"via_device_id": via_device_id}
+        if not device_entry.area_id and via_device_entry.area_id:
+            kwargs["area_id"] = via_device_entry.area_id
+        device_registry.async_update_device(device_entry.id, **kwargs)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -360,7 +360,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             entry,
             source_entry.title,
             details,
-            source_domain,
             entry.data.get(CONF_SOURCE_DEVICE_ID),
         )
         return True
