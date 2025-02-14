@@ -10,7 +10,7 @@
       },
       "folder_name": {
         "title": "Pick a folder name",
-        "description": "This name will be used to create an instance specific folder in your application folder. Will be put inside `Apps/{appfolder}`",
+        "description": "This name will be used to create a folder that is specific for this Home Assistant instance. This folder will be created inside `Apps/{appfolder}`",
         "data": {
           "folder_name": "Folder name"
         },
