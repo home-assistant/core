@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, RADIO_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             FirmwareUpdateEntity(
-                device=config_entry.data["device"],
+                device=RADIO_DEVICE,
                 config_entry=config_entry,
                 update_coordinator=FirmwareUpdateCoordinator(hass, session),
             )
