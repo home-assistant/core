@@ -70,13 +70,13 @@ class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
 class StarlinkRestoreSensor(StarlinkSensorEntity, RestoreSensor):
     """A RestoreSensorEntity for Starlink devices. Handles creating unique IDs."""
 
-    _attr_native_value: float = 0
+    _attr_native_value: int | float = 0
 
     @property
     def native_value(self) -> StateType | datetime:
         """Calculate the sensor value from current value and the entity description."""
         native_value = super().native_value
-        assert isinstance(native_value, float)
+        assert isinstance(native_value, (int, float))
         return self._attr_native_value + native_value
 
     async def async_added_to_hass(self) -> None:
@@ -87,7 +87,7 @@ class StarlinkRestoreSensor(StarlinkSensorEntity, RestoreSensor):
         ) is not None and (
             last_native_value := last_sensor_data.native_value
         ) is not None:
-            assert isinstance(last_native_value, float)
+            assert isinstance(last_native_value, (int, float))
             self._attr_native_value = last_native_value
 
 
