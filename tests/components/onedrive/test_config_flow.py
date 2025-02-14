@@ -403,3 +403,28 @@ async def test_reconfigure_flow_error(
     assert mock_config_entry.data[CONF_FOLDER_NAME] == "newFolder"
     assert mock_config_entry.data[CONF_TOKEN][CONF_ACCESS_TOKEN] == "mock-access-token"
     assert mock_config_entry.data[CONF_TOKEN]["refresh_token"] == "mock-refresh-token"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reconfigure_flow_id_changed(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test that the reconfigure flow fails on a different drive id."""
+    app_root = deepcopy(MOCK_APPROOT)
+    app_root.parent_reference.drive_id = "other_drive_id"
+    mock_onedrive_client.get_approot.return_value = app_root
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "wrong_drive"

@@ -73,7 +73,7 @@ def async_register_backup_agents_listener(
 def handle_backup_errors[_R, **P](
     func: Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]]:
-    """Handle backup errors with a specific translation key."""
+    """Handle backup errors."""
 
     @wraps(func)
     async def wrapper(

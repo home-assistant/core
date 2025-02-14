@@ -77,10 +77,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
             ),
             folder_name,
         )
-    # update in case folder was renamed manually
-    hass.config_entries.async_update_entry(
-        entry, data={**entry.data, CONF_FOLDER_NAME: backup_folder.name}
-    )
+
+    # update in case folder was renamed manually inside OneDrive
+    if backup_folder.name != entry.data[CONF_FOLDER_NAME]:
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_FOLDER_NAME: backup_folder.name}
+        )
 
     coordinator = OneDriveUpdateCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
