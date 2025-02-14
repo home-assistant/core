@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
-from .entity import EnvoyBaseEntity
+from .entity import EnvoyBaseEntity, exception_handler
 
 PARALLEL_UPDATES = 1
 
@@ -192,6 +192,7 @@ class EnvoyRelaySelectEntity(EnvoyBaseEntity, SelectEntity):
         """Return the state of the Enpower switch."""
         return self.entity_description.value_fn(self.relay)
 
+    @exception_handler
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
         await self.entity_description.update_fn(self.envoy, self.relay, option)
@@ -243,6 +244,7 @@ class EnvoyStorageSettingsSelectEntity(EnvoyBaseEntity, SelectEntity):
         assert self.data.tariff.storage_settings is not None
         return self.entity_description.value_fn(self.data.tariff.storage_settings)
 
+    @exception_handler
     async def async_select_option(self, option: str) -> None:
         """Update the relay."""
         await self.entity_description.update_fn(self.envoy, option)

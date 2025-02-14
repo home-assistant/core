@@ -27,7 +27,6 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -681,14 +680,12 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_SCAN_INTERVAL: 2,
             CONF_SNAPSHOT_QUALITY: 0,
             CONF_BACKUP_PATH: "my_nackup_path",
             CONF_BACKUP_SHARE: "/ha_backup",
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert config_entry.options[CONF_SCAN_INTERVAL] == 2
     assert config_entry.options[CONF_SNAPSHOT_QUALITY] == 0
     assert config_entry.options[CONF_BACKUP_PATH] == "my_nackup_path"
     assert config_entry.options[CONF_BACKUP_SHARE] == "/ha_backup"
