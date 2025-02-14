@@ -1106,7 +1106,7 @@ habiticalib==0.3.7
 habluetooth==3.21.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.91.0
+hass-nabucasa==0.92.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -2286,7 +2286,7 @@ pyserial==3.5
 pysesame2==1.0.1
 
 # homeassistant.components.seventeentrack
-pyseventeentrack==1.0.1
+pyseventeentrack==1.0.2
 
 # homeassistant.components.sia
 pysiaalarm==3.1.1
@@ -2337,7 +2337,7 @@ pyspcwebgw==0.7.0
 pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
-pysqueezebox==0.11.1
+pysqueezebox==0.12.0
 
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.0.1.dev2
