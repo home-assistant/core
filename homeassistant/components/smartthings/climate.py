@@ -323,6 +323,8 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
+    _attr_preset_mode = None
+
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
         super().__init__(
@@ -339,7 +341,6 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Capability.DEMAND_RESPONSE_LOAD_CONTROL,
             ],
         )
-        self._attr_preset_mode = None
         self._attr_hvac_modes = self._determine_hvac_modes()
         self._attr_preset_modes = self._determine_preset_modes()
         self._attr_swing_modes = self._determine_swing_modes()
