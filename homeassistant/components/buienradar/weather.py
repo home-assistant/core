@@ -133,8 +133,7 @@ class BrWeather(WeatherEntity):
 
     def __init__(self, config, coordinates) -> None:
         """Initialize the platform with a data instance and station name."""
-        self._stationname = config.get(CONF_NAME, "Buienradar")
-        self._attr_name = self._stationname or f"BR {'(unknown station)'}"
+        self._attr_name = config.get(CONF_NAME, "Buienradar")
 
         self._attr_unique_id = (
             f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
@@ -144,13 +143,13 @@ class BrWeather(WeatherEntity):
     @callback
     def data_updated(self, data: BrData) -> None:
         """Update data."""
-        self._attr_attribution = data.attribution
+        if data.stationname:
+            self._attr_attribution = f"{data.attribution} ({data.stationname})"
+        else:
+            self._attr_attribution = data.attribution
         self._attr_condition = self._calc_condition(data)
         self._forecast = self._calc_forecast(data)
         self._attr_humidity = data.humidity
-        self._attr_name = (
-            self._stationname or f"BR {data.stationname or '(unknown station)'}"
-        )
         self._attr_native_pressure = data.pressure
         self._attr_native_temperature = data.temperature
         self._attr_native_visibility = data.visibility

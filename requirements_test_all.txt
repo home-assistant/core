@@ -588,7 +588,7 @@ brunt==1.2.0
 bthome-ble==3.12.3
 
 # homeassistant.components.buienradar
-buienradar==1.0.6
+buienradar==1.0.8
 
 # homeassistant.components.dhcp
 cached-ipaddress==0.8.0

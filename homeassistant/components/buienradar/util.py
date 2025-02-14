@@ -7,6 +7,10 @@ from typing import Any
 
 import aiohttp
 from buienradar.buienradar import parse_data
+from buienradar.buienradar_json import (
+    apply_image_workaround,
+    status_image_workaround_url,
+)
 from buienradar.constants import (
     ATTRIBUTION,
     CONDITION,
@@ -14,6 +18,8 @@ from buienradar.constants import (
     DATA,
     FORECAST,
     HUMIDITY,
+    IMAGE,
+    MEASURED,
     MESSAGE,
     PRESSURE,
     STATIONNAME,
@@ -32,7 +38,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_TIMEOUT, SCHEDULE_NOK, SCHEDULE_OK
+from .const import DEFAULT_TIMEOUT, ONCE_A_DAY, SCHEDULE_NOK, SCHEDULE_OK
 
 __all__ = ["BrData"]
 _LOGGER = logging.getLogger(__name__)
@@ -63,6 +69,8 @@ class BrData:
         """Initialize the data object."""
         self.devices = devices
         self.data: dict[str, Any] | None = {}
+        self.use_img_workaround: bool | None = None
+        self.img_workaround_retry: int = 0
         self.hass = hass
         self.coordinates = coordinates
         self.timeframe = timeframe
@@ -86,7 +94,7 @@ class BrData:
             self.hass, self.async_update, nxt
         )
 
-    async def get_data(self, url):
+    async def get_data(self, url, fetch=True):
         """Load data from specified url."""
         _LOGGER.debug("Calling url: %s", url)
         result = {SUCCESS: False, MESSAGE: None}
@@ -97,7 +105,8 @@ class BrData:
                 url, timeout=aiohttp.ClientTimeout(total=DEFAULT_TIMEOUT)
             ) as resp:
                 result[STATUS_CODE] = resp.status
-                result[CONTENT] = await resp.text()
+                if fetch:
+                    result[CONTENT] = await resp.text()
                 if resp.status == HTTPStatus.OK:
                     result[SUCCESS] = True
                 else:
@@ -162,6 +171,34 @@ class BrData:
                     result.get(MESSAGE),
                 )
             return None
+
+        if self.use_img_workaround is None:
+            self.img_workaround_retry = 0
+            # Test to see if we need to apply a workaround for the image url or not
+            try:
+                # create workaround url:
+                workaround_url = status_image_workaround_url(
+                    result[DATA][CONDITION][IMAGE]
+                )
+                if workaround_url:
+                    # test if the workaround url resolves (200 OK) or not:
+                    workaround_result = await self.get_data(workaround_url, False)
+                    self.use_img_workaround = workaround_result.get(SUCCESS)
+                    if self.use_img_workaround:
+                        _LOGGER.info(
+                            "Using image workaround for fetching condition images"
+                        )
+            except (KeyError, TypeError):
+                # no condition image url; re-check once we are able to retrieve condition image url:
+                self.use_img_workaround = None
+
+        if self.use_img_workaround:
+            self.img_workaround_retry += 1
+            result[DATA] = apply_image_workaround(result[DATA])
+
+            if self.img_workaround_retry > ONCE_A_DAY:
+                # trigger a re-evaluate if the img workaround is needed or not:
+                self.use_img_workaround = None
 
         return result[DATA]
 
@@ -244,3 +281,8 @@ class BrData:
     def forecast(self):
         """Return the forecast data."""
         return self.data.get(FORECAST)
+
+    @property
+    def measured(self):
+        """Return the measurement date/time."""
+        return self.data.get(MEASURED)
