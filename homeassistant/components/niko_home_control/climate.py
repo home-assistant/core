@@ -54,17 +54,14 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.COOL, HVACMode.AUTO]
 
-    @property
-    def preset_modes(self):
-        """Return the list of available preset modes."""
-        return [
-            "day",
-            "night",
-            PRESET_ECO,
-            "prog1",
-            "prog2",
-            "prog3",
-        ]
+    _attr_preset_modes = [
+        "day",
+        "night",
+        PRESET_ECO,
+        "prog1",
+        "prog2",
+        "prog3",
+    ]
 
     def _get_niko_mode(self, mode: str) -> int:
         """Return the Niko mode."""
