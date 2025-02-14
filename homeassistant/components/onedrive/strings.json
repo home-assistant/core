@@ -35,6 +35,34 @@
     },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
+    },
+    "failed_to_migrate_files": {
+      "message": "Failed to migrate metadata to separate files"
+    },
+    "update_failed": {
+      "message": "Failed to update drive state"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_size": {
+        "name": "Total available storage"
+      },
+      "used_size": {
+        "name": "Used storage"
+      },
+      "remaining_size": {
+        "name": "Remaining storage"
+      },
+      "drive_state": {
+        "name": "Drive state",
+        "state": {
+          "normal": "Normal",
+          "nearing": "Nearing limit",
+          "critical": "Critical",
+          "exceeded": "Exceeded"
+        }
+      }
     }
   }
 }

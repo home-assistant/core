@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from pydrawise import HydrawiseBase
 from pydrawise.schema import Controller, ControllerWaterUseSummary, Sensor, User, Zone
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.dt import now
@@ -39,6 +40,7 @@ class HydrawiseDataUpdateCoordinator(DataUpdateCoordinator[HydrawiseData]):
     """Base class for Hydrawise Data Update Coordinators."""
 
     api: HydrawiseBase
+    config_entry: ConfigEntry
 
 
 class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
@@ -49,9 +51,17 @@ class HydrawiseMainDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
     integration are updated in a timely manner.
     """
 
-    def __init__(self, hass: HomeAssistant, api: HydrawiseBase) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: HydrawiseBase
+    ) -> None:
         """Initialize HydrawiseDataUpdateCoordinator."""
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=MAIN_SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=MAIN_SCAN_INTERVAL,
+        )
         self.api = api
 
     async def _async_update_data(self) -> HydrawiseData:
@@ -82,6 +92,7 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         api: HydrawiseBase,
         main_coordinator: HydrawiseMainDataUpdateCoordinator,
     ) -> None:
@@ -89,6 +100,7 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN} water use",
             update_interval=WATER_USE_SCAN_INTERVAL,
         )

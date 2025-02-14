@@ -23,7 +23,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
@@ -769,7 +769,7 @@ def _async_nvr_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up binary sensors for UniFi Protect integration."""
     data = entry.runtime_data

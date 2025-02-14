@@ -34,11 +34,17 @@ class SeventeenTrackCoordinator(DataUpdateCoordinator[SeventeenTrackData]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, client: SeventeenTrackClient) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        client: SeventeenTrackClient,
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )

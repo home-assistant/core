@@ -25,10 +25,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import FGLairConfigEntry
-from .coordinator import FGLairCoordinator
+from .coordinator import FGLairConfigEntry, FGLairCoordinator
 from .entity import FGLairEntity
 
 HA_TO_FUJI_FAN = {
@@ -61,7 +60,7 @@ FUJI_TO_HA_SWING = {value: key for key, value in HA_TO_FUJI_SWING.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FGLairConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up one Fujitsu HVAC device."""
     async_add_entities(

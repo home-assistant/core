@@ -11,9 +11,9 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.hassio import is_hassio
 
-from .agent import BackupAgent, BackupNotFound, LocalBackupAgent
+from .agent import BackupAgent, LocalBackupAgent
 from .const import DOMAIN, LOGGER
-from .models import AgentBackup
+from .models import AgentBackup, BackupNotFound
 from .util import read_backup, suggested_filename
 
 

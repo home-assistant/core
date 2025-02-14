@@ -41,7 +41,7 @@ ATTR_CURRENCY = "currency"
 SERVICE_GET_PRICES_FOR_DATE = "get_prices_for_date"
 SERVICE_GET_PRICES_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Required(ATTR_DATE): cv.date,
         vol.Optional(ATTR_AREAS): vol.All(vol.In(list(AREAS)), cv.ensure_list, [str]),
         vol.Optional(ATTR_CURRENCY): vol.All(

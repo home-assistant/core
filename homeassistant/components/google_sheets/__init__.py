@@ -39,7 +39,7 @@ SERVICE_APPEND_SHEET = "append_sheet"
 
 SHEET_SERVICE_SCHEMA = vol.All(
     {
-        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(DATA_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Optional(WORKSHEET): cv.string,
         vol.Required(DATA): vol.Any(cv.ensure_list, [dict]),
     },

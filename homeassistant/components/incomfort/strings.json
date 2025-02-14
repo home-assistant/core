@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "description": "Set up new Intergas gateway, some older systems might not need credentials to be set up. For newer devices authentication is required.",
+        "description": "Set up new Intergas gateway. Note that some older systems might not accept credentials to be set up. For newer devices authentication is required.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "username": "[%key:common::config_flow::data::username%]",

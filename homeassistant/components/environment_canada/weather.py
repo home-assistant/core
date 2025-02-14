@@ -37,7 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import ECConfigEntry, ECDataUpdateCoordinator
@@ -63,7 +63,7 @@ ICON_CONDITION_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ECConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add a weather entity from a config_entry."""
     entity_registry = er.async_get(hass)

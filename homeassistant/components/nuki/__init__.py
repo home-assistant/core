@@ -222,7 +222,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_nuki)
     )
 
-    coordinator = NukiCoordinator(hass, bridge, locks, openers)
+    coordinator = NukiCoordinator(hass, entry, bridge, locks, openers)
     hass.data[DOMAIN][entry.entry_id] = NukiEntryData(
         coordinator=coordinator,
         bridge=bridge,

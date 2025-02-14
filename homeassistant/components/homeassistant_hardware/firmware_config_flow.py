@@ -25,12 +25,14 @@ from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.hassio import is_hassio
 
 from . import silabs_multiprotocol_addon
-from .const import ZHA_DOMAIN
+from .const import OTBR_DOMAIN, ZHA_DOMAIN
 from .util import (
     ApplicationType,
+    OwningAddon,
+    OwningIntegration,
     get_otbr_addon_manager,
-    get_zha_device_path,
     get_zigbee_flasher_addon_manager,
+    guess_hardware_owners,
     probe_silabs_firmware_type,
 )
 
@@ -519,19 +521,15 @@ class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
     ) -> ConfigFlowResult:
         """Pick Zigbee firmware."""
         assert self._device is not None
+        owners = await guess_hardware_owners(self.hass, self._device)
 
-        if is_hassio(self.hass):
-            otbr_manager = get_otbr_addon_manager(self.hass)
-            otbr_addon_info = await self._async_get_addon_info(otbr_manager)
-
-            if (
-                otbr_addon_info.state != AddonState.NOT_INSTALLED
-                and otbr_addon_info.options.get("device") == self._device
-            ):
-                raise AbortFlow(
-                    "otbr_still_using_stick",
-                    description_placeholders=self._get_translation_placeholders(),
-                )
+        for info in owners:
+            for owner in info.owners:
+                if info.source == OTBR_DOMAIN and isinstance(owner, OwningAddon):
+                    raise AbortFlow(
+                        "otbr_still_using_stick",
+                        description_placeholders=self._get_translation_placeholders(),
+                    )
 
         return await super().async_step_pick_firmware_zigbee(user_input)
 
@@ -541,15 +539,14 @@ class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
         """Pick Thread firmware."""
         assert self._device is not None
 
-        for zha_entry in self.hass.config_entries.async_entries(
-            ZHA_DOMAIN,
-            include_ignore=False,
-            include_disabled=True,
-        ):
-            if get_zha_device_path(zha_entry) == self._device:
-                raise AbortFlow(
-                    "zha_still_using_stick",
-                    description_placeholders=self._get_translation_placeholders(),
-                )
+        owners = await guess_hardware_owners(self.hass, self._device)
+
+        for info in owners:
+            for owner in info.owners:
+                if info.source == ZHA_DOMAIN and isinstance(owner, OwningIntegration):
+                    raise AbortFlow(
+                        "zha_still_using_stick",
+                        description_placeholders=self._get_translation_placeholders(),
+                    )
 
         return await super().async_step_pick_firmware_thread(user_input)

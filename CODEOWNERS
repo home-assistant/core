@@ -731,6 +731,8 @@ build.json @home-assistant/supervisor
 /homeassistant/components/intent/ @home-assistant/core @synesthesiam
 /tests/components/intent/ @home-assistant/core @synesthesiam
 /homeassistant/components/intesishome/ @jnimmo
+/homeassistant/components/iometer/ @MaestroOnICe
+/tests/components/iometer/ @MaestroOnICe
 /homeassistant/components/ios/ @robbiet480
 /tests/components/ios/ @robbiet480
 /homeassistant/components/iotawatt/ @gtdiehl @jyavenard
@@ -1136,6 +1138,8 @@ build.json @home-assistant/supervisor
 /tests/components/permobil/ @IsakNyberg
 /homeassistant/components/persistent_notification/ @home-assistant/core
 /tests/components/persistent_notification/ @home-assistant/core
+/homeassistant/components/pglab/ @pglab-electronics
+/tests/components/pglab/ @pglab-electronics
 /homeassistant/components/philips_js/ @elupus
 /tests/components/philips_js/ @elupus
 /homeassistant/components/pi_hole/ @shenxn

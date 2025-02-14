@@ -13,7 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import TadoConfigEntry
@@ -115,7 +115,9 @@ ZONE_SENSORS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TadoConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TadoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tado sensor platform."""
 

@@ -6,7 +6,6 @@ from dataclasses import asdict
 from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 
@@ -16,6 +15,7 @@ from .const import (
     SERVICE_SMARTMETER,
     SERVICE_WATERMETER,
 )
+from .coordinator import P1MonitorConfigEntry
 
 if TYPE_CHECKING:
     from _typeshed import DataclassInstance
@@ -24,7 +24,7 @@ TO_REDACT = {CONF_HOST, CONF_PORT}
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: P1MonitorConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     data = {

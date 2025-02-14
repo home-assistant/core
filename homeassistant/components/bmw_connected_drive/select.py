@@ -13,7 +13,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.const import UnitOfElectricCurrent
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN as BMW_DOMAIN, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
@@ -65,7 +65,7 @@ SELECT_TYPES: tuple[BMWSelectEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BMWConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the MyBMW lock from config entry."""
     coordinator = config_entry.runtime_data

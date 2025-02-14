@@ -32,6 +32,7 @@ from .test_common import help_all_subscribe_calls
 
 from tests.common import (
     MockConfigEntry,
+    MockMqttReasonCode,
     async_fire_mqtt_message,
     async_fire_time_changed,
 )
@@ -94,7 +95,7 @@ async def test_mqtt_await_ack_at_disconnect(hass: HomeAssistant) -> None:
         mqtt_client.connect = MagicMock(
             return_value=0,
             side_effect=lambda *args, **kwargs: hass.loop.call_soon_threadsafe(
-                mqtt_client.on_connect, mqtt_client, None, 0, 0, 0
+                mqtt_client.on_connect, mqtt_client, None, 0, MockMqttReasonCode()
             ),
         )
         mqtt_client.publish = MagicMock(return_value=FakeInfo())
@@ -119,7 +120,7 @@ async def test_mqtt_await_ack_at_disconnect(hass: HomeAssistant) -> None:
         )
         await asyncio.sleep(0)
         # Simulate late ACK callback from client with mid 100
-        mqtt_client.on_publish(0, 0, 100)
+        mqtt_client.on_publish(0, 0, 100, MockMqttReasonCode(), None)
         # disconnect the MQTT client
         await hass.async_stop()
         await hass.async_block_till_done()
@@ -778,10 +779,10 @@ async def test_replaying_payload_same_topic(
     calls_a = []
     calls_b = []
     mqtt_client_mock.reset_mock()
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, MockMqttReasonCode())
     await mock_debouncer.wait()
     mqtt_client_mock.subscribe.assert_called()
     # Simulate a (retained) message played back after reconnecting
@@ -908,10 +909,10 @@ async def test_replaying_payload_wildcard_topic(
     calls_a = []
     calls_b = []
     mqtt_client_mock.reset_mock()
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, MockMqttReasonCode())
     await mock_debouncer.wait()
 
     mqtt_client_mock.subscribe.assert_called()
@@ -1045,7 +1046,7 @@ async def test_restore_subscriptions_on_reconnect(
     assert ("test/state", 0) in help_all_subscribe_calls(mqtt_client_mock)
 
     mqtt_client_mock.reset_mock()
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
 
     # Test to subscribe orther topic while the client is not connected
     await mqtt.async_subscribe(hass, "test/other", record_calls)
@@ -1053,7 +1054,7 @@ async def test_restore_subscriptions_on_reconnect(
     assert ("test/other", 0) not in help_all_subscribe_calls(mqtt_client_mock)
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, MockMqttReasonCode())
     await mock_debouncer.wait()
     # Assert all subscriptions are performed at the broker
     assert ("test/state", 0) in help_all_subscribe_calls(mqtt_client_mock)
@@ -1089,10 +1090,10 @@ async def test_restore_all_active_subscriptions_on_reconnect(
     unsub()
     assert mqtt_client_mock.unsubscribe.call_count == 0
 
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, None, 0)
+    mqtt_client_mock.on_connect(None, None, None, MockMqttReasonCode())
     # wait for cooldown
     await mock_debouncer.wait()
 
@@ -1160,27 +1161,37 @@ async def test_logs_error_if_no_connect_broker(
 ) -> None:
     """Test for setup failure if connection to broker is missing."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
-    # test with rc = 3 -> broker unavailable
-    mqtt_client_mock.on_disconnect(Mock(), None, 0)
-    mqtt_client_mock.on_connect(Mock(), None, None, 3)
-    await hass.async_block_till_done()
-    assert (
-        "Unable to connect to the MQTT broker: Connection Refused: broker unavailable."
-        in caplog.text
+    # test with reason code = 136 -> server unavailable
+    mqtt_client_mock.on_disconnect(Mock(), None, None, MockMqttReasonCode())
+    mqtt_client_mock.on_connect(
+        Mock(),
+        None,
+        None,
+        MockMqttReasonCode(value=136, is_failure=True, name="Server unavailable"),
     )
+    await hass.async_block_till_done()
+    assert "Unable to connect to the MQTT broker: Server unavailable" in caplog.text
 
 
-@pytest.mark.parametrize("return_code", [4, 5])
+@pytest.mark.parametrize(
+    "reason_code",
+    [
+        MockMqttReasonCode(
+            value=134, is_failure=True, name="Bad user name or password"
+        ),
+        MockMqttReasonCode(value=135, is_failure=True, name="Not authorized"),
+    ],
+)
 async def test_triggers_reauth_flow_if_auth_fails(
     hass: HomeAssistant,
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
-    return_code: int,
+    reason_code: MockMqttReasonCode,
 ) -> None:
     """Test re-auth is triggered if authentication is failing."""
     mqtt_client_mock = setup_with_birth_msg_client_mock
     # test with rc = 4 -> CONNACK_REFUSED_NOT_AUTHORIZED and 5 -> CONNACK_REFUSED_BAD_USERNAME_PASSWORD
-    mqtt_client_mock.on_disconnect(Mock(), None, 0)
-    mqtt_client_mock.on_connect(Mock(), None, None, return_code)
+    mqtt_client_mock.on_disconnect(Mock(), None, 0, MockMqttReasonCode(), None)
+    mqtt_client_mock.on_connect(Mock(), None, None, reason_code)
     await hass.async_block_till_done()
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
@@ -1197,7 +1208,9 @@ async def test_handle_mqtt_on_callback(
     mqtt_client_mock = setup_with_birth_msg_client_mock
     with patch.object(mqtt_client_mock, "get_mid", return_value=100):
         # Simulate an ACK for mid == 100, this will call mqtt_mock._async_get_mid_future(mid)
-        mqtt_client_mock.on_publish(mqtt_client_mock, None, 100)
+        mqtt_client_mock.on_publish(
+            mqtt_client_mock, None, 100, MockMqttReasonCode(), None
+        )
         await hass.async_block_till_done()
         # Make sure the ACK has been received
         await hass.async_block_till_done()
@@ -1219,7 +1232,7 @@ async def test_handle_mqtt_on_callback_after_cancellation(
     # Simulate the mid future getting a cancellation
     mqtt_mock()._async_get_mid_future(101).cancel()
     # Simulate an ACK for mid == 101, being received after the cancellation
-    mqtt_client_mock.on_publish(mqtt_client_mock, None, 101)
+    mqtt_client_mock.on_publish(mqtt_client_mock, None, 101, MockMqttReasonCode(), None)
     await hass.async_block_till_done()
     assert "No ACK from MQTT server" not in caplog.text
     assert "InvalidStateError" not in caplog.text
@@ -1236,7 +1249,7 @@ async def test_handle_mqtt_on_callback_after_timeout(
     # Simulate the mid future getting a timeout
     mqtt_mock()._async_get_mid_future(101).set_exception(asyncio.TimeoutError)
     # Simulate an ACK for mid == 101, being received after the timeout
-    mqtt_client_mock.on_publish(mqtt_client_mock, None, 101)
+    mqtt_client_mock.on_publish(mqtt_client_mock, None, 101, MockMqttReasonCode(), None)
     await hass.async_block_till_done()
     assert "No ACK from MQTT server" not in caplog.text
     assert "InvalidStateError" not in caplog.text
@@ -1388,7 +1401,7 @@ async def test_handle_mqtt_timeout_on_callback(
         mock_client.connect = MagicMock(
             return_value=0,
             side_effect=lambda *args, **kwargs: hass.loop.call_soon_threadsafe(
-                mock_client.on_connect, mock_client, None, 0, 0, 0
+                mock_client.on_connect, mock_client, None, 0, MockMqttReasonCode()
             ),
         )
 
@@ -1777,12 +1790,12 @@ async def test_mqtt_subscribes_topics_on_connect(
     await mqtt.async_subscribe(hass, "still/pending", record_calls, 1)
     await mock_debouncer.wait()
 
-    mqtt_client_mock.on_disconnect(Mock(), None, 0)
+    mqtt_client_mock.on_disconnect(Mock(), None, 0, MockMqttReasonCode())
 
     mqtt_client_mock.reset_mock()
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(Mock(), None, 0, 0)
+    mqtt_client_mock.on_connect(Mock(), None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
 
     subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
@@ -1837,12 +1850,12 @@ async def test_mqtt_subscribes_wildcard_topics_in_correct_order(
     # Assert the initial wildcard topic subscription order
     _assert_subscription_order()
 
-    mqtt_client_mock.on_disconnect(Mock(), None, 0)
+    mqtt_client_mock.on_disconnect(Mock(), None, 0, MockMqttReasonCode())
 
     mqtt_client_mock.reset_mock()
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(Mock(), None, 0, 0)
+    mqtt_client_mock.on_connect(Mock(), None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
 
     # Assert the wildcard topic subscription order after a reconnect
@@ -1868,12 +1881,12 @@ async def test_mqtt_discovery_not_subscribes_when_disabled(
         assert (f"homeassistant/{component}/+/config", 0) not in subscribe_calls
         assert (f"homeassistant/{component}/+/+/config", 0) not in subscribe_calls
 
-    mqtt_client_mock.on_disconnect(Mock(), None, 0)
+    mqtt_client_mock.on_disconnect(Mock(), None, 0, MockMqttReasonCode())
 
     mqtt_client_mock.reset_mock()
 
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(Mock(), None, 0, 0)
+    mqtt_client_mock.on_connect(Mock(), None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
 
     subscribe_calls = help_all_subscribe_calls(mqtt_client_mock)
@@ -1968,7 +1981,7 @@ async def test_auto_reconnect(
     mqtt_client_mock.reconnect.reset_mock()
 
     mqtt_client_mock.disconnect()
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
 
     mqtt_client_mock.reconnect.side_effect = exception("foo")
@@ -1989,7 +2002,7 @@ async def test_auto_reconnect(
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
 
     mqtt_client_mock.disconnect()
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
 
     async_fire_time_changed(
@@ -2031,7 +2044,7 @@ async def test_server_sock_connect_and_disconnect(
     mqtt_client_mock.loop_misc.return_value = paho_mqtt.MQTT_ERR_CONN_LOST
     mqtt_client_mock.on_socket_unregister_write(mqtt_client_mock, None, client)
     mqtt_client_mock.on_socket_close(mqtt_client_mock, None, client)
-    mqtt_client_mock.on_disconnect(mqtt_client_mock, None, client)
+    mqtt_client_mock.on_disconnect(mqtt_client_mock, None, None, MockMqttReasonCode())
     await hass.async_block_till_done()
     mock_debouncer.clear()
     unsub()
@@ -2082,7 +2095,7 @@ async def test_server_sock_buffer_size_with_websocket(
     client.setblocking(False)
     server.setblocking(False)
 
-    class FakeWebsocket(paho_mqtt.WebsocketWrapper):
+    class FakeWebsocket(paho_mqtt._WebsocketWrapper):
         def _do_handshake(self, *args, **kwargs):
             pass
 
@@ -2169,4 +2182,4 @@ async def test_loop_write_failure(
     # Final for the disconnect callback
     await hass.async_block_till_done()
 
-    assert "Disconnected from MQTT server test-broker:1883" in caplog.text
+    assert "Error returned from MQTT server: The connection was lost." in caplog.text

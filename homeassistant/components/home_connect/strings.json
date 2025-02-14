@@ -7,9 +7,14 @@
     "step": {
       "pick_implementation": {
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "The Home Connect integration needs to re-authenticate your account"
       }
     },
     "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
       "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
@@ -22,6 +27,9 @@
     }
   },
   "exceptions": {
+    "auth_error": {
+      "message": "Authentication error: {error}. Please, re-authenticate your account"
+    },
     "appliance_not_found": {
       "message": "Appliance for device ID {device_id} not found"
     },

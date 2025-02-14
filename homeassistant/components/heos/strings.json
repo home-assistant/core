@@ -112,6 +112,12 @@
     "not_heos_media_player": {
       "message": "Entity {entity_id} is not a HEOS media player entity"
     },
+    "unable_to_connect": {
+      "message": "Unable to connect to {host}"
+    },
+    "unable_to_get_players": {
+      "message": "Unexpected error retrieving players"
+    },
     "unknown_source": {
       "message": "Unknown source: {source}"
     }

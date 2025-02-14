@@ -6,7 +6,6 @@ from aiohttp import CookieJar
 from pyloadapi.api import PyLoadAPI
 from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -21,11 +20,9 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import DOMAIN
-from .coordinator import PyLoadCoordinator
+from .coordinator import PyLoadConfigEntry, PyLoadCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
-
-type PyLoadConfigEntry = ConfigEntry[PyLoadCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bool:
@@ -66,7 +63,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bo
             translation_key="setup_authentication_exception",
             translation_placeholders={CONF_USERNAME: entry.data[CONF_USERNAME]},
         ) from e
-    coordinator = PyLoadCoordinator(hass, pyloadapi)
+    coordinator = PyLoadCoordinator(hass, entry, pyloadapi)
 
     await coordinator.async_config_entry_first_refresh()
 

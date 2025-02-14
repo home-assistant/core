@@ -54,19 +54,18 @@ class NiceGODevice:
     vacation_mode: bool | None
 
 
+type NiceGOConfigEntry = ConfigEntry[NiceGOUpdateCoordinator]
+
+
 class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
     """DataUpdateCoordinator for Nice G.O."""
 
-    config_entry: ConfigEntry
+    config_entry: NiceGOConfigEntry
     organization_id: str
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: NiceGOConfigEntry) -> None:
         """Initialize DataUpdateCoordinator for Nice G.O."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            name="Nice G.O.",
-        )
+        super().__init__(hass, _LOGGER, config_entry=config_entry, name="Nice G.O.")
 
         self.refresh_token = self.config_entry.data[CONF_REFRESH_TOKEN]
         self.refresh_token_creation_time = self.config_entry.data[

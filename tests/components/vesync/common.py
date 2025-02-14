@@ -13,6 +13,7 @@ from tests.common import load_fixture, load_json_object_fixture
 ENTITY_HUMIDIFIER = "humidifier.humidifier_200s"
 ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
 ENTITY_HUMIDIFIER_HUMIDITY = "sensor.humidifier_200s_humidity"
+ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT = "select.humidifier_300s_night_light_level"
 
 ALL_DEVICES = load_json_object_fixture("vesync-devices.json", DOMAIN)
 ALL_DEVICE_NAMES: list[str] = [

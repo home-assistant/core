@@ -12,7 +12,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .api import OneDriveConfigFlowAccessTokenProvider
 from .const import DOMAIN, OAUTH_SCOPES
 
 
@@ -36,12 +35,12 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         data: dict[str, Any],
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        token_provider = OneDriveConfigFlowAccessTokenProvider(
-            cast(str, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-        )
+
+        async def get_access_token() -> str:
+            return cast(str, data[CONF_TOKEN][CONF_ACCESS_TOKEN])
 
         graph_client = OneDriveClient(
-            token_provider, async_get_clientsession(self.hass)
+            get_access_token, async_get_clientsession(self.hass)
         )
 
         try:

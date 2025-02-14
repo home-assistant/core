@@ -12,11 +12,14 @@ from incomfortclient import (
     InvalidHeaterList,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+type InComfortConfigEntry = ConfigEntry[InComfortDataCoordinator]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,14 +53,20 @@ async def async_connect_gateway(
 class InComfortDataCoordinator(DataUpdateCoordinator[InComfortData]):
     """Data coordinator for InComfort entities."""
 
+    config_entry: InComfortConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, incomfort_data: InComfortData, unique_id: str | None
+        self,
+        hass: HomeAssistant,
+        config_entry: InComfortConfigEntry,
+        incomfort_data: InComfortData,
     ) -> None:
         """Initialize coordinator."""
-        self.unique_id = unique_id
+        self.unique_id = config_entry.unique_id
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="InComfort datacoordinator",
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )

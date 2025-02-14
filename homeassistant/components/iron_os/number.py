@@ -23,7 +23,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IronOSConfigEntry
 from .const import MAX_TEMP, MIN_TEMP
@@ -327,7 +327,7 @@ PINECIL_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: IronOSConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities from a config entry."""
     coordinators = entry.runtime_data

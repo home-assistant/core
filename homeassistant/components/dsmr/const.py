@@ -28,7 +28,7 @@ DEVICE_NAME_GAS = "Gas Meter"
 DEVICE_NAME_WATER = "Water Meter"
 DEVICE_NAME_HEAT = "Heat Meter"
 
-DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S", "Q3D"}
+DSMR_VERSIONS = {"2.2", "4", "5", "5B", "5L", "5S", "Q3D", "5EONHU"}
 
 DSMR_PROTOCOL = "dsmr_protocol"
 RFXTRX_DSMR_PROTOCOL = "rfxtrx_dsmr_protocol"

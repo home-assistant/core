@@ -20,7 +20,7 @@ from homeassistant.components.todo import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import CalDavConfigEntry
@@ -46,7 +46,7 @@ TODO_STATUS_MAP_INV: dict[TodoItemStatus, str] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CalDavConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CalDav todo platform for a config entry."""
     calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)

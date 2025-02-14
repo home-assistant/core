@@ -59,8 +59,6 @@ def smile_user_schema(discovery_info: ZeroconfServiceInfo | None) -> vol.Schema:
         schema = schema.extend(
             {
                 vol.Required(CONF_HOST): str,
-                # Port under investigation for removal (hence not added in #132878)
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
                 vol.Required(CONF_USERNAME, default=SMILE): vol.In(
                     {SMILE: FLOW_SMILE, STRETCH: FLOW_STRETCH}
                 ),
@@ -197,6 +195,7 @@ class PlugwiseConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_PORT] = DEFAULT_PORT
             if self.discovery_info:
                 user_input[CONF_HOST] = self.discovery_info.host
                 user_input[CONF_PORT] = self.discovery_info.port

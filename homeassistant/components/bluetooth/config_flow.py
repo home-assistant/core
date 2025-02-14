@@ -140,7 +140,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=adapter_title(adapter, details), data={}
             )
 
-        configured_addresses = self._async_current_ids()
+        configured_addresses = self._async_current_ids(include_ignore=False)
         bluetooth_adapters = get_adapters()
         await bluetooth_adapters.refresh()
         self._adapters = bluetooth_adapters.adapters
@@ -155,12 +155,8 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             and not (system == "Linux" and details[ADAPTER_ADDRESS] == DEFAULT_ADDRESS)
         ]
         if not unconfigured_adapters:
-            ignored_adapters = len(
-                self._async_current_entries(include_ignore=True)
-            ) - len(self._async_current_entries(include_ignore=False))
             return self.async_abort(
                 reason="no_adapters",
-                description_placeholders={"ignored_adapters": str(ignored_adapters)},
             )
         if len(unconfigured_adapters) == 1:
             self._adapter = list(self._adapters)[0]

@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SensiboConfigEntry
 from .coordinator import SensiboDataUpdateCoordinator
@@ -35,7 +35,7 @@ DEVICE_BUTTON_TYPES = SensiboButtonEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SensiboConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensibo button platform."""
 

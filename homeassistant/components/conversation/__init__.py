@@ -32,6 +32,7 @@ from .agent_manager import (
 )
 from .chat_log import (
     AssistantContent,
+    AssistantContentDeltaDict,
     ChatLog,
     Content,
     ConverseError,
@@ -65,6 +66,7 @@ __all__ = [
     "HOME_ASSISTANT_AGENT",
     "OLD_HOME_ASSISTANT_AGENT",
     "AssistantContent",
+    "AssistantContentDeltaDict",
     "ChatLog",
     "Content",
     "ConversationEntity",

@@ -15,7 +15,7 @@ from .manager import (
     IncorrectPasswordError,
     ManagerStateEvent,
 )
-from .models import Folder
+from .models import BackupNotFound, Folder
 
 
 @callback
@@ -151,6 +151,8 @@ async def handle_restore(
             restore_folders=msg.get("restore_folders"),
             restore_homeassistant=msg["restore_homeassistant"],
         )
+    except BackupNotFound:
+        connection.send_error(msg["id"], "backup_not_found", "Backup not found")
     except IncorrectPasswordError:
         connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
     else:
@@ -179,6 +181,8 @@ async def handle_can_decrypt_on_download(
             agent_id=msg["agent_id"],
             password=msg.get("password"),
         )
+    except BackupNotFound:
+        connection.send_error(msg["id"], "backup_not_found", "Backup not found")
     except IncorrectPasswordError:
         connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
     except DecryptOnDowloadNotSupported:

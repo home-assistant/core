@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.cover import CoverEntity
 from homeassistant.const import (
@@ -41,7 +41,6 @@ async def async_setup_platform(
         return
 
     covers = []
-    discovery_info = cast(DiscoveryInfoType, discovery_info)
     entities: dict[str, dict[str, Any]] = {
         slugify(discovery_info[CONF_NAME]): discovery_info
     }

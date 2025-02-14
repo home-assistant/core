@@ -272,9 +272,14 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfiguration of the integration."""
         errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
         if user_input:
             try:
-                device_info = await async_try_connect(user_input[CONF_IP_ADDRESS])
+                device_info = await async_try_connect(
+                    user_input[CONF_IP_ADDRESS],
+                    token=reconfigure_entry.data.get(CONF_TOKEN),
+                )
 
             except RecoverableError as ex:
                 LOGGER.error(ex)
@@ -288,7 +293,6 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._get_reconfigure_entry(),
                     data_updates=user_input,
                 )
-        reconfigure_entry = self._get_reconfigure_entry()
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=vol.Schema(
@@ -306,7 +310,7 @@ class HomeWizardConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-async def async_try_connect(ip_address: str) -> Device:
+async def async_try_connect(ip_address: str, token: str | None = None) -> Device:
     """Try to connect.
 
     Make connection with device to test the connection
@@ -317,7 +321,7 @@ async def async_try_connect(ip_address: str) -> Device:
 
     # Determine if device is v1 or v2 capable
     if await has_v2_api(ip_address):
-        energy_api = HomeWizardEnergyV2(ip_address)
+        energy_api = HomeWizardEnergyV2(ip_address, token=token)
     else:
         energy_api = HomeWizardEnergyV1(ip_address)
 

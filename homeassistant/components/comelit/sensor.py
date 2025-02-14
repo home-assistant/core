@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_TYPE, UnitOfPower
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -42,7 +42,7 @@ SENSOR_VEDO_TYPES: Final = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ComelitConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Comelit sensors."""
 
@@ -55,7 +55,7 @@ async def async_setup_entry(
 async def async_setup_bridge_entry(
     hass: HomeAssistant,
     config_entry: ComelitConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Comelit Bridge sensors."""
 
@@ -75,7 +75,7 @@ async def async_setup_bridge_entry(
 async def async_setup_vedo_entry(
     hass: HomeAssistant,
     config_entry: ComelitConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Comelit VEDO sensors."""
 

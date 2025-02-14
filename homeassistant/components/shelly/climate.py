@@ -27,7 +27,7 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -56,7 +56,7 @@ from .utils import (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -75,7 +75,7 @@ async def async_setup_entry(
 
 @callback
 def async_setup_climate_entities(
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: ShellyBlockCoordinator,
 ) -> None:
     """Set up online climate devices."""
@@ -102,7 +102,7 @@ def async_setup_climate_entities(
 def async_restore_climate_entities(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: ShellyBlockCoordinator,
 ) -> None:
     """Restore sleeping climate devices."""
@@ -124,7 +124,7 @@ def async_restore_climate_entities(
 def async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
     coordinator = config_entry.runtime_data.rpc

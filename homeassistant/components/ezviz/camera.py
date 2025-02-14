@@ -15,7 +15,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 
@@ -36,7 +36,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EzvizConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up EZVIZ cameras based on a config entry."""
 

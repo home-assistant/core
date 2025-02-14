@@ -1531,7 +1531,7 @@ async def async_api_adjust_range(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     range_delta = directive.payload["rangeValueDelta"]
     range_delta_default = bool(directive.payload["rangeValueDeltaDefault"])
-    response_value: int | None = 0
+    response_value: float | None = 0
 
     # Cover Position
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":

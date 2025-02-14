@@ -208,6 +208,14 @@ HOMEKIT = {
         "always_discover": False,
         "domain": "nanoleaf",
     },
+    "NL69": {
+        "always_discover": False,
+        "domain": "nanoleaf",
+    },
+    "NL81": {
+        "always_discover": False,
+        "domain": "nanoleaf",
+    },
     "Netatmo Relay": {
         "always_discover": True,
         "domain": "netatmo",
@@ -612,6 +620,11 @@ ZEROCONF = {
     "_hwenergy._tcp.local.": [
         {
             "domain": "homewizard",
+        },
+    ],
+    "_iometer._tcp.local.": [
+        {
+            "domain": "iometer",
         },
     ],
     "_ipp._tcp.local.": [

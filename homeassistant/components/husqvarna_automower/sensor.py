@@ -23,7 +23,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfLength, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import AutomowerConfigEntry
@@ -430,7 +430,7 @@ WORK_AREA_SENSOR_TYPES: tuple[WorkAreaSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AutomowerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
     coordinator = entry.runtime_data

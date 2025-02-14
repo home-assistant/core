@@ -381,7 +381,7 @@ class DefaultAgent(ConversationEntity):
             speech: str = response.speech.get("plain", {}).get("speech", "")
             chat_log.async_add_assistant_content_without_tools(
                 AssistantContent(
-                    agent_id=user_input.agent_id,  # type: ignore[arg-type]
+                    agent_id=user_input.agent_id,
                     content=speech,
                 )
             )

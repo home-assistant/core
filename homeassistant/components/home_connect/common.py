@@ -6,7 +6,7 @@ from typing import cast
 
 from aiohomeconnect.model import EventKey
 
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
@@ -18,7 +18,7 @@ def _handle_paired_or_connected_appliance(
     get_entities_for_appliance: Callable[
         [HomeConnectConfigEntry, HomeConnectApplianceData], list[HomeConnectEntity]
     ],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Handle a new paired appliance or an appliance that has been connected.
 
@@ -59,7 +59,7 @@ def setup_home_connect_entry(
     get_entities_for_appliance: Callable[
         [HomeConnectConfigEntry, HomeConnectApplianceData], list[HomeConnectEntity]
     ],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the callbacks for paired and depaired appliances."""
     known_entity_unique_ids: dict[str, str] = {}

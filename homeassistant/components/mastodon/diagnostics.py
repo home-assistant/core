@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import MastodonConfigEntry
+from .coordinator import MastodonConfigEntry
 
 
 async def async_get_config_entry_diagnostics(

@@ -13,7 +13,7 @@ from homeassistant.const import UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -82,7 +82,7 @@ def _device_info(coordinator: ProximityDataUpdateCoordinator) -> DeviceInfo:
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ProximityConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the proximity sensors."""
 

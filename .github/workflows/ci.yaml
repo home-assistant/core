@@ -975,6 +975,7 @@ jobs:
             ${cov_params[@]} \
             -o console_output_style=count \
             -p no:sugar \
+            --exclude-warning-annotations \
             $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt) \
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output
@@ -1098,6 +1099,7 @@ jobs:
             -o console_output_style=count \
             --durations=10 \
             -p no:sugar \
+            --exclude-warning-annotations \
             --dburl=mysql://root:password@127.0.0.1/homeassistant-test \
             tests/components/history \
             tests/components/logbook \
@@ -1228,6 +1230,7 @@ jobs:
             --durations=0 \
             --durations-min=10 \
             -p no:sugar \
+            --exclude-warning-annotations \
             --dburl=postgresql://postgres:password@127.0.0.1/homeassistant-test \
             tests/components/history \
             tests/components/logbook \
@@ -1374,6 +1377,7 @@ jobs:
             --durations=0 \
             --durations-min=1 \
             -p no:sugar \
+            --exclude-warning-annotations \
             tests/components/${{ matrix.group }} \
               2>&1 | tee pytest-${{ matrix.python-version }}-${{ matrix.group }}.txt
       - name: Upload pytest output

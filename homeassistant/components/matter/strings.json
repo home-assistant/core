@@ -183,6 +183,9 @@
       "mode": {
         "name": "Mode"
       },
+      "device_energy_management_mode": {
+        "name": "Energy management mode"
+      },
       "sensitivity_level": {
         "name": "Sensitivity",
         "state": {

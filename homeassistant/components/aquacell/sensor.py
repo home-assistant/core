@@ -15,11 +15,10 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import AquacellConfigEntry
-from .coordinator import AquacellCoordinator
+from .coordinator import AquacellConfigEntry, AquacellCoordinator
 from .entity import AquacellEntity
 
 PARALLEL_UPDATES = 1
@@ -84,7 +83,7 @@ SENSORS: tuple[SoftenerSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AquacellConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors."""
     softeners = config_entry.runtime_data.data
