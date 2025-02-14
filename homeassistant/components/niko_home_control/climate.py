@@ -82,8 +82,10 @@ class NikoHomeControlClimate(NikoHomeControlEntity, ClimateEntity):
 
     def update_state(self) -> None:
         """Update the state of the entity."""
-        if self._action.state in (3, 4):
-            self._attr_hvac_mode = THERMOSTAT_MODES[self._action.state]
+        if self._action.state = NIKO_THERMOSTAT_MODES_MAP.off:
+            self._attr_hvac_mode = HVACMode.OFF
+        elif self._action.state == NIKO_THERMOSTAT_MODES_MAP.cool:
+            self._attr_hvac_mode = HVACMode.COOL
         else:
             self._attr_hvac_mode = HVACMode.AUTO
             self._attr_preset_mode = THERMOSTAT_MODES[self._action.state]
