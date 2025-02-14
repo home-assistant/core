@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.climate import ATTR_HVAC_MODE, ATTR_PRESET_MODE
+from homeassistant.components.climate import ATTR_HVAC_MODE, ATTR_PRESET_MODE, HVACMode
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -113,7 +113,7 @@ async def test_set_hvac_off_mode(
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",
-        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: "off"},
+        {ATTR_ENTITY_ID: "climate.thermostat", ATTR_HVAC_MODE: HVACMode.OFF},
         blocking=True,
     )
     mock_niko_home_control_connection.thermostats[
@@ -138,6 +138,25 @@ async def test_set_hvac_auto_mode(
     mock_niko_home_control_connection.thermostats[
         "thermostat-5"
     ].set_mode.assert_called_once_with(5)
+
+
+async def test_turn_off(
+    hass: HomeAssistant,
+    mock_niko_home_control_connection: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    climate: AsyncMock,
+) -> None:
+    """Test turning off the thermostat."""
+    await setup_integration(hass, mock_config_entry)
+    await hass.services.async_call(
+        "climate",
+        "turn_off",
+        {ATTR_ENTITY_ID: "climate.thermostat"},
+        blocking=True,
+    )
+    mock_niko_home_control_connection.thermostats[
+        "thermostat-5"
+    ].set_mode.assert_called_once_with(3)
 
 
 async def test_is_expected_state(
