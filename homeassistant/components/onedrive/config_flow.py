@@ -129,6 +129,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             data_schema=vol.Schema(
                 {vol.Required(CONF_FOLDER_NAME, default=default_folder_name): str},
             ),
+            description_placeholders={"appfolder": self.approot.name},
             errors=errors,
         )
 
@@ -166,6 +167,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     ): str
                 },
             ),
+            description_placeholders={"appfolder": self.approot.name},
             errors=errors,
         )
 
