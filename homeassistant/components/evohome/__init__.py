@@ -8,7 +8,6 @@ Note that the API used by this integration's client does not support cooling.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Final
@@ -38,7 +37,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_DURATION,
@@ -90,18 +88,7 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
     }
 )
 
-EVOHOME_KEY: HassKey[EvoData] = HassKey(DOMAIN)
-
 PLATFORMS = (Platform.CLIMATE, Platform.WATER_HEATER)
-
-
-@dataclass
-class EvoData:
-    """Dataclass for storing evohome data."""
-
-    coordinator: EvoDataUpdateCoordinator
-    loc_idx: int
-    tcs: ec2.ControlSystem
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
