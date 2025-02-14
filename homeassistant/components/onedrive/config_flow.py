@@ -22,6 +22,8 @@ from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
 from .const import CONF_FOLDER_ID, CONF_FOLDER_NAME, DOMAIN, OAUTH_SCOPES
 
+FOLDER_NAME_SCHEMA = vol.Schema({vol.Required(CONF_FOLDER_NAME): str})
+
 
 class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     """Config flow to handle OneDrive OAuth2 authentication."""
@@ -122,12 +124,16 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
                     },
                 )
 
-        default_folder_name = f"backups_{instance_id[:8]}"
+        default_folder_name = (
+            f"backups_{instance_id[:8]}"
+            if user_input is None
+            else user_input[CONF_FOLDER_NAME]
+        )
 
         return self.async_show_form(
             step_id="folder_name",
-            data_schema=vol.Schema(
-                {vol.Required(CONF_FOLDER_NAME, default=default_folder_name): str},
+            data_schema=self.add_suggested_values_to_schema(
+                FOLDER_NAME_SCHEMA, {CONF_FOLDER_NAME: default_folder_name}
             ),
             description_placeholders={
                 "approot": (
@@ -167,13 +173,9 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure_folder",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_FOLDER_NAME,
-                        default=reconfigure_entry.data[CONF_FOLDER_NAME],
-                    ): str
-                },
+            data_schema=self.add_suggested_values_to_schema(
+                FOLDER_NAME_SCHEMA,
+                {CONF_FOLDER_NAME: reconfigure_entry.data[CONF_FOLDER_NAME]},
             ),
             description_placeholders={
                 "approot": (
