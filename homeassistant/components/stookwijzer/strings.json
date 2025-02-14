@@ -30,7 +30,7 @@
   "services": {
     "get_forecast": {
       "name": "Get forecast",
-      "description": "Get the Stookwijzer forecast."
+      "description": "Retrieves the advice forecast from Stookwijzer."
     }
   },
   "issues": {
