@@ -26,6 +26,12 @@
       "upload_speed": {
         "name": "Upload speed"
       },
+      "download_speed_limit": {
+        "name": "Download speed limit"
+      },
+      "upload_speed_limit": {
+        "name": "Upload speed limit"
+      },
       "alltime_download": {
         "name": "Alltime download"
       },
