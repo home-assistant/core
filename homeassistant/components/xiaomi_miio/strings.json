@@ -398,8 +398,8 @@
       }
     },
     "light_night_light_mode_on": {
-      "name": "Night light mode on",
-      "description": "Turns on the smart night light mode (EYECARE SMART LAMP 2 ONLY).",
+      "name": "Light night light mode on",
+      "description": "Turns on the night light mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -408,8 +408,8 @@
       }
     },
     "light_night_light_mode_off": {
-      "name": "Night light mode off",
-      "description": "Turns off the smart night light mode (EYECARE SMART LAMP 2 ONLY).",
+      "name": "Light night light mode off",
+      "description": "Turns off the night light mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -419,7 +419,7 @@
     },
     "light_eyecare_mode_on": {
       "name": "Light eyecare mode on",
-      "description": "Turns on the eyecare mode (EYECARE SMART LAMP 2 ONLY).",
+      "description": "Turns on the eyecare mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -429,7 +429,7 @@
     },
     "light_eyecare_mode_off": {
       "name": "Light eyecare mode off",
-      "description": "Turns off the eyecare mode (EYECARE SMART LAMP 2 ONLY).",
+      "description": "Turns off the eyecare mode of a light (EYECARE SMART LAMP 2 ONLY).",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
