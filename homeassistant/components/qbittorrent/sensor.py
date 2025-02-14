@@ -123,7 +123,7 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
         key=SENSOR_TYPE_CONNECTION_STATUS,
         translation_key="connection_status",
         device_class=SensorDeviceClass.ENUM,
-        options=["connected"],
+        options=["connected", "firewalled", "disconnected"],
         value_fn=get_connection_status,
     ),
     QBittorrentSensorEntityDescription(
