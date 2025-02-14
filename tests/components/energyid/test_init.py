@@ -1,6 +1,6 @@
 """Tests for the EnergyID integration."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import aiohttp
 from multidict import CIMultiDict, CIMultiDictProxy
@@ -60,7 +60,15 @@ async def test_async_setup_entry_invalid(hass: HomeAssistant) -> None:
 
 async def test_dispatcher(hass: HomeAssistant) -> None:
     """Test dispatcher."""
-    dispatcher = WebhookDispatcher(hass, MockEnergyIDConfigEntry())
+    # Create mock client with required attributes
+    mock_client = AsyncMock()
+    mock_client.webhook_url = "https://example.com/webhook"
+    mock_client.post_payload = (
+        AsyncMock()
+    )  # Ensure the mock client has post_payload method
+    # Pass mock_client as runtime_data
+    entry = MockEnergyIDConfigEntry(runtime_data=mock_client)
+    dispatcher = WebhookDispatcher(hass, entry)
 
     # Test handle state change when the state is not castable as float
     event = MockEvent(data={"new_state": MockState("not a float")})
@@ -68,28 +76,23 @@ async def test_dispatcher(hass: HomeAssistant) -> None:
 
     # Test handle state change when the URL is not reachable
     event = MockEvent()
-    with patch(
-        "homeassistant.components.energyid.__init__.WebhookClientAsync.post_payload",
-        side_effect=aiohttp.ClientResponseError(
-            aiohttp.RequestInfo(
-                url=URL(dispatcher.client.webhook_url),
-                method="GET",
-                headers=CIMultiDictProxy(CIMultiDict({})),
-                real_url=URL(dispatcher.client.webhook_url),
-            ),
-            (),
-            status=404,
+    mock_client.post_payload.side_effect = aiohttp.ClientResponseError(
+        aiohttp.RequestInfo(
+            url=URL(dispatcher.client.webhook_url),
+            method="GET",
+            headers=CIMultiDictProxy(CIMultiDict({})),
+            real_url=URL(dispatcher.client.webhook_url),
         ),
-    ):
-        assert await dispatcher.async_handle_state_change(event=event) is False
+        (),
+        status=404,
+    )
+    assert await dispatcher.async_handle_state_change(event=event) is False
 
     # Test handle state change of valid event
     event = MockEvent()
-    with patch(
-        "homeassistant.components.energyid.__init__.WebhookClientAsync.post_payload",
-        return_value=True,
-    ):
-        assert await dispatcher.async_handle_state_change(event=event) is True
+    mock_client.post_payload.side_effect = None
+    mock_client.post_payload.return_value = True
+    assert await dispatcher.async_handle_state_change(event=event) is True
 
     # Test handle state change of an event that is too soon
     # Since the last event was less than 5 minutes ago, this should return None already
@@ -99,32 +102,37 @@ async def test_dispatcher(hass: HomeAssistant) -> None:
 
 async def test_dispatcher_connection_errors(hass: HomeAssistant) -> None:
     """Test dispatcher handling of connection errors."""
-    dispatcher = WebhookDispatcher(hass, MockEnergyIDConfigEntry())
+    mock_client = AsyncMock()
+    mock_client.webhook_url = "https://example.com/webhook"
+    mock_client.post_payload = (
+        AsyncMock()
+    )  # Ensure the mock client has post_payload method
+    entry = MockEnergyIDConfigEntry(runtime_data=mock_client)
+    dispatcher = WebhookDispatcher(hass, entry)
     event = MockEvent()
 
     # Test ClientConnectionError
-    with patch(
-        "homeassistant.components.energyid.__init__.WebhookClientAsync.post_payload",
-        side_effect=aiohttp.ClientConnectionError("Connection refused"),
-    ):
-        assert await dispatcher.async_handle_state_change(event=event) is False
+    mock_client.post_payload.side_effect = aiohttp.ClientConnectionError(
+        "Connection refused"
+    )
+    assert await dispatcher.async_handle_state_change(event=event) is False
 
     # Test general ClientError
-    with patch(
-        "homeassistant.components.energyid.__init__.WebhookClientAsync.post_payload",
-        side_effect=aiohttp.ClientError("Generic client error"),
-    ):
-        assert await dispatcher.async_handle_state_change(event=event) is False
+    mock_client.post_payload.side_effect = aiohttp.ClientError("Generic client error")
+    assert await dispatcher.async_handle_state_change(event=event) is False
 
 
 async def test_dispatcher_payload_validation(hass: HomeAssistant) -> None:
     """Test dispatcher payload validation."""
-    dispatcher = WebhookDispatcher(hass, MockEnergyIDConfigEntry())
+    mock_client = AsyncMock()
+    mock_client.webhook_url = "https://example.com/webhook"
+    mock_client.post_payload = (
+        AsyncMock()
+    )  # Ensure the mock client has post_payload method
+    entry = MockEnergyIDConfigEntry(runtime_data=mock_client)
+    dispatcher = WebhookDispatcher(hass, entry)
 
     # Test with invalid state attributes
     event = MockEvent(data={"new_state": MockState("42", attributes={})})
-    with patch(
-        "homeassistant.components.energyid.__init__.WebhookClientAsync.post_payload",
-        return_value=True,
-    ):
-        assert await dispatcher.async_handle_state_change(event=event) is True
+    mock_client.post_payload.return_value = True
+    assert await dispatcher.async_handle_state_change(event=event) is True
