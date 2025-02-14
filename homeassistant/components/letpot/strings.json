@@ -34,7 +34,7 @@
   "entity": {
     "sensor": {
       "temperature": {
-        "name": "Temperature"
+        "name": "[%key:component::sensor::entity_component::temperature::name%]"
       },
       "water_level": {
         "name": "Water level"

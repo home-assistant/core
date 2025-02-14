@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
-from .entity import LetPotEntity
+from .entity import LetPotEntity, LetPotEntityDescription
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -30,29 +30,35 @@ LETPOT_TEMPERATURE_UNIT_HA_UNIT = {
 
 
 @dataclass(frozen=True, kw_only=True)
-class LetPotSensorEntityDescription(SensorEntityDescription):
+class LetPotSensorEntityDescription(LetPotEntityDescription, SensorEntityDescription):
     """Describes a LetPot sensor entity."""
 
     native_unit_of_measurement_fn: Callable[[LetPotDeviceStatus], str | None]
     value_fn: Callable[[LetPotDeviceStatus], StateType]
 
 
-TEMPERATURE_SENSOR: LetPotSensorEntityDescription = LetPotSensorEntityDescription(
-    key="temperature",
-    translation_key="temperature",
-    value_fn=lambda status: status.temperature_value,
-    native_unit_of_measurement_fn=lambda status: LETPOT_TEMPERATURE_UNIT_HA_UNIT[
-        status.temperature_unit or TemperatureUnit.CELSIUS
-    ],
-    device_class=SensorDeviceClass.TEMPERATURE,
-    state_class=SensorStateClass.MEASUREMENT,
-)
-WATER_LEVEL_SENSOR: LetPotSensorEntityDescription = LetPotSensorEntityDescription(
-    key="water_level",
-    translation_key="water_level",
-    value_fn=lambda status: status.water_level,
-    native_unit_of_measurement_fn=lambda _: PERCENTAGE,
-    state_class=SensorStateClass.MEASUREMENT,
+SENSORS: tuple[LetPotSensorEntityDescription, ...] = (
+    LetPotSensorEntityDescription(
+        key="temperature",
+        translation_key="temperature",
+        value_fn=lambda status: status.temperature_value,
+        native_unit_of_measurement_fn=lambda status: LETPOT_TEMPERATURE_UNIT_HA_UNIT[
+            status.temperature_unit or TemperatureUnit.CELSIUS
+        ],
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        supported_fn=lambda coordinator: DeviceFeature.TEMPERATURE
+        in coordinator.device_client.device_features,
+    ),
+    LetPotSensorEntityDescription(
+        key="water_level",
+        translation_key="water_level",
+        value_fn=lambda status: status.water_level,
+        native_unit_of_measurement_fn=lambda _: PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        supported_fn=lambda coordinator: DeviceFeature.WATER_LEVEL
+        in coordinator.device_client.device_features,
+    ),
 )
 
 
@@ -63,18 +69,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up LetPot sensor entities based on a device features."""
     coordinators = entry.runtime_data
-    entities: list[SensorEntity] = []
-    entities.extend(
-        LetPotSensorEntity(coordinator, TEMPERATURE_SENSOR)
+    async_add_entities(
+        LetPotSensorEntity(coordinator, description)
+        for description in SENSORS
         for coordinator in coordinators
-        if DeviceFeature.TEMPERATURE in coordinator.device_client.device_features
+        if description.supported_fn(coordinator)
     )
-    entities.extend(
-        LetPotSensorEntity(coordinator, WATER_LEVEL_SENSOR)
-        for coordinator in coordinators
-        if DeviceFeature.WATER_LEVEL in coordinator.device_client.device_features
-    )
-    async_add_entities(entities)
 
 
 class LetPotSensorEntity(LetPotEntity, SensorEntity):
