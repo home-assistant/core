@@ -1286,7 +1286,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "brottsplatskartan",
     "browser",
     "brunt",
-    "bring",
     "bryant_evolution",
     "bsblan",
     "bt_home_hub_5",
