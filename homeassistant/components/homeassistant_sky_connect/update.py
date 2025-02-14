@@ -103,7 +103,6 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             data={
                 **self._config_entry.data,
                 "firmware": firmware_info.firmware_type,
-                "firmware_version": firmware_info.firmware_version,
             },
         )
 
