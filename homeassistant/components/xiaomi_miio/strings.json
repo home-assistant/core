@@ -365,7 +365,7 @@
     },
     "light_set_delayed_turn_off": {
       "name": "Light set delayed turn off",
-      "description": "Sets the delayed turn off of a light.",
+      "description": "Sets the delayed turning off of a light.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
@@ -373,7 +373,7 @@
         },
         "time_period": {
           "name": "Time period",
-          "description": "Time period for the delayed turn off."
+          "description": "Time period for the delayed turning off."
         }
       }
     },
