@@ -47,7 +47,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     @property
     def apps_folder(self) -> str:
-        """Return the approot name."""
+        """Return the name of the Apps folder (translated)."""
         return (
             path.split("/")[-1]
             if (path := self.approot.parent_reference.path)
