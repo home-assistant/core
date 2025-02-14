@@ -29,14 +29,13 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_MODE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import EVOHOME_KEY
 from .const import (
     ATTR_DURATION,
     ATTR_DURATION_UNTIL,
@@ -70,19 +69,16 @@ EVO_PRESET_TO_HA = {
 HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Create the evohome Controller, and its Zones, if any."""
-    if discovery_info is None:
-        return
+    """Create the Evohome Controller, and its Zones."""
 
-    coordinator = hass.data[EVOHOME_KEY].coordinator
-    loc_idx = hass.data[EVOHOME_KEY].loc_idx
-    tcs = hass.data[EVOHOME_KEY].tcs
+    coordinator: EvoDataUpdateCoordinator = config_entry.runtime_data
+    loc_idx = coordinator.loc_idx
+    tcs = coordinator.tcs
 
     _LOGGER.debug(
         "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
