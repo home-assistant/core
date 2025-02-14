@@ -76,7 +76,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         ),
     }
 
-    _config_entry: ConfigEntry
+    bootloader_reset_type = None
 
     def __init__(
         self,
