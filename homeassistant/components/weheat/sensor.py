@@ -28,8 +28,9 @@ from .const import (
     DISPLAY_PRECISION_WATER_TEMP,
     DISPLAY_PRECISION_WATTS,
 )
-from .coordinator import WeheatDataUpdateCoordinator
+from .coordinator import WeheatDataUpdateCoordinator, WeheatEnergyUpdateCoordinator
 from .entity import WeheatEntity
+from . import HeatPumpInfo
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -144,22 +145,6 @@ SENSORS = [
         ),
     ),
     WeHeatSensorEntityDescription(
-        translation_key="electricity_used",
-        key="electricity_used",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda status: status.energy_total,
-    ),
-    WeHeatSensorEntityDescription(
-        translation_key="energy_output",
-        key="energy_output",
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        device_class=SensorDeviceClass.ENERGY,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda status: status.energy_output,
-    ),
-    WeHeatSensorEntityDescription(
         translation_key="compressor_rpm",
         key="compressor_rpm",
         state_class=SensorStateClass.MEASUREMENT,
@@ -174,7 +159,6 @@ SENSORS = [
         value_fn=lambda status: status.compressor_percentage,
     ),
 ]
-
 
 DHW_SENSORS = [
     WeHeatSensorEntityDescription(
@@ -197,6 +181,24 @@ DHW_SENSORS = [
     ),
 ]
 
+ENERGY_SENSORS = [
+    WeHeatSensorEntityDescription(
+        translation_key="electricity_used",
+        key="electricity_used",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_total,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="energy_output",
+        key="energy_output",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_output,
+    ),
+]
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -204,17 +206,22 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the sensors for weheat heat pump."""
-    entities = [
-        WeheatHeatPumpSensor(coordinator, entity_description)
-        for entity_description in SENSORS
-        for coordinator in entry.runtime_data
-    ]
-    entities.extend(
-        WeheatHeatPumpSensor(coordinator, entity_description)
-        for entity_description in DHW_SENSORS
-        for coordinator in entry.runtime_data
-        if coordinator.heat_pump_info.has_dhw
-    )
+
+    entities = []
+    for weheatdata in entry.runtime_data:
+        entities.extend(
+            WeheatHeatPumpSensor(weheatdata.heat_pump_info, weheatdata.data_coordinator, entity_description)
+            for entity_description in SENSORS
+        )
+        if weheatdata.heat_pump_info.heat_pump.has_dhw:
+            entities.extend(
+            WeheatHeatPumpSensor(weheatdata.heat_pump_info, weheatdata.data_coordinator, entity_description)
+            for entity_description in DHW_SENSORS
+            )
+        entities.extend(
+            WeheatHeatPumpSensor(weheatdata.heat_pump_info, weheatdata.energy_coordinator, entity_description)
+            for entity_description in ENERGY_SENSORS
+        )
 
     async_add_entities(entities)
 
@@ -222,20 +229,22 @@ async def async_setup_entry(
 class WeheatHeatPumpSensor(WeheatEntity, SensorEntity):
     """Defines a Weheat heat pump sensor."""
 
-    coordinator: WeheatDataUpdateCoordinator
+    heat_pump_info: HeatPumpInfo
+    coordinator: WeheatDataUpdateCoordinator | WeheatEnergyUpdateCoordinator
     entity_description: WeHeatSensorEntityDescription
 
     def __init__(
         self,
-        coordinator: WeheatDataUpdateCoordinator,
+        heat_pump_info: HeatPumpInfo,
+        coordinator: WeheatDataUpdateCoordinator | WeheatEnergyUpdateCoordinator,
         entity_description: WeHeatSensorEntityDescription,
     ) -> None:
         """Pass coordinator to CoordinatorEntity."""
-        super().__init__(coordinator)
-
+        super().__init__(heat_pump_info)
+        self.coordinator = coordinator
         self.entity_description = entity_description
 
-        self._attr_unique_id = f"{coordinator.heatpump_id}_{entity_description.key}"
+        self._attr_unique_id = f"{heat_pump_info.heatpump_id}_{entity_description.key}"
 
     @property
     def native_value(self) -> StateType:

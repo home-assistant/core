@@ -19,11 +19,54 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 
 from .const import API_URL, LOGGER
-from .coordinator import WeheatDataUpdateCoordinator
+from .coordinator import WeheatDataUpdateCoordinator, WeheatEnergyUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
-type WeheatConfigEntry = ConfigEntry[list[WeheatDataUpdateCoordinator]]
+type WeheatConfigEntry = ConfigEntry[list[WeheatDataUpdateCoordinator, WeheatEnergyUpdateCoordinator]]
+
+class HeatPumpInfo:
+    """Heat pump info."""
+
+    def __init__(
+        self,
+        heat_pump: HeatPumpDiscovery.HeatPumpInfo
+    ) -> None:
+        """Initialize the data coordinator."""
+        self.heat_pump = heat_pump
+
+    @property
+    def heatpump_id(self) -> str:
+        """Return the heat pump id."""
+        return self.heat_pump.uuid
+
+    @property
+    def readable_name(self) -> str | None:
+        """Return the readable name of the heat pump."""
+        if self.heat_pump.name:
+            return self.heat_pump.name
+        return self.heat_pump.model
+
+    @property
+    def model(self) -> str:
+        """Return the model of the heat pump."""
+        return self.heat_pump.model
+
+
+class WeheatData:
+    """Data for the Weheat integration."""
+
+    def __init__(
+        self,
+        heat_pump_info: HeatPumpInfo,
+        data_coordinator: WeheatDataUpdateCoordinator,
+        energy_coordinator: WeheatEnergyUpdateCoordinator,
+    ) -> None:
+        """Initialize the WeheatData instance."""
+        self.heat_pump_info = heat_pump_info
+        self.data_coordinator = data_coordinator
+        self.energy_coordinator = energy_coordinator
+
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bool:
@@ -55,14 +98,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
     except UnauthorizedException as error:
         raise ConfigEntryAuthFailed from error
 
+    nr_of_pumps = len(discovered_heat_pumps)
+
     for pump_info in discovered_heat_pumps:
         LOGGER.debug("Adding %s", pump_info)
-        # for each pump, add a coordinator
-        new_coordinator = WeheatDataUpdateCoordinator(hass, session, pump_info)
+        # for each pump, add the coordinators
 
-        await new_coordinator.async_config_entry_first_refresh()
+        new_heat_pump = HeatPumpInfo(pump_info)
+        new_data_coordinator = WeheatDataUpdateCoordinator(hass, session, pump_info, nr_of_pumps)
+        new_energy_coordinator = WeheatEnergyUpdateCoordinator(hass, session, pump_info)
 
-        entry.runtime_data.append(new_coordinator)
+        await new_data_coordinator.async_config_entry_first_refresh()
+        await new_energy_coordinator.async_config_entry_first_refresh()
+
+        entry.runtime_data.append(
+            WeheatData(
+            heat_pump_info=new_heat_pump,
+            data_coordinator=new_data_coordinator,
+            energy_coordinator=new_energy_coordinator,
+            )
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
