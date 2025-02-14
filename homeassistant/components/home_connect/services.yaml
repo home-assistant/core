@@ -53,13 +53,22 @@ set_program_and_options:
       selector:
         device:
           integration: home_connect
+    affects_to:
+      example: active_program
+      required: true
+      selector:
+        select:
+          translation_key: affects_to
+          options:
+            - active_program
+            - selected_program
     program:
       example: dishcare_dishwasher_program_auto2
       required: true
       selector:
         select:
           mode: dropdown
-          custom_value: true
+          custom_value: false
           translation_key: programs
           options:
             - consumer_products_cleaning_robot_program_cleaning_clean_all

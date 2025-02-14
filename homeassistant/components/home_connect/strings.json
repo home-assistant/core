@@ -114,6 +114,12 @@
     }
   },
   "selector": {
+    "affects_to": {
+      "options": {
+        "active_program": "Active program",
+        "selected_program": "Selected program"
+      }
+    },
     "programs": {
       "options": {
         "consumer_products_cleaning_robot_program_cleaning_clean_all": "Clean all",
@@ -484,6 +490,10 @@
         "device_id": {
           "name": "Device ID",
           "description": "ID of the device."
+        },
+        "affects_to": {
+          "name": "Affects to",
+          "description": "Selects if the program affected by the action should be the active or the selected program"
         },
         "program": {
           "name": "Program",
