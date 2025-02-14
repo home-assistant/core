@@ -766,7 +766,7 @@ def _sorted_states_to_dict(
                     attr_cache,
                     start_time_ts,
                     entity_id,
-                    prev_state,  # type: ignore[arg-type]
+                    prev_state,
                     first_state[last_updated_ts_idx],
                     no_attributes,
                 )

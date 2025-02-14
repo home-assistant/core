@@ -24,6 +24,7 @@ PLATFORMS = [
     Platform.FAN,
     Platform.LIGHT,
     Platform.SELECT,
+    Platform.TIME,
 ]
 
 

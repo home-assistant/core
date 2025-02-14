@@ -9,7 +9,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
-from . import PureEnergieConfigEntry
+from .coordinator import PureEnergieConfigEntry
 
 TO_REDACT = {
     CONF_HOST,

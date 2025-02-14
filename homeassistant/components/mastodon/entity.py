@@ -4,9 +4,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import MastodonConfigEntry
 from .const import DEFAULT_NAME, DOMAIN, INSTANCE_VERSION
-from .coordinator import MastodonCoordinator
+from .coordinator import MastodonConfigEntry, MastodonCoordinator
 from .utils import construct_mastodon_username
 
 

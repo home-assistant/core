@@ -33,7 +33,6 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from . import HabiticaConfigEntry
 from .const import (
     CONF_API_USER,
     DEFAULT_URL,
@@ -47,6 +46,7 @@ from .const import (
     SITE_DATA_URL,
     X_CLIENT,
 )
+from .coordinator import HabiticaConfigEntry
 
 STEP_ADVANCED_DATA_SCHEMA = vol.Schema(
     {

@@ -9,10 +9,10 @@ from homeassistant.components.switch import SwitchEntity, SwitchEntityDescriptio
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import OhmeConfigEntry
 from .const import DOMAIN
+from .coordinator import OhmeConfigEntry
 from .entity import OhmeEntity, OhmeEntityDescription
 
 PARALLEL_UPDATES = 1
@@ -53,7 +53,7 @@ SWITCH_DEVICE_INFO = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OhmeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches."""
     coordinators = config_entry.runtime_data
