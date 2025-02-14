@@ -2,16 +2,16 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartthings.models import Capability, Command
+from pysmartthings.models import Attribute, Capability, Command
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_integration, snapshot_smartthings_entities
+from . import setup_integration, snapshot_smartthings_entities, trigger_update
 
 from tests.common import MockConfigEntry
 
@@ -57,4 +57,28 @@ async def test_lock_unlock(
         "a9f587c5-5d8b-4273-8907-e7f609af5158",
         Capability.LOCK,
         command,
+        "main",
     )
+
+
+@pytest.mark.parametrize("fixture", ["yale_push_button_deadbolt_lock"])
+async def test_state_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("lock.basement_door_lock").state == LockState.LOCKED
+
+    await trigger_update(
+        hass,
+        devices,
+        "a9f587c5-5d8b-4273-8907-e7f609af5158",
+        Capability.LOCK,
+        Attribute.LOCK,
+        "open",
+    )
+
+    assert hass.states.get("lock.basement_door_lock").state == LockState.UNLOCKED
