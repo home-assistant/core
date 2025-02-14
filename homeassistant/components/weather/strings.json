@@ -90,7 +90,7 @@
   "services": {
     "get_forecasts": {
       "name": "Get forecasts",
-      "description": "Retrieves the forecast from selected weather services",
+      "description": "Retrieves the forecast from selected weather services.",
       "fields": {
         "type": {
           "name": "Forecast type",
@@ -100,7 +100,7 @@
     },
     "get_forecast": {
       "name": "Get forecast",
-      "description": "Retrieves the forecast from a selected weather service",
+      "description": "Retrieves the forecast from a selected weather service.",
       "fields": {
         "type": {
           "name": "[%key:component::weather::services::get_forecasts::fields::type::name%]",
