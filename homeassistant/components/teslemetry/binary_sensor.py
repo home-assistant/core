@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import StateType
 
@@ -377,7 +377,7 @@ ENERGY_INFO_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry binary sensor platform from a config entry."""
 

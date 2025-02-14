@@ -37,7 +37,7 @@ from homeassistant.const import (
     UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     VICARE_CUBIC_METER,
@@ -915,6 +915,14 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_getter=lambda api: api.getSeasonalPerformanceFactorHeating(),
     ),
+    ViCareSensorEntityDescription(
+        key="battery_level",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.BATTERY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getBatteryLevel(),
+    ),
 )
 
 CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
@@ -1065,7 +1073,7 @@ def _build_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ViCareConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the ViCare sensor devices."""
     async_add_entities(

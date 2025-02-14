@@ -11,23 +11,22 @@ from homeassistant.components.switch import (
     SwitchEntity,
     SwitchEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import StarlinkData, StarlinkUpdateCoordinator
+from .coordinator import StarlinkConfigEntry, StarlinkData, StarlinkUpdateCoordinator
 from .entity import StarlinkEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config_entry: StarlinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all binary sensors for this entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        StarlinkSwitchEntity(coordinator, description) for description in SWITCHES
+        StarlinkSwitchEntity(config_entry.runtime_data, description)
+        for description in SWITCHES
     )
 
 
