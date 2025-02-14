@@ -962,6 +962,7 @@ jobs:
           if [[ "${{ needs.info.outputs.skip_coverage }}" != "true" ]]; then
             cov_params+=(--cov="homeassistant")
             cov_params+=(--cov-report=xml)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           echo "Test group ${{ matrix.group }}: $(sed -n "${{ matrix.group }},1p" pytest_buckets.txt)"
@@ -997,6 +998,12 @@ jobs:
       - name: Check dirty
         run: |
           ./script/check_dirty
+      - name: Upload test results to Codecov
+        if: ${{ needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          fail_ci_if_error: true
+          verbose: true
 
   pytest-mariadb:
     runs-on: ubuntu-24.04
@@ -1088,6 +1095,7 @@ jobs:
             cov_params+=(--cov="homeassistant.components.recorder")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           python3 -b -X dev -m pytest \
@@ -1125,6 +1133,12 @@ jobs:
       - name: Check dirty
         run: |
           ./script/check_dirty
+      - name: Upload test results to Codecov
+        if: ${{ needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          fail_ci_if_error: true
+          verbose: true
 
   pytest-postgres:
     runs-on: ubuntu-24.04
@@ -1218,6 +1232,7 @@ jobs:
             cov_params+=(--cov="homeassistant.components.recorder")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           python3 -b -X dev -m pytest \
@@ -1256,6 +1271,12 @@ jobs:
       - name: Check dirty
         run: |
           ./script/check_dirty
+      - name: Upload test results to Codecov
+        if: ${{ needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          fail_ci_if_error: true
+          verbose: true
 
   coverage-full:
     name: Upload test coverage to Codecov (full suite)
@@ -1365,6 +1386,7 @@ jobs:
             cov_params+=(--cov="homeassistant.components.${{ matrix.group }}")
             cov_params+=(--cov-report=xml)
             cov_params+=(--cov-report=term-missing)
+            cov_params+=(--junitxml=junit.xml -o junit_family=legacy)
           fi
 
           python3 -b -X dev -m pytest \
@@ -1397,6 +1419,12 @@ jobs:
       - name: Check dirty
         run: |
           ./script/check_dirty
+      - name: Upload test results to Codecov
+        if: ${{ needs.info.outputs.skip_coverage != 'true' && !cancelled() }}
+        uses: codecov/test-results-action@v1
+        with:
+          fail_ci_if_error: true
+          verbose: true
 
   coverage-partial:
     name: Upload test coverage to Codecov (partial suite)
