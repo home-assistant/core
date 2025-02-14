@@ -43,8 +43,10 @@ SWITCHES: tuple[LetPotSwitchEntityDescription, ...] = (
         value_fn=lambda status: status.water_mode == 1,
         set_value_fn=lambda device_client, value: device_client.set_water_mode(value),
         entity_category=EntityCategory.CONFIG,
-        supported_fn=lambda coordinator: DeviceFeature.PUMP_AUTO
-        in coordinator.device_client.device_features,
+        supported_fn=(
+            lambda coordinator: DeviceFeature.PUMP_AUTO
+            in coordinator.device_client.device_features
+        ),
     ),
     LetPotSwitchEntityDescription(
         key="power",
