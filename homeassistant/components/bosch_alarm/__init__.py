@@ -23,13 +23,7 @@ from homeassistant.helpers import device_registry as dr
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE, DOMAIN
 from .device import PanelConnection
 
-PLATFORMS: list[Platform] = [
-    Platform.ALARM_CONTROL_PANEL,
-    Platform.BINARY_SENSOR,
-    Platform.LOCK,
-    Platform.SENSOR,
-    Platform.SWITCH,
-]
+PLATFORMS: list[Platform] = [Platform.ALARM_CONTROL_PANEL]
 _LOGGER = logging.getLogger(__name__)
 
 
