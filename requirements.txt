@@ -8,7 +8,7 @@ aiohasupervisor==0.3.0
 aiohttp==3.11.12
 aiohttp_cors==0.7.0
 aiohttp-fast-zlib==0.2.2
-aiohttp-asyncmdnsresolver==0.1.0
+aiohttp-asyncmdnsresolver==0.1.1
 aiozoneinfo==0.2.3
 astral==2.2
 async-interrupt==1.2.1
