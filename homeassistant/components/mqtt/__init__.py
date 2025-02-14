@@ -81,6 +81,7 @@ from .const import (
     ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
     TEMPLATE_ERRORS,
+    Platform,
 )
 from .models import (
     DATA_MQTT,
@@ -293,6 +294,23 @@ async def async_check_config_schema(
                     ) from exc
 
 
+def _platforms_from_entry(
+    hass: HomeAssistant, entry: ConfigEntry
+) -> set[str | Platform]:
+    """Return a set of platforms configured through the config entry."""
+    domains: set[str | Platform] = {
+        entry.domain
+        for entry in er.async_entries_for_config_entry(
+            er.async_get(hass), entry.entry_id
+        )
+    }
+    # Update with domains from subentries
+    for subentry in entry.subentries.values():
+        keys = subentry.data["components"].keys()
+        domains.update(key.split("_")[0] for key in keys)
+    return domains
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the actions and websocket API for the MQTT component."""
 
@@ -434,12 +452,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     mqtt_data, conf = await _setup_client()
     platforms_used = platforms_from_config(mqtt_data.config)
-    platforms_used.update(
-        entry.domain
-        for entry in er.async_entries_for_config_entry(
-            er.async_get(hass), entry.entry_id
-        )
-    )
+    platforms_used.update(_platforms_from_entry(hass, entry))
     integration = async_get_loaded_integration(hass, DOMAIN)
     # Preload platforms we know we are going to use so
     # discovery can setup each platform synchronously
