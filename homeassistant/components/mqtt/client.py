@@ -387,6 +387,7 @@ class MQTT:
         self.loop = hass.loop
         self.config_entry = config_entry
         self.conf = conf
+        self.is_mqttv5 = conf.get(CONF_PROTOCOL, DEFAULT_PROTOCOL) == PROTOCOL_5
 
         self._simple_subscriptions: defaultdict[str, set[Subscription]] = defaultdict(
             set
@@ -686,9 +687,7 @@ class MQTT:
                     # subscriptions) is cleared on successful connect when the
                     # clean_start flag is set. For MQTT v3.1.1, the clean_session
                     # argument of Client should be used for similar result.
-                    True
-                    if self._mqttc.protocol == mqtt.MQTTv5
-                    else mqtt.MQTT_CLEAN_START_FIRST_ONLY,  # clean_start
+                    True if self.is_mqttv5 else mqtt.MQTT_CLEAN_START_FIRST_ONLY,
                 )
         except (OSError, mqtt.WebsocketConnectionError) as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
