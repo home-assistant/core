@@ -17,6 +17,7 @@ from aiohomeconnect.model import (
     EventType,
     GetSetting,
     HomeAppliance,
+    OptionKey,
     SettingKey,
     Status,
     StatusKey,
@@ -53,6 +54,7 @@ class HomeConnectApplianceData:
 
     events: dict[EventKey, Event]
     info: HomeAppliance
+    options: set[OptionKey]
     programs: list[EnumerateProgram]
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
@@ -61,6 +63,8 @@ class HomeConnectApplianceData:
         """Update data with data from other instance."""
         self.events.update(other.events)
         self.info.connected = other.info.connected
+        self.options.clear()
+        self.options.update(other.options)
         self.programs.clear()
         self.programs.extend(other.programs)
         self.settings.update(other.settings)
@@ -172,8 +176,9 @@ class HomeConnectCoordinator(
                             settings = self.data[event_message_ha_id].settings
                             events = self.data[event_message_ha_id].events
                             for event in event_message.data.items:
-                                if event.key in SettingKey:
-                                    setting_key = SettingKey(event.key)
+                                event_key = event.key
+                                if event_key in SettingKey:
+                                    setting_key = SettingKey(event_key)
                                     if setting_key in settings:
                                         settings[setting_key].value = event.value
                                     else:
@@ -183,7 +188,14 @@ class HomeConnectCoordinator(
                                             value=event.value,
                                         )
                                 else:
-                                    events[event.key] = event
+                                    if event_key in (
+                                        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                                        EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                                    ):
+                                        await self.update_options(
+                                            event_message_ha_id, event_key
+                                        )
+                                    events[event_key] = event
                             self._call_event_listener(event_message)
 
                         case EventType.EVENT:
@@ -338,6 +350,7 @@ class HomeConnectCoordinator(
 
         programs = []
         events = {}
+        options: set[OptionKey] = set()
         if appliance.type in APPLIANCES_WITH_PROGRAMS:
             try:
                 all_programs = await self.client.get_all_programs(appliance.ha_id)
@@ -370,10 +383,26 @@ class HomeConnectCoordinator(
                             "",
                             program.key,
                         )
+                        options.clear()
+                        for option in program.options or []:
+                            options.add(option.key)
+                            option_event_key = EventKey(option.key)
+                            events[option_event_key] = Event(
+                                option_event_key,
+                                option.key,
+                                0,
+                                "",
+                                "",
+                                option.value,
+                                option.name,
+                                display_value=option.display_value,
+                                unit=option.unit,
+                            )
 
         appliance_data = HomeConnectApplianceData(
             events=events,
             info=appliance,
+            options=options,
             programs=programs,
             settings=settings,
             status=status,
@@ -383,3 +412,36 @@ class HomeConnectCoordinator(
             appliance_data = appliance_data_to_update
 
         return appliance_data
+
+    async def update_options(self, ha_id: str, event_key: EventKey) -> None:
+        """Update options for appliance."""
+        options = self.data[ha_id].options
+        events = self.data[ha_id].events
+        options_to_notify = options.copy()
+        options.clear()
+        options_getter = (
+            self.client.get_active_program_options
+            if event_key is EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
+            else self.client.get_selected_program_options
+        )
+        for option in (await options_getter(ha_id)).options:
+            options.add(option.key)
+            option_event_key = EventKey(option.key)
+            events[option_event_key] = Event(
+                option_event_key,
+                option.key.value,
+                0,
+                "",
+                "",
+                option.value,
+                option.name,
+                display_value=option.display_value,
+                unit=option.unit,
+            )
+        options_to_notify.update(options)
+        for option_key in options_to_notify:
+            for listener in self.context_listeners.get(
+                (ha_id, EventKey(option_key)),
+                [],
+            ):
+                listener()

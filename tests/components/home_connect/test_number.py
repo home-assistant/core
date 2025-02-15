@@ -6,13 +6,24 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
+    ArrayOfOptions,
     ArrayOfSettings,
+    Event,
+    EventKey,
     EventMessage,
     EventType,
     GetSetting,
+    Option,
+    OptionKey,
+    ProgramKey,
     SettingKey,
 )
-from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
+from aiohomeconnect.model.error import (
+    ActiveProgramNotSetError,
+    HomeConnectApiError,
+    HomeConnectError,
+    SelectedProgramNotSetError,
+)
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
 
@@ -369,3 +380,137 @@ async def test_number_entity_error(
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
+
+
+@pytest.mark.parametrize(
+    (
+        "set_active_program_options_side_effect",
+        "set_selected_program_options_side_effect",
+        "called_mock_method",
+    ),
+    [
+        (
+            None,
+            SelectedProgramNotSetError("error.key"),
+            "set_active_program_option",
+        ),
+        (
+            ActiveProgramNotSetError("error.key"),
+            None,
+            "set_selected_program_option",
+        ),
+    ],
+)
+@pytest.mark.parametrize("unit", ["ºC", "ºF"])
+@pytest.mark.parametrize(
+    ("entity_id", "option_key", "appliance_ha_id"),
+    [
+        (
+            "number.oven_setpoint_temperature",
+            OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
+            "Oven",
+        )
+    ],
+    indirect=["appliance_ha_id"],
+)
+async def test_options_functionality(
+    entity_id: str,
+    option_key: OptionKey,
+    appliance_ha_id: str,
+    unit: str,
+    set_active_program_options_side_effect: ActiveProgramNotSetError | None,
+    set_selected_program_options_side_effect: SelectedProgramNotSetError | None,
+    called_mock_method: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test options functionality."""
+
+    async def set_program_option_side_effect(ha_id: str, *_, **kwargs) -> None:
+        event_key = EventKey(kwargs["option_key"])
+        await client.add_events(
+            [
+                EventMessage(
+                    ha_id,
+                    EventType.NOTIFY,
+                    ArrayOfEvents(
+                        [
+                            Event(
+                                key=event_key,
+                                raw_key=event_key.value,
+                                timestamp=0,
+                                level="",
+                                handling="",
+                                value=kwargs["value"],
+                                unit=unit,
+                            )
+                        ]
+                    ),
+                ),
+            ]
+        )
+
+    called_mock = AsyncMock(side_effect=set_program_option_side_effect)
+    if set_active_program_options_side_effect:
+        client.set_active_program_option.side_effect = (
+            set_active_program_options_side_effect
+        )
+    else:
+        assert set_selected_program_options_side_effect
+        client.set_selected_program_option.side_effect = (
+            set_selected_program_options_side_effect
+        )
+    setattr(client, called_mock_method, called_mock)
+    client.get_active_program_options = AsyncMock(
+        return_value=ArrayOfOptions([Option(option_key, 180)])
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.UNKNOWN,  # Not important
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, "180")
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: entity_id, SERVICE_ATTR_VALUE: 80},
+    )
+    await hass.async_block_till_done()
+
+    assert called_mock.called
+    assert called_mock.call_args.args == (appliance_ha_id,)
+    assert called_mock.call_args.kwargs == {
+        "option_key": option_key,
+        "value": 80,
+    }
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.state == "80.0"
+    assert entity_state.attributes["unit_of_measurement"] == unit

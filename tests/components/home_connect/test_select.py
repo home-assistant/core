@@ -1,18 +1,25 @@
 """Tests for home_connect select entities."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
+    ArrayOfOptions,
     ArrayOfPrograms,
     Event,
     EventKey,
     EventMessage,
     EventType,
+    Option,
+    OptionKey,
     ProgramKey,
 )
-from aiohomeconnect.model.error import HomeConnectError
+from aiohomeconnect.model.error import (
+    ActiveProgramNotSetError,
+    HomeConnectError,
+    SelectedProgramNotSetError,
+)
 from aiohomeconnect.model.program import (
     EnumerateProgram,
     EnumerateProgramConstraints,
@@ -413,3 +420,113 @@ async def test_select_exception_handling(
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2
+
+
+@pytest.mark.parametrize(
+    (
+        "set_active_program_options_side_effect",
+        "set_selected_program_options_side_effect",
+        "called_mock_method",
+    ),
+    [
+        (
+            None,
+            SelectedProgramNotSetError("error.key"),
+            "set_active_program_option",
+        ),
+        (
+            ActiveProgramNotSetError("error.key"),
+            None,
+            "set_selected_program_option",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("entity_id", "option_key"),
+    [
+        (
+            "select.washer_temperature",
+            OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
+        )
+    ],
+)
+async def test_options_functionality(
+    entity_id: str,
+    option_key: OptionKey,
+    appliance_ha_id: str,
+    set_active_program_options_side_effect: ActiveProgramNotSetError | None,
+    set_selected_program_options_side_effect: SelectedProgramNotSetError | None,
+    called_mock_method: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test options functionality."""
+    if set_active_program_options_side_effect:
+        client.set_active_program_option.side_effect = (
+            set_active_program_options_side_effect
+        )
+    else:
+        assert set_selected_program_options_side_effect
+        client.set_selected_program_option.side_effect = (
+            set_selected_program_options_side_effect
+        )
+    called_mock: AsyncMock = getattr(client, called_mock_method)
+    client.get_active_program_options = AsyncMock(
+        return_value=ArrayOfOptions(
+            [Option(option_key, "LaundryCare.Washer.EnumType.Temperature.Cold")]
+        )
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.UNKNOWN,  # Not important
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(
+        entity_id, "laundry_care_washer_enum_type_temperature_cold"
+    )
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_OPTION: "laundry_care_washer_enum_type_temperature_ul_warm",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert called_mock.called
+    assert called_mock.call_args.args == (appliance_ha_id,)
+    assert called_mock.call_args.kwargs == {
+        "option_key": option_key,
+        "value": "LaundryCare.Washer.EnumType.Temperature.UlWarm",
+    }
+    assert hass.states.is_state(
+        entity_id, "laundry_care_washer_enum_type_temperature_ul_warm"
+    )

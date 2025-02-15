@@ -1,19 +1,32 @@
 """Home Connect entity base class."""
 
 from abc import abstractmethod
+import contextlib
+from dataclasses import dataclass
 import logging
 
-from aiohomeconnect.model import EventKey
+from aiohomeconnect.model import EventKey, OptionKey
+from aiohomeconnect.model.error import ActiveProgramNotSetError, HomeConnectError
 
 from homeassistant.core import callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, ApplianceType
 from .coordinator import HomeConnectApplianceData, HomeConnectCoordinator
+from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class HomeConnectOptionEntityDescription(EntityDescription):
+    """Entity description for entities that represents program options."""
+
+    key: OptionKey
+    appliance_types: set[ApplianceType]
 
 
 class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
@@ -60,3 +73,61 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
         return (
             self.appliance.info.connected and self._attr_available and super().available
         )
+
+
+class HomeConnectOptionEntity(HomeConnectEntity):
+    """Class for entities that represents program options."""
+
+    entity_description: HomeConnectOptionEntityDescription
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return super().available and self.bsh_key in self.appliance.options
+
+    @property
+    def option_value(self) -> str | int | float | bool | None:
+        """Return the state of the entity."""
+        if event := self.appliance.events.get(EventKey(self.bsh_key)):
+            return event.value
+        return None
+
+    async def async_set_option(self, value: str | float | bool) -> None:
+        """Set an option for the entity."""
+        try:
+            # We try to set the active program option first,
+            # if it fails we try to set the selected program option
+            with contextlib.suppress(ActiveProgramNotSetError):
+                await self.coordinator.client.set_active_program_option(
+                    self.appliance.info.ha_id,
+                    option_key=self.bsh_key,
+                    value=value,
+                )
+                _LOGGER.debug(
+                    "Updated %s for the active program, new state: %s",
+                    self.entity_id,
+                    self.state,
+                )
+                return
+
+            await self.coordinator.client.set_selected_program_option(
+                self.appliance.info.ha_id,
+                option_key=self.bsh_key,
+                value=value,
+            )
+            _LOGGER.debug(
+                "Updated %s for the selected program, new state: %s",
+                self.entity_id,
+                self.state,
+            )
+        except HomeConnectError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_option",
+                translation_placeholders=get_dict_from_home_connect_error(err),
+            ) from err
+
+    @property
+    def bsh_key(self) -> OptionKey:
+        """Return the BSH key."""
+        return self.entity_description.key

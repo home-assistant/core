@@ -5,17 +5,27 @@ from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
+    ArrayOfEvents,
+    ArrayOfOptions,
+    ArrayOfPrograms,
     ArrayOfSettings,
     Event,
     EventKey,
     EventMessage,
+    EventType,
     GetSetting,
+    Option,
+    OptionKey,
     ProgramKey,
     SettingKey,
 )
-from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
-from aiohomeconnect.model.event import ArrayOfEvents, EventType
-from aiohomeconnect.model.program import ArrayOfPrograms, EnumerateProgram
+from aiohomeconnect.model.error import (
+    ActiveProgramNotSetError,
+    HomeConnectApiError,
+    HomeConnectError,
+    SelectedProgramNotSetError,
+)
+from aiohomeconnect.model.program import EnumerateProgram
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
 
@@ -840,3 +850,117 @@ async def test_create_issue(
     # Assert the issue is no longer present
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 0
+
+
+@pytest.mark.parametrize(
+    (
+        "set_active_program_options_side_effect",
+        "set_selected_program_options_side_effect",
+        "called_mock_method",
+    ),
+    [
+        (
+            None,
+            SelectedProgramNotSetError("error.key"),
+            "set_active_program_option",
+        ),
+        (
+            ActiveProgramNotSetError("error.key"),
+            None,
+            "set_selected_program_option",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("entity_id", "option_key", "appliance_ha_id"),
+    [
+        (
+            "switch.dishwasher_half_load",
+            OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+            "Dishwasher",
+        )
+    ],
+    indirect=["appliance_ha_id"],
+)
+async def test_options_functionality(
+    entity_id: str,
+    option_key: OptionKey,
+    appliance_ha_id: str,
+    set_active_program_options_side_effect: ActiveProgramNotSetError | None,
+    set_selected_program_options_side_effect: SelectedProgramNotSetError | None,
+    called_mock_method: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test options functionality."""
+    if set_active_program_options_side_effect:
+        client.set_active_program_option.side_effect = (
+            set_active_program_options_side_effect
+        )
+    else:
+        assert set_selected_program_options_side_effect
+        client.set_selected_program_option.side_effect = (
+            set_selected_program_options_side_effect
+        )
+    called_mock: AsyncMock = getattr(client, called_mock_method)
+    client.get_active_program_options = AsyncMock(
+        return_value=ArrayOfOptions([Option(option_key, True)])
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.NOTIFY,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value=ProgramKey.UNKNOWN,  # Not important
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.is_state(entity_id, STATE_ON)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}
+    )
+    await hass.async_block_till_done()
+
+    assert called_mock.called
+    assert called_mock.call_args.args == (appliance_ha_id,)
+    assert called_mock.call_args.kwargs == {
+        "option_key": option_key,
+        "value": False,
+    }
+    assert hass.states.is_state(entity_id, STATE_OFF)
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}
+    )
+    await hass.async_block_till_done()
+
+    assert called_mock.called
+    assert called_mock.call_args.args == (appliance_ha_id,)
+    assert called_mock.call_args.kwargs == {
+        "option_key": option_key,
+        "value": True,
+    }
+    assert hass.states.is_state(entity_id, STATE_ON)

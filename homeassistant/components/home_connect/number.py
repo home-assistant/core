@@ -1,9 +1,10 @@
 """Provides number enties for Home Connect."""
 
+from dataclasses import dataclass
 import logging
 from typing import cast
 
-from aiohomeconnect.model import GetSetting, SettingKey
+from aiohomeconnect.model import EventKey, GetSetting, OptionKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.number import (
@@ -22,12 +23,24 @@ from .const import (
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
+    ApplianceType,
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
-from .entity import HomeConnectEntity
+from .entity import (
+    HomeConnectEntity,
+    HomeConnectOptionEntity,
+    HomeConnectOptionEntityDescription,
+)
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass(frozen=True, kw_only=True)
+class HomeConnectNumberOptionEntityDescription(
+    HomeConnectOptionEntityDescription, NumberEntityDescription
+):
+    """Entity description for entities that represents numeric options."""
 
 
 NUMBERS = (
@@ -78,6 +91,41 @@ NUMBERS = (
     ),
 )
 
+NUMBER_OPTIONS = (
+    HomeConnectNumberOptionEntityDescription(
+        key=OptionKey.BSH_COMMON_DURATION,
+        translation_key="duration",
+        appliance_types={ApplianceType.OVEN, ApplianceType.HOOD},
+    ),
+    HomeConnectNumberOptionEntityDescription(
+        key=OptionKey.BSH_COMMON_FINISH_IN_RELATIVE,
+        translation_key="finish_in_relative",
+        appliance_types={
+            ApplianceType.DRYER,
+            ApplianceType.WASHER,
+            ApplianceType.WASHER_DRYER,
+        },
+    ),
+    HomeConnectNumberOptionEntityDescription(
+        key=OptionKey.BSH_COMMON_START_IN_RELATIVE,
+        translation_key="start_in_relative",
+        appliance_types={ApplianceType.OVEN, ApplianceType.DISHWASHER},
+    ),
+    HomeConnectNumberOptionEntityDescription(
+        key=OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY,
+        translation_key="fill_quantity",
+        device_class=NumberDeviceClass.VOLUME,
+        native_step=1,
+        appliance_types={ApplianceType.COFFEE_MAKER},
+    ),
+    HomeConnectNumberOptionEntityDescription(
+        key=OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
+        translation_key="setpoint_temperature",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        appliance_types={ApplianceType.OVEN},
+    ),
+)
+
 
 def _get_entities_for_appliance(
     entry: HomeConnectConfigEntry,
@@ -85,9 +133,16 @@ def _get_entities_for_appliance(
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
-        HomeConnectNumberEntity(entry.runtime_data, appliance, description)
-        for description in NUMBERS
-        if description.key in appliance.settings
+        *[
+            HomeConnectNumberEntity(entry.runtime_data, appliance, description)
+            for description in NUMBERS
+            if description.key in appliance.settings
+        ],
+        *[
+            HomeConnectOptionNumberEntity(entry.runtime_data, appliance, description)
+            for description in NUMBER_OPTIONS
+            if appliance.info.type in description.appliance_types
+        ],
     ]
 
 
@@ -174,3 +229,21 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
             or not hasattr(self, "_attr_native_step")
         ):
             await self.async_fetch_constraints()
+
+
+class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
+    """Number option class for Home Connect."""
+
+    entity_description: HomeConnectNumberOptionEntityDescription
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the native value of the entity."""
+        await self.async_set_option(value)
+
+    def update_native_value(self) -> None:
+        """Set the value of the entity."""
+        self._attr_native_value = cast(float, self.option_value)
+        if not hasattr(self, "_unit_of_measurement") and (
+            event := self.appliance.events.get(EventKey(self.bsh_key))
+        ):
+            self._attr_native_unit_of_measurement = event.unit
