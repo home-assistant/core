@@ -8,11 +8,12 @@ from collections.abc import Callable
 from aiohttp import ClientError
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.hub import EheimDigitalHub
-from eheimdigital.types import EheimDeviceType
+from eheimdigital.types import EheimDeviceType, EheimDigitalClientError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import DEFAULT_SCAN_INTERVAL
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -79,14 +80,17 @@ class EheimDigitalUpdateCoordinator(
         self.async_set_updated_data(self.hub.devices)
 
     async def _async_setup(self) -> None:
-        await self.hub.connect()
-        async with asyncio.timeout(2):
-            # This event gets triggered when the first message is received from
-            # the device, it contains the data necessary to create the main device.
-            # This removes the race condition where the main device is accessed
-            # before the response from the device is parsed.
-            await self.main_device_added_event.wait()
-        await self.hub.update()
+        try:
+            await self.hub.connect()
+            async with asyncio.timeout(2):
+                # This event gets triggered when the first message is received from
+                # the device, it contains the data necessary to create the main device.
+                # This removes the race condition where the main device is accessed
+                # before the response from the device is parsed.
+                await self.main_device_added_event.wait()
+            await self.hub.update()
+        except (TimeoutError, EheimDigitalClientError) as err:
+            raise ConfigEntryNotReady from err
 
     async def _async_update_data(self) -> dict[str, EheimDigitalDevice]:
         try:
