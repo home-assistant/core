@@ -157,6 +157,27 @@ FLOW_RATE_OPTIONS = {
     )
 }
 
+COFFEE_MILK_RATIO_OPTIONS = {
+    bsh_key_to_translation_key(option): option
+    for option in (
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.10Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.20Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.25Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.30Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.40Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.50Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.55Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.60Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.65Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.67Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.70Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.75Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.80Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.85Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.90Percent",
+    )
+}
+
 HOT_WATER_TEMPERATURE_OPTIONS = {
     bsh_key_to_translation_key(option): option
     for option in (
@@ -300,6 +321,10 @@ PROGRAM_ENUM_OPTIONS = {
             BEAN_CONTAINER_OPTIONS,
         ),
         (OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FLOW_RATE, FLOW_RATE_OPTIONS),
+        (
+            OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_COFFEE_MILK_RATIO,
+            COFFEE_MILK_RATIO_OPTIONS,
+        ),
         (
             OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_HOT_WATER_TEMPERATURE,
             HOT_WATER_TEMPERATURE_OPTIONS,
