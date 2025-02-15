@@ -346,9 +346,9 @@
     },
     "hot_water_temperature": {
       "options": {
-        "consumer_products_coffee_maker_enum_type_hot_water_temperature_white_tea": ".WhiteTea",
-        "consumer_products_coffee_maker_enum_type_hot_water_temperature_green_tea": ".GreenTea",
-        "consumer_products_coffee_maker_enum_type_hot_water_temperature_black_tea": ".BlackTea",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_white_tea": "White tea",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_green_tea": "Green tea",
+        "consumer_products_coffee_maker_enum_type_hot_water_temperature_black_tea": "Black tea",
         "consumer_products_coffee_maker_enum_type_hot_water_temperature_50_c": "50ºC",
         "consumer_products_coffee_maker_enum_type_hot_water_temperature_55_c": "55ºC",
         "consumer_products_coffee_maker_enum_type_hot_water_temperature_60_c": "60ºC",
