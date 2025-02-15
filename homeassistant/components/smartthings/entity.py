@@ -43,8 +43,13 @@ class SmartThingsEntity(Entity):
         """Subscribe to updates."""
         await super().async_added_to_hass()
         for capability in self._internal_state:
-            self.client.add_device_event_listener(
-                self.device.device.device_id, "main", capability, self._update_handler
+            self.async_on_remove(
+                self.client.add_device_event_listener(
+                    self.device.device.device_id,
+                    "main",
+                    capability,
+                    self._update_handler,
+                )
             )
         self._update_attr()
 
