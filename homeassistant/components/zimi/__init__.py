@@ -33,13 +33,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ZimiConfigEntry) -> bool
         )
 
     except ControlPointError as error:
-        _LOGGER.error("Initiation failed: %s", error)
-        raise ConfigEntryNotReady(error) from error
+        raise ConfigEntryNotReady(f"Zimi setup failed: {error}") from error
 
     if not api:
-        msg = "Zimi setup failed: not ready"
-        _LOGGER.error(msg=msg)
-        raise ConfigEntryNotReady(msg)
+        raise ConfigEntryNotReady("Zimi setup failed: not ready")
 
     _LOGGER.debug("\n%s", api.describe())
 
