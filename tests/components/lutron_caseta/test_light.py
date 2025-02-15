@@ -3,6 +3,7 @@
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     DOMAIN as LIGHT_DOMAIN,
+    SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON
@@ -67,3 +68,26 @@ async def test_previous_brightness(
         blocking=True,
     )
     await hass.async_block_till_done()
+
+    state = hass.states.get(caseta_entity_id)
+    assert state.attributes[ATTR_BRIGHTNESS] == 25
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: caseta_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: caseta_entity_id},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Expect the state has been restored to 10%
+    state = hass.states.get(caseta_entity_id)
+    assert state.attributes[ATTR_BRIGHTNESS] == 25
