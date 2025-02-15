@@ -24,10 +24,10 @@ PLATFORMS = [
     Platform.FAN,
     Platform.LIGHT,
     Platform.SELECT,
+    Platform.SENSOR,
     Platform.SWITCH,
     Platform.TIME,
 ]
-
 
 KEEP_ALIVE_INTERVAL = timedelta(minutes=1)
 SYNC_TIME_INTERVAL = timedelta(hours=1)
