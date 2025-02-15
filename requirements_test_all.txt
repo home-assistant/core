@@ -404,7 +404,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.2.0
+aiowebdav2==0.2.1
 
 # homeassistant.components.webostv
 aiowebostv==0.6.2
@@ -679,6 +679,9 @@ discovery30303==0.3.3
 
 # homeassistant.components.dremel_3d_printer
 dremel3dpy==2.1.1
+
+# homeassistant.components.dropbox
+dropbox==12.0.2
 
 # homeassistant.components.drop_connect
 dropmqttapi==1.0.3
