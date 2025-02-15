@@ -63,18 +63,18 @@
     },
     "search": {
       "name": "Search music library & players",
-      "description": "Search for items in the music library & players.",
+      "description": "Searches for items in the music library & players",
       "fields": {
         "command": {
           "name": "Items",
           "description": "The items to search for on LMS."
         },
         "return_items": {
-          "name": "Number of Items",
+          "name": "Number of items",
           "description": "The number of items to return."
         },
         "search_string": {
-          "name": "Search String",
+          "name": "Search string",
           "description": "Limit the search to items matching the search string."
         },
         "tags": {
@@ -85,7 +85,7 @@
     },
     "play": {
       "name": "Play music",
-      "description": "Play an item in the music library",
+      "description": "Plays an item in the music library",
       "fields": {
         "command": {
           "name": "Items",
@@ -93,7 +93,7 @@
         },
         "search_type": {
           "name": "Search Type",
-          "description": "Full Text search for a string, or directly provide an item_id"
+          "description": "Full text search for a string, or directly provide an item_id"
         },
         "search_string": {
           "name": "Search String",
