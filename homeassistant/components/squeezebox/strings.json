@@ -109,7 +109,7 @@
       "init": {
         "title": "LMS Configuration",
         "data": {
-          "browse_limit": "Maximum number of items to include when browsing media and generating a playlist.",
+          "browse_limit": "Maximum number of items when browsing or in a playlist.",
           "volume_step": "Step when increasing or decreasing volume."
         }
       }
