@@ -107,7 +107,7 @@
     },
     "deprecated_program_switch": {
       "title": "Deprecated program switch detected in some automations or scripts",
-      "description": "Program switch are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use active program select entity to run the program without any additional option and get the current running program on the above automations or scripts to fix this issue."
+      "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
     },
     "deprecated_set_program_and_option_actions": {
       "title": "The executed action is deprecated",
