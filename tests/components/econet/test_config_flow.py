@@ -140,3 +140,5 @@ async def test_already_configured(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+# Local fallback improvement: appended a small comment.
