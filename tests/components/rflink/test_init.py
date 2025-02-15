@@ -578,9 +578,10 @@ async def test_enable_debug_logs(
     await hass.async_block_till_done()
 
     assert "RFDEBUG enabled" in caplog.text
+    assert "RFDEBUG disabled" not in caplog.text
 
     logging.getLogger("rflink").setLevel(logging.INFO)
     hass.bus.async_fire(EVENT_LOGGING_CHANGED)
     await hass.async_block_till_done()
 
-    assert "RFDEBUG disabled" not in caplog.text
+    assert "RFDEBUG disabled" in caplog.text
