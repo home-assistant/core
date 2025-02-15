@@ -7,6 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+from pysmartthings import SmartThings
 from pysmartthings.models import Attribute, Capability
 
 from homeassistant.components.sensor import (
@@ -28,10 +29,10 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import SmartThingsConfigEntry, SmartThingsDeviceCoordinator
+from . import FullDevice, SmartThingsConfigEntry
 from .entity import SmartThingsEntity
 
 THERMOSTAT_CAPABILITIES = {
@@ -761,20 +762,20 @@ UNITS = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add sensors for a config entry."""
-    devices = entry.runtime_data.devices
+    entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsSensor(device, description, capability, attribute)
-        for device in devices
-        for capability, attributes in device.data.items()
+        SmartThingsSensor(entry_data.client, device, description, capability, attribute)
+        for device in entry_data.devices.values()
+        for capability, attributes in device.status["main"].items()
         if capability in CAPABILITY_TO_SENSORS
         for attribute in attributes
         for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
         if not description.capability_ignore_list
         or not any(
-            all(capability in device.data for capability in capability_list)
+            all(capability in device.status["main"] for capability in capability_list)
             for capability_list in description.capability_ignore_list
         )
     )
@@ -787,13 +788,14 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
 
     def __init__(
         self,
-        device: SmartThingsDeviceCoordinator,
+        client: SmartThings,
+        device: FullDevice,
         entity_description: SmartThingsSensorEntityDescription,
         capability: Capability,
         attribute: Attribute,
     ) -> None:
         """Init the class."""
-        super().__init__(device)
+        super().__init__(client, device, [capability])
         self._attr_name = f"{device.device.label} {entity_description.name}"
         self._attr_unique_id = f"{device.device.device_id}{entity_description.unique_id_separator}{entity_description.key}"
         self._attribute = attribute
@@ -809,7 +811,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
-        unit = self.coordinator.data[self.capability][self._attribute].unit
+        unit = self._internal_state[self.capability][self._attribute].unit
         return (
             UNITS.get(unit, unit)
             if unit

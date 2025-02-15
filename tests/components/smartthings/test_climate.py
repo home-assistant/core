@@ -3,13 +3,18 @@
 from typing import Any
 from unittest.mock import AsyncMock, call
 
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings.models import Attribute, Capability, Command, Status
 import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_HUMIDITY,
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
     ATTR_PRESET_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
@@ -20,7 +25,9 @@ from homeassistant.components.climate import (
     SERVICE_SET_PRESET_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    SWING_HORIZONTAL,
     SWING_OFF,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import (
@@ -33,7 +40,12 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import set_attribute_value, setup_integration, snapshot_smartthings_entities
+from . import (
+    set_attribute_value,
+    setup_integration,
+    snapshot_smartthings_entities,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry
 
@@ -70,6 +82,7 @@ async def test_ac_set_fan_mode(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.AIR_CONDITIONER_FAN_MODE,
         Command.SET_FAN_MODE,
+        "main",
         argument="auto",
     )
 
@@ -93,6 +106,7 @@ async def test_ac_set_hvac_mode_off(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.SWITCH,
         Command.OFF,
+        "main",
     )
 
 
@@ -135,6 +149,7 @@ async def test_ac_set_hvac_mode(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.AIR_CONDITIONER_MODE,
         Command.SET_AIR_CONDITIONER_MODE,
+        "main",
         argument=argument,
     )
 
@@ -161,14 +176,16 @@ async def test_ac_set_hvac_mode_turns_on(
     assert devices.execute_device_command.mock_calls == [
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.AIR_CONDITIONER_MODE,
-            Command.SET_AIR_CONDITIONER_MODE,
-            argument="auto",
+            Capability.SWITCH,
+            Command.ON,
+            "main",
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.SWITCH,
-            Command.ON,
+            Capability.AIR_CONDITIONER_MODE,
+            Command.SET_AIR_CONDITIONER_MODE,
+            "main",
+            argument="auto",
         ),
     ]
 
@@ -200,6 +217,7 @@ async def test_ac_set_hvac_mode_wind(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.AIR_CONDITIONER_MODE,
         Command.SET_AIR_CONDITIONER_MODE,
+        "main",
         argument="wind",
     )
 
@@ -223,6 +241,7 @@ async def test_ac_set_temperature(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.THERMOSTAT_COOLING_SETPOINT,
         Command.SET_COOLING_SETPOINT,
+        "main",
         argument=23,
     )
 
@@ -249,25 +268,29 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
     assert devices.execute_device_command.mock_calls == [
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
+            Capability.SWITCH,
+            Command.ON,
+            "main",
+        ),
+        call(
+            "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.THERMOSTAT_COOLING_SETPOINT,
             Command.SET_COOLING_SETPOINT,
+            "main",
             argument=23.0,
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.SWITCH,
             Command.ON,
+            "main",
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
+            "main",
             argument="auto",
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.SWITCH,
-            Command.ON,
         ),
     ]
 
@@ -297,12 +320,14 @@ async def test_ac_set_temperature_and_hvac_mode(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.THERMOSTAT_COOLING_SETPOINT,
             Command.SET_COOLING_SETPOINT,
+            "main",
             argument=23.0,
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
+            "main",
             argument="auto",
         ),
     ]
@@ -331,14 +356,16 @@ async def test_ac_set_temperature_and_hvac_mode_off(
     assert devices.execute_device_command.mock_calls == [
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.THERMOSTAT_COOLING_SETPOINT,
-            Command.SET_COOLING_SETPOINT,
-            argument=23.0,
+            Capability.SWITCH,
+            Command.OFF,
+            "main",
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.SWITCH,
-            Command.OFF,
+            Capability.THERMOSTAT_COOLING_SETPOINT,
+            Command.SET_COOLING_SETPOINT,
+            "main",
+            argument=23.0,
         ),
     ]
 
@@ -368,7 +395,10 @@ async def test_ac_toggle_power(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "96a5ef74-5832-a84b-f1f7-ca799957065d", Capability.SWITCH, command
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.SWITCH,
+        command,
+        "main",
     )
 
 
@@ -397,6 +427,7 @@ async def test_ac_set_swing_mode(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.FAN_OSCILLATION_MODE,
         Command.SET_FAN_OSCILLATION_MODE,
+        "main",
         argument="fixed",
     )
 
@@ -420,7 +451,134 @@ async def test_ac_set_preset_mode(
         "96a5ef74-5832-a84b-f1f7-ca799957065d",
         Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
         Command.SET_AC_OPTIONAL_MODE,
+        "main",
         argument="windFree",
+    )
+
+
+@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+async def test_ac_state_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("climate.ac_office_granit").state == HVACMode.OFF
+
+    await trigger_update(
+        hass,
+        devices,
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.SWITCH,
+        Attribute.SWITCH,
+        "on",
+    )
+
+    assert hass.states.get("climate.ac_office_granit").state == HVACMode.HEAT
+
+
+@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize(
+    (
+        "capability",
+        "attribute",
+        "value",
+        "state_attribute",
+        "original_value",
+        "expected_value",
+    ),
+    [
+        (
+            Capability.TEMPERATURE_MEASUREMENT,
+            Attribute.TEMPERATURE,
+            20,
+            ATTR_CURRENT_TEMPERATURE,
+            25,
+            20,
+        ),
+        (
+            Capability.AIR_CONDITIONER_FAN_MODE,
+            Attribute.FAN_MODE,
+            "auto",
+            ATTR_FAN_MODE,
+            "low",
+            "auto",
+        ),
+        (
+            Capability.AIR_CONDITIONER_FAN_MODE,
+            Attribute.SUPPORTED_AC_FAN_MODES,
+            ["low", "auto"],
+            ATTR_FAN_MODES,
+            ["auto", "low", "medium", "high", "turbo"],
+            ["low", "auto"],
+        ),
+        (
+            Capability.THERMOSTAT_COOLING_SETPOINT,
+            Attribute.COOLING_SETPOINT,
+            23,
+            ATTR_TEMPERATURE,
+            25,
+            23,
+        ),
+        (
+            Capability.FAN_OSCILLATION_MODE,
+            Attribute.FAN_OSCILLATION_MODE,
+            "horizontal",
+            ATTR_SWING_MODE,
+            SWING_OFF,
+            SWING_HORIZONTAL,
+        ),
+        (
+            Capability.FAN_OSCILLATION_MODE,
+            Attribute.FAN_OSCILLATION_MODE,
+            "direct",
+            ATTR_SWING_MODE,
+            SWING_OFF,
+            SWING_OFF,
+        ),
+    ],
+    ids=[
+        ATTR_CURRENT_TEMPERATURE,
+        ATTR_FAN_MODE,
+        ATTR_FAN_MODES,
+        ATTR_TEMPERATURE,
+        ATTR_SWING_MODE,
+        f"{ATTR_SWING_MODE}_off",
+    ],
+)
+async def test_ac_state_attributes_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    capability: Capability,
+    attribute: Attribute,
+    value: Any,
+    state_attribute: str,
+    original_value: Any,
+    expected_value: Any,
+) -> None:
+    """Test state attributes update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("climate.ac_office_granit").attributes[state_attribute]
+        == original_value
+    )
+
+    await trigger_update(
+        hass,
+        devices,
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        capability,
+        attribute,
+        value,
+    )
+
+    assert (
+        hass.states.get("climate.ac_office_granit").attributes[state_attribute]
+        == expected_value
     )
 
 
@@ -443,6 +601,7 @@ async def test_thermostat_set_fan_mode(
         "2894dc93-0f11-49cc-8a81-3a684cebebf6",
         Capability.THERMOSTAT_FAN_MODE,
         Command.SET_THERMOSTAT_FAN_MODE,
+        "main",
         argument="on",
     )
 
@@ -466,6 +625,7 @@ async def test_thermostat_set_hvac_mode(
         "2894dc93-0f11-49cc-8a81-3a684cebebf6",
         Capability.THERMOSTAT_MODE,
         Command.SET_THERMOSTAT_MODE,
+        "main",
         argument="auto",
     )
 
@@ -482,12 +642,14 @@ async def test_thermostat_set_hvac_mode(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_HEATING_SETPOINT,
                     Command.SET_HEATING_SETPOINT,
+                    "main",
                     argument=59.0,
                 ),
                 call(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_COOLING_SETPOINT,
                     Command.SET_COOLING_SETPOINT,
+                    "main",
                     argument=73.4,
                 ),
             ],
@@ -500,6 +662,7 @@ async def test_thermostat_set_hvac_mode(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_COOLING_SETPOINT,
                     Command.SET_COOLING_SETPOINT,
+                    "main",
                     argument=59.0,
                 )
             ],
@@ -512,6 +675,7 @@ async def test_thermostat_set_hvac_mode(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_HEATING_SETPOINT,
                     Command.SET_HEATING_SETPOINT,
+                    "main",
                     argument=73.4,
                 )
             ],
@@ -524,12 +688,14 @@ async def test_thermostat_set_hvac_mode(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_MODE,
                     Command.SET_THERMOSTAT_MODE,
+                    "main",
                     argument="cool",
                 ),
                 call(
                     "2894dc93-0f11-49cc-8a81-3a684cebebf6",
                     Capability.THERMOSTAT_COOLING_SETPOINT,
                     Command.SET_COOLING_SETPOINT,
+                    "main",
                     argument=73.4,
                 ),
             ],
@@ -557,3 +723,136 @@ async def test_thermostat_set_temperature(
         blocking=True,
     )
     assert devices.execute_device_command.mock_calls == calls
+
+
+@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+async def test_humidity(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test humidity extra state attribute."""
+    devices.get_device_status.return_value["main"][
+        Capability.RELATIVE_HUMIDITY_MEASUREMENT
+    ] = {Attribute.HUMIDITY: Status(50)}
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.asd")
+    assert state
+    assert state.attributes[ATTR_CURRENT_HUMIDITY] == 50
+
+
+@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+async def test_updating_humidity(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating humidity extra state attribute."""
+    devices.get_device_status.return_value["main"][
+        Capability.RELATIVE_HUMIDITY_MEASUREMENT
+    ] = {Attribute.HUMIDITY: Status(50)}
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.asd")
+    assert state
+    assert state.attributes[ATTR_CURRENT_HUMIDITY] == 50
+
+    await trigger_update(
+        hass,
+        devices,
+        "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+        Capability.RELATIVE_HUMIDITY_MEASUREMENT,
+        Attribute.HUMIDITY,
+        40,
+    )
+
+    assert hass.states.get("climate.asd").attributes[ATTR_CURRENT_HUMIDITY] == 40
+
+
+@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize(
+    (
+        "capability",
+        "attribute",
+        "value",
+        "state_attribute",
+        "original_value",
+        "expected_value",
+    ),
+    [
+        (
+            Capability.TEMPERATURE_MEASUREMENT,
+            Attribute.TEMPERATURE,
+            20,
+            ATTR_CURRENT_TEMPERATURE,
+            4734.6,
+            -6.7,
+        ),
+        (
+            Capability.THERMOSTAT_FAN_MODE,
+            Attribute.THERMOSTAT_FAN_MODE,
+            "auto",
+            ATTR_FAN_MODE,
+            "followschedule",
+            "auto",
+        ),
+        (
+            Capability.THERMOSTAT_FAN_MODE,
+            Attribute.SUPPORTED_THERMOSTAT_FAN_MODES,
+            ["auto", "circulate"],
+            ATTR_FAN_MODES,
+            ["on"],
+            ["auto", "circulate"],
+        ),
+        (
+            Capability.THERMOSTAT_OPERATING_STATE,
+            Attribute.THERMOSTAT_OPERATING_STATE,
+            "fan only",
+            ATTR_HVAC_ACTION,
+            HVACAction.COOLING,
+            HVACAction.FAN,
+        ),
+        (
+            Capability.THERMOSTAT_MODE,
+            Attribute.SUPPORTED_THERMOSTAT_MODES,
+            ["coolClean", "dryClean"],
+            ATTR_HVAC_MODES,
+            [],
+            [HVACMode.COOL, HVACMode.DRY],
+        ),
+    ],
+    ids=[
+        ATTR_CURRENT_TEMPERATURE,
+        ATTR_FAN_MODE,
+        ATTR_FAN_MODES,
+        ATTR_HVAC_ACTION,
+        ATTR_HVAC_MODES,
+    ],
+)
+async def test_thermostat_state_attributes_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    capability: Capability,
+    attribute: Attribute,
+    value: Any,
+    state_attribute: str,
+    original_value: Any,
+    expected_value: Any,
+) -> None:
+    """Test state attributes update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("climate.asd").attributes[state_attribute] == original_value
+
+    await trigger_update(
+        hass,
+        devices,
+        "2894dc93-0f11-49cc-8a81-3a684cebebf6",
+        capability,
+        attribute,
+        value,
+    )
+
+    assert hass.states.get("climate.asd").attributes[state_attribute] == expected_value
