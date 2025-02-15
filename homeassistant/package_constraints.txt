@@ -4,7 +4,7 @@ aiodhcpwatcher==1.1.0
 aiodiscover==2.6.0
 aiodns==3.2.0
 aiohasupervisor==0.3.0
-aiohttp-asyncmdnsresolver==0.1.0
+aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.2.2
 aiohttp==3.11.12
 aiohttp_cors==0.7.0
@@ -73,7 +73,7 @@ voluptuous-serialize==2.6.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.18.3
-zeroconf==0.144.1
+zeroconf==0.144.3
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
