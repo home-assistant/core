@@ -333,7 +333,7 @@ set_program_and_options:
           selector:
             number:
               unit_of_measurement: "%"
-              step: 10
+              step: 1
               min: 10
               max: 90
         consumer_products_coffee_maker_option_hot_water_temperature:

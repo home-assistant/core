@@ -50,14 +50,34 @@
             'key': <OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_COFFEE_MILK_RATIO: 'ConsumerProducts.CoffeeMaker.Option.CoffeeMilkRatio'>,
             'name': None,
             'unit': None,
-            'value': 60,
+            'value': 'ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.60Percent',
           }),
         ]),
       }),
     }),
   )
 # ---
-# name: test_set_program_and_options[service_call3-set_selected_program_options]
+# name: test_set_program_and_options[service_call3-set_active_program_options]
+  _Call(
+    tuple(
+      'SIEMENS-HCS03WCH1-7BC6383CF794',
+    ),
+    dict({
+      'array_of_options': dict({
+        'options': list([
+          dict({
+            'display_value': None,
+            'key': <OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_COFFEE_MILK_RATIO: 'ConsumerProducts.CoffeeMaker.Option.CoffeeMilkRatio'>,
+            'name': None,
+            'unit': None,
+            'value': 'ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.67Percent',
+          }),
+        ]),
+      }),
+    }),
+  )
+# ---
+# name: test_set_program_and_options[service_call4-set_selected_program_options]
   _Call(
     tuple(
       'SIEMENS-HCS03WCH1-7BC6383CF794',

@@ -486,6 +486,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 )
             elif option in PROGRAM_OPTIONS:
                 option_key = PROGRAM_OPTIONS[option][0]
+                if (
+                    option_key
+                    is OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_COFFEE_MILK_RATIO
+                ):
+                    if value in (67, 68):
+                        value = 67
+                    else:
+                        value = round(value / 5) * 5
+                    value = f"ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.{int(value)}Percent"
                 options.append(Option(option_key, value))
             elif option in TIME_PROGRAM_OPTIONS:
                 options.append(
