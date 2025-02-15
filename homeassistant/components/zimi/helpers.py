@@ -18,13 +18,13 @@ async def async_connect_to_controller(
 
     _LOGGER.debug("Connecting to %s:%d", host, port)
 
-    try:
-        api = ControlPoint(
-            description=ControlPointDescription(
-                host=host,
-                port=port,
-            )
+    api = ControlPoint(
+        description=ControlPointDescription(
+            host=host,
+            port=port,
         )
+    )
+    try:
         await api.connect(fast=fast)
 
     except ControlPointError as error:
