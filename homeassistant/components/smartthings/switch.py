@@ -8,9 +8,9 @@ from pysmartthings.models import Attribute, Capability, Command
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import SmartThingsConfigEntry
+from . import SmartThingsConfigEntry
 from .entity import SmartThingsEntity
 
 CAPABILITIES = (
@@ -30,16 +30,18 @@ AC_CAPABILITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add lights for a config entry."""
-    devices = entry.runtime_data.devices
+    """Add switches for a config entry."""
+    entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsSwitch(device)
-        for device in devices
-        if Capability.SWITCH in device.data
-        and not any(capability in device.data for capability in CAPABILITIES)
-        and not all(capability in device.data for capability in AC_CAPABILITIES)
+        SmartThingsSwitch(entry_data.client, device, [Capability.SWITCH])
+        for device in entry_data.devices.values()
+        if Capability.SWITCH in device.status["main"]
+        and not any(capability in device.status["main"] for capability in CAPABILITIES)
+        and not all(
+            capability in device.status["main"] for capability in AC_CAPABILITIES
+        )
     )
 
 
@@ -48,16 +50,14 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.SWITCH,
             Command.OFF,
         )
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.SWITCH,
             Command.ON,
         )

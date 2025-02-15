@@ -8,9 +8,9 @@ from pysmartthings.models import Attribute, Capability, Command
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import SmartThingsConfigEntry
+from . import SmartThingsConfigEntry
 from .entity import SmartThingsEntity
 
 ST_STATE_LOCKED = "locked"
@@ -27,12 +27,14 @@ ST_LOCK_ATTR_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add lights for a config entry."""
-    devices = entry.runtime_data.devices
+    """Add locks for a config entry."""
+    entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsLock(device) for device in devices if Capability.LOCK in device.data
+        SmartThingsLock(entry_data.client, device, [Capability.LOCK])
+        for device in entry_data.devices.values()
+        if Capability.LOCK in device.status["main"]
     )
 
 
@@ -41,16 +43,14 @@ class SmartThingsLock(SmartThingsEntity, LockEntity):
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.LOCK,
             Command.LOCK,
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.LOCK,
             Command.UNLOCK,
         )
@@ -66,7 +66,7 @@ class SmartThingsLock(SmartThingsEntity, LockEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         state_attrs = {}
-        status = self.coordinator.data[Capability.LOCK][Attribute.LOCK]
+        status = self._internal_state[Capability.LOCK][Attribute.LOCK]
         if status.value:
             state_attrs["lock_state"] = status.value
         if isinstance(status.data, dict):

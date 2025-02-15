@@ -44,3 +44,19 @@ def set_attribute_value(
 ) -> None:
     """Set the value of an attribute."""
     mock.get_device_status.return_value[component][capability][attribute].value = value
+
+
+async def trigger_update(
+    hass: HomeAssistant,
+    mock: AsyncMock,
+    device_id: str,
+    capability: Capability,
+    attribute: Attribute,
+    value: str | float | dict[str, Any] | list[Any] | None,
+    data: dict[str, Any] | None = None,
+) -> None:
+    """Trigger an update."""
+    for call in mock.add_device_event_listener.call_args_list:
+        if call[0][0] == device_id and call[0][2] == capability:
+            call[0][3](capability, attribute, value, data)
+    await hass.async_block_till_done()

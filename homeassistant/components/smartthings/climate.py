@@ -6,6 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
+from pysmartthings import SmartThings
 from pysmartthings.models import Attribute, Capability, Command
 
 from homeassistant.components.climate import (
@@ -23,9 +24,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import SmartThingsConfigEntry, SmartThingsDeviceCoordinator
+from . import FullDevice, SmartThingsConfigEntry
 from .entity import SmartThingsEntity
 
 ATTR_OPERATION_STATE = "operation_state"
@@ -94,34 +95,40 @@ UNIT_MAP = {"C": UnitOfTemperature.CELSIUS, "F": UnitOfTemperature.FAHRENHEIT}
 _LOGGER = logging.getLogger(__name__)
 
 
+AC_CAPABILITIES = [
+    Capability.AIR_CONDITIONER_MODE,
+    Capability.AIR_CONDITIONER_FAN_MODE,
+    Capability.SWITCH,
+    Capability.TEMPERATURE_MEASUREMENT,
+    Capability.THERMOSTAT_COOLING_SETPOINT,
+]
+
+THERMOSTAT_CAPABILITIES = [
+    Capability.TEMPERATURE_MEASUREMENT,
+    Capability.THERMOSTAT_HEATING_SETPOINT,
+    Capability.THERMOSTAT_MODE,
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add climate entities for a config entry."""
-    devices = entry.runtime_data.devices
-    ac_capabilities = [
-        Capability.AIR_CONDITIONER_MODE,
-        Capability.AIR_CONDITIONER_FAN_MODE,
-        Capability.SWITCH,
-        Capability.TEMPERATURE_MEASUREMENT,
-        Capability.THERMOSTAT_COOLING_SETPOINT,
-    ]
-    thermostat_capabilities = [
-        Capability.TEMPERATURE_MEASUREMENT,
-        Capability.THERMOSTAT_HEATING_SETPOINT,
-        Capability.THERMOSTAT_MODE,
-    ]
+    entry_data = entry.runtime_data
     entities: list[ClimateEntity] = [
-        SmartThingsAirConditioner(device)
-        for device in devices
-        if all(capability in device.data for capability in ac_capabilities)
+        SmartThingsAirConditioner(entry_data.client, device)
+        for device in entry_data.devices.values()
+        if all(capability in device.status["main"] for capability in AC_CAPABILITIES)
     ]
     entities.extend(
-        SmartThingsThermostat(device)
-        for device in devices
-        if all(capability in device.data for capability in thermostat_capabilities)
+        SmartThingsThermostat(entry_data.client, device)
+        for device in entry_data.devices.values()
+        if all(
+            capability in device.status["main"]
+            for capability in THERMOSTAT_CAPABILITIES
+        )
     )
     async_add_entities(entities)
 
@@ -129,9 +136,21 @@ async def async_setup_entry(
 class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings climate entities."""
 
-    def __init__(self, device: SmartThingsDeviceCoordinator) -> None:
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
-        super().__init__(device)
+        super().__init__(
+            client,
+            device,
+            [
+                Capability.THERMOSTAT_FAN_MODE,
+                Capability.THERMOSTAT_MODE,
+                Capability.TEMPERATURE_MEASUREMENT,
+                Capability.THERMOSTAT_HEATING_SETPOINT,
+                Capability.THERMOSTAT_OPERATING_STATE,
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+                Capability.RELATIVE_HUMIDITY_MEASUREMENT,
+            ],
+        )
         self._attr_supported_features = self._determine_features()
 
     def _determine_features(self) -> ClimateEntityFeature:
@@ -149,8 +168,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.THERMOSTAT_FAN_MODE,
             Command.SET_THERMOSTAT_FAN_MODE,
             argument=fan_mode,
@@ -158,8 +176,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.THERMOSTAT_MODE,
             Command.SET_THERMOSTAT_MODE,
             argument=STATE_TO_MODE[hvac_mode],
@@ -186,8 +203,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         tasks = []
         if heating_setpoint is not None:
             tasks.append(
-                self.coordinator.client.execute_device_command(
-                    self.coordinator.device.device_id,
+                self.execute_device_command(
                     Capability.THERMOSTAT_HEATING_SETPOINT,
                     Command.SET_HEATING_SETPOINT,
                     argument=round(heating_setpoint, 3),
@@ -195,8 +211,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
             )
         if cooling_setpoint is not None:
             tasks.append(
-                self.coordinator.client.execute_device_command(
-                    self.coordinator.device.device_id,
+                self.execute_device_command(
                     Capability.THERMOSTAT_COOLING_SETPOINT,
                     Command.SET_COOLING_SETPOINT,
                     argument=round(cooling_setpoint, 3),
@@ -298,19 +313,34 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        unit = self.coordinator.data[Capability.TEMPERATURE_MEASUREMENT][
+        unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
             Attribute.TEMPERATURE
         ].unit
+        assert unit
         return UNIT_MAP[unit]
 
 
 class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
-    def __init__(self, device: SmartThingsDeviceCoordinator) -> None:
+    _attr_preset_mode = None
+
+    def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
-        super().__init__(device)
-        self._attr_preset_mode = None
+        super().__init__(
+            client,
+            device,
+            [
+                Capability.AIR_CONDITIONER_MODE,
+                Capability.SWITCH,
+                Capability.FAN_OSCILLATION_MODE,
+                Capability.AIR_CONDITIONER_FAN_MODE,
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+                Capability.TEMPERATURE_MEASUREMENT,
+                Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
+                Capability.DEMAND_RESPONSE_LOAD_CONTROL,
+            ],
+        )
         self._attr_hvac_modes = self._determine_hvac_modes()
         self._attr_preset_modes = self._determine_preset_modes()
         self._attr_swing_modes = self._determine_swing_modes()
@@ -331,8 +361,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.AIR_CONDITIONER_FAN_MODE,
             Command.SET_FAN_MODE,
             argument=fan_mode,
@@ -359,8 +388,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 mode = WIND
 
         tasks.append(
-            self.coordinator.client.execute_device_command(
-                self.coordinator.device.device_id,
+            self.execute_device_command(
                 Capability.AIR_CONDITIONER_MODE,
                 Command.SET_AIR_CONDITIONER_MODE,
                 argument=mode,
@@ -384,8 +412,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 tasks.append(self.async_set_hvac_mode(operation_mode))
         # temperature
         tasks.append(
-            self.coordinator.client.execute_device_command(
-                self.coordinator.device.device_id,
+            self.execute_device_command(
                 Capability.THERMOSTAT_COOLING_SETPOINT,
                 Command.SET_COOLING_SETPOINT,
                 argument=kwargs[ATTR_TEMPERATURE],
@@ -395,16 +422,14 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     async def async_turn_on(self) -> None:
         """Turn device on."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.SWITCH,
             Command.ON,
         )
 
     async def async_turn_off(self) -> None:
         """Turn device off."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.SWITCH,
             Command.OFF,
         )
@@ -469,9 +494,10 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     @property
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
-        unit = self.coordinator.data[Capability.TEMPERATURE_MEASUREMENT][
+        unit = self._internal_state[Capability.TEMPERATURE_MEASUREMENT][
             Attribute.TEMPERATURE
         ].unit
+        assert unit
         return UNIT_MAP[unit]
 
     def _determine_swing_modes(self) -> list[str] | None:
@@ -487,8 +513,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set swing mode."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.FAN_OSCILLATION_MODE,
             Command.SET_FAN_OSCILLATION_MODE,
             argument=SWING_TO_FAN_OSCILLATION[swing_mode],
@@ -517,8 +542,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set special modes (currently only windFree is supported)."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
             Command.SET_AC_OPTIONAL_MODE,
             argument=preset_mode,

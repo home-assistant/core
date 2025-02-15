@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from pysmartthings import SmartThings
 from pysmartthings.models import Attribute, Capability, Command
 
 from homeassistant.components.cover import (
@@ -15,9 +16,9 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import SmartThingsConfigEntry, SmartThingsDeviceCoordinator
+from . import FullDevice, SmartThingsConfigEntry
 from .entity import SmartThingsEntity
 
 VALUE_TO_STATE = {
@@ -35,14 +36,14 @@ CAPABILITIES = (Capability.WINDOW_SHADE, Capability.DOOR_CONTROL)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add covers for a config entry."""
-    devices = entry.runtime_data.devices
+    entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsCover(device, capability)
-        for device in devices
-        for capability in device.data
+        SmartThingsCover(entry_data.client, device, capability)
+        for device in entry_data.devices.values()
+        for capability in device.status["main"]
         if capability in CAPABILITIES
     )
 
@@ -53,10 +54,19 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     _state: CoverState | None = None
 
     def __init__(
-        self, device: SmartThingsDeviceCoordinator, capability: Capability
+        self, client: SmartThings, device: FullDevice, capability: Capability
     ) -> None:
         """Initialize the cover class."""
-        super().__init__(device)
+        super().__init__(
+            client,
+            device,
+            [
+                capability,
+                Capability.BATTERY,
+                Capability.WINDOW_SHADE_LEVEL,
+                Capability.SWITCH_LEVEL,
+            ],
+        )
         self.capability = capability
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
@@ -73,20 +83,15 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id, self.capability, Command.CLOSE
-        )
+        await self.execute_device_command(self.capability, Command.CLOSE)
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id, self.capability, Command.OPEN
-        )
+        await self.execute_device_command(self.capability, Command.OPEN)
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             (
                 Capability.WINDOW_SHADE_LEVEL
                 if self.supports_capability(Capability.WINDOW_SHADE_LEVEL)
@@ -105,7 +110,7 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         attribute = {
             Capability.WINDOW_SHADE: Attribute.WINDOW_SHADE,
             Capability.DOOR_CONTROL: Attribute.DOOR,
-        }.get(self.capability)
+        }[self.capability]
         self._state = VALUE_TO_STATE.get(
             self.get_attribute_value(self.capability, attribute)
         )

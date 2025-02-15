@@ -1,13 +1,25 @@
 """Test configuration and mocks for the SmartThings component."""
 
 from collections.abc import Generator
+import time
 from unittest.mock import AsyncMock, patch
 
-from pysmartthings.models import DeviceResponse, DeviceStatus, SceneResponse
+from pysmartthings.models import (
+    DeviceResponse,
+    DeviceStatus,
+    LocationResponse,
+    SceneResponse,
+)
 import pytest
 
-from homeassistant.components.smartthings.const import CONF_LOCATION_ID, DOMAIN
-from homeassistant.const import CONF_ACCESS_TOKEN
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.smartthings import CONF_INSTALLED_APP_ID
+from homeassistant.components.smartthings.const import CONF_LOCATION_ID, DOMAIN, SCOPES
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -22,6 +34,24 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup_entry
 
 
+@pytest.fixture(name="expires_at")
+def mock_expires_at() -> int:
+    """Fixture to set the oauth token expiration time."""
+    return time.time() + 3600
+
+
+@pytest.fixture(autouse=True)
+async def setup_credentials(hass: HomeAssistant) -> None:
+    """Fixture to setup credentials."""
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("CLIENT_ID", "CLIENT_SECRET"),
+        DOMAIN,
+    )
+
+
 @pytest.fixture
 def mock_smartthings() -> Generator[AsyncMock]:
     """Mock a SmartThings client."""
@@ -30,10 +60,17 @@ def mock_smartthings() -> Generator[AsyncMock]:
             "homeassistant.components.smartthings.SmartThings",
             autospec=True,
         ) as mock_client,
+        patch(
+            "homeassistant.components.smartthings.config_flow.SmartThings",
+            new=mock_client,
+        ),
     ):
         client = mock_client.return_value
         client.get_scenes.return_value = SceneResponse.from_json(
             load_fixture("scenes.json", DOMAIN)
+        ).items
+        client.get_locations.return_value = LocationResponse.from_json(
+            load_fixture("locations.json", DOMAIN)
         ).items
         yield client
 
@@ -92,11 +129,24 @@ def devices(mock_smartthings: AsyncMock, fixture: str) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(expires_at: int) -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="SmartThings",
-        data={CONF_ACCESS_TOKEN: "abc", CONF_LOCATION_ID: "123"},
+        title="My home",
+        unique_id="5aaaa925-2be1-4e40-b257-e4ef59083324",
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": expires_at,
+                "scope": " ".join(SCOPES),
+                "access_tier": 0,
+                "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
+            },
+            CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+            CONF_INSTALLED_APP_ID: "123",
+        },
         version=3,
     )
