@@ -18,15 +18,23 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     EVENT_LOGGING_CHANGED,
 )
-from homeassistant.core import Event, CoreState, HassJob, HomeAssistant, ServiceCall, callback
+from homeassistant.core import (
+    callback,
+    CoreState,
+    Event,
+    HassJob,
+    HomeAssistant,
+    ServiceCall,
+    callback,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.start import async_at_started
+from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DATA_DEVICE_REGISTER,
@@ -281,6 +289,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(connect(), eager_start=False)
     async_dispatcher_connect(hass, SIGNAL_EVENT, event_callback)
 
+    @callback
     async def handle_logging_changed(_: Event | None = None) -> None:
         """Handle logging changed event."""
         if LIB_LOGGER.isEnabledFor(logging.DEBUG):

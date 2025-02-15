@@ -2,6 +2,7 @@
 
 from unittest.mock import Mock
 
+import logging
 import pytest
 from voluptuous.error import MultipleInvalid
 
@@ -21,6 +22,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_HOST,
     CONF_PORT,
+    EVENT_LOGGING_CHANGED,
     SERVICE_STOP_COVER,
     SERVICE_TURN_OFF,
 )
