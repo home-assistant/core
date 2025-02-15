@@ -1,4 +1,4 @@
-"""Support for switches through the SmartThings cloud API."""
+"""Support for update entities through the SmartThings cloud API."""
 
 from __future__ import annotations
 
@@ -13,23 +13,23 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import SmartThingsConfigEntry
+from . import SmartThingsConfigEntry
 from .entity import SmartThingsEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SmartThingsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add update entities for a config entry."""
-    devices = entry.runtime_data.devices
+    entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsSwitch(device)
-        for device in devices
-        if Capability.FIRMWARE_UPDATE in device.data
+        SmartThingsSwitch(entry_data.client, device, [Capability.FIRMWARE_UPDATE])
+        for device in entry_data.devices.values()
+        if Capability.FIRMWARE_UPDATE in device.status["main"]
     )
 
 
@@ -37,7 +37,9 @@ class SmartThingsSwitch(SmartThingsEntity, UpdateEntity):
     """Define a SmartThings update entity."""
 
     _attr_device_class = UpdateDeviceClass.FIRMWARE
-    _attr_supported_features = UpdateEntityFeature.INSTALL
+    _attr_supported_features = (
+        UpdateEntityFeature.INSTALL | UpdateEntityFeature.PROGRESS
+    )
 
     @property
     def installed_version(self) -> str | None:
@@ -65,8 +67,7 @@ class SmartThingsSwitch(SmartThingsEntity, UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install the firmware update."""
-        await self.coordinator.client.execute_device_command(
-            self.coordinator.device.device_id,
+        await self.execute_device_command(
             Capability.FIRMWARE_UPDATE,
             Command.UPDATE_FIRMWARE,
         )
