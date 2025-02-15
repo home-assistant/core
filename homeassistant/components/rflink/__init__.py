@@ -19,7 +19,6 @@ from homeassistant.const import (
     EVENT_LOGGING_CHANGED,
 )
 from homeassistant.core import (
-    callback,
     CoreState,
     Event,
     HassJob,
@@ -289,8 +288,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(connect(), eager_start=False)
     async_dispatcher_connect(hass, SIGNAL_EVENT, event_callback)
 
-    @callback
-    async def handle_logging_changed(_: Event | None = None) -> None:
+    async def handle_logging_changed(_: Event | HomeAssistant) -> None:
         """Handle logging changed event."""
         if LIB_LOGGER.isEnabledFor(logging.DEBUG):
             await RflinkCommand.send_command("rfdebug", "on")
