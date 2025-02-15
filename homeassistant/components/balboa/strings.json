@@ -79,6 +79,11 @@
         }
       }
     },
+    "sensor": {
+      "fault": {
+        "name": "Fault"
+      }
+    },
     "switch": {
       "filter_cycle_2_enabled": {
         "name": "Filter cycle 2 enabled"
