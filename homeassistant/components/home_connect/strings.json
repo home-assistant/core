@@ -509,7 +509,7 @@
         },
         "consumer_products_cleaning_robot_option_reference_map_id": {
           "name": "Reference map ID",
-          "description": "Defines the used reference map."
+          "description": "Defines which reference map is to be used."
         },
         "consumer_products_cleaning_robot_option_cleaning_mode": {
           "name": "Cleaning mode",
@@ -517,15 +517,15 @@
         },
         "consumer_products_coffee_maker_option_bean_amount": {
           "name": "Bean amount",
-          "description": "Describes the bean amount of a coffee machine program."
+          "description": "Describes the amount of coffee beans used in a coffee machine program."
         },
         "consumer_products_coffee_maker_option_fill_quantity": {
           "name": "Fill quantity",
-          "description": "Describes the fill quantity (in ml) of a coffee machine program."
+          "description": "Describes the amount of water (in ml) used in a coffee machine program."
         },
         "consumer_products_coffee_maker_option_coffee_temperature": {
           "name": "Coffee Temperature",
-          "description": "Describes the coffee temperature of a coffee machine program."
+          "description": "Describes the coffee temperature used in a coffee machine program."
         },
         "consumer_products_coffee_maker_option_bean_container": {
           "name": "Bean container",
@@ -541,7 +541,7 @@
         },
         "consumer_products_coffee_maker_option_coffee_milk_ratio": {
           "name": "Coffee milk ratio",
-          "description": "Defines the milk amount."
+          "description": "Defines the amount of milk."
         },
         "consumer_products_coffee_maker_option_hot_water_temperature": {
           "name": "Hot water temperature",
@@ -557,7 +557,7 @@
         },
         "dishcare_dishwasher_option_brilliance_dry": {
           "name": "Brilliance dry",
-          "description": "Defines if the program sequence is optimized with special drying cycle ensures more shine on glasses and plastic items."
+          "description": "Defines if the program sequence is optimized with a special drying cycle to ensure more shine on glasses and plastic items."
         },
         "dishcare_dishwasher_option_vario_speed_plus": {
           "name": "Vario speed plus",
@@ -569,7 +569,7 @@
         },
         "dishcare_dishwasher_option_half_load": {
           "name": "Half load",
-          "description": "Defines if economical cleaning is enabled for smaller loads which reduces energy and water consumption and also saves time. The utensils can be placed in the upper and lower baskets."
+          "description": "Defines if economical cleaning is enabled for smaller loads. This reduces energy and water consumption and also saves time. The utensils can be placed in the upper and lower baskets."
         },
         "dishcare_dishwasher_option_extra_dry": {
           "name": "Extra dry",
@@ -577,7 +577,7 @@
         },
         "dishcare_dishwasher_option_hygiene_plus": {
           "name": "Hygiene plus",
-          "description": "Defines if the cleaning is done with increased temperatures which ensures maximum hygienic cleanliness for regular use."
+          "description": "Defines if the cleaning is done with increased temperature. This ensures maximum hygienic cleanliness for regular use."
         },
         "dishcare_dishwasher_option_eco_dry": {
           "name": "Eco dry",
@@ -605,11 +605,11 @@
         },
         "b_s_h_common_option_duration": {
           "name": "Duration",
-          "description": "Defines the run-time of the program. Afterwards the appliance is stopped."
+          "description": "Defines the run-time of the program. Afterwards, the appliance is stopped."
         },
         "cooking_oven_option_fast_pre_heat": {
           "name": "Fast pre-heat",
-          "description": "Defines if the cooking compartment is heated up quickly. Please note that the setpoint temperature has to be equal or higher than 100 °C or 212 °F otherwise the fast pre-heat option is not activated."
+          "description": "Defines if the cooking compartment is heated up quickly. Please note that the setpoint temperature has to be equal to or higher than 100 °C or 212 °F. Otherwise, the fast pre-heat option is not activated."
         },
         "cooking_oven_option_warming_level": {
           "name": "Warming level",
