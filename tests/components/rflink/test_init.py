@@ -1,8 +1,8 @@
 """Common functions for RFLink component tests and generic platform tests."""
 
+import logging
 from unittest.mock import Mock
 
-import logging
 import pytest
 from voluptuous.error import MultipleInvalid
 
