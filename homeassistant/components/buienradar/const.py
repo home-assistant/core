@@ -2,6 +2,8 @@
 
 DOMAIN = "buienradar"
 
+ONCE_A_DAY = 144
+
 DEFAULT_TIMEOUT = 60
 DEFAULT_TIMEFRAME = 60
 
