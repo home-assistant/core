@@ -11,6 +11,7 @@ from pyvesync.vesyncbasedevice import VeSyncBaseDevice
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
@@ -166,18 +167,26 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
     def set_percentage(self, percentage: int) -> None:
         """Set the speed of the device."""
         if percentage == 0:
-            self.device.turn_off()
+            success = self.device.turn_off()
+            if not success:
+                raise HomeAssistantError("An error occurred while turning off.")
         elif not self.device.is_on:
-            self.device.turn_on()
+            success = self.device.turn_on()
+            if not success:
+                raise HomeAssistantError("An error occurred while turning on.")
 
-        self.device.manual_mode()
-        self.device.change_fan_speed(
+        success = self.device.manual_mode()
+        if not success:
+            raise HomeAssistantError("An error occurred while manual mode.")
+        success = self.device.change_fan_speed(
             math.ceil(
                 percentage_to_ranged_value(
                     SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], percentage
                 )
             )
         )
+        if not success:
+            raise HomeAssistantError("An error occurred while changing fan speed.")
         self.schedule_update_ha_state()
 
     def set_preset_mode(self, preset_mode: str) -> None:
@@ -192,17 +201,19 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             self.device.turn_on()
 
         if preset_mode == VS_FAN_MODE_AUTO:
-            self.device.auto_mode()
+            success = self.device.auto_mode()
         elif preset_mode == VS_FAN_MODE_SLEEP:
-            self.device.sleep_mode()
+            success = self.device.sleep_mode()
         elif preset_mode == VS_FAN_MODE_ADVANCED_SLEEP:
-            self.device.advanced_sleep_mode()
+            success = self.device.advanced_sleep_mode()
         elif preset_mode == VS_FAN_MODE_PET:
-            self.device.pet_mode()
+            success = self.device.pet_mode()
         elif preset_mode == VS_FAN_MODE_TURBO:
-            self.device.turbo_mode()
+            success = self.device.turbo_mode()
         elif preset_mode == VS_FAN_MODE_NORMAL:
-            self.device.normal_mode()
+            success = self.device.normal_mode()
+        if not success:
+            raise HomeAssistantError("An error occurred while setting preset mode.")
 
         self.schedule_update_ha_state()
 
@@ -222,5 +233,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        self.device.turn_off()
+        success = self.device.turn_off()
+        if not success:
+            raise HomeAssistantError("An error occurred while turning off.")
         self.schedule_update_ha_state()
