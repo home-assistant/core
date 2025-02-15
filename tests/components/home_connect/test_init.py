@@ -173,7 +173,7 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
         "service_data": {
             "device_id": "DEVICE_ID",
             "affects_to": "active_program",
-            "consumer_products_coffee_maker_option_coffee_milk_ratio": 60,
+            "consumer_products_coffee_maker_option_coffee_milk_ratio": "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent",
         },
         "blocking": True,
     },
