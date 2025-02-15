@@ -6,11 +6,14 @@ import motionmount
 from motionmount import MotionMountSystemError
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import MotionMountConfigEntry
 from .entity import MotionMountEntity
+
+PARALLEL_UPDATES = 0
 
 ERROR_MESSAGES: Final = {
     MotionMountSystemError.MotorError: "motor",
@@ -45,6 +48,8 @@ class MotionMountErrorStatusSensor(MotionMountEntity, SensorEntity):
         "internal",
     ]
     _attr_translation_key = "motionmount_error_status"
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    _attr_entity_registry_enabled_default = False
 
     def __init__(
         self, mm: motionmount.MotionMount, config_entry: MotionMountConfigEntry
