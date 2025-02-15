@@ -727,11 +727,10 @@ async def _async_resolve_domains_and_preload(
     platform_integrations = conf_util.extract_platform_integrations(
         config, BASE_PLATFORMS
     )
-    # Ensure base platforms that have platform integrations are added to
-    # to `domains_to_setup` so they can be setup first instead of
-    # discovering them later when a config entry setup task
-    # notices it's needed and there is already a long line to use
-    # the import executor.
+    # Ensure base platforms that have platform integrations are added to `domains`,
+    # so they can be setup first instead of discovering them later when a config
+    # entry setup task notices that it's needed and there is already a long line
+    # to use the import executor.
     #
     # For example if we have
     # sensor:
