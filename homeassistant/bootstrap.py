@@ -722,7 +722,7 @@ def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
 async def _async_resolve_domains_and_preload(
     hass: core.HomeAssistant, config: dict[str, Any]
 ) -> tuple[dict[str, Integration], dict[str, Integration]]:
-    """Resolve all dependencies and return list of domains to set up."""
+    """Resolve all dependencies and return list of integrations to set up."""
     domains = _get_domains(hass, config)
     platform_integrations = conf_util.extract_platform_integrations(
         config, BASE_PLATFORMS

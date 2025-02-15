@@ -989,22 +989,29 @@ class Integration:
         """Resolve all dependencies, including after_dependencies, for integrations.
 
         Detects circular dependencies and missing integrations.
-        Should preferably only be used on already loaded integrations.
         """
         resolved: dict[str, set[str] | Exception] = {}
-        result: dict[str, set[str]] = {}
 
-        # All integrations are already loaded, so we can do it synchronously
-        for itg in integrations:
-            deps = await itg._do_resolve_dependencies(  # noqa: SLF001
-                cache=resolved,
-                possible_after_dependencies=possible_after_dependencies,
-                ignore_exceptions=ignore_exceptions,
+        resolve_dependencies_tasks = {
+            itg.domain: create_eager_task(
+                itg._do_resolve_dependencies(  # noqa: SLF001
+                    cache=resolved,
+                    possible_after_dependencies=possible_after_dependencies,
+                    ignore_exceptions=ignore_exceptions,
+                ),
+                name=f"resolve after dependencies {itg.domain}",
+                loop=hass.loop,
             )
-            if deps is not None:
-                result[itg.domain] = deps
+            for itg in integrations
+        }
 
-        return result
+        result = await asyncio.gather(*resolve_dependencies_tasks.values())
+
+        return {
+            domain: deps
+            for domain, deps in zip(resolve_dependencies_tasks, result, strict=True)
+            if deps is not None
+        }
 
     async def _do_resolve_dependencies(
         self,
@@ -1016,7 +1023,15 @@ class Integration:
     ) -> set[str] | None:
         """Recursively resolve all dependencies.
 
-        Also considers after dependencies, if `include_after_dependencies` is not None.
+        Uses `cache` or `cache_key` to cache the results.
+
+        If `include_after_dependencies` is not UNDEFINED, listed after dependencies are also considered.
+        If it is None, all the possible after dependencies are considered.
+
+        If `ignore_exceptions` is True, exceptions are caught and ignored and the normal resolution
+        algorithm continues. Otherwise, if `ignore_exceptions` is False, they are raised. If it is None,
+        the normal resolution algorithm is interrupted, but exceptions are not raised, and instead
+        None is returned as a result.
         """
         resolved = cache if cache is not None else {}
         resolving: set[str] = set()
