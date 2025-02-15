@@ -107,9 +107,9 @@
   "options": {
     "step": {
       "init": {
-        "title": "LMS Configuration.",
+        "title": "LMS Configuration",
         "data": {
-          "browse_limit": "Number of items to return from media browser.",
+          "browse_limit": "Maximum number of items to include when browsing media and generating a playlist.",
           "volume_step": "Step when increasing or decreasing volume."
         }
       }

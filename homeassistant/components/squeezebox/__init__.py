@@ -28,11 +28,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
-    CONF_BROWSE_LIMIT,
     CONF_HTTPS,
-    CONF_VOLUME_STEP,
-    DEFAULT_BROWSE_LIMIT,
-    DEFAULT_VOLUME_STEP,
     DISCOVERY_INTERVAL,
     DISCOVERY_TASK,
     DOMAIN,
@@ -63,20 +59,11 @@ PLATFORMS = [
 
 
 @dataclass
-class SqueezeboxOptions:
-    """Squeezebox Options data class."""
-
-    browse_limit: int
-    volume_step: int
-
-
-@dataclass
 class SqueezeboxData:
     """SqueezeboxData data class."""
 
     coordinator: LMSStatusDataUpdateCoordinator
     server: Server
-    options: SqueezeboxOptions
 
 
 type SqueezeboxConfigEntry = ConfigEntry[SqueezeboxData]
@@ -142,16 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
 
     server_coordinator = LMSStatusDataUpdateCoordinator(hass, entry, lms)
 
-    entry.async_on_unload(entry.add_update_listener(options_update_listener))
-
-    entry.runtime_data = SqueezeboxData(
-        coordinator=server_coordinator,
-        server=lms,
-        options=SqueezeboxOptions(
-            browse_limit=entry.options.get(CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT),
-            volume_step=entry.options.get(CONF_VOLUME_STEP, DEFAULT_VOLUME_STEP),
-        ),
-    )
+    entry.runtime_data = SqueezeboxData(coordinator=server_coordinator, server=lms)
 
     # set up player discovery
     known_servers = hass.data.setdefault(DOMAIN, {}).setdefault(KNOWN_SERVERS, {})
@@ -196,14 +174,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     )
 
     return True
-
-
-async def options_update_listener(
-    hass: HomeAssistant, entry: SqueezeboxConfigEntry
-) -> None:
-    """Handle options update."""
-
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -> bool:

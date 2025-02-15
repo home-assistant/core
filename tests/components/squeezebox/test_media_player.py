@@ -55,10 +55,8 @@ from homeassistant.const import (
     SERVICE_SHUFFLE_SET,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    SERVICE_VOLUME_DOWN,
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
-    SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -177,32 +175,6 @@ async def test_squeezebox_state(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == MediaPlayerState.OFF
-
-
-async def test_squeezebox_volume_up(
-    hass: HomeAssistant, configured_player: MagicMock
-) -> None:
-    """Test volume up service call."""
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_UP,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
-        blocking=True,
-    )
-    configured_player.async_set_volume.assert_called_once_with("+5")
-
-
-async def test_squeezebox_volume_down(
-    hass: HomeAssistant, configured_player: MagicMock
-) -> None:
-    """Test volume down service call."""
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_VOLUME_DOWN,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
-        blocking=True,
-    )
-    configured_player.async_set_volume.assert_called_once_with("-5")
 
 
 async def test_squeezebox_volume_set(
