@@ -1,7 +1,9 @@
 """Tests for the Lutron Caseta integration."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from homeassistant.components.light import ColorMode
 from homeassistant.components.lutron_caseta import DOMAIN
 from homeassistant.components.lutron_caseta.const import (
     CONF_CA_CERTS,
@@ -139,6 +141,15 @@ class MockBridge:
             "1205": {"id": "1205", "name": "Hallway", "parent_id": "3"},
         }
 
+    async def set_value(
+        self,
+        device_id: str,
+        value: int | None = None,
+        fade_time: timedelta | None = None,
+        color_value: ColorMode | None = None,
+    ):
+        """Mock changing device state."""
+
     def load_devices(self):
         """Load mock devices into self.devices."""
         return {
@@ -211,6 +222,19 @@ class MockBridge:
                 "type": "WallDimmer",
                 "model": None,
                 "serial": 5442321,
+                "tilt": None,
+                "area": "1025",
+            },
+            "902": {
+                "device_id": "902",
+                "current_state": 000,
+                "fan_speed": None,
+                "zone": "901",
+                "name": "Kitchen_Other Lights",
+                "button_groups": None,
+                "type": "WallDimmer",
+                "model": None,
+                "serial": 5442322,
                 "tilt": None,
                 "area": "1025",
             },
