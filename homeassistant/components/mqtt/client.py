@@ -298,12 +298,15 @@ class MqttClientSetup:
         from .async_client import AsyncMQTTClient
 
         config = self._config
+        clean_session: bool | None = None
         if (protocol := config.get(CONF_PROTOCOL, DEFAULT_PROTOCOL)) == PROTOCOL_31:
             proto = mqtt.MQTTv31
+            clean_session = True
         elif protocol == PROTOCOL_5:
             proto = mqtt.MQTTv5
         else:
             proto = mqtt.MQTTv311
+            clean_session = True
 
         if (client_id := config.get(CONF_CLIENT_ID)) is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
@@ -313,6 +316,19 @@ class MqttClientSetup:
         self._client = AsyncMQTTClient(
             callback_api_version=mqtt.CallbackAPIVersion.VERSION2,
             client_id=client_id,
+            # See: https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
+            # clean_session (bool defaults to None)
+            # a boolean that determines the client type.
+            # If True, the broker will remove all information about this client when it
+            # disconnects. If False, the client is a persistent client and subscription
+            # information and queued messages will be retained when the client
+            # disconnects. Note that a client will never discard its own outgoing
+            # messages on disconnect. Calling connect() or reconnect() will cause the
+            # messages to be resent. Use reinitialise() to reset a client to its
+            # original state. The clean_session argument only applies to MQTT versions
+            # v3.1.1 and v3.1. It is not accepted if the MQTT version is v5.0 - use the
+            # clean_start argument on connect() instead.
+            clean_session=clean_session,
             protocol=proto,
             transport=transport,  # type: ignore[arg-type]
             reconnect_on_failure=False,
@@ -659,9 +675,20 @@ class MQTT:
                     self.conf[CONF_BROKER],
                     self.conf.get(CONF_PORT, DEFAULT_PORT),
                     self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
-                    "", # bind_address default
-                    0, # bind_port default
-                    True, # clean_start
+                    "",  # bind_address default
+                    0,  # bind_port default
+                    # See:
+                    # https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
+                    # `clean_start` (bool) – (MQTT v5.0 only) `True`, `False` or
+                    # `MQTT_CLEAN_START_FIRST_ONLY`. Sets the MQTT v5.0 clean_start flag
+                    #  always, never or on the first successful connect only,
+                    # respectively. MQTT session data (such as outstanding messages and
+                    # subscriptions) is cleared on successful connect when the
+                    # clean_start flag is set. For MQTT v3.1.1, the clean_session
+                    # argument of Client should be used for similar result.
+                    True
+                    if self._mqttc.protocol == mqtt.MQTTv5
+                    else mqtt.MQTT_CLEAN_START_FIRST_ONLY,  # clean_start
                 )
         except (OSError, mqtt.WebsocketConnectionError) as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
