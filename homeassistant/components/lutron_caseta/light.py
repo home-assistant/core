@@ -85,6 +85,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
     """Representation of a Lutron Light, including dimmable, white tune, and spectrum tune."""
 
     _attr_supported_features = LightEntityFeature.TRANSITION
+    _prev_brightness: int | None = None
 
     def __init__(self, light: dict[str, Any], data: LutronCasetaData) -> None:
         """Initialize the light and set the supported color modes.
@@ -148,8 +149,10 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
         if ATTR_TRANSITION in kwargs:
             args["fade_time"] = timedelta(seconds=kwargs[ATTR_TRANSITION])
 
+        self._prev_brightness = brightness
         if brightness is not None:
             brightness = to_lutron_level(brightness)
+
         await self._smartbridge.set_value(
             self.device_id, value=brightness, color_value=color_value, **args
         )
@@ -162,6 +165,7 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
                 seconds=kwargs[ATTR_TRANSITION]
             )
 
+        self._prev_brightness = brightness
         if brightness is not None:
             brightness = to_lutron_level(brightness)
 
@@ -176,7 +180,14 @@ class LutronCasetaLight(LutronCasetaUpdatableEntity, LightEntity):
             await self._async_set_warm_dim(white_color)
             return
 
-        brightness = kwargs.pop(ATTR_BRIGHTNESS, None)
+        if ATTR_BRIGHTNESS in kwargs:
+            brightness = kwargs.pop(ATTR_BRIGHTNESS, None)
+        elif self._prev_brightness == 0:
+            brightness = 255 / 2
+        else:
+            brightness = self._prev_brightness
+        self._prev_brightness = brightness
+
         color: LutronColorMode | None = None
         hs_color: tuple[float, float] | None = kwargs.pop(ATTR_HS_COLOR, None)
         kelvin_color: int | None = kwargs.pop(ATTR_COLOR_TEMP_KELVIN, None)
