@@ -739,39 +739,66 @@ class SqueezeBoxMediaPlayerEntity(
         self, command: str, search_type: str, search_string: str, playlist_action: str
     ) -> None:
         """Call Squeezebox JSON/RPC method to search media library."""
+        _id = ""
         if search_type == "text":
-            match command:
-                case "favorite":
-                    _param = [
-                        "favorites",
-                        "items",
-                        "0",
-                        "1",
-                        "search:" + search_string if search_string is not None else "",
-                    ]
-                    result_loop = "loop_loop"
-                    _type = "Favorites"
-                case _:
-                    _param = [
-                        command + "s",
-                        "0",
-                        "1",
-                        "search:" + search_string if search_string is not None else "",
-                    ]
-                    result_loop = command + "s_loop"
-                    _type = command
+            if command == "favorite":
+                _param = [
+                    "favorites",
+                    "items",
+                    "0",
+                    "1",
+                    "search:" + search_string if search_string is not None else "",
+                ]
+                result_loop = "loop_loop"
+                _type = "Favorites"
 
-            query_result = await self._player.async_query(*_param)
+                query_result = await self._player.async_query(*_param)
 
-            if int(query_result["count"]) == 0:
-                raise ServiceValidationError("Search returned zero results")
+                if int(query_result["count"]) == 0:
+                    raise ServiceValidationError("Search returned zero results")
 
-            if int(query_result["count"]) > 1:
-                raise ServiceValidationError(
-                    f"Search returned {query_result['count']} results.  Each search must return only one result"
-                )
+                if int(query_result["count"]) > 1:
+                    raise ServiceValidationError(
+                        f"Search returned {query_result['count']} results.  Each search must return only one result"
+                    )
 
-            _id = str(query_result[result_loop][0]["id"])
+                _name = str(query_result[result_loop][0]["name"])
+
+                _param = [
+                    "favorites",
+                    "items",
+                    "0",
+                    "1000",
+                ]
+
+                query_result = await self._player.async_query(*_param)
+
+                for _favorite in query_result[result_loop]:
+                    if _favorite["name"] == _name:
+                        # This is the fav that matches the search
+                        _id = _favorite["id"]
+                        break
+            else:
+                _param = [
+                    command + "s",
+                    "0",
+                    "1",
+                    "search:" + search_string if search_string is not None else "",
+                ]
+                result_loop = command + "s_loop"
+                _type = command
+
+                query_result = await self._player.async_query(*_param)
+
+                if int(query_result["count"]) == 0:
+                    raise ServiceValidationError("Search returned zero results")
+
+                if int(query_result["count"]) > 1:
+                    raise ServiceValidationError(
+                        f"Search returned {query_result['count']} results.  Each search must return only one result"
+                    )
+
+                _id = str(query_result[result_loop][0]["id"])
 
         else:
             _id = search_string
