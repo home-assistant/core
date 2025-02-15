@@ -328,14 +328,28 @@ set_program_and_options:
           selector:
             boolean:
         consumer_products_coffee_maker_option_coffee_milk_ratio:
-          example: 50
+          example: consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent
           required: false
           selector:
-            number:
-              unit_of_measurement: "%"
-              step: 1
-              min: 10
-              max: 90
+            select:
+              mode: dropdown
+              translation_key: coffee_milk_ratio
+              options:
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_10_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_20_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_25_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_30_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_40_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_55_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_60_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_65_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_67_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_70_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_75_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_80_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_85_percent
+                - consumer_products_coffee_maker_enum_type_coffee_milk_ratio_90_percent
         consumer_products_coffee_maker_option_hot_water_temperature:
           example: consumer_products_coffee_maker_enum_type_hot_water_temperature_50_c
           required: false

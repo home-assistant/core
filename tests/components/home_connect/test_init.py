@@ -173,17 +173,7 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
         "service_data": {
             "device_id": "DEVICE_ID",
             "affects_to": "active_program",
-            "consumer_products_coffee_maker_option_coffee_milk_ratio": 60,
-        },
-        "blocking": True,
-    },
-    {
-        "domain": DOMAIN,
-        "service": "set_program_and_options",
-        "service_data": {
-            "device_id": "DEVICE_ID",
-            "affects_to": "active_program",
-            "consumer_products_coffee_maker_option_coffee_milk_ratio": 68,
+            "consumer_products_coffee_maker_option_coffee_milk_ratio": "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent",
         },
         "blocking": True,
     },
@@ -416,7 +406,6 @@ async def test_programs_and_options_actions_deprecation(
             "set_selected_program",
             "start_program",
             "set_active_program_options",
-            "set_active_program_options",
             "set_selected_program_options",
         ],
         strict=True,
@@ -459,7 +448,6 @@ async def test_set_program_and_options(
         [
             r"Error.*selecting.*program.*",
             r"Error.*starting.*program.*",
-            r"Error.*setting.*options.*active.*program.*",
             r"Error.*setting.*options.*active.*program.*",
             r"Error.*setting.*options.*selected.*program.*",
         ],

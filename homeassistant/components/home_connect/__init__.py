@@ -76,7 +76,6 @@ PROGRAM_OPTIONS = {
     for key, value in {
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: int,
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES: bool,
-        OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_COFFEE_MILK_RATIO: int,
         OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE: bool,
         OptionKey.DISHCARE_DISHWASHER_BRILLIANCE_DRY: bool,
         OptionKey.DISHCARE_DISHWASHER_VARIO_SPEED_PLUS: bool,
@@ -486,15 +485,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 )
             elif option in PROGRAM_OPTIONS:
                 option_key = PROGRAM_OPTIONS[option][0]
-                if (
-                    option_key
-                    is OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_COFFEE_MILK_RATIO
-                ):
-                    if value in (67, 68):
-                        value = 67
-                    else:
-                        value = round(value / 5) * 5
-                    value = f"ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.{int(value)}Percent"
                 options.append(Option(option_key, value))
             elif option in TIME_PROGRAM_OPTIONS:
                 options.append(
