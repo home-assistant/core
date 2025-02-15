@@ -426,6 +426,7 @@ SLEEP_SENSORS = [
         value_fn=lambda sleep_summary: sleep_summary.snoring,
         translation_key="snoring",
         native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,

@@ -3198,6 +3198,9 @@
     }),
     'name': None,
     'options': dict({
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
@@ -3207,7 +3210,7 @@
     'supported_features': 0,
     'translation_key': 'snoring',
     'unique_id': 'withings_12345_sleep_snoring',
-    'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
   })
 # ---
 # name: test_all_entities[sensor.henk_snoring-state]
@@ -3216,14 +3219,14 @@
       'device_class': 'duration',
       'friendly_name': 'henk Snoring',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.henk_snoring',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '1080',
+    'state': '18.0',
   })
 # ---
 # name: test_all_entities[sensor.henk_snoring_episode_count-entry]
