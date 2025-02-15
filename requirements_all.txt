@@ -1993,7 +1993,7 @@ pyhaversion==22.8.0
 pyheos==1.0.2
 
 # homeassistant.components.hive
-pyhive-integration==1.0.1
+pyhive-integration==1.0.2
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -3131,7 +3131,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.144.1
+zeroconf==0.144.3
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
