@@ -90,7 +90,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update vehicle data using TeslaFleet API."""
 
         try:
-            # Check if the vehicle is awake using a non-rate limited API call
+            # Check if the vehicle is awake using a free API call
             response = await self.api.vehicle()
             self.data["state"] = response["response"]["state"]
 
