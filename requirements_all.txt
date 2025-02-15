@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.0.0
+aioesphomeapi==29.0.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -3131,7 +3131,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.144.1
+zeroconf==0.144.3
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2
