@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from collections.abc import Callable
 
 from aiohttp import ClientError
@@ -43,12 +44,14 @@ class EheimDigitalUpdateCoordinator(
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
+        self.main_device_added_event = asyncio.Event()
         self.hub = EheimDigitalHub(
             host=self.config_entry.data[CONF_HOST],
             session=async_get_clientsession(hass),
             loop=hass.loop,
             receive_callback=self._async_receive_callback,
             device_found_callback=self._async_device_found,
+            main_device_added_event=self.main_device_added_event,
         )
         self.known_devices: set[str] = set()
         self.platform_callbacks: set[AsyncSetupDeviceEntitiesCallback] = set()
@@ -77,6 +80,12 @@ class EheimDigitalUpdateCoordinator(
 
     async def _async_setup(self) -> None:
         await self.hub.connect()
+        async with asyncio.timeout(2):
+            # This event gets triggered when the first message is received from
+            # the device, it contains the data necessary to create the main device.
+            # This removes the race condition where the main device is accessed
+            # before the response from the device is parsed.
+            await self.main_device_added_event.wait()
         await self.hub.update()
 
     async def _async_update_data(self) -> dict[str, EheimDigitalDevice]:
