@@ -387,10 +387,14 @@ set_program_and_options:
       collapsed: true
       fields:
         b_s_h_common_option_start_in_relative:
-          example: "30:00"
+          example: 3600
           required: false
           selector:
-            time:
+            number:
+              min: 0
+              step: 1
+              mode: box
+              unit_of_measurement: s
         dishcare_dishwasher_option_intensiv_zone:
           example: false
           required: false
@@ -493,10 +497,14 @@ set_program_and_options:
               mode: box
               unit_of_measurement: °C/°F
         b_s_h_common_option_duration:
-          example: "30:00"
+          example: 900
           required: false
           selector:
-            time:
+            number:
+              min: 0
+              step: 1
+              mode: box
+              unit_of_measurement: s
         cooking_oven_option_fast_pre_heat:
           example: false
           required: false
@@ -561,10 +569,14 @@ set_program_and_options:
                 - laundry_care_washer_enum_type_spin_speed_ul_medium
                 - laundry_care_washer_enum_type_spin_speed_ul_high
         b_s_h_common_option_finish_in_relative:
-          example: "30:00"
+          example: 3600
           required: false
           selector:
-            time:
+            number:
+              min: 0
+              step: 1
+              mode: box
+              unit_of_measurement: s
         laundry_care_washer_option_i_dos1_active:
           example: false
           required: false
