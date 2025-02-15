@@ -4946,7 +4946,17 @@ async def test_hard_reset_controller(
         identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
     )
 
-    client.async_send_command.return_value = {}
+    async def mock_send_command(
+        command: str, require_schema: int | None = None, **kwargs: Any
+    ) -> dict:
+        # Guard against future changes where the command might change, or
+        # there might be additional commands sent
+        assert command == {"command": "driver.hard_reset"}
+        listen_block.set()
+        listen_block.clear()
+        return {}
+
+    client.async_send_command.side_effect = mock_send_command
     await ws_client.send_json(
         {
             ID: 1,
@@ -4954,10 +4964,6 @@ async def test_hard_reset_controller(
             ENTRY_ID: entry.entry_id,
         }
     )
-
-    listen_block.set()
-    listen_block.clear()
-    await hass.async_block_till_done()
 
     msg = await ws_client.receive_json()
     assert msg["result"] == device.id
