@@ -259,7 +259,12 @@ async def mock_async_query(*parameters: str) -> dict[str, str | int] | None:
                 else:
                     _loop = _cmd + "s_loop"
                 break
-    return {_loop: [{"id": FAKE_VALID_ITEM_ID, "title": "Fake Item 1"}], "count": 1}
+    return {
+        _loop: [
+            {"id": FAKE_VALID_ITEM_ID, "title": "Fake Item 1", "name": "Fake Item Name"}
+        ],
+        "count": 1,
+    }
 
 
 @pytest.fixture
