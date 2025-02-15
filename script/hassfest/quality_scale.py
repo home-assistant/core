@@ -1535,7 +1535,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "gstreamer",
     "gtfs",
     "guardian",
-    "habitica",
     "harman_kardon_avr",
     "harmony",
     "hassio",
