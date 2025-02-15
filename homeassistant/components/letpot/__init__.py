@@ -9,10 +9,9 @@ from letpot.converters import CONVERTERS
 from letpot.exceptions import LetPotAuthenticationException, LetPotException
 from letpot.models import AuthenticationInfo
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_EMAIL, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -21,11 +20,14 @@ from .const import (
     CONF_REFRESH_TOKEN_EXPIRES,
     CONF_USER_ID,
 )
-from .coordinator import LetPotDeviceCoordinator
+from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
 
-PLATFORMS: list[Platform] = [Platform.TIME]
-
-type LetPotConfigEntry = ConfigEntry[list[LetPotDeviceCoordinator]]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bool:
@@ -57,17 +59,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: LetPotConfigEntry) -> bo
                 },
             )
         except LetPotAuthenticationException as exc:
-            raise ConfigEntryError from exc
+            raise ConfigEntryAuthFailed from exc
 
     try:
         devices = await client.get_devices()
     except LetPotAuthenticationException as exc:
-        raise ConfigEntryError from exc
+        raise ConfigEntryAuthFailed from exc
     except LetPotException as exc:
         raise ConfigEntryNotReady from exc
 
     coordinators: list[LetPotDeviceCoordinator] = [
-        LetPotDeviceCoordinator(hass, auth, device)
+        LetPotDeviceCoordinator(hass, entry, auth, device)
         for device in devices
         if any(converter.supports_type(device.device_type) for converter in CONVERTERS)
     ]

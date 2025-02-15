@@ -8,9 +8,9 @@ import velbusaio.controller
 from velbusaio.exceptions import VelbusConnectionFailed
 import voluptuous as vol
 
-from homeassistant.components import usb
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_PORT
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.util import slugify
 
 from .const import DOMAIN
@@ -69,9 +69,7 @@ class VelbusConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=self._errors,
         )
 
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         await self.async_set_unique_id(
             f"{discovery_info.vid}:{discovery_info.pid}_{discovery_info.serial_number}_{discovery_info.manufacturer}_{discovery_info.description}"

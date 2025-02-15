@@ -28,12 +28,12 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 __all__ = [
-    "CONF_URL",
-    "CONF_PROMPT",
-    "CONF_MODEL",
-    "CONF_MAX_HISTORY",
-    "CONF_NUM_CTX",
     "CONF_KEEP_ALIVE",
+    "CONF_MAX_HISTORY",
+    "CONF_MODEL",
+    "CONF_NUM_CTX",
+    "CONF_PROMPT",
+    "CONF_URL",
     "DOMAIN",
 ]
 

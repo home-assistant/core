@@ -1,5 +1,7 @@
 """SmartApp functionality to receive cloud-push notifications."""
 
+from __future__ import annotations
+
 import asyncio
 import functools
 import logging
@@ -27,6 +29,7 @@ from pysmartthings import (
 )
 
 from homeassistant.components import cloud, webhook
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -400,7 +403,7 @@ async def smartapp_sync_subscriptions(
         _LOGGER.debug("Subscriptions for app '%s' are up-to-date", installed_app_id)
 
 
-async def _continue_flow(
+async def _find_and_continue_flow(
     hass: HomeAssistant,
     app_id: str,
     location_id: str,
@@ -418,24 +421,34 @@ async def _continue_flow(
         None,
     )
     if flow is not None:
-        await hass.config_entries.flow.async_configure(
-            flow["flow_id"],
-            {
-                CONF_INSTALLED_APP_ID: installed_app_id,
-                CONF_REFRESH_TOKEN: refresh_token,
-            },
-        )
-        _LOGGER.debug(
-            "Continued config flow '%s' for SmartApp '%s' under parent app '%s'",
-            flow["flow_id"],
-            installed_app_id,
-            app_id,
-        )
+        await _continue_flow(hass, app_id, installed_app_id, refresh_token, flow)
+
+
+async def _continue_flow(
+    hass: HomeAssistant,
+    app_id: str,
+    installed_app_id: str,
+    refresh_token: str,
+    flow: ConfigFlowResult,
+) -> None:
+    await hass.config_entries.flow.async_configure(
+        flow["flow_id"],
+        {
+            CONF_INSTALLED_APP_ID: installed_app_id,
+            CONF_REFRESH_TOKEN: refresh_token,
+        },
+    )
+    _LOGGER.debug(
+        "Continued config flow '%s' for SmartApp '%s' under parent app '%s'",
+        flow["flow_id"],
+        installed_app_id,
+        app_id,
+    )
 
 
 async def smartapp_install(hass: HomeAssistant, req, resp, app):
     """Handle a SmartApp installation and continue the config flow."""
-    await _continue_flow(
+    await _find_and_continue_flow(
         hass, app.app_id, req.location_id, req.installed_app_id, req.refresh_token
     )
     _LOGGER.debug(
@@ -447,6 +460,27 @@ async def smartapp_install(hass: HomeAssistant, req, resp, app):
 
 async def smartapp_update(hass: HomeAssistant, req, resp, app):
     """Handle a SmartApp update and either update the entry or continue the flow."""
+    unique_id = format_unique_id(app.app_id, req.location_id)
+    flow = next(
+        (
+            flow
+            for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+            if flow["context"].get("unique_id") == unique_id
+            and flow["step_id"] == "authorize"
+        ),
+        None,
+    )
+    if flow is not None:
+        await _continue_flow(
+            hass, app.app_id, req.installed_app_id, req.refresh_token, flow
+        )
+        _LOGGER.debug(
+            "Continued reauth flow '%s' for SmartApp '%s' under parent app '%s'",
+            flow["flow_id"],
+            req.installed_app_id,
+            app.app_id,
+        )
+        return
     entry = next(
         (
             entry
@@ -466,7 +500,7 @@ async def smartapp_update(hass: HomeAssistant, req, resp, app):
             app.app_id,
         )
 
-    await _continue_flow(
+    await _find_and_continue_flow(
         hass, app.app_id, req.location_id, req.installed_app_id, req.refresh_token
     )
     _LOGGER.debug(

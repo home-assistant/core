@@ -2,19 +2,19 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from enum import StrEnum
 
-from habiticalib import UserStyles
+from habiticalib import Avatar, extract_avatar
 
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import HabiticaConfigEntry
-from .coordinator import HabiticaDataUpdateCoordinator
+from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
+
+PARALLEL_UPDATES = 1
 
 
 class HabiticaImageEntity(StrEnum):
@@ -26,7 +26,7 @@ class HabiticaImageEntity(StrEnum):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HabiticaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the habitica image platform."""
 
@@ -43,7 +43,7 @@ class HabiticaImage(HabiticaBase, ImageEntity):
         translation_key=HabiticaImageEntity.AVATAR,
     )
     _attr_content_type = "image/png"
-    _current_appearance: UserStyles | None = None
+    _avatar: Avatar | None = None
     _cache: bytes | None = None
 
     def __init__(
@@ -55,13 +55,13 @@ class HabiticaImage(HabiticaBase, ImageEntity):
         super().__init__(coordinator, self.entity_description)
         ImageEntity.__init__(self, hass)
         self._attr_image_last_updated = dt_util.utcnow()
+        self._avatar = extract_avatar(self.coordinator.data.user)
 
     def _handle_coordinator_update(self) -> None:
         """Check if equipped gear and other things have changed since last avatar image generation."""
-        new_appearance = UserStyles.from_dict(asdict(self.coordinator.data.user))
 
-        if self._current_appearance != new_appearance:
-            self._current_appearance = new_appearance
+        if self._avatar != self.coordinator.data.user:
+            self._avatar = extract_avatar(self.coordinator.data.user)
             self._attr_image_last_updated = dt_util.utcnow()
             self._cache = None
 
@@ -69,8 +69,6 @@ class HabiticaImage(HabiticaBase, ImageEntity):
 
     async def async_image(self) -> bytes | None:
         """Return cached bytes, otherwise generate new avatar."""
-        if not self._cache and self._current_appearance:
-            self._cache = await self.coordinator.generate_avatar(
-                self._current_appearance
-            )
+        if not self._cache and self._avatar:
+            self._cache = await self.coordinator.generate_avatar(self._avatar)
         return self._cache

@@ -6,15 +6,15 @@ from aioemonitor.monitor import EmonitorNetwork, EmonitorStatus
 import aiohttp
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.emonitor.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
-DHCP_SERVICE_INFO = dhcp.DhcpServiceInfo(
+DHCP_SERVICE_INFO = DhcpServiceInfo(
     hostname="emonitor",
     ip="1.2.3.4",
     macaddress="aabbccddeeff",
