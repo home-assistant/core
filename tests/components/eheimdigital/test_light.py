@@ -26,8 +26,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.color import value_to_brightness
 
+from .conftest import init_integration
+
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.components.eheimdigital.conftest import init_integration
 
 
 @pytest.mark.parametrize(
