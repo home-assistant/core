@@ -65,7 +65,7 @@ async def test_send_notification_exception(
     mock_bring_client.notify.side_effect = BringRequestException
     with pytest.raises(
         HomeAssistantError,
-        match="Failed to send push notification for bring due to a connection error, try again later",
+        match="Failed to send push notification for Bring! due to a connection error, try again later",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -94,7 +94,7 @@ async def test_send_notification_service_validation_error(
     with pytest.raises(
         HomeAssistantError,
         match=re.escape(
-            "Failed to perform action bring.send_message. 'URGENT_MESSAGE' requires a value @ data['item']. Got None"
+            "This action requires field item, please enter a valid value for item"
         ),
     ):
         await hass.services.async_call(

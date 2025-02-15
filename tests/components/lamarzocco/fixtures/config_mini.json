@@ -1,0 +1,116 @@
+{
+  "version": "v1",
+  "preinfusionModesAvailable": ["ByDoseType"],
+  "machineCapabilities": [
+    {
+      "family": "LINEA",
+      "groupsNumber": 1,
+      "coffeeBoilersNumber": 1,
+      "hasCupWarmer": false,
+      "steamBoilersNumber": 1,
+      "teaDosesNumber": 1,
+      "machineModes": ["BrewingMode", "StandBy"],
+      "schedulingType": "smartWakeUpSleep"
+    }
+  ],
+  "machine_sn": "Sn01239157",
+  "machine_hw": "0",
+  "isPlumbedIn": false,
+  "isBackFlushEnabled": false,
+  "standByTime": 0,
+  "tankStatus": true,
+  "settings": [],
+  "recipes": [
+    {
+      "id": "Recipe1",
+      "dose_mode": "Mass",
+      "recipe_doses": [
+        { "id": "A", "target": 32 },
+        { "id": "B", "target": 45 }
+      ]
+    }
+  ],
+  "recipeAssignment": [
+    {
+      "dose_index": "DoseA",
+      "recipe_id": "Recipe1",
+      "recipe_dose": "A",
+      "group": "Group1"
+    }
+  ],
+  "groupCapabilities": [
+    {
+      "capabilities": {
+        "groupType": "AV_Group",
+        "groupNumber": "Group1",
+        "boilerId": "CoffeeBoiler1",
+        "hasScale": false,
+        "hasFlowmeter": false,
+        "numberOfDoses": 1
+      },
+      "doses": [
+        {
+          "groupNumber": "Group1",
+          "doseIndex": "DoseA",
+          "doseType": "MassType",
+          "stopTarget": 32
+        }
+      ],
+      "doseMode": { "groupNumber": "Group1", "brewingType": "ManualType" }
+    }
+  ],
+  "machineMode": "StandBy",
+  "teaDoses": { "DoseA": { "doseIndex": "DoseA", "stopTarget": 0 } },
+  "scale": {
+    "connected": true,
+    "address": "44:b7:d0:74:5f:90",
+    "name": "LMZ-123A45",
+    "battery": 64
+  },
+  "boilers": [
+    { "id": "SteamBoiler", "isEnabled": false, "target": 0, "current": 0 },
+    { "id": "CoffeeBoiler1", "isEnabled": true, "target": 89, "current": 42 }
+  ],
+  "boilerTargetTemperature": { "SteamBoiler": 0, "CoffeeBoiler1": 89 },
+  "preinfusionMode": {
+    "Group1": {
+      "groupNumber": "Group1",
+      "preinfusionStyle": "PreinfusionByDoseType"
+    }
+  },
+  "preinfusionSettings": {
+    "mode": "TypeB",
+    "Group1": [
+      {
+        "groupNumber": "Group1",
+        "doseType": "DoseA",
+        "preWetTime": 2,
+        "preWetHoldTime": 3
+      }
+    ]
+  },
+  "wakeUpSleepEntries": [
+    {
+      "id": "T6aLl42",
+      "days": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday",
+        "saturday",
+        "sunday"
+      ],
+      "steam": false,
+      "enabled": false,
+      "timeOn": "24:0",
+      "timeOff": "24:0"
+    }
+  ],
+  "smartStandBy": { "mode": "LastBrewing", "minutes": 10, "enabled": true },
+  "clock": "2024-08-31T14:47:45",
+  "firmwareVersions": [
+    { "name": "machine_firmware", "fw_version": "2.12" },
+    { "name": "gateway_firmware", "fw_version": "v3.6-rc4" }
+  ]
+}

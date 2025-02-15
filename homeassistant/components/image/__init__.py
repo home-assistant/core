@@ -14,7 +14,7 @@ from typing import Final, final
 
 from aiohttp import hdrs, web
 import httpx
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
@@ -28,7 +28,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import (
@@ -348,7 +348,7 @@ async def async_get_still_stream(
         # While this results in additional bandwidth usage,
         # given the low frequency of image updates, it is acceptable.
         frame.extend(frame)
-        await response.write(frame)  # type: ignore[arg-type]
+        await response.write(frame)
         return True
 
     event = asyncio.Event()

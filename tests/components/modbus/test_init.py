@@ -25,7 +25,6 @@ import voluptuous as vol
 
 from homeassistant import config as hass_config
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.modbus import async_reset_platform
 from homeassistant.components.modbus.const import (
     ATTR_ADDRESS,
     ATTR_HUB,
@@ -108,7 +107,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     TEST_ENTITY_NAME,
@@ -847,6 +846,13 @@ async def test_pb_service_write(
         CALL_TYPE_WRITE_REGISTERS: mock_modbus_with_pymodbus.write_registers,
     }
 
+    value_arg_name = {
+        CALL_TYPE_WRITE_COIL: "value",
+        CALL_TYPE_WRITE_COILS: "values",
+        CALL_TYPE_WRITE_REGISTER: "value",
+        CALL_TYPE_WRITE_REGISTERS: "values",
+    }
+
     data = {
         ATTR_HUB: TEST_MODBUS_NAME,
         do_slave: 17,
@@ -859,10 +865,12 @@ async def test_pb_service_write(
     func_name[do_write[FUNC]].return_value = do_return[VALUE]
     await hass.services.async_call(DOMAIN, do_write[SERVICE], data, blocking=True)
     assert func_name[do_write[FUNC]].called
-    assert func_name[do_write[FUNC]].call_args[0] == (
-        data[ATTR_ADDRESS],
-        data[do_write[DATA]],
-    )
+    assert func_name[do_write[FUNC]].call_args.args == (data[ATTR_ADDRESS],)
+    assert func_name[do_write[FUNC]].call_args.kwargs == {
+        "slave": 17,
+        value_arg_name[do_write[FUNC]]: data[do_write[DATA]],
+    }
+
     if do_return[DATA]:
         assert any(message.startswith("Pymodbus:") for message in caplog.messages)
 
@@ -1159,22 +1167,61 @@ async def test_integration_reload(
     hass: HomeAssistant,
     caplog: pytest.LogCaptureFixture,
     mock_modbus,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Run test for integration reload."""
 
     caplog.set_level(logging.DEBUG)
     caplog.clear()
 
-    yaml_path = get_fixture_path("configuration.yaml", "modbus")
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(minutes=10))
+    await hass.async_block_till_done()
+
+    yaml_path = get_fixture_path("configuration.yaml", DOMAIN)
     with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
-        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
         await hass.async_block_till_done()
-        for _ in range(4):
-            freezer.tick(timedelta(seconds=1))
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done()
     assert "Modbus reloading" in caplog.text
+    state_sensor_1 = hass.states.get("sensor.dummy")
+    state_sensor_2 = hass.states.get("sensor.dummy_2")
+    assert state_sensor_1
+    assert not state_sensor_2
+
+    caplog.clear()
+    yaml_path = get_fixture_path("configuration_2.yaml", DOMAIN)
+    with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    assert "Modbus reloading" in caplog.text
+    state_sensor_1 = hass.states.get("sensor.dummy")
+    state_sensor_2 = hass.states.get("sensor.dummy_2")
+    assert state_sensor_1
+    assert state_sensor_2
+
+    caplog.clear()
+    yaml_path = get_fixture_path("configuration_empty.yaml", DOMAIN)
+    with mock.patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_RELOAD,
+            {},
+            blocking=True,
+        )
+        await hass.async_block_till_done()
+    assert "Modbus not present anymore" in caplog.text
+    state_sensor_1 = hass.states.get("sensor.dummy")
+    state_sensor_2 = hass.states.get("sensor.dummy_2")
+    assert not state_sensor_1
+    assert not state_sensor_2
 
 
 @pytest.mark.parametrize("do_config", [{}])
@@ -1229,7 +1276,54 @@ async def test_no_entities(hass: HomeAssistant) -> None:
     assert await async_setup_component(hass, DOMAIN, config) is False
 
 
-async def test_reset_platform(hass: HomeAssistant) -> None:
-    """Run test for async_reset_platform."""
-    await async_reset_platform(hass, "modbus")
-    assert DOMAIN not in hass.data
+@pytest.mark.parametrize(
+    ("do_config", "expected_slave_value"),
+    [
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 1234,
+                    },
+                ],
+            },
+            1,
+        ),
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 1234,
+                        CONF_SLAVE: 0,
+                    },
+                ],
+            },
+            0,
+        ),
+        (
+            {
+                CONF_SENSORS: [
+                    {
+                        CONF_NAME: "dummy",
+                        CONF_ADDRESS: 1234,
+                        CONF_DEVICE_ADDRESS: 6,
+                    },
+                ],
+            },
+            6,
+        ),
+    ],
+)
+async def test_check_default_slave(
+    hass: HomeAssistant,
+    mock_modbus,
+    do_config,
+    mock_do_cycle,
+    expected_slave_value: int,
+) -> None:
+    """Test default slave."""
+    assert mock_modbus.read_holding_registers.mock_calls
+    first_call = mock_modbus.read_holding_registers.mock_calls[0]
+    assert first_call.kwargs["slave"] == expected_slave_value

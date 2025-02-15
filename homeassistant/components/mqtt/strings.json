@@ -1,24 +1,8 @@
 {
   "issues": {
-    "deprecated_color_handling": {
-      "title": "Deprecated color handling used for MQTT light",
-      "description": "An MQTT light config (with `json` schema) found in `configuration.yaml` uses deprecated color handling flags.\n\nConfiguration found:\n```yaml\n{config}\n```\nDeprecated flags: **{deprecated_flags}**.\n\nUse the `supported_color_modes` option instead and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
-    },
-    "deprecated_color_mode_flag": {
-      "title": "Deprecated color_mode option flag used for MQTT light",
-      "description": "An MQTT light config (with `json` schema) found in `configuration.yaml` uses a deprecated `color_mode` flag.\n\nConfiguration found:\n```yaml\n{config}\n```\n\nRemove the option from your config and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
-    },
     "invalid_platform_config": {
       "title": "Invalid config found for mqtt {domain} item",
       "description": "Home Assistant detected an invalid config for a manually configured item.\n\nPlatform domain: **{domain}**\nConfiguration file: **{config_file}**\nNear line: **{line}**\nConfiguration found:\n```yaml\n{config}\n```\nError: **{error}**.\n\nMake sure the configuration is valid and [reload](/developer-tools/yaml) the manually configured MQTT items or restart Home Assistant to fix this issue."
-    },
-    "payload_template_deprecation": {
-      "title": "Deprecated option used in mqtt publish action call",
-      "description": "Deprecated `payload_template` option used in MQTT publish action call to topic `{topic}` from payload template `{payload_template}`. Use the `payload` option instead. In automations templates are supported natively. Update the automation or script to use the `payload` option instead and restart Home Assistant to fix this issue."
-    },
-    "topic_template_deprecation": {
-      "title": "Deprecated option used in mqtt publish action call",
-      "description": "Deprecated `topic_template` option used in MQTT publish action call to topic `{topic}` from topic template `{topic_template}`. Use the `topic` option instead. In automations templates are supported natively. Update the automation or script to use the `topic` option instead and restart Home Assistant to fix this issue."
     }
   },
   "config": {
@@ -209,7 +193,7 @@
           "birth_payload": "The `birth` message that is published when MQTT is ready and connected.",
           "birth_qos": "The quality of service of the `birth` message that is published when MQTT is ready and connected",
           "birth_retain": "When set, Home Assistant will retain the `birth` message published to your MQTT broker.",
-          "will_enable": "When set, Home Assistant will ask your broker to publish a `will` message when MQTT is stopped or when it looses the connection to your broker.",
+          "will_enable": "When set, Home Assistant will ask your broker to publish a `will` message when MQTT is stopped or when it loses the connection to your broker.",
           "will_topic": "The MQTT topic your MQTT broker will publish a `will` message to.",
           "will_payload": "The message your MQTT broker `will` publish when the MQTT integration is stopped or when the connection is lost.",
           "will_qos": "The quality of service of the `will` message that is published by your MQTT broker.",
@@ -254,11 +238,7 @@
         },
         "payload": {
           "name": "Payload",
-          "description": "The payload to publish."
-        },
-        "payload_template": {
-          "name": "Payload template",
-          "description": "Template to render as a payload value. If a payload is provided, the template is ignored."
+          "description": "The payload to publish. Publishes an empty message if not provided."
         },
         "qos": {
           "name": "QoS",

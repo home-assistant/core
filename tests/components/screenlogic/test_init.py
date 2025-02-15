@@ -4,12 +4,14 @@ from dataclasses import dataclass
 from unittest.mock import DEFAULT, patch
 
 import pytest
-from screenlogicpy import ScreenLogicGateway
+from screenlogicpy import ScreenLogicError, ScreenLogicGateway
+from screenlogicpy.const.common import ScreenLogicConnectionError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN
 from homeassistant.components.screenlogic import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import slugify
@@ -41,7 +43,7 @@ TEST_MIGRATING_ENTITIES = [
     EntityMigrationData(
         "Chemistry Alarm",
         "chem_alarm",
-        "Active Alert",
+        "Active alert",
         "active_alert",
         BINARY_SENSOR_DOMAIN,
     ),
@@ -284,3 +286,35 @@ async def test_platform_setup(
 
         for entity_id in tested_entity_ids:
             assert hass.states.get(entity_id) is not None
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [ScreenLogicConnectionError, ScreenLogicError],
+)
+async def test_retry_on_connect_exception(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, exception: Exception
+) -> None:
+    """Test setup retries on expected exceptions."""
+
+    def stub_connect(*args, **kwargs):
+        raise exception
+
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            GATEWAY_DISCOVERY_IMPORT_PATH,
+            return_value={},
+        ),
+        patch.multiple(
+            ScreenLogicGateway,
+            async_connect=stub_connect,
+            is_connected=False,
+            _async_connected_request=DEFAULT,
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

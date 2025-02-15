@@ -14,7 +14,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entityfilter import (
     INCLUDE_EXCLUDE_BASE_FILTER_SCHEMA,
     INCLUDE_EXCLUDE_FILTER_SCHEMA_INNER,
@@ -28,7 +28,14 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 from homeassistant.util.event_type import EventType
 
-from . import entity_registry, websocket_api
+# Pre-import backup to avoid it being imported
+# later when the import executor is busy and delaying
+# startup
+from . import (
+    backup,  # noqa: F401
+    entity_registry,
+    websocket_api,
+)
 from .const import (  # noqa: F401
     CONF_DB_INTEGRITY_CHECK,
     DOMAIN,

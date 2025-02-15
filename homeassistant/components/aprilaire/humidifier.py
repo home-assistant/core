@@ -15,7 +15,7 @@ from homeassistant.components.humidifier import (
     HumidifierEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .coordinator import AprilaireConfigEntry, AprilaireCoordinator
@@ -40,7 +40,7 @@ DEHUMIDIFIER_ACTION_MAP: dict[StateType, HumidifierAction] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AprilaireConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Aprilaire humidifier devices."""
 
@@ -50,7 +50,7 @@ async def async_setup_entry(
 
     descriptions: list[AprilaireHumidifierDescription] = []
 
-    if coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) in (0, 1, 2):
+    if coordinator.data.get(Attribute.HUMIDIFICATION_AVAILABLE) in (1, 2):
         descriptions.append(
             AprilaireHumidifierDescription(
                 key="humidifier",
@@ -67,7 +67,7 @@ async def async_setup_entry(
             )
         )
 
-    if coordinator.data.get(Attribute.DEHUMIDIFICATION_AVAILABLE) in (0, 1):
+    if coordinator.data.get(Attribute.DEHUMIDIFICATION_AVAILABLE) == 1:
         descriptions.append(
             AprilaireHumidifierDescription(
                 key="dehumidifier",

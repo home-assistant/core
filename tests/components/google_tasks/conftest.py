@@ -34,6 +34,18 @@ LIST_TASK_LIST_RESPONSE = {
     "items": [TASK_LIST],
 }
 
+LIST_TASKS_RESPONSE_WATER = {
+    "items": [
+        {
+            "id": "some-task-id",
+            "title": "Water",
+            "status": "needsAction",
+            "description": "Any size is ok",
+            "position": "00000000000000000001",
+        },
+    ],
+}
+
 
 @pytest.fixture
 def platforms() -> list[Platform]:
@@ -44,7 +56,7 @@ def platforms() -> list[Platform]:
 @pytest.fixture(name="expires_at")
 def mock_expires_at() -> int:
     """Fixture to set the oauth token expiration time."""
-    return time.time() + 3600
+    return time.time() + 86400
 
 
 @pytest.fixture(name="token_entry")

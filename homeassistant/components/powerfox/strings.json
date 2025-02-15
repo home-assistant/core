@@ -64,6 +64,18 @@
       },
       "warm_water": {
         "name": "Warm water"
+      },
+      "heat_total_energy": {
+        "name": "Total energy"
+      },
+      "heat_delta_energy": {
+        "name": "Delta energy"
+      },
+      "heat_total_volume": {
+        "name": "Total volume"
+      },
+      "heat_delta_volume": {
+        "name": "Delta volume"
       }
     }
   }

@@ -306,6 +306,7 @@ class CloudClient(Interface):
             },
             "version": HA_VERSION,
             "instance_id": self.prefs.instance_id,
+            "name": self._hass.config.location_name,
         }
 
     async def async_alexa_message(self, payload: dict[Any, Any]) -> dict[Any, Any]:

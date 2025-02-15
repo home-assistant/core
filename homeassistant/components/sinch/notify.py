@@ -23,7 +23,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_SENDER
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 DOMAIN = "sinch"

@@ -1,0 +1,89 @@
+# serializer version: 1
+# name: test_states[camera.my_camera_live_view-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'camera',
+    'entity_category': None,
+    'entity_id': 'camera.my_camera_live_view',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Live view',
+    'platform': 'tplink',
+    'previous_unique_id': None,
+    'supported_features': <CameraEntityFeature: 3>,
+    'translation_key': 'live_view',
+    'unique_id': '123456789ABCDEFGH-live_view',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_states[camera.my_camera_live_view-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1caab5c3b3',
+      'entity_picture': '/api/camera_proxy/camera.my_camera_live_view?token=1caab5c3b3',
+      'friendly_name': 'my_camera Live view',
+      'frontend_stream_type': <StreamType.HLS: 'hls'>,
+      'supported_features': <CameraEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'camera.my_camera_live_view',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'idle',
+  })
+# ---
+# name: test_states[my_camera-entry]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '66:55:44:33:22:11',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '1.0.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'tplink',
+        '123456789ABCDEFGH',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'TP-Link',
+    'model': 'HS100',
+    'model_id': None,
+    'name': 'my_camera',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '1.0.0',
+    'via_device_id': None,
+  })
+# ---
