@@ -152,7 +152,7 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
             "device_id": "DEVICE_ID",
             "affects_to": "selected_program",
             "program": "dishcare_dishwasher_program_eco_50",
-            "b_s_h_common_option_start_in_relative": "00:30:00",
+            "b_s_h_common_option_start_in_relative": 1800,
         },
         "blocking": True,
     },
