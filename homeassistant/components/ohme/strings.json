@@ -73,7 +73,8 @@
           "plugged_in": "Plugged in",
           "charging": "Charging",
           "paused": "[%key:common::state::paused%]",
-          "pending_approval": "Pending approval"
+          "pending_approval": "Pending approval",
+          "finished": "Finished charging"
         }
       },
       "ct_current": {
