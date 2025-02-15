@@ -94,6 +94,9 @@ async def test_nonexistent_component_dependencies(hass: HomeAssistant) -> None:
     with pytest.raises(loader.IntegrationNotFound):
         mod_1.all_dependencies  # noqa: B018
 
+    result = await Integration.resolve_multiple_dependencies(hass, (mod_2, mod_1))
+    assert result == {}
+
     mod_1 = mock_integration(
         hass,
         MockModule("mod1", partial_manifest={"after_dependencies": ["nonexistent"]}),
