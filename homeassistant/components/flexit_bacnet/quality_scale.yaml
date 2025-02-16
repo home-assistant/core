@@ -68,7 +68,7 @@ rules:
   dynamic-devices:
     status: exempt
     comment: |
-      This is not applicable for this integration.
+      Device type integration.
   discovery-update-info: todo
   repair-issues:
     status: exempt
