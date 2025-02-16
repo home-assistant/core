@@ -4,10 +4,10 @@
     "step": {
       "choose_serial_port": {
         "title": "Select a serial port",
+        "description": "Select the serial port for your Zigbee radio",
         "data": {
           "path": "Serial device path"
         },
-        "description": "Select the serial port for your Zigbee radio"
       },
       "confirm": {
         "description": "Do you want to set up {name}?"
@@ -16,11 +16,11 @@
         "description": "Do you want to set up {name}?"
       },
       "manual_pick_radio_type": {
+        "title": "Select a radio type",
+        "description": "Pick your Zigbee radio type",
         "data": {
           "radio_type": "Radio type"
         },
-        "title": "[%key:component::zha::config::step::manual_pick_radio_type::data::radio_type%]",
-        "description": "Pick your Zigbee radio type"
       },
       "manual_port_config": {
         "title": "Serial port settings",
