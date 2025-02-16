@@ -1968,7 +1968,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "season",
     "sendgrid",
     "sense",
-    "sensibo",
     "sensirion_ble",
     "sensorpro",
     "sensorpush",
