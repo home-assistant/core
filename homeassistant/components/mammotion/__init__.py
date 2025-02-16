@@ -61,7 +61,7 @@ PLATFORMS: list[Platform] = [
     Platform.SELECT,
 ]
 
-type MammotionConfigEntry = ConfigEntry[MammotionDevices]
+type MammotionConfigEntry = ConfigEntry[list[MammotionMowerData]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) -> bool:
@@ -129,17 +129,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                 await version_coordinator.async_config_entry_first_refresh()
                 await report_coordinator.async_config_entry_first_refresh()
 
-                # maintenance_coordinator.
-                device_info = DeviceInfo(
-                    identifiers={(DOMAIN, device.deviceName)},
-                    manufacturer="Mammotion",
-                    serial_number=device.deviceName.split("-", 1)[-1],
-                    model_id=device.productModel,
-                    name=device.nickName,
-                    model=device.productName,
-                    suggested_area="Garden",
-                )
-
                 device_config = DeviceConfig()
                 if (
                     device_limits := device_config.get_working_parameters(
@@ -147,14 +136,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                     )
                     is None
                 ):
-                    device_limits = device_config.get_working_parameters(
-                        version_coordinator.data.main_product_type
-                    )
+                    if version_coordinator.data.model_id == "":
+                        device_limits = device_config.get_best_default(
+                            device.productKey
+                        )
+                    else:
+                        device_limits = device_config.get_working_parameters(
+                            version_coordinator.data.model_id
+                        )
 
                 mammotion_devices.append(
                     MammotionMowerData(
                         name=device.deviceName,
-                        device=device_info,
+                        device=device,
                         device_limits=device_limits,
                         api=mammotion,
                         maintenance_coordinator=maintenance_coordinator,
