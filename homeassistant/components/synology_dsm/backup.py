@@ -14,6 +14,7 @@ from homeassistant.components.backup import (
     AgentBackup,
     BackupAgent,
     BackupAgentError,
+    BackupNotFound,
     suggested_filename,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -120,7 +121,7 @@ class SynologyDSMBackupAgent(BackupAgent):
         :return: A tuple of tar_filename and meta_filename
         """
         if await self.async_get_backup(backup_id) is None:
-            raise BackupAgentError("Backup not found")
+            raise BackupNotFound
         base_name = self.backup_base_names[backup_id]
         return (f"{base_name}.tar", f"{base_name}_meta.json")
 
