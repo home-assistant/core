@@ -1,10 +1,7 @@
 from datetime import datetime, timedelta
-
 import voluptuous as vol
-
 from homeassistant import config_entries
 from homeassistant.core import callback
-
 from .api import authenticate, signup
 
 
@@ -18,14 +15,14 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         username = config_data.get("user", {}).get("name", "Unknown User")
         token_expiry = config_data.get("token_expiry", 0)
 
-        # ✅ Step 1: Check if token is expired
+        # Check if token is expired
         current_time = datetime.now().timestamp()
         if is_logged_in and current_time > token_expiry:
-            # ❌ Token has expired, log out user and return to main menu
+            # Token has expired, log out user and return to main menu
             return await self.async_step_force_logout()
 
         if is_logged_in:
-            # ✅ User is logged in, show logout option
+            # User is logged in, show logout option
             return self.async_show_menu(
                 step_id="init",
                 menu_options={
@@ -33,20 +30,20 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                 },
             )
 
-        # ❌ User is NOT logged in, show login and configure options (main menu)
+        # User is NOT logged in, show login and configure options (main menu)
         return self.async_show_menu(
             step_id="init",
             menu_options={
                 "configure": "⚙️ Configure Port Settings",
                 "login": "🔑 Login to Ezlo Cloud",
-                "signup": "📝 Sign Up for Ezlo Cloud",  # ✅ NEW SIGNUP OPTION
+                "signup": "📝 Sign Up for Ezlo Cloud",
             },
         )
 
     async def async_step_configure(self, user_input=None):
         """Show configuration settings form properly."""
         if user_input is not None:
-            # ✅ Save new configuration settings
+            # Save new configuration settings
             new_data = self.config_entry.data.copy()
             new_data.update(user_input)
 
@@ -85,11 +82,11 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         new_data["is_logged_in"] = False
         new_data["auth_token"] = None
         new_data["user"] = {}
-        new_data["token_expiry"] = 0  # ✅ Clear expiry time
+        new_data["token_expiry"] = 0  # Clear expiry time
 
         self.hass.config_entries.async_update_entry(self.config_entry, data=new_data)
 
-        # ✅ Instead of showing logout message, return to the main options screen
+        # Instead of showing logout message, return to the main options screen
         return await self.async_step_init()
 
     async def async_step_login(self, user_input=None):
@@ -119,7 +116,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
                     self.config_entry, data=new_data
                 )
 
-                # ✅ Force refresh options menu after login
+                # Force refresh options menu after login
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self.config_entry.entry_id)
                 )
@@ -145,15 +142,15 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         new_data["is_logged_in"] = False
         new_data["auth_token"] = None
         new_data["user"] = {}
-        new_data["token_expiry"] = 0  # ✅ Clear expiry time
+        new_data["token_expiry"] = 0  # Clear expiry time
 
         self.hass.config_entries.async_update_entry(self.config_entry, data=new_data)
 
-        # ✅ Show logout success message only for manual logout
+        # Show logout success message only for manual logout
         return self.async_abort(reason="logged_out")
 
     async def async_step_signup(self, user_input=None):
-        """Handles user sign-up form."""
+        """Handles signup form."""
         errors = {}
 
         if user_input is not None:
@@ -161,7 +158,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             email = user_input["email"]
             password = user_input["password"]
 
-            # Call signup API (to be implemented in api.py)
+            # Call signup API
             signup_response = await self.hass.async_add_executor_job(
                 signup, username, email, password
             )
