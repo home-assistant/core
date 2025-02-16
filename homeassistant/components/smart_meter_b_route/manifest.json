@@ -12,6 +12,7 @@
     "momonga.momonga_session_manager",
     "momonga.sk_wrapper_logger"
   ],
+  "quality_scale": "bronze",
   "requirements": ["pyserial==3.5", "momonga==0.1.4"],
   "usb": [
     {
