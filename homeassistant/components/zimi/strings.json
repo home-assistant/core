@@ -3,16 +3,20 @@
     "step": {
       "user": {
         "title": "Zimi",
-        "description": "Specify details of your Zimi Cloud Connect device.",
+        "description": "Discover details of your Zimi Cloud Connect device."
+      },
+      "finish": {
+        "title": "Zimi",
+        "description": "Finalise details of your Zimi Cloud Connect device.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
           "mac": "MAC address"
         },
         "data_description": {
-          "host": "Optional - If not entered HA will attempt to discover on LAN.",
-          "port": "Optional - If not entered HA will attempt to use the default value.",
-          "mac": "Mandatory - You can find the MAC on the back of your Zimi Cloud Connect."
+          "host": "Mandatory - ZCC IP address (auto-discovered or manually overriden).",
+          "port": "Mandatory - ZCC port number (auto-discovered or manually overriden).",
+          "mac": "Mandatory - ZCC BLE MAC address (auto-discovered or manually overriden)."
         }
       }
     },
@@ -20,13 +24,13 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "timeout": "Connection timed out]",
+      "timeout": "Connection timed out",
       "duplicate_entry": "Duplicate configuration entry: {error_detail}",
       "invalid_host": "Invalid hostname",
       "invalid_mac": "Invalid MAC address",
       "mismatched_mac": "Configured MAC mismatch: {error_detail}",
       "connection_refused": "Connection refused",
-      "discovery_failure": "ZCC discovery on LAN failed - specify host and try again."
+      "discovery_failure": "ZCC discovery on LAN failed - manually define host, port and mac."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
