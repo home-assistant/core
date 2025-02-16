@@ -3,9 +3,9 @@
     "flow_title": "{name}",
     "step": {
       "choose_serial_port": {
-        "title": "Select a Serial Port",
+        "title": "Select a serial port",
         "data": {
-          "path": "Serial Device Path"
+          "path": "Serial device path"
         },
         "description": "Select the serial port for your Zigbee radio"
       },
@@ -17,13 +17,13 @@
       },
       "manual_pick_radio_type": {
         "data": {
-          "radio_type": "Radio Type"
+          "radio_type": "Radio type"
         },
         "title": "[%key:component::zha::config::step::manual_pick_radio_type::data::radio_type%]",
         "description": "Pick your Zigbee radio type"
       },
       "manual_port_config": {
-        "title": "Serial Port Settings",
+        "title": "Serial port settings",
         "description": "Enter the serial port settings",
         "data": {
           "path": "Serial device path",
@@ -36,7 +36,7 @@
         "description": "The radio you are using ({name}) is not recommended and support for it may be removed in the future. Please see the Zigbee Home Automation integration's documentation for [a list of recommended adapters]({docs_recommended_adapters_url})."
       },
       "choose_formation_strategy": {
-        "title": "Network Formation",
+        "title": "Network formation",
         "description": "Choose the network settings for your radio.",
         "menu_options": {
           "form_new_network": "Erase network settings and create a new network",
@@ -47,21 +47,21 @@
         }
       },
       "choose_automatic_backup": {
-        "title": "Restore Automatic Backup",
+        "title": "Restore automatic backup",
         "description": "Restore your network settings from an automatic backup",
         "data": {
           "choose_automatic_backup": "Choose an automatic backup"
         }
       },
       "upload_manual_backup": {
-        "title": "Upload a Manual Backup",
+        "title": "Upload a manual backup",
         "description": "Restore your network settings from an uploaded backup JSON file. You can download one from a different ZHA installation from **Network Settings**, or use a Zigbee2MQTT `coordinator_backup.json` file.",
         "data": {
           "uploaded_backup_file": "Upload a file"
         }
       },
       "maybe_confirm_ezsp_restore": {
-        "title": "Overwrite Radio IEEE Address",
+        "title": "Overwrite radio IEEE address",
         "description": "Your backup has a different IEEE address than your radio. For your network to function properly, the IEEE address of your radio should also be changed.\n\nThis is a permanent operation.",
         "data": {
           "overwrite_coordinator_ieee": "Permanently replace the radio IEEE address"
@@ -74,10 +74,10 @@
     },
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
-      "not_zha_device": "This device is not a zha device",
-      "usb_probe_failed": "Failed to probe the usb device",
+      "not_zha_device": "This device is not a ZHA device",
+      "usb_probe_failed": "Failed to probe the USB device",
       "wrong_firmware_installed": "Your device is running the wrong firmware and cannot be used with ZHA until the correct firmware is installed. [A repair has been created]({repair_url}) with more information and instructions for how to fix this.",
-      "invalid_zeroconf_data": "The coordinator has invalid zeroconf service info and cannot be identified by ZHA"
+      "invalid_zeroconf_data": "The coordinator has invalid Zeroconf service info and cannot be identified by ZHA"
     }
   },
   "options": {
@@ -112,7 +112,7 @@
       },
       "manual_pick_radio_type": {
         "data": {
-          "radio_type": "[%key:component::zha::config::step::manual_pick_radio_type::data::radio_type%]"
+          "radio_type": "[%key:component::::config::step::manual_pick_radio_type::data::radio_type%]"
         },
         "title": "[%key:component::zha::config::step::manual_pick_radio_type::data::radio_type%]",
         "description": "[%key:component::zha::config::step::manual_pick_radio_type::description%]"
@@ -307,7 +307,7 @@
       }
     },
     "set_zigbee_cluster_attribute": {
-      "name": "Set zigbee cluster attribute",
+      "name": "Set Zigbee cluster attribute",
       "description": "Sets an attribute value for the specified cluster on the specified entity.",
       "fields": {
         "ieee": {
@@ -323,7 +323,7 @@
           "description": "ZCL cluster to retrieve attributes for."
         },
         "cluster_type": {
-          "name": "Cluster Type",
+          "name": "Cluster type",
           "description": "Type of the cluster."
         },
         "attribute": {
@@ -341,7 +341,7 @@
       }
     },
     "issue_zigbee_cluster_command": {
-      "name": "Issue zigbee cluster command",
+      "name": "Issue Zigbee cluster command",
       "description": "Issues a command on the specified cluster on the specified entity.",
       "fields": {
         "ieee": {
@@ -383,8 +383,8 @@
       }
     },
     "issue_zigbee_group_command": {
-      "name": "Issue zigbee group command",
-      "description": "Issue command on the specified cluster on the specified group.",
+      "name": "Issue Zigbee group command",
+      "description": "Issues a command on the specified cluster on the specified group.",
       "fields": {
         "group": {
           "name": "Group",
