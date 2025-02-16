@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -33,6 +33,8 @@ from .const import (
     LOGGER,
 )
 from .coordinator import TradfriDeviceDataUpdateCoordinator
+
+# mypy: disable-error-code="union-attr"
 
 PLATFORMS = [
     Platform.COVER,
@@ -83,7 +85,7 @@ async def async_setup_entry(
         await factory.shutdown()
         raise ConfigEntryNotReady from exc
 
-    migrate_entity_unique_ids(hass, entry.entry_id)
+    migrate_config_entry_and_identifiers(hass, entry)
 
     dev_reg = dr.async_get(hass)
     dev_reg.async_get_or_create(
@@ -141,49 +143,67 @@ async def async_setup_entry(
     return True
 
 
-def migrate_entity_unique_ids(hass: HomeAssistant, ConfigEntryId: str) -> None:
+def migrate_config_entry_and_identifiers(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Migrate old non-unique identifiers to new unique identifiers."""
 
+    related_device_flag: bool
+    device_id: str
+
     device_reg = dr.async_get(hass)
-    for device in dr.async_entries_for_config_entry(device_reg, ConfigEntryId):
-        # Remove non-primary config entry ID from config_entries if present
-        config_entries = device.config_entries
-        if len(config_entries) > 1:
-            # Non-primary config entry exists, remove it
-            for config_entry in config_entries:
-                if config_entry != ConfigEntryId:
-                    device_reg.async_update_device(
-                        device.id, remove_config_entry_id=config_entry
-                    )
+    # pylint:disable=R1702
+    # Get all devices associated to contextual gateway config_entry and loop through list of devices.
+    for device in dr.async_entries_for_config_entry(device_reg, config_entry.entry_id):
+        related_device_flag = False
+        for identifier in device.identifiers:
+            if identifier[0] != DOMAIN:
+                continue
 
-    entity_reg = er.async_get(hass)
-    for entity in er.async_entries_for_config_entry(entity_reg, ConfigEntryId):
-        # 4 types of unique_id:
-        # 1) <Tradfri gateway ID>
-        # 2) light-<Tradfri gateway ID>-<Tradfri gateway's own device ID>
-        # 3) <Tradfri gateway ID>-<Tradfri gateway's own device ID>
-        # 4) <Tradfri gateway ID>-<Tradfri gateway's own device ID>-battery_level
-        # Need to extract 'Tradfri gateway's own device ID' from string and match against device.
-        # If device is found, update device's identifiers to:
-        # {DOMAIN, "<Tradfri gateway ID>-<Tradfri gateway's own device ID>"}
-        unique_id_parts = entity.unique_id.split("-")
-        if len(unique_id_parts) > 1:
-            if unique_id_parts[0].find("light") > -1:
-                tradfri_device_id = unique_id_parts[2]
-                tradfri_gateway_id = unique_id_parts[1]
-            else:
-                tradfri_device_id = unique_id_parts[1]
-                tradfri_gateway_id = unique_id_parts[0]
+            related_device_flag = True
 
-            if device := device_reg.async_get_device(  # type: ignore[assignment]
-                identifiers={(DOMAIN, int(tradfri_device_id))}  # type: ignore[arg-type]
-            ):
+            _id = identifier[1]
+
+            # Identify gateway device.
+            if _id == config_entry.data[CONF_GATEWAY_ID]:
+                related_device_flag = False  # Using this to avoid updating gateway's own device registry entry
+                break
+
+            device_id = str(_id)
+            break
+
+        # Check that device is related to tradfri domain (and is not the gateway itself)
+        if related_device_flag:
+            # Identify where a device has multiple config_entry IDs
+            config_entry_ids = device.config_entries
+            if len(config_entry_ids) > 1:
+                # Loop through list of config_entry_ids for device
+                for config_entry_id in config_entry_ids:
+                    # Check that the config entry in list is not the device's primary config entry
+                    if config_entry_id != device.primary_config_entry:
+                        # Check that the 'other' config entry is also a tradfri config entry
+                        other_entry = hass.config_entries.async_get_entry(
+                            config_entry_id
+                        )
+                        # mypy linter 'union-attr' error occurs here without exclusion -
+                        # other_entry could be None (and therefore won't have a domain), but that would
+                        # only happen if config entries were manually changed in core.config_entries.
+                        if other_entry.domain == DOMAIN:
+                            # Remove non-primary 'tradfri' config entry from device's config_entry_ids
+                            device_reg.async_update_device(
+                                device.id, remove_config_entry_id=config_entry_id
+                            )
+
+            if device_id.find(config_entry.data[CONF_GATEWAY_ID]) == -1:
                 device_reg.async_update_device(
                     device.id,
                     new_identifiers={
-                        (DOMAIN, f"{tradfri_gateway_id}-{tradfri_device_id}")
+                        (DOMAIN, f"{device_id}-{config_entry.data[CONF_GATEWAY_ID]}")
                     },
                 )
+
+
+# pylint:enable=R1702
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

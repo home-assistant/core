@@ -125,7 +125,7 @@ def bulb_w() -> str:
     ],
     indirect=["device"],
 )
-async def test_migrate_entity_unique_ids(
+async def test_migrate_config_entry_and_identifiers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -166,7 +166,7 @@ async def test_migrate_entity_unique_ids(
     # Update bulb 1 device to have both config-entry IDs
     # This is to simulate existing data scenario with older version of tradfri component
     gateway_1_bulb = device_registry.async_get_device(
-        identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID1}-65537")}
+        identifiers={(tradfri.DOMAIN, f"65537-{GATEWAY_ID1}")}
     )
     device_registry.async_update_device(
         gateway_1_bulb.id,
@@ -176,7 +176,7 @@ async def test_migrate_entity_unique_ids(
     # Remove bulb 1 from gateway 2 completely
     # This is to simulate existing data scenario with older version of tradfri component
     gateway_2_bulb = device_registry.async_get_device(
-        identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID2}-65537")}
+        identifiers={(tradfri.DOMAIN, f"65537-{GATEWAY_ID2}")}
     )
     device_registry.async_remove_device(gateway_2_bulb.id)
 
@@ -207,7 +207,7 @@ async def test_migrate_entity_unique_ids(
     )
     assert (
         device_registry.async_get_device(
-            identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID1}-65537")}
+            identifiers={(tradfri.DOMAIN, f"65537-{GATEWAY_ID1}")}
         ).id
         == gateway_1_bulb.id
     )
@@ -220,7 +220,7 @@ async def test_migrate_entity_unique_ids(
         device_registry, config_entry2.entry_id
     )
     assert len(device_entries) == 2
-    assert device_entries[1].identifiers == {(tradfri.DOMAIN, f"{GATEWAY_ID2}-65537")}
+    assert device_entries[1].identifiers == {(tradfri.DOMAIN, f"65537-{GATEWAY_ID2}")}
 
     # Validate that gateway 2 bulb 1 only has only gateway 2's config ID associated to it
     assert device_entries[1].config_entries == {config_entry2.entry_id}
