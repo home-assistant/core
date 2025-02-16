@@ -66,7 +66,12 @@ class SesameDevice(LockEntity):
     def is_locked(self) -> bool:
         """Return True if the device is currently locked, else False."""
         return self._is_locked
-
+        
+    @property
+    def unique_id(self) -> str:
+        """Return a unique ID for the device."""
+        return self._device_id
+        
     def lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         self._sesame.lock()
