@@ -28,3 +28,23 @@ def authenticate(username, password):
 
     _LOGGER.warning("⚠️ Ezlo HA Cloud: Authentication failed (Invalid credentials)")
     return {"success": False, "error": "Invalid username or password"}
+
+
+def signup(username, email, password):
+    """Simulated sign-up API."""
+    _LOGGER.info("🚀 Ezlo HA Cloud: Simulated signup request")
+
+    # Simulated delay
+    time.sleep(1)
+
+    # ✅ Mocking success response (replace this with real API later)
+    if username and email and password:
+        _LOGGER.info("✅ Ezlo HA Cloud: Signup successful")
+        return {
+            "success": True,
+            "message": "Account created successfully!",
+            "user": {"name": username, "email": email},
+        }
+
+    _LOGGER.warning("⚠️ Ezlo HA Cloud: Signup failed (Invalid data)")
+    return {"success": False, "error": "Invalid signup details"}

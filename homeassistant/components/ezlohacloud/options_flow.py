@@ -5,7 +5,7 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 
-from .api import authenticate
+from .api import authenticate, signup
 
 
 class EzloOptionsFlowHandler(config_entries.OptionsFlow):
@@ -39,6 +39,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             menu_options={
                 "configure": "⚙️ Configure Port Settings",
                 "login": "🔑 Login to Ezlo Cloud",
+                "signup": "📝 Sign Up for Ezlo Cloud",  # ✅ NEW SIGNUP OPTION
             },
         )
 
@@ -154,6 +155,37 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
 
         # ✅ Show logout success message only for manual logout
         return self.async_abort(reason="logged_out")
+
+    async def async_step_signup(self, user_input=None):
+        """Handles user sign-up form."""
+        errors = {}
+
+        if user_input is not None:
+            username = user_input["username"]
+            email = user_input["email"]
+            password = user_input["password"]
+
+            # Call signup API (to be implemented in api.py)
+            signup_response = await self.hass.async_add_executor_job(
+                signup, username, email, password
+            )
+
+            if signup_response.get("success"):
+                return self.async_abort(reason="signup_successful")
+            else:
+                errors["base"] = signup_response.get("error", "Signup failed")
+
+        return self.async_show_form(
+            step_id="signup",
+            data_schema=vol.Schema(
+                {
+                    vol.Required("username"): str,
+                    vol.Required("email"): str,
+                    vol.Required("password"): str,
+                }
+            ),
+            errors=errors,
+        )
 
     @staticmethod
     @callback
