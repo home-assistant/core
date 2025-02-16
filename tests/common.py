@@ -86,7 +86,10 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.json import JSONEncoder, _orjson_default_encoder, json_dumps
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, ulid as ulid_util
@@ -405,6 +408,25 @@ def async_mock_intent(hass: HomeAssistant, intent_typ: str) -> list[intent.Inten
     intent.async_register(hass, MockIntentHandler())
 
     return intents
+
+
+class MockMqttReasonCode:
+    """Class to fake a MQTT ReasonCode."""
+
+    value: int
+    is_failure: bool
+
+    def __init__(
+        self, value: int = 0, is_failure: bool = False, name: str = "Success"
+    ) -> None:
+        """Initialize the mock reason code."""
+        self.value = value
+        self.is_failure = is_failure
+        self._name = name
+
+    def getName(self) -> str:
+        """Return the name of the reason code."""
+        return self._name
 
 
 @callback
@@ -1813,7 +1835,7 @@ def setup_test_component_platform(
         async def _async_setup_entry(
             hass: HomeAssistant,
             entry: ConfigEntry,
-            async_add_entities: AddEntitiesCallback,
+            async_add_entities: AddConfigEntryEntitiesCallback,
         ) -> None:
             """Set up a test component platform."""
             async_add_entities(entities)
