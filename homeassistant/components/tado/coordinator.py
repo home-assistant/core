@@ -348,7 +348,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
                 enabled,
             )
         except RequestException as exc:
-            raise UpdateFailed(f"Error setting Tado child lock: {exc}") from exc
+            raise HomeAssistantError(f"Error setting Tado child lock: {exc}") from exc
 
 
 class TadoMobileDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, dict]]):
