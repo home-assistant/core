@@ -68,7 +68,7 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
-from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC
+from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC, TEST_VOLUME_STEP
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -183,26 +183,32 @@ async def test_squeezebox_volume_up(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
     """Test volume up service call."""
+    configured_player.volume = 50
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_UP,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_set_volume.assert_called_once_with("+5")
+    configured_player.async_set_volume.assert_called_once_with(
+        str(configured_player.volume + TEST_VOLUME_STEP)
+    )
 
 
 async def test_squeezebox_volume_down(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
     """Test volume down service call."""
+    configured_player.volume = 50
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_DOWN,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_set_volume.assert_called_once_with("-5")
+    configured_player.async_set_volume.assert_called_once_with(
+        str(configured_player.volume - TEST_VOLUME_STEP)
+    )
 
 
 async def test_squeezebox_volume_set(
