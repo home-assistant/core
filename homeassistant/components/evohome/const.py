@@ -20,7 +20,7 @@ DEFAULT_HIGH_PRECISION: Final = False
 USER_DATA: Final = "user_data"
 
 SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
-SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=180)  # NOTE: breaking change (was 60)
+SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
 
 ATTR_PERIOD: Final = "period"  # number of days
 ATTR_DURATION: Final = "duration"  # number of minutes, <24h
