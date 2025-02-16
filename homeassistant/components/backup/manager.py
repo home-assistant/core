@@ -114,6 +114,12 @@ class BackupManagerState(StrEnum):
     RESTORE_BACKUP = "restore_backup"
 
 
+class BackupPlatformState(StrEnum):
+    """Backup platform type."""
+
+    LOADED = "loaded"
+
+
 class CreateBackupStage(StrEnum):
     """Create backup stage enum."""
 
@@ -216,6 +222,14 @@ class RestoreBackupEvent(ManagerStateEvent):
     reason: str | None
     stage: RestoreBackupStage | None
     state: RestoreBackupState
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class BackupPlatformEvent:
+    """Backup platform class."""
+
+    domain: str
+    state: BackupPlatformState
 
 
 class BackupPlatformProtocol(Protocol):
@@ -325,6 +339,9 @@ class BackupManager:
         self.last_event: ManagerStateEvent = IdleEvent()
         self.last_non_idle_event: ManagerStateEvent | None = None
         self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
+        self._backup_platform_event_subscriptions: list[
+            Callable[[BackupPlatformEvent], None]
+        ] = []
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -418,6 +435,11 @@ class BackupManager:
         LOGGER.debug("%s platforms loaded in total", len(self.platforms))
         LOGGER.debug("%s agents loaded in total", len(self.backup_agents))
         LOGGER.debug("%s local agents loaded in total", len(self.local_backup_agents))
+        event = BackupPlatformEvent(
+            domain=integration_domain, state=BackupPlatformState.LOADED
+        )
+        for subscription in self._backup_platform_event_subscriptions:
+            subscription(event)
 
     async def async_pre_backup_actions(self) -> None:
         """Perform pre backup actions."""
@@ -1281,6 +1303,19 @@ class BackupManager:
             self._backup_event_subscriptions.remove(on_event)
 
         self._backup_event_subscriptions.append(on_event)
+        return remove_subscription
+
+    @callback
+    def async_subscribe_platform_events(
+        self,
+        on_event: Callable[[BackupPlatformEvent], None],
+    ) -> Callable[[], None]:
+        """Subscribe to platform events."""
+
+        def remove_subscription() -> None:
+            self._backup_platform_event_subscriptions.remove(on_event)
+
+        self._backup_platform_event_subscriptions.append(on_event)
         return remove_subscription
 
     def _update_issue_backup_failed(self) -> None:
