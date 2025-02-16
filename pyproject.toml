@@ -31,7 +31,7 @@ dependencies    = [
     "aiohttp==3.11.12",
     "aiohttp_cors==0.7.0",
     "aiohttp-fast-zlib==0.2.2",
-    "aiohttp-asyncmdnsresolver==0.1.0",
+    "aiohttp-asyncmdnsresolver==0.1.1",
     "aiozoneinfo==0.2.3",
     "astral==2.2",
     "async-interrupt==1.2.1",
@@ -46,7 +46,7 @@ dependencies    = [
     "fnv-hash-fast==1.2.2",
     # hass-nabucasa is imported by helpers which don't depend on the cloud
     # integration
-    "hass-nabucasa==0.90.0",
+    "hass-nabucasa==0.92.0",
     # When bumping httpx, please check the version pins of
     # httpcore, anyio, and h11 in gen_requirements_all
     "httpx==0.28.1",
@@ -82,7 +82,7 @@ dependencies    = [
     "voluptuous-openapi==0.0.6",
     "yarl==1.18.3",
     "webrtc-models==0.3.0",
-    "zeroconf==0.143.0"
+    "zeroconf==0.144.3"
 ]
 
 [project.urls]
