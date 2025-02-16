@@ -271,11 +271,6 @@ class ReolinkVODMediaSource(MediaSource):
                 ]
             )
 
-        if len(children) == 1:
-            return await self._async_generate_camera_days(
-                config_entry_id, channel, "sub"
-            )
-
         title = host.api.camera_name(channel)
         if host.api.model in DUAL_LENS_MODELS:
             title = f"{host.api.camera_name(channel)} lens {channel}"

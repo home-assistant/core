@@ -261,6 +261,18 @@ async def test_browsing_unsupported_encoding(
 
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_root_id}")
 
+    browse_resolution_id = f"RESs|{entry_id}|{TEST_CHANNEL}"
+    browse_res_sub_id = f"RES|{entry_id}|{TEST_CHANNEL}|sub"
+    browse_res_main_id = f"RES|{entry_id}|{TEST_CHANNEL}|main"
+
+    assert browse.domain == DOMAIN
+    assert browse.title == f"{TEST_NVR_NAME}"
+    assert browse.identifier == browse_resolution_id
+    assert browse.children[0].identifier == browse_res_sub_id
+    assert browse.children[1].identifier == browse_res_main_id
+
+    browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}/{browse_res_sub_id}")
+
     browse_days_id = f"DAYS|{entry_id}|{TEST_CHANNEL}|sub"
     browse_day_0_id = (
         f"DAY|{entry_id}|{TEST_CHANNEL}|sub|{TEST_YEAR}|{TEST_MONTH}|{TEST_DAY}"
