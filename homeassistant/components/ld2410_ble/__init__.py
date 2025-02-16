@@ -41,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     ld2410_ble = LD2410BLE(ble_device)
 
-    coordinator = LD2410BLECoordinator(hass, ld2410_ble)
+    coordinator = LD2410BLECoordinator(hass, entry, ld2410_ble)
 
     try:
         await ld2410_ble.initialise()

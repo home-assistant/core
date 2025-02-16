@@ -5,9 +5,9 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 import socket
-from telnetlib import Telnet  # pylint: disable=deprecated-module
 from typing import Any
 
+from telnetlib import Telnet  # pylint: disable=deprecated-module
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -23,7 +23,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
