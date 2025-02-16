@@ -55,8 +55,11 @@ class ZimiEntity(Entity):
         self._device.unsubscribe(self)
         await super().async_will_remove_from_hass()
 
-    def notify(self, _observable):
-        """Receive notification from device that state has changed."""
+    def notify(self, _observable: object):
+        """Receive notification from device that state has changed.
+
+        No data is fetched for the notification but schedule_update_ha_state is called.
+        """
 
         _LOGGER.debug(
             "Received notification() for %s in %s", self._device.name, self._device.room
