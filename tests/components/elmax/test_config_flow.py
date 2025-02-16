@@ -4,6 +4,7 @@ from ipaddress import IPv4Address, IPv6Address
 from unittest.mock import patch
 
 from elmax_api.exceptions import ElmaxBadLoginError, ElmaxBadPinError, ElmaxNetworkError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.elmax.const import (
@@ -39,6 +40,7 @@ from . import (
     MOCK_USERNAME,
     MOCK_WRONG_PANEL_PIN,
 )
+from .conftest import MOCK_DIRECT_BASE_URI_V6
 
 from tests.common import MockConfigEntry
 
@@ -258,6 +260,7 @@ async def test_zeroconf_setup(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize("base_uri", [MOCK_DIRECT_BASE_URI_V6])
 async def test_zeroconf_ipv6_setup(hass: HomeAssistant) -> None:
     """Test the successful creation of config entry via discovery flow."""
     result = await hass.config_entries.flow.async_init(
