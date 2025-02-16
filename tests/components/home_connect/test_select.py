@@ -5,14 +5,13 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
-    ArrayOfOptions,
     ArrayOfPrograms,
     Event,
     EventKey,
     EventMessage,
     EventType,
-    Option,
     OptionKey,
+    ProgramDefinition,
     ProgramKey,
 )
 from aiohomeconnect.model.error import (
@@ -24,6 +23,8 @@ from aiohomeconnect.model.program import (
     EnumerateProgram,
     EnumerateProgramConstraints,
     Execution,
+    ProgramDefinitionConstraints,
+    ProgramDefinitionOption,
 )
 import pytest
 
@@ -442,17 +443,51 @@ async def test_select_exception_handling(
     ],
 )
 @pytest.mark.parametrize(
-    ("entity_id", "option_key"),
+    ("entity_id", "option_key", "allowed_values", "expected_options"),
     [
         (
             "select.washer_temperature",
             OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
-        )
+            None,
+            {
+                "laundry_care_washer_enum_type_temperature_cold",
+                "laundry_care_washer_enum_type_temperature_g_c_20",
+                "laundry_care_washer_enum_type_temperature_g_c_30",
+                "laundry_care_washer_enum_type_temperature_g_c_40",
+                "laundry_care_washer_enum_type_temperature_g_c_50",
+                "laundry_care_washer_enum_type_temperature_g_c_60",
+                "laundry_care_washer_enum_type_temperature_g_c_70",
+                "laundry_care_washer_enum_type_temperature_g_c_80",
+                "laundry_care_washer_enum_type_temperature_g_c_90",
+                "laundry_care_washer_enum_type_temperature_ul_cold",
+                "laundry_care_washer_enum_type_temperature_ul_warm",
+                "laundry_care_washer_enum_type_temperature_ul_hot",
+                "laundry_care_washer_enum_type_temperature_ul_extra_hot",
+            },
+        ),
+        (
+            "select.washer_temperature",
+            OptionKey.LAUNDRY_CARE_WASHER_TEMPERATURE,
+            [
+                "LaundryCare.Washer.EnumType.Temperature.UlCold",
+                "LaundryCare.Washer.EnumType.Temperature.UlWarm",
+                "LaundryCare.Washer.EnumType.Temperature.UlHot",
+                "LaundryCare.Washer.EnumType.Temperature.UlExtraHot",
+            ],
+            {
+                "laundry_care_washer_enum_type_temperature_ul_cold",
+                "laundry_care_washer_enum_type_temperature_ul_warm",
+                "laundry_care_washer_enum_type_temperature_ul_hot",
+                "laundry_care_washer_enum_type_temperature_ul_extra_hot",
+            },
+        ),
     ],
 )
 async def test_options_functionality(
     entity_id: str,
     option_key: OptionKey,
+    allowed_values: list[str | None] | None,
+    expected_options: set[str],
     appliance_ha_id: str,
     set_active_program_options_side_effect: ActiveProgramNotSetError | None,
     set_selected_program_options_side_effect: SelectedProgramNotSetError | None,
@@ -474,42 +509,27 @@ async def test_options_functionality(
             set_selected_program_options_side_effect
         )
     called_mock: AsyncMock = getattr(client, called_mock_method)
-    client.get_active_program_options = AsyncMock(
-        return_value=ArrayOfOptions(
-            [Option(option_key, "LaundryCare.Washer.EnumType.Temperature.Cold")]
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    option_key,
+                    "Enumeration",
+                    constraints=ProgramDefinitionConstraints(
+                        allowed_values=allowed_values
+                    ),
+                )
+            ],
         )
     )
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
-    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
-
-    await client.add_events(
-        [
-            EventMessage(
-                appliance_ha_id,
-                EventType.NOTIFY,
-                data=ArrayOfEvents(
-                    [
-                        Event(
-                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
-                            timestamp=0,
-                            level="",
-                            handling="",
-                            value=ProgramKey.UNKNOWN,  # Not important
-                        )
-                    ]
-                ),
-            )
-        ]
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.is_state(
-        entity_id, "laundry_care_washer_enum_type_temperature_cold"
-    )
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert set(entity_state.attributes[ATTR_OPTIONS]) == expected_options
 
     await hass.services.async_call(
         SELECT_DOMAIN,

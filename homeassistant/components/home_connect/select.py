@@ -360,6 +360,21 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
     """Select option class for Home Connect."""
 
     entity_description: HomeConnectSelectOptionEntityDescription
+    _original_option_keys: set[str | None]
+
+    def __init__(
+        self,
+        coordinator: HomeConnectCoordinator,
+        appliance: HomeConnectApplianceData,
+        desc: HomeConnectSelectOptionEntityDescription,
+    ) -> None:
+        """Initialize the entity."""
+        self._original_option_keys = set(desc.values_translation_key.keys())
+        super().__init__(
+            coordinator,
+            appliance,
+            desc,
+        )
 
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
@@ -369,6 +384,23 @@ class HomeConnectSelectOptionEntity(HomeConnectOptionEntity, SelectEntity):
 
     def update_native_value(self) -> None:
         """Set the value of the entity."""
-        self._attr_current_option = self.entity_description.values_translation_key.get(
-            cast(str, self.option_value), None
+        self._attr_current_option = (
+            self.entity_description.values_translation_key.get(
+                cast(str, self.option_value), None
+            )
+            if self.option_value is not None
+            else None
         )
+        if (
+            (option_definition := self.appliance.options.get(self.bsh_key))
+            and (option_constraints := option_definition.constraints)
+            and option_constraints.allowed_values
+            and self._original_option_keys != set(option_constraints.allowed_values)
+        ):
+            self._original_option_keys = set(option_constraints.allowed_values)
+            self._attr_options = [
+                self.entity_description.values_translation_key[option]
+                for option in self._original_option_keys
+                if option is not None
+            ]
+            self.__dict__.pop("options", None)

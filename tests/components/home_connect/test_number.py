@@ -6,15 +6,14 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
-    ArrayOfOptions,
     ArrayOfSettings,
     Event,
     EventKey,
     EventMessage,
     EventType,
     GetSetting,
-    Option,
     OptionKey,
+    ProgramDefinition,
     ProgramKey,
     SettingKey,
 )
@@ -24,11 +23,18 @@ from aiohomeconnect.model.error import (
     HomeConnectError,
     SelectedProgramNotSetError,
 )
+from aiohomeconnect.model.program import (
+    ProgramDefinitionConstraints,
+    ProgramDefinitionOption,
+)
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
 
 from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.components.number import (
+    ATTR_MAX,
+    ATTR_MIN,
+    ATTR_STEP,
     ATTR_VALUE as SERVICE_ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
@@ -401,15 +407,18 @@ async def test_number_entity_error(
         ),
     ],
 )
-@pytest.mark.parametrize("unit", ["ºC", "ºF"])
 @pytest.mark.parametrize(
-    ("entity_id", "option_key", "appliance_ha_id"),
+    ("appliance_ha_id", "entity_id", "option_key", "min", "max", "step_size", "unit"),
     [
         (
+            "Oven",
             "number.oven_setpoint_temperature",
             OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
-            "Oven",
-        )
+            50,
+            260,
+            1,
+            "°C",
+        ),
     ],
     indirect=["appliance_ha_id"],
 )
@@ -417,6 +426,9 @@ async def test_options_functionality(
     entity_id: str,
     option_key: OptionKey,
     appliance_ha_id: str,
+    min: int,
+    max: int,
+    step_size: int,
     unit: str,
     set_active_program_options_side_effect: ActiveProgramNotSetError | None,
     set_selected_program_options_side_effect: SelectedProgramNotSetError | None,
@@ -464,38 +476,33 @@ async def test_options_functionality(
             set_selected_program_options_side_effect
         )
     setattr(client, called_mock_method, called_mock)
-    client.get_active_program_options = AsyncMock(
-        return_value=ArrayOfOptions([Option(option_key, 180)])
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    option_key,
+                    "Double",
+                    unit=unit,
+                    constraints=ProgramDefinitionConstraints(
+                        min=min,
+                        max=max,
+                        step_size=step_size,
+                    ),
+                )
+            ],
+        )
     )
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
-    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
-
-    await client.add_events(
-        [
-            EventMessage(
-                appliance_ha_id,
-                EventType.NOTIFY,
-                data=ArrayOfEvents(
-                    [
-                        Event(
-                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
-                            timestamp=0,
-                            level="",
-                            handling="",
-                            value=ProgramKey.UNKNOWN,  # Not important
-                        )
-                    ]
-                ),
-            )
-        ]
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.is_state(entity_id, "180")
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.attributes["unit_of_measurement"] == unit
+    assert entity_state.attributes[ATTR_MIN] == min
+    assert entity_state.attributes[ATTR_MAX] == max
+    assert entity_state.attributes[ATTR_STEP] == step_size
 
     await hass.services.async_call(
         NUMBER_DOMAIN,
@@ -510,7 +517,4 @@ async def test_options_functionality(
         "option_key": option_key,
         "value": 80,
     }
-    entity_state = hass.states.get(entity_id)
-    assert entity_state
-    assert entity_state.state == "80.0"
-    assert entity_state.attributes["unit_of_measurement"] == unit
+    assert hass.states.is_state(entity_id, "80.0")

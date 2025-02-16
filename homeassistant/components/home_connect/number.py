@@ -4,7 +4,7 @@ from dataclasses import dataclass
 import logging
 from typing import cast
 
-from aiohomeconnect.model import EventKey, GetSetting, OptionKey, SettingKey
+from aiohomeconnect.model import GetSetting, OptionKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.number import (
@@ -12,6 +12,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
+from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,6 +35,13 @@ from .entity import (
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
+
+UNIT_MAP = {
+    "seconds": UnitOfTime.SECONDS,
+    "ml": UnitOfVolume.MILLILITERS,
+    "°C": UnitOfTemperature.CELSIUS,
+    "°F": UnitOfTemperature.FAHRENHEIT,
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -242,8 +250,33 @@ class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
 
     def update_native_value(self) -> None:
         """Set the value of the entity."""
-        self._attr_native_value = cast(float, self.option_value)
-        if not hasattr(self, "_unit_of_measurement") and (
-            event := self.appliance.events.get(EventKey(self.bsh_key))
-        ):
-            self._attr_native_unit_of_measurement = event.unit
+        self._attr_native_value = cast(float | None, self.option_value)
+        option_definition = self.appliance.options.get(self.bsh_key)
+        if option_definition:
+            if option_definition.unit:
+                candidate_unit = UNIT_MAP.get(
+                    option_definition.unit, option_definition.unit
+                )
+                if (
+                    not hasattr(self, "_attr_native_unit_of_measurement")
+                    or candidate_unit != self._attr_native_unit_of_measurement
+                ):
+                    self._attr_native_unit_of_measurement = candidate_unit
+                    self.__dict__.pop("unit_of_measurement", None)
+            option_constraints = option_definition.constraints
+            if option_constraints:
+                if (
+                    not hasattr(self, "_attr_native_min_value")
+                    or self._attr_native_min_value != option_constraints.min
+                ) and option_constraints.min:
+                    self._attr_native_min_value = option_constraints.min
+                if (
+                    not hasattr(self, "_attr_native_max_value")
+                    or self._attr_native_max_value != option_constraints.max
+                ) and option_constraints.max:
+                    self._attr_native_max_value = option_constraints.max
+                if (
+                    not hasattr(self, "_attr_native_step")
+                    or self._attr_native_step != option_constraints.step_size
+                ) and option_constraints.step_size:
+                    self._attr_native_step = option_constraints.step_size

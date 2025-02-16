@@ -14,6 +14,7 @@ from aiohomeconnect.model import (
     Option,
     OptionKey,
     Program,
+    ProgramDefinition,
     ProgramKey,
 )
 from aiohomeconnect.model.error import (
@@ -21,6 +22,7 @@ from aiohomeconnect.model.error import (
     HomeConnectError,
     SelectedProgramNotSetError,
 )
+from aiohomeconnect.model.program import ProgramDefinitionOption
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -136,6 +138,22 @@ async def test_program_options_retrieval(
         retrieve_options_method,
         AsyncMock(return_value=ArrayOfOptions(options_stages[1])),
     )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    option_key,
+                    "Boolean",
+                )
+                for option_key, (_, value) in zip(
+                    option_entity_id.keys(), options_state_stage_1, strict=True
+                )
+                if value is not None
+            ],
+        )
+    )
+
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
@@ -145,6 +163,21 @@ async def test_program_options_retrieval(
     ):
         assert hass.states.is_state(entity_id, state)
 
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    option_key,
+                    "Boolean",
+                )
+                for option_key, (_, value) in zip(
+                    option_entity_id.keys(), options_state_stage_2, strict=True
+                )
+                if value is not None
+            ],
+        )
+    )
     await client.add_events(
         [
             EventMessage(
@@ -158,7 +191,7 @@ async def test_program_options_retrieval(
                             timestamp=0,
                             level="",
                             handling="",
-                            value=ProgramKey.UNKNOWN,  # Not important
+                            value=ProgramKey.DISHCARE_DISHWASHER_AUTO_1,
                         )
                     ]
                 ),
@@ -208,36 +241,21 @@ async def test_option_entity_functionality_exception(
     """Test that the option entity handles exceptions correctly."""
     entity_id = "switch.washer_i_dos_1_active"
 
-    client.get_active_program_options = AsyncMock(
-        return_value=ArrayOfOptions(
-            [Option(OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE, value=True)]
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE,
+                    "Boolean",
+                )
+            ],
         )
     )
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
-    await client.add_events(
-        [
-            EventMessage(
-                appliance_ha_id,
-                EventType.NOTIFY,
-                data=ArrayOfEvents(
-                    [
-                        Event(
-                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
-                            timestamp=0,
-                            level="",
-                            handling="",
-                            value=ProgramKey.UNKNOWN,  # Not important
-                        )
-                    ]
-                ),
-            )
-        ]
-    )
-    await hass.async_block_till_done()
 
     assert hass.states.get(entity_id)
 

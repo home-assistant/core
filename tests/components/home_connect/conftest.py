@@ -23,6 +23,8 @@ from aiohomeconnect.model import (
     HomeAppliance,
     Option,
     Program,
+    ProgramDefinition,
+    ProgramKey,
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
@@ -403,6 +405,9 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
     mock.get_status = AsyncMock(return_value=copy.deepcopy(MOCK_STATUS))
     mock.get_all_programs = AsyncMock(side_effect=_get_all_programs_side_effect)
     mock.put_command = AsyncMock()
+    mock.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(ProgramKey.UNKNOWN, options=[])
+    )
     mock.get_active_program_options = AsyncMock(return_value=ArrayOfOptions([]))
     mock.get_selected_program_options = AsyncMock(return_value=ArrayOfOptions([]))
     mock.set_active_program_option = AsyncMock(
@@ -451,6 +456,7 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
     mock.get_status = AsyncMock(side_effect=exception)
     mock.get_all_programs = AsyncMock(side_effect=exception)
     mock.put_command = AsyncMock(side_effect=exception)
+    mock.get_available_program = AsyncMock(side_effect=exception)
     mock.get_active_program_options = AsyncMock(side_effect=exception)
     mock.get_selected_program_options = AsyncMock(side_effect=exception)
     mock.set_active_program_option = AsyncMock(side_effect=exception)

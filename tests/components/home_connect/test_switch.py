@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
-    ArrayOfOptions,
     ArrayOfPrograms,
     ArrayOfSettings,
     Event,
@@ -14,8 +13,8 @@ from aiohomeconnect.model import (
     EventMessage,
     EventType,
     GetSetting,
-    Option,
     OptionKey,
+    ProgramDefinition,
     ProgramKey,
     SettingKey,
 )
@@ -25,7 +24,7 @@ from aiohomeconnect.model.error import (
     HomeConnectError,
     SelectedProgramNotSetError,
 )
-from aiohomeconnect.model.program import EnumerateProgram
+from aiohomeconnect.model.program import EnumerateProgram, ProgramDefinitionOption
 from aiohomeconnect.model.setting import SettingConstraints
 import pytest
 
@@ -906,38 +905,16 @@ async def test_options_functionality(
             set_selected_program_options_side_effect
         )
     called_mock: AsyncMock = getattr(client, called_mock_method)
-    client.get_active_program_options = AsyncMock(
-        return_value=ArrayOfOptions([Option(option_key, True)])
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN, options=[ProgramDefinitionOption(option_key, "Boolean")]
+        )
     )
 
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
-    assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
-
-    await client.add_events(
-        [
-            EventMessage(
-                appliance_ha_id,
-                EventType.NOTIFY,
-                data=ArrayOfEvents(
-                    [
-                        Event(
-                            key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                            raw_key=EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM.value,
-                            timestamp=0,
-                            level="",
-                            handling="",
-                            value=ProgramKey.UNKNOWN,  # Not important
-                        )
-                    ]
-                ),
-            )
-        ]
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.is_state(entity_id, STATE_ON)
+    assert hass.states.get(entity_id)
 
     await hass.services.async_call(
         SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}

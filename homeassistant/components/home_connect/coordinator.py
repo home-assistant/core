@@ -7,7 +7,7 @@ from collections import defaultdict
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, cast
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
@@ -18,6 +18,7 @@ from aiohomeconnect.model import (
     GetSetting,
     HomeAppliance,
     OptionKey,
+    ProgramKey,
     SettingKey,
     Status,
     StatusKey,
@@ -29,7 +30,7 @@ from aiohomeconnect.model.error import (
     HomeConnectRequestError,
     UnauthorizedError,
 )
-from aiohomeconnect.model.program import EnumerateProgram
+from aiohomeconnect.model.program import EnumerateProgram, ProgramDefinitionOption
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
@@ -54,7 +55,7 @@ class HomeConnectApplianceData:
 
     events: dict[EventKey, Event]
     info: HomeAppliance
-    options: set[OptionKey]
+    options: dict[OptionKey, ProgramDefinitionOption]
     programs: list[EnumerateProgram]
     settings: dict[SettingKey, GetSetting]
     status: dict[StatusKey, Status]
@@ -193,7 +194,9 @@ class HomeConnectCoordinator(
                                         EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
                                     ):
                                         await self.update_options(
-                                            event_message_ha_id, event_key
+                                            event_message_ha_id,
+                                            event_key,
+                                            ProgramKey(cast(str, event.value)),
                                         )
                                     events[event_key] = event
                             self._call_event_listener(event_message)
@@ -350,7 +353,7 @@ class HomeConnectCoordinator(
 
         programs = []
         events = {}
-        options: set[OptionKey] = set()
+        options = {}
         if appliance.type in APPLIANCES_WITH_PROGRAMS:
             try:
                 all_programs = await self.client.get_all_programs(appliance.ha_id)
@@ -383,9 +386,10 @@ class HomeConnectCoordinator(
                             "",
                             program.key,
                         )
-                        options.clear()
+                        options = await self.get_options_definitions(
+                            appliance.ha_id, program.key
+                        )
                         for option in program.options or []:
-                            options.add(option.key)
                             option_event_key = EventKey(option.key)
                             events[option_event_key] = Event(
                                 option_event_key,
@@ -413,19 +417,34 @@ class HomeConnectCoordinator(
 
         return appliance_data
 
-    async def update_options(self, ha_id: str, event_key: EventKey) -> None:
+    async def get_options_definitions(
+        self, ha_id: str, program_key: ProgramKey
+    ) -> dict[OptionKey, ProgramDefinitionOption]:
+        """Get options with constraints for appliance."""
+        return {
+            option.key: option
+            for option in (
+                await self.client.get_available_program(ha_id, program_key=program_key)
+            ).options
+            or []
+        }
+
+    async def update_options(
+        self, ha_id: str, event_key: EventKey, program_key: ProgramKey
+    ) -> None:
         """Update options for appliance."""
         options = self.data[ha_id].options
         events = self.data[ha_id].events
         options_to_notify = options.copy()
         options.clear()
+        if program_key is not ProgramKey.UNKNOWN:
+            options.update(await self.get_options_definitions(ha_id, program_key))
         options_getter = (
             self.client.get_active_program_options
             if event_key is EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
             else self.client.get_selected_program_options
         )
         for option in (await options_getter(ha_id)).options:
-            options.add(option.key)
             option_event_key = EventKey(option.key)
             events[option_event_key] = Event(
                 option_event_key,
