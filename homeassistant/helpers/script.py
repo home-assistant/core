@@ -16,7 +16,7 @@ from types import MappingProxyType
 from typing import Any, Literal, TypedDict, cast, overload
 
 import async_interrupt
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant import exceptions
@@ -756,10 +756,8 @@ class _ScriptRun:
                 )
 
         running_script = (
-            params[CONF_DOMAIN] == "automation"
-            and params[CONF_SERVICE] == "trigger"
-            or params[CONF_DOMAIN] in ("python_script", "script")
-        )
+            params[CONF_DOMAIN] == "automation" and params[CONF_SERVICE] == "trigger"
+        ) or params[CONF_DOMAIN] in ("python_script", "script")
         trace_set_result(params=params, running_script=running_script)
         response_data = await self._async_run_long_action(
             self._hass.async_create_task_internal(
@@ -1589,6 +1587,9 @@ class Script:
                         target, referenced, script[CONF_SEQUENCE]
                     )
 
+            elif action == cv.SCRIPT_ACTION_SEQUENCE:
+                Script._find_referenced_target(target, referenced, step[CONF_SEQUENCE])
+
     @cached_property
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
@@ -1635,6 +1636,9 @@ class Script:
             elif action == cv.SCRIPT_ACTION_PARALLEL:
                 for script in step[CONF_PARALLEL]:
                     Script._find_referenced_devices(referenced, script[CONF_SEQUENCE])
+
+            elif action == cv.SCRIPT_ACTION_SEQUENCE:
+                Script._find_referenced_devices(referenced, step[CONF_SEQUENCE])
 
     @cached_property
     def referenced_entities(self) -> set[str]:
@@ -1683,6 +1687,9 @@ class Script:
             elif action == cv.SCRIPT_ACTION_PARALLEL:
                 for script in step[CONF_PARALLEL]:
                     Script._find_referenced_entities(referenced, script[CONF_SEQUENCE])
+
+            elif action == cv.SCRIPT_ACTION_SEQUENCE:
+                Script._find_referenced_entities(referenced, step[CONF_SEQUENCE])
 
     def run(
         self, variables: _VarsType | None = None, context: Context | None = None

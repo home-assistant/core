@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 
-from . import TechnoVEConfigEntry
+from .coordinator import TechnoVEConfigEntry
 
 TO_REDACT = {"unique_id", "mac_address"}
 

@@ -43,6 +43,29 @@
         "name": "Current voltage"
       }
     },
+    "binary_sensor": {
+      "water_lacks": {
+        "name": "Low water"
+      },
+      "water_tank_lifted": {
+        "name": "Water tank lifted"
+      }
+    },
+    "number": {
+      "mist_level": {
+        "name": "Mist level"
+      }
+    },
+    "select": {
+      "night_light_level": {
+        "name": "Night light level",
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
     "fan": {
       "vesync": {
         "state_attributes": {
@@ -50,6 +73,7 @@
             "state": {
               "auto": "Auto",
               "sleep": "Sleep",
+              "advanced_sleep": "Advanced sleep",
               "pet": "Pet",
               "turbo": "Turbo"
             }

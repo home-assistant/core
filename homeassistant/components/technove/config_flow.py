@@ -5,10 +5,11 @@ from typing import Any
 from technove import Station as TechnoVEStation, TechnoVE, TechnoVEConnectionError
 import voluptuous as vol
 
-from homeassistant.components import onboarding, zeroconf
+from homeassistant.components import onboarding
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 
@@ -49,7 +50,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         # Abort quick if the device with provided mac is already configured

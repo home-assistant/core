@@ -2,15 +2,14 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
 from pyheos import CommandAuthenticationError, Heos, HeosError, HeosOptions
 import voluptuous as vol
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import (
-    ConfigEntry,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -18,8 +17,13 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import selector
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    SsdpServiceInfo,
+)
 
 from .const import DOMAIN
+from .coordinator import HeosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -102,21 +106,19 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
+    def async_get_options_flow(config_entry: HeosConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return HeosOptionsFlowHandler()
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered Heos device."""
         # Store discovered host
         if TYPE_CHECKING:
             assert discovery_info.ssdp_location
         hostname = urlparse(discovery_info.ssdp_location).hostname
-        friendly_name = (
-            f"{discovery_info.upnp[ssdp.ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
-        )
+        friendly_name = f"{discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]} ({hostname})"
         self.hass.data.setdefault(DOMAIN, {})
         self.hass.data[DOMAIN][friendly_name] = hostname
         await self.async_set_unique_id(DOMAIN)
@@ -182,10 +184,10 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Validate account credentials and update options."""
         errors: dict[str, str] = {}
-        entry = self._get_reauth_entry()
+        entry: HeosConfigEntry = self._get_reauth_entry()
         if user_input is not None:
-            heos = cast(Heos, entry.runtime_data.controller_manager.controller)
-            if await _validate_auth(user_input, heos, errors):
+            assert entry.state is ConfigEntryState.LOADED
+            if await _validate_auth(user_input, entry.runtime_data.heos, errors):
                 return self.async_update_reload_and_abort(entry, options=user_input)
 
         return self.async_show_form(
@@ -206,10 +208,8 @@ class HeosOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            heos = cast(
-                Heos, self.config_entry.runtime_data.controller_manager.controller
-            )
-            if await _validate_auth(user_input, heos, errors):
+            entry: HeosConfigEntry = self.config_entry
+            if await _validate_auth(user_input, entry.runtime_data.heos, errors):
                 return self.async_create_entry(data=user_input)
 
         return self.async_show_form(

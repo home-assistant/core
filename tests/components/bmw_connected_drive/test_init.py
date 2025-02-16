@@ -14,7 +14,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import FIXTURE_CONFIG_ENTRY
+from . import BIMMER_CONNECTED_VEHICLE_PATCH, FIXTURE_CONFIG_ENTRY
 
 from tests.common import MockConfigEntry
 
@@ -156,7 +156,7 @@ async def test_migrate_unique_ids(
     assert entity.unique_id == old_unique_id
 
     with patch(
-        "bimmer_connected.account.MyBMWAccount.get_vehicles",
+        BIMMER_CONNECTED_VEHICLE_PATCH,
         return_value=[],
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -212,7 +212,7 @@ async def test_dont_migrate_unique_ids(
     assert entity.unique_id == old_unique_id
 
     with patch(
-        "bimmer_connected.account.MyBMWAccount.get_vehicles",
+        BIMMER_CONNECTED_VEHICLE_PATCH,
         return_value=[],
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)

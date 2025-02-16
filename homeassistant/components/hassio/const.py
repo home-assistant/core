@@ -1,7 +1,16 @@
 """Hass.io const variables."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 from enum import StrEnum
+from typing import TYPE_CHECKING
+
+from homeassistant.util.hass_dict import HassKey
+
+if TYPE_CHECKING:
+    from .handler import HassIO
+
 
 DOMAIN = "hassio"
 
@@ -64,6 +73,7 @@ UPDATE_KEY_SUPERVISOR = "supervisor"
 ADDONS_COORDINATOR = "hassio_addons_coordinator"
 
 
+DATA_COMPONENT: HassKey[HassIO] = HassKey(DOMAIN)
 DATA_CORE_INFO = "hassio_core_info"
 DATA_CORE_STATS = "hassio_core_stats"
 DATA_HOST_INFO = "hassio_host_info"

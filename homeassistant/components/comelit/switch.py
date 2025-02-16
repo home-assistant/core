@@ -2,29 +2,27 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import IRRIGATION, OTHER, STATE_OFF, STATE_ON
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import ComelitSerialBridge
+from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ComelitConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Comelit switches."""
 
-    coordinator: ComelitSerialBridge = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = cast(ComelitSerialBridge, config_entry.runtime_data)
 
     entities: list[ComelitSwitchEntity] = []
     entities.extend(

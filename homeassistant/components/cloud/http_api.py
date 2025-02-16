@@ -29,6 +29,7 @@ from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
+from homeassistant.components.system_health import get_info as get_system_health_info
 from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -42,6 +43,7 @@ from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
+    DATA_CLOUD_LOG_HANDLER,
     EVENT_CLOUD_EVENT,
     LOGIN_MFA_TIMEOUT,
     PREF_ALEXA_REPORT_STATE,
@@ -107,6 +109,7 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.http.register_view(CloudRegisterView)
     hass.http.register_view(CloudResendConfirmView)
     hass.http.register_view(CloudForgotPasswordView)
+    hass.http.register_view(DownloadSupportPackageView)
 
     _CLOUD_ERRORS.update(
         {
@@ -387,6 +390,73 @@ class CloudForgotPasswordView(HomeAssistantView):
             await cloud.auth.async_forgot_password(data["email"])
 
         return self.json_message("ok")
+
+
+class DownloadSupportPackageView(HomeAssistantView):
+    """Download support package view."""
+
+    url = "/api/cloud/support_package"
+    name = "api:cloud:support_package"
+
+    async def _generate_markdown(
+        self,
+        hass: HomeAssistant,
+        hass_info: dict[str, Any],
+        domains_info: dict[str, dict[str, str]],
+    ) -> str:
+        def get_domain_table_markdown(domain_info: dict[str, Any]) -> str:
+            if len(domain_info) == 0:
+                return "No information available\n"
+
+            markdown = ""
+            first = True
+            for key, value in domain_info.items():
+                markdown += f"{key} | {value}\n"
+                if first:
+                    markdown += "--- | ---\n"
+                    first = False
+            return markdown + "\n"
+
+        markdown = "## System Information\n\n"
+        markdown += get_domain_table_markdown(hass_info)
+
+        for domain, domain_info in domains_info.items():
+            domain_info_md = get_domain_table_markdown(domain_info)
+            markdown += (
+                f"<details><summary>{domain}</summary>\n\n"
+                f"{domain_info_md}"
+                "</details>\n\n"
+            )
+
+        log_handler = hass.data[DATA_CLOUD_LOG_HANDLER]
+        logs = "\n".join(await log_handler.get_logs(hass))
+        markdown += (
+            "## Full logs\n\n"
+            "<details><summary>Logs</summary>\n\n"
+            "```logs\n"
+            f"{logs}\n"
+            "```\n\n"
+            "</details>\n"
+        )
+
+        return markdown
+
+    async def get(self, request: web.Request) -> web.Response:
+        """Download support package file."""
+
+        hass = request.app[KEY_HASS]
+        domain_health = await get_system_health_info(hass)
+
+        hass_info = domain_health.pop("homeassistant", {})
+        markdown = await self._generate_markdown(hass, hass_info, domain_health)
+
+        return web.Response(
+            body=markdown,
+            content_type="text/markdown",
+            headers={
+                "Content-Disposition": 'attachment; filename="support_package.md"'
+            },
+        )
 
 
 @websocket_api.require_admin

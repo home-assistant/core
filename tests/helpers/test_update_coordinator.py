@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 import logging
 from unittest.mock import AsyncMock, Mock, patch
 import urllib.error
+import weakref
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
@@ -12,7 +13,7 @@ import requests
 
 from homeassistant import config_entries
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, CoreState, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -898,3 +899,41 @@ async def test_config_entry(hass: HomeAssistant) -> None:
         hass, _LOGGER, name="test", config_entry=another_entry
     )
     assert crd.config_entry is another_entry
+
+
+async def test_listener_unsubscribe_releases_coordinator(hass: HomeAssistant) -> None:
+    """Test listener subscribe/unsubscribe releases parent class.
+
+    See https://github.com/home-assistant/core/issues/137237
+    And https://github.com/home-assistant/core/pull/137338
+    """
+
+    class Subscriber:
+        _unsub: CALLBACK_TYPE | None = None
+
+        def start_listen(
+            self, coordinator: update_coordinator.DataUpdateCoordinator
+        ) -> None:
+            self._unsub = coordinator.async_add_listener(lambda: None)
+
+        def stop_listen(self) -> None:
+            self._unsub()
+            self._unsub = None
+
+    coordinator = update_coordinator.DataUpdateCoordinator[int](
+        hass, _LOGGER, name="test"
+    )
+    subscriber = Subscriber()
+    subscriber.start_listen(coordinator)
+
+    # Keep weak reference to the coordinator
+    weak_ref = weakref.ref(coordinator)
+    assert weak_ref() is not None
+
+    # Unload the subscriber, then shutdown the coordinator
+    subscriber.stop_listen()
+    await coordinator.async_shutdown()
+    del coordinator
+
+    # Ensure the coordinator is released
+    assert weak_ref() is None

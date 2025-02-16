@@ -10,13 +10,16 @@ from synology_dsm.api.surveillance_station.camera import SynoCamera
 from synology_dsm.exceptions import SynologyDSMNotLoggedInException
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_MAC, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_MAC, CONF_SCAN_INTERVAL, CONF_VERIFY_SSL
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 
 from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
+    CONF_BACKUP_PATH,
+    CONF_BACKUP_SHARE,
+    DATA_BACKUP_AGENT_LISTENERS,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     EXCEPTION_DETAILS,
@@ -60,6 +63,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.config_entries.async_update_entry(
             entry, data={**entry.data, CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL}
         )
+    if CONF_BACKUP_SHARE not in entry.options:
+        hass.config_entries.async_update_entry(
+            entry,
+            options={**entry.options, CONF_BACKUP_SHARE: None, CONF_BACKUP_PATH: None},
+        )
+    if CONF_SCAN_INTERVAL in entry.options:
+        current_options = {**entry.options}
+        current_options.pop(CONF_SCAN_INTERVAL)
+        hass.config_entries.async_update_entry(entry, options=current_options)
 
     # Continue setup
     api = SynoApi(hass, entry)
@@ -118,6 +130,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
+    if entry.options[CONF_BACKUP_SHARE]:
+        _async_notify_backup_listeners_soon(hass)
+
     return True
 
 
@@ -127,7 +142,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         entry_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
         await entry_data.api.async_unload()
         hass.data[DOMAIN].pop(entry.unique_id)
+    _async_notify_backup_listeners_soon(hass)
     return unload_ok
+
+
+def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
+    for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
+        listener()
+
+
+@callback
+def _async_notify_backup_listeners_soon(hass: HomeAssistant) -> None:
+    hass.loop.call_soon(_async_notify_backup_listeners, hass)
 
 
 async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:

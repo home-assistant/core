@@ -25,6 +25,11 @@ async def init_component(hass: HomeAssistant) -> MockConfigEntry:
             json=load_json_array_fixture("enologic.json", youless.DOMAIN),
             headers={"Content-Type": "application/json"},
         )
+        mock.get(
+            "http://1.1.1.1/f",
+            json=load_json_object_fixture("phase.json", youless.DOMAIN),
+            headers={"Content-Type": "application/json"},
+        )
 
         entry = MockConfigEntry(
             domain=youless.DOMAIN,

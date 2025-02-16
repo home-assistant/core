@@ -79,12 +79,13 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
                     for station in self.stations
                     if station["id"] == user_input[CONF_STATION_TO]
                 ]
+                vias = "_excl_vias" if user_input.get(CONF_EXCLUDE_VIAS) else ""
                 await self.async_set_unique_id(
-                    f"{user_input[CONF_STATION_FROM]}_{user_input[CONF_STATION_TO]}"
+                    f"{user_input[CONF_STATION_FROM]}_{user_input[CONF_STATION_TO]}{vias}"
                 )
                 self._abort_if_unique_id_configured()
 
-                config_entry_name = f"Train from {station_from["standardname"]} to {station_to["standardname"]}"
+                config_entry_name = f"Train from {station_from['standardname']} to {station_to['standardname']}"
                 return self.async_create_entry(
                     title=config_entry_name,
                     data=user_input,
@@ -154,21 +155,22 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
             user_input[CONF_STATION_LIVE] = station_live["id"]
             entity_registry = er.async_get(self.hass)
             prefix = "live"
+            vias = "_excl_vias" if user_input.get(CONF_EXCLUDE_VIAS, False) else ""
             if entity_id := entity_registry.async_get_entity_id(
                 Platform.SENSOR,
                 DOMAIN,
-                f"{prefix}_{station_live["standardname"]}_{station_from["standardname"]}_{station_to["standardname"]}",
+                f"{prefix}_{station_live['standardname']}_{station_from['standardname']}_{station_to['standardname']}",
             ):
-                new_unique_id = f"{DOMAIN}_{prefix}_{station_live["id"]}_{station_from["id"]}_{station_to["id"]}"
+                new_unique_id = f"{DOMAIN}_{prefix}_{station_live['id']}_{station_from['id']}_{station_to['id']}{vias}"
                 entity_registry.async_update_entity(
                     entity_id, new_unique_id=new_unique_id
                 )
             if entity_id := entity_registry.async_get_entity_id(
                 Platform.SENSOR,
                 DOMAIN,
-                f"{prefix}_{station_live["name"]}_{station_from["name"]}_{station_to["name"]}",
+                f"{prefix}_{station_live['name']}_{station_from['name']}_{station_to['name']}",
             ):
-                new_unique_id = f"{DOMAIN}_{prefix}_{station_live["id"]}_{station_from["id"]}_{station_to["id"]}"
+                new_unique_id = f"{DOMAIN}_{prefix}_{station_live['id']}_{station_from['id']}_{station_to['id']}{vias}"
                 entity_registry.async_update_entity(
                     entity_id, new_unique_id=new_unique_id
                 )
