@@ -60,7 +60,7 @@ rules:
   stale-devices:
     status: exempt
     comment: |
-      This is not applicable for this integration.
+      Device type integration.
   diagnostics: todo
   exception-translations: todo
   icon-translations: done
