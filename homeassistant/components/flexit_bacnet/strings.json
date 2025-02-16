@@ -5,6 +5,10 @@
         "data": {
           "ip_address": "[%key:common::config_flow::data::ip%]",
           "device_id": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "ip_address": "The IP address of the Flexit Nordic device",
+          "device_id": "The device ID of the Flexit Nordic device"
         }
       }
     },
