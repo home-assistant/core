@@ -232,7 +232,6 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.title = None
         mock_player.image_url = None
         mock_player.model = "SqueezeLite"
-        mock_player.ATTR_MEDIA_VOLUME_LEVEL = 0.2
 
         return mock_player
 
