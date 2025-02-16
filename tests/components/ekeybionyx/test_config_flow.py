@@ -51,7 +51,7 @@ async def test_full_flow(
     result = await hass.config_entries.flow.async_init(
         EKEYBIONYX_DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    state = config_entry_oauth2_flow._encode_jwt(  # noqa: SLF001
+    state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
             "flow_id": result["flow_id"],
@@ -88,7 +88,7 @@ async def test_full_flow(
         flow2 = await hass.config_entries.flow.async_configure(
             flow["flow_id"],
             {
-                "Webhook 1": "Test",
+                "webhook1": "Test",
                 "url": "http://localhost:8123",
             },
         )
