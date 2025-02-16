@@ -50,13 +50,14 @@ async def test_previous_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: caseta_entity_id},
+        {},
+        target={ATTR_ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
+
     await hass.async_block_till_done()
 
     state = hass.states.get(caseta_entity_id)
-
     assert state.state == STATE_ON
     assert state.attributes[ATTR_BRIGHTNESS] == 255
 
@@ -64,7 +65,8 @@ async def test_previous_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: caseta_entity_id, ATTR_BRIGHTNESS: 25},
+        {ATTR_BRIGHTNESS: 25},
+        target={ATTR_ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()
@@ -75,7 +77,7 @@ async def test_previous_brightness(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: caseta_entity_id},
+        target={ATTR_ENTITY_ID: caseta_entity_id},
         blocking=True,
     )
     await hass.async_block_till_done()

@@ -1,6 +1,7 @@
 """Tests for the Lutron Caseta integration."""
 
 from datetime import timedelta
+import logging
 from unittest.mock import patch
 
 from homeassistant.components.light import ColorMode
@@ -14,6 +15,8 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 ENTRY_MOCK_DATA = {
     CONF_HOST: "1.1.1.1",
@@ -103,6 +106,8 @@ async def async_setup_integration(hass: HomeAssistant, mock_bridge) -> MockConfi
 class MockBridge:
     """Mock Lutron bridge that emulates configured connected status."""
 
+    _subscribers = {}
+
     def __init__(self, can_connect=True) -> None:
         """Initialize MockBridge instance with configured mock connectivity."""
         self.can_connect = can_connect
@@ -120,6 +125,7 @@ class MockBridge:
 
     def add_subscriber(self, device_id: str, callback_):
         """Mock a listener to be notified of state changes."""
+        self._subscribers[device_id] = callback_
 
     def add_button_subscriber(self, button_id: str, callback_):
         """Mock a listener for button presses."""
@@ -148,7 +154,8 @@ class MockBridge:
         fade_time: timedelta | None = None,
         color_value: ColorMode | None = None,
     ):
-        """Mock changing device state."""
+        """Mock changing device state and invoke callback."""
+        self._subscribers[device_id]()
 
     def load_devices(self):
         """Load mock devices into self.devices."""
