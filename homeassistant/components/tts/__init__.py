@@ -775,7 +775,9 @@ class SpeechManager:
 
         async def get_tts_data() -> str:
             """Handle data available."""
-            if engine_instance.name is UNDEFINED:
+            if engine_instance.name is UNDEFINED or (
+                isinstance(engine_instance, Provider) and engine_instance.name is None
+            ):
                 raise HomeAssistantError("TTS engine name is not set.")
 
             if isinstance(engine_instance, Provider):
