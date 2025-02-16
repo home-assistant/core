@@ -735,11 +735,11 @@ eagle100==0.1.1
 # homeassistant.components.easyenergy
 easyenergy==2.1.2
 
-# homeassistant.components.ekeybionyx
-ekey-bionyxpy==1.0.0
-
 # homeassistant.components.eheimdigital
 eheimdigital==1.3.0
+
+# homeassistant.components.ekeybionyx
+ekey-bionyxpy==1.0.0
 
 # homeassistant.components.electric_kiwi
 electrickiwi-api==0.9.14

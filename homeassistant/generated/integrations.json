@@ -1592,17 +1592,17 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
-    "ekeybionyx": {
-      "name": "Ekey Bionyx",
-      "integration_type": "hub",
-      "config_flow": true,
-      "iot_class": "local_push"
-    },
     "eheimdigital": {
       "name": "EHEIM Digital",
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "ekeybionyx": {
+      "name": "Ekey Bionyx",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "electrasmart": {
       "name": "Electra Smart",
