@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from datetime import datetime
 import json
 import logging
+from collections.abc import Callable
+from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
-from pysqueezebox import Server, async_discover
 import voluptuous as vol
+from pysqueezebox import Server, async_discover
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -31,8 +31,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
+)
+from homeassistant.helpers import (
     discovery_flow,
     entity_platform,
+)
+from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import (
@@ -53,12 +57,12 @@ from .browse_media import (
     media_source_content_filter,
 )
 from .const import (
+    ANNOUNCE_TIMEOUT,
+    ANNOUNCE_VOLUME,
     CONF_BROWSE_LIMIT,
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
     DEFAULT_VOLUME_STEP,
-    ANNOUNCE_TIMEOUT,
-    ANNOUNCE_VOLUME,
     DISCOVERY_TASK,
     DOMAIN,
     KNOWN_PLAYERS,
