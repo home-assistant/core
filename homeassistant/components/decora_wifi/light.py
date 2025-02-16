@@ -57,11 +57,11 @@ async def async_setup_entry(
     """Set up the Decora WiFi platform."""
 
     session: DecoraWiFiSession = hass.data[DOMAIN][entry.entry_id]
-    asyncSession = DecoraWifiAsyncClient(session, hass)
+    async_session = DecoraWifiAsyncClient(session, hass)
     try:
-        permissions = await asyncSession.get_permissions()
-        residences = await asyncSession.get_residences(permissions)
-        iot_switches = await asyncSession.get_iot_switches(residences)
+        permissions = await async_session.get_permissions()
+        residences = await async_session.get_residences(permissions)
+        iot_switches = await async_session.get_iot_switches(residences)
 
     # As of the current release of the decora wifi lib (1.4), all api errors raise a generic ValueError
     except ValueError as err:
@@ -79,7 +79,7 @@ class DecoraWifiLight(LightEntity):
         self._switch = switch
         self._attr_unique_id = switch.serial
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
+            identifiers={(DOMAIN, switch.serial)},
             name=switch.name,
             manufacturer=switch.manufacturer,
             model=switch.model,
@@ -110,11 +110,6 @@ class DecoraWifiLight(LightEntity):
     def name(self) -> str:
         """Return the display name of this switch."""
         return self._switch.name
-
-    @property
-    def unique_id(self) -> str:
-        """Return the ID of this light."""
-        return self._switch.serial
 
     @property
     def brightness(self) -> int:
