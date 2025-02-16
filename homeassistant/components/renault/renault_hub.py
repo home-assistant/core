@@ -5,13 +5,13 @@ from __future__ import annotations
 import asyncio
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from renault_api.gigya.exceptions import InvalidCredentialsException
 from renault_api.kamereon.models import KamereonVehiclesLink
 from renault_api.renault_account import RenaultAccount
 from renault_api.renault_client import RenaultClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_IDENTIFIERS,
     ATTR_MANUFACTURER,
@@ -23,6 +23,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+
+if TYPE_CHECKING:
+    from . import RenaultConfigEntry
 
 from .const import CONF_KAMEREON_ACCOUNT_ID, DEFAULT_SCAN_INTERVAL
 from .renault_vehicle import RenaultVehicleProxy
@@ -52,7 +55,7 @@ class RenaultHub:
             return True
         return False
 
-    async def async_initialise(self, config_entry: ConfigEntry) -> None:
+    async def async_initialise(self, config_entry: RenaultConfigEntry) -> None:
         """Set up proxy."""
         account_id: str = config_entry.data[CONF_KAMEREON_ACCOUNT_ID]
         scan_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
@@ -86,7 +89,7 @@ class RenaultHub:
         vehicle_link: KamereonVehiclesLink,
         renault_account: RenaultAccount,
         scan_interval: timedelta,
-        config_entry: ConfigEntry,
+        config_entry: RenaultConfigEntry,
         device_registry: dr.DeviceRegistry,
     ) -> None:
         """Set up proxy."""
@@ -95,6 +98,7 @@ class RenaultHub:
         # Generate vehicle proxy
         vehicle = RenaultVehicleProxy(
             hass=self._hass,
+            config_entry=config_entry,
             vehicle=await renault_account.get_api_vehicle(vehicle_link.vin),
             details=vehicle_link.vehicleDetails,
             scan_interval=scan_interval,
