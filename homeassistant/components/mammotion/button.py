@@ -1,15 +1,14 @@
 """Mammotion button sensor entities."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Awaitable
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MammotionConfigEntry
-from .coordinator import MammotionDataUpdateCoordinator
+from .coordinator import MammotionBaseUpdateCoordinator, MammotionDataUpdateCoordinator
 from .entity import MammotionBaseEntity
 
 
@@ -66,12 +65,13 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Mammotion button sensor entity."""
-    coordinator = entry.runtime_data
+    mammotion_devices = entry.runtime_data
 
-    async_add_entities(
-        MammotionButtonSensorEntity(coordinator, entity_description)
-        for entity_description in BUTTON_SENSORS
-    )
+    for mower in mammotion_devices:
+        async_add_entities(
+            MammotionButtonSensorEntity(mower.reporting_coordinator, entity_description)
+            for entity_description in BUTTON_SENSORS
+        )
 
 
 class MammotionButtonSensorEntity(MammotionBaseEntity, ButtonEntity):
@@ -82,7 +82,7 @@ class MammotionButtonSensorEntity(MammotionBaseEntity, ButtonEntity):
 
     def __init__(
         self,
-        coordinator: MammotionDataUpdateCoordinator,
+        coordinator: MammotionBaseUpdateCoordinator,
         entity_description: MammotionButtonSensorEntityDescription,
     ) -> None:
         """Initialize the button sensor entity."""

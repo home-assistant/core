@@ -5,9 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from pymammotion.data.model.device_config import OperationSettings
-from pymammotion.data.model.report_info import ReportData
-from pymammotion.proto import has_field
-from pymammotion.proto.luba_msg import RptDevStatus
+from pymammotion.data.model.report_info import DeviceData, ReportData
 from pymammotion.utility.constant.device_constant import WorkMode
 from pymammotion.utility.device_type import DeviceType
 import voluptuous as vol
@@ -22,9 +20,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from . import MammotionConfigEntry
+from . import MammotionConfigEntry, MammotionReportUpdateCoordinator
 from .const import COMMAND_EXCEPTIONS, DOMAIN, LOGGER
-from .coordinator import MammotionDataUpdateCoordinator
 from .entity import MammotionBaseEntity
 
 SERVICE_START_MOWING = "start_mow"
@@ -90,8 +87,10 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Luba config entry."""
-    coordinator = entry.runtime_data
-    async_add_entities([MammotionLawnMowerEntity(coordinator)])
+    mammotion_devices = entry.runtime_data
+
+    for mower in mammotion_devices:
+        async_add_entities([MammotionLawnMowerEntity(mower.reporting_coordinator)])
 
     platform = entity_platform.async_get_current_platform()
 
@@ -111,17 +110,15 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
         | LawnMowerEntityFeature.START_MOWING
     )
 
-    def __init__(self, coordinator: MammotionDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: MammotionReportUpdateCoordinator) -> None:
         """Initialize the lawn mower."""
         super().__init__(coordinator, "mower")
         self._attr_name = None  # main feature of device
 
     @property
-    def rpt_dev_status(self) -> RptDevStatus:
+    def rpt_dev_status(self) -> DeviceData:
         """Return the device status."""
-        if has_field(self.coordinator.data.sys.toapp_report_data.dev):
-            return self.coordinator.data.sys.toapp_report_data.dev
-        return RptDevStatus()
+        return self.coordinator.data.report_data.dev
 
     @property
     def report_data(self) -> ReportData:
