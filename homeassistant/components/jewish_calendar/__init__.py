@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from functools import partial
+import logging
 
 from hdate import Location
 
@@ -15,6 +16,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     CONF_CANDLE_LIGHT_MINUTES,
@@ -27,6 +29,7 @@ from .const import (
 )
 from .entity import JewishCalendarConfigEntry, JewishCalendarData
 
+_LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
@@ -34,6 +37,8 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
 ) -> bool:
     """Set up a configuration entry for Jewish calendar."""
+    if not await async_migrate_entry(hass, config_entry):
+        return False
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
     candle_lighting_offset = config_entry.options.get(
@@ -80,3 +85,44 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
+async def async_migrate_entry(
+    hass: HomeAssistant, entry: JewishCalendarConfigEntry
+) -> bool:
+    """Migrate old entry."""
+    version = entry.version
+
+    _LOGGER.debug("Migrating from version %s", version)
+
+    # 1 -> 2: Unique ID format changed, so delete and re-import:
+    if version == 1:
+        key_translations = {
+            "first_light": "alot_hashachar",
+            "talit": "talit_and_tefillin",
+            "sunrise": "netz_hachama",
+            "gra_end_shma": "sof_zman_shema_gra",
+            "mga_end_shma": "sof_zman_shema_mga",
+            "gra_end_tfila": "sof_zman_tfilla_gra",
+            "mga_end_tfila": "sof_zman_tfilla_mga",
+            "midday": "chatzot_hayom",
+            "big_mincha": "mincha_gedola",
+            "small_mincha": "mincha_ketana",
+            "plag_mincha": "plag_hamincha",
+            "sunset": "shkia",
+            "first_stars": "tset_hakohavim_tsom",
+            "three_stars": "tset_hakohavim_shabbat",
+        }
+        en_reg = er.async_get(hass)
+        for entity in er.async_entries_for_config_entry(en_reg, entry.entry_id):
+            old_key = entity.unique_id.split("-")[1]
+            new_unique_id = f"{entry.entry_id}-{key_translations[old_key]}"
+            hass.config_entries.async_update_entry(
+                entry, unique_id=new_unique_id, version=2
+            )
+
+        entry.version = 2
+
+    _LOGGER.info("Migration to version %s successful", version)
+
+    return True

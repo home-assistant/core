@@ -72,7 +72,7 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="sunrise",
+        key="netz_hachama",
         name="Hanetz Hachama",
         icon="mdi:calendar-clock",
     ),
@@ -101,7 +101,7 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="chatsot",
+        key="chatzot_hayom",
         name="Chatzot Hayom",
         icon="mdi:calendar-clock",
         entity_registry_enabled_default=False,
@@ -119,13 +119,13 @@ TIME_SENSORS: tuple[SensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="plag_mincha",
+        key="plag_hamincha",
         name="Plag Hamincha",
         icon="mdi:weather-sunset-down",
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="sunset",
+        key="shkia",
         name="Shkia",
         icon="mdi:weather-sunset",
     ),
