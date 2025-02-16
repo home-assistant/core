@@ -10,7 +10,7 @@ from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import MammotionConfigEntry
 from .const import ATTR_DIRECTION
-from .coordinator import MammotionDataUpdateCoordinator
+from .coordinator import MammotionBaseUpdateCoordinator
 from .entity import MammotionBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,13 +18,14 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: MammotionConfigEntry,
+    entry: MammotionConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the RTK tracker from config entry."""
-    coordinator = config_entry.runtime_data
+    mammotion_devices = entry.runtime_data
 
-    async_add_entities([MammotionTracker(coordinator)])
+    for mower in mammotion_devices:
+        async_add_entities([MammotionTracker(mower.reporting_coordinator)])
 
 
 class MammotionTracker(MammotionBaseEntity, TrackerEntity, RestoreEntity):
@@ -34,7 +35,7 @@ class MammotionTracker(MammotionBaseEntity, TrackerEntity, RestoreEntity):
     _attr_translation_key = "device_tracker"
     _attr_source_type = SourceType.GPS
 
-    def __init__(self, coordinator: MammotionDataUpdateCoordinator) -> None:
+    def __init__(self, coordinator: MammotionBaseUpdateCoordinator) -> None:
         """Initialize the Tracker."""
         super().__init__(coordinator, f"{coordinator.device_name}_gps")
 

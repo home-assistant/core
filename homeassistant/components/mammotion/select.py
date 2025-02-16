@@ -1,4 +1,4 @@
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from dataclasses import dataclass
 
 from pymammotion.data.model.mowing_modes import (
@@ -18,8 +18,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
-from . import MammotionConfigEntry
-from .coordinator import MammotionDataUpdateCoordinator
+from . import MammotionConfigEntry, MammotionReportUpdateCoordinator
+from .coordinator import MammotionBaseUpdateCoordinator
 from .entity import MammotionBaseEntity
 
 
@@ -29,7 +29,7 @@ class MammotionConfigSelectEntityDescription(SelectEntityDescription):
 
     key: str
     options: list[str]
-    set_fn: Callable[[MammotionDataUpdateCoordinator, str], Awaitable[None]]
+    set_fn: Callable[[MammotionBaseUpdateCoordinator, str], None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -38,7 +38,7 @@ class MammotionAsyncConfigSelectEntityDescription(MammotionBaseEntity, SelectEnt
 
     key: str
     options: list[str]
-    set_fn: Callable[[MammotionDataUpdateCoordinator, str], None]
+    set_fn: Callable[[MammotionBaseUpdateCoordinator, str], None]
 
 
 ASYNC_SELECT_ENTITIES: tuple[MammotionAsyncConfigSelectEntityDescription, ...] = (
@@ -133,29 +133,41 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Mammotion select entity."""
-    coordinator = entry.runtime_data
-    entities = []
+    mammotion_devices = entry.runtime_data
 
-    for entity_description in SELECT_ENTITIES:
-        entities.append(MammotionConfigSelectEntity(coordinator, entity_description))
+    for mower in mammotion_devices:
+        entities = []
 
-    for entity_description in ASYNC_SELECT_ENTITIES:
-        entities.append(
-            MammotionAsyncConfigSelectEntity(coordinator, entity_description)
-        )
-
-    if DeviceType.is_luba1(coordinator.device_name):
-        for entity_description in LUBA1_SELECT_ENTITIES:
+        for entity_description in SELECT_ENTITIES:
             entities.append(
-                MammotionConfigSelectEntity(coordinator, entity_description)
-            )
-    else:
-        for entity_description in LUBA_PRO_SELECT_ENTITIES:
-            entities.append(
-                MammotionConfigSelectEntity(coordinator, entity_description)
+                MammotionConfigSelectEntity(
+                    mower.reporting_coordinator, entity_description
+                )
             )
 
-    async_add_entities(entities)
+        for entity_description in ASYNC_SELECT_ENTITIES:
+            entities.append(
+                MammotionAsyncConfigSelectEntity(
+                    mower.reporting_coordinator, entity_description
+                )
+            )
+
+        if DeviceType.is_luba1(mower.device.deviceName):
+            for entity_description in LUBA1_SELECT_ENTITIES:
+                entities.append(
+                    MammotionConfigSelectEntity(
+                        mower.reporting_coordinator, entity_description
+                    )
+                )
+        else:
+            for entity_description in LUBA_PRO_SELECT_ENTITIES:
+                entities.append(
+                    MammotionConfigSelectEntity(
+                        mower.reporting_coordinator, entity_description
+                    )
+                )
+
+        async_add_entities(entities)
 
 
 # Define the select entity class with entity_category: config
@@ -169,7 +181,7 @@ class MammotionConfigSelectEntity(MammotionBaseEntity, SelectEntity, RestoreEnti
 
     def __init__(
         self,
-        coordinator: MammotionDataUpdateCoordinator,
+        coordinator: MammotionReportUpdateCoordinator,
         entity_description: MammotionConfigSelectEntityDescription,
     ) -> None:
         super().__init__(coordinator, entity_description.key)
@@ -193,13 +205,13 @@ class MammotionAsyncConfigSelectEntity(
 
     _attr_entity_category = EntityCategory.CONFIG
 
-    entity_description: MammotionConfigSelectEntityDescription
+    entity_description: MammotionAsyncConfigSelectEntityDescription
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: MammotionDataUpdateCoordinator,
-        entity_description: MammotionConfigSelectEntityDescription,
+        coordinator: MammotionReportUpdateCoordinator,
+        entity_description: MammotionAsyncConfigSelectEntityDescription,
     ) -> None:
         super().__init__(coordinator, entity_description.key)
         self.coordinator = coordinator

@@ -3,24 +3,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from homeassistant.components.sensor import (
-    SensorDeviceClass,
-    SensorEntity,
-    SensorEntityDescription,
-    SensorStateClass,
-)
-from homeassistant.const import (
-    AREA_SQUARE_METERS,
-    PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    UnitOfLength,
-    UnitOfSpeed,
-    UnitOfTime, UnitOfArea,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import StateType
-from homeassistant.util.unit_conversion import SpeedConverter
 from pymammotion.data.model.device import MowingDevice
 from pymammotion.data.model.enums import RTKStatus
 from pymammotion.utility.constant.device_constant import (
@@ -31,8 +13,26 @@ from pymammotion.utility.constant.device_constant import (
 )
 from pymammotion.utility.device_type import DeviceType
 
-from . import MammotionConfigEntry
-from .coordinator import MammotionDataUpdateCoordinator
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+    SensorStateClass,
+)
+from homeassistant.const import (
+    PERCENTAGE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+    UnitOfArea,
+    UnitOfLength,
+    UnitOfSpeed,
+    UnitOfTime,
+)
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.util.unit_conversion import SpeedConverter
+
+from . import MammotionConfigEntry, MammotionReportUpdateCoordinator
 from .entity import MammotionBaseEntity
 
 SPEED_UNITS = SpeedConverter.VALID_UNITS
@@ -248,25 +248,25 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
-    mowers = entry.runtime_data
+    mammotion_devices = entry.runtime_data
 
-    for mower in mowers:
-
-        if not DeviceType.is_yuka(mower.device_name):
+    for mower in mammotion_devices:
+        if not DeviceType.is_yuka(mower.device.deviceName):
             async_add_entities(
-                MammotionSensorEntity(coordinator, description)
+                MammotionSensorEntity(mower.reporting_coordinator, description)
                 for description in LUBA_SENSOR_ONLY_TYPES
             )
 
-        if not DeviceType.is_luba1(coordinator.device_name):
+        if not DeviceType.is_luba1(mower.device.deviceName):
             async_add_entities(
-                MammotionSensorEntity(coordinator, description)
+                MammotionSensorEntity(mower.reporting_coordinator, description)
                 for description in LUBA_2_YUKA_ONLY_TYPES
             )
 
-    async_add_entities(
-        MammotionSensorEntity(coordinator, description) for description in SENSOR_TYPES
-    )
+        async_add_entities(
+            MammotionSensorEntity(mower.reporting_coordinator, description)
+            for description in SENSOR_TYPES
+        )
 
 
 class MammotionSensorEntity(MammotionBaseEntity, SensorEntity):
@@ -277,7 +277,7 @@ class MammotionSensorEntity(MammotionBaseEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: MammotionDataUpdateCoordinator,
+        coordinator: MammotionReportUpdateCoordinator,
         description: MammotionSensorEntityDescription,
     ) -> None:
         """Set up MammotionSensor."""

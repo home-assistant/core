@@ -128,31 +128,39 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Mammotion number entities."""
-    coordinator = entry.runtime_data
-    limits = coordinator.manager.mower(coordinator.device_name).limits
+    mammotion_devices = entry.runtime_data
 
-    entities: list[MammotionConfigNumberEntity] = []
+    for mower in mammotion_devices:
+        limits = mower.device_limits
 
-    for entity_description in NUMBER_WORKING_ENTITIES:
-        entity = MammotionWorkingNumberEntity(coordinator, entity_description, limits)
-        entities.append(entity)
+        entities: list[MammotionConfigNumberEntity] = []
 
-    for entity_description in NUMBER_ENTITIES:
-        entity = MammotionConfigNumberEntity(coordinator, entity_description)
-        entities.append(entity)
-
-    if DeviceType.is_yuka(coordinator.device_name):
-        for entity_description in YUKA_NUMBER_ENTITIES:
-            entity = MammotionConfigNumberEntity(coordinator, entity_description)
-            entities.append(entity)
-    else:
-        for entity_description in LUBA_WORKING_ENTITIES:
+        for entity_description in NUMBER_WORKING_ENTITIES:
             entity = MammotionWorkingNumberEntity(
-                coordinator, entity_description, limits
+                mower.reporting_coordinator, entity_description, limits
             )
             entities.append(entity)
 
-    async_add_entities(entities)
+        for entity_description in NUMBER_ENTITIES:
+            entity = MammotionConfigNumberEntity(
+                mower.reporting_coordinator, entity_description
+            )
+            entities.append(entity)
+
+        if DeviceType.is_yuka(mower.device.deviceName):
+            for entity_description in YUKA_NUMBER_ENTITIES:
+                entity = MammotionConfigNumberEntity(
+                    mower.reporting_coordinator, entity_description
+                )
+                entities.append(entity)
+        else:
+            for entity_description in LUBA_WORKING_ENTITIES:
+                entity = MammotionWorkingNumberEntity(
+                    mower.reporting_coordinator, entity_description, limits
+                )
+                entities.append(entity)
+
+        async_add_entities(entities)
 
 
 class MammotionConfigNumberEntity(MammotionBaseEntity, NumberEntity, RestoreEntity):

@@ -13,7 +13,7 @@ from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import MammotionConfigEntry
-from .coordinator import MammotionDataUpdateCoordinator
+from .coordinator import MammotionBaseUpdateCoordinator
 from .entity import MammotionBaseEntity
 
 
@@ -28,21 +28,21 @@ class MammotionSwitchEntityDescription(SwitchEntityDescription):
 class MammotionAsyncSwitchEntityDescription(MammotionSwitchEntityDescription):
     """Describes Mammotion switch entity."""
 
-    set_fn: Callable[[MammotionDataUpdateCoordinator, bool], Awaitable[None]]
+    set_fn: Callable[[MammotionBaseUpdateCoordinator, bool], Awaitable[None]]
 
 
 @dataclass(frozen=True, kw_only=True)
 class MammotionUpdateSwitchEntityDescription(MammotionAsyncSwitchEntityDescription):
     """Describes Mammotion switch entity."""
 
-    is_on_func: Callable[[MammotionDataUpdateCoordinator], bool]
+    is_on_func: Callable[[MammotionBaseUpdateCoordinator], bool]
 
 
 @dataclass(frozen=True, kw_only=True)
 class MammotionConfigSwitchEntityDescription(MammotionSwitchEntityDescription):
     """Describes Mammotion Config switch entity."""
 
-    set_fn: Callable[[MammotionDataUpdateCoordinator, bool], None]
+    set_fn: Callable[[MammotionBaseUpdateCoordinator, bool], None]
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -50,7 +50,7 @@ class MammotionConfigAreaSwitchEntityDescription(MammotionSwitchEntityDescriptio
     """Describes the Areas  entities."""
 
     area: str
-    set_fn: Callable[[MammotionDataUpdateCoordinator, bool, int], None]
+    set_fn: Callable[[MammotionBaseUpdateCoordinator, bool, int], None]
 
 
 YUKA_CONFIG_SWITCH_ENTITIES: tuple[MammotionConfigSwitchEntityDescription, ...] = (
@@ -108,72 +108,85 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: MammotionConfigEntry, async_add_entities: Callable
 ) -> None:
     """Set up the Mammotion switch entities."""
-    coordinator = entry.runtime_data
-    added_areas: set[str] = set()
+    mammotion_devices = entry.runtime_data
 
-    @callback
-    def add_entities() -> None:
-        """Handle addition of mowing areas."""
+    for mower in mammotion_devices:
+        added_areas: set[str] = set()
 
-        switch_entities: list[MammotionConfigAreaSwitchEntity] = []
-        areas = list(map(str, coordinator.data.map.area.keys()))
-        area_name_hashes = [f"{area.hash}" for area in coordinator.data.map.area_name]
-        area_name = coordinator.data.map.area_name
-        new_areas = (set(areas) | set(area_name_hashes)) - added_areas
-        if new_areas:
-            for area_id in new_areas:
-                existing_name: AreaHashNameList | None = next(
-                    (area for area in area_name if str(area.hash) == str(area_id)), None
-                )
-                name = (
-                    existing_name.name
-                    if (existing_name and existing_name.name)
-                    else f"{area_id}"
-                )
-                base_area_switch_entity = MammotionConfigAreaSwitchEntityDescription(
-                    key=f"{area_id}",
-                    translation_key="area",
-                    translation_placeholders={"name": name},
-                    area=area_id,
-                    name=f"{name}",
-                    set_fn=lambda coord, bool_val, value: (
-                        coord.operation_settings.areas.append(value)
-                        if bool_val
-                        else coord.operation_settings.areas.remove(value)
-                    ),
-                )
-                switch_entities.append(
-                    MammotionConfigAreaSwitchEntity(
-                        coordinator,
-                        base_area_switch_entity,
+        coordinator = mower.reporting_coordinator
+
+        @callback
+        def add_entities() -> None:
+            """Handle addition of mowing areas."""
+            if coordinator.data is None:
+                return
+
+            switch_entities: list[MammotionConfigAreaSwitchEntity] = []
+            areas = list(map(str, coordinator.data.map.area.keys()))
+            area_name_hashes = [
+                f"{area.hash}" for area in coordinator.data.map.area_name
+            ]
+            area_name = coordinator.data.map.area_name
+            new_areas = (set(areas) | set(area_name_hashes)) - added_areas
+            if new_areas:
+                for area_id in new_areas:
+                    existing_name: AreaHashNameList | None = next(
+                        (area for area in area_name if str(area.hash) == str(area_id)),
+                        None,
                     )
-                )
-                added_areas.add(area_id)
+                    name = (
+                        existing_name.name
+                        if (existing_name and existing_name.name)
+                        else f"{area_id}"
+                    )
+                    base_area_switch_entity = (
+                        MammotionConfigAreaSwitchEntityDescription(
+                            key=f"{area_id}",
+                            translation_key="area",
+                            translation_placeholders={"name": name},
+                            area=area_id,
+                            name=f"{name}",
+                            set_fn=lambda coord, bool_val, value: (
+                                coord.operation_settings.areas.append(value)
+                                if bool_val
+                                else coord.operation_settings.areas.remove(value)
+                            ),
+                        )
+                    )
+                    switch_entities.append(
+                        MammotionConfigAreaSwitchEntity(
+                            coordinator,
+                            base_area_switch_entity,
+                        )
+                    )
+                    added_areas.add(area_id)
 
-        if switch_entities:
-            async_add_entities(switch_entities)
+            if switch_entities:
+                async_add_entities(switch_entities)
 
-    add_entities()
-    coordinator.async_add_listener(add_entities)
+        add_entities()
+        coordinator.async_add_listener(add_entities)
 
-    entities = []
-    for entity_description in SWITCH_ENTITIES:
-        entity = MammotionSwitchEntity(coordinator, entity_description)
-        entities.append(entity)
+        entities = []
+        for entity_description in SWITCH_ENTITIES:
+            entity = MammotionSwitchEntity(coordinator, entity_description)
+            entities.append(entity)
 
-    for entity_description in CONFIG_SWITCH_ENTITIES:
-        config_entity = MammotionConfigSwitchEntity(coordinator, entity_description)
-        entities.append(config_entity)
-
-    for entity_description in UPDATE_SWITCH_ENTITIES:
-        config_entity = MammotionUpdateSwitchEntity(coordinator, entity_description)
-        entities.append(config_entity)
-
-    if DeviceType.is_yuka(coordinator.device_name):
-        for entity_description in YUKA_CONFIG_SWITCH_ENTITIES:
+        for entity_description in CONFIG_SWITCH_ENTITIES:
             config_entity = MammotionConfigSwitchEntity(coordinator, entity_description)
             entities.append(config_entity)
-    async_add_entities(entities)
+
+        for entity_description in UPDATE_SWITCH_ENTITIES:
+            config_entity = MammotionUpdateSwitchEntity(coordinator, entity_description)
+            entities.append(config_entity)
+
+        if DeviceType.is_yuka(coordinator.device_name):
+            for entity_description in YUKA_CONFIG_SWITCH_ENTITIES:
+                config_entity = MammotionConfigSwitchEntity(
+                    coordinator, entity_description
+                )
+                entities.append(config_entity)
+        async_add_entities(entities)
 
 
 class MammotionSwitchEntity(MammotionBaseEntity, SwitchEntity):
@@ -182,7 +195,7 @@ class MammotionSwitchEntity(MammotionBaseEntity, SwitchEntity):
 
     def __init__(
         self,
-        coordinator: MammotionDataUpdateCoordinator,
+        coordinator: MammotionBaseUpdateCoordinator,
         entity_description: MammotionSwitchEntityDescription,
     ) -> None:
         super().__init__(coordinator, entity_description.key)
@@ -211,7 +224,7 @@ class MammotionUpdateSwitchEntity(MammotionBaseEntity, SwitchEntity, RestoreEnti
 
     def __init__(
         self,
-        coordinator: MammotionDataUpdateCoordinator,
+        coordinator: MammotionBaseUpdateCoordinator,
         entity_description: MammotionUpdateSwitchEntityDescription,
     ) -> None:
         super().__init__(coordinator, entity_description.key)
@@ -242,7 +255,7 @@ class MammotionConfigSwitchEntity(MammotionBaseEntity, SwitchEntity, RestoreEnti
 
     def __init__(
         self,
-        coordinator: MammotionDataUpdateCoordinator,
+        coordinator: MammotionBaseUpdateCoordinator,
         entity_description: MammotionConfigSwitchEntityDescription,
     ) -> None:
         super().__init__(coordinator, entity_description.key)
@@ -278,7 +291,7 @@ class MammotionConfigAreaSwitchEntity(MammotionBaseEntity, SwitchEntity, Restore
 
     def __init__(
         self,
-        coordinator: MammotionDataUpdateCoordinator,
+        coordinator: MammotionBaseUpdateCoordinator,
         entity_description: MammotionConfigAreaSwitchEntityDescription,
     ) -> None:
         super().__init__(coordinator, entity_description.key)
