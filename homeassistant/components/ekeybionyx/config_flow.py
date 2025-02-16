@@ -101,7 +101,7 @@ class OAuth2FlowHandler(
             return await self.async_step_delete_webhooks()
         if user_input is None:
             data_schema: dict[Any, Any] = {
-                vol.Optional(f"Webhook {i + 1}"): vol.All(str, vol.Length(max=50))
+                vol.Optional(f"webhook{i + 1}"): vol.All(str, vol.Length(max=50))
                 for i in range(self._data["system"].function_webhook_quotas["free"])
             }
             data_schema[
