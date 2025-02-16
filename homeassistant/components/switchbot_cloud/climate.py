@@ -34,7 +34,7 @@ _SWITCHBOT_HVAC_MODES: dict[HVACMode, int] = {
 _DEFAULT_SWITCHBOT_HVAC_MODE = _SWITCHBOT_HVAC_MODES[HVACMode.FAN_ONLY]
 
 _SWITCHBOT_FAN_MODES: dict[str, int] = {
-    FanState.FAN_AUTO: 0,
+    FanState.FAN_AUTO: 1,
     FanState.FAN_LOW: 2,
     FanState.FAN_MEDIUM: 3,
     FanState.FAN_HIGH: 4,
