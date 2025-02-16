@@ -11,7 +11,23 @@
         "description": "Please select a system in which you want to set up the webhooks"
       },
       "webhooks": {
-        "description": "Please name your Webhooks. Leaving them empty will delete them."
+        "description": "Please name your Webhooks. Leaving them empty will delete them.",
+        "data": {
+          "webhook1": "Webhook 1",
+          "webhook2": "Webhook 2",
+          "webhook3": "Webhook 3",
+          "webhook4": "Webhook 4",
+          "webhook5": "Webhook 5",
+          "url": "URL"
+        },
+        "data_description": {
+          "webhook1": "Webhook 1",
+          "webhook2": "Webhook 2",
+          "webhook3": "Webhook 3",
+          "webhook4": "Webhook 4",
+          "webhook5": "Webhook 5",
+          "url": "URL"
+        }
       },
       "delete_webhooks": {
         "description": "Webhook configuration inconsistent. Webhooks with Home Assistant were already configured. If you continue they will be marked for removal."
