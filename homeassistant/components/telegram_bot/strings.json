@@ -96,7 +96,7 @@
         },
         "verify_ssl": {
           "name": "Verify SSL",
-          "description": "Enable or disable SSL certificate verification. Set to false if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server."
+          "description": "Enable or disable SSL certificate verification. Disable if you're downloading the file from a URL and you don't want to validate the SSL certificate of the server."
         },
         "timeout": {
           "name": "Read timeout",
@@ -530,11 +530,11 @@
         },
         "is_anonymous": {
           "name": "Is anonymous",
-          "description": "If the poll needs to be anonymous, defaults to True."
+          "description": "If the poll needs to be anonymous. This is the default."
         },
         "allows_multiple_answers": {
           "name": "Allow multiple answers",
-          "description": "If the poll allows multiple answers, defaults to False."
+          "description": "If the poll allows multiple answers."
         },
         "open_period": {
           "name": "Open period",
