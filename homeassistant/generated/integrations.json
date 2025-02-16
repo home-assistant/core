@@ -1799,6 +1799,12 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "ezlohacloud": {
+      "name": "Ezlo HA Cloud",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "ezviz": {
       "name": "EZVIZ",
       "integration_type": "hub",

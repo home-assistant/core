@@ -1,0 +1,13 @@
+{
+  "domain": "ezlohacloud",
+  "name": "Ezlo HA Cloud",
+  "codeowners": ["@ezlotamilselvan"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/ezlohacloud",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": ["snitun==0.39.1"],
+  "ssdp": [],
+  "zeroconf": []
+}
