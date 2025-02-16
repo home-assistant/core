@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import SCAN_INTERVAL
+from .const import DOMAIN, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -75,16 +75,28 @@ class LaCrosseUpdateCoordinator(DataUpdateCoordinator[list[Sensor]]):
         try:
             # Fetch last hour of data
             for sensor in self.devices:
-                sensor.data = (
-                    await self.api.get_sensor_status(
-                        sensor=sensor,
-                        tz=self.hass.config.time_zone,
+                data = await self.api.get_sensor_status(
+                    sensor=sensor,
+                    tz=self.hass.config.time_zone,
+                )
+                _LOGGER.debug("Got data: %s", data)
+
+                if data_error := data.get("error"):
+                    if data_error == "no_readings":
+                        sensor.data = None
+                        _LOGGER.debug("No readings for %s", sensor.name)
+                        continue
+                    _LOGGER.debug("Error: %s", data_error)
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN, translation_key="update_error"
                     )
-                )["data"]["current"]
-                _LOGGER.debug("Got data: %s", sensor.data)
+
+                sensor.data = data["data"]["current"]
 
         except HTTPError as error:
-            raise UpdateFailed from error
+            raise UpdateFailed(
+                translation_domain=DOMAIN, translation_key="update_error"
+            ) from error
 
         # Verify that we have permission to read the sensors
         for sensor in self.devices:
