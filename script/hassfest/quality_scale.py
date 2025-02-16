@@ -335,7 +335,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "egardia",
     "eight_sleep",
     "electrasmart",
-    "electric_kiwi",
     "eliqonline",
     "elkm1",
     "elmax",
