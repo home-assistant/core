@@ -26,6 +26,7 @@ from aiohasupervisor.models import (
     jobs as supervisor_jobs,
     mounts as supervisor_mounts,
 )
+from aiohasupervisor.models.backups import LOCATION_CLOUD_BACKUP, LOCATION_LOCAL_STORAGE
 from aiohasupervisor.models.mounts import MountsInfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -39,11 +40,7 @@ from homeassistant.components.backup import (
     Folder,
 )
 from homeassistant.components.hassio import DOMAIN
-from homeassistant.components.hassio.backup import (
-    LOCATION_CLOUD_BACKUP,
-    LOCATION_LOCAL,
-    RESTORE_JOB_ID_ENV,
-)
+from homeassistant.components.hassio.backup import RESTORE_JOB_ID_ENV
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -60,17 +57,12 @@ TEST_BACKUP = supervisor_backups.Backup(
         homeassistant=True,
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
-    location=None,
     location_attributes={
-        LOCATION_LOCAL: supervisor_backups.BackupLocationAttributes(
+        LOCATION_LOCAL_STORAGE: supervisor_backups.BackupLocationAttributes(
             protected=False, size_bytes=1048576
         )
     },
-    locations={None},
     name="Test",
-    protected=False,
-    size=1.0,
-    size_bytes=1048576,
     slug="abc123",
     type=supervisor_backups.BackupType.PARTIAL,
 )
@@ -89,14 +81,9 @@ TEST_BACKUP_DETAILS = supervisor_backups.BackupComplete(
     folders=[supervisor_backups.Folder.SHARE],
     homeassistant_exclude_database=False,
     homeassistant="2024.12.0",
-    location=TEST_BACKUP.location,
     location_attributes=TEST_BACKUP.location_attributes,
-    locations=TEST_BACKUP.locations,
     name=TEST_BACKUP.name,
-    protected=TEST_BACKUP.protected,
     repositories=[],
-    size=TEST_BACKUP.size,
-    size_bytes=TEST_BACKUP.size_bytes,
     slug=TEST_BACKUP.slug,
     supervisor_version="2024.11.2",
     type=TEST_BACKUP.type,
@@ -110,17 +97,12 @@ TEST_BACKUP_2 = supervisor_backups.Backup(
         homeassistant=False,
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
-    location=None,
     location_attributes={
-        LOCATION_LOCAL: supervisor_backups.BackupLocationAttributes(
+        LOCATION_LOCAL_STORAGE: supervisor_backups.BackupLocationAttributes(
             protected=False, size_bytes=1048576
         )
     },
-    locations={None},
     name="Test",
-    protected=False,
-    size=1.0,
-    size_bytes=1048576,
     slug="abc123",
     type=supervisor_backups.BackupType.PARTIAL,
 )
@@ -139,14 +121,9 @@ TEST_BACKUP_DETAILS_2 = supervisor_backups.BackupComplete(
     folders=[supervisor_backups.Folder.SHARE],
     homeassistant_exclude_database=False,
     homeassistant=None,
-    location=TEST_BACKUP_2.location,
     location_attributes=TEST_BACKUP_2.location_attributes,
-    locations=TEST_BACKUP_2.locations,
     name=TEST_BACKUP_2.name,
-    protected=TEST_BACKUP_2.protected,
     repositories=[],
-    size=TEST_BACKUP_2.size,
-    size_bytes=TEST_BACKUP_2.size_bytes,
     slug=TEST_BACKUP_2.slug,
     supervisor_version="2024.11.2",
     type=TEST_BACKUP_2.type,
@@ -160,17 +137,12 @@ TEST_BACKUP_3 = supervisor_backups.Backup(
         homeassistant=True,
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
-    location="share",
     location_attributes={
-        LOCATION_LOCAL: supervisor_backups.BackupLocationAttributes(
+        LOCATION_LOCAL_STORAGE: supervisor_backups.BackupLocationAttributes(
             protected=False, size_bytes=1048576
         )
     },
-    locations={"share"},
     name="Test",
-    protected=False,
-    size=1.0,
-    size_bytes=1048576,
     slug="abc123",
     type=supervisor_backups.BackupType.PARTIAL,
 )
@@ -189,14 +161,9 @@ TEST_BACKUP_DETAILS_3 = supervisor_backups.BackupComplete(
     folders=[supervisor_backups.Folder.SHARE],
     homeassistant_exclude_database=False,
     homeassistant=None,
-    location=TEST_BACKUP_3.location,
     location_attributes=TEST_BACKUP_3.location_attributes,
-    locations=TEST_BACKUP_3.locations,
     name=TEST_BACKUP_3.name,
-    protected=TEST_BACKUP_3.protected,
     repositories=[],
-    size=TEST_BACKUP_3.size,
-    size_bytes=TEST_BACKUP_3.size_bytes,
     slug=TEST_BACKUP_3.slug,
     supervisor_version="2024.11.2",
     type=TEST_BACKUP_3.type,
@@ -211,17 +178,12 @@ TEST_BACKUP_4 = supervisor_backups.Backup(
         homeassistant=True,
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
-    location=None,
     location_attributes={
-        LOCATION_LOCAL: supervisor_backups.BackupLocationAttributes(
+        LOCATION_LOCAL_STORAGE: supervisor_backups.BackupLocationAttributes(
             protected=False, size_bytes=1048576
         )
     },
-    locations={None},
     name="Test",
-    protected=False,
-    size=1.0,
-    size_bytes=1048576,
     slug="abc123",
     type=supervisor_backups.BackupType.PARTIAL,
 )
@@ -240,14 +202,9 @@ TEST_BACKUP_DETAILS_4 = supervisor_backups.BackupComplete(
     folders=[supervisor_backups.Folder.SHARE],
     homeassistant_exclude_database=True,
     homeassistant="2024.12.0",
-    location=TEST_BACKUP_4.location,
     location_attributes=TEST_BACKUP_4.location_attributes,
-    locations=TEST_BACKUP_4.locations,
     name=TEST_BACKUP_4.name,
-    protected=TEST_BACKUP_4.protected,
     repositories=[],
-    size=TEST_BACKUP_4.size,
-    size_bytes=TEST_BACKUP_4.size_bytes,
     slug=TEST_BACKUP_4.slug,
     supervisor_version="2024.11.2",
     type=TEST_BACKUP_4.type,
@@ -261,17 +218,12 @@ TEST_BACKUP_5 = supervisor_backups.Backup(
         homeassistant=True,
     ),
     date=datetime.fromisoformat("1970-01-01T00:00:00Z"),
-    location=LOCATION_CLOUD_BACKUP,
     location_attributes={
         LOCATION_CLOUD_BACKUP: supervisor_backups.BackupLocationAttributes(
             protected=False, size_bytes=1048576
         )
     },
-    locations={LOCATION_CLOUD_BACKUP},
     name="Test",
-    protected=False,
-    size=1.0,
-    size_bytes=1048576,
     slug="abc123",
     type=supervisor_backups.BackupType.PARTIAL,
 )
@@ -290,14 +242,9 @@ TEST_BACKUP_DETAILS_5 = supervisor_backups.BackupComplete(
     folders=[supervisor_backups.Folder.SHARE],
     homeassistant_exclude_database=False,
     homeassistant="2024.12.0",
-    location=TEST_BACKUP_5.location,
     location_attributes=TEST_BACKUP_5.location_attributes,
-    locations=TEST_BACKUP_5.locations,
     name=TEST_BACKUP_5.name,
-    protected=TEST_BACKUP_5.protected,
     repositories=[],
-    size=TEST_BACKUP_5.size,
-    size_bytes=TEST_BACKUP_5.size_bytes,
     slug=TEST_BACKUP_5.slug,
     supervisor_version="2024.11.2",
     type=TEST_BACKUP_5.type,
@@ -312,6 +259,7 @@ TEST_JOB_NOT_DONE = supervisor_jobs.Job(
     stage="copy_additional_locations",
     done=False,
     errors=[],
+    created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
 )
 TEST_JOB_DONE = supervisor_jobs.Job(
@@ -322,6 +270,7 @@ TEST_JOB_DONE = supervisor_jobs.Job(
     stage="copy_additional_locations",
     done=True,
     errors=[],
+    created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
 )
 TEST_RESTORE_JOB_DONE_WITH_ERROR = supervisor_jobs.Job(
@@ -340,6 +289,7 @@ TEST_RESTORE_JOB_DONE_WITH_ERROR = supervisor_jobs.Job(
             ),
         )
     ],
+    created=datetime.fromisoformat("1970-01-01T00:00:00Z"),
     child_jobs=[],
 )
 
@@ -580,7 +530,10 @@ async def test_agent_download(
     assert await resp.content.read() == b"backup data"
 
     supervisor_client.backups.download_backup.assert_called_once_with(
-        "abc123", options=supervisor_backups.DownloadBackupOptions(location=None)
+        "abc123",
+        options=supervisor_backups.DownloadBackupOptions(
+            location=LOCATION_LOCAL_STORAGE
+        ),
     )
 
 
@@ -708,8 +661,8 @@ async def test_agent_get_backup(
         (
             SupervisorBadRequestError("blah"),
             {
-                "success": False,
-                "error": {"code": "unknown_error", "message": "Unknown error"},
+                "success": True,
+                "result": {"agent_errors": {"hassio.local": "blah"}, "backup": None},
             },
         ),
         (
@@ -766,7 +719,10 @@ async def test_agent_delete_backup(
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
     supervisor_client.backups.remove_backup.assert_called_once_with(
-        backup_id, options=supervisor_backups.RemoveBackupOptions(location={None})
+        backup_id,
+        options=supervisor_backups.RemoveBackupOptions(
+            location={LOCATION_LOCAL_STORAGE}
+        ),
     )
 
 
@@ -777,8 +733,8 @@ async def test_agent_delete_backup(
         (
             SupervisorBadRequestError("blah"),
             {
-                "success": False,
-                "error": {"code": "unknown_error", "message": "Unknown error"},
+                "success": True,
+                "result": {"agent_errors": {"hassio.local": "blah"}},
             },
         ),
         (
@@ -812,7 +768,10 @@ async def test_agent_delete_with_error(
 
     assert response == {"id": 1, "type": "result"} | expected_response
     supervisor_client.backups.remove_backup.assert_called_once_with(
-        backup_id, options=supervisor_backups.RemoveBackupOptions(location={None})
+        backup_id,
+        options=supervisor_backups.RemoveBackupOptions(
+            location={LOCATION_LOCAL_STORAGE}
+        ),
     )
 
 
@@ -887,11 +846,11 @@ DEFAULT_BACKUP_OPTIONS = supervisor_backups.PartialBackupOptions(
         "supervisor.backup_request_date": "2025-01-30T05:42:12.345678-08:00",
         "with_automatic_settings": False,
     },
-    filename=PurePath("Test_-_2025-01-30_05.42_12345678.tar"),
+    filename=PurePath("Test_2025-01-30_05.42_12345678.tar"),
     folders={"ssl"},
     homeassistant_exclude_database=False,
     homeassistant=True,
-    location=[None],
+    location=[LOCATION_LOCAL_STORAGE],
     name="Test",
     password=None,
 )
@@ -947,7 +906,7 @@ async def test_reader_writer_create(
     """Test generating a backup."""
     client = await hass_ws_client(hass)
     freezer.move_to("2025-01-30 13:42:12.345678")
-    supervisor_client.backups.partial_backup.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
 
@@ -1022,7 +981,7 @@ async def test_reader_writer_create_report_progress(
     """Test generating a backup."""
     client = await hass_ws_client(hass)
     freezer.move_to("2025-01-30 13:42:12.345678")
-    supervisor_client.backups.partial_backup.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
 
@@ -1129,7 +1088,7 @@ async def test_reader_writer_create_job_done(
     """Test generating a backup, and backup job finishes early."""
     client = await hass_ws_client(hass)
     freezer.move_to("2025-01-30 13:42:12.345678")
-    supervisor_client.backups.partial_backup.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
     supervisor_client.jobs.get_job.return_value = TEST_JOB_DONE
 
@@ -1198,7 +1157,7 @@ async def test_reader_writer_create_job_done(
             None,
             ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
             None,
-            [None, "share1", "share2", "share3"],
+            [LOCATION_LOCAL_STORAGE, "share1", "share2", "share3"],
             False,
             [],
         ),
@@ -1207,7 +1166,7 @@ async def test_reader_writer_create_job_done(
             "hunter2",
             ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
             "hunter2",
-            [None, "share1", "share2", "share3"],
+            [LOCATION_LOCAL_STORAGE, "share1", "share2", "share3"],
             True,
             [],
         ),
@@ -1225,7 +1184,7 @@ async def test_reader_writer_create_job_done(
             "hunter2",
             ["share1", "share2", "share3"],
             True,
-            [None],
+            [LOCATION_LOCAL_STORAGE],
         ),
         (
             [
@@ -1242,7 +1201,7 @@ async def test_reader_writer_create_job_done(
             "hunter2",
             ["share2", "share3"],
             True,
-            [None, "share1"],
+            [LOCATION_LOCAL_STORAGE, "share1"],
         ),
         (
             [
@@ -1258,7 +1217,7 @@ async def test_reader_writer_create_job_done(
             "hunter2",
             ["hassio.local", "hassio.share1", "hassio.share2", "hassio.share3"],
             None,
-            [None, "share1", "share2"],
+            [LOCATION_LOCAL_STORAGE, "share1", "share2"],
             True,
             ["share3"],
         ),
@@ -1274,7 +1233,7 @@ async def test_reader_writer_create_job_done(
             "hunter2",
             ["hassio.local"],
             None,
-            [None],
+            [LOCATION_LOCAL_STORAGE],
             False,
             [],
         ),
@@ -1312,15 +1271,14 @@ async def test_reader_writer_create_per_agent_encryption(
             for i in range(1, 4)
         ],
     )
-    supervisor_client.backups.partial_backup.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = replace(
         TEST_BACKUP_DETAILS,
         extra=DEFAULT_BACKUP_OPTIONS.extra,
-        locations=create_locations,
         location_attributes={
-            location or LOCATION_LOCAL: supervisor_backups.BackupLocationAttributes(
+            location: supervisor_backups.BackupLocationAttributes(
                 protected=create_protected,
-                size_bytes=TEST_BACKUP_DETAILS.size_bytes,
+                size_bytes=1048576,
             )
             for location in create_locations
         },
@@ -1400,7 +1358,7 @@ async def test_reader_writer_create_per_agent_encryption(
         upload_locations
     )
     for call in supervisor_client.backups.upload_backup.mock_calls:
-        assert call.args[1].filename == PurePath("Test_-_2025-01-30_05.42_12345678.tar")
+        assert call.args[1].filename == PurePath("Test_2025-01-30_05.42_12345678.tar")
         upload_call_locations: set = call.args[1].location
         assert len(upload_call_locations) == 1
         assert upload_call_locations.pop() in upload_locations
@@ -1514,7 +1472,7 @@ async def test_reader_writer_create_missing_reference_error(
 ) -> None:
     """Test missing reference error when generating a backup."""
     client = await hass_ws_client(hass)
-    supervisor_client.backups.partial_backup.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1581,7 +1539,7 @@ async def test_reader_writer_create_download_remove_error(
 ) -> None:
     """Test download and remove error when generating a backup."""
     client = await hass_ws_client(hass)
-    supervisor_client.backups.partial_backup.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS_5
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
     method_mock = getattr(supervisor_client.backups, method)
@@ -1668,7 +1626,7 @@ async def test_reader_writer_create_info_error(
 ) -> None:
     """Test backup info error when generating a backup."""
     client = await hass_ws_client(hass)
-    supervisor_client.backups.partial_backup.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.side_effect = exception
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
 
@@ -1745,7 +1703,7 @@ async def test_reader_writer_create_remote_backup(
     """Test generating a backup which will be uploaded to a remote agent."""
     client = await hass_ws_client(hass)
     freezer.move_to("2025-01-30 13:42:12.345678")
-    supervisor_client.backups.partial_backup.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS_5
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
 
@@ -1848,7 +1806,7 @@ async def test_reader_writer_create_wrong_parameters(
 ) -> None:
     """Test generating a backup."""
     client = await hass_ws_client(hass)
-    supervisor_client.backups.partial_backup.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_backup.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
 
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
@@ -1975,7 +1933,7 @@ async def test_reader_writer_restore(
 ) -> None:
     """Test restoring a backup."""
     client = await hass_ws_client(hass)
-    supervisor_client.backups.partial_restore.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_restore.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
     supervisor_client.jobs.get_job.return_value = get_job_result
@@ -2006,7 +1964,7 @@ async def test_reader_writer_restore(
             background=True,
             folders=None,
             homeassistant=True,
-            location=None,
+            location=LOCATION_LOCAL_STORAGE,
             password=None,
         ),
     )
@@ -2040,7 +1998,7 @@ async def test_reader_writer_restore_report_progress(
 ) -> None:
     """Test restoring a backup."""
     client = await hass_ws_client(hass)
-    supervisor_client.backups.partial_restore.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_restore.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
@@ -2071,7 +2029,7 @@ async def test_reader_writer_restore_report_progress(
             background=True,
             folders=None,
             homeassistant=True,
-            location=None,
+            location=LOCATION_LOCAL_STORAGE,
             password=None,
         ),
     )
@@ -2193,7 +2151,7 @@ async def test_reader_writer_restore_error(
             background=True,
             folders=None,
             homeassistant=True,
-            location=None,
+            location=LOCATION_LOCAL_STORAGE,
             password=None,
         ),
     )
@@ -2221,7 +2179,7 @@ async def test_reader_writer_restore_late_error(
 ) -> None:
     """Test restoring a backup with error."""
     client = await hass_ws_client(hass)
-    supervisor_client.backups.partial_restore.return_value.job_id = TEST_JOB_ID
+    supervisor_client.backups.partial_restore.return_value.job_id = UUID(TEST_JOB_ID)
     supervisor_client.backups.list.return_value = [TEST_BACKUP]
     supervisor_client.backups.backup_info.return_value = TEST_BACKUP_DETAILS
     supervisor_client.jobs.get_job.return_value = TEST_JOB_NOT_DONE
@@ -2250,7 +2208,7 @@ async def test_reader_writer_restore_late_error(
             background=True,
             folders=None,
             homeassistant=True,
-            location=None,
+            location=LOCATION_LOCAL_STORAGE,
             password=None,
         ),
     )

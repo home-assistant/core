@@ -252,7 +252,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigEntry",
-                2: "AddEntitiesCallback",
+                2: "AddConfigEntryEntitiesCallback",
             },
             return_type=None,
         ),

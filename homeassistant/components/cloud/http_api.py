@@ -43,6 +43,7 @@ from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
+    DATA_CLOUD_LOG_HANDLER,
     EVENT_CLOUD_EVENT,
     LOGIN_MFA_TIMEOUT,
     PREF_ALEXA_REPORT_STATE,
@@ -397,8 +398,11 @@ class DownloadSupportPackageView(HomeAssistantView):
     url = "/api/cloud/support_package"
     name = "api:cloud:support_package"
 
-    def _generate_markdown(
-        self, hass_info: dict[str, Any], domains_info: dict[str, dict[str, str]]
+    async def _generate_markdown(
+        self,
+        hass: HomeAssistant,
+        hass_info: dict[str, Any],
+        domains_info: dict[str, dict[str, str]],
     ) -> str:
         def get_domain_table_markdown(domain_info: dict[str, Any]) -> str:
             if len(domain_info) == 0:
@@ -424,6 +428,17 @@ class DownloadSupportPackageView(HomeAssistantView):
                 "</details>\n\n"
             )
 
+        log_handler = hass.data[DATA_CLOUD_LOG_HANDLER]
+        logs = "\n".join(await log_handler.get_logs(hass))
+        markdown += (
+            "## Full logs\n\n"
+            "<details><summary>Logs</summary>\n\n"
+            "```logs\n"
+            f"{logs}\n"
+            "```\n\n"
+            "</details>\n"
+        )
+
         return markdown
 
     async def get(self, request: web.Request) -> web.Response:
@@ -433,7 +448,7 @@ class DownloadSupportPackageView(HomeAssistantView):
         domain_health = await get_system_health_info(hass)
 
         hass_info = domain_health.pop("homeassistant", {})
-        markdown = self._generate_markdown(hass_info, domain_health)
+        markdown = await self._generate_markdown(hass, hass_info, domain_health)
 
         return web.Response(
             body=markdown,

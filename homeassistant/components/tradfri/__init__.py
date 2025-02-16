@@ -110,7 +110,7 @@ async def async_setup_entry(
 
     for device in devices:
         coordinator = TradfriDeviceDataUpdateCoordinator(
-            hass=hass, api=api, device=device
+            hass=hass, config_entry=entry, api=api, device=device
         )
         await coordinator.async_config_entry_first_refresh()
 
