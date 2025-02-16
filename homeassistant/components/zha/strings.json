@@ -7,7 +7,7 @@
         "description": "Select the serial port for your Zigbee radio",
         "data": {
           "path": "Serial device path"
-        },
+        }
       },
       "confirm": {
         "description": "Do you want to set up {name}?"
@@ -20,7 +20,7 @@
         "description": "Pick your Zigbee radio type",
         "data": {
           "radio_type": "Radio type"
-        },
+        }
       },
       "manual_port_config": {
         "title": "Serial port settings",
