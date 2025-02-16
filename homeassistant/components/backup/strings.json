@@ -25,9 +25,9 @@
         "name": "Backup Manager State",
         "state": {
           "idle": "Idle",
-          "create_backup": "Create backup",
-          "receive_backup": "Receive backup",
-          "restore_backup": "Restore backup"
+          "create_backup": "Creating a backup",
+          "receive_backup": "Receiving a backup",
+          "restore_backup": "Restoring a backup"
         }
       },
       "next_scheduled_automatic_backup": {
