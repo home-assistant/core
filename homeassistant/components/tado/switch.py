@@ -13,8 +13,33 @@ from .entity import TadoDataUpdateCoordinator, TadoZoneEntity
 _LOGGER = logging.getLogger(__name__)
 
 
+async def async_setup_entry(
+    hass: HomeAssistant, entry: TadoConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up the Tado switch platform."""
+
+    tado = entry.runtime_data.coordinator
+    entities: list[TadoChildLockSwitchEntity] = []
+    for zone in tado.zones:
+        zoneChildLockSupported = (
+            len(zone["devices"]) > 0 and "childLockEnabled" in zone["devices"][0]
+        )
+
+        if not zoneChildLockSupported:
+            continue
+
+        entities.append(
+            TadoChildLockSwitchEntity(
+                tado, zone["name"], zone["id"], zone["devices"][0]
+            )
+        )
+    async_add_entities(entities, True)
+
+
 class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
     """Representation of a Tado child lock switch entity."""
+
+    _attr_translation_key = "child_lock"
 
     def __init__(
         self,
@@ -29,7 +54,6 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
         self._device_info = device_info
         self._device_id = self._device_info["shortSerialNo"]
         self._attr_unique_id = f"{zone_id} {coordinator.home_id} child-lock"
-        self._attr_translation_key = "child_lock"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
@@ -60,35 +84,3 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
             )
         else:
             self._attr_is_on = self._device_info.get("childLockEnabled", False) is True
-
-
-async def async_setup_entry(
-    hass: HomeAssistant, entry: TadoConfigEntry, async_add_entities: AddEntitiesCallback
-) -> None:
-    """Set up the Tado switch platform."""
-
-    tado = entry.runtime_data.coordinator
-    entities: list[TadoChildLockSwitchEntity] = await _generate_entities(tado)
-
-    async_add_entities(entities, True)
-
-
-async def _generate_entities(
-    tado: TadoDataUpdateCoordinator,
-) -> list[TadoChildLockSwitchEntity]:
-    """Create all switch entities."""
-    entities: list[TadoChildLockSwitchEntity] = []
-    for zone in tado.zones:
-        zoneChildLockSupported = (
-            len(zone["devices"]) > 0 and "childLockEnabled" in zone["devices"][0]
-        )
-
-        if not zoneChildLockSupported:
-            continue
-
-        entities.append(
-            TadoChildLockSwitchEntity(
-                tado, zone["name"], zone["id"], zone["devices"][0]
-            )
-        )
-    return entities
