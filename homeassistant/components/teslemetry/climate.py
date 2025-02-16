@@ -280,7 +280,7 @@ class TeslemetryStreamingClimateEntity(
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
             self._attr_hvac_mode = (
-                HVACMode[state.state] if state.state in HVAC_MODES else None
+                HVACMode(state.state) if state.state in HVAC_MODES else None
             )
             self._attr_current_temperature = state.attributes.get("current_temperature")
             self._attr_target_temperature = state.attributes.get("target_temperature")
@@ -521,10 +521,9 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
         """Handle entity which will be added."""
         await super().async_added_to_hass()
         if (state := await self.async_get_last_state()) is not None:
-            try:
-                self._attr_hvac_mode = HVACMode[state.state]
-            except KeyError:
-                self._attr_hvac_mode = None
+            self._attr_hvac_mode = (
+                HVACMode(state.state) if state.state in HVAC_MODES else None
+            )
             self._attr_current_temperature = state.attributes.get("current_temperature")
             self._attr_target_temperature = state.attributes.get("target_temperature")
 
