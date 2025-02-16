@@ -1,6 +1,7 @@
 get_forecast:
-  target:
-    entity:
-      integration: stookwijzer
-      domain: sensor
-      device_class: enum
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: stookwijzer

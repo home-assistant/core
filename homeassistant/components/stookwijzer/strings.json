@@ -30,7 +30,13 @@
   "services": {
     "get_forecast": {
       "name": "Get forecast",
-      "description": "Retrieves the advice forecast from Stookwijzer."
+      "description": "Retrieves the advice forecast from Stookwijzer.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Stookwijzer instance",
+          "description": "The Stookwijzer instance to get requests from."
+        }
+      }
     }
   },
   "issues": {
@@ -42,6 +48,12 @@
   "exceptions": {
     "no_data_received": {
       "message": "No data received from Stookwijzer."
+    },
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
     }
   }
 }
