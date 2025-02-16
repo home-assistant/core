@@ -58,7 +58,8 @@ class TadoChildLockSwitchEntity(TadoZoneEntity, SwitchEntity):
                 self._device_id,
                 self.zone_name,
             )
-        self._attr_is_on = self._device_info.get("childLockEnabled", False) is True
+        else:
+            self._attr_is_on = self._device_info.get("childLockEnabled", False) is True
 
 
 async def async_setup_entry(
