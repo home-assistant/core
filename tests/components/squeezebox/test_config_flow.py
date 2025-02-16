@@ -119,15 +119,15 @@ async def test_options_form(hass: HomeAssistant) -> None:
     assert result["step_id"] == "init"
 
     # simulate manual input of options
-    result2 = await hass.config_entries.options.async_configure(
+    result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={CONF_BROWSE_LIMIT: BROWSE_LIMIT, CONF_VOLUME_STEP: VOLUME_STEP},
     )
 
     # put some meaningful asserts here
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    assert result2["data"] == {
+    assert result["data"] == {
         CONF_BROWSE_LIMIT: BROWSE_LIMIT,
         CONF_VOLUME_STEP: VOLUME_STEP,
     }

@@ -236,6 +236,13 @@ class SqueezeBoxMediaPlayerEntity(
         )
 
     @property
+    def browse_limit(self) -> int:
+        """Return the step to be used for volume up down."""
+        return self.coordinator.config_entry.options.get(
+            CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
+        )
+
+    @property
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.coordinator.available and super().available
@@ -471,9 +478,7 @@ class SqueezeBoxMediaPlayerEntity(
                 playlist = await generate_playlist(
                     self._player,
                     payload,
-                    self.coordinator.config_entry.options.get(
-                        CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
-                    ),
+                    self.browse_limit,
                 )
             except BrowseError:
                 # a list of urls
@@ -488,9 +493,7 @@ class SqueezeBoxMediaPlayerEntity(
             playlist = await generate_playlist(
                 self._player,
                 payload,
-                self.coordinator.config_entry.options.get(
-                    CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
-                ),
+                self.browse_limit,
             )
 
             _LOGGER.debug("Generated playlist: %s", playlist)
@@ -605,9 +608,7 @@ class SqueezeBoxMediaPlayerEntity(
             self,
             self._player,
             payload,
-            self.coordinator.config_entry.options.get(
-                CONF_BROWSE_LIMIT, DEFAULT_BROWSE_LIMIT
-            ),
+            self.browse_limit,
         )
 
     async def async_get_browse_image(

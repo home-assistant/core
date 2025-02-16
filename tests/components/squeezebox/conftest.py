@@ -33,6 +33,9 @@ from homeassistant.helpers.device_registry import format_mac
 # from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 
+CONF_VOLUME_STEP = "volume_step"
+TEST_VOLUME_STEP = 10
+
 TEST_HOST = "1.2.3.4"
 TEST_PORT = "9000"
 TEST_USE_HTTPS = False
@@ -108,6 +111,9 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
             const.CONF_HTTPS: TEST_USE_HTTPS,
+        },
+        options={
+            CONF_VOLUME_STEP: TEST_VOLUME_STEP,
         },
     )
     config_entry.add_to_hass(hass)
@@ -226,6 +232,7 @@ def mock_pysqueezebox_player(uuid: str) -> MagicMock:
         mock_player.title = None
         mock_player.image_url = None
         mock_player.model = "SqueezeLite"
+        mock_player.ATTR_MEDIA_VOLUME_LEVEL = 0.2
 
         return mock_player
 
