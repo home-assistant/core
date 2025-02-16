@@ -143,10 +143,9 @@ class BrWeather(WeatherEntity):
     @callback
     def data_updated(self, data: BrData) -> None:
         """Update data."""
+        self._attr_attribution = data.attribution
         if data.stationname:
             self._attr_attribution = f"{data.attribution} ({data.stationname})"
-        else:
-            self._attr_attribution = data.attribution
         self._attr_condition = self._calc_condition(data)
         self._forecast = self._calc_forecast(data)
         self._attr_humidity = data.humidity
