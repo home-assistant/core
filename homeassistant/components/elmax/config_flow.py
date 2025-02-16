@@ -499,7 +499,7 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle device found via zeroconf."""
         host = (
-            f"[{discovery_info.ip_address!s}]"
+            f"[{discovery_info.ip_address}]"
             if discovery_info.ip_address.version == 6
             else str(discovery_info.ip_address)
         )
