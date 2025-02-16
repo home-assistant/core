@@ -32,7 +32,6 @@ LIGHT_ATTRIBUTES = [
     AttributeType.COLOR_MODE,
     AttributeType.COLOR_TEMPERATURE,
     AttributeType.DIMMING_LEVEL,
-    AttributeType.HUE,
 ]
 
 
@@ -64,13 +63,11 @@ def get_light_attribute_sets(
     on_off_attributes = [
         i for i in node.attributes if i.type == AttributeType.ON_OFF and i.editable
     ]
-    node_attributes = node.attributes.copy()
     for a in on_off_attributes:
         attribute_dict: dict[AttributeType, HomeeAttribute] = {a.type: a}
-        for attribute in node_attributes:
+        for attribute in node.attributes:
             if attribute.instance == a.instance and attribute.type in LIGHT_ATTRIBUTES:
                 attribute_dict[attribute.type] = attribute
-                node_attributes.remove(attribute)
         lights.append(attribute_dict)
 
     return lights
@@ -116,31 +113,33 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
     ) -> None:
         """Initialize a homee light."""
         super().__init__(node, entry)
+
         self._on_off_attr: HomeeAttribute = light[AttributeType.ON_OFF]
         self._dimmer_attr: HomeeAttribute | None = light.get(
             AttributeType.DIMMING_LEVEL
         )
-        self._hue_attr: HomeeAttribute | None = light.get(AttributeType.HUE)
         self._col_attr: HomeeAttribute | None = light.get(AttributeType.COLOR)
         self._temp_attr: HomeeAttribute | None = light.get(
             AttributeType.COLOR_TEMPERATURE
         )
         self._mode_attr: HomeeAttribute | None = light.get(AttributeType.COLOR_MODE)
+
         self._attr_supported_color_modes = self._get_supported_color_modes()
         self._attr_color_mode = get_color_mode(self._attr_supported_color_modes)
 
+        if self._on_off_attr.instance > 0:
+            self._attr_translation_key = "light_instance"
+            self._attr_translation_placeholders = {
+                "instance": str(self._on_off_attr.instance)
+            }
         self._attr_unique_id = (
             f"{entry.runtime_data.settings.uid}-{self._node.id}-{self._on_off_attr.id}"
         )
 
     @property
-    def name(self) -> str | None:
+    def translation_key(self) -> str | None:
         """Return a name if more than one light is present."""
-        return (
-            f"light {self._on_off_attr.instance}"
-            if self._on_off_attr.instance > 0
-            else None
-        )
+        return "light_instance" if self._on_off_attr.instance > 0 else None
 
     @property
     def brightness(self) -> int | None:
@@ -222,11 +221,6 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
                     self._col_attr,
                     rgb_list_to_decimal(color_hs_to_RGB(*color)),
                 )
-            elif self._hue_attr is not None:
-                await self.async_set_value(
-                    self._hue_attr,
-                    rgb_list_to_decimal(color_hs_to_RGB(*color)),
-                )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
@@ -236,7 +230,7 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         """Determine the supported color modes from the available attributes."""
         color_modes: set[ColorMode] = set()
 
-        if self._col_attr is not None or self._hue_attr is not None:
+        if self._col_attr is not None:
             color_modes.add(ColorMode.HS)
         if self._temp_attr is not None:
             if self._temp_attr.editable:
