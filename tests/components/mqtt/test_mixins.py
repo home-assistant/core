@@ -502,6 +502,22 @@ async def test_loading_subentries(
         assert entity_entry_entity_id == entity_id
         state = hass.states.get(entity_id)
         assert state is not None
+        assert (
+            state.attributes.get("entity_picture")
+            == f"https://example.com/{platform}_{object_id}"
+        )
+        # Availability was configured, so entities are unavailable
+        assert state.state == "unavailable"
+
+    # Make entities available
+    async_fire_mqtt_message(hass, "test/availability", '{"availability": "online"}')
+    for component in mqtt_config_subentries_data[0]["data"]["components"].values():
+        platform = component["platform"]
+        object_id = component["object_id"]
+        entity_id = f"{platform}.{object_id}"
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == "unknown"
 
 
 @pytest.mark.parametrize(

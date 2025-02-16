@@ -76,7 +76,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
         "command_topic": "test-topic",
         "command_template": "{{ value_json.value }}",
         "icon": "mdi:cow",
-        "entity_picture": "https://example.com",
+        "entity_picture": "https://example.com/notify_bla123",
         "entity_category": "config",
         "retain": False,
     },
@@ -89,6 +89,7 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
         "qos": 0,
         "encoding": "",
         "command_topic": "test-topic2",
+        "entity_picture": "https://example.com/notify_bla456",
     },
 }
 
@@ -99,6 +100,7 @@ MOCK_SUBENTRY_SENSOR_COMPONENT = {
         "name": "Test sensor",
         "qos": 1,
         "state_topic": "test-topic3",
+        "entity_picture": "https://example.com/sensor_bla789",
     },
 }
 
@@ -110,7 +112,17 @@ MOCK_SUBENTRY_LIGHT_COMPONENT = {
         "qos": 1,
         "command_topic": "test-topic4",
         "schema": "basic",
+        "entity_picture": "https://example.com/light_bla0ab",
     },
+}
+
+MOCK_SUBENTRY_AVAILABILITY_DATA = {
+    "availability": {
+        "availability_topic": "test/availability",
+        "availability_template": "{{ value_json.availability }}",
+        "payload_available": "online",
+        "payload_not_available": "offline",
+    }
 }
 
 MOCK_SUBENTRY_LIGHT_BAD_SCHEMA = {
@@ -134,7 +146,7 @@ MOCK_SUBENTRY_DATA = {
         "configuration_url": "https://example.com",
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
-}
+} | MOCK_SUBENTRY_AVAILABILITY_DATA
 
 MOCK_SUBENTRY_DATA_SINGLE = {
     "device": {
@@ -161,7 +173,7 @@ MOCK_SUBENTRY_DATA_SET_MIX = {
     | MOCK_SUBENTRY_NOTIFY_COMPONENT2
     | MOCK_SUBENTRY_SENSOR_COMPONENT
     | MOCK_SUBENTRY_LIGHT_COMPONENT,
-}
+} | MOCK_SUBENTRY_AVAILABILITY_DATA
 
 MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
     "device": {
