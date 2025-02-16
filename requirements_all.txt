@@ -1663,7 +1663,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.1
+plugwise==1.7.2
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1912,7 +1912,7 @@ pyebox==1.1.4
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.1.27
+pyeconet==0.1.28
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.3.1
@@ -2310,7 +2310,7 @@ pysmartapp==0.3.5
 pysmartthings==0.7.8
 
 # homeassistant.components.smarty
-pysmarty2==0.10.1
+pysmarty2==0.10.2
 
 # homeassistant.components.smhi
 pysmhi==1.0.0
