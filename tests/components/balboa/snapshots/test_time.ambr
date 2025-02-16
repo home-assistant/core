@@ -1,0 +1,189 @@
+# serializer version: 1
+# name: test_times[time.fakespa_filter_cycle_1_end-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.fakespa_filter_cycle_1_end',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filter cycle 1 end',
+    'platform': 'balboa',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_cycle_end',
+    'unique_id': 'FakeSpa-filter_cycle_1_end-c0ffee',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_times[time.fakespa_filter_cycle_1_end-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'FakeSpa Filter cycle 1 end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.fakespa_filter_cycle_1_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '09:00:00',
+  })
+# ---
+# name: test_times[time.fakespa_filter_cycle_1_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.fakespa_filter_cycle_1_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filter cycle 1 start',
+    'platform': 'balboa',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_cycle_start',
+    'unique_id': 'FakeSpa-filter_cycle_1_start-c0ffee',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_times[time.fakespa_filter_cycle_1_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'FakeSpa Filter cycle 1 start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.fakespa_filter_cycle_1_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '08:00:00',
+  })
+# ---
+# name: test_times[time.fakespa_filter_cycle_2_end-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.fakespa_filter_cycle_2_end',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filter cycle 2 end',
+    'platform': 'balboa',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_cycle_end',
+    'unique_id': 'FakeSpa-filter_cycle_2_end-c0ffee',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_times[time.fakespa_filter_cycle_2_end-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'FakeSpa Filter cycle 2 end',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.fakespa_filter_cycle_2_end',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21:30:00',
+  })
+# ---
+# name: test_times[time.fakespa_filter_cycle_2_start-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'time',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'time.fakespa_filter_cycle_2_start',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Filter cycle 2 start',
+    'platform': 'balboa',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_cycle_start',
+    'unique_id': 'FakeSpa-filter_cycle_2_start-c0ffee',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_times[time.fakespa_filter_cycle_2_start-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'FakeSpa Filter cycle 2 start',
+    }),
+    'context': <ANY>,
+    'entity_id': 'time.fakespa_filter_cycle_2_start',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '19:00:00',
+  })
+# ---
