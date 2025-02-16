@@ -1387,14 +1387,14 @@ async def test_setup_mqtt_client_clean_session_and_protocol(
                 mqtt.CONF_BROKER: "mock-broker",
                 CONF_PROTOCOL: "3.1",
             },
-            call("mock-broker", 1883, 60, "", 0),
+            call("mock-broker", 1883, 60, "", 0, 3),
         ),
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
                 CONF_PROTOCOL: "3.1.1",
             },
-            call("mock-broker", 1883, 60, "", 0),
+            call("mock-broker", 1883, 60, "", 0, 3),
         ),
         (
             {
@@ -1412,10 +1412,7 @@ async def test_setup_mqtt_client_clean_start(
     mqtt_client_mock: MqttMockPahoClient,
     connect_args: tuple[Any],
 ) -> None:
-    """Test MQTT client protocol connects with `clean_start` set correctly.
-
-    When MQTT v5 is used, we set `clean_start` to `True` on connect.
-    """
+    """Test MQTT client protocol connects with `clean_start` set correctly."""
     await mqtt_mock_entry()
 
     # check if clean_start was set correctly
