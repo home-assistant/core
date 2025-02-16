@@ -1,33 +1,47 @@
-import logging
-import time
+import requests
+import logging, time
 
 _LOGGER = logging.getLogger(__name__)
 
+API_URL = "http://host.docker.internal:8080/api/auth/login"
+
 
 def authenticate(username, password):
-    # """Simulated authentication for testing with a 1-minute expiration."""
+    """Calls the actual Ezlo API for authentication."""
+    _LOGGER.info("🚀 Sending login request to Ezlo API...")
 
-    _LOGGER.info("🚀 Ezlo HA Cloud: Simulated authentication request")
-    # _LOGGER.debug(f"🔑 Attempting login for username: {username}")
+    payload = {
+        "username": username,
+        "password": password,
+        "oem_id": "1",  # Required as per cURL request
+    }
 
-    # Simulated network delay
-    time.sleep(1)
+    try:
+        response = requests.post(API_URL, json=payload, timeout=10)
+        response_data = response.json()
 
-    # Mocked authentication logic (Replace with real API later)
-    if username == "admin" and password == "password123":
-        _LOGGER.info("✅ Ezlo HA Cloud: Authentication successful")
+        if response.status_code == 200 and response_data.get("status") == 1:
+            _LOGGER.info("✅ Authentication successful!")
 
-        expiry_time = time.time() + 60  # ✅ Token expires in 1 minute
-        return {
-            "success": True,
-            "token": "dummy_token_abc123",
-            "user": {"name": "Fahad Khan", "email": "fahad@example.com"},
-            "expires_in": 60,  # ✅ Explicit expiry time
-            "expires_at": expiry_time,
-        }
+            token = response_data["data"]["token"]
+            expiry_time = response_data["data"]["expires"]
 
-    _LOGGER.warning("⚠️ Ezlo HA Cloud: Authentication failed (Invalid credentials)")
-    return {"success": False, "error": "Invalid username or password"}
+            return {
+                "success": True,
+                "token": token,
+                "expires_at": expiry_time,
+                "user": {
+                    "username": username,
+                    "oem_id": 1,
+                },
+            }
+
+        _LOGGER.warning(f"⚠️ Login failed: {response_data}")
+        return {"success": False, "error": "Invalid credentials or API error"}
+
+    except requests.exceptions.RequestException as e:
+        _LOGGER.error(f"❌ API request failed: {e}")
+        return {"success": False, "error": "API connection failed"}
 
 
 def signup(username, email, password):

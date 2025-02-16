@@ -93,7 +93,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_init()
 
     async def async_step_login(self, user_input=None):
-        # """Handles login authentication form."""
+        """Handles login authentication form."""
         errors = {}
 
         if user_input is not None:
@@ -106,18 +106,14 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             )
 
             if auth_response.get("success"):
-                expiry_time = datetime.now() + timedelta(
-                    seconds=3600
-                )  # ✅ Expire in 1 minute
+                expiry_time = auth_response["expires_at"]
 
                 # Store login session persistently
                 new_data = self.config_entry.data.copy()
                 new_data["auth_token"] = auth_response["token"]
                 new_data["user"] = auth_response["user"]
                 new_data["is_logged_in"] = True
-                new_data["token_expiry"] = (
-                    expiry_time.timestamp()
-                )  # ✅ Store expiry time
+                new_data["token_expiry"] = expiry_time  # Store actual expiry
 
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=new_data
