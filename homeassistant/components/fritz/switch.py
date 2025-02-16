@@ -207,7 +207,7 @@ async def async_all_entities_list(
     local_ip: str,
 ) -> list[Entity]:
     """Get a list of all entities."""
-    if avm_wrapper.mesh_role == MeshRoles.SLAVE:
+    if avm_wrapper.mesh_role == MeshRoles.SLAVE and not avm_wrapper.mesh_wifi_uplink:
         return [*await _async_wifi_entities_list(avm_wrapper, device_friendly_name)]
 
     return [
