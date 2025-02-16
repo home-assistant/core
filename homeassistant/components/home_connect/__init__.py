@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
-from datetime import timedelta
 import logging
 from typing import Any, cast
 
@@ -74,9 +73,11 @@ PROGRAM_OPTIONS = {
         value,
     )
     for key, value in {
+        OptionKey.BSH_COMMON_DURATION: int,
+        OptionKey.BSH_COMMON_START_IN_RELATIVE: int,
+        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: int,
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: int,
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES: bool,
-        OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_COFFEE_MILK_RATIO: int,
         OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE: bool,
         OptionKey.DISHCARE_DISHWASHER_BRILLIANCE_DRY: bool,
         OptionKey.DISHCARE_DISHWASHER_VARIO_SPEED_PLUS: bool,
@@ -90,18 +91,6 @@ PROGRAM_OPTIONS = {
         OptionKey.COOKING_OVEN_FAST_PRE_HEAT: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE: bool,
-    }.items()
-}
-
-TIME_PROGRAM_OPTIONS = {
-    bsh_key_to_translation_key(key): (
-        key,
-        value,
-    )
-    for key, value in {
-        OptionKey.BSH_COMMON_START_IN_RELATIVE: cv.time_period_str,
-        OptionKey.BSH_COMMON_DURATION: cv.time_period_str,
-        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: cv.time_period_str,
     }.items()
 }
 
@@ -157,10 +146,7 @@ SERVICE_PROGRAM_SCHEMA = vol.Any(
 
 def _require_program_or_at_least_one_option(data: dict) -> dict:
     if ATTR_PROGRAM not in data and not any(
-        option_key in data
-        for option_key in (
-            PROGRAM_ENUM_OPTIONS | PROGRAM_OPTIONS | TIME_PROGRAM_OPTIONS
-        )
+        option_key in data for option_key in (PROGRAM_ENUM_OPTIONS | PROGRAM_OPTIONS)
     ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -191,9 +177,7 @@ SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = vol.All(
     .extend(
         {
             vol.Optional(translation_key): schema
-            for translation_key, (key, schema) in (
-                PROGRAM_OPTIONS | TIME_PROGRAM_OPTIONS
-            ).items()
+            for translation_key, (key, schema) in PROGRAM_OPTIONS.items()
         }
     ),
     _require_program_or_at_least_one_option,
@@ -487,13 +471,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             elif option in PROGRAM_OPTIONS:
                 option_key = PROGRAM_OPTIONS[option][0]
                 options.append(Option(option_key, value))
-            elif option in TIME_PROGRAM_OPTIONS:
-                options.append(
-                    Option(
-                        TIME_PROGRAM_OPTIONS[option][0],
-                        int(cast(timedelta, value).total_seconds()),
-                    )
-                )
+
         method_call: Awaitable[Any]
         exception_translation_key: str
         if program:
