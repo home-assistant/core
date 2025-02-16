@@ -455,10 +455,17 @@ async def test_options_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={"lock_code_digits": 6},
-    )
+    with patch(
+        "homeassistant.components.yale_smart_alarm.coordinator.YaleSmartAlarmClient",
+        return_value=load_config_entry[1],
+    ):
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={"lock_code_digits": 4},
+        )
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {"lock_code_digits": 6}
+    assert result["data"] == {"lock_code_digits": 4}
+
+    assert entry.state == config_entries.ConfigEntryState.LOADED

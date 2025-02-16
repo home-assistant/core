@@ -130,6 +130,62 @@ def mock_light() -> Mock:
 
 
 @pytest.fixture
+def mock_thermostat() -> Mock:
+    """Fixture for a thermostat."""
+    climate = Mock()
+    climate.fibaro_id = 4
+    climate.parent_fibaro_id = 0
+    climate.name = "Test climate"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.thermostatDanfoss"
+    climate.base_type = "com.fibaro.device"
+    climate.properties = {"manufacturer": ""}
+    climate.actions = {"setThermostatMode": 1}
+    climate.supported_features = {}
+    climate.has_supported_thermostat_modes = True
+    climate.supported_thermostat_modes = ["Off", "Heat", "CustomerSpecific"]
+    climate.has_operating_mode = False
+    climate.has_thermostat_mode = True
+    climate.thermostat_mode = "CustomerSpecific"
+    value_mock = Mock()
+    value_mock.has_value = True
+    value_mock.int_value.return_value = 20
+    climate.value = value_mock
+    return climate
+
+
+@pytest.fixture
+def mock_thermostat_with_operating_mode() -> Mock:
+    """Fixture for a thermostat."""
+    climate = Mock()
+    climate.fibaro_id = 4
+    climate.parent_fibaro_id = 0
+    climate.name = "Test climate"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.thermostatDanfoss"
+    climate.base_type = "com.fibaro.device"
+    climate.properties = {"manufacturer": ""}
+    climate.actions = {"setOperationMode": 1}
+    climate.supported_features = {}
+    climate.has_supported_operating_modes = True
+    climate.supported_operating_modes = [0, 1, 15]
+    climate.has_operating_mode = True
+    climate.operating_mode = 15
+    climate.has_thermostat_mode = False
+    value_mock = Mock()
+    value_mock.has_value = True
+    value_mock.int_value.return_value = 20
+    climate.value = value_mock
+    return climate
+
+
+@pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Return the default mocked config entry."""
     mock_config_entry = MockConfigEntry(

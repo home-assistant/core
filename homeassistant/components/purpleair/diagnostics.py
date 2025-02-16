@@ -37,7 +37,7 @@ async def async_get_config_entry_diagnostics(
     return async_redact_data(
         {
             "entry": entry.as_dict(),
-            "data": coordinator.data.dict(),
+            "data": coordinator.data.model_dump(),
         },
         TO_REDACT,
     )

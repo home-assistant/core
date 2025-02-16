@@ -230,6 +230,8 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @esphome_float_state_property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
+        if not self._static_info.supports_current_temperature:
+            return None
         return self._state.current_temperature
 
     @property

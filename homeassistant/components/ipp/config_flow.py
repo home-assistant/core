@@ -16,7 +16,6 @@ from pyipp import (
 )
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
@@ -28,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_BASE_PATH, CONF_SERIAL, DOMAIN
 
@@ -103,7 +103,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         host = discovery_info.host

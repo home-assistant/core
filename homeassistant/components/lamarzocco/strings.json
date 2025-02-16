@@ -122,6 +122,9 @@
       "preinfusion_off_key": {
         "name": "Preinfusion time Key {key}"
       },
+      "scale_target_key": {
+        "name": "Brew by weight target {key}"
+      },
       "smart_standby_time": {
         "name": "Smart standby time"
       },
@@ -133,6 +136,13 @@
       }
     },
     "select": {
+      "active_bbw": {
+        "name": "Active brew by weight recipe",
+        "state": {
+          "a": "Recipe A",
+          "b": "Recipe B"
+        }
+      },
       "prebrew_infusion_select": {
         "name": "Prebrew/-infusion mode",
         "state": {
@@ -165,10 +175,16 @@
         "name": "Current steam temperature"
       },
       "drink_stats_coffee": {
-        "name": "Total coffees made"
+        "name": "Total coffees made",
+        "unit_of_measurement": "coffees"
+      },
+      "drink_stats_coffee_key": {
+        "name": "Coffees made Key {key}",
+        "unit_of_measurement": "coffees"
       },
       "drink_stats_flushing": {
-        "name": "Total flushes made"
+        "name": "Total flushes made",
+        "unit_of_measurement": "flushes"
       },
       "shot_timer": {
         "name": "Shot timer"

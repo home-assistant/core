@@ -6,7 +6,7 @@ from datetime import timedelta
 import logging
 from typing import Any, TypedDict, cast, final
 
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
@@ -68,10 +68,8 @@ def process_turn_on_params(
             isinstance(siren.available_tones, dict)
             and tone in siren.available_tones.values()
         )
-        if (
-            not siren.available_tones
-            or tone not in siren.available_tones
-            and not is_tone_dict_value
+        if not siren.available_tones or (
+            tone not in siren.available_tones and not is_tone_dict_value
         ):
             raise ValueError(
                 f"Invalid tone specified for entity {siren.entity_id}: {tone}, "
@@ -191,9 +189,4 @@ class SirenEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     @cached_property
     def supported_features(self) -> SirenEntityFeature:
         """Return the list of supported features."""
-        features = self._attr_supported_features
-        if type(features) is int:  # noqa: E721
-            new_features = SirenEntityFeature(features)
-            self._report_deprecated_supported_features_values(new_features)
-            return new_features
-        return features
+        return self._attr_supported_features

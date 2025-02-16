@@ -13,21 +13,19 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import TadoConfigEntry
 from .const import (
-    SIGNAL_TADO_UPDATE_RECEIVED,
     TYPE_AIR_CONDITIONING,
     TYPE_BATTERY,
     TYPE_HEATING,
     TYPE_HOT_WATER,
     TYPE_POWER,
 )
+from .coordinator import TadoDataUpdateCoordinator
 from .entity import TadoDeviceEntity, TadoZoneEntity
-from .tado_connector import TadoConnector
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -117,11 +115,13 @@ ZONE_SENSORS = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: TadoConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TadoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tado sensor platform."""
 
-    tado = entry.runtime_data
+    tado = entry.runtime_data.coordinator
     devices = tado.devices
     zones = tado.zones
     entities: list[BinarySensorEntity] = []
@@ -164,43 +164,23 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        tado: TadoConnector,
+        coordinator: TadoDataUpdateCoordinator,
         device_info: dict[str, Any],
         entity_description: TadoBinarySensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
-        self._tado = tado
-        super().__init__(device_info)
+        super().__init__(device_info, coordinator)
 
         self._attr_unique_id = (
-            f"{entity_description.key} {self.device_id} {tado.home_id}"
+            f"{entity_description.key} {self.device_id} {coordinator.home_id}"
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Register for sensor updates."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.home_id, "device", self.device_id
-                ),
-                self._async_update_callback,
-            )
-        )
-        self._async_update_device_data()
-
     @callback
-    def _async_update_callback(self) -> None:
-        """Update and write state."""
-        self._async_update_device_data()
-        self.async_write_ha_state()
-
-    @callback
-    def _async_update_device_data(self) -> None:
-        """Handle update callbacks."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         try:
-            self._device_info = self._tado.data["device"][self.device_id]
+            self._device_info = self.coordinator.data["device"][self.device_id]
         except KeyError:
             return
 
@@ -209,6 +189,7 @@ class TadoDeviceBinarySensor(TadoDeviceEntity, BinarySensorEntity):
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
                 self._device_info
             )
+        super()._handle_coordinator_update()
 
 
 class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
@@ -218,42 +199,24 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
 
     def __init__(
         self,
-        tado: TadoConnector,
+        coordinator: TadoDataUpdateCoordinator,
         zone_name: str,
         zone_id: int,
         entity_description: TadoBinarySensorEntityDescription,
     ) -> None:
         """Initialize of the Tado Sensor."""
         self.entity_description = entity_description
-        self._tado = tado
-        super().__init__(zone_name, tado.home_id, zone_id)
+        super().__init__(zone_name, coordinator.home_id, zone_id, coordinator)
 
-        self._attr_unique_id = f"{entity_description.key} {zone_id} {tado.home_id}"
-
-    async def async_added_to_hass(self) -> None:
-        """Register for sensor updates."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_TADO_UPDATE_RECEIVED.format(
-                    self._tado.home_id, "zone", self.zone_id
-                ),
-                self._async_update_callback,
-            )
+        self._attr_unique_id = (
+            f"{entity_description.key} {zone_id} {coordinator.home_id}"
         )
-        self._async_update_zone_data()
 
     @callback
-    def _async_update_callback(self) -> None:
-        """Update and write state."""
-        self._async_update_zone_data()
-        self.async_write_ha_state()
-
-    @callback
-    def _async_update_zone_data(self) -> None:
-        """Handle update callbacks."""
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         try:
-            tado_zone_data = self._tado.data["zone"][self.zone_id]
+            tado_zone_data = self.coordinator.data["zone"][self.zone_id]
         except KeyError:
             return
 
@@ -262,3 +225,4 @@ class TadoZoneBinarySensor(TadoZoneEntity, BinarySensorEntity):
             self._attr_extra_state_attributes = self.entity_description.attributes_fn(
                 tado_zone_data
             )
+        super()._handle_coordinator_update()

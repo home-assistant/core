@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
@@ -38,9 +38,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import template
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv, template
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -54,7 +56,7 @@ from .const import (
     FEED_NAME,
     FEED_TAG,
 )
-from .coordinator import EmoncmsCoordinator
+from .coordinator import EmonCMSConfigEntry, EmoncmsCoordinator
 
 SENSORS: dict[str | None, SensorEntityDescription] = {
     "kWh": SensorEntityDescription(
@@ -289,8 +291,8 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: EmonCMSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the emoncms sensors."""
     name = sensor_name(entry.data[CONF_URL])
@@ -317,7 +319,7 @@ async def async_setup_entry(
             EmonCmsSensor(
                 coordinator,
                 unique_id,
-                elem["unit"],
+                elem.get("unit"),
                 name,
                 idx,
             )
@@ -353,6 +355,7 @@ class EmonCmsSensor(CoordinatorEntity[EmoncmsCoordinator], SensorEntity):
             self.entity_description = description
         else:
             self._attr_native_unit_of_measurement = unit_of_measurement
+            self._attr_name = f"{name} {elem[FEED_NAME]}"
         self._update_attributes(elem)
 
     def _update_attributes(self, elem: dict[str, Any]) -> None:

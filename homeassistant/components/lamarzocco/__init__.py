@@ -7,6 +7,7 @@ from pylamarzocco.clients.bluetooth import LaMarzoccoBluetoothClient
 from pylamarzocco.clients.cloud import LaMarzoccoCloudClient
 from pylamarzocco.clients.local import LaMarzoccoLocalClient
 from pylamarzocco.const import BT_MODEL_PREFIXES, FirmwareType
+from pylamarzocco.devices.machine import LaMarzoccoMachine
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 
 from homeassistant.components.bluetooth import async_discovered_service_info
@@ -25,7 +26,13 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import CONF_USE_BLUETOOTH, DOMAIN
-from .coordinator import LaMarzoccoConfigEntry, LaMarzoccoUpdateCoordinator
+from .coordinator import (
+    LaMarzoccoConfigEntry,
+    LaMarzoccoConfigUpdateCoordinator,
+    LaMarzoccoFirmwareUpdateCoordinator,
+    LaMarzoccoRuntimeData,
+    LaMarzoccoStatisticsUpdateCoordinator,
+)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -99,18 +106,29 @@ async def async_setup_entry(hass: HomeAssistant, entry: LaMarzoccoConfigEntry) -
                 address_or_ble_device=entry.data[CONF_MAC],
             )
 
-    coordinator = LaMarzoccoUpdateCoordinator(
-        hass=hass,
-        entry=entry,
-        local_client=local_client,
+    device = LaMarzoccoMachine(
+        model=entry.data[CONF_MODEL],
+        serial_number=entry.unique_id,
+        name=entry.data[CONF_NAME],
         cloud_client=cloud_client,
+        local_client=local_client,
         bluetooth_client=bluetooth_client,
     )
 
-    await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
+    coordinators = LaMarzoccoRuntimeData(
+        LaMarzoccoConfigUpdateCoordinator(hass, entry, device, local_client),
+        LaMarzoccoFirmwareUpdateCoordinator(hass, entry, device),
+        LaMarzoccoStatisticsUpdateCoordinator(hass, entry, device),
+    )
 
-    gateway_version = coordinator.device.firmware[FirmwareType.GATEWAY].current_version
+    # API does not like concurrent requests, so no asyncio.gather here
+    await coordinators.config_coordinator.async_config_entry_first_refresh()
+    await coordinators.firmware_coordinator.async_config_entry_first_refresh()
+    await coordinators.statistics_coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinators
+
+    gateway_version = device.firmware[FirmwareType.GATEWAY].current_version
     if version.parse(gateway_version) < version.parse("v3.4-rc5"):
         # incompatible gateway firmware, create an issue
         ir.async_create_issue(

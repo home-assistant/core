@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.event import async_track_time_interval
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_SYNC_TIME, DEFAULT_SYNC_TIME
 
@@ -24,6 +24,8 @@ PLATFORMS = [
     Platform.FAN,
     Platform.LIGHT,
     Platform.SELECT,
+    Platform.SWITCH,
+    Platform.TIME,
 ]
 
 

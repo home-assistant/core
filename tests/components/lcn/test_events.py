@@ -150,19 +150,3 @@ async def test_dont_fire_on_non_module_input(
         await lcn_connection.async_process_input(inp)
         await hass.async_block_till_done()
         assert len(events) == 0
-
-
-async def test_dont_fire_on_unknown_module(
-    hass: HomeAssistant, entry: MockConfigEntry
-) -> None:
-    """Test for no event is fired if an input from an unknown module is received."""
-    lcn_connection = await init_integration(hass, entry)
-    inp = ModStatusAccessControl(
-        LcnAddr(0, 10, False),  # unknown module
-        periphery=AccessControlPeriphery.FINGERPRINT,
-        code="aabbcc",
-    )
-    events = async_capture_events(hass, LCN_FINGERPRINT)
-    await lcn_connection.async_process_input(inp)
-    await hass.async_block_till_done()
-    assert len(events) == 0

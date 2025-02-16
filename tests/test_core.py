@@ -20,6 +20,7 @@ import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     EVENT_CALL_SERVICE,
@@ -35,7 +36,6 @@ from homeassistant.const import (
     EVENT_STATE_REPORTED,
     MATCH_ALL,
 )
-import homeassistant.core as ha
 from homeassistant.core import (
     CoreState,
     HassJob,
@@ -59,8 +59,8 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers.json import json_dumps
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
-import homeassistant.util.dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
 from .common import (
@@ -1562,10 +1562,10 @@ async def test_statemachine_avoids_updating_attributes(hass: HomeAssistant) -> N
 
 def test_service_call_repr() -> None:
     """Test ServiceCall repr."""
-    call = ha.ServiceCall("homeassistant", "start")
+    call = ha.ServiceCall(None, "homeassistant", "start")
     assert str(call) == f"<ServiceCall homeassistant.start (c:{call.context.id})>"
 
-    call2 = ha.ServiceCall("homeassistant", "start", {"fast": "yes"})
+    call2 = ha.ServiceCall(None, "homeassistant", "start", {"fast": "yes"})
     assert (
         str(call2)
         == f"<ServiceCall homeassistant.start (c:{call2.context.id}): fast=yes>"

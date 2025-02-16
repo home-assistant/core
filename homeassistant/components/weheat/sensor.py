@@ -11,19 +11,27 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    REVOLUTIONS_PER_MINUTE,
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import WeheatConfigEntry
 from .const import (
     DISPLAY_PRECISION_COP,
     DISPLAY_PRECISION_WATER_TEMP,
     DISPLAY_PRECISION_WATTS,
 )
-from .coordinator import WeheatDataUpdateCoordinator
+from .coordinator import WeheatConfigEntry, WeheatDataUpdateCoordinator
 from .entity import WeheatEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -142,6 +150,28 @@ SENSORS = [
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_fn=lambda status: status.energy_total,
     ),
+    WeHeatSensorEntityDescription(
+        translation_key="energy_output",
+        key="energy_output",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        value_fn=lambda status: status.energy_output,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="compressor_rpm",
+        key="compressor_rpm",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
+        value_fn=lambda status: status.compressor_rpm,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="compressor_percentage",
+        key="compressor_percentage",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda status: status.compressor_percentage,
+    ),
 ]
 
 
@@ -170,7 +200,7 @@ DHW_SENSORS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WeheatConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensors for weheat heat pump."""
     entities = [

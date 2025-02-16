@@ -11,7 +11,6 @@ def configure_integration(hass: HomeAssistant) -> MockConfigEntry:
     config = {
         "username": "test-username",
         "password": "test-password",
-        "mydevolo_url": "https://test_mydevolo_url.test",
     }
     entry = MockConfigEntry(
         domain=DOMAIN, data=config, entry_id="123456", unique_id="123456"

@@ -118,7 +118,7 @@ async def test_setup_too_old(
 ) -> None:
     """Test setup of unifiprotect entry with too old of version of UniFi Protect."""
 
-    old_bootstrap = ufp.api.bootstrap.copy()
+    old_bootstrap = ufp.api.bootstrap.model_copy()
     old_bootstrap.nvr = old_nvr
     ufp.api.update.return_value = old_bootstrap
     ufp.api.bootstrap = old_bootstrap

@@ -34,12 +34,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
     """Unload Trafikverket Camera config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: TVCameraConfigEntry) -> bool:
     """Migrate old entry."""
     api_key = entry.data[CONF_API_KEY]
     web_session = async_get_clientsession(hass)

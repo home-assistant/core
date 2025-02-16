@@ -46,7 +46,7 @@ async def test_cannot_connect(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     assert result["errors"] == {}
 
     with patch(
-        "homeassistant.components.niko_home_control.config_flow.NikoHomeControlConnection",
+        "homeassistant.components.niko_home_control.config_flow.NHCController.connect",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -58,7 +58,7 @@ async def test_cannot_connect(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
     assert result["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "homeassistant.components.niko_home_control.config_flow.NikoHomeControlConnection"
+        "homeassistant.components.niko_home_control.config_flow.NHCController.connect",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -114,7 +114,7 @@ async def test_import_cannot_connect(
     """Test the cannot connect error."""
 
     with patch(
-        "homeassistant.components.niko_home_control.config_flow.NikoHomeControlConnection",
+        "homeassistant.components.niko_home_control.config_flow.NHCController.connect",
         side_effect=Exception,
     ):
         result = await hass.config_entries.flow.async_init(
