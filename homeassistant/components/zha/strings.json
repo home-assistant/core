@@ -112,7 +112,7 @@
       },
       "manual_pick_radio_type": {
         "data": {
-          "radio_type": "[%key:component::::config::step::manual_pick_radio_type::data::radio_type%]"
+          "radio_type": "[%key:component::zha::config::step::manual_pick_radio_type::data::radio_type%]"
         },
         "title": "[%key:component::zha::config::step::manual_pick_radio_type::data::radio_type%]",
         "description": "[%key:component::zha::config::step::manual_pick_radio_type::description%]"
