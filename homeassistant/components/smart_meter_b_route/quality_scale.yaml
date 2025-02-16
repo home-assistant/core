@@ -1,21 +1,21 @@
 rules:
   # Bronze
   action-setup:
-    status: exempt
+    status: done
     comment: |
       The integration does not provide any additional actions.
   appropriate-polling:
     status: done
   brands:
-    status: exempt
+    status: done
     comment: |
-      The integration is not specific to a single brand.
+      The integration is not specific to a single brand, it does not have a logo.
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency: todo
+  dependency-transparency: done
   docs-actions:
-    status: exempt
+    status: done
     comment: |
       The integration does not provide any additional actions.
   docs-high-level-description: done
