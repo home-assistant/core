@@ -222,7 +222,7 @@ class ReolinkVODMediaSource(MediaSource):
         if main_enc == "h265":
             _LOGGER.debug(
                 "Reolink camera %s uses h265 encoding for main stream,"
-                "playback only possible using sub stream",
+                "playback at high resolution may not work in all browsers/apps",
                 host.api.camera_name(channel),
             )
 
@@ -236,34 +236,29 @@ class ReolinkVODMediaSource(MediaSource):
                 can_play=False,
                 can_expand=True,
             ),
+            BrowseMediaSource(
+                domain=DOMAIN,
+                identifier=f"RES|{config_entry_id}|{channel}|main",
+                media_class=MediaClass.CHANNEL,
+                media_content_type=MediaType.PLAYLIST,
+                title="High resolution",
+                can_play=False,
+                can_expand=True,
+            ),
         ]
-        if main_enc != "h265":
-            children.append(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"RES|{config_entry_id}|{channel}|main",
-                    media_class=MediaClass.CHANNEL,
-                    media_content_type=MediaType.PLAYLIST,
-                    title="High resolution",
-                    can_play=False,
-                    can_expand=True,
-                ),
-            )
 
         if host.api.supported(channel, "autotrack_stream"):
-            children.append(
-                BrowseMediaSource(
-                    domain=DOMAIN,
-                    identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
-                    media_class=MediaClass.CHANNEL,
-                    media_content_type=MediaType.PLAYLIST,
-                    title="Autotrack low resolution",
-                    can_play=False,
-                    can_expand=True,
-                ),
-            )
-            if main_enc != "h265":
-                children.append(
+            children.extend(
+                [
+                    BrowseMediaSource(
+                        domain=DOMAIN,
+                        identifier=f"RES|{config_entry_id}|{channel}|autotrack_sub",
+                        media_class=MediaClass.CHANNEL,
+                        media_content_type=MediaType.PLAYLIST,
+                        title="Autotrack low resolution",
+                        can_play=False,
+                        can_expand=True,
+                    ),
                     BrowseMediaSource(
                         domain=DOMAIN,
                         identifier=f"RES|{config_entry_id}|{channel}|autotrack_main",
@@ -273,7 +268,8 @@ class ReolinkVODMediaSource(MediaSource):
                         can_play=False,
                         can_expand=True,
                     ),
-                )
+                ]
+            )
 
         if len(children) == 1:
             return await self._async_generate_camera_days(
