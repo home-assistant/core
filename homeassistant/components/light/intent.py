@@ -36,7 +36,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                     "The brightness percentage of the light between 0 and 100, where 0 is off and 100 is fully lit",
                 ): vol.All(vol.Coerce(int), vol.Range(0, 100)),
             },
-            description="Sets the brightness percentage or color",
+            description="Sets the brightness percentage or color of a light",
             platforms={DOMAIN},
         ),
     )
