@@ -111,9 +111,9 @@ MOCK_DRIVE = Drive(
     owner=IDENTITY_SET,
     quota=DriveQuota(
         deleted=5,
-        remaining=750000000,
+        remaining=805306368,
         state=DriveState.NEARING,
-        total=5000000000,
+        total=5368709120,
         used=4250000000,
     ),
 )

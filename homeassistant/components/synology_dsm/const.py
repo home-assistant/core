@@ -35,6 +35,8 @@ PLATFORMS = [
 EXCEPTION_DETAILS = "details"
 EXCEPTION_UNKNOWN = "unknown"
 
+ISSUE_MISSING_BACKUP_SETUP = "missing_backup_setup"
+
 # Configuration
 CONF_SERIAL = "serial"
 CONF_VOLUMES = "volumes"
