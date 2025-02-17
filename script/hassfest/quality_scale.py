@@ -1411,7 +1411,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "emulated_roku",
     "energenie_power_sockets",
     "energy",
-    "energyzero",
     "enigma2",
     "enphase_envoy",
     "enocean",
