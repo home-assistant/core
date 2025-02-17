@@ -74,9 +74,8 @@ async def async_setup_entry(
 async def async_unload_entry(
     hass: HomeAssistant, entry: AzureStorageConfigEntry
 ) -> bool:
-    """Unload a OneDrive config entry."""
-    if not hass.config_entries.async_loaded_entries(DOMAIN):
-        _async_notify_backup_listeners(hass)
+    """Unload an Azure Storage config entry."""
+    _async_notify_backup_listeners(hass)
     return True
 
 
