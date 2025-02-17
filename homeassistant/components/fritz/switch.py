@@ -207,8 +207,9 @@ async def async_all_entities_list(
     local_ip: str,
 ) -> list[Entity]:
     """Get a list of all entities."""
-
     if avm_wrapper.mesh_role == MeshRoles.SLAVE:
+        if not avm_wrapper.mesh_wifi_uplink:
+            return [*await _async_wifi_entities_list(avm_wrapper, device_friendly_name)]
         return []
 
     return [
@@ -565,6 +566,9 @@ class FritzBoxWifiSwitch(FritzBoxBaseSwitch):
 
         self._attributes = {}
         self._attr_entity_category = EntityCategory.CONFIG
+        self._attr_entity_registry_enabled_default = (
+            avm_wrapper.mesh_role is not MeshRoles.SLAVE
+        )
         self._network_num = network_num
 
         switch_info = SwitchInfo(
