@@ -28,19 +28,14 @@ PRODID = "-//homeassistant.io//local_calendar 1.0//EN"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the local calendar platform."""
-    store = hass.data[DOMAIN][config_entry.entry_id]
-    ics = await store.async_load()
-    calendar: Calendar = await hass.async_add_executor_job(
-        IcsCalendarStream.calendar_from_ics, ics
-    )
-    calendar.prodid = PRODID
+    coordinator = entry.runtime_data
 
-    name = config_entry.data[CONF_CALENDAR_NAME]
-    entity = LocalCalendarEntity(store, calendar, name, unique_id=config_entry.entry_id)
+    name = entry.data[CONF_CALENDAR_NAME]
+    entity = LocalCalendarEntity(coordinator, name, unique_id=entry.entry_id)
     async_add_entities([entity], True)
 
 
@@ -51,15 +46,14 @@ class LocalCalendarEntity(CalendarEntity):
 
     def __init__(
         self,
-        store: LocalCalendarStore,
-        calendar: Calendar,
+        coordinator: Calendar,
         name: str,
         unique_id: str,
     ) -> None:
         """Initialize LocalCalendarEntity."""
-        self._store = store
         self._client = None
-        self._calendar = calendar
+        self._calendar = None
+        self.coordinator = coordinator
         self._calendar_lock = asyncio.Lock()
         self._event: CalendarEvent | None = None
         self._etag = None
@@ -67,43 +61,43 @@ class LocalCalendarEntity(CalendarEntity):
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._update_interval = timedelta(minutes=15)
-        # self._url = "https://www2.awrm.de/WasteManagementRemsmurr/WasteManagementServiceServlet?ApplicationName=Calendar&SubmitAction=sync&StandortID=1036699001&AboID=284134&Fra=Gelb;Papier;RestTonne2wo"
-        self._url = "https://calendar.google.com/calendar/ical/p07n98go11onamd08d0kmq6jhs%40group.calendar.google.com/public/basic.ics"
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
+        _LOGGER.debug("Test")
+        # self._calendar = self.coordinator
         return self._event
 
-    async def _fetch_calendar_and_update(self):
-        headers = {}
-        if self._etag:
-            headers["If-None-Match"] = self._etag
-        res = await self._client.get(self._url, headers=headers)
-        if res.status_code == 304:  # Not modified
-            return
-        res.raise_for_status()
-        self._etag = res.headers.get("ETag")
-        self._calendar = await self.hass.async_add_executor_job(
-            IcsCalendarStream.calendar_from_ics, res.text
-        )
-        _LOGGER.debug("self._calendar %s", self._calendar)
-        self._calendar.prodid = PRODID
-        content = await self.hass.async_add_executor_job(
-            IcsCalendarStream.calendar_to_ics, self._calendar
-        )
-        _LOGGER.debug("content %s", content)
-        await self._store.async_store(content)
+    # async def _fetch_calendar_and_update(self):
+    #     headers = {}
+    #     if self._etag:
+    #         headers["If-None-Match"] = self._etag
+    #     res = await self._client.get(self._url, headers=headers)
+    #     if res.status_code == 304:  # Not modified
+    #         return
+    #     res.raise_for_status()
+    #     self._etag = res.headers.get("ETag")
+    #     self._calendar = await self.hass.async_add_executor_job(
+    #         IcsCalendarStream.calendar_from_ics, res.text
+    #     )
+    #     _LOGGER.debug("self._calendar %s", self._calendar)
+    #     self._calendar.prodid = PRODID
+    #     content = await self.hass.async_add_executor_job(
+    #         IcsCalendarStream.calendar_to_ics, self._calendar
+    #     )
+    #     _LOGGER.debug("content %s", content)
+    #     await self._store.async_store(content)
 
-    async def async_added_to_hass(self) -> None:
-        """Once initialized, get the calendar, and schedule future updates."""
-        self._client = get_async_client(self.hass)
-        self.hass.loop.create_task(self._fetch_calendar_and_update())
-        self._track_fetch = async_track_time_interval(
-            self.hass,
-            lambda now: self.hass.loop.create_task(self._fetch_calendar_and_update()),
-            self._update_interval,
-        )
+    # async def async_added_to_hass(self) -> None:
+    #     """Once initialized, get the calendar, and schedule future updates."""
+    #     self._client = get_async_client(self.hass)
+    #     self.hass.loop.create_task(self._fetch_calendar_and_update())
+    #     self._track_fetch = async_track_time_interval(
+    #         self.hass,
+    #         lambda now: self.hass.loop.create_task(self._fetch_calendar_and_update()),
+    #         self._update_interval,
+    #     )
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -117,6 +111,9 @@ class LocalCalendarEntity(CalendarEntity):
 
     async def async_update(self) -> None:
         """Update entity state with the next upcoming event."""
+        self._calendar = await self.hass.async_add_executor_job(
+            IcsCalendarStream.calendar_from_ics, self.coordinator.data
+        )
         now = dt_util.now()
         events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
         if event := next(events, None):
