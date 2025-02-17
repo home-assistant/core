@@ -6,7 +6,7 @@ from datetime import datetime
 from freezegun import freeze_time as alter_time  # noqa: F401
 
 from homeassistant.components import jewish_calendar
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 _LatLng = namedtuple("_LatLng", ["lat", "lng"])  # noqa: PYI024
 

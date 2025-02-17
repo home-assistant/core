@@ -9,17 +9,12 @@ from homematicip.functionalHomes import SecurityAndAlarmHome
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
-)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .hap import AsyncHome, HomematicipHAP
@@ -32,7 +27,7 @@ CONST_ALARM_CONTROL_PANEL_NAME = "HmIP Alarm Control Panel"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the HomematicIP alrm control panel from a config entry."""
     hap = hass.data[DOMAIN][config_entry.unique_id]
@@ -65,21 +60,21 @@ class HomematicipAlarmControlPanelEntity(AlarmControlPanelEntity):
         )
 
     @property
-    def state(self) -> str:
+    def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the alarm control panel."""
         # check for triggered alarm
         if self._security_and_alarm.alarmActive:
-            return STATE_ALARM_TRIGGERED
+            return AlarmControlPanelState.TRIGGERED
 
         activation_state = self._home.get_security_zones_activation()
         # check arm_away
         if activation_state == (True, True):
-            return STATE_ALARM_ARMED_AWAY
+            return AlarmControlPanelState.ARMED_AWAY
         # check arm_home
         if activation_state == (False, True):
-            return STATE_ALARM_ARMED_HOME
+            return AlarmControlPanelState.ARMED_HOME
 
-        return STATE_ALARM_DISARMED
+        return AlarmControlPanelState.DISARMED
 
     @property
     def _security_and_alarm(self) -> SecurityAndAlarmHome:

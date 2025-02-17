@@ -24,7 +24,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -41,6 +42,8 @@ from .const import (
     TEMPERATURE,
     TVOC,
 )
+from .coordinator import MillDataUpdateCoordinator
+from .entity import MillBaseEntity
 
 HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -56,6 +59,19 @@ HEATER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    SensorEntityDescription(
+        key="current_power",
+        translation_key="current_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SensorEntityDescription(
+        key="control_signal",
+        translation_key="control_signal",
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
@@ -118,9 +134,21 @@ LOCAL_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     ),
 )
 
+SOCKET_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=HUMIDITY,
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    *HEATER_SENSOR_TYPES,
+)
+
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Mill sensor."""
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
@@ -145,7 +173,9 @@ async def async_setup_entry(
         )
         for mill_device in mill_data_coordinator.data.values()
         for entity_description in (
-            HEATER_SENSOR_TYPES
+            SOCKET_SENSOR_TYPES
+            if isinstance(mill_device, mill.Socket)
+            else HEATER_SENSOR_TYPES
             if isinstance(mill_device, mill.Heater)
             else SENSOR_TYPES
         )
@@ -154,37 +184,19 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-class MillSensor(CoordinatorEntity, SensorEntity):
+class MillSensor(MillBaseEntity, SensorEntity):
     """Representation of a Mill Sensor device."""
 
-    _attr_has_entity_name = True
-
-    def __init__(self, coordinator, entity_description, mill_device):
+    def __init__(
+        self,
+        coordinator: MillDataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
+        mill_device: mill.Socket | mill.Heater,
+    ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator)
-
-        self._id = mill_device.device_id
         self.entity_description = entity_description
-        self._available = False
         self._attr_unique_id = f"{mill_device.device_id}_{entity_description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, mill_device.device_id)},
-            name=mill_device.name,
-            manufacturer=MANUFACTURER,
-            model=mill_device.model,
-        )
-        self._update_attr(mill_device)
-
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_attr(self.coordinator.data[self._id])
-        self.async_write_ha_state()
-
-    @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return super().available and self._available
+        super().__init__(coordinator, mill_device)
 
     @callback
     def _update_attr(self, device):
@@ -192,12 +204,16 @@ class MillSensor(CoordinatorEntity, SensorEntity):
         self._attr_native_value = getattr(device, self.entity_description.key)
 
 
-class LocalMillSensor(CoordinatorEntity, SensorEntity):
+class LocalMillSensor(CoordinatorEntity[MillDataUpdateCoordinator], SensorEntity):
     """Representation of a Mill Sensor device."""
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, entity_description):
+    def __init__(
+        self,
+        coordinator: MillDataUpdateCoordinator,
+        entity_description: SensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
 
@@ -214,6 +230,6 @@ class LocalMillSensor(CoordinatorEntity, SensorEntity):
             )
 
     @property
-    def native_value(self):
+    def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         return self.coordinator.data[self.entity_description.key]

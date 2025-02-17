@@ -1,5 +1,6 @@
 {
   "config": {
+    "flow_title": "{model}",
     "step": {
       "user": {
         "description": "Connect to the Balboa Wi-Fi device",
@@ -9,6 +10,9 @@
         "data_description": {
           "host": "Hostname or IP address of your Balboa Spa Wi-Fi Device. For example, 192.168.1.58."
         }
+      },
+      "confirm_discovery": {
+        "description": "Do you want to set up the spa at {host}?"
       }
     },
     "error": {
@@ -73,6 +77,19 @@
           "low": "Low",
           "high": "High"
         }
+      }
+    },
+    "switch": {
+      "filter_cycle_2_enabled": {
+        "name": "Filter cycle 2 enabled"
+      }
+    },
+    "time": {
+      "filter_cycle_start": {
+        "name": "Filter cycle {index} start"
+      },
+      "filter_cycle_end": {
+        "name": "Filter cycle {index} end"
       }
     }
   }

@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
+    ATTR_SERIAL_NUMBER,
     ATTR_SW_VERSION,
     PERCENTAGE,
     STATE_UNKNOWN,
@@ -29,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -42,6 +43,7 @@ NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
     "manufacturer": ATTR_MANUFACTURER,
     "model": ATTR_MODEL,
     "firmware": ATTR_SW_VERSION,
+    "serial": ATTR_SERIAL_NUMBER,
 }
 
 _LOGGER = logging.getLogger(__name__)
@@ -961,7 +963,7 @@ def _get_nut_device_info(data: PyNUTData) -> DeviceInfo:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: NutConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NUT sensors."""
 

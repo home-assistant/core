@@ -36,10 +36,6 @@ async def mock_impl(hass: HomeAssistant) -> None:
     )
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.lyric.config.abort.missing_credentials"],
-)
 async def test_abort_if_no_configuration(hass: HomeAssistant) -> None:
     """Check flow abort when no configuration."""
     result = await hass.config_entries.flow.async_init(

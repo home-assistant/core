@@ -46,7 +46,7 @@ from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, cal
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_platform, service
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import UnjoinData, media_browser
@@ -108,7 +108,7 @@ ATTR_QUEUE_POSITION = "queue_position"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sonos from a config entry."""
     platform = entity_platform.async_get_current_platform()
@@ -782,9 +782,9 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         queue: list[DidlMusicTrack] = self.coordinator.soco.get_queue(max_items=0)
         return [
             {
-                ATTR_MEDIA_TITLE: track.title,
-                ATTR_MEDIA_ALBUM_NAME: track.album,
-                ATTR_MEDIA_ARTIST: track.creator,
+                ATTR_MEDIA_TITLE: getattr(track, "title", None),
+                ATTR_MEDIA_ALBUM_NAME: getattr(track, "album", None),
+                ATTR_MEDIA_ARTIST: getattr(track, "creator", None),
                 ATTR_MEDIA_CONTENT_ID: track.get_uri(),
             }
             for track in queue

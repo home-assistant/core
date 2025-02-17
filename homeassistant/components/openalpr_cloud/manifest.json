@@ -3,5 +3,6 @@
   "name": "OpenALPR Cloud",
   "codeowners": [],
   "documentation": "https://www.home-assistant.io/integrations/openalpr_cloud",
-  "iot_class": "cloud_push"
+  "iot_class": "cloud_push",
+  "quality_scale": "legacy"
 }

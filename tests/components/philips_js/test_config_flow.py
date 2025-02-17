@@ -155,16 +155,13 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
         "version": 1,
         "options": {},
         "minor_version": 1,
+        "subentries": (),
     }
 
     await hass.async_block_till_done()
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.philips_js.config.abort.pairing_failure"],
-)
 async def test_pair_request_failed(
     hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
 ) -> None:
@@ -192,10 +189,6 @@ async def test_pair_request_failed(
     }
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.philips_js.config.abort.pairing_failure"],
-)
 async def test_pair_grant_failed(
     hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
 ) -> None:

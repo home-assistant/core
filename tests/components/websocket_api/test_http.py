@@ -5,7 +5,7 @@ from datetime import timedelta
 from typing import Any, cast
 from unittest.mock import patch
 
-from aiohttp import WSMsgType, WSServerHandshakeError, web
+from aiohttp import ServerDisconnectedError, WSMsgType, web
 import pytest
 
 from homeassistant.components.websocket_api import (
@@ -374,7 +374,7 @@ async def test_prepare_fail_timeout(
             "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
             side_effect=(TimeoutError, web.WebSocketResponse.prepare),
         ),
-        pytest.raises(WSServerHandshakeError),
+        pytest.raises(ServerDisconnectedError),
     ):
         await hass_ws_client(hass)
 
@@ -392,7 +392,7 @@ async def test_prepare_fail_connection_reset(
             "homeassistant.components.websocket_api.http.web.WebSocketResponse.prepare",
             side_effect=(ConnectionResetError, web.WebSocketResponse.prepare),
         ),
-        pytest.raises(WSServerHandshakeError),
+        pytest.raises(ServerDisconnectedError),
     ):
         await hass_ws_client(hass)
 

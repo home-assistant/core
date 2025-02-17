@@ -7,6 +7,7 @@
     'capabilities': dict({
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -70,6 +71,12 @@
         'media_artist': 'The Beatles',
         'media_content_id': 'x-file-cifs://192.168.42.10/music/The%20Beatles/Abbey%20Road/01%20Come%20Together.mp3',
         'media_title': 'Come Together',
+      }),
+      dict({
+        'media_album_name': None,
+        'media_artist': None,
+        'media_content_id': 'x-file-cifs://192.168.42.10/music/TrackWithNoAlbumOrCreator.mp3',
+        'media_title': 'Track with no album or creator',
       }),
     ]),
   })

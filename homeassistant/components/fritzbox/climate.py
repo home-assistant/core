@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ATTR_STATE_BATTERY_LOW,
@@ -59,7 +59,7 @@ OFF_REPORT_SET_TEMPERATURE = 0.0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: FritzboxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the FRITZ!SmartHome thermostat from ConfigEntry."""
     coordinator = entry.runtime_data
@@ -88,7 +88,6 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
     _attr_precision = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key = "thermostat"
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -142,7 +141,7 @@ class FritzboxThermostat(FritzBoxDeviceEntity, ClimateEntity):
             await self.async_set_hvac_mode(hvac_mode)
         elif target_temp is not None:
             await self.hass.async_add_executor_job(
-                self.data.set_target_temperature, target_temp
+                self.data.set_target_temperature, target_temp, True
             )
         else:
             return

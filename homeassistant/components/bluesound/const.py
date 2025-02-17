@@ -2,9 +2,5 @@
 
 DOMAIN = "bluesound"
 INTEGRATION_TITLE = "Bluesound"
-SERVICE_CLEAR_TIMER = "clear_sleep_timer"
-SERVICE_JOIN = "join"
-SERVICE_SET_TIMER = "set_sleep_timer"
-SERVICE_UNJOIN = "unjoin"
 ATTR_BLUESOUND_GROUP = "bluesound_group"
 ATTR_MASTER = "master"

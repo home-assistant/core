@@ -10,7 +10,14 @@ from typing import Any, cast
 
 from gcal_sync.api import Range, SyncEventsRequest
 from gcal_sync.exceptions import ApiException
-from gcal_sync.model import AccessRole, Calendar, DateOrDatetime, Event, EventTypeEnum
+from gcal_sync.model import (
+    AccessRole,
+    Calendar,
+    DateOrDatetime,
+    Event,
+    EventTypeEnum,
+    ResponseStatus,
+)
 from gcal_sync.store import ScopedCalendarStore
 from gcal_sync.sync import CalendarEventSyncManager
 
@@ -36,7 +43,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -132,7 +139,7 @@ def _get_entity_descriptions(
             )
         read_only = not (
             calendar_item.access_role.is_writer
-            and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+            and get_feature_access(config_entry) is FeatureAccess.read_write
         )
         # Prefer calendar sync down of resources when possible. However,
         # sync does not work for search. Also free-busy calendars denormalize
@@ -185,7 +192,7 @@ def _get_entity_descriptions(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the google calendar platform."""
     calendar_service = hass.data[DOMAIN][config_entry.entry_id][DATA_SERVICE]
@@ -259,6 +266,7 @@ async def async_setup_entry(
             if not entity_description.local_sync:
                 coordinator = CalendarQueryUpdateCoordinator(
                     hass,
+                    config_entry,
                     calendar_service,
                     entity_description.name or entity_description.key,
                     calendar_id,
@@ -278,6 +286,7 @@ async def async_setup_entry(
                 )
                 coordinator = CalendarSyncUpdateCoordinator(
                     hass,
+                    config_entry,
                     sync,
                     entity_description.name or entity_description.key,
                 )
@@ -304,7 +313,7 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
     if (
         any(calendar_item.access_role.is_writer for calendar_item in result.items)
-        and get_feature_access(hass, config_entry) is FeatureAccess.read_write
+        and get_feature_access(config_entry) is FeatureAccess.read_write
     ):
         platform.async_register_entity_service(
             SERVICE_CREATE_EVENT,
@@ -367,7 +376,14 @@ class GoogleCalendarEntity(
         return event
 
     def _event_filter(self, event: Event) -> bool:
-        """Return True if the event is visible."""
+        """Return True if the event is visible and not declined."""
+
+        if any(
+            attendee.is_self and attendee.response_status == ResponseStatus.DECLINED
+            for attendee in event.attendees
+        ):
+            return False
+
         if event.event_type == EventTypeEnum.WORKING_LOCATION:
             return self.entity_description.working_location
         if self._ignore_availability:

@@ -1,4 +1,4 @@
-"""Constants for the ENOcean integration."""
+"""Constants for the EnOcean integration."""
 
 import logging
 

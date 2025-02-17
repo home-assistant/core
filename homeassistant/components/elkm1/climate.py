@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import PRECISION_WHOLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 
 from . import ElkM1ConfigEntry
@@ -60,7 +60,7 @@ ELK_TO_HASS_FAN_MODES = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ElkM1ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the Elk-M1 thermostat platform."""
     elk_data = config_entry.runtime_data
@@ -90,7 +90,6 @@ class ElkThermostat(ElkEntity, ClimateEntity):
     _attr_target_temperature_step = 1
     _attr_fan_modes = [FAN_AUTO, FAN_ON]
     _element: Thermostat
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def temperature_unit(self) -> str:

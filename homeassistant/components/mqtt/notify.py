@@ -9,8 +9,8 @@ from homeassistant.components.notify import NotifyEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .config import DEFAULT_RETAIN, MQTT_BASE_SCHEMA
@@ -19,6 +19,8 @@ from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import MqttCommandTemplate
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 from .util import valid_publish_topic
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "MQTT notify"
 
@@ -37,7 +39,7 @@ DISCOVERY_SCHEMA = PLATFORM_SCHEMA_MODERN.extend({}, extra=vol.REMOVE_EXTRA)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT notify through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(

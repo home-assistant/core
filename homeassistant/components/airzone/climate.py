@@ -48,11 +48,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AirzoneConfigEntry
 from .const import API_TEMPERATURE_STEP, TEMP_UNIT_LIB_TO_HASS
-from .coordinator import AirzoneUpdateCoordinator
+from .coordinator import AirzoneConfigEntry, AirzoneUpdateCoordinator
 from .entity import AirzoneZoneEntity
 
 BASE_FAN_SPEEDS: Final[dict[int, str]] = {
@@ -101,7 +100,7 @@ HVAC_MODE_HASS_TO_LIB: Final[dict[HVACMode, OperationMode]] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AirzoneConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Airzone climate from a config_entry."""
     coordinator = entry.runtime_data
@@ -136,7 +135,6 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
     _attr_name = None
     _speeds: dict[int, str] = {}
     _speeds_reverse: dict[str, int] = {}
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,
@@ -275,12 +273,18 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
             self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
-        if self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
+        if (
+            self.supported_features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
+            and self._attr_hvac_mode == HVACMode.HEAT_COOL
+        ):
             self._attr_target_temperature_high = self.get_airzone_value(
                 AZD_COOL_TEMP_SET
             )
             self._attr_target_temperature_low = self.get_airzone_value(
                 AZD_HEAT_TEMP_SET
             )
+            self._attr_target_temperature = None
         else:
+            self._attr_target_temperature_high = None
+            self._attr_target_temperature_low = None
             self._attr_target_temperature = self.get_airzone_value(AZD_TEMP_SET)

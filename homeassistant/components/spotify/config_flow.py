@@ -6,10 +6,12 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from spotipy import Spotify
+from spotifyaio import SpotifyClient
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_NAME, CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, SPOTIFY_SCOPES
 
@@ -34,27 +36,24 @@ class SpotifyFlowHandler(
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for Spotify."""
-        spotify = Spotify(auth=data["token"]["access_token"])
+        spotify = SpotifyClient(async_get_clientsession(self.hass))
+        spotify.authenticate(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
 
         try:
-            current_user = await self.hass.async_add_executor_job(spotify.current_user)
+            current_user = await spotify.get_current_user()
         except Exception:  # noqa: BLE001
             return self.async_abort(reason="connection_error")
 
-        name = data["id"] = current_user["id"]
+        name = current_user.display_name
 
-        if current_user.get("display_name"):
-            name = current_user["display_name"]
-        data["name"] = name
-
-        await self.async_set_unique_id(current_user["id"])
+        await self.async_set_unique_id(current_user.user_id)
 
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), title=name, data=data
             )
-        return self.async_create_entry(title=name, data=data)
+        return self.async_create_entry(title=name, data={**data, CONF_NAME: name})
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

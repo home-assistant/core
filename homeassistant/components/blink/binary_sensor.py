@@ -9,11 +9,10 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -23,7 +22,7 @@ from .const import (
     TYPE_CAMERA_ARMED,
     TYPE_MOTION_DETECTED,
 )
-from .coordinator import BlinkUpdateCoordinator
+from .coordinator import BlinkConfigEntry, BlinkUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -47,11 +46,13 @@ BINARY_SENSORS_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, config: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config_entry: BlinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the blink binary sensors."""
 
-    coordinator: BlinkUpdateCoordinator = hass.data[DOMAIN][config.entry_id]
+    coordinator = config_entry.runtime_data
 
     entities = [
         BlinkBinarySensor(coordinator, camera, description)

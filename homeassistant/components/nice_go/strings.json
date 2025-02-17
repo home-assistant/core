@@ -6,12 +6,20 @@
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "[%key:component::nice_go::config::step::user::data_description::email%]",
+          "password": "[%key:component::nice_go::config::step::user::data_description::password%]"
         }
       },
       "user": {
         "data": {
           "email": "[%key:common::config_flow::data::email%]",
           "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address used to log in to the Nice G.O. app",
+          "password": "The password used to log in to the Nice G.O. app"
         }
       }
     },

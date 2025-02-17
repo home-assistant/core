@@ -9,8 +9,8 @@ from yalesmartalarmclient import YaleLock, YaleLockState
 from homeassistant.components.lock import LockEntity, LockState
 from homeassistant.const import ATTR_CODE
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import YaleConfigEntry
 from .const import (
@@ -30,7 +30,9 @@ LOCK_STATE_MAP = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: YaleConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: YaleConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Yale lock entry."""
 
@@ -65,12 +67,6 @@ class YaleDoorlock(YaleLockEntity, LockEntity):
 
     async def async_set_lock(self, state: YaleLockState, code: str | None) -> None:
         """Set lock."""
-        if state is YaleLockState.UNLOCKED and not code:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_code",
-            )
-
         lock_state = False
         try:
             if state is YaleLockState.LOCKED:

@@ -55,6 +55,7 @@ async def async_setup_entry(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=entry,
         name="Advantage Air",
         update_method=async_get,
         update_interval=timedelta(seconds=ADVANTAGE_AIR_SYNC_INTERVAL),

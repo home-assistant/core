@@ -10,7 +10,6 @@ from aioswitcher.api import (
     DeviceState,
     SwitcherApi,
     SwitcherBaseResponse,
-    SwitcherType2Api,
     ThermostatSwing,
 )
 from aioswitcher.api.remotes import SwitcherBreezeRemote
@@ -21,7 +20,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitcherConfigEntry
 from .const import SIGNAL_DEVICE_ADD
@@ -82,7 +81,7 @@ THERMOSTAT_BUTTONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SwitcherConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switcher button from config entry."""
 
@@ -128,7 +127,7 @@ class SwitcherThermostatButtonEntity(SwitcherEntity, ButtonEntity):
         error = None
 
         try:
-            async with SwitcherType2Api(
+            async with SwitcherApi(
                 self.coordinator.data.device_type,
                 self.coordinator.data.ip_address,
                 self.coordinator.data.device_id,

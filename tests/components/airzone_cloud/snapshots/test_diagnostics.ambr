@@ -101,6 +101,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': 'installation1',
       'version': 1,
@@ -136,6 +138,7 @@
           }),
           'temperature': 21.0,
           'temperature-setpoint': 22.0,
+          'temperature-setpoint-auto-air': 22.0,
           'temperature-setpoint-cool-air': 22.0,
           'temperature-setpoint-hot-air': 22.0,
           'temperature-setpoint-max': 30.0,
@@ -191,6 +194,7 @@
           }),
           'temperature': 20.0,
           'temperature-setpoint': 22.0,
+          'temperature-setpoint-auto-air': 22.0,
           'temperature-setpoint-cool-air': 22.0,
           'temperature-setpoint-hot-air': 18.0,
           'temperature-setpoint-max': 30.0,
@@ -297,6 +301,7 @@
         'dhw1': dict({
           'active': False,
           'available': True,
+          'double-set-point': False,
           'id': 'dhw1',
           'installation': 'installation1',
           'is-connected': True,
@@ -379,6 +384,7 @@
           'aq-present': True,
           'aq-status': 'good',
           'available': True,
+          'double-set-point': False,
           'errors': list([
             dict({
               '_id': 'error-id',

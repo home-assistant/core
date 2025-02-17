@@ -30,10 +30,14 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.components.squeezebox.const import DOMAIN, SENSOR_UPDATE_INTERVAL
+from homeassistant.components.squeezebox.const import (
+    DISCOVERY_INTERVAL,
+    DOMAIN,
+    PLAYER_UPDATE_INTERVAL,
+    SENSOR_UPDATE_INTERVAL,
+)
 from homeassistant.components.squeezebox.media_player import (
     ATTR_PARAMETERS,
-    DISCOVERY_INTERVAL,
     SERVICE_CALL_METHOD,
     SERVICE_CALL_QUERY,
 )
@@ -64,7 +68,7 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.util.dt import utcnow
 
-from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC
+from .conftest import FAKE_VALID_ITEM_ID, TEST_MAC, TEST_VOLUME_STEP
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -101,12 +105,9 @@ async def test_squeezebox_player_rediscovery(
 
     # Make the player appear unavailable
     configured_player.connected = False
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "media_player.test_player"},
-        blocking=True,
-    )
+    freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == STATE_UNAVAILABLE
 
     # Make the player available again
@@ -115,7 +116,7 @@ async def test_squeezebox_player_rediscovery(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    freezer.tick(timedelta(seconds=SENSOR_UPDATE_INTERVAL))
+    freezer.tick(timedelta(seconds=PLAYER_UPDATE_INTERVAL))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert hass.states.get("media_player.test_player").state == MediaPlayerState.IDLE
@@ -182,26 +183,32 @@ async def test_squeezebox_volume_up(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
     """Test volume up service call."""
+    configured_player.volume = 50
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_UP,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_set_volume.assert_called_once_with("+5")
+    configured_player.async_set_volume.assert_called_once_with(
+        str(configured_player.volume + TEST_VOLUME_STEP)
+    )
 
 
 async def test_squeezebox_volume_down(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
     """Test volume down service call."""
+    configured_player.volume = 50
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
         SERVICE_VOLUME_DOWN,
         {ATTR_ENTITY_ID: "media_player.test_player"},
         blocking=True,
     )
-    configured_player.async_set_volume.assert_called_once_with("-5")
+    configured_player.async_set_volume.assert_called_once_with(
+        str(configured_player.volume - TEST_VOLUME_STEP)
+    )
 
 
 async def test_squeezebox_volume_set(

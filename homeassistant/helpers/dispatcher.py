@@ -154,7 +154,7 @@ def _format_err[*_Ts](
 
     return (
         # Functions wrapped in partial do not have a __name__
-        f"Exception in {getattr(target, "__name__", None) or target} "
+        f"Exception in {getattr(target, '__name__', None) or target} "
         f"when dispatching '{signal}': {args}"
     )
 

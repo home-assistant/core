@@ -9,26 +9,16 @@ from total_connect_client.location import TotalConnectLocation
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
-)
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_CUSTOM_BYPASS,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_DISARMING,
-    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CODE_REQUIRED, DOMAIN
-from .coordinator import TotalConnectDataUpdateCoordinator
+from .coordinator import TotalConnectConfigEntry, TotalConnectDataUpdateCoordinator
 from .entity import TotalConnectLocationEntity
 
 SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
@@ -36,10 +26,12 @@ SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TotalConnectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
-    coordinator: TotalConnectDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     code_required = entry.options.get(CODE_REQUIRED, False)
 
     async_add_entities(
@@ -82,7 +74,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     ) -> None:
         """Initialize the TotalConnect status."""
         super().__init__(coordinator, location)
-        self._partition_id = partition_id
+        self._partition_id = int(partition_id)
         self._partition = self._location.partitions[partition_id]
 
         """
@@ -90,7 +82,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         for most users with new support for partitions.
         Add _# for partition 2 and beyond.
         """
-        if partition_id == 1:
+        if int(partition_id) == 1:
             self._attr_name = None
             self._attr_unique_id = str(location.location_id)
         else:
@@ -103,7 +95,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
             self._attr_code_format = CodeFormat.NUMBER
 
     @property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the device."""
         # State attributes can be removed in 2025.3
         attr = {
@@ -121,29 +113,29 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         else:
             attr["location_name"] = f"{self.device.name} partition {self._partition_id}"
 
-        state: str | None = None
+        state: AlarmControlPanelState | None = None
         if self._partition.arming_state.is_disarmed():
-            state = STATE_ALARM_DISARMED
+            state = AlarmControlPanelState.DISARMED
         elif self._partition.arming_state.is_armed_night():
-            state = STATE_ALARM_ARMED_NIGHT
+            state = AlarmControlPanelState.ARMED_NIGHT
         elif self._partition.arming_state.is_armed_home():
-            state = STATE_ALARM_ARMED_HOME
+            state = AlarmControlPanelState.ARMED_HOME
         elif self._partition.arming_state.is_armed_away():
-            state = STATE_ALARM_ARMED_AWAY
+            state = AlarmControlPanelState.ARMED_AWAY
         elif self._partition.arming_state.is_armed_custom_bypass():
-            state = STATE_ALARM_ARMED_CUSTOM_BYPASS
+            state = AlarmControlPanelState.ARMED_CUSTOM_BYPASS
         elif self._partition.arming_state.is_arming():
-            state = STATE_ALARM_ARMING
+            state = AlarmControlPanelState.ARMING
         elif self._partition.arming_state.is_disarming():
-            state = STATE_ALARM_DISARMING
+            state = AlarmControlPanelState.DISARMING
         elif self._partition.arming_state.is_triggered_police():
-            state = STATE_ALARM_TRIGGERED
+            state = AlarmControlPanelState.TRIGGERED
             attr["triggered_source"] = "Police/Medical"
         elif self._partition.arming_state.is_triggered_fire():
-            state = STATE_ALARM_TRIGGERED
+            state = AlarmControlPanelState.TRIGGERED
             attr["triggered_source"] = "Fire/Smoke"
         elif self._partition.arming_state.is_triggered_gas():
-            state = STATE_ALARM_TRIGGERED
+            state = AlarmControlPanelState.TRIGGERED
             attr["triggered_source"] = "Carbon Monoxide"
 
         self._attr_extra_state_attributes = attr

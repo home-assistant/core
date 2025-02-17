@@ -1,0 +1,14 @@
+{
+  "domain": "google_drive",
+  "name": "Google Drive",
+  "after_dependencies": ["backup"],
+  "codeowners": ["@tronikos"],
+  "config_flow": true,
+  "dependencies": ["application_credentials"],
+  "documentation": "https://www.home-assistant.io/integrations/google_drive",
+  "integration_type": "service",
+  "iot_class": "cloud_polling",
+  "loggers": ["google_drive_api"],
+  "quality_scale": "platinum",
+  "requirements": ["python-google-drive-api==0.1.0"]
+}

@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricCurrent, UnitOfPower
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import SIGNAL_DEVICE_ADD
@@ -46,15 +46,22 @@ TIME_SENSORS: list[SensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
 ]
+TEMPERATURE_SENSORS: list[SensorEntityDescription] = [
+    SensorEntityDescription(
+        key="temperature",
+        translation_key="temperature",
+    ),
+]
 
 POWER_PLUG_SENSORS = POWER_SENSORS
 WATER_HEATER_SENSORS = [*POWER_SENSORS, *TIME_SENSORS]
+THERMOSTAT_SENSORS = TEMPERATURE_SENSORS
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switcher sensor from config entry."""
 
@@ -70,6 +77,11 @@ async def async_setup_entry(
             async_add_entities(
                 SwitcherSensorEntity(coordinator, description)
                 for description in WATER_HEATER_SENSORS
+            )
+        elif coordinator.data.device_type.category == DeviceCategory.THERMOSTAT:
+            async_add_entities(
+                SwitcherSensorEntity(coordinator, description)
+                for description in THERMOSTAT_SENSORS
             )
 
     config_entry.async_on_unload(

@@ -29,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -124,7 +124,6 @@ class TemplateFan(TemplateEntity, FanEntity):
     """A template fan component."""
 
     _attr_should_poll = False
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

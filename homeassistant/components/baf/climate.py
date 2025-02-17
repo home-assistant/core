@@ -12,7 +12,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BAFConfigEntry
 from .entity import BAFEntity
@@ -21,7 +21,7 @@ from .entity import BAFEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BAFConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BAF fan auto comfort."""
     device = entry.runtime_data
@@ -40,7 +40,6 @@ class BAFAutoComfort(BAFEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.FAN_ONLY]
     _attr_translation_key = "auto_comfort"
-    _enable_turn_on_off_backwards_compatibility = False
 
     @callback
     def _async_update_attrs(self) -> None:

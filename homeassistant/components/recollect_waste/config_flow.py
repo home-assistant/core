@@ -34,9 +34,9 @@ class RecollectWasteConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_get_options_flow(
         config_entry: ConfigEntry,
-    ) -> OptionsFlow:
+    ) -> RecollectWasteOptionsFlowHandler:
         """Define the config flow to handle options."""
-        return RecollectWasteOptionsFlowHandler(config_entry)
+        return RecollectWasteOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -79,10 +79,6 @@ class RecollectWasteConfigFlow(ConfigFlow, domain=DOMAIN):
 class RecollectWasteOptionsFlowHandler(OptionsFlow):
     """Handle a Recollect Waste options flow."""
 
-    def __init__(self, entry: ConfigEntry) -> None:
-        """Initialize."""
-        self._entry = entry
-
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -96,7 +92,7 @@ class RecollectWasteOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(
                         CONF_FRIENDLY_NAME,
-                        default=self._entry.options.get(CONF_FRIENDLY_NAME),
+                        default=self.config_entry.options.get(CONF_FRIENDLY_NAME),
                     ): bool
                 }
             ),

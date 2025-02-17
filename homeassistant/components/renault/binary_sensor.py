@@ -13,11 +13,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import RenaultConfigEntry
 from .entity import RenaultDataEntity, RenaultDataEntityDescription
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -34,7 +37,7 @@ class RenaultBinarySensorEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RenaultConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Renault entities from config entry."""
     entities: list[RenaultBinarySensor] = [

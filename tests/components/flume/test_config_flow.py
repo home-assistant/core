@@ -110,10 +110,6 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
 
-@pytest.mark.parametrize(  # Remove when translations fixed
-    "ignore_translations",
-    ["component.flume.config.abort.reauth_successful"],
-)
 @pytest.mark.usefixtures("access_token")
 async def test_reauth(hass: HomeAssistant, requests_mock: Mocker) -> None:
     """Test we can reauth."""

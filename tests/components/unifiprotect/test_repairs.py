@@ -363,3 +363,30 @@ async def test_rtsp_writable_fix_when_not_setup(
     ufp.api.update_device.assert_called_with(
         ModelType.CAMERA, doorbell.id, {"channels": channels}
     )
+
+
+async def test_rtsp_no_fix_if_third_party(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test no RTSP disabled warning if camera is third-party."""
+
+    for channel in doorbell.channels:
+        channel.is_rtsp_enabled = False
+    for user in ufp.api.bootstrap.users.values():
+        user.all_permissions = []
+
+    ufp.api.get_camera = AsyncMock(return_value=doorbell)
+    doorbell.is_third_party_camera = True
+
+    await init_entry(hass, ufp, [doorbell])
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert not msg["result"]["issues"]

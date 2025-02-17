@@ -27,13 +27,16 @@ from .mock import MockDevice
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize("device", ["mock_device", "mock_repeater_device"])
 async def test_setup_entry(
     hass: HomeAssistant,
-    mock_device: MockDevice,
+    device: str,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test setup entry."""
+    mock_device: MockDevice = request.getfixturevalue(device)
     entry = configure_integration(hass)
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()

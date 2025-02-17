@@ -4,16 +4,21 @@ from __future__ import annotations
 
 import functools
 
+from zha.application.platforms.alarm_control_panel.const import (
+    AlarmState as ZHAAlarmState,
+)
+
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ZHAEntity
 from .helpers import (
@@ -23,11 +28,25 @@ from .helpers import (
     get_zha_data,
 )
 
+ZHA_STATE_TO_ALARM_STATE_MAP = {
+    ZHAAlarmState.DISARMED.value: AlarmControlPanelState.DISARMED,
+    ZHAAlarmState.ARMED_HOME.value: AlarmControlPanelState.ARMED_HOME,
+    ZHAAlarmState.ARMED_AWAY.value: AlarmControlPanelState.ARMED_AWAY,
+    ZHAAlarmState.ARMED_NIGHT.value: AlarmControlPanelState.ARMED_NIGHT,
+    ZHAAlarmState.ARMED_VACATION.value: AlarmControlPanelState.ARMED_VACATION,
+    ZHAAlarmState.ARMED_CUSTOM_BYPASS.value: AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    ZHAAlarmState.PENDING.value: AlarmControlPanelState.PENDING,
+    ZHAAlarmState.ARMING.value: AlarmControlPanelState.ARMING,
+    ZHAAlarmState.DISARMING.value: AlarmControlPanelState.DISARMING,
+    ZHAAlarmState.TRIGGERED.value: AlarmControlPanelState.TRIGGERED,
+    ZHAAlarmState.UNKNOWN.value: None,
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Zigbee Home Automation alarm control panel from config entry."""
     zha_data = get_zha_data(hass)
@@ -94,6 +113,6 @@ class ZHAAlarmControlPanel(ZHAEntity, AlarmControlPanelEntity):
         self.async_write_ha_state()
 
     @property
-    def state(self) -> str | None:
+    def alarm_state(self) -> AlarmControlPanelState | None:
         """Return the state of the entity."""
-        return self.entity_data.entity.state["state"]
+        return ZHA_STATE_TO_ALARM_STATE_MAP.get(self.entity_data.entity.state["state"])

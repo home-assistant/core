@@ -27,7 +27,11 @@ from homeassistant.components.todo import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    ServiceValidationError,
+)
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
 
@@ -941,14 +945,15 @@ async def test_unsupported_service(
     payload: dict[str, Any] | None,
 ) -> None:
     """Test a To-do list that does not support features."""
-
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", "")
     entity1 = TodoListEntity()
     entity1.entity_id = "todo.entity1"
     await create_mock_platform(hass, [entity1])
 
     with pytest.raises(
-        HomeAssistantError,
-        match="does not support this service",
+        ServiceNotSupported,
+        match=f"Entity todo.entity1 does not support action {DOMAIN}.{service_name}",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1007,7 +1012,7 @@ async def test_add_item_intent(
         hass,
         "test",
         todo_intent.INTENT_LIST_ADD_ITEM,
-        {ATTR_ITEM: {"value": "beer"}, "name": {"value": "list 1"}},
+        {ATTR_ITEM: {"value": " beer "}, "name": {"value": "list 1"}},
         assistant=conversation.DOMAIN,
     )
     assert response.response_type == intent.IntentResponseType.ACTION_DONE
@@ -1017,7 +1022,7 @@ async def test_add_item_intent(
 
     assert len(entity1.items) == 1
     assert len(entity2.items) == 0
-    assert entity1.items[0].summary == "beer"
+    assert entity1.items[0].summary == "beer"  # summary is trimmed
     assert entity1.items[0].status == TodoItemStatus.NEEDS_ACTION
     entity1.items.clear()
 

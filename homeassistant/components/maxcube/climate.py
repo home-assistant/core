@@ -73,7 +73,6 @@ class MaxCubeClimate(ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, handler, device):
         """Initialize MAX! Cube ClimateEntity."""
@@ -172,8 +171,8 @@ class MaxCubeClimate(ClimateEntity):
         else:
             return None
 
-        # Assume heating when valve is open
-        if valve > 0:
+        # Assume heating when valve is open.
+        if valve:
             return HVACAction.HEATING
 
         return HVACAction.OFF if self.hvac_mode == HVACMode.OFF else HVACAction.IDLE

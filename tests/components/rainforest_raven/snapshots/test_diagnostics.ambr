@@ -1,0 +1,111 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'device': '/dev/ttyACM0',
+        'mac': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'rainforest_raven',
+      'entry_id': '01JADXBJSPYEBAFPKGXDJWZBQ8',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'data': dict({
+      'Meters': dict({
+        '**REDACTED0**': dict({
+          'CurrentSummationDelivered': dict({
+            'device_mac_id': '**REDACTED**',
+            'meter_mac_id': '**REDACTED**',
+            'summation_delivered': '23456.7890',
+            'summation_received': '00000.0000',
+            'time_stamp': None,
+          }),
+          'InstantaneousDemand': dict({
+            'demand': '1.2345',
+            'device_mac_id': '**REDACTED**',
+            'meter_mac_id': '**REDACTED**',
+            'time_stamp': None,
+          }),
+          'PriceCluster': dict({
+            'currency': dict({
+              '__type': "<enum 'Currency'>",
+              'repr': "<Currency.USD: 'USD'>",
+            }),
+            'device_mac_id': '**REDACTED**',
+            'meter_mac_id': '**REDACTED**',
+            'price': '0.10',
+            'rate_label': 'Set by user',
+            'tier': 3,
+            'tier_label': 'Set by user',
+            'time_stamp': None,
+          }),
+        }),
+      }),
+      'NetworkInfo': dict({
+        'channel': 13,
+        'coord_mac_id': None,
+        'description': None,
+        'device_mac_id': '**REDACTED**',
+        'ext_pan_id': None,
+        'link_strength': 100,
+        'short_addr': None,
+        'status': None,
+        'status_code': None,
+      }),
+    }),
+  })
+# ---
+# name: test_entry_diagnostics_no_meters
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'device': '/dev/ttyACM0',
+        'mac': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'rainforest_raven',
+      'entry_id': '01JADXBJSPYEBAFPKGXDJWZBQ8',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'data': dict({
+      'Meters': dict({
+      }),
+      'NetworkInfo': dict({
+        'channel': 13,
+        'coord_mac_id': None,
+        'description': None,
+        'device_mac_id': '**REDACTED**',
+        'ext_pan_id': None,
+        'link_strength': 100,
+        'short_addr': None,
+        'status': None,
+        'status_code': None,
+      }),
+    }),
+  })
+# ---

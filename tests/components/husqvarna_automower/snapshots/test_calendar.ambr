@@ -68,6 +68,11 @@
           'start': '2023-06-10T01:00:00+02:00',
           'summary': 'Back lawn schedule 2',
         }),
+        dict({
+          'end': '2023-06-12T09:00:00+02:00',
+          'start': '2023-06-12T01:00:00+02:00',
+          'summary': 'Back lawn schedule 2',
+        }),
       ]),
     }),
     'calendar.test_mower_2': dict({

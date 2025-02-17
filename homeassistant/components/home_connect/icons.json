@@ -18,6 +18,9 @@
     "set_option_selected": {
       "service": "mdi:gesture-tap"
     },
+    "set_program_and_options": {
+      "service": "mdi:form-select"
+    },
     "change_setting": {
       "service": "mdi:cog"
     }
@@ -59,6 +62,14 @@
           "finished": "mdi:flag-checkered",
           "error": "mdi:alert-circle",
           "aborting": "mdi:close-circle"
+        }
+      },
+      "door": {
+        "default": "mdi:door",
+        "state": {
+          "closed": "mdi:door-closed",
+          "locked": "mdi:door-closed-lock",
+          "open": "mdi:door-open"
         }
       },
       "program_progress": {

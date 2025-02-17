@@ -14,7 +14,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import PowerviewShadeUpdateCoordinator
 from .entity import ShadeEntity
@@ -54,7 +54,7 @@ NUMBERS: Final = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PowerviewConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the hunter douglas number entities."""
     pv_entry = entry.runtime_data
@@ -95,7 +95,7 @@ class PowerViewNumber(ShadeEntity, RestoreNumber):
         self.entity_description = description
         self._attr_unique_id = f"{self._attr_unique_id}_{description.key}"
 
-    def set_native_value(self, value: float) -> None:
+    async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         self._attr_native_value = value
         self.entity_description.store_value_fn(self.coordinator, self._shade.id, value)

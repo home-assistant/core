@@ -17,8 +17,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DEFAULT_SETUP_TIMEOUT, DOMAIN, PRODUCT
+from .const import DEFAULT_SETUP_TIMEOUT
 from .helpers import get_maybe_authenticated_session
+
+type BleBoxConfigEntry = ConfigEntry[Box]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +37,7 @@ PLATFORMS = [
 PARALLEL_UPDATES = 0
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BleBoxConfigEntry) -> bool:
     """Set up BleBox devices from a config entry."""
     host = entry.data[CONF_HOST]
     port = entry.data[CONF_PORT]
@@ -55,20 +57,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         _LOGGER.error("Identify failed at %s:%d (%s)", api_host.host, api_host.port, ex)
         raise ConfigEntryNotReady from ex
 
-    domain = hass.data.setdefault(DOMAIN, {})
-    domain_entry = domain.setdefault(entry.entry_id, {})
-    product = domain_entry.setdefault(PRODUCT, product)
+    entry.runtime_data = product
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: BleBoxConfigEntry) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

@@ -19,7 +19,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from tests.common import MockConfigEntry, MockPlatform, mock_platform
 
@@ -31,7 +31,7 @@ class SelectPlatform(MockPlatform):
         self,
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up fake select platform."""
         pipeline_entity = AssistPipelineSelect(hass, "test-domain", "test-prefix")
@@ -184,7 +184,7 @@ async def test_select_entity_changing_vad_sensitivity(
     hass: HomeAssistant,
     init_select: MockConfigEntry,
 ) -> None:
-    """Test entity tracking pipeline changes."""
+    """Test entity tracking vad sensitivity changes."""
     config_entry = init_select  # nicer naming
     config_entry.mock_state(hass, ConfigEntryState.LOADED)
 
@@ -192,7 +192,7 @@ async def test_select_entity_changing_vad_sensitivity(
     assert state is not None
     assert state.state == VadSensitivity.DEFAULT.value
 
-    # Change select to new pipeline
+    # Change select to new sensitivity
     await hass.services.async_call(
         "select",
         "select_option",

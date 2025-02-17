@@ -20,7 +20,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -50,7 +50,7 @@ DEVICE_CLASS_MAPPING = {
 
 def add_lcn_entities(
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     entity_configs: Iterable[ConfigType],
 ) -> None:
     """Add entities for this domain."""
@@ -69,7 +69,7 @@ def add_lcn_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LCN switch entities from a config entry."""
     add_entities = partial(
@@ -126,7 +126,11 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
         ):
             return
 
-        self._attr_native_value = input_obj.get_value().to_var_unit(self.unit)
+        is_regulator = self.variable.name in SETPOINTS
+        self._attr_native_value = input_obj.get_value().to_var_unit(
+            self.unit, is_regulator
+        )
+
         self.async_write_ha_state()
 
 
