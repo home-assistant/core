@@ -392,7 +392,7 @@
 # name: test_select_streaming[climate.test_cabin_overheat_protection]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 26,
+      'current_temperature': None,
       'friendly_name': 'Test Cabin overheat protection',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
@@ -411,6 +411,35 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'cool',
+  })
+# ---
+# name: test_select_streaming[climate.test_climate LHD]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 26.0,
+      'friendly_name': 'Test Climate',
+      'hvac_modes': list([
+        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 28.0,
+      'min_temp': 15.0,
+      'preset_mode': None,
+      'preset_modes': list([
+        'off',
+        'keep',
+        'dog',
+        'camp',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'temperature': 21.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.test_climate',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat_cool',
   })
 # ---
 # name: test_select_streaming[climate.test_climate]
@@ -432,7 +461,7 @@
         'camp',
       ]),
       'supported_features': <ClimateEntityFeature: 401>,
-      'temperature': None,
+      'temperature': 21.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.test_climate',
