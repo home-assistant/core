@@ -7,7 +7,11 @@ import pytest
 import requests_mock
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
+from homeassistant.components.fan import (
+    ATTR_PRESET_MODE,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PRESET_MODE,
+)
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -120,6 +124,41 @@ async def test_turn_off(
                 FAN_DOMAIN,
                 SERVICE_TURN_OFF,
                 {ATTR_ENTITY_ID: ENTITY_FAN},
+                blocking=True,
+            )
+
+        await hass.async_block_till_done()
+        method_mock.assert_called_once()
+        update_mock.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    ("api_response", "expectation"),
+    [(True, NoException), (False, pytest.raises(HomeAssistantError))],
+)
+async def test_set_preset_mode(
+    hass: HomeAssistant,
+    fan_config_entry: MockConfigEntry,
+    api_response: bool,
+    expectation,
+) -> None:
+    """Test handling of value in set_mode method."""
+
+    # If VeSyncTowerFan.normal_mode fails (returns False), then HomeAssistantError is raised
+    with (
+        expectation,
+        patch(
+            "pyvesync.vesyncfan.VeSyncTowerFan.normal_mode",
+            return_value=api_response,
+        ) as method_mock,
+    ):
+        with patch(
+            "homeassistant.components.vesync.fan.VeSyncFanHA.schedule_update_ha_state"
+        ) as update_mock:
+            await hass.services.async_call(
+                FAN_DOMAIN,
+                SERVICE_SET_PRESET_MODE,
+                {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PRESET_MODE: "normal"},
                 blocking=True,
             )
 
