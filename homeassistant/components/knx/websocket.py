@@ -63,6 +63,7 @@ async def register_panel(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, ws_get_entity_schemas)
     websocket_api.async_register_command(hass, ws_create_entity_v2)
     websocket_api.async_register_command(hass, ws_get_entity_config_v2)
+    websocket_api.async_register_command(hass, ws_update_entity_v2)
 
     if DOMAIN not in hass.data.get("frontend_panels", {}):
         await hass.http.async_register_static_paths(
@@ -743,5 +744,83 @@ def ws_get_entity_config_v2(
     except (ValueError, TypeError, Exception) as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_SUPPORTED, str(err)
+        )
+        return
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "knx/update_entity_v2",
+        vol.Required(CONF_ENTITY_ID): str,
+        vol.Required(CONF_DATA): vol.Schema(
+            {CONF_PLATFORM: str}, extra=vol.ALLOW_EXTRA
+        ),
+    }
+)
+@websocket_api.async_response
+@provide_knx
+async def ws_update_entity_v2(
+    hass: HomeAssistant,
+    knx: KNXModule,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+) -> None:
+    """Handle an update request for a KNX entity via WebSocket.
+
+    This function validates the incoming update request data, creates the appropriate
+    configuration object, and persists the updated configuration for the specified KNX entity.
+
+    Args:
+        hass (HomeAssistant): The Home Assistant instance.
+        knx (KNXModule): The KNX integration module that manages KNX-specific configurations.
+        connection (websocket_api.ActiveConnection): The active WebSocket connection
+            to communicate with the client.
+        msg (dict): The WebSocket message containing entity update information.
+
+    Returns:
+        None: This function does not return any value. The result is sent back to the client
+        through the provided WebSocket connection.
+
+    Raises:
+        TypeError: If the provided config class does not implement Persistable.
+        vol.Invalid: If the configuration validation fails.
+        ConfigStoreException: If any errors occur while updating the entity in the config store.
+
+    """
+    message_id: int = msg["id"]
+    platform: str = msg[CONF_DATA][CONF_PLATFORM]
+    entity_id: str = msg[CONF_ENTITY_ID]
+
+    try:
+        config_class = get_entity_config_cls(platform)
+        config = config_class.from_dict(msg[CONF_DATA])
+        if not isinstance(config, Persistable):
+            raise TypeError(f"Config class {config_class} must implement Persistable")  # noqa: TRY301
+
+        await knx.config_store.update_entity(
+            platform, entity_id, config.to_storage_dict()
+        )
+
+        connection.send_result(
+            message_id,
+            EntityStoreValidationSuccess(success=True, entity_id=None),
+        )
+
+    except TypeError as err:
+        connection.send_error(
+            message_id,
+            websocket_api.const.ERR_NOT_SUPPORTED,
+            str(err),
+        )
+        return
+    except vol.Invalid as err:
+        connection.send_result(message_id, vol_invalid_response(err))
+        return
+    except ConfigStoreException as err:
+        connection.send_error(
+            message_id,
+            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
+            str(err),
         )
         return
