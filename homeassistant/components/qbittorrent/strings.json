@@ -53,7 +53,7 @@
       "connection_status": {
         "name": "Connection status",
         "state": {
-          "connected": "Conencted",
+          "connected": "Connected",
           "firewalled": "Firewalled",
           "disconnected": "Disconnected"
         }
