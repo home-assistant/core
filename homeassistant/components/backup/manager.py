@@ -1844,8 +1844,8 @@ class CoreBackupReaderWriter(BackupReaderWriter):
     async def async_validate_config(self, *, config: BackupConfig) -> None:
         """Validate backup config.
 
-        Update automatic backup settings to not include addons or folders
-        and remove hassio agents in case a HassIO or Supervisor backup was restored.
+        Update automatic backup settings to not include addons or folders and remove
+        hassio agents in case a backup created by supervisor was restored.
         """
         create_backup = config.data.create_backup
         if (
