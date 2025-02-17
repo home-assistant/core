@@ -19,7 +19,7 @@ from homeassistant.components.cover import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -40,7 +40,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add cover for passed config_entry in HA."""
     gaposa, coordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -49,7 +49,7 @@ async def async_setup_entry(
     my_entities: dict[str, GaposaCover] = {}
 
     @callback
-    def async_add_remove_entities():
+    def async_add_remove_entities() -> None:
         """Add or remove entities based on coordinator data."""
         new_entities = []
         latest_ids = set(coordinator.data.keys())
@@ -93,9 +93,12 @@ class GaposaCover(CoordinatorEntity, CoverEntity):
     # imported above, we can tell HA the features that are supported by this entity.
     # If the supported features were dynamic (ie: different depending on the external
     # device it connected to), then this should be function with an @property decorator.
-    supported_features = (
-        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
-    )
+    @property
+    def supported_features(self) -> CoverEntityFeature:
+        """Return supported features."""
+        return (
+            CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+        )
 
     # Add device actions support
     @property
