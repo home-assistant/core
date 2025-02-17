@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-import json
-import logging
 from collections.abc import Callable
 from datetime import datetime
+import json
+import logging
 from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
 from pysqueezebox import Server, async_discover
+import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -31,12 +31,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import (
     config_validation as cv,
-)
-from homeassistant.helpers import (
     discovery_flow,
     entity_platform,
-)
-from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.helpers.device_registry import (
