@@ -1,6 +1,6 @@
 """Test the OneDrive setup."""
 
-from copy import deepcopy
+from copy import copy
 from html import escape
 from json import dumps
 from unittest.mock import MagicMock
@@ -11,6 +11,7 @@ from onedrive_personal_sdk.exceptions import (
     NotFoundError,
     OneDriveException,
 )
+from onedrive_personal_sdk.models.items import AppRoot, Drive, Folder
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -24,13 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import setup_integration
-from .const import (
-    BACKUP_METADATA,
-    MOCK_APPROOT,
-    MOCK_BACKUP_FILE,
-    MOCK_BACKUP_FOLDER,
-    MOCK_DRIVE,
-)
+from .const import BACKUP_METADATA, MOCK_BACKUP_FILE
 
 from tests.common import MockConfigEntry
 
@@ -97,20 +92,22 @@ async def test_get_integration_folder_creation(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
+    mock_approot: AppRoot,
+    mock_folder: Folder,
 ) -> None:
     """Test faulty integration folder creation."""
-    folder_name = deepcopy(mock_config_entry.data[CONF_FOLDER_NAME])
+    folder_name = copy(mock_config_entry.data[CONF_FOLDER_NAME])
     mock_onedrive_client.get_drive_item.side_effect = NotFoundError(404, "Not found")
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_onedrive_client.create_folder.assert_called_once_with(
-        parent_id=MOCK_APPROOT.id,
+        parent_id=mock_approot.id,
         name=folder_name,
     )
     # ensure the folder id and name are updated
-    assert mock_config_entry.data[CONF_FOLDER_ID] == MOCK_BACKUP_FOLDER.id
-    assert mock_config_entry.data[CONF_FOLDER_NAME] == MOCK_BACKUP_FOLDER.name
+    assert mock_config_entry.data[CONF_FOLDER_ID] == mock_folder.id
+    assert mock_config_entry.data[CONF_FOLDER_NAME] == mock_folder.name
 
 
 async def test_get_integration_folder_creation_error(
@@ -174,12 +171,13 @@ async def test_device(
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
+    mock_drive: Drive,
 ) -> None:
     """Test the device."""
 
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device({(DOMAIN, MOCK_DRIVE.id)})
+    device = device_registry.async_get_device({(DOMAIN, mock_drive.id)})
     assert device
     assert device == snapshot
 
@@ -203,15 +201,15 @@ async def test_data_cap_issues(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
+    mock_drive: Drive,
     drive_state: DriveState,
     issue_key: str,
     issue_exists: bool,
 ) -> None:
     """Make sure we get issues for high data usage."""
-    mock_drive = deepcopy(MOCK_DRIVE)
     assert mock_drive.quota
     mock_drive.quota.state = drive_state
-    mock_onedrive_client.get_drive.return_value = mock_drive
+
     await setup_integration(hass, mock_config_entry)
 
     issue_registry = ir.async_get(hass)
@@ -223,6 +221,7 @@ async def test_1_1_to_1_2_migration(
     hass: HomeAssistant,
     mock_onedrive_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_folder: Folder,
 ) -> None:
     """Test migration from 1.1 to 1.2."""
     old_config_entry = MockConfigEntry(
@@ -239,8 +238,8 @@ async def test_1_1_to_1_2_migration(
     mock_onedrive_client.get_drive_item.side_effect = NotFoundError(404, "Not found")
 
     await setup_integration(hass, old_config_entry)
-    assert old_config_entry.data[CONF_FOLDER_ID] == MOCK_BACKUP_FOLDER.id
-    assert old_config_entry.data[CONF_FOLDER_NAME] == MOCK_BACKUP_FOLDER.name
+    assert old_config_entry.data[CONF_FOLDER_ID] == mock_folder.id
+    assert old_config_entry.data[CONF_FOLDER_NAME] == mock_folder.name
 
 
 async def test_migration_guard_against_major_downgrade(

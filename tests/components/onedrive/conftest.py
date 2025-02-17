@@ -5,6 +5,16 @@ from json import dumps
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from onedrive_personal_sdk.const import DriveState, DriveType
+from onedrive_personal_sdk.models.items import (
+    AppRoot,
+    Drive,
+    DriveQuota,
+    Folder,
+    IdentitySet,
+    ItemParentReference,
+    User,
+)
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -24,10 +34,8 @@ from .const import (
     BACKUP_METADATA,
     CLIENT_ID,
     CLIENT_SECRET,
-    MOCK_APPROOT,
+    IDENTITY_SET,
     MOCK_BACKUP_FILE,
-    MOCK_BACKUP_FOLDER,
-    MOCK_DRIVE,
     MOCK_METADATA_FILE,
 )
 
@@ -95,12 +103,78 @@ def mock_onedrive_client_init() -> Generator[MagicMock]:
         yield onedrive_client
 
 
+@pytest.fixture
+def mock_approot() -> AppRoot:
+    """Return a mocked approot."""
+    return AppRoot(
+        id="id",
+        child_count=0,
+        size=0,
+        name="name",
+        parent_reference=ItemParentReference(
+            drive_id="mock_drive_id", id="id", path="path"
+        ),
+        created_by=IdentitySet(
+            user=User(
+                display_name="John Doe",
+                id="id",
+                email="john@doe.com",
+            )
+        ),
+    )
+
+
+@pytest.fixture
+def mock_drive() -> Drive:
+    """Return a mocked drive."""
+    return Drive(
+        id="mock_drive_id",
+        name="My Drive",
+        drive_type=DriveType.PERSONAL,
+        owner=IDENTITY_SET,
+        quota=DriveQuota(
+            deleted=5,
+            remaining=805306368,
+            state=DriveState.NEARING,
+            total=5368709120,
+            used=4250000000,
+        ),
+    )
+
+
+@pytest.fixture
+def mock_folder() -> Folder:
+    """Return a mocked backup folder."""
+    return Folder(
+        id="my_folder_id",
+        name="name",
+        size=0,
+        child_count=0,
+        description="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
+        parent_reference=ItemParentReference(
+            drive_id="mock_drive_id", id="id", path="path"
+        ),
+        created_by=IdentitySet(
+            user=User(
+                display_name="John Doe",
+                id="id",
+                email="john@doe.com",
+            ),
+        ),
+    )
+
+
 @pytest.fixture(autouse=True)
-def mock_onedrive_client(mock_onedrive_client_init: MagicMock) -> Generator[MagicMock]:
+def mock_onedrive_client(
+    mock_onedrive_client_init: MagicMock,
+    mock_approot: AppRoot,
+    mock_drive: Drive,
+    mock_folder: Folder,
+) -> Generator[MagicMock]:
     """Return a mocked GraphServiceClient."""
     client = mock_onedrive_client_init.return_value
-    client.get_approot.return_value = MOCK_APPROOT
-    client.create_folder.return_value = MOCK_BACKUP_FOLDER
+    client.get_approot.return_value = mock_approot
+    client.create_folder.return_value = mock_folder
     client.list_drive_items.return_value = [MOCK_BACKUP_FILE, MOCK_METADATA_FILE]
     client.get_drive_item.return_value = MOCK_BACKUP_FILE
     client.upload_file.return_value = MOCK_METADATA_FILE
@@ -113,7 +187,7 @@ def mock_onedrive_client(mock_onedrive_client_init: MagicMock) -> Generator[Magi
             return dumps(BACKUP_METADATA).encode()
 
     client.download_drive_item.return_value = MockStreamReader()
-    client.get_drive.return_value = MOCK_DRIVE
+    client.get_drive.return_value = mock_drive
     return client
 
 

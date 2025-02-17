@@ -1,11 +1,10 @@
 """Test the OneDrive config flow."""
 
-from copy import deepcopy
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock
 
 from onedrive_personal_sdk.exceptions import OneDriveException
-from onedrive_personal_sdk.models.items import ItemUpdate
+from onedrive_personal_sdk.models.items import AppRoot, Folder, ItemUpdate
 import pytest
 
 from homeassistant import config_entries
@@ -23,7 +22,7 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from . import setup_integration
-from .const import CLIENT_ID, MOCK_APPROOT, MOCK_BACKUP_FOLDER
+from .const import CLIENT_ID
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -111,12 +110,11 @@ async def test_full_flow_with_owner_not_found(
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
     mock_onedrive_client: MagicMock,
+    mock_approot: MagicMock,
 ) -> None:
     """Ensure we get a default title if the drive's owner can't be read."""
 
-    mock_approot = deepcopy(MOCK_APPROOT)
     mock_approot.created_by.user = None
-    mock_onedrive_client.get_approot.return_value = mock_approot
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -150,12 +148,11 @@ async def test_folder_already_in_use(
     mock_setup_entry: AsyncMock,
     mock_onedrive_client: MagicMock,
     mock_instance_id: AsyncMock,
+    mock_folder: Folder,
 ) -> None:
     """Ensure a folder that is already in use is not allowed."""
 
-    mock_folder = deepcopy(MOCK_BACKUP_FOLDER)
     mock_folder.description = "1234"
-    mock_onedrive_client.create_folder.return_value = mock_folder
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -311,11 +308,11 @@ async def test_reauth_flow_id_changed(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
+    mock_approot: AppRoot,
 ) -> None:
     """Test that the reauth flow fails on a different drive id."""
-    app_root = deepcopy(MOCK_APPROOT)
-    app_root.parent_reference.drive_id = "other_drive_id"
-    mock_onedrive_client.get_approot.return_value = app_root
+
+    mock_approot.parent_reference.drive_id = "other_drive_id"
 
     await setup_integration(hass, mock_config_entry)
 
@@ -413,11 +410,11 @@ async def test_reconfigure_flow_id_changed(
     mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
+    mock_approot: AppRoot,
 ) -> None:
     """Test that the reconfigure flow fails on a different drive id."""
-    app_root = deepcopy(MOCK_APPROOT)
-    app_root.parent_reference.drive_id = "other_drive_id"
-    mock_onedrive_client.get_approot.return_value = app_root
+
+    mock_approot.parent_reference.drive_id = "other_drive_id"
 
     mock_config_entry.add_to_hass(hass)
     await hass.async_block_till_done()

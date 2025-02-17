@@ -3,13 +3,8 @@
 from html import escape
 from json import dumps
 
-from onedrive_personal_sdk.const import DriveState, DriveType
 from onedrive_personal_sdk.models.items import (
-    AppRoot,
-    Drive,
-    DriveQuota,
     File,
-    Folder,
     Hashes,
     IdentitySet,
     ItemParentReference,
@@ -40,29 +35,6 @@ IDENTITY_SET = IdentitySet(
         id="id",
         email="john@doe.com",
     )
-)
-
-MOCK_APPROOT = AppRoot(
-    id="id",
-    child_count=0,
-    size=0,
-    name="name",
-    parent_reference=ItemParentReference(
-        drive_id="mock_drive_id", id="id", path="path"
-    ),
-    created_by=IDENTITY_SET,
-)
-
-MOCK_BACKUP_FOLDER = Folder(
-    id="my_folder_id",
-    name="name",
-    size=0,
-    child_count=0,
-    description="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
-    parent_reference=ItemParentReference(
-        drive_id="mock_drive_id", id="id", path="path"
-    ),
-    created_by=IDENTITY_SET,
 )
 
 MOCK_BACKUP_FILE = File(
@@ -101,19 +73,4 @@ MOCK_METADATA_FILE = File(
         )
     ),
     created_by=IDENTITY_SET,
-)
-
-
-MOCK_DRIVE = Drive(
-    id="mock_drive_id",
-    name="My Drive",
-    drive_type=DriveType.PERSONAL,
-    owner=IDENTITY_SET,
-    quota=DriveQuota(
-        deleted=5,
-        remaining=805306368,
-        state=DriveState.NEARING,
-        total=5368709120,
-        used=4250000000,
-    ),
 )
