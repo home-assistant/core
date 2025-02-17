@@ -42,10 +42,10 @@ BACKUP_CALL = call(
     agent_ids=["test.test-agent"],
     backup_name="test-name",
     extra_metadata={"instance_id": ANY, "with_automatic_settings": True},
-    include_addons=["test-addon"],
+    include_addons=[],
     include_all_addons=False,
     include_database=True,
-    include_folders=["media"],
+    include_folders=None,
     include_homeassistant=True,
     password="test-password",
     on_progress=ANY,
@@ -1123,6 +1123,14 @@ async def test_agents_info(
         },
     ],
 )
+@pytest.mark.parametrize(
+    ("with_hassio"),
+    [
+        pytest.param(True, id="with_hassio"),
+        pytest.param(False, id="without_hassio"),
+    ],
+)
+@pytest.mark.usefixtures("supervisor_client")
 @patch("homeassistant.components.backup.config.random.randint", Mock(return_value=600))
 async def test_config_info(
     hass: HomeAssistant,
@@ -1130,6 +1138,7 @@ async def test_config_info(
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     hass_storage: dict[str, Any],
+    with_hassio: bool,
     storage_data: dict[str, Any] | None,
 ) -> None:
     """Test getting backup config info."""
@@ -1139,7 +1148,7 @@ async def test_config_info(
 
     hass_storage.update(storage_data)
 
-    await setup_backup_integration(hass)
+    await setup_backup_integration(hass, with_hassio=with_hassio)
     await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/config/info"})
@@ -1697,10 +1706,10 @@ async def test_config_schedule_logic(
             "agents": {},
             "create_backup": {
                 "agent_ids": ["test.test-agent"],
-                "include_addons": ["test-addon"],
+                "include_addons": [],
                 "include_all_addons": False,
                 "include_database": True,
-                "include_folders": ["media"],
+                "include_folders": [],
                 "name": "test-name",
                 "password": "test-password",
             },
