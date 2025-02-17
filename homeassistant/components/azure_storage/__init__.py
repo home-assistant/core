@@ -12,7 +12,7 @@ from azure.core.pipeline.transport._aiohttp import (
 from azure.storage.blob.aio import ContainerClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -66,7 +66,7 @@ async def async_setup_entry(
 
     entry.runtime_data = container_client
 
-    _async_notify_backup_listeners_soon(hass)
+    _async_notify_backup_listeners(hass)
 
     return True
 
@@ -75,15 +75,11 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: AzureStorageConfigEntry
 ) -> bool:
     """Unload a OneDrive config entry."""
-    _async_notify_backup_listeners_soon(hass)
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
+        _async_notify_backup_listeners(hass)
     return True
 
 
 def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
     for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
         listener()
-
-
-@callback
-def _async_notify_backup_listeners_soon(hass: HomeAssistant) -> None:
-    hass.loop.call_soon(_async_notify_backup_listeners, hass)
