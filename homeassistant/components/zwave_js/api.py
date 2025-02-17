@@ -899,15 +899,8 @@ async def websocket_subscribe_s2_inclusion(
     @callback
     def handle_requested_grant(event: dict) -> None:
         """Accept the requested security classes without user interaction."""
-        inclusion_grant = InclusionGrant(
-            [
-                SecurityClass(sec_cls)
-                for sec_cls in event["requested_grant"]["security_classes"]
-            ],
-            event["requested_grant"]["client_side_auth"],
-        )
         hass.async_create_task(
-            driver.controller.async_grant_security_classes(inclusion_grant)
+            driver.controller.async_grant_security_classes(event["requested_grant"])
         )
 
     connection.subscriptions[msg["id"]] = async_cleanup
