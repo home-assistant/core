@@ -36,5 +36,5 @@ CONF_BROWSE_LIMIT = "browse_limit"
 CONF_VOLUME_STEP = "volume_step"
 DEFAULT_BROWSE_LIMIT = 1000
 DEFAULT_VOLUME_STEP = 5
-ANNOUNCE_VOLUME = "announce_volume"
-ANNOUNCE_TIMEOUT = "announce_timeout"
+ATTR_ANNOUNCE_VOLUME = "announce_volume"
+ATTR_ANNOUNCE_TIMEOUT = "announce_timeout"

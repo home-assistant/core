@@ -33,8 +33,8 @@ from homeassistant.components.media_player import (
     RepeatMode,
 )
 from homeassistant.components.squeezebox.const import (
-    ANNOUNCE_TIMEOUT,
-    ANNOUNCE_VOLUME,
+    ATTR_ANNOUNCE_TIMEOUT,
+    ATTR_ANNOUNCE_VOLUME,
     DISCOVERY_INTERVAL,
     DOMAIN,
     PLAYER_UPDATE_INTERVAL,
@@ -460,8 +460,33 @@ async def test_squeezebox_play_media_with_announce(
     )
 
 
-async def test_squeezebox_play_media_with_announce_volume(
+async def test_squeezebox_play_media_with_announce_zero(
     hass: HomeAssistant, configured_player: MagicMock
+) -> None:
+    """Test play service call with announce volume zero."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            ATTR_MEDIA_ANNOUNCE: True,
+            ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_VOLUME: 0},
+        },
+        blocking=True,
+    )
+    configured_player.async_load_url.assert_called_once_with(
+        FAKE_VALID_ITEM_ID, "announce"
+    )
+
+
+@pytest.mark.parametrize(
+    ("announce_volume"),
+    ["0.2", 0.2],
+)
+async def test_squeezebox_play_media_with_announce_volume(
+    hass: HomeAssistant, configured_player: MagicMock, announce_volume: str | int
 ) -> None:
     """Test play service call with announce."""
     await hass.services.async_call(
@@ -472,7 +497,7 @@ async def test_squeezebox_play_media_with_announce_volume(
             ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
             ATTR_MEDIA_ANNOUNCE: True,
-            ATTR_MEDIA_EXTRA: {ANNOUNCE_VOLUME: "20"},
+            ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_VOLUME: announce_volume},
         },
         blocking=True,
     )
@@ -482,8 +507,9 @@ async def test_squeezebox_play_media_with_announce_volume(
     )
 
 
-async def test_squeezebox_play_media_with_announce_volume_zero(
-    hass: HomeAssistant, configured_player: MagicMock
+@pytest.mark.parametrize(("announce_volume"), ["1.1", 1.1, "text", "-1", -1])
+async def test_squeezebox_play_media_with_announce_volume_invalid(
+    hass: HomeAssistant, configured_player: MagicMock, announce_volume: str | int
 ) -> None:
     """Test play service call with announce and volume zero."""
     with pytest.raises(ServiceValidationError):
@@ -495,7 +521,7 @@ async def test_squeezebox_play_media_with_announce_volume_zero(
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
                 ATTR_MEDIA_ANNOUNCE: True,
-                ATTR_MEDIA_EXTRA: {ANNOUNCE_VOLUME: "0"},
+                ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_VOLUME: announce_volume},
             },
             blocking=True,
         )
@@ -504,7 +530,29 @@ async def test_squeezebox_play_media_with_announce_volume_zero(
 async def test_squeezebox_play_media_with_announce_timeout_zero(
     hass: HomeAssistant, configured_player: MagicMock
 ) -> None:
-    """Test play service call with announce and volume zero."""
+    """Test play service call with announce and timeout zero."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.test_player",
+            ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
+            ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+            ATTR_MEDIA_ANNOUNCE: True,
+            ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_TIMEOUT: 0},
+        },
+        blocking=True,
+    )
+    configured_player.async_load_url.assert_called_once_with(
+        FAKE_VALID_ITEM_ID, "announce"
+    )
+
+
+@pytest.mark.parametrize(("announce_timeout"), ["-1", "text", -1])
+async def test_squeezebox_play_media_with_announce_timeout_invalid(
+    hass: HomeAssistant, configured_player: MagicMock, announce_timeout: str | int
+) -> None:
+    """Test play service call with announce and invalid timeout."""
     with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,
@@ -514,14 +562,15 @@ async def test_squeezebox_play_media_with_announce_timeout_zero(
                 ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
                 ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
                 ATTR_MEDIA_ANNOUNCE: True,
-                ATTR_MEDIA_EXTRA: {ANNOUNCE_TIMEOUT: "0"},
+                ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_TIMEOUT: announce_timeout},
             },
             blocking=True,
         )
 
 
+@pytest.mark.parametrize(("announce_timeout"), ["100", 100])
 async def test_squeezebox_play_media_with_announce_timeout(
-    hass: HomeAssistant, configured_player: MagicMock
+    hass: HomeAssistant, configured_player: MagicMock, announce_timeout: str | int
 ) -> None:
     """Test play service call with announce."""
     await hass.services.async_call(
@@ -532,7 +581,7 @@ async def test_squeezebox_play_media_with_announce_timeout(
             ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
             ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
             ATTR_MEDIA_ANNOUNCE: True,
-            ATTR_MEDIA_EXTRA: {ANNOUNCE_TIMEOUT: "100"},
+            ATTR_MEDIA_EXTRA: {ATTR_ANNOUNCE_TIMEOUT: announce_timeout},
         },
         blocking=True,
     )

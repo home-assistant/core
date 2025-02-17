@@ -53,8 +53,8 @@ from .browse_media import (
     media_source_content_filter,
 )
 from .const import (
-    ANNOUNCE_TIMEOUT,
-    ANNOUNCE_VOLUME,
+    ATTR_ANNOUNCE_TIMEOUT,
+    ATTR_ANNOUNCE_VOLUME,
     CONF_BROWSE_LIMIT,
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
@@ -473,22 +473,38 @@ class SqueezeBoxMediaPlayerEntity(
                 raise ServiceValidationError(
                     "Announcements must have media type of 'music'.  Playlists are not supported"
                 )
+
             extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
             cmd = "announce"
-            if extra.get(ANNOUNCE_VOLUME) == "0":
-                raise ServiceValidationError("Announcements cannot have a volume of 0")
-            self._player.set_announce_volume(
-                int(extra[ANNOUNCE_VOLUME])
-                if extra.get(ANNOUNCE_VOLUME, None)
-                else None
-            )
-            if extra.get(ANNOUNCE_TIMEOUT) == "0":
-                raise ServiceValidationError("Announcements cannot have a timeout of 0")
-            self._player.set_announce_timeout(
-                int(extra[ANNOUNCE_TIMEOUT])
-                if extra.get(ANNOUNCE_TIMEOUT, None)
-                else None
-            )
+            if raw_announce_volume := extra.get(ATTR_ANNOUNCE_VOLUME):
+                try:
+                    announce_volume = float(raw_announce_volume)
+                    if not (0 < announce_volume <= 1):
+                        raise ServiceValidationError(
+                            f"{ATTR_ANNOUNCE_VOLUME} must be a number greater than 0 and less than or equal to 1"
+                        ) from None
+                except ValueError:
+                    raise ServiceValidationError(
+                        f"{ATTR_ANNOUNCE_VOLUME} must be a number greater than 0 and less than or equal to 1"
+                    ) from None
+                self._player.set_announce_volume(int(announce_volume * 100))
+            else:
+                self._player.set_announce_volume(None)
+
+            if raw_announce_timeout := extra.get(ATTR_ANNOUNCE_TIMEOUT):
+                try:
+                    announce_timeout = int(raw_announce_timeout)
+                    if announce_timeout < 1:
+                        raise ServiceValidationError(
+                            f"{ATTR_ANNOUNCE_TIMEOUT} must be an integer greater than 0"
+                        ) from None
+                except ValueError:
+                    raise ServiceValidationError(
+                        f"{ATTR_ANNOUNCE_TIMEOUT} must be an integer greater than 0"
+                    ) from None
+                self._player.set_announce_timeout(int(announce_timeout))
+            else:
+                self._player.set_announce_timeout(None)
 
         if media_type in MediaType.MUSIC:
             if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
