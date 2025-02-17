@@ -235,12 +235,12 @@ async def test_browsing(
     reolink_connect.model = TEST_HOST_MODEL
 
 
-async def test_browsing_unsupported_encoding(
+async def test_browsing_h265_encoding(
     hass: HomeAssistant,
     reolink_connect: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test browsing a Reolink camera with unsupported stream encoding."""
+    """Test browsing a Reolink camera with h265 stream encoding."""
     entry_id = config_entry.entry_id
 
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
