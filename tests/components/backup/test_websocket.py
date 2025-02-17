@@ -1121,6 +1121,68 @@ async def test_agents_info(
                 "minor_version": store.STORAGE_VERSION_MINOR,
             },
         },
+        {
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "agents": {},
+                        "create_backup": {
+                            "agent_ids": ["hassio.local", "hassio.share", "test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {
+                            "days": [],
+                            "recurrence": "never",
+                            "state": "never",
+                            "time": None,
+                        },
+                    },
+                },
+                "key": DOMAIN,
+                "version": store.STORAGE_VERSION,
+                "minor_version": store.STORAGE_VERSION_MINOR,
+            },
+        },
+        {
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "agents": {},
+                        "create_backup": {
+                            "agent_ids": ["backup.local", "test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {
+                            "days": [],
+                            "recurrence": "never",
+                            "state": "never",
+                            "time": None,
+                        },
+                    },
+                },
+                "key": DOMAIN,
+                "version": store.STORAGE_VERSION,
+                "minor_version": store.STORAGE_VERSION_MINOR,
+            },
+        },
     ],
 )
 @pytest.mark.parametrize(
@@ -1132,7 +1194,7 @@ async def test_agents_info(
 )
 @pytest.mark.usefixtures("supervisor_client")
 @patch("homeassistant.components.backup.config.random.randint", Mock(return_value=600))
-async def test_config_info(
+async def test_config_load_config_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
@@ -1141,7 +1203,7 @@ async def test_config_info(
     with_hassio: bool,
     storage_data: dict[str, Any] | None,
 ) -> None:
-    """Test getting backup config info."""
+    """Test loading stored backup config and reading it via config/info."""
     client = await hass_ws_client(hass)
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-13T12:01:00+01:00")

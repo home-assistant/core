@@ -251,7 +251,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[with_hassio-storage_data0]
+# name: test_config_load_config_info[with_hassio-storage_data0]
   dict({
     'id': 1,
     'result': dict({
@@ -288,7 +288,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[with_hassio-storage_data1]
+# name: test_config_load_config_info[with_hassio-storage_data1]
   dict({
     'id': 1,
     'result': dict({
@@ -337,7 +337,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[with_hassio-storage_data2]
+# name: test_config_load_config_info[with_hassio-storage_data2]
   dict({
     'id': 1,
     'result': dict({
@@ -375,7 +375,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[with_hassio-storage_data3]
+# name: test_config_load_config_info[with_hassio-storage_data3]
   dict({
     'id': 1,
     'result': dict({
@@ -413,7 +413,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[with_hassio-storage_data4]
+# name: test_config_load_config_info[with_hassio-storage_data4]
   dict({
     'id': 1,
     'result': dict({
@@ -452,7 +452,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[with_hassio-storage_data5]
+# name: test_config_load_config_info[with_hassio-storage_data5]
   dict({
     'id': 1,
     'result': dict({
@@ -490,7 +490,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[with_hassio-storage_data6]
+# name: test_config_load_config_info[with_hassio-storage_data6]
   dict({
     'id': 1,
     'result': dict({
@@ -530,7 +530,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[with_hassio-storage_data7]
+# name: test_config_load_config_info[with_hassio-storage_data7]
   dict({
     'id': 1,
     'result': dict({
@@ -576,7 +576,86 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[without_hassio-storage_data0]
+# name: test_config_load_config_info[with_hassio-storage_data8]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+            'hassio.local',
+            'hassio.share',
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_load_config_info[with_hassio-storage_data9]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+            'backup.local',
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_load_config_info[without_hassio-storage_data0]
   dict({
     'id': 1,
     'result': dict({
@@ -613,7 +692,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[without_hassio-storage_data1]
+# name: test_config_load_config_info[without_hassio-storage_data1]
   dict({
     'id': 1,
     'result': dict({
@@ -658,7 +737,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[without_hassio-storage_data2]
+# name: test_config_load_config_info[without_hassio-storage_data2]
   dict({
     'id': 1,
     'result': dict({
@@ -696,7 +775,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[without_hassio-storage_data3]
+# name: test_config_load_config_info[without_hassio-storage_data3]
   dict({
     'id': 1,
     'result': dict({
@@ -734,7 +813,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[without_hassio-storage_data4]
+# name: test_config_load_config_info[without_hassio-storage_data4]
   dict({
     'id': 1,
     'result': dict({
@@ -773,7 +852,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[without_hassio-storage_data5]
+# name: test_config_load_config_info[without_hassio-storage_data5]
   dict({
     'id': 1,
     'result': dict({
@@ -811,7 +890,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[without_hassio-storage_data6]
+# name: test_config_load_config_info[without_hassio-storage_data6]
   dict({
     'id': 1,
     'result': dict({
@@ -851,7 +930,7 @@
     'type': 'result',
   })
 # ---
-# name: test_config_info[without_hassio-storage_data7]
+# name: test_config_load_config_info[without_hassio-storage_data7]
   dict({
     'id': 1,
     'result': dict({
@@ -889,6 +968,84 @@
             'sun',
           ]),
           'recurrence': 'custom_days',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_load_config_info[without_hassio-storage_data8]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+            'backup.local',
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
+          'time': None,
+        }),
+      }),
+    }),
+    'success': True,
+    'type': 'result',
+  })
+# ---
+# name: test_config_load_config_info[without_hassio-storage_data9]
+  dict({
+    'id': 1,
+    'result': dict({
+      'config': dict({
+        'agents': dict({
+        }),
+        'create_backup': dict({
+          'agent_ids': list([
+            'backup.local',
+            'test-agent',
+          ]),
+          'include_addons': None,
+          'include_all_addons': False,
+          'include_database': False,
+          'include_folders': None,
+          'name': None,
+          'password': None,
+        }),
+        'last_attempted_automatic_backup': None,
+        'last_completed_automatic_backup': None,
+        'next_automatic_backup': None,
+        'next_automatic_backup_additional': False,
+        'retention': dict({
+          'copies': None,
+          'days': None,
+        }),
+        'schedule': dict({
+          'days': list([
+          ]),
+          'recurrence': 'never',
           'time': None,
         }),
       }),
