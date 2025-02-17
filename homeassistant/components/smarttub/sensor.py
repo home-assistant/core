@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubSensorBase
+from .entity import SmartTubBuiltinSensorBase, SmartTubExternalSensor
 
 # the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
@@ -55,16 +55,16 @@ async def async_setup_entry(
     for spa in controller.spas:
         entities.extend(
             [
-                SmartTubSensor(controller.coordinator, spa, "State", "state"),
-                SmartTubSensor(
+                SmartTubBuiltinSensor(controller.coordinator, spa, "State", "state"),
+                SmartTubBuiltinSensor(
                     controller.coordinator, spa, "Flow Switch", "flow_switch"
                 ),
-                SmartTubSensor(controller.coordinator, spa, "Ozone", "ozone"),
-                SmartTubSensor(controller.coordinator, spa, "UV", "uv"),
-                SmartTubSensor(
+                SmartTubBuiltinSensor(controller.coordinator, spa, "Ozone", "ozone"),
+                SmartTubBuiltinSensor(controller.coordinator, spa, "UV", "uv"),
+                SmartTubBuiltinSensor(
                     controller.coordinator, spa, "Blowout Cycle", "blowout_cycle"
                 ),
-                SmartTubSensor(
+                SmartTubBuiltinSensor(
                     controller.coordinator, spa, "Cleanup Cycle", "cleanup_cycle"
                 ),
                 SmartTubPrimaryFiltrationCycle(controller.coordinator, spa),
@@ -89,7 +89,7 @@ async def async_setup_entry(
     )
 
 
-class SmartTubSensor(SmartTubSensorBase, SensorEntity):
+class SmartTubBuiltinSensor(SmartTubBuiltinSensorBase, SensorEntity):
     """Generic class for SmartTub status sensors."""
 
     @property
@@ -104,7 +104,7 @@ class SmartTubSensor(SmartTubSensorBase, SensorEntity):
         return self._state.lower()
 
 
-class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
+class SmartTubPrimaryFiltrationCycle(SmartTubBuiltinSensor):
     """The primary filtration cycle."""
 
     def __init__(self, coordinator, spa):
@@ -142,7 +142,7 @@ class SmartTubPrimaryFiltrationCycle(SmartTubSensor):
         await self.coordinator.async_request_refresh()
 
 
-class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
+class SmartTubSecondaryFiltrationCycle(SmartTubBuiltinSensor):
     """The secondary filtration cycle."""
 
     def __init__(self, coordinator, spa):
@@ -176,3 +176,19 @@ class SmartTubSecondaryFiltrationCycle(SmartTubSensor):
         ]
         await self.cycle.set_mode(mode)
         await self.coordinator.async_request_refresh()
+
+
+class SmartTubExternalSensor(SmartTubEntity):
+    """Class for additional BLE wireless sensors sold separately."""
+
+    def __init__(self, coordinator, spa, sensor: smarttub.SmartTubSensor):
+        super().__init__(coordinator, spa, self._human_readable_name(sensor))
+    
+    @staticmethod
+    def _human_readable_name(self, sensor):
+        return ' '.join(word.capitalize() for word in sensor.name.strip('{}').split('-'))
+    
+class SmartTubCoverSensor(SmartTubExternalSensor):
+    def __init__(self, spa, sensor: smarttub.SmartTubCoverSensor):
+        self.spa = spa
+        self.sensor = sensor

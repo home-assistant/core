@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from smarttub import SpaError, SpaReminder
+from smarttub import SpaError, SpaReminder, SpaSensor
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from .const import ATTR_ERRORS, ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubEntity, SmartTubSensorBase
+from .entity import SmartTubEntity, SmartTubBuiltinSensorBase
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
@@ -76,7 +76,7 @@ async def async_setup_entry(
     )
 
 
-class SmartTubOnline(SmartTubSensorBase, BinarySensorEntity):
+class SmartTubOnline(SmartTubBuiltinSensorBase, BinarySensorEntity):
     """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY
@@ -180,3 +180,30 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
             ATTR_CREATED_AT: error.created_at.isoformat(),
             ATTR_UPDATED_AT: error.updated_at.isoformat(),
         }
+
+
+
+class SmartTubExternalSensor(SmartTubEntity):
+    """Class for additional BLE wireless sensors sold separately."""
+
+    def __init__(self, coordinator, spa, sensor: SpaSensor):
+        super().__init__(coordinator, spa, self._human_readable_name(sensor))
+    
+    @staticmethod
+    def _human_readable_name(self, sensor):
+        return ' '.join(word.capitalize() for word in sensor.name.strip('{}').split('-'))
+    
+
+class SmartTubCoverSensor(SmartTubExternalSensor):
+    _attr_device_class = BinarySensorDeviceClass.OPENING
+
+    def __init__(self, spa, sensor: SpaSensor):
+        self.spa = spa
+        self.sensor = sensor
+    
+    @property
+    def is_on(self) -> bool:
+        """Return true if an error is signaled."""
+        # magnet is True when the cover is closed, False when open
+        # device class OPENING wants True for open, False for closed
+        return not self.sensor.magnet
