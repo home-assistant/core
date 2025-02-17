@@ -88,7 +88,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             from . import frame  # pylint: disable=import-outside-toplevel
 
             frame.report_usage(
-                "rely on the ContextVar, but should passing the config entry explicitly - see "
+                "relies on ContextVar, but should pass the config entry explicitly - see "
                 "https://developers.home-assistant.io/blog/xxxxxxx",
                 core_behavior=frame.ReportBehavior.LOG,
                 core_integration_behavior=frame.ReportBehavior.LOG,
