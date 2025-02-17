@@ -312,16 +312,10 @@
       "yeast_info": {
         "default": "mdi:information-box-outline"
       },
-      "hop_oil_capsule_1": {
+      "hop_oil_info": {
         "default": "mdi:information-box-outline"
       },
-      "hop_oil_capsule_2": {
-        "default": "mdi:information-box-outline"
-      },
-      "flavor_capsule_1": {
-        "default": "mdi:information-box-outline"
-      },
-      "flavor_capsule_2": {
+      "flavor_info": {
         "default": "mdi:information-box-outline"
       },
       "beer_remain": {
