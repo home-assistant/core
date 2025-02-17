@@ -85,6 +85,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
     label_registry as lr,
     recorder as recorder_helper,
+    translation as translation_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.translation import _TranslationsCacheData
@@ -1232,11 +1233,10 @@ def mock_get_source_ip() -> Generator[_patch]:
 
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
-    """Only load translations once per session.
+    """Only load translations once per module.
 
-    Warning: having this as a session fixture can cause issues with tests that
-    create mock integrations, overriding the real integration translations
-    with empty ones. Translations should be reset after such tests (see #131628)
+    Note: To avoid issues with tests that mock integrations, translations for
+    mocked integrations are cleaned up by the evict_faked_translations fixture.
     """
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
@@ -1248,6 +1248,27 @@ def translations_once() -> Generator[_patch]:
         yield patcher
     finally:
         patcher.stop()
+
+
+@pytest.fixture(autouse=True, scope="module")
+def evict_faked_translations(translations_once) -> Generator[_patch]:
+    """Clear translations for mocked integrations from the cache after each module."""
+    real_component_strings = translation_helper._async_get_component_strings
+    with patch(
+        "homeassistant.helpers.translation._async_get_component_strings",
+        wraps=real_component_strings,
+    ) as mock_component_strings:
+        yield
+    cache: _TranslationsCacheData = translations_once.kwargs["return_value"]
+    for call in mock_component_strings.mock_calls:
+        integrations: dict[str, loader.Integration] = call.args[3]
+        for domain, integration in integrations.items():
+            if str(integration.file_path).endswith(
+                f"homeassistant/components/{domain}"
+            ):
+                continue
+            cache.loaded["en"].discard(domain)
+            cache.cache["en"].pop(domain, None)
 
 
 @pytest.fixture
