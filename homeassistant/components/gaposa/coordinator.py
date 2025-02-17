@@ -38,7 +38,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
         self.devices: list[Device] = []
         self.listener: Callable[[], None] | None = None
 
-    async def update_gateway(self):
+    async def update_gateway(self) -> bool:
         """Fetch data from gateway."""
         try:
             await self.gaposa.update()
@@ -66,7 +66,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
 
         return True
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Motor]:
         self.logger.info(
             "Gaposa coordinator _async_update_data, interval: %s",
             str(self.update_interval),
@@ -93,7 +93,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
 
         return data
 
-    def _get_data_from_devices(self):
+    def _get_data_from_devices(self) -> dict[str, Motor]:
         # Coordinator data consists of a Dictionary of the controllable motors, with
         # the dictionalry key being a unique id for the motor of the form
         # <device serial number>.motors.<channel number>
@@ -106,7 +106,7 @@ class DataUpdateCoordinatorGaposa(DataUpdateCoordinator):
 
         return data
 
-    def on_document_updated(self):
+    def on_document_updated(self) -> None:
         """Handle document updated."""
         self.logger.info("Gaposa coordinator on_document_updated")
         data = self._get_data_from_devices()
