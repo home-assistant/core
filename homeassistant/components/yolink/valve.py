@@ -33,6 +33,7 @@ class YoLinkValveEntityDescription(ValveEntityDescription):
 
     exists_fn: Callable[[YoLinkDevice], bool] = lambda _: True
     value: Callable = lambda state: state
+    channel_index: int | None = None
 
 
 DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
@@ -53,6 +54,7 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         exists_fn=lambda device: (
             device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
         ),
+        channel_index=0,
     ),
     YoLinkValveEntityDescription(
         key="valve_2_state",
@@ -62,6 +64,7 @@ DEVICE_TYPES: tuple[YoLinkValveEntityDescription, ...] = (
         exists_fn=lambda device: (
             device.device_type == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
         ),
+        channel_index=1,
     ),
 )
 
@@ -131,7 +134,17 @@ class YoLinkValveEntity(YoLinkEntity, ValveEntity):
 
     async def _async_invoke_device(self, state: str) -> None:
         """Call setState api to change valve state."""
-        await self.call_device(ClientRequest("setState", {"valve": state}))
+        if (
+            self.coordinator.device.device_type
+            == ATTR_DEVICE_MULTI_WATER_METER_CONTROLLER
+        ):
+            channel_index = self.entity_description.channel_index
+            if channel_index is not None:
+                await self.call_device(
+                    ClientRequest("setState", {"valves": {str(channel_index): state}})
+                )
+        else:
+            await self.call_device(ClientRequest("setState", {"valve": state}))
         self._attr_is_closed = state == "close"
         self.async_write_ha_state()
 
