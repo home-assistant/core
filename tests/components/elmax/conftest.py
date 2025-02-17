@@ -67,7 +67,7 @@ def base_uri() -> str:
 
 
 @pytest.fixture(autouse=True)
-def httpx_mock_direct_fixture(base_uri) -> Generator[respx.MockRouter]:
+def httpx_mock_direct_fixture(base_uri: str) -> Generator[respx.MockRouter]:
     """Configure httpx fixture for direct Panel-API communication."""
     with respx.mock(base_url=base_uri, assert_all_called=False) as respx_mock:
         # Mock Login POST.
