@@ -1181,6 +1181,9 @@ ibeacon-ble==1.2.0
 # homeassistant.components.watson_iot
 ibmiotf==0.3.4
 
+# homeassistant.components.remote_calendar
+ical==8.2.0
+
 # homeassistant.components.google
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
