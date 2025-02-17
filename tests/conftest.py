@@ -1230,13 +1230,13 @@ def mock_get_source_ip() -> Generator[_patch]:
         patcher.stop()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(autouse=True, scope="module")
 def translations_once() -> Generator[_patch]:
-    """Only load translations once per session.
+    """Only load translations once per module.
 
-    Warning: having this as a session fixture can cause issues with tests that
-    create mock integrations, overriding the real integration translations
-    with empty ones. Translations should be reset after such tests (see #131628)
+    Note: This was previously a session scope fixture, but that made tests which
+    mock an integration interfere with tests which set up the real integration.
+    Unless we find a way to solve that, this needs to be module scope.
     """
     cache = _TranslationsCacheData({}, {})
     patcher = patch(
