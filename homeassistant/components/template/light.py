@@ -27,6 +27,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.const import (
     CONF_EFFECT,
+    CONF_COLOR_TEMP_KELVIN,
     CONF_ENTITY_ID,
     CONF_FRIENDLY_NAME,
     CONF_LIGHTS,
@@ -85,6 +86,8 @@ CONF_MAX_MIREDS = "max_mireds"
 CONF_MAX_MIREDS_TEMPLATE = "max_mireds_template"
 CONF_MIN_MIREDS = "min_mireds"
 CONF_MIN_MIREDS_TEMPLATE = "min_mireds_template"
+CONF_MAX_COLOR_TEMP_KELVIN_TEMPLATE = "max_color_temp_kelvin_template"
+CONF_MIN_COLOR_TEMP_KELVIN_TEMPLATE = "min_color_temp_kelvin_template"
 CONF_OFF_ACTION = "turn_off"
 CONF_ON_ACTION = "turn_on"
 CONF_SUPPORTS_TRANSITION = "supports_transition"
@@ -98,6 +101,8 @@ CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
 
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
+DEFAULT_COLOR_TEMP_KELVIN = 153
+DEFAULT_COLOR_TEMP_KELVIN = 500
 
 LEGACY_FIELDS = TEMPLATE_ENTITY_LEGACY_FIELDS | {
     CONF_COLOR_ACTION: CONF_HS_ACTION,
@@ -158,6 +163,7 @@ LEGACY_LIGHT_SCHEMA = vol.All(
         {
             vol.Exclusive(CONF_COLOR_ACTION, "hs_legacy_action"): cv.SCRIPT_SCHEMA,
             vol.Exclusive(CONF_COLOR_TEMPLATE, "hs_legacy_template"): cv.template,
+            vol.Optional(CONF_COLOR_TEMP_KELVIN): cv.boolean,
             vol.Exclusive(CONF_HS_ACTION, "hs_legacy_action"): cv.SCRIPT_SCHEMA,
             vol.Exclusive(CONF_HS_TEMPLATE, "hs_legacy_template"): cv.template,
             vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
@@ -175,6 +181,8 @@ LEGACY_LIGHT_SCHEMA = vol.All(
             vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
             vol.Optional(CONF_MAX_MIREDS_TEMPLATE): cv.template,
             vol.Optional(CONF_MIN_MIREDS_TEMPLATE): cv.template,
+            vol.Optional(CONF_MAX_COLOR_TEMP_KELVIN_TEMPLATE): cv.template,
+            vol.Optional(CONF_MIN_COLOR_TEMP_KELVIN_TEMPLATE): cv.template,
             vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
             vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
             vol.Optional(CONF_SUPPORTS_TRANSITION_TEMPLATE): cv.template,
@@ -294,6 +302,7 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._max_mireds_template = config.get(CONF_MAX_MIREDS)
         self._min_mireds_template = config.get(CONF_MIN_MIREDS)
         self._supports_transition_template = config.get(CONF_SUPPORTS_TRANSITION)
+        self._color_temp_kelvin = config.get(CONF_COLOR_TEMP_KELVIN)
 
         for action_id in (CONF_ON_ACTION, CONF_OFF_ACTION, CONF_EFFECT_ACTION):
             # Scripts can be an empty list, therefore we need to check for None
@@ -312,6 +321,8 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._color_mode = None
         self._max_mireds = None
         self._min_mireds = None
+        self._max_color_temp_kelvin = None
+        self._min_color_temp_kelvin = None
         self._supports_transition = False
         self._supported_color_modes = None
 
@@ -350,12 +361,17 @@ class LightTemplate(TemplateEntity, LightEntity):
         """Return the color temperature value in Kelvin."""
         if self._temperature is None:
             return None
+        if self._color_temp_kelvin:
+            return self._temperature
         return color_util.color_temperature_mired_to_kelvin(self._temperature)
 
     @property
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
-        if self._max_mireds is not None:
+        if self._color_temp_kelvin:
+            if self._max_color_temp_kelvin is not None:
+                return self._max_color_temp_kelvin
+        elif self._max_mireds is not None:
             return color_util.color_temperature_mired_to_kelvin(self._max_mireds)
 
         return DEFAULT_MIN_KELVIN
@@ -363,7 +379,10 @@ class LightTemplate(TemplateEntity, LightEntity):
     @property
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
-        if self._min_mireds is not None:
+        if self._color_temp_kelvin:
+            if self._max_color_temp_kelvin is not None:
+                return self._max_color_temp_kelvin
+        elif self._min_mireds is not None:
             return color_util.color_temperature_mired_to_kelvin(self._min_mireds)
 
         return DEFAULT_MAX_KELVIN
@@ -442,6 +461,22 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._min_mireds_template,
                 None,
                 self._update_min_mireds,
+                none_on_template_error=True,
+            )
+        if self._max_color_temp_kelvin_template:
+            self.add_template_attribute(
+                "_max_color_temp_kelvin_template",
+                self._max_color_temp_kelvin_template,
+                None,
+                self._update_max_color_temp_kelvin,
+                none_on_template_error=True,
+            )
+        if self._min_color_temp_kelvin_template:
+            self.add_template_attribute(
+                "_min_color_temp_kelvin_template",
+                self._min_color_temp_kelvin_template,
+                None,
+                self._update_min_color_temp_kelvin,
                 none_on_template_error=True,
             )
         if self._temperature_template:
@@ -526,8 +561,12 @@ class LightTemplate(TemplateEntity, LightEntity):
             optimistic_set = True
 
         if self._temperature_template is None and ATTR_COLOR_TEMP_KELVIN in kwargs:
-            color_temp = color_util.color_temperature_kelvin_to_mired(
+            color_temp = (
                 kwargs[ATTR_COLOR_TEMP_KELVIN]
+                if self._color_temp_kelvin
+                else color_util.color_temperature_kelvin_to_mired(
+                    kwargs[ATTR_COLOR_TEMP_KELVIN]
+                )
             )
             _LOGGER.debug(
                 "Optimistically setting color temperature to %s",
@@ -624,8 +663,12 @@ class LightTemplate(TemplateEntity, LightEntity):
         if ATTR_COLOR_TEMP_KELVIN in kwargs and (
             temperature_script := self._action_scripts.get(CONF_TEMPERATURE_ACTION)
         ):
-            common_params["color_temp"] = color_util.color_temperature_kelvin_to_mired(
+            common_params["color_temp"] = (
                 kwargs[ATTR_COLOR_TEMP_KELVIN]
+                if self._color_temp_kelvin
+                else color_util.color_temperature_kelvin_to_mired(
+                    kwargs[ATTR_COLOR_TEMP_KELVIN]
+                )
             )
 
             await self.async_run_script(
@@ -844,9 +887,20 @@ class LightTemplate(TemplateEntity, LightEntity):
                 self._temperature = None
                 return
             temperature = int(render)
-            min_mireds = self._min_mireds or DEFAULT_MIN_MIREDS
-            max_mireds = self._max_mireds or DEFAULT_MAX_MIREDS
-            if min_mireds <= temperature <= max_mireds:
+            if self._color_temp_kelvin:
+                min_color_temp_kelvin = (
+                    self._min_color_temp_kelvin or DEFAULT_MIN_KELVIN
+                )
+                max_color_temp_kelvin = (
+                    self._max_color_temp_kelvin or DEFAULT_MAX_KELVIN
+                )
+                in_range = min_color_temp_kelvin <= temperature <= max_color_temp_kelvin
+            else:
+                min_mireds = self._min_mireds or DEFAULT_MIN_MIREDS
+                max_mireds = self._max_mireds or DEFAULT_MAX_MIREDS
+                in_range = min_mireds <= temperature <= max_mireds
+
+            if in_range:
                 self._temperature = temperature
             else:
                 _LOGGER.error(
@@ -1050,6 +1104,37 @@ class LightTemplate(TemplateEntity, LightEntity):
             )
             self._rgbww_color = None
         self._color_mode = ColorMode.RGBWW
+
+    @callback
+    def _update_max_color_temp_kelvin(self, render):
+        """Update the max color_temp_kelvin from the template."""
+
+        try:
+            if render in (None, "None", ""):
+                self._max_color_temp_kelvin = None
+                return
+            self._max_color_temp_kelvin = int(render)
+        except ValueError:
+            _LOGGER.exception(
+                "Template must supply an integer temperature within the range for"
+                " this light, or 'None'"
+            )
+            self._max_color_temp_kelvin = None
+
+    @callback
+    def _update_min_color_temp_kelvin(self, render):
+        """Update the min color_temp_kelvin from the template."""
+        try:
+            if render in (None, "None", ""):
+                self._min_color_temp_kelvin = None
+                return
+            self._min_color_temp_kelvin = int(render)
+        except ValueError:
+            _LOGGER.exception(
+                "Template must supply an integer temperature within the range for"
+                " this light, or 'None'"
+            )
+            self._min_color_temp_kelvin = None
 
     @callback
     def _update_max_mireds(self, render):
