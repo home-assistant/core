@@ -248,6 +248,24 @@ TEMPERATURE_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
         state_class=SensorStateClass.MEASUREMENT,
         translation_key=ThinQProperty.CURRENT_TEMPERATURE,
     ),
+    ThinQPropertyEx.ROOM_AIR_CURRENT_TEMPERATURE: SensorEntityDescription(
+        key=ThinQPropertyEx.ROOM_AIR_CURRENT_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key=ThinQPropertyEx.ROOM_AIR_CURRENT_TEMPERATURE,
+    ),
+    ThinQPropertyEx.ROOM_IN_WATER_CURRENT_TEMPERATURE: SensorEntityDescription(
+        key=ThinQPropertyEx.ROOM_IN_WATER_CURRENT_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key=ThinQPropertyEx.ROOM_IN_WATER_CURRENT_TEMPERATURE,
+    ),
+    ThinQPropertyEx.ROOM_OUT_WATER_CURRENT_TEMPERATURE: SensorEntityDescription(
+        key=ThinQPropertyEx.ROOM_OUT_WATER_CURRENT_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key=ThinQPropertyEx.ROOM_OUT_WATER_CURRENT_TEMPERATURE,
+    ),
 }
 WATER_FILTER_INFO_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
     ThinQProperty.USED_TIME: SensorEntityDescription(
@@ -341,6 +359,10 @@ TIMER_SENSOR_DESC: dict[ThinQProperty, SensorEntityDescription] = {
 }
 
 WASHER_SENSORS: tuple[SensorEntityDescription, ...] = (
+    SensorEntityDescription(
+        key=ThinQProperty.CYCLE_COUNT,
+        translation_key=ThinQProperty.CYCLE_COUNT,
+    ),
     RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
     TIMER_SENSOR_DESC[TimerProperty.TOTAL],
     TIMER_SENSOR_DESC[TimerProperty.RELATIVE_TO_START_WM],
@@ -470,6 +492,11 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
         RUN_STATE_SENSOR_DESC[ThinQProperty.CURRENT_STATE],
     ),
     DeviceType.STYLER: WASHER_SENSORS,
+    DeviceType.SYSTEM_BOILER: (
+        TEMPERATURE_SENSOR_DESC[ThinQPropertyEx.ROOM_AIR_CURRENT_TEMPERATURE],
+        TEMPERATURE_SENSOR_DESC[ThinQPropertyEx.ROOM_IN_WATER_CURRENT_TEMPERATURE],
+        TEMPERATURE_SENSOR_DESC[ThinQPropertyEx.ROOM_OUT_WATER_CURRENT_TEMPERATURE],
+    ),
     DeviceType.WASHCOMBO_MAIN: WASHER_SENSORS,
     DeviceType.WASHCOMBO_MINI: WASHER_SENSORS,
     DeviceType.WASHER: WASHER_SENSORS,

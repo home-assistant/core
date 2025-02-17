@@ -305,6 +305,15 @@
       "current_temperature": {
         "name": "Current temperature"
       },
+      "room_air_current_temperature": {
+        "name": "Indoor temperature"
+      },
+      "room_in_water_current_temperature": {
+        "name": "Inlet temperature"
+      },
+      "room_out_water_current_temperature": {
+        "name": "Outlet temperature"
+      },
       "temperature": {
         "name": "Temperature"
       },
@@ -848,6 +857,12 @@
       },
       "power_level_for_location": {
         "name": "{location} power level"
+      },
+      "cycle_count": {
+        "name": "Cycles"
+      },
+      "cycle_count_for_location": {
+        "name": "{location} cycles"
       }
     },
     "select": {
