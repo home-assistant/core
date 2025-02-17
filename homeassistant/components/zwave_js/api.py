@@ -884,6 +884,11 @@ async def websocket_subscribe_s2_inclusion(
     """Subscribe to S2 inclusion initiated by the controller."""
 
     @callback
+    def async_cleanup() -> None:
+        for unsub in unsubs:
+            unsub()
+
+    @callback
     def forward_dsk(event: dict) -> None:
         connection.send_message(
             websocket_api.event_message(
@@ -891,9 +896,22 @@ async def websocket_subscribe_s2_inclusion(
             )
         )
 
-    unsub = driver.controller.on("validate dsk and enter pin", forward_dsk)
-    connection.subscriptions[msg["id"]] = unsub
-    msg[DATA_UNSUBSCRIBE] = [unsub]
+    async def accept_requested_grant(event: dict) -> None:
+        # accept the requested security classes without user interaction
+        inclusion_grant = InclusionGrant(
+            [
+                SecurityClass(sec_cls)
+                for sec_cls in event["requested_grant"]["security_classes"]
+            ],
+            event["requested_grant"]["client_side_auth"],
+        )
+        await driver.controller.async_grant_security_classes(inclusion_grant)
+
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        driver.controller.on("grant security classes", accept_requested_grant),
+        driver.controller.on("validate dsk and enter pin", forward_dsk),
+    ]
     connection.send_result(msg[ID])
 
 
