@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -15,13 +14,11 @@ from .const import (
     DEFAULT_HOME_LONGITUDE,
     DOMAIN,
 )
-from .coordinator import MetDataUpdateCoordinator
+from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
 
 PLATFORMS = [Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
-
-type MetWeatherConfigEntry = ConfigEntry[MetDataUpdateCoordinator]
 
 
 async def async_setup_entry(
