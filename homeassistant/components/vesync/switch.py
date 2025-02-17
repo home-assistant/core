@@ -14,6 +14,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -119,10 +120,14 @@ class VeSyncSwitchEntity(SwitchEntity, VeSyncBaseEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
-        if self.entity_description.off_fn(self.device):
-            self.schedule_update_ha_state()
+        if not self.entity_description.off_fn(self.device):
+            raise HomeAssistantError("An error occurred while turning on.")
+
+        self.schedule_update_ha_state()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
-        if self.entity_description.on_fn(self.device):
-            self.schedule_update_ha_state()
+        if not self.entity_description.on_fn(self.device):
+            raise HomeAssistantError("An error occurred while turning on.")
+
+        self.schedule_update_ha_state()
