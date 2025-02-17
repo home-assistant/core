@@ -62,7 +62,7 @@ rules:
     comment: |
       Device type integration.
   diagnostics: todo
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: todo
   dynamic-devices:
