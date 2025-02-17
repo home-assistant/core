@@ -15,7 +15,7 @@ from homeassistant.const import (
     CONF_TIME_ZONE,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 
 from .const import (
@@ -37,8 +37,6 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
 ) -> bool:
     """Set up a configuration entry for Jewish calendar."""
-    if not await async_migrate_entry(hass, config_entry):
-        return False
     language = config_entry.data.get(CONF_LANGUAGE, DEFAULT_LANGUAGE)
     diaspora = config_entry.data.get(CONF_DIASPORA, DEFAULT_DIASPORA)
     candle_lighting_offset = config_entry.options.get(
@@ -88,15 +86,17 @@ async def async_unload_entry(
 
 
 async def async_migrate_entry(
-    hass: HomeAssistant, entry: JewishCalendarConfigEntry
+    hass: HomeAssistant, config_entry: JewishCalendarConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    version = entry.version
 
-    _LOGGER.debug("Migrating from version %s", version)
+    _LOGGER.debug("Migrating from version %s", config_entry.version)
 
-    # 1 -> 2: Unique ID format changed, so delete and re-import:
-    if version == 1:
+    @callback
+    def update_unique_id(
+        entity_entry: er.RegistryEntry,
+    ) -> dict[str, str] | None:
+        """Update unique ID of entity entry."""
         key_translations = {
             "first_light": "alot_hashachar",
             "talit": "talit_and_tefillin",
@@ -113,16 +113,23 @@ async def async_migrate_entry(
             "first_stars": "tset_hakohavim_tsom",
             "three_stars": "tset_hakohavim_shabbat",
         }
-        en_reg = er.async_get(hass)
-        for entity in er.async_entries_for_config_entry(en_reg, entry.entry_id):
-            old_key = entity.unique_id.split("-")[1]
-            new_unique_id = f"{entry.entry_id}-{key_translations[old_key]}"
-            hass.config_entries.async_update_entry(
-                entry, unique_id=new_unique_id, version=2
+        new_keys = tuple(key_translations.values())
+        if not entity_entry.unique_id.endswith(new_keys):
+            old_key = entity_entry.unique_id.split("-")[1]
+            new_unique_id = f"{config_entry.entry_id}-{key_translations[old_key]}"
+            return {"new_unique_id": new_unique_id}
+        return None
+
+    if config_entry.version > 1:
+        # This means the user has downgraded from a future version
+        return False
+
+    if config_entry.version == 1:
+        if config_entry.minor_version == 1:
+            await er.async_migrate_entries(
+                hass, config_entry.entry_id, update_unique_id
             )
-
-        entry.version = 2
-
-    _LOGGER.info("Migration to version %s successful", version)
+        else:
+            return False
 
     return True

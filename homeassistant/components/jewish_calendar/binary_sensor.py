@@ -117,7 +117,7 @@ class JewishCalendarBinarySensor(JewishCalendarEntity, BinarySensorEntity):
         """Schedule the next update of the sensor."""
         now = dt_util.now()
         zmanim = self._get_zmanim()
-        update = zmanim.zmanim["sunrise"].local + dt.timedelta(days=1)
+        update = zmanim.netz_hachama.local + dt.timedelta(days=1)
         candle_lighting = zmanim.candle_lighting
         if candle_lighting is not None and now < candle_lighting < update:
             update = candle_lighting
