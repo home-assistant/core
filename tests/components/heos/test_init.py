@@ -11,10 +11,12 @@ from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from . import MockHeos
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_async_setup_entry_loads_platforms(
@@ -226,3 +228,30 @@ async def test_device_id_migration_both_present(
     await hass.async_block_till_done(wait_background_tasks=True)
     assert device_registry.async_get_device({(DOMAIN, 1)}) is None  # type: ignore[arg-type]
     assert device_registry.async_get_device({(DOMAIN, "1")}) is not None
+
+
+@pytest.mark.parametrize(
+    ("player_id", "expected_result"),
+    [("1", False), ("5", True)],
+    ids=("Present device", "Stale device"),
+)
+async def test_remove_config_entry_device(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    hass_ws_client: WebSocketGenerator,
+    player_id: str,
+    expected_result: bool,
+) -> None:
+    """Test manually removing an stale device."""
+    assert await async_setup_component(hass, "config", {})
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={(DOMAIN, player_id)}
+    )
+
+    ws_client = await hass_ws_client(hass)
+    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    assert response["success"] == expected_result

@@ -94,7 +94,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare==2.42.1
+PyViCare==2.43.0
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -1376,7 +1376,7 @@ plexauth==0.0.6
 plexwebsocket==0.0.14
 
 # homeassistant.components.plugwise
-plugwise==1.7.1
+plugwise==1.7.2
 
 # homeassistant.components.plum_lightpad
 plumlightpad==0.0.11
@@ -1505,7 +1505,7 @@ pyatv==0.16.0
 pyaussiebb==0.1.5
 
 # homeassistant.components.balboa
-pybalboa==1.1.2
+pybalboa==1.1.3
 
 # homeassistant.components.blackbird
 pyblackbird==0.6
@@ -1559,7 +1559,7 @@ pydroid-ipcam==2.0.0
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.1.27
+pyeconet==0.1.28
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.3.1
@@ -1622,7 +1622,7 @@ pyhaversion==22.8.0
 pyheos==1.0.2
 
 # homeassistant.components.hive
-pyhive-integration==1.0.1
+pyhive-integration==1.0.2
 
 # homeassistant.components.homematic
 pyhomematic==0.1.77
@@ -1882,7 +1882,7 @@ pysmartapp==0.3.5
 pysmartthings==0.7.8
 
 # homeassistant.components.smarty
-pysmarty2==0.10.1
+pysmarty2==0.10.2
 
 # homeassistant.components.smhi
 pysmhi==1.0.0
@@ -2040,7 +2040,7 @@ pyuptimerobot==22.2.0
 pyvera==0.3.15
 
 # homeassistant.components.vesync
-pyvesync==2.1.17
+pyvesync==2.1.18
 
 # homeassistant.components.vizio
 pyvizio==0.1.61
@@ -2167,7 +2167,7 @@ securetar==2025.1.4
 
 # homeassistant.components.emulated_kasa
 # homeassistant.components.sense
-sense-energy==0.13.4
+sense-energy==0.13.5
 
 # homeassistant.components.sensirion_ble
 sensirion-ble==0.1.1
@@ -2257,7 +2257,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.5.2
+stookwijzer==1.5.4
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
@@ -2300,7 +2300,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.9.8
+tesla-fleet-api==0.9.10
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
