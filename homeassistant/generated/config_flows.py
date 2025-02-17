@@ -283,6 +283,7 @@ FLOWS = {
         "ifttt",
         "igloohome",
         "imap",
+        "imeon_inverter",
         "imgw_pib",
         "improv_ble",
         "incomfort",
