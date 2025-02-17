@@ -16,11 +16,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.dispatcher import (
+    async_dispatcher_connect,
+    async_dispatcher_send,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import now
 
-from .const import DOMAIN, SIGNAL_DATA_UPDATED
+from .const import DOMAIN, SIGNAL_AVAILABILITY_UPDATED, SIGNAL_DATA_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,6 +67,7 @@ async def async_setup_entry(
             name = update.devices[None].name
             assert name is not None
             set_datetime_entity = ThermoProDateTimeButtonEntity(
+                entry_id=entry.entry_id,
                 address=entry.unique_id,
                 device_name=name,
                 description=DATETIME_UPDATE,
@@ -76,7 +80,12 @@ async def async_setup_entry(
             )
 
         if service_info.connectable and not set_datetime_entity.available:
-            set_datetime_entity.set_available(True)
+            _LOGGER.debug("sending availability '%s' for %s", True, entry.entry_id)
+            async_dispatcher_send(
+                hass,
+                f"{SIGNAL_AVAILABILITY_UPDATED}_{entry.entry_id}_button_datetime",
+                True,
+            )
 
     entry.async_on_unload(
         async_dispatcher_connect(
@@ -88,7 +97,12 @@ async def async_setup_entry(
     def _async_on_unavailable(service_info: BluetoothServiceInfoBleak) -> None:
         _LOGGER.debug("service info unavailable %s", service_info)
         if set_datetime_entity:
-            set_datetime_entity.set_available(False)
+            _LOGGER.debug("sending availability '%s' for %s", False, entry.entry_id)
+            async_dispatcher_send(
+                hass,
+                f"{SIGNAL_AVAILABILITY_UPDATED}_{entry.entry_id}_button_datetime",
+                False,
+            )
 
     entry.async_on_unload(
         async_track_unavailable(
@@ -103,11 +117,16 @@ class ThermoProDateTimeButtonEntity(
     """Representation of a ThermoProDateTime button entity."""
 
     def __init__(
-        self, address: str, device_name: str, description: ButtonEntityDescription
+        self,
+        entry_id: str,
+        address: str,
+        device_name: str,
+        description: ButtonEntityDescription,
     ) -> None:
         """Initialize the thermopro datetime button entity."""
         self.address = address
         self.entity_description = description
+        self.entry_id = entry_id
         self._attr_unique_id = f"{device_name}-{description.key}"
 
         self._attr_device_info = dr.DeviceInfo(
@@ -115,14 +134,25 @@ class ThermoProDateTimeButtonEntity(
             connections={(dr.CONNECTION_BLUETOOTH, address)},
         )
 
-    @property
-    def available(self) -> bool:
-        """Return if the device is available."""
-        return self._attr_available
+    async def async_added_to_hass(self) -> None:
+        """Connect availability dispatcher."""
+        _LOGGER.debug("registering for availability callback for %s", self.entry_id)
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                "{SIGNAL_AVAILABILITY_UPDATED}_{self.entry_id}_button_datetime",
+                self._async_on_available_changed,
+            )
+        )
+        await super().async_added_to_hass()
 
-    def set_available(self, available: bool) -> None:
-        """Set availability of ButtonEntity."""
+    @callback
+    def _async_on_available_changed(self, available: bool) -> None:
+        _LOGGER.debug(
+            "got availability callback with '%s' for %s", available, self.entry_id
+        )
         self._attr_available = available
+        self.async_write_ha_state()  # write state to state machine
 
     async def async_press(self) -> None:
         """Set Date&Time for a given device."""
