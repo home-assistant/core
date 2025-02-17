@@ -43,7 +43,7 @@ from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity import generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
@@ -192,7 +192,7 @@ def _get_entity_descriptions(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the google calendar platform."""
     calendar_service = hass.data[DOMAIN][config_entry.entry_id][DATA_SERVICE]

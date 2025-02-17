@@ -24,7 +24,7 @@
         },
         "data": {
           "name": "Data",
-          "description": "Some integrations provide extended functionality. For information on how to use _data_, refer to the integration documentation."
+          "description": "Some integrations provide extended functionality via this field. For more information, refer to the integration documentation."
         }
       }
     },
@@ -56,7 +56,7 @@
         },
         "data": {
           "name": "Data",
-          "description": "Some integrations provide extended functionality. For information on how to use _data_, refer to the integration documentation.."
+          "description": "Some integrations provide extended functionality via this field. For more information, refer to the integration documentation."
         }
       }
     }

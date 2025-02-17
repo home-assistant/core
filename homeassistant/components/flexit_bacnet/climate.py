@@ -19,32 +19,31 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    DOMAIN,
     MAX_TEMP,
     MIN_TEMP,
     PRESET_TO_VENTILATION_MODE_MAP,
     VENTILATION_TO_PRESET_MODE_MAP,
 )
-from .coordinator import FlexitCoordinator
+from .coordinator import FlexitConfigEntry, FlexitCoordinator
 from .entity import FlexitEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: FlexitConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Flexit Nordic unit."""
-    coordinator: FlexitCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    async_add_entities([FlexitClimateEntity(config_entry.runtime_data)])
 
-    async_add_entities([FlexitClimateEntity(coordinator)])
+
+PARALLEL_UPDATES = 1
 
 
 class FlexitClimateEntity(FlexitEntity, ClimateEntity):
