@@ -134,7 +134,7 @@
       "message": "Failed to set preset mode {preset}."
     },
     "set_hvac_mode": {
-      "message": "Failed to set hvac mode {mode}."
+      "message": "Failed to set HVAC mode {mode}."
     }
   }
 }
