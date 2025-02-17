@@ -9,5 +9,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["gaposa"],
   "quality_scale": "bronze",
-  "requirements": ["pygaposa==0.2.3"]
+  "requirements": ["pygaposa==0.2.4"]
 }

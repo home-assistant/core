@@ -1613,7 +1613,7 @@ pyfritzhome==0.6.14
 pyfttt==0.3
 
 # homeassistant.components.gaposa
-pygaposa==0.2.3
+pygaposa==0.2.4
 
 # homeassistant.components.hvv_departures
 pygti==0.9.4
