@@ -9,8 +9,6 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
-    DEFAULT_MAX_KELVIN,
-    DEFAULT_MIN_KELVIN,
     ColorMode,
     LightEntity,
 )
@@ -49,10 +47,8 @@ def get_color_mode(supported_modes: set[ColorMode]) -> ColorMode:
         return ColorMode.COLOR_TEMP
     if ColorMode.BRIGHTNESS in supported_modes:
         return ColorMode.BRIGHTNESS
-    if ColorMode.ONOFF in supported_modes:
-        return ColorMode.ONOFF
 
-    return ColorMode.UNKNOWN
+    return ColorMode.ONOFF
 
 
 def get_light_attribute_sets(
@@ -127,6 +123,10 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         self._attr_supported_color_modes = self._get_supported_color_modes()
         self._attr_color_mode = get_color_mode(self._attr_supported_color_modes)
 
+        if self._temp_attr is not None:
+            self._attr_min_color_temp_kelvin = int(self._temp_attr.minimum)
+            self._attr_max_color_temp_kelvin = int(self._temp_attr.maximum)
+
         if self._on_off_attr.instance > 0:
             self._attr_translation_key = "light_instance"
             self._attr_translation_placeholders = {
@@ -137,20 +137,13 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         )
 
     @property
-    def translation_key(self) -> str | None:
-        """Return a name if more than one light is present."""
-        return "light_instance" if self._on_off_attr.instance > 0 else None
-
-    @property
-    def brightness(self) -> int | None:
+    def brightness(self) -> int:
         """Return the brightness of the light."""
-        if self._dimmer_attr is not None:
-            return value_to_brightness(
-                (self._dimmer_attr.minimum + 1, self._dimmer_attr.maximum),
-                self._dimmer_attr.current_value,
-            )
-
-        return None
+        assert self._dimmer_attr is not None
+        return value_to_brightness(
+            (self._dimmer_attr.minimum + 1, self._dimmer_attr.maximum),
+            self._dimmer_attr.current_value,
+        )
 
     @property
     def hs_color(self) -> tuple[float, float] | None:
@@ -163,35 +156,15 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
             if mode == 2:
                 return None
 
-        if self._col_attr is not None:
-            rgb = decimal_to_rgb_list(self._col_attr.current_value)
-            return color_RGB_to_hs(rgb[0], rgb[1], rgb[2])
-
-        return None
+        assert self._col_attr is not None
+        rgb = decimal_to_rgb_list(self._col_attr.current_value)
+        return color_RGB_to_hs(rgb[0], rgb[1], rgb[2])
 
     @property
-    def min_color_temp_kelvin(self) -> int:
-        """Return the min color temperature the light supports."""
-        if self._temp_attr is not None:
-            return int(self._temp_attr.minimum)
-
-        return DEFAULT_MIN_KELVIN
-
-    @property
-    def max_color_temp_kelvin(self) -> int:
-        """Return the max color temperature the light supports."""
-        if self._temp_attr is not None:
-            return int(self._temp_attr.maximum)
-
-        return DEFAULT_MAX_KELVIN
-
-    @property
-    def color_temp_kelvin(self) -> int | None:
+    def color_temp_kelvin(self) -> int:
         """Return the color temperature of the light."""
-        if self._temp_attr is not None:
-            return int(self._temp_attr.current_value)
-
-        return None
+        assert self._temp_attr is not None
+        return int(self._temp_attr.current_value)
 
     @property
     def is_on(self) -> bool:
@@ -230,13 +203,10 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         """Determine the supported color modes from the available attributes."""
         color_modes: set[ColorMode] = set()
 
+        if self._temp_attr is not None and self._temp_attr.editable:
+            color_modes.add(ColorMode.COLOR_TEMP)
         if self._col_attr is not None:
             color_modes.add(ColorMode.HS)
-        if self._temp_attr is not None:
-            if self._temp_attr.editable:
-                color_modes.add(ColorMode.COLOR_TEMP)
-            else:
-                color_modes.add(ColorMode.WHITE)
 
         # if no other color modes are available, set one of those
         if len(color_modes) == 0:
