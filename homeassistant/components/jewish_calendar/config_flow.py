@@ -87,7 +87,7 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Jewish calendar."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback

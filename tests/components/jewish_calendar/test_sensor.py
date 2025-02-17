@@ -7,7 +7,6 @@ from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
 
-from homeassistant.components.binary_sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
@@ -15,6 +14,7 @@ from homeassistant.components.jewish_calendar.const import (
     DEFAULT_NAME,
     DOMAIN,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component

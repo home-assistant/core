@@ -125,11 +125,12 @@ async def async_migrate_entry(
         return False
 
     if config_entry.version == 1:
+        if config_entry.minor_version > 1:
+            return False
+
         if config_entry.minor_version == 1:
             await er.async_migrate_entries(
                 hass, config_entry.entry_id, update_unique_id
             )
-        else:
-            return False
 
     return True
