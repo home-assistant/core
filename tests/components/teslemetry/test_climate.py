@@ -335,8 +335,9 @@ async def test_select_streaming(
     )
     await hass.async_block_till_done()
 
-    for entity_id in ("climate.test_climate",):
-        assert hass.states.get(entity_id) == snapshot(name=entity_id)
+    assert hass.states.get("climate.test_climate") == snapshot(
+        name="climate.test_climate LHD"
+    )
 
     await reload_platform(hass, entry, [Platform.CLIMATE])
 

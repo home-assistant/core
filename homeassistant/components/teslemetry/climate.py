@@ -283,7 +283,7 @@ class TeslemetryStreamingClimateEntity(
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
             self._attr_current_temperature = state.attributes.get("current_temperature")
-            self._attr_target_temperature = state.attributes.get("target_temperature")
+            self._attr_target_temperature = state.attributes.get("temperature")
             self._attr_preset_mode = state.attributes.get("preset_mode")
 
         self.async_on_remove(
@@ -525,7 +525,7 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
             self._attr_hvac_mode = (
                 HVACMode(state.state) if state.state in HVAC_MODES else None
             )
-            self._attr_current_temperature = state.attributes.get("current_temperature")
+            self._attr_current_temperature = state.attributes.get("temperature")
             self._attr_target_temperature = state.attributes.get("target_temperature")
 
         self.async_on_remove(
