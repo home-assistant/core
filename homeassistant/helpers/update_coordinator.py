@@ -90,8 +90,9 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
             frame.report_usage(
                 "rely on the ContextVar, but should passing the config entry explicitly - see "
                 "https://developers.home-assistant.io/blog/xxxxxxx",
-                core_behavior=frame.ReportBehavior.ERROR,
-                custom_integration_behavior=frame.ReportBehavior.LOG,
+                core_behavior=frame.ReportBehavior.LOG,
+                core_integration_behavior=frame.ReportBehavior.LOG,
+                custom_integration_behavior=frame.ReportBehavior.IGNORE,
                 breaks_in_ha_version="2026.3",
             )
 
