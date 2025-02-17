@@ -7,11 +7,7 @@ import pytest
 import requests_mock
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.fan import (
-    ATTR_PRESET_MODE,
-    DOMAIN as FAN_DOMAIN,
-    SERVICE_SET_PRESET_MODE,
-)
+from homeassistant.components.fan import ATTR_PRESET_MODE, DOMAIN as FAN_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -142,7 +138,7 @@ async def test_set_preset_mode(
     api_response: bool,
     expectation,
 ) -> None:
-    """Test handling of value in set_mode method."""
+    """Test handling of value in set_preset_mode method. Does this via turn on as it increases test coverage."""
 
     # If VeSyncTowerFan.normal_mode fails (returns False), then HomeAssistantError is raised
     with (
@@ -157,7 +153,7 @@ async def test_set_preset_mode(
         ) as update_mock:
             await hass.services.async_call(
                 FAN_DOMAIN,
-                SERVICE_SET_PRESET_MODE,
+                SERVICE_TURN_ON,
                 {ATTR_ENTITY_ID: ENTITY_FAN, ATTR_PRESET_MODE: "normal"},
                 blocking=True,
             )
