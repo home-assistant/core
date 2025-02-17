@@ -99,7 +99,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                 (
                     ATTR_MEDIA_VOLUME_LEVEL,
                     ATTR_MEDIA_VOLUME_LEVEL,
-                    "The volume percentage between 0 and 100 where 0 is mute and 100 is full volume"
+                    "The volume percentage between 0 and 100 where 0 is mute and 100 is full volume",
                 ): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=100), lambda val: val / 100
                 )

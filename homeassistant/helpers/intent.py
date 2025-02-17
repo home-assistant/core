@@ -37,7 +37,7 @@ from .typing import VolSchemaType
 
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
-# The key may be anyhwere from one to three fields in this order:
+# The key may be a single string or up to a three field tuple with these ordered fields:
 # - The name of the slot
 # - The name of the service data input to map to this slot
 # - A description of the slot
@@ -961,7 +961,9 @@ class DynamicServiceIntentHandler(IntentHandler):
         if self.required_slots:
             slot_schema.update(
                 {
-                    vol.Required(key[0], description=key[2] if len(key) > 2 else None): validator
+                    vol.Required(
+                        key[0], description=key[2] if len(key) > 2 else None
+                    ): validator
                     for key, validator in self.required_slots.items()
                 }
             )
@@ -969,7 +971,9 @@ class DynamicServiceIntentHandler(IntentHandler):
         if self.optional_slots:
             slot_schema.update(
                 {
-                    vol.Optional(key[0], description=key[2] if len(key) > 2 else None): validator
+                    vol.Optional(
+                        key[0], description=key[2] if len(key) > 2 else None
+                    ): validator
                     for key, validator in self.optional_slots.items()
                 }
             )
