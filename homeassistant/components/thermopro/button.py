@@ -4,23 +4,26 @@ from __future__ import annotations
 
 import logging
 
-from thermopro_ble import ThermoProBluetoothDeviceData, ThermoProDevice
+from thermopro_ble import SensorUpdate, ThermoProBluetoothDeviceData, ThermoProDevice
 
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfoBleak,
     async_ble_device_from_address,
     async_process_advertisements,
+    async_track_unavailable,
 )
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import now
 
 from . import DOMAIN
+from .const import SIGNAL_DATA_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,12 +39,45 @@ ADDITIONAL_DISCOVERY_TIMEOUT = 60
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the demo button platform."""
+    assert entry.unique_id is not None
 
-    assert config_entry.unique_id is not None
+    @callback
+    def _async_on_data_updated(
+        data: ThermoProBluetoothDeviceData,
+        update: SensorUpdate,
+        service_info: BluetoothServiceInfoBleak,
+    ) -> None:
+        _LOGGER.debug(
+            "got update data=%s update=%s service_info=%s", data, update, service_info
+        )
+        # TODO: add entities here if we haven't already added them
+        # if not added_entities:
+        # ...
+
+        # TODO: if entities are already added an unavailable, mark them as available
+        # if service_info.connectable and was_unavailable:
+        # ....
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{SIGNAL_DATA_UPDATED}_{entry.entry_id}", _async_on_data_updated
+        )
+    )
+
+    @callback
+    def _async_on_unavailable(service_info: BluetoothServiceInfoBleak) -> None:
+        _LOGGER.debug("service info unavailable %s", service_info)
+        # TODO: mark entities as unavailable if they were added
+
+    entry.async_on_unload(
+        async_track_unavailable(
+            hass, _async_on_unavailable, entry.unique_id, connectable=True
+        )
+    )
 
     data = ThermoProBluetoothDeviceData()
     parsed = None
@@ -55,7 +91,7 @@ async def async_setup_entry(
         await async_process_advertisements(
             hass,
             no_more_updates,
-            {"address": config_entry.unique_id, "connectable": False},
+            {"address": entry.unique_id, "connectable": False},
             BluetoothScanningMode.ACTIVE,
             ADDITIONAL_DISCOVERY_TIMEOUT,
         )
@@ -65,7 +101,7 @@ async def async_setup_entry(
                 "timeout while waiting for ThermoPro device %s"
                 "- additional features will not be available"
             ),
-            config_entry.unique_id,
+            entry.unique_id,
         )
         return
 
@@ -82,7 +118,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             ThermoProDateTimeButtonEntity(
-                address=config_entry.unique_id,
+                address=entry.unique_id,
                 title=parsed.title,
                 description=DATETIME_UPDATE,
             ),
