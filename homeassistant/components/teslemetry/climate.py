@@ -75,7 +75,7 @@ async def async_setup_entry(
     )
 
 
-HVAC_PRESET_MODES = {
+PRESET_MODES = {
     "Off": "off",
     "On": "keep",
     "Dog": "dog",
@@ -91,7 +91,7 @@ class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):
     _attr_precision = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = [HVACMode.HEAT_COOL, HVACMode.OFF]
-    _attr_preset_modes = ["off", "keep", "dog", "camp"]
+    _attr_preset_modes = list(PRESET_MODES.values())
     _attr_fan_modes = ["off", "bioweapon"]
     _enable_turn_on_off_backwards_compatibility = False
 
@@ -343,7 +343,7 @@ class TeslemetryStreamingClimateEntity(
         self.async_write_ha_state()
 
     def _async_handle_climate_keeper_mode(self, data: str | None):
-        self._attr_preset_mode = HVAC_PRESET_MODES.get(data) if data else None
+        self._attr_preset_mode = PRESET_MODES.get(data) if data else None
         self.async_write_ha_state()
 
     def _async_handle_hvac_temperature_request(self, data: float | None):
@@ -379,8 +379,9 @@ class TeslemetryCabinOverheatProtectionEntity(TeslemetryRootEntity, ClimateEntit
     _attr_max_temp = 40
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_hvac_modes = list(COP_MODES.values())
-    _enable_turn_on_off_backwards_compatibility = False
     _attr_entity_registry_enabled_default = False
+
+    _enable_turn_on_off_backwards_compatibility = False
 
     async def async_turn_on(self) -> None:
         """Set the climate state to on."""
@@ -459,7 +460,7 @@ class TeslemetryPollingCabinOverheatProtectionEntity(
             ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         )
         if self.get("vehicle_config_cop_user_set_temp_supported"):
-            self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         # Scopes
         self.scoped = Scope.VEHICLE_CMDS in scopes
@@ -510,7 +511,7 @@ class TeslemetryStreamingCabinOverheatProtectionEntity(
             ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         )
         if data.coordinator.data.get("vehicle_config_cop_user_set_temp_supported"):
-            self._attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+            self._attr_supported_features |= ClimateEntityFeature.TARGET_TEMPERATURE
 
         # Scopes
         self.scoped = Scope.VEHICLE_CMDS in scopes
