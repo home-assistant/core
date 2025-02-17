@@ -104,7 +104,10 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="switch_turn_on",
+                translation_key="switch_turn",
+                translation_placeholders={
+                    "state": "on",
+                },
             ) from exc
         finally:
             await self.coordinator.async_refresh()
@@ -116,7 +119,10 @@ class FlexitSwitch(FlexitEntity, SwitchEntity):
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="switch_turn_off",
+                translation_key="switch_turn",
+                translation_placeholders={
+                    "state": "off",
+                },
             ) from exc
         finally:
             await self.coordinator.async_refresh()

@@ -124,11 +124,8 @@
     "set_value_error": {
       "message": "Failed setting the value {value}."
     },
-    "switch_turn_on": {
-      "message": "Failed to turn on the switch."
-    },
-    "switch_turn_off": {
-      "message": "Failed to turn off the switch."
+    "switch_turn": {
+      "message": "Failed to turn the switch {state}."
     },
     "set_preset_mode": {
       "message": "Failed to set preset mode {preset}."
@@ -137,7 +134,7 @@
       "message": "Failed to set HVAC mode {mode}."
     },
     "not_ready": {
-      "message": "Timeout while connecting to {ip}"
+      "message": "Timeout while connecting to {ip}."
     }
   }
 }
