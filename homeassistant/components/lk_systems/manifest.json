@@ -1,0 +1,13 @@
+{
+  "domain": "lk_systems",
+  "name": "LK systems",
+  "codeowners": ["@simon-bonnedahl"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://www.home-assistant.io/integrations/lk_systems",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
