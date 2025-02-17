@@ -247,6 +247,7 @@
           'domain': 'sensor',
           'entity_category': None,
           'entity_id': 'sensor.fan_air_quality',
+          'icon': None,
           'name': None,
           'original_device_class': None,
           'original_icon': None,
