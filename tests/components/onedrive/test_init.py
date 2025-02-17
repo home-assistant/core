@@ -6,7 +6,7 @@ from json import dumps
 from unittest.mock import MagicMock
 
 from onedrive_personal_sdk.const import DriveState
-from onedrive_personal_sdk.exceptions import import (
+from onedrive_personal_sdk.exceptions import (
     AuthenticationError,
     NotFoundError,
     OneDriveException,
