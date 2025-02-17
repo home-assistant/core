@@ -341,6 +341,9 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
 
                 await asyncio.sleep(_HANGUP_SEC / 2)
         except asyncio.CancelledError:
+            # Don't swallow cancellation
+            if (current_task := asyncio.current_task()) and current_task.cancelling():
+                raise
             _LOGGER.debug("Check hangup cancelled")
 
     async def async_start_conversation(
