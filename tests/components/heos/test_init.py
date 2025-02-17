@@ -304,7 +304,7 @@ async def test_players_changed_new_entities_created(
     controller: MockHeos,
     player_factory: Callable[[int, str, str], HeosPlayer],
 ) -> None:
-    """Test new n are created for new players on change event."""
+    """Test new entities are created for new players on change event."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
 
