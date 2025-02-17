@@ -47,7 +47,7 @@ rules:
     status: done
     comment: |
       Done implicitly with coordinator.
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: todo
   test-coverage: todo
   # Gold
