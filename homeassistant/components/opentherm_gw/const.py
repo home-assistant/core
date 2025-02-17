@@ -26,6 +26,9 @@ DATA_OPENTHERM_GW = "opentherm_gw"
 
 DOMAIN = "opentherm_gw"
 
+ENTITY_KEY_CENTRAL_HEATING_1_OVERRIDE = "central_heating_1_override"
+ENTITY_KEY_CENTRAL_HEATING_2_OVERRIDE = "central_heating_2_override"
+
 SERVICE_RESET_GATEWAY = "reset_gateway"
 SERVICE_SET_CH_OVRD = "set_central_heating_ovrd"
 SERVICE_SET_CLOCK = "set_clock"
