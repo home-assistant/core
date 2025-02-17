@@ -48,7 +48,10 @@ rules:
     comment: |
       Done implicitly with coordinator.
   parallel-updates: done
-  reauthentication-flow: todo
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      Integration doesn't require any form of authentication.
   test-coverage: todo
   # Gold
   entity-translations: done
