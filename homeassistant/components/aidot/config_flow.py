@@ -1,8 +1,6 @@
 """Config flow for Aidot integration."""
 
 from __future__ import annotations
-
-from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -11,7 +9,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 
 from .const import (
     CLOUD_SERVERS,
@@ -50,18 +48,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.device_list: list[Any] = []
         self.product_list: list[Any] = []
         self.selected_house: dict[Any, Any] = {}
-
-    @callback
-    def async_abort(
-        self,
-        *,
-        reason: str,
-        description_placeholders: Mapping[str, str] | None = None,
-    ) -> ConfigFlowResult:
-        """Abort the config flow."""
-        return super().async_abort(
-            reason=reason, description_placeholders=description_placeholders
-        )
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
