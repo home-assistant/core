@@ -1,21 +1,30 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+      status: exempt
+      comment: |
+          No custom actions.
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: todo
+  docs-actions:
+      status: exempt
+      comment: |
+          No custom actions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: todo
-  entity-event-setup: todo
+  entity-event-setup:
+      status: exempt
+      comment: |
+          Does not subscribe to event explicitly.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
-  test-before-configure: todo
+  test-before-configure: done
   test-before-setup: todo
   unique-config-entry: done
 
@@ -45,7 +54,7 @@ rules:
   docs-use-cases: todo
   dynamic-devices: todo
   entity-category: todo
-  entity-device-class: todo
+  entity-device-class: done
   entity-disabled-by-default: todo
   entity-translations: todo
   exception-translations: todo
