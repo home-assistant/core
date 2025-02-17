@@ -206,8 +206,7 @@ class CloudBackupAgent(BackupAgent):
         **kwargs: Any,
     ) -> AgentBackup | None:
         """Return a backup."""
-        backup = await self._async_get_backup(backup_id)
-        if not backup:
+        if not (backup := await self._async_get_backup(backup_id)):
             return None
         return AgentBackup.from_dict(backup["Metadata"])
 
