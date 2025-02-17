@@ -450,6 +450,9 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             self.disconnect()  # caller hung up
         except asyncio.CancelledError:
             _LOGGER.debug("Pipeline cancelled")
+            # Don't swallow cancellation
+            if (current_task := asyncio.current_task()) and current_task.cancelling():
+                raise
         finally:
             # Stop audio stream
             await self._audio_queue.put(None)
