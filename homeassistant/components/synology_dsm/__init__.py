@@ -138,11 +138,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload Synology DSM sensors."""
+    _async_notify_backup_listeners(hass)
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         entry_data: SynologyDSMData = hass.data[DOMAIN][entry.unique_id]
         await entry_data.api.async_unload()
         hass.data[DOMAIN].pop(entry.unique_id)
-    _async_notify_backup_listeners(hass)
     return unload_ok
 
 
