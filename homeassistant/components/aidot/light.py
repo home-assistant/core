@@ -90,11 +90,6 @@ class AidotLight(LightEntity):
                     self._cct_min = int(service["properties"][0]["minValue"])
                     self._cct_max = int(service["properties"][0]["maxValue"])
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
-                # elif "control.light.effect.mode" == service["identity"]:
-                # self._attr_supported_features = LightEntityFeature.EFFECT | LightEntityFeature.FLASH
-                # allowedValues = service["properties"][0]["allowedValues"]
-                # print(f"allowedValues: {allowedValues}")
-                # self._attr_effect_list = [item["name"] for item in allowedValues]
 
         if ColorMode.RGBW in supported_color_modes:
             self._attr_color_mode = ColorMode.RGBW

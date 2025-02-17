@@ -43,9 +43,7 @@ async def cleanup_device_registry(hass: HomeAssistant) -> None:
     """Remove deleted device registry entry if there are no remaining entities."""
     device_registry = dr.async_get(hass)
     for dev_id, device_entry in list(device_registry.devices.items()):
-        for item in device_entry.identifiers:
-            _LOGGER.info(item)
-            _LOGGER.info(dev_id)
+        for _ in device_entry.identifiers:
             device_registry.async_remove_device(dev_id)
 
 
