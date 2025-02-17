@@ -2661,7 +2661,7 @@ async def test_subentry_configflow(
     assert result["step_id"] == "entity_platform_config"
     assert result["errors"] == {}
     assert result["description_placeholders"] == {
-        "mqtt_device": "`Milk notifier`",
+        "mqtt_device": '"Milk notifier"',
         "platform": "notify",
         "object_id": "bla123",
     }
@@ -2682,8 +2682,8 @@ async def test_subentry_configflow(
     assert result["menu_options"] == ["entity", "update_entity", "device", "finish"]
     assert result["step_id"] == "summary_menu"
     assert result["description_placeholders"] == {
-        "mqtt_device": "`Milk notifier`",
-        "mqtt_items": "`notify_bla123`",
+        "mqtt_device": '"Milk notifier"',
+        "mqtt_items": '"notify_bla123"',
     }
 
     # Try to add another entity with the same object_id
@@ -2737,8 +2737,8 @@ async def test_subentry_configflow(
     ]
     assert result["step_id"] == "summary_menu"
     assert result["description_placeholders"] == {
-        "mqtt_device": "`Milk notifier`",
-        "mqtt_items": "`notify_bla123`, `notify_bla456`",
+        "mqtt_device": '"Milk notifier"',
+        "mqtt_items": '"notify_bla123", "notify_bla456"',
     }
     # Finish the subentry flow
     result = await hass.config_entries.subentries.async_configure(

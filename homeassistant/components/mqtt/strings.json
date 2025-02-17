@@ -113,8 +113,8 @@
       "title": "Add MQTT device",
       "step": {
         "device": {
-          "title": "Add MQTT device",
-          "description": "Enter the device details for the new subentry:",
+          "title": "Configure MQTT device detais",
+          "description": "Enter the MQTT device details:",
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
             "configuration_url": "Configuration URL",
@@ -125,40 +125,40 @@
           },
           "data_description": {
             "name": "The name of the manually added MQTT device.",
-            "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a `http://`, `https://` or an internal `homeassistant://` URL.",
-            "sw_version": "The software version of the device. E.g. `2025.1.0`.",
-            "hw_version": "The hardware version of the device. E.g. `v1.0 rev a`.",
-            "model": "E.g. `Cleanmaster Pro`.",
-            "model_id": "E.g. `123NK2PRO`."
+            "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a 'http://', 'https://' or an internal 'homeassistant://' URL.",
+            "sw_version": "The software version of the device. E.g. '2025.1.0'.",
+            "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
+            "model": "E.g. 'Cleanmaster Pro'.",
+            "model_id": "E.g. '123NK2PRO'."
           }
         },
         "summary_menu": {
-          "title": "MQTT subentry summary",
-          "description": "Items configured for {mqtt_device}: {mqtt_items}. Decide what to do next:",
+          "title": "Configuration summary",
+          "description": "Following entities are about\nto be set up for MQTT device {mqtt_device}:\n{mqtt_items}.\n\nDecide what to do next:",
           "menu_options": {
             "entity": "Add an entity to {mqtt_device}",
             "update_entity": "Update entity properties",
             "delete_entity": "Delete an entity",
             "device": "Edit device properties",
-            "finish": "Create {mqtt_device} subentry",
+            "finish": "Create the configuration for {mqtt_device}",
             "finish_reconfigure": "Finish reconfiguring {mqtt_device}"
           }
         },
         "entity": {
-          "title": "Configure entity for {mqtt_device}",
-          "description": "Configure the entity platform and the common entity parameters",
+          "title": "Configure MQTT device {mqtt_device}",
+          "description": "Configure the entity platform and the common entity properties",
           "data": {
-            "platform": "Platform",
-            "object_id": "Object ID",
+            "platform": "Type of entity",
+            "object_id": "Entity ID",
             "name": "Entity name",
             "encoding": "Encoding",
             "qos": "QoS"
           },
           "data_description": {
-            "platform": "The platform of the entity to add.",
+            "platform": "The type of the entity to configure.",
             "object_id": "An ID to be used as base to generate the entity_id.",
-            "name": "The name of the entity to add. Leave empty to set it to `None`.",
-            "encoding": "The encoding of the payloads received. Defaults to `utf-8`. Set to `None` to allow to process `raw` payloads.",
+            "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device](https://www.home-assistant.io/integrations/mqtt/#naming-of-mqtt-entities).",
+            "encoding": "The encoding of the payloads received. Defaults to 'utf-8'. Set to `None` to allow to process raw payloads.",
             "qos": "The QoS value this entity should subscrive with."
           }
         },
@@ -183,8 +183,8 @@
           }
         },
         "entity_platform_config": {
-          "title": "Configure {platform} platform for {mqtt_device}",
-          "description": "Please configure details for {object_id}:",
+          "title": "Configure MQTT device \"{mqtt_device}\"",
+          "description": "Please configure details for {platform} entity \"{object_id}\":",
           "data": {
             "command_topic": "Command topic",
             "command_template": "Command template",
@@ -195,11 +195,11 @@
           },
           "data_description": {
             "command_topic": "The publishing topic that will be used to control the {platform} entity.",
-            "command_template": "A template to render the payload to be published at the command topic.",
-            "icon": "The icon assigned to the entity `{object_id}`.",
-            "entity_picture": "An URL to a picture to be assigned `{object_id}`.",
-            "entity_category": "The entity category for `{object_id}`.",
-            "retain": "Select if values published by `{object_id}` should be retained at the MQTT broker."
+            "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
+            "icon": "The icon assigned to the entity \"{object_id}\".",
+            "entity_picture": "An URL to a picture to be assigned \"{object_id}\".",
+            "entity_category": "The entity category for \"{object_id}\". Leave empty if no category is to be set.",
+            "retain": "Select if values published by \"{object_id}\" should be retained at the MQTT broker."
           }
         }
       },
@@ -211,8 +211,8 @@
         "invalid_subscribe_topic": "Invalid subscribe topic",
         "invalid_template": "Invalid template",
         "invalid_url": "Invalid URL",
-        "object_id_not_unique": "This Object ID is already used for this device",
-        "object_id_not_mutable": "The Object ID is not mutable when reconfiguring an entity. Instead remove the entity, and re-add it"
+        "object_id_not_unique": "This Entity ID is already used for this device",
+        "object_id_not_mutable": "The Entity ID is not mutable when reconfiguring an entity. Instead remove the entity, and re-add it"
       }
     }
   },
