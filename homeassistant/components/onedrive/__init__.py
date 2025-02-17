@@ -16,7 +16,7 @@ from onedrive_personal_sdk.exceptions import (
 from onedrive_personal_sdk.models.items import ItemUpdate
 
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -96,7 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
             translation_key="failed_to_migrate_files",
         ) from err
 
-    _async_notify_backup_listeners_soon(hass)
+    _async_notify_backup_listeners(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -104,18 +104,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
     """Unload a OneDrive config entry."""
-    _async_notify_backup_listeners_soon(hass)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    _async_notify_backup_listeners(hass)
+    return unload_ok
 
 
 def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
     for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
         listener()
-
-
-@callback
-def _async_notify_backup_listeners_soon(hass: HomeAssistant) -> None:
-    hass.loop.call_soon(_async_notify_backup_listeners, hass)
 
 
 async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -> None:
