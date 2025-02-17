@@ -2,7 +2,10 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Generator
+import contextlib
+from pathlib import Path
 from random import getrandbits
+import shutil
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -39,14 +42,30 @@ def temp_dir_prefix() -> str:
 
 
 @pytest.fixture(autouse=True)
-def mock_temp_dir(temp_dir_prefix: str) -> Generator[str]:
+async def mock_temp_dir(
+    hass: HomeAssistant, tmp_path: Path, temp_dir_prefix: str
+) -> AsyncGenerator[str]:
     """Mock the certificate temp directory."""
-    with patch(
-        # Patch temp dir name to avoid tests fail running in parallel
-        "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
-        f"home-assistant-mqtt-{temp_dir_prefix}-{getrandbits(10):03x}",
-    ) as mocked_temp_dir:
+    mqtt_temp_dir = f"home-assistant-mqtt-{temp_dir_prefix}-{getrandbits(10):03x}"
+    with (
+        patch(
+            "homeassistant.components.mqtt.util.tempfile.gettempdir",
+            return_value=tmp_path,
+        ),
+        patch(
+            # Patch temp dir name to avoid tests fail running in parallel
+            "homeassistant.components.mqtt.util.TEMP_DIR_NAME",
+            mqtt_temp_dir,
+        ) as mocked_temp_dir,
+    ):
         yield mocked_temp_dir
+
+    # Clean up temp files after test
+    def _cleanup() -> None:
+        with contextlib.suppress(OSError):
+            shutil.rmtree(tmp_path)
+
+    await hass.async_add_executor_job(_cleanup)
 
 
 @pytest.fixture
