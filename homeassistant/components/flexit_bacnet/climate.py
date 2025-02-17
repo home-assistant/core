@@ -43,6 +43,9 @@ async def async_setup_entry(
     async_add_entities([FlexitClimateEntity(config_entry.runtime_data)])
 
 
+PARALLEL_UPDATES = 1
+
+
 class FlexitClimateEntity(FlexitEntity, ClimateEntity):
     """Flexit air handling unit."""
 

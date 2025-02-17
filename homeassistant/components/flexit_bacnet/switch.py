@@ -68,6 +68,9 @@ async def async_setup_entry(
     )
 
 
+PARALLEL_UPDATES = 1
+
+
 class FlexitSwitch(FlexitEntity, SwitchEntity):
     """Representation of a Flexit Switch."""
 
