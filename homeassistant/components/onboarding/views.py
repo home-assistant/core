@@ -235,6 +235,8 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
                 onboard_integrations.append("rpi_power")
 
             for domain in onboard_integrations:
+                # Create tasks so onboarding isn't affected
+                # by errors in these integrations.
                 hass.async_create_task(
                     hass.config_entries.flow.async_init(
                         domain, context={"source": "onboarding"}
