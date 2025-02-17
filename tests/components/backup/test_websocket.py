@@ -439,6 +439,7 @@ async def test_generate_wrong_parameters(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_backup_generation")
 async def test_generate_wrong_parameters_automatic_settings(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
