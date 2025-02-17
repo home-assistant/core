@@ -135,6 +135,9 @@
     },
     "set_hvac_mode": {
       "message": "Failed to set HVAC mode {mode}."
+    },
+    "not_ready": {
+      "message": "Timeout while connecting to {ip}"
     }
   }
 }
