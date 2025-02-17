@@ -10,7 +10,7 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EkeyBionyxConfigEntry
 from .const import DOMAIN, LOGGER
@@ -69,7 +69,7 @@ class EkeyEvent(EventEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EkeyBionyxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Ekey event."""
     LOGGER.info(entry.data)
