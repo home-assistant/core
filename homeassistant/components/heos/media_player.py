@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from datetime import datetime
 from functools import reduce, wraps
 from operator import ior
@@ -93,11 +93,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add media players for a config entry."""
-    devices = [
-        HeosMediaPlayer(entry.runtime_data, player)
-        for player in entry.runtime_data.heos.players.values()
-    ]
-    async_add_entities(devices)
+
+    def add_entities_callback(players: Sequence[HeosPlayer]) -> None:
+        """Add entities for each player."""
+        async_add_entities(
+            [HeosMediaPlayer(entry.runtime_data, player) for player in players]
+        )
+
+    coordinator = entry.runtime_data
+    coordinator.async_add_platform_callback(add_entities_callback)
+    add_entities_callback(list(coordinator.heos.players.values()))
 
 
 type _FuncType[**_P] = Callable[_P, Awaitable[Any]]

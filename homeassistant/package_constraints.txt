@@ -4,7 +4,7 @@ aiodhcpwatcher==1.1.0
 aiodiscover==2.6.0
 aiodns==3.2.0
 aiohasupervisor==0.3.0
-aiohttp-asyncmdnsresolver==0.1.0
+aiohttp-asyncmdnsresolver==0.1.1
 aiohttp-fast-zlib==0.2.2
 aiohttp==3.11.12
 aiohttp_cors==0.7.0
@@ -34,10 +34,10 @@ fnv-hash-fast==1.2.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
 habluetooth==3.21.1
-hass-nabucasa==0.91.0
+hass-nabucasa==0.92.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250210.0
+home-assistant-frontend==20250214.0
 home-assistant-intents==2025.2.5
 httpx==0.28.1
 ifaddr==0.2.0
@@ -67,13 +67,13 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.12.2,<5.0
 ulid-transform==1.2.0
 urllib3>=1.26.5,<2
-uv==0.5.27
+uv==0.6.0
 voluptuous-openapi==0.0.6
 voluptuous-serialize==2.6.0
 voluptuous==0.15.2
 webrtc-models==0.3.0
 yarl==1.18.3
-zeroconf==0.144.1
+zeroconf==0.144.3
 
 # Constrain pycryptodome to avoid vulnerability
 # see https://github.com/home-assistant/core/pull/16238
