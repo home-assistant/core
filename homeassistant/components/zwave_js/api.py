@@ -896,8 +896,9 @@ async def websocket_subscribe_s2_inclusion(
             )
         )
 
-    async def accept_requested_grant(event: dict) -> None:
-        # accept the requested security classes without user interaction
+    @callback
+    def handle_requested_grant(event: dict) -> None:
+        """Accept the requested security classes without user interaction."""
         inclusion_grant = InclusionGrant(
             [
                 SecurityClass(sec_cls)
@@ -905,11 +906,13 @@ async def websocket_subscribe_s2_inclusion(
             ],
             event["requested_grant"]["client_side_auth"],
         )
-        await driver.controller.async_grant_security_classes(inclusion_grant)
+        hass.async_create_task(
+            driver.controller.async_grant_security_classes(inclusion_grant)
+        )
 
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
-        driver.controller.on("grant security classes", accept_requested_grant),
+        driver.controller.on("grant security classes", handle_requested_grant),
         driver.controller.on("validate dsk and enter pin", forward_dsk),
     ]
     connection.send_result(msg[ID])
