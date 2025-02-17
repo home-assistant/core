@@ -1461,9 +1461,11 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         backup_id = _generate_backup_id(date_str, backup_name)
 
         if include_addons or include_all_addons or include_folders:
-            raise BackupReaderWriterError(
-                "Addons and folders are not supported by core backup"
-            )
+            if not extra_metadata.get("with_automatic_settings"):
+                raise BackupReaderWriterError(
+                    "Addons and folders are not supported by core backup"
+                )
+            LOGGER.debug("Ignoring addons and folders in automatic backup")
         if not include_homeassistant:
             raise BackupReaderWriterError("Home Assistant must be included in backup")
 

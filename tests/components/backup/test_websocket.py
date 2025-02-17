@@ -422,6 +422,50 @@ async def test_generate_wrong_parameters(
     }
 
 
+@pytest.mark.parametrize(
+    ("parameters", "expected_error"),
+    [
+        (
+            {"include_addons": ["blah"]},
+            "Ignoring addons and folders in automatic backup",
+        ),
+        (
+            {"include_all_addons": True},
+            "Ignoring addons and folders in automatic backup",
+        ),
+        (
+            {"include_folders": ["ssl"]},
+            "Ignoring addons and folders in automatic backup",
+        ),
+    ],
+)
+async def test_generate_wrong_parameters_automatic_settings(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    parameters: dict[str, Any],
+    expected_error: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test generating a backup."""
+    await setup_backup_integration(hass, with_hassio=False)
+
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["backup.local"]} | parameters,
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id({"type": "backup/generate_with_automatic_settings"})
+    response = await client.receive_json()
+    assert response["success"]
+    assert expected_error in caplog.text
+
+
 @pytest.mark.usefixtures("mock_backup_generation")
 @pytest.mark.parametrize(
     ("params", "expected_extra_call_params"),
