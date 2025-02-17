@@ -964,7 +964,7 @@ class ConfigEntry[_DataT = Any]:
 
             assert isinstance(result, bool)
 
-            # Only adjust state if we unloaded the integration
+            # Only do side effects if we unloaded the integration
             if domain_is_integration:
                 if result:
                     await self._async_process_on_unload(hass)
