@@ -205,6 +205,9 @@ async def async_setup_entry(
     )
 
 
+PARALLEL_UPDATES = 1
+
+
 class FlexitNumber(FlexitEntity, NumberEntity):
     """Representation of a Flexit Number."""
 
