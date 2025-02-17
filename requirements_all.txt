@@ -431,7 +431,7 @@ aiowithings==3.1.5
 aioymaps==1.2.5
 
 # homeassistant.components.airgradient
-airgradient==0.9.1
+airgradient==0.9.2
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -3110,7 +3110,7 @@ yeelight==0.7.16
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.4.7
+yolink-api==0.4.8
 
 # homeassistant.components.youless
 youless-api==2.2.0
