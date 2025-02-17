@@ -6,7 +6,6 @@ import asyncio
 from datetime import date, datetime, timedelta
 import logging
 
-from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
 
@@ -14,16 +13,12 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_CALENDAR_NAME, DOMAIN
-from .store import LocalCalendarStore
+from .const import CONF_CALENDAR_NAME
+from .coordinator import RemoteCalendarDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-PRODID = "-//homeassistant.io//local_calendar 1.0//EN"
 
 
 async def async_setup_entry(
@@ -35,24 +30,24 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     name = entry.data[CONF_CALENDAR_NAME]
-    entity = LocalCalendarEntity(coordinator, name, unique_id=entry.entry_id)
+    entity = RemoteCalendarEntity(coordinator, name, unique_id=entry.entry_id)
     async_add_entities([entity], True)
 
 
-class LocalCalendarEntity(CalendarEntity):
+class RemoteCalendarEntity(CalendarEntity):
     """A calendar entity backed by a local iCalendar file."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: Calendar,
+        coordinator: RemoteCalendarDataUpdateCoordinator,
         name: str,
         unique_id: str,
     ) -> None:
         """Initialize LocalCalendarEntity."""
         self._client = None
-        self._calendar = None
+        self._calendar = IcsCalendarStream.calendar_from_ics(coordinator.data)
         self.coordinator = coordinator
         self._calendar_lock = asyncio.Lock()
         self._event: CalendarEvent | None = None
@@ -65,39 +60,7 @@ class LocalCalendarEntity(CalendarEntity):
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        _LOGGER.debug("Test")
-        # self._calendar = self.coordinator
         return self._event
-
-    # async def _fetch_calendar_and_update(self):
-    #     headers = {}
-    #     if self._etag:
-    #         headers["If-None-Match"] = self._etag
-    #     res = await self._client.get(self._url, headers=headers)
-    #     if res.status_code == 304:  # Not modified
-    #         return
-    #     res.raise_for_status()
-    #     self._etag = res.headers.get("ETag")
-    #     self._calendar = await self.hass.async_add_executor_job(
-    #         IcsCalendarStream.calendar_from_ics, res.text
-    #     )
-    #     _LOGGER.debug("self._calendar %s", self._calendar)
-    #     self._calendar.prodid = PRODID
-    #     content = await self.hass.async_add_executor_job(
-    #         IcsCalendarStream.calendar_to_ics, self._calendar
-    #     )
-    #     _LOGGER.debug("content %s", content)
-    #     await self._store.async_store(content)
-
-    # async def async_added_to_hass(self) -> None:
-    #     """Once initialized, get the calendar, and schedule future updates."""
-    #     self._client = get_async_client(self.hass)
-    #     self.hass.loop.create_task(self._fetch_calendar_and_update())
-    #     self._track_fetch = async_track_time_interval(
-    #         self.hass,
-    #         lambda now: self.hass.loop.create_task(self._fetch_calendar_and_update()),
-    #         self._update_interval,
-    #     )
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
@@ -120,11 +83,6 @@ class LocalCalendarEntity(CalendarEntity):
             self._event = _get_calendar_event(event)
         else:
             self._event = None
-
-    async def _async_store(self) -> None:
-        """Persist the calendar to disk."""
-        content = IcsCalendarStream.calendar_to_ics(self._calendar)
-        await self._store.async_store(content)
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:

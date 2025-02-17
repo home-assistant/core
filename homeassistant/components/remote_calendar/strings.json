@@ -1,31 +1,23 @@
 {
-  "title": "Local Calendar",
+  "title": "Remote Calendar",
   "config": {
     "step": {
       "user": {
-        "description": "Please choose a name for your new calendar",
+        "description": "Please choose a name for the calendar to be imported",
         "data": {
           "calendar_name": "Calendar Name",
-          "import": "Starting Data"
+          "url": "Calendar URL"
         }
-      },
-      "import": {
-        "description": "You can import events in iCal format (.ics file)."
       }
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
     },
     "error": {
-      "invalid_ics_file": "Invalid .ics file"
-    }
-  },
-  "selector": {
-    "import": {
-      "options": {
-        "create_empty": "Create an empty calendar",
-        "import_ics_file": "Upload an iCalendar file (.ics)"
-      }
+      "unsupported_protocol": "Request URL is missing an 'http://' or 'https://' protocol",
+      "url_not_reachable": "URL is not reachable",
+      "not_authorized": "You are not authorized to access this URL",
+      "unknown_url_type": "Unknown URL type"
     }
   }
 }

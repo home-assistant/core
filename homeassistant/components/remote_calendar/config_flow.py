@@ -3,31 +3,17 @@
 from __future__ import annotations
 
 import logging
-from pathlib import Path
-import shutil
 from typing import Any
 
-from ical.calendar_stream import CalendarStream
-from ical.exceptions import CalendarParseError
+from httpx import ConnectError, HTTPStatusError, UnsupportedProtocol
 import voluptuous as vol
 
-from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import selector
+from homeassistant.const import CONF_URL
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import slugify
 
-from .const import (
-    ATTR_IMPORT_ICS_FILE,
-    CONF_CALENDAR_NAME,
-    CONF_ICS_FILE,
-    CONF_STORAGE_KEY,
-    DOMAIN,
-    STORAGE_PATH,
-)
-from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.const import CONF_URL
+from .const import CONF_CALENDAR_NAME, CONF_STORAGE_KEY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,19 +39,29 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
+        errors: dict = {}
         _LOGGER.debug("User input: %s", user_input)
         key = slugify(user_input[CONF_CALENDAR_NAME])
         user_input[CONF_STORAGE_KEY] = key
         self.data = user_input
-        errors = {}
         client = get_async_client(self.hass)
         _LOGGER.debug("User input in fetch url: %s", user_input)
         if user_input is not None:
-            headers = {}
+            headers: dict = {}
             try:
                 await client.get(user_input[CONF_URL], headers=headers)
+            except UnsupportedProtocol as err:
+                errors["base"] = "unsupported_protocol"
+                _LOGGER.debug("Unsupported Protokol: %s", err)
+            except ConnectError as err:
+                errors["base"] = "url_not_reachable"
+                _LOGGER.debug("ConnectError: %s", err)
+            except HTTPStatusError as err:
+                errors["base"] = "not_authorized"
+                _LOGGER.debug("HTTPStatusError: %s", err)
             except ValueError as err:
-                _LOGGER.debug("Error saving uploaded file: %s", err)
+                errors["base"] = "unknown_url_type"
+                _LOGGER.debug("ValueError: %s", err)
             else:
                 return self.async_create_entry(
                     title=self.data[CONF_CALENDAR_NAME], data=self.data
@@ -73,5 +69,6 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )

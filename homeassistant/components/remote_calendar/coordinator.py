@@ -2,31 +2,20 @@
 
 from __future__ import annotations
 
-import asyncio
-from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
 
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-# from ical.calendar import Calendar
-# from ical.calendar_stream import IcsCalendarStream
-# from ical.event import Event
 from .const import DOMAIN
 
-
 _LOGGER = logging.getLogger(__name__)
-MAX_WS_RECONNECT_TIME = 600
-SCAN_INTERVAL = timedelta(minutes=8)
-DEFAULT_RECONNECT_TIME = 2  # Define a default reconnect time
+SCAN_INTERVAL = timedelta(days=1)
 
 
-class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator):
+class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[str]):
     """Class to manage fetching Husqvarna data."""
 
     def __init__(self, hass: HomeAssistant, entry_data) -> None:
@@ -42,14 +31,14 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator):
         # self._url = "https://calendar.google.com/calendar/ical/p07n98go11onamd08d0kmq6jhs%40group.calendar.google.com/public/basic.ics"
         self._url = entry_data["url"]
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> str:
         """Subscribe for websocket and poll data from the API."""
-        headers = {}
+        headers: dict = {}
         if self._etag:
             headers["If-None-Match"] = self._etag
         res = await self._client.get(self._url, headers=headers)
-        if res.status_code == 304:  # Not modified
-            return
+        # if res.status_code == 304:  # Not modified
+        #     return None
         res.raise_for_status()
         self._etag = res.headers.get("ETag")
         return res.text

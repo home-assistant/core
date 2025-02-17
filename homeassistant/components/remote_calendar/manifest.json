@@ -3,8 +3,7 @@
   "name": "Remote Calendar",
   "codeowners": ["@Thomas55555"],
   "config_flow": true,
-  "dependencies": ["file_upload"],
-  "documentation": "https://www.home-assistant.io/integrations/local_calendar",
+  "documentation": "https://www.home-assistant.io/integrations/remote_calendar",
   "iot_class": "cloud_polling",
   "loggers": ["ical"],
   "requirements": ["ical==8.2.0"]
