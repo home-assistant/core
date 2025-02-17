@@ -19,7 +19,7 @@
       "delivered": {
         "default": "mdi:package"
       },
-      "returned": {
+      "alert": {
         "default": "mdi:package"
       },
       "package": {
