@@ -37,8 +37,12 @@ from .typing import VolSchemaType
 
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
+# The key may be anyhwere from one to three fields in this order:
+# - The name of the slot
+# - The name of the service data input to map to this slot
+# - A description of the slot
 type _IntentSlotsType = dict[
-    str | tuple[str, str], VolSchemaType | Callable[[Any], Any]
+    str | tuple[str, str] | tuple[str, str, str], VolSchemaType | Callable[[Any], Any]
 ]
 
 INTENT_TURN_OFF = "HassTurnOff"
@@ -957,7 +961,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         if self.required_slots:
             slot_schema.update(
                 {
-                    vol.Required(key[0]): validator
+                    vol.Required(key[0], description=key[2] if len(key) > 2 else None): validator
                     for key, validator in self.required_slots.items()
                 }
             )
@@ -965,7 +969,7 @@ class DynamicServiceIntentHandler(IntentHandler):
         if self.optional_slots:
             slot_schema.update(
                 {
-                    vol.Optional(key[0]): validator
+                    vol.Optional(key[0], description=key[2] if len(key) > 2 else None): validator
                     for key, validator in self.optional_slots.items()
                 }
             )
