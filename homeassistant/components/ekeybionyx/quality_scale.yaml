@@ -1,22 +1,28 @@
 rules:
-  action-setup: done
-  appropriate-polling: done
+  action-setup:
+    status: exempt
+    comment: This integration does not provide actions.
+  appropriate-polling:
+    status: exempt
+    comment: This integration does not poll.
   brands: done
   common-modules: done
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions: done
-  docs-high-level-description: done
-  docs-installation-instructions: done
-  docs-removal-instructions: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide actions.
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data:
     status: exempt
     comment: This integration does not connect to any device or service.
-  test-before-configure: done
+  test-before-configure: todo
   test-before-setup:
     status: exempt
     comment: This integration does not connect to any device or service.
