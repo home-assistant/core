@@ -38,10 +38,7 @@ rules:
     status: exempt
     comment: |
       Has no options flow
-  docs-installation-parameters:
-    status: exempt
-    comment: |
-      Users cannot be issued client id and secret
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
