@@ -31,7 +31,7 @@ MAX_QUEUE_BACKLOG_MIN_VALUE = 65000
 MIN_AVAILABLE_MEMORY_FOR_QUEUE_BACKLOG = 256 * 1024**2
 
 # As soon as we have more than 999 ids, split the query as the
-# MariaDB/MySQL optimizers handle it poorly and will no longer
+# MySQL optimizer handles it poorly and will no longer
 # do an index only scan with a group-by
 # https://github.com/home-assistant/core/issues/132865#issuecomment-2543160459
 MAX_IDS_FOR_INDEXED_GROUP_BY = 999
