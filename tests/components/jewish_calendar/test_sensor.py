@@ -27,9 +27,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 @pytest.mark.parametrize("language", ["english", "hebrew"])
 async def test_jewish_calendar_min_config(
-    hass: HomeAssistant, setup_integration: MockConfigEntry
+    hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
     """Test minimum jewish calendar configuration."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
     assert hass.states.get("sensor.jewish_calendar_date") is not None
 
 
