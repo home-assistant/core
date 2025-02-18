@@ -178,6 +178,7 @@ def fixture_request(
     site_payload: list[dict[str, Any]],
     system_information_payload: list[dict[str, Any]],
     wlan_payload: list[dict[str, Any]],
+    firewall_policy_payload: list[dict[str, Any]],
 ) -> Callable[[str], None]:
     """Mock default UniFi requests responses."""
 
@@ -216,6 +217,9 @@ def fixture_request(
         mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
         mock_get_request(f"/v2/api/site/{site_id}/trafficrules", traffic_rule_payload)
         mock_get_request(f"/v2/api/site/{site_id}/trafficroutes", traffic_route_payload)
+        mock_get_request(
+            f"/v2/api/site/{site_id}/firewall-policies", firewall_policy_payload
+        )
 
     return __mock_requests
 
@@ -302,6 +306,12 @@ def traffic_route_payload_data() -> list[dict[str, Any]]:
 @pytest.fixture(name="wlan_payload")
 def fixture_wlan_data() -> list[dict[str, Any]]:
     """WLAN data."""
+    return []
+
+
+@pytest.fixture(name="firewall_policy_payload")
+def firewall_policy_payload_data() -> list[dict[str, Any]]:
+    """Firewall policy data."""
     return []
 
 
