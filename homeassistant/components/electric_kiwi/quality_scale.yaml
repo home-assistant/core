@@ -38,7 +38,10 @@ rules:
     status: exempt
     comment: |
       Has no options flow
-  docs-installation-parameters: done
+  docs-installation-parameters:
+    status: exempt
+    comment: |
+      Handled by OAuth flow (HA is only one with credentials, users cannot get them)
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
