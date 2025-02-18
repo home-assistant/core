@@ -11,7 +11,7 @@ from onedrive_personal_sdk.exceptions import (
     NotFoundError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import AppRoot, Drive, Folder
+from onedrive_personal_sdk.models.items import AppRoot, Drive, Folder, ItemUpdate
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import setup_integration
-from .const import BACKUP_METADATA, MOCK_BACKUP_FILE
+from .const import BACKUP_METADATA, INSTANCE_ID, MOCK_BACKUP_FILE
 
 from tests.common import MockConfigEntry
 
@@ -125,6 +125,22 @@ async def test_get_integration_folder_creation_error(
     assert "Failed to get backups_123 folder" in caplog.text
 
 
+async def test_update_instance_id_description(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+    mock_folder: Folder,
+) -> None:
+    """Test we write the instance id to the folder."""
+    mock_folder.description = ""
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    mock_onedrive_client.update_drive_item.assert_called_with(
+        mock_folder.id, ItemUpdate(description=INSTANCE_ID)
+    )
+
+
 async def test_migrate_metadata_files(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -138,7 +154,7 @@ async def test_migrate_metadata_files(
     await hass.async_block_till_done()
 
     mock_onedrive_client.upload_file.assert_called_once()
-    assert mock_onedrive_client.update_drive_item.call_count == 3
+    assert mock_onedrive_client.update_drive_item.call_count == 2
     assert mock_onedrive_client.update_drive_item.call_args[1]["data"].description == ""
 
 

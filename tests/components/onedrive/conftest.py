@@ -35,6 +35,7 @@ from .const import (
     CLIENT_ID,
     CLIENT_SECRET,
     IDENTITY_SET,
+    INSTANCE_ID,
     MOCK_BACKUP_FILE,
     MOCK_METADATA_FILE,
 )
@@ -176,7 +177,7 @@ def mock_onedrive_client(
     client.get_approot.return_value = mock_approot
     client.create_folder.return_value = mock_folder
     client.list_drive_items.return_value = [MOCK_BACKUP_FILE, MOCK_METADATA_FILE]
-    client.get_drive_item.return_value = MOCK_BACKUP_FILE
+    client.get_drive_item.return_value = mock_folder
     client.upload_file.return_value = MOCK_METADATA_FILE
 
     class MockStreamReader:
@@ -216,7 +217,7 @@ def mock_instance_id() -> Generator[AsyncMock]:
     with (
         patch(
             "homeassistant.components.onedrive.async_get_instance_id",
-            return_value="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
+            return_value=INSTANCE_ID,
         ) as mock_instance_id,
         patch(
             "homeassistant.components.onedrive.config_flow.async_get_instance_id",

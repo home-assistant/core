@@ -29,6 +29,8 @@ BACKUP_METADATA = {
     "size": 34519040,
 }
 
+INSTANCE_ID = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0"
+
 IDENTITY_SET = IdentitySet(
     user=User(
         display_name="John Doe",
@@ -48,7 +50,6 @@ MOCK_BACKUP_FILE = File(
         quick_xor_hash="hash",
     ),
     mime_type="application/x-tar",
-    description="9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0",
     created_by=IDENTITY_SET,
 )
 
