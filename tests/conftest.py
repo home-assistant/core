@@ -11,6 +11,7 @@ import gc
 import itertools
 import logging
 import os
+import pathlib
 import reprlib
 from shutil import rmtree
 import sqlite3
@@ -49,7 +50,7 @@ from . import patch_recorder
 # Setup patching of dt_util time functions before any other Home Assistant imports
 from . import patch_time  # noqa: F401, isort:skip
 
-from homeassistant import core as ha, loader, runner
+from homeassistant import components, core as ha, loader, runner
 from homeassistant.auth.const import GROUP_ID_ADMIN, GROUP_ID_READ_ONLY
 from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
@@ -1260,15 +1261,17 @@ def evict_faked_translations(translations_once) -> Generator[_patch]:
     ) as mock_component_strings:
         yield
     cache: _TranslationsCacheData = translations_once.kwargs["return_value"]
+    component_paths = components.__path__
+
     for call in mock_component_strings.mock_calls:
         integrations: dict[str, loader.Integration] = call.args[3]
         for domain, integration in integrations.items():
-            if str(integration.file_path).endswith(
-                f"homeassistant/components/{domain}"
+            if any(
+                pathlib.Path(f"{component_path}/{domain}") == integration.file_path
+                for component_path in component_paths
             ):
                 continue
             cache.loaded["en"].discard(domain)
-            cache.cache["en"].pop(domain, None)
 
 
 @pytest.fixture

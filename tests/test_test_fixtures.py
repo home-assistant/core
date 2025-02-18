@@ -1,6 +1,7 @@
 """Test test fixture configuration."""
 
 from http import HTTPStatus
+import pathlib
 import socket
 
 from aiohttp import web
@@ -11,6 +12,7 @@ from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, async_get_hass
 from homeassistant.setup import async_setup_component
 
+from .common import MockModule, mock_integration
 from .typing import ClientSessionGenerator
 
 
@@ -70,3 +72,12 @@ async def test_aiohttp_client_frozen_router_view(
     assert response.status == HTTPStatus.OK
     result = await response.json()
     assert result["test"] is True
+
+
+async def test_evict_faked_translations_assumptions(hass: HomeAssistant) -> None:
+    """Test assumptions made when detecting translations for mocked integrations.
+
+    If this test fails, the evict_faked_translations may need to be updated.
+    """
+    integration = mock_integration(hass, MockModule("test"), built_in=True)
+    assert integration.file_path == pathlib.Path("")
