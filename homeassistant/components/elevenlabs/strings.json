@@ -6,12 +6,24 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "Your Elevenlabs API key."
+          "api_key": "Your ElevenLabs API key."
+        }
+      },
+      "reauth_confirm": {
+        "title": "Reauthentication required for ElevenLabs",
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Your ElevenLabs API key."
         }
       }
     },
     "error": {
       "invalid_api_key": "[%key:common::config_flow::error::invalid_api_key%]"
+    },
+    "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
   "options": {
