@@ -4,6 +4,7 @@ from unittest.mock import MagicMock
 
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.vegehub.sensor import VegeHubSensor, async_setup_entry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfElectricPotential
 from homeassistant.core import HomeAssistant
 
@@ -12,7 +13,7 @@ TEST_SERVER = "http://example.com"
 
 
 async def test_async_setup_entry_with_mocked_lib(
-    hass: HomeAssistant, config_entry
+    hass: HomeAssistant, config_entry: ConfigEntry
 ) -> None:
     """Test async_setup_entry for adding sensors."""
     async_add_entities = MagicMock()
@@ -26,7 +27,7 @@ async def test_async_setup_entry_with_mocked_lib(
     assert len(added_sensors) == 5  # 2 sensors + 2 actuators + 1 battery
 
 
-def test_vegehub_sensor_properties(config_entry) -> None:
+def test_vegehub_sensor_properties(config_entry: ConfigEntry) -> None:
     """Test VegeHubSensor properties."""
     sensor = VegeHubSensor(
         mac_address="1234567890AB",

@@ -56,13 +56,13 @@ def mock_vegehub():
 
 
 @pytest.fixture(name="mocked_hub")
-def fixture_mocked_hub(mock_vegehub):
+def fixture_mocked_hub(mock_vegehub: MagicMock):
     """Fixture for creating a mocked VegeHub instance."""
     return mock_vegehub
 
 
 @pytest.fixture
-def config_entry(mocked_hub, hass: HomeAssistant):
+def config_entry(mocked_hub: MagicMock, hass: HomeAssistant):
     """Mock a config entry."""
     return MagicMock(
         data={"mac": "1234567890AB", "host": "VegeHub1"},
