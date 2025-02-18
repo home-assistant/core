@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "minor_version": 1,
+  "key": "knx/config_store.json",
+  "data": {
+    "entities": {
+      "sensor": {
+        "knx_es_01JMAP2V63HHGW0C90HT8V56J3": {
+          "ga_sensor": {
+            "write": null,
+            "state": "1/1/1",
+            "passive": [],
+            "dpt": "9.001"
+          },
+          "state_class": null,
+          "device_class": null,
+          "always_callback": null,
+          "sync_state": null,
+          "name": "Demo Sensor",
+          "device_info": null,
+          "entity_category": null
+        }
+      }
+    },
+    "invalid_platform": {
+      "knx_es_01JMAP2V63HHGW0C90AGEKJH652": {
+        "name": "invalid"
+      }
+    }
+  }
+}

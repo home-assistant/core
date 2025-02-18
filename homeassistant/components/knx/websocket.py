@@ -9,12 +9,13 @@ from typing import TYPE_CHECKING, Any, Final, cast, overload
 
 import knx_frontend as knx_panel
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 from xknx.telegram import Telegram
 from xknxproject.exceptions import XknxProjectException
 
 from homeassistant.components import panel_custom, websocket_api
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, Platform
+from homeassistant.const import CONF_ENTITY_ID, CONF_PLATFORM, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -156,19 +157,6 @@ def provide_knx(
             func(hass, knx, connection, msg)
 
     return with_knx
-
-
-def vol_invalid_response(exc: vol.Invalid) -> dict[str, Any]:
-    """Format a Voluptuous validation exception into a structured error response."""
-    errors: list[dict[str, Any]] = [
-        {"path": [str(p) for p in error.path], "error": error.error_message}
-        for error in (exc.errors if isinstance(exc, vol.MultipleInvalid) else [exc])
-    ]
-
-    return {
-        "success": False,
-        "errors": errors,
-    }
 
 
 @websocket_api.require_admin
@@ -640,7 +628,7 @@ def get_entity_config_cls(platform: str) -> type[EntityConfiguration]:
     {
         vol.Required("type"): "knx/create_entity_v2",
         vol.Required(CONF_DATA): vol.Schema(
-            {CONF_PLATFORM: str}, extra=vol.ALLOW_EXTRA
+            {vol.Required(CONF_PLATFORM): str}, extra=vol.ALLOW_EXTRA
         ),
     }
 )
@@ -691,6 +679,7 @@ async def ws_create_entity_v2(
         )
 
     except (ValueError, TypeError) as err:
+        # The platform is either missing or not supported
         connection.send_error(
             message_id,
             websocket_api.const.ERR_NOT_SUPPORTED,
@@ -698,13 +687,13 @@ async def ws_create_entity_v2(
         )
         return
     except vol.Invalid as err:
-        connection.send_result(message_id, vol_invalid_response(err))
-        return
-    except ConfigStoreException as err:
         connection.send_error(
             message_id,
-            websocket_api.const.ERR_HOME_ASSISTANT_ERROR,
-            str(err),
+            websocket_api.const.ERR_INVALID_FORMAT,
+            humanize_error(
+                msg[CONF_DATA],
+                err,
+            ),
         )
         return
 
@@ -712,7 +701,7 @@ async def ws_create_entity_v2(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/get_entity_config_v2",
+        vol.Required(CONF_TYPE): "knx/get_entity_config_v2",
         vol.Required(CONF_ENTITY_ID): str,
     }
 )
@@ -741,7 +730,7 @@ def ws_get_entity_config_v2(
             msg["id"], websocket_api.const.ERR_HOME_ASSISTANT_ERROR, str(err)
         )
         return
-    except (ValueError, TypeError, Exception) as err:
+    except (ValueError, TypeError) as err:
         connection.send_error(
             msg["id"], websocket_api.const.ERR_NOT_SUPPORTED, str(err)
         )
@@ -751,7 +740,7 @@ def ws_get_entity_config_v2(
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
-        vol.Required("type"): "knx/update_entity_v2",
+        vol.Required(CONF_TYPE): "knx/update_entity_v2",
         vol.Required(CONF_ENTITY_ID): str,
         vol.Required(CONF_DATA): vol.Schema(
             {CONF_PLATFORM: str}, extra=vol.ALLOW_EXTRA
@@ -807,7 +796,8 @@ async def ws_update_entity_v2(
             EntityStoreValidationSuccess(success=True, entity_id=None),
         )
 
-    except TypeError as err:
+    except (ValueError, TypeError) as err:
+        # The platform is either missing or not supported
         connection.send_error(
             message_id,
             websocket_api.const.ERR_NOT_SUPPORTED,
@@ -815,7 +805,14 @@ async def ws_update_entity_v2(
         )
         return
     except vol.Invalid as err:
-        connection.send_result(message_id, vol_invalid_response(err))
+        connection.send_error(
+            message_id,
+            websocket_api.const.ERR_INVALID_FORMAT,
+            humanize_error(
+                msg[CONF_DATA],
+                err,
+            ),
+        )
         return
     except ConfigStoreException as err:
         connection.send_error(

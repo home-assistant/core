@@ -274,7 +274,7 @@ class KNXSystemSensor(SensorEntity):
 
 
 @dataclass
-class SensorConfig(EntityConfiguration, ABC):
+class BaseSensorConfig(EntityConfiguration, ABC):
     """Base configuration data class for a sensor entity.
 
     Provides core sensor-related fields. Subclasses must implement
@@ -294,11 +294,11 @@ class SensorConfig(EntityConfiguration, ABC):
     @classmethod
     def get_platform(cls) -> str:
         """Return the platform name for this configuration."""
-        return Platform.SENSOR.value
+        return str(Platform.SENSOR)
 
 
 @dataclass
-class UiSensorConfig(SensorConfig, Persistable):
+class UiSensorConfig(BaseSensorConfig, Persistable):
     """UI-oriented sensor configuration with storage serialization.
 
     Extends `BaseSensorConfig` to define how the sensor configuration
@@ -513,17 +513,6 @@ class UiSensorConfig(SensorConfig, Persistable):
         }
 
 
-class KnxUiSensorPlatformController(KnxUiEntityPlatformController):
-    """Class to manage dynamic adding and reloading of UI entities."""
-
-    async def create_entity(self, unique_id: str, config: dict[str, Any]) -> None:
-        """Add a new UI entity."""
-
-        sensorConfig = UiSensorConfig.from_storage_dict(config)
-        sensor = UiSensorEntity(self._knx_module, unique_id, sensorConfig)
-        await self._entity_platform.async_add_entities([sensor])
-
-
 class BaseSensorEntity(SensorEntity):
     """Base class for a KNX sensor."""
 
@@ -550,7 +539,7 @@ class UiSensorEntity(BaseSensorEntity, KnxUiEntity):
     _device: XknxSensor
 
     def __init__(
-        self, knx_module: KNXModule, unique_id: str, config: SensorConfig
+        self, knx_module: KNXModule, unique_id: str, config: BaseSensorConfig
     ) -> None:
         """Initialize of a KNX sensor."""
         super().__init__(knx_module, unique_id, {})
@@ -582,3 +571,14 @@ class UiSensorEntity(BaseSensorEntity, KnxUiEntity):
         self._attr_state_class = config.state_class
         self._attr_unique_id = unique_id
         self._attr_native_unit_of_measurement = self._device.unit_of_measurement()
+
+
+class KnxUiSensorPlatformController(KnxUiEntityPlatformController):
+    """Class to manage dynamic adding and reloading of UI entities."""
+
+    async def create_entity(self, unique_id: str, config: dict[str, Any]) -> None:
+        """Add a new UI entity."""
+
+        sensor_config = UiSensorConfig.from_storage_dict(config)
+        sensor = UiSensorEntity(self._knx_module, unique_id, sensor_config)
+        await self._entity_platform.async_add_entities([sensor])
