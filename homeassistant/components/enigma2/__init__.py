@@ -1,12 +1,9 @@
 """Support for Enigma2 devices."""
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import Enigma2UpdateCoordinator
-
-type Enigma2ConfigEntry = ConfigEntry[Enigma2UpdateCoordinator]
+from .coordinator import Enigma2ConfigEntry, Enigma2UpdateCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
 

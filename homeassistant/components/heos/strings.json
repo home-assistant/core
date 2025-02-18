@@ -71,6 +71,16 @@
     }
   },
   "services": {
+    "group_volume_set": {
+      "name": "Set group volume",
+      "description": "Sets the group's volume while preserving member volume ratios.",
+      "fields": {
+        "volume_level": {
+          "name": "Level",
+          "description": "The volume. 0 is inaudible, 1 is the maximum volume."
+        }
+      }
+    },
     "sign_in": {
       "name": "Sign in",
       "description": "Signs in to a HEOS account.",
@@ -94,8 +104,32 @@
     "action_error": {
       "message": "Unable to {action}: {error}"
     },
+    "entity_not_grouped": {
+      "message": "Entity {entity_id} is not joined to a group"
+    },
+    "entity_not_found": {
+      "message": "Entity {entity_id} was not found"
+    },
     "integration_not_loaded": {
       "message": "The HEOS integration is not loaded"
+    },
+    "sign_in_auth_error": {
+      "message": "Failed to sign in: Invalid username and/or password"
+    },
+    "sign_in_error": {
+      "message": "Unable to sign in: {error}"
+    },
+    "sign_out_error": {
+      "message": "Unable to sign out: {error}"
+    },
+    "not_heos_media_player": {
+      "message": "Entity {entity_id} is not a HEOS media player entity"
+    },
+    "unable_to_connect": {
+      "message": "Unable to connect to {host}"
+    },
+    "unable_to_get_players": {
+      "message": "Unexpected error retrieving players"
     },
     "unknown_source": {
       "message": "Unknown source: {source}"

@@ -78,6 +78,39 @@ def mock_delay_save() -> Generator[None]:
                     "last_attempted_automatic_backup": None,
                     "last_completed_automatic_backup": None,
                     "retention": {
+                        "copies": 0,
+                        "days": 0,
+                    },
+                    "schedule": {
+                        "state": "never",
+                    },
+                },
+            },
+            "key": DOMAIN,
+            "version": 1,
+        },
+        {
+            "data": {
+                "backups": [
+                    {
+                        "backup_id": "abc123",
+                        "failed_agent_ids": ["test.remote"],
+                    }
+                ],
+                "config": {
+                    "agents": {"test.remote": {"protected": True}},
+                    "create_backup": {
+                        "agent_ids": [],
+                        "include_addons": None,
+                        "include_all_addons": False,
+                        "include_database": True,
+                        "include_folders": None,
+                        "name": None,
+                        "password": None,
+                    },
+                    "last_attempted_automatic_backup": None,
+                    "last_completed_automatic_backup": None,
+                    "retention": {
                         "copies": None,
                         "days": None,
                     },

@@ -4,11 +4,13 @@ from dataclasses import dataclass
 from typing import Any
 
 from homeassistant.components.event import EventEntity, EventEntityDescription
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EVENT_KEY
+from . import DOMAIN, EVENT_KEY
 from .coordinator import OverseerrConfigEntry, OverseerrCoordinator
 from .entity import OverseerrEntity
 
@@ -42,14 +44,21 @@ EVENTS: tuple[OverseerrEventEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverseerrConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Overseerr sensor entities based on a config entry."""
 
     coordinator = entry.runtime_data
-    async_add_entities(
-        OverseerrEvent(coordinator, description) for description in EVENTS
+    ent_reg = er.async_get(hass)
+
+    event_entities_setup_before = ent_reg.async_get_entity_id(
+        Platform.EVENT, DOMAIN, f"{entry.entry_id}-media"
     )
+
+    if coordinator.push or event_entities_setup_before:
+        async_add_entities(
+            OverseerrEvent(coordinator, description) for description in EVENTS
+        )
 
 
 class OverseerrEvent(OverseerrEntity, EventEntity):
@@ -94,7 +103,7 @@ class OverseerrEvent(OverseerrEntity, EventEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return self._attr_available
+        return self._attr_available and self.coordinator.push
 
 
 def parse_event(event: dict[str, Any], nullable_fields: list[str]) -> dict[str, Any]:

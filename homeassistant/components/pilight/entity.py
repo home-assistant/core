@@ -10,7 +10,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import DOMAIN, EVENT, SERVICE_NAME
@@ -86,7 +86,7 @@ class PilightBaseDevice(RestoreEntity):
 
         self._brightness = 255
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
@@ -99,7 +99,7 @@ class PilightBaseDevice(RestoreEntity):
         return self._name
 
     @property
-    def assumed_state(self):
+    def assumed_state(self) -> bool:
         """Return True if unable to access real state of the entity."""
         return True
 

@@ -36,7 +36,7 @@ jobs:
 
       - name: Set up Python ${{ env.DEFAULT_PYTHON }}
         id: python
-        uses: actions/setup-python@v5.3.0
+        uses: actions/setup-python@v5.4.0
         with:
           python-version: ${{ env.DEFAULT_PYTHON }}
           check-latest: true
@@ -131,7 +131,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp312", "cp313"]
+        abi: ["cp313"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
@@ -180,7 +180,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        abi: ["cp312", "cp313"]
+        abi: ["cp313"]
         arch: ${{ fromJson(needs.init.outputs.architectures) }}
     steps:
       - name: Checkout the repository
