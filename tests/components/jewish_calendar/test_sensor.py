@@ -38,150 +38,116 @@ async def test_jewish_calendar_min_config(
 
 TEST_PARAMS = [
     (
-        dt(2018, 9, 3),
-        "UTC",
-        31.778,
-        35.235,
+        ("Jerusalem", dt(2018, 9, 3), {"state": "23 Elul 5778", "attr": None}),
         "english",
         "date",
-        False,
-        "23 Elul 5778",
-        None,
     ),
     (
-        dt(2018, 9, 3),
-        "UTC",
-        31.778,
-        35.235,
+        ("Jerusalem", dt(2018, 9, 3), {"state": 'כ"ג אלול ה\' תשע"ח', "attr": None}),
         "hebrew",
         "date",
-        False,
-        'כ"ג אלול ה\' תשע"ח',
-        None,
     ),
     (
-        dt(2018, 9, 10),
-        "UTC",
-        31.778,
-        35.235,
+        ("Jerusalem", dt(2018, 9, 10), {"state": "א' ראש השנה", "attr": None}),
         "hebrew",
         "holiday",
-        False,
-        "א' ראש השנה",
-        None,
     ),
     (
-        dt(2018, 9, 10),
-        "UTC",
-        31.778,
-        35.235,
+        (
+            "Jerusalem",
+            dt(2018, 9, 10),
+            {
+                "state": "Rosh Hashana I",
+                "attr": {
+                    "device_class": "enum",
+                    "friendly_name": "Jewish Calendar Holiday",
+                    "icon": "mdi:calendar-star",
+                    "id": "rosh_hashana_i",
+                    "type": "YOM_TOV",
+                    "options": HolidayDatabase(False).get_all_names("english"),
+                },
+            },
+        ),
         "english",
         "holiday",
-        False,
-        "Rosh Hashana I",
-        {
-            "device_class": "enum",
-            "friendly_name": "Jewish Calendar Holiday",
-            "icon": "mdi:calendar-star",
-            "id": "rosh_hashana_i",
-            "type": "YOM_TOV",
-            "options": HolidayDatabase(False).get_all_names("english"),
-        },
     ),
     (
-        dt(2024, 12, 31),
-        "UTC",
-        31.778,
-        35.235,
+        (
+            "Jerusalem",
+            dt(2024, 12, 31),
+            {
+                "state": "Chanukah, Rosh Chodesh",
+                "attr": {
+                    "device_class": "enum",
+                    "friendly_name": "Jewish Calendar Holiday",
+                    "icon": "mdi:calendar-star",
+                    "id": "chanukah, rosh_chodesh",
+                    "type": "MELACHA_PERMITTED_HOLIDAY, ROSH_CHODESH",
+                    "options": HolidayDatabase(False).get_all_names("english"),
+                },
+            },
+        ),
         "english",
         "holiday",
-        False,
-        "Chanukah, Rosh Chodesh",
-        {
-            "device_class": "enum",
-            "friendly_name": "Jewish Calendar Holiday",
-            "icon": "mdi:calendar-star",
-            "id": "chanukah, rosh_chodesh",
-            "type": "MELACHA_PERMITTED_HOLIDAY, ROSH_CHODESH",
-            "options": HolidayDatabase(False).get_all_names("english"),
-        },
     ),
     (
-        dt(2018, 9, 8),
-        "UTC",
-        31.778,
-        35.235,
+        (
+            "Jerusalem",
+            dt(2018, 9, 8),
+            {
+                "state": "נצבים",
+                "attr": {
+                    "device_class": "enum",
+                    "friendly_name": "Jewish Calendar Parshat Hashavua",
+                    "icon": "mdi:book-open-variant",
+                    "options": list(Parasha),
+                },
+            },
+        ),
         "hebrew",
         "parshat_hashavua",
-        False,
-        "נצבים",
-        {
-            "device_class": "enum",
-            "friendly_name": "Jewish Calendar Parshat Hashavua",
-            "icon": "mdi:book-open-variant",
-            "options": list(Parasha),
-        },
     ),
     (
-        dt(2018, 9, 8),
-        "America/New_York",
-        40.7128,
-        -74.0060,
+        ("NYC", dt(2018, 9, 8), {"state": dt(2018, 9, 8, 19, 47), "attr": None}),
         "hebrew",
         "t_set_hakochavim",
-        True,
-        dt(2018, 9, 8, 19, 47),
-        None,
     ),
     (
-        dt(2018, 9, 8),
-        "Asia/Jerusalem",
-        31.778,
-        35.235,
+        ("Jerusalem", dt(2018, 9, 8), {"state": dt(2018, 9, 8, 19, 21), "attr": None}),
         "hebrew",
         "t_set_hakochavim",
-        False,
-        dt(2018, 9, 8, 19, 21),
-        None,
     ),
     (
-        dt(2018, 10, 14),
-        "Asia/Jerusalem",
-        31.778,
-        35.235,
+        ("Jerusalem", dt(2018, 10, 14), {"state": "לך לך", "attr": None}),
         "hebrew",
         "parshat_hashavua",
-        False,
-        "לך לך",
-        None,
     ),
     (
-        dt(2018, 10, 14, 17, 0, 0),
-        "Asia/Jerusalem",
-        31.778,
-        35.235,
+        (
+            "Jerusalem",
+            dt(2018, 10, 14, 17, 0, 0),
+            {"state": "ה' מרחשוון ה' תשע\"ט", "attr": None},
+        ),
         "hebrew",
         "date",
-        False,
-        "ה' מרחשוון ה' תשע\"ט",
-        None,
     ),
     (
-        dt(2018, 10, 14, 19, 0, 0),
-        "Asia/Jerusalem",
-        31.778,
-        35.235,
+        (
+            "Jerusalem",
+            dt(2018, 10, 14, 19, 0, 0),
+            {
+                "state": "ו' מרחשוון ה' תשע\"ט",
+                "attr": {
+                    "hebrew_year": "5779",
+                    "hebrew_month_name": "מרחשוון",
+                    "hebrew_day": "6",
+                    "icon": "mdi:star-david",
+                    "friendly_name": "Jewish Calendar Date",
+                },
+            },
+        ),
         "hebrew",
         "date",
-        False,
-        "ו' מרחשוון ה' תשע\"ט",
-        {
-            "hebrew_year": "5779",
-            "hebrew_month_name": "מרחשוון",
-            "hebrew_day": "6",
-            "icon": "mdi:star-david",
-            "friendly_name": "Jewish Calendar Date",
-        },
     ),
 ]
 
@@ -201,68 +167,39 @@ TEST_IDS = [
 
 
 @pytest.mark.parametrize(
-    (
-        "now",
-        "tzname",
-        "latitude",
-        "longitude",
-        "language",
-        "sensor",
-        "diaspora",
-        "result",
-        "attrs",
-    ),
+    ("jcal_params", "language", "sensor"),
     TEST_PARAMS,
     ids=TEST_IDS,
+    indirect=["jcal_params", "language"],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_jewish_calendar_sensor(
     hass: HomeAssistant,
-    now,
-    tzname,
-    latitude,
-    longitude,
-    language,
-    sensor,
-    diaspora,
-    result,
-    attrs,
+    jcal_params: dict,
+    config_entry: MockConfigEntry,
+    sensor: str,
+    setup_hass: None,
 ) -> None:
     """Test Jewish calendar sensor output."""
-    time_zone = dt_util.get_time_zone(tzname)
-    test_time = now.replace(tzinfo=time_zone)
-
-    await hass.config.async_set_time_zone(tzname)
-    hass.config.latitude = latitude
-    hass.config.longitude = longitude
+    test_time = jcal_params["dtime"]
 
     with freeze_time(test_time):
-        entry = MockConfigEntry(
-            title=DEFAULT_NAME,
-            domain=DOMAIN,
-            data={
-                CONF_LANGUAGE: language,
-                CONF_DIASPORA: diaspora,
-            },
-        )
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         future = test_time + timedelta(seconds=30)
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    result = (
-        dt_util.as_utc(result.replace(tzinfo=time_zone)).isoformat()
-        if isinstance(result, dt)
-        else result
-    )
+    result = jcal_params["results"]["state"]
+    if isinstance(result, dt):
+        result = dt_util.as_utc(result).isoformat()
 
     sensor_object = hass.states.get(f"sensor.jewish_calendar_{sensor}")
     assert sensor_object.state == result
 
-    if attrs:
+    if attrs := getattr(jcal_params, "results", None):
         assert sensor_object.attributes == attrs
 
 
