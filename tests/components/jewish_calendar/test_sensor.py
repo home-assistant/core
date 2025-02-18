@@ -25,23 +25,11 @@ from . import make_jerusalem_test_params, make_nyc_test_params
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-async def test_jewish_calendar_min_config(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("language", ["english", "hebrew"])
+async def test_jewish_calendar_min_config(
+    hass: HomeAssistant, setup_integration: MockConfigEntry
+) -> None:
     """Test minimum jewish calendar configuration."""
-    entry = MockConfigEntry(title=DEFAULT_NAME, domain=DOMAIN, data={})
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert hass.states.get("sensor.jewish_calendar_date") is not None
-
-
-async def test_jewish_calendar_hebrew(hass: HomeAssistant) -> None:
-    """Test jewish calendar sensor with language set to hebrew."""
-    entry = MockConfigEntry(
-        title=DEFAULT_NAME, domain=DOMAIN, data={"language": "hebrew"}
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
     assert hass.states.get("sensor.jewish_calendar_date") is not None
 
 
