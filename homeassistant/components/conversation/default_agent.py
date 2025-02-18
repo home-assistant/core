@@ -53,8 +53,10 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_added_domain
+from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
+from .chat_log import AssistantContent, async_get_chat_log
 from .const import (
     DATA_DEFAULT_ENTITY,
     DEFAULT_EXPOSED_ATTRIBUTES,
@@ -63,7 +65,6 @@ from .const import (
 )
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
-from .session import Content, async_get_chat_log
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 _LOGGER = logging.getLogger(__name__)
@@ -379,9 +380,8 @@ class DefaultAgent(ConversationEntity):
                 )
 
             speech: str = response.speech.get("plain", {}).get("speech", "")
-            chat_log.async_add_message(
-                Content(
-                    role="assistant",
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(
                     agent_id=user_input.agent_id,
                     content=speech,
                 )
@@ -915,25 +915,19 @@ class DefaultAgent(ConversationEntity):
     def _load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents for language (run inside executor)."""
         intents_dict: dict[str, Any] = {}
-        language_variant: str | None = None
         supported_langs = set(get_languages())
 
         # Choose a language variant upfront and commit to it for custom
         # sentences, etc.
-        all_language_variants = {lang.lower(): lang for lang in supported_langs}
+        lang_matches = language_util.matches(language, supported_langs)
 
-        # en-US, en_US, en, ...
-        for maybe_variant in _get_language_variations(language):
-            matching_variant = all_language_variants.get(maybe_variant.lower())
-            if matching_variant:
-                language_variant = matching_variant
-                break
-
-        if not language_variant:
+        if not lang_matches:
             _LOGGER.warning(
                 "Unable to find supported language variant for %s", language
             )
             return None
+
+        language_variant = lang_matches[0]
 
         # Load intents for this language variant
         lang_variant_intents = get_intents(language_variant, json_load=json_load)

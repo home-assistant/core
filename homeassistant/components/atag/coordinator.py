@@ -19,17 +19,22 @@ type AtagConfigEntry = ConfigEntry[AtagDataUpdateCoordinator]
 class AtagDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Atag data update coordinator."""
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    config_entry: AtagConfigEntry
+
+    def __init__(self, hass: HomeAssistant, config_entry: AtagConfigEntry) -> None:
         """Initialize Atag coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Atag",
             update_interval=timedelta(seconds=60),
         )
 
         self.atag = AtagOne(
-            session=async_get_clientsession(hass), **entry.data, device=entry.unique_id
+            session=async_get_clientsession(hass),
+            **config_entry.data,
+            device=config_entry.unique_id,
         )
 
     async def _async_update_data(self) -> None:

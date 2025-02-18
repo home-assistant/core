@@ -11,7 +11,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.backup import (
     AgentBackup,
     BackupAgentError,
-    BackupAgentPlatformProtocol,
+    BackupNotFound,
     BackupReaderWriterError,
     Folder,
     store,
@@ -19,6 +19,7 @@ from homeassistant.components.backup import (
 from homeassistant.components.backup.agent import BackupAgentUnreachableError
 from homeassistant.components.backup.const import DATA_MANAGER, DOMAIN
 from homeassistant.components.backup.manager import (
+    AgentBackupStatus,
     CreateBackupEvent,
     CreateBackupState,
     ManagerBackup,
@@ -26,15 +27,12 @@ from homeassistant.components.backup.manager import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.setup import async_setup_component
 
 from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
-    BackupAgentTest,
     setup_backup_integration,
-    setup_backup_platform,
 )
 
 from tests.common import async_fire_time_changed, async_mock_service
@@ -97,15 +95,6 @@ def mock_delay_save() -> Generator[None]:
         yield
 
 
-@pytest.fixture(name="delete_backup")
-def mock_delete_backup() -> Generator[AsyncMock]:
-    """Mock manager delete backup."""
-    with patch(
-        "homeassistant.components.backup.BackupManager.async_delete_backup"
-    ) as mock_delete_backup:
-        yield mock_delete_backup
-
-
 @pytest.fixture(name="get_backups")
 def mock_get_backups() -> Generator[AsyncMock]:
     """Mock manager get backups."""
@@ -119,9 +108,9 @@ def mock_get_backups() -> Generator[AsyncMock]:
     ("remote_agents", "remote_backups"),
     [
         ([], {}),
-        (["remote"], {}),
-        (["remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
-        (["remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
+        (["test.remote"], {}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
     ],
 )
 async def test_info(
@@ -147,7 +136,8 @@ async def test_info(
 
 
 @pytest.mark.parametrize(
-    "side_effect", [HomeAssistantError("Boom!"), BackupAgentUnreachableError]
+    "side_effect",
+    [Exception("Oops"), HomeAssistantError("Boom!"), BackupAgentUnreachableError],
 )
 async def test_info_with_errors(
     hass: HomeAssistant,
@@ -156,28 +146,30 @@ async def test_info_with_errors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test getting backup info with one unavailable agent."""
-    await setup_backup_integration(
-        hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}
+    mock_agents = await setup_backup_integration(
+        hass,
+        with_hassio=False,
+        backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]},
+        remote_agents=["test.remote"],
     )
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
+    mock_agents["test.remote"].async_list_backups.side_effect = side_effect
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch.object(BackupAgentTest, "async_list_backups", side_effect=side_effect):
-        await client.send_json_auto_id({"type": "backup/info"})
-        assert await client.receive_json() == snapshot
+    await client.send_json_auto_id({"type": "backup/info"})
+    assert await client.receive_json() == snapshot
 
 
 @pytest.mark.parametrize(
     ("remote_agents", "backups"),
     [
         ([], {}),
-        (["remote"], {LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}),
-        (["remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
-        (["remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
+        (["test.remote"], {LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
         (
-            ["remote"],
+            ["test.remote"],
             {
                 LOCAL_AGENT_ID: [TEST_BACKUP_ABC123],
                 "test.remote": [TEST_BACKUP_ABC123],
@@ -208,7 +200,8 @@ async def test_details(
 
 
 @pytest.mark.parametrize(
-    "side_effect", [HomeAssistantError("Boom!"), BackupAgentUnreachableError]
+    "side_effect",
+    [Exception("Oops"), HomeAssistantError("Boom!"), BackupAgentUnreachableError],
 )
 async def test_details_with_errors(
     hass: HomeAssistant,
@@ -217,18 +210,18 @@ async def test_details_with_errors(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test getting backup info with one unavailable agent."""
-    await setup_backup_integration(
-        hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}
+    mock_agents = await setup_backup_integration(
+        hass,
+        with_hassio=False,
+        backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]},
+        remote_agents=["test.remote"],
     )
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
+    mock_agents["test.remote"].async_get_backup.side_effect = side_effect
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch.object(BackupAgentTest, "async_get_backup", side_effect=side_effect),
-    ):
+    with patch("pathlib.Path.exists", return_value=True):
         await client.send_json_auto_id(
             {"type": "backup/details", "backup_id": "abc123"}
         )
@@ -239,11 +232,11 @@ async def test_details_with_errors(
     ("remote_agents", "backups"),
     [
         ([], {}),
-        (["remote"], {LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}),
-        (["remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
-        (["remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
+        (["test.remote"], {LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_DEF456]}),
         (
-            ["remote"],
+            ["test.remote"],
             {
                 LOCAL_AGENT_ID: [TEST_BACKUP_ABC123],
                 "test.remote": [TEST_BACKUP_ABC123],
@@ -309,17 +302,22 @@ async def test_delete_with_errors(
         "version": store.STORAGE_VERSION,
         "minor_version": store.STORAGE_VERSION_MINOR,
     }
-    await setup_backup_integration(
-        hass, with_hassio=False, backups={LOCAL_AGENT_ID: [TEST_BACKUP_ABC123]}
+    mock_agents = await setup_backup_integration(
+        hass,
+        with_hassio=False,
+        backups={
+            LOCAL_AGENT_ID: [TEST_BACKUP_ABC123],
+            "test.remote": [TEST_BACKUP_ABC123],
+        },
+        remote_agents=["test.remote"],
     )
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
+    mock_agents["test.remote"].async_delete_backup.side_effect = side_effect
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch.object(BackupAgentTest, "async_delete_backup", side_effect=side_effect):
-        await client.send_json_auto_id({"type": "backup/delete", "backup_id": "abc123"})
-        assert await client.receive_json() == snapshot
+    await client.send_json_auto_id({"type": "backup/delete", "backup_id": "abc123"})
+    assert await client.receive_json() == snapshot
 
     await client.send_json_auto_id({"type": "backup/info"})
     assert await client.receive_json() == snapshot
@@ -331,22 +329,22 @@ async def test_agent_delete_backup(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test deleting a backup file with a mock agent."""
-    await setup_backup_integration(hass)
-    hass.data[DATA_MANAGER].backup_agents = {"domain.test": BackupAgentTest("test")}
+    mock_agents = await setup_backup_integration(
+        hass, with_hassio=False, remote_agents=["test.remote"]
+    )
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
 
-    with patch.object(BackupAgentTest, "async_delete_backup") as delete_mock:
-        await client.send_json_auto_id(
-            {
-                "type": "backup/delete",
-                "backup_id": "abc123",
-            }
-        )
-        assert await client.receive_json() == snapshot
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": "abc123",
+        }
+    )
+    assert await client.receive_json() == snapshot
 
-    assert delete_mock.call_args == call("abc123")
+    assert mock_agents["test.remote"].async_delete_backup.call_args == call("abc123")
 
 
 @pytest.mark.parametrize(
@@ -593,17 +591,9 @@ async def test_generate_with_default_settings_calls_create(
     client = await hass_ws_client(hass)
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-13T12:01:00+01:00")
-    remote_agent = BackupAgentTest("remote", backups=[])
-    await setup_backup_platform(
-        hass,
-        domain="test",
-        platform=Mock(
-            async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
-            spec_set=BackupAgentPlatformProtocol,
-        ),
+    mock_agents = await setup_backup_integration(
+        hass, with_hassio=False, remote_agents=["test.remote"]
     )
-    await async_setup_component(hass, DOMAIN, {})
-    await hass.async_block_till_done()
 
     await client.send_json_auto_id(
         {"type": "backup/config/update", "create_backup": create_backup_settings}
@@ -628,15 +618,13 @@ async def test_generate_with_default_settings_calls_create(
         is None
     )
 
-    with patch.object(remote_agent, "async_upload_backup", side_effect=side_effect):
-        await client.send_json_auto_id(
-            {"type": "backup/generate_with_automatic_settings"}
-        )
-        result = await client.receive_json()
-        assert result["success"]
-        assert result["result"] == {"backup_job_id": "abc123"}
+    mock_agents["test.remote"].async_upload_backup.side_effect = side_effect
+    await client.send_json_auto_id({"type": "backup/generate_with_automatic_settings"})
+    result = await client.receive_json()
+    assert result["success"]
+    assert result["result"] == {"backup_job_id": "abc123"}
 
-        await hass.async_block_till_done()
+    await hass.async_block_till_done()
 
     create_backup.assert_called_once_with(**expected_call_params)
 
@@ -693,8 +681,8 @@ async def test_restore_local_agent(
 @pytest.mark.parametrize(
     ("remote_agents", "backups"),
     [
-        (["remote"], {}),
-        (["remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
+        (["test.remote"], {}),
+        (["test.remote"], {"test.remote": [TEST_BACKUP_ABC123]}),
     ],
 )
 async def test_restore_remote_agent(
@@ -705,6 +693,7 @@ async def test_restore_remote_agent(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test calling the restore command."""
+
     await setup_backup_integration(
         hass, with_hassio=False, backups=backups, remote_agents=remote_agents
     )
@@ -896,8 +885,9 @@ async def test_agents_info(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test getting backup agents info."""
-    await setup_backup_integration(hass, with_hassio=False)
-    hass.data[DATA_MANAGER].backup_agents["domain.test"] = BackupAgentTest("test")
+    await setup_backup_integration(
+        hass, with_hassio=False, remote_agents=["test.remote"]
+    )
 
     client = await hass_ws_client(hass)
     await hass.async_block_till_done()
@@ -906,7 +896,7 @@ async def test_agents_info(
     assert await client.receive_json() == snapshot
 
 
-@pytest.mark.usefixtures("create_backup", "delete_backup", "get_backups")
+@pytest.mark.usefixtures("get_backups")
 @pytest.mark.parametrize(
     "storage_data",
     [
@@ -1156,7 +1146,7 @@ async def test_config_info(
     assert await client.receive_json() == snapshot
 
 
-@pytest.mark.usefixtures("create_backup", "delete_backup", "get_backups")
+@pytest.mark.usefixtures("get_backups")
 @pytest.mark.parametrize(
     "commands",
     [
@@ -1321,7 +1311,7 @@ async def test_config_update(
     assert hass_storage[DOMAIN] == snapshot
 
 
-@pytest.mark.usefixtures("create_backup", "delete_backup", "get_backups")
+@pytest.mark.usefixtures("get_backups")
 @pytest.mark.parametrize(
     "command",
     [
@@ -1370,6 +1360,14 @@ async def test_config_update(
         {
             "type": "backup/config/update",
             "agents": {"test-agent1": {"favorite": True}},
+        },
+        {
+            "type": "backup/config/update",
+            "retention": {"copies": 0},
+        },
+        {
+            "type": "backup/config/update",
+            "retention": {"days": 0},
         },
     ],
 )
@@ -1735,7 +1733,7 @@ async def test_config_schedule_logic(
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-11 12:00:00+01:00")
 
-    await setup_backup_integration(hass, remote_agents=["test-agent"])
+    await setup_backup_integration(hass, remote_agents=["test.test-agent"])
     await hass.async_block_till_done()
 
     for command in commands:
@@ -1778,14 +1776,13 @@ async def test_config_schedule_logic(
         "command",
         "backups",
         "get_backups_agent_errors",
-        "delete_backup_agent_errors",
+        "delete_backup_side_effects",
         "last_backup_time",
         "next_time",
         "backup_time",
         "backup_calls",
         "get_backups_calls",
         "delete_calls",
-        "delete_args_list",
     ),
     [
         (
@@ -1797,21 +1794,25 @@ async def test_config_schedule_logic(
             },
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -1824,8 +1825,7 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,  # we get backups even if backup retention copies is None
-            0,
-            [],
+            {},
         ),
         (
             {
@@ -1836,21 +1836,25 @@ async def test_config_schedule_logic(
             },
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -1863,8 +1867,7 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            0,
-            [],
+            {},
         ),
         (
             {
@@ -1875,11 +1878,13 @@ async def test_config_schedule_logic(
             },
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
@@ -1892,8 +1897,7 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            0,
-            [],
+            {},
         ),
         (
             {
@@ -1904,26 +1908,46 @@ async def test_config_schedule_logic(
             },
             {
                 "backup-1": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
                     date="2024-11-09T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-5": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -1936,8 +1960,75 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
+            {
+                "test.test-agent": [call("backup-1")],
+                "test.test-agent2": [call("backup-1")],
+            },
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test.test-agent"]},
+                "retention": {"copies": 3, "days": None},
+                "schedule": {"recurrence": "daily"},
+            },
+            {
+                "backup-1": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
+                    date="2024-11-09T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
+                    date="2024-11-10T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
+                    date="2024-11-11T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                    },
+                    date="2024-11-12T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-5": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
+                    date="2024-11-12T04:45:00+01:00",
+                    with_automatic_settings=False,
+                    spec=ManagerBackup,
+                ),
+            },
+            {},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
             1,
-            [call("backup-1")],
+            1,
+            {
+                "test.test-agent": [call("backup-1")],
+                "test.test-agent2": [call("backup-1")],
+            },
         ),
         (
             {
@@ -1948,26 +2039,31 @@ async def test_config_schedule_logic(
             },
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-09T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-5": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -1980,8 +2076,7 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            2,
-            [call("backup-1"), call("backup-2")],
+            {"test.test-agent": [call("backup-1"), call("backup-2")]},
         ),
         (
             {
@@ -1992,35 +2087,38 @@ async def test_config_schedule_logic(
             },
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
-            {"test-agent": BackupAgentError("Boom!")},
+            {"test.test-agent": BackupAgentError("Boom!")},
             {},
             "2024-11-11T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            1,
-            [call("backup-1")],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             {
@@ -2031,65 +2129,88 @@ async def test_config_schedule_logic(
             },
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
             {},
-            {"test-agent": BackupAgentError("Boom!")},
+            {"test.test-agent": BackupAgentError("Boom!")},
             "2024-11-11T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            1,
-            [call("backup-1")],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test.test-agent"]},
-                "retention": {"copies": 0, "days": None},
+                "retention": {"copies": 1, "days": None},
                 "schedule": {"recurrence": "daily"},
             },
             {
                 "backup-1": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
                     date="2024-11-09T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-5": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -2102,23 +2223,67 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            3,
-            [call("backup-1"), call("backup-2"), call("backup-3")],
+            {
+                "test.test-agent": [
+                    call("backup-1"),
+                    call("backup-2"),
+                    call("backup-3"),
+                ],
+                "test.test-agent2": [
+                    call("backup-1"),
+                    call("backup-2"),
+                    call("backup-3"),
+                ],
+            },
         ),
         (
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test.test-agent"]},
-                "retention": {"copies": 0, "days": None},
+                "retention": {"copies": 1, "days": None},
                 "schedule": {"recurrence": "daily"},
             },
             {
                 "backup-1": MagicMock(
-                    date="2024-11-12T04:45:00+01:00",
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
+                    date="2024-11-09T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
+                    date="2024-11-10T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-3": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
+                    date="2024-11-11T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-4": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                    },
+                    date="2024-11-12T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-5": MagicMock(
+                    agents={
+                        "test.test-agent": MagicMock(spec=AgentBackupStatus),
+                        "test.test-agent2": MagicMock(spec=AgentBackupStatus),
+                    },
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -2131,8 +2296,44 @@ async def test_config_schedule_logic(
             "2024-11-12T04:45:00+01:00",
             1,
             1,
-            0,
-            [],
+            {
+                "test.test-agent": [
+                    call("backup-1"),
+                    call("backup-2"),
+                    call("backup-3"),
+                ],
+                "test.test-agent2": [call("backup-1"), call("backup-2")],
+            },
+        ),
+        (
+            {
+                "type": "backup/config/update",
+                "create_backup": {"agent_ids": ["test.test-agent"]},
+                "retention": {"copies": 1, "days": None},
+                "schedule": {"recurrence": "daily"},
+            },
+            {
+                "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-12T04:45:00+01:00",
+                    with_automatic_settings=True,
+                    spec=ManagerBackup,
+                ),
+                "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
+                    date="2024-11-12T04:45:00+01:00",
+                    with_automatic_settings=False,
+                    spec=ManagerBackup,
+                ),
+            },
+            {},
+            {},
+            "2024-11-11T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            "2024-11-12T04:45:00+01:00",
+            1,
+            1,
+            {},
         ),
     ],
 )
@@ -2143,19 +2344,17 @@ async def test_config_retention_copies_logic(
     freezer: FrozenDateTimeFactory,
     hass_storage: dict[str, Any],
     create_backup: AsyncMock,
-    delete_backup: AsyncMock,
     get_backups: AsyncMock,
     command: dict[str, Any],
     backups: dict[str, Any],
     get_backups_agent_errors: dict[str, Exception],
-    delete_backup_agent_errors: dict[str, Exception],
+    delete_backup_side_effects: dict[str, Exception],
     last_backup_time: str,
     next_time: str,
     backup_time: str,
     backup_calls: int,
     get_backups_calls: int,
-    delete_calls: int,
-    delete_args_list: Any,
+    delete_calls: dict[str, Any],
 ) -> None:
     """Test config backup retention copies logic."""
     created_backup: MagicMock = create_backup.return_value[1].result().backup
@@ -2193,12 +2392,16 @@ async def test_config_retention_copies_logic(
         "minor_version": store.STORAGE_VERSION_MINOR,
     }
     get_backups.return_value = (backups, get_backups_agent_errors)
-    delete_backup.return_value = delete_backup_agent_errors
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-11 12:00:00+01:00")
 
-    await setup_backup_integration(hass, remote_agents=["test-agent"])
+    mock_agents = await setup_backup_integration(
+        hass, remote_agents=["test.test-agent", "test.test-agent2"]
+    )
     await hass.async_block_till_done()
+
+    for agent_id, agent in mock_agents.items():
+        agent.async_delete_backup.side_effect = delete_backup_side_effects.get(agent_id)
 
     await client.send_json_auto_id(command)
     result = await client.receive_json()
@@ -2210,8 +2413,10 @@ async def test_config_retention_copies_logic(
     await hass.async_block_till_done()
     assert create_backup.call_count == backup_calls
     assert get_backups.call_count == get_backups_calls
-    assert delete_backup.call_count == delete_calls
-    assert delete_backup.call_args_list == delete_args_list
+    for agent_id, agent in mock_agents.items():
+        agent_delete_calls = delete_calls.get(agent_id, [])
+        assert agent.async_delete_backup.call_count == len(agent_delete_calls)
+        assert agent.async_delete_backup.call_args_list == agent_delete_calls
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert (
@@ -2242,11 +2447,9 @@ async def test_config_retention_copies_logic(
         "config_command",
         "backups",
         "get_backups_agent_errors",
-        "delete_backup_agent_errors",
         "backup_calls",
         "get_backups_calls",
         "delete_calls",
-        "delete_args_list",
     ),
     [
         (
@@ -2258,32 +2461,34 @@ async def test_config_retention_copies_logic(
             },
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
-            {},
             {},
             1,
             1,  # we get backups even if backup retention copies is None
-            0,
-            [],
+            {},
         ),
         (
             {
@@ -2294,32 +2499,34 @@ async def test_config_retention_copies_logic(
             },
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
             {},
+            1,
+            1,
             {},
-            1,
-            1,
-            0,
-            [],
         ),
         (
             {
@@ -2330,37 +2537,40 @@ async def test_config_retention_copies_logic(
             },
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-09T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-5": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
             {},
-            {},
             1,
             1,
-            1,
-            [call("backup-1")],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             {
@@ -2371,37 +2581,40 @@ async def test_config_retention_copies_logic(
             },
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-09T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-5": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-12T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
                 ),
             },
             {},
-            {},
             1,
             1,
-            2,
-            [call("backup-1"), call("backup-2")],
+            {"test.test-agent": [call("backup-1"), call("backup-2")]},
         ),
     ],
 )
@@ -2411,18 +2624,15 @@ async def test_config_retention_copies_logic_manual_backup(
     freezer: FrozenDateTimeFactory,
     hass_storage: dict[str, Any],
     create_backup: AsyncMock,
-    delete_backup: AsyncMock,
     get_backups: AsyncMock,
     config_command: dict[str, Any],
     backup_command: dict[str, Any],
     backups: dict[str, Any],
     get_backups_agent_errors: dict[str, Exception],
-    delete_backup_agent_errors: dict[str, Exception],
     backup_time: str,
     backup_calls: int,
     get_backups_calls: int,
-    delete_calls: int,
-    delete_args_list: Any,
+    delete_calls: dict[str, Any],
 ) -> None:
     """Test config backup retention copies logic for manual backup."""
     created_backup: MagicMock = create_backup.return_value[1].result().backup
@@ -2460,11 +2670,12 @@ async def test_config_retention_copies_logic_manual_backup(
         "minor_version": store.STORAGE_VERSION_MINOR,
     }
     get_backups.return_value = (backups, get_backups_agent_errors)
-    delete_backup.return_value = delete_backup_agent_errors
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-11 12:00:00+01:00")
 
-    await setup_backup_integration(hass, remote_agents=["test-agent"])
+    mock_agents = await setup_backup_integration(
+        hass, remote_agents=["test.test-agent"]
+    )
     await hass.async_block_till_done()
 
     await client.send_json_auto_id(config_command)
@@ -2481,8 +2692,10 @@ async def test_config_retention_copies_logic_manual_backup(
 
     assert create_backup.call_count == backup_calls
     assert get_backups.call_count == get_backups_calls
-    assert delete_backup.call_count == delete_calls
-    assert delete_backup.call_args_list == delete_args_list
+    for agent_id, agent in mock_agents.items():
+        agent_delete_calls = delete_calls.get(agent_id, [])
+        assert agent.async_delete_backup.call_count == len(agent_delete_calls)
+        assert agent.async_delete_backup.call_args_list == agent_delete_calls
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
     assert (
@@ -2501,13 +2714,12 @@ async def test_config_retention_copies_logic_manual_backup(
         "commands",
         "backups",
         "get_backups_agent_errors",
-        "delete_backup_agent_errors",
+        "delete_backup_side_effects",
         "last_backup_time",
         "start_time",
         "next_time",
         "get_backups_calls",
         "delete_calls",
-        "delete_args_list",
     ),
     [
         # No config update - cleanup backups older than 2 days
@@ -2516,16 +2728,19 @@ async def test_config_retention_copies_logic_manual_backup(
             [],
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -2537,8 +2752,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            1,
-            [call("backup-1")],
+            {"test.test-agent": [call("backup-1")]},
         ),
         # No config update - No cleanup
         (
@@ -2546,16 +2760,19 @@ async def test_config_retention_copies_logic_manual_backup(
             [],
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -2567,8 +2784,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             0,
-            0,
-            [],
+            {},
         ),
         # Unchanged config
         (
@@ -2583,16 +2799,19 @@ async def test_config_retention_copies_logic_manual_backup(
             ],
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -2604,8 +2823,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            1,
-            [call("backup-1")],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             None,
@@ -2619,16 +2837,19 @@ async def test_config_retention_copies_logic_manual_backup(
             ],
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -2640,8 +2861,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            1,
-            [call("backup-1")],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             None,
@@ -2655,16 +2875,19 @@ async def test_config_retention_copies_logic_manual_backup(
             ],
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -2676,8 +2899,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            0,
-            [],
+            {},
         ),
         (
             None,
@@ -2691,21 +2913,25 @@ async def test_config_retention_copies_logic_manual_backup(
             ],
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-09T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -2717,8 +2943,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            2,
-            [call("backup-1"), call("backup-2")],
+            {"test.test-agent": [call("backup-1"), call("backup-2")]},
         ),
         (
             None,
@@ -2732,16 +2957,19 @@ async def test_config_retention_copies_logic_manual_backup(
             ],
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -2753,8 +2981,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            1,
-            [call("backup-1")],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             None,
@@ -2768,16 +2995,19 @@ async def test_config_retention_copies_logic_manual_backup(
             ],
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -2789,8 +3019,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            1,
-            [call("backup-1")],
+            {"test.test-agent": [call("backup-1")]},
         ),
         (
             None,
@@ -2798,27 +3027,31 @@ async def test_config_retention_copies_logic_manual_backup(
                 {
                     "type": "backup/config/update",
                     "create_backup": {"agent_ids": ["test-agent"]},
-                    "retention": {"copies": None, "days": 0},
+                    "retention": {"copies": None, "days": 1},
                     "schedule": {"recurrence": "never"},
                 }
             ],
             {
                 "backup-1": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-09T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-2": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-3": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-11T04:45:00+01:00",
                     with_automatic_settings=True,
                     spec=ManagerBackup,
                 ),
                 "backup-4": MagicMock(
+                    agents={"test.test-agent": MagicMock(spec=AgentBackupStatus)},
                     date="2024-11-10T04:45:00+01:00",
                     with_automatic_settings=False,
                     spec=ManagerBackup,
@@ -2830,8 +3063,7 @@ async def test_config_retention_copies_logic_manual_backup(
             "2024-11-11T12:00:00+01:00",
             "2024-11-12T12:00:00+01:00",
             1,
-            2,
-            [call("backup-1"), call("backup-2")],
+            {"test.test-agent": [call("backup-1"), call("backup-2")]},
         ),
     ],
 )
@@ -2840,19 +3072,17 @@ async def test_config_retention_days_logic(
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     hass_storage: dict[str, Any],
-    delete_backup: AsyncMock,
     get_backups: AsyncMock,
     stored_retained_days: int | None,
     commands: list[dict[str, Any]],
     backups: dict[str, Any],
     get_backups_agent_errors: dict[str, Exception],
-    delete_backup_agent_errors: dict[str, Exception],
+    delete_backup_side_effects: dict[str, Exception],
     last_backup_time: str,
     start_time: str,
     next_time: str,
     get_backups_calls: int,
-    delete_calls: int,
-    delete_args_list: list[Any],
+    delete_calls: dict[str, Any],
 ) -> None:
     """Test config backup retention logic."""
     client = await hass_ws_client(hass)
@@ -2887,12 +3117,16 @@ async def test_config_retention_days_logic(
         "minor_version": store.STORAGE_VERSION_MINOR,
     }
     get_backups.return_value = (backups, get_backups_agent_errors)
-    delete_backup.return_value = delete_backup_agent_errors
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to(start_time)
 
-    await setup_backup_integration(hass)
+    mock_agents = await setup_backup_integration(
+        hass, remote_agents=["test.test-agent"]
+    )
     await hass.async_block_till_done()
+
+    for agent_id, agent in mock_agents.items():
+        agent.async_delete_backup.side_effect = delete_backup_side_effects.get(agent_id)
 
     for command in commands:
         await client.send_json_auto_id(command)
@@ -2903,8 +3137,10 @@ async def test_config_retention_days_logic(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert get_backups.call_count == get_backups_calls
-    assert delete_backup.call_count == delete_calls
-    assert delete_backup.call_args_list == delete_args_list
+    for agent_id, agent in mock_agents.items():
+        agent_delete_calls = delete_calls.get(agent_id, [])
+        assert agent.async_delete_backup.call_count == len(agent_delete_calls)
+        assert agent.async_delete_backup.call_args_list == agent_delete_calls
     async_fire_time_changed(hass, fire_all=True)  # flush out storage save
     await hass.async_block_till_done()
 
@@ -2964,6 +3200,42 @@ async def test_can_decrypt_on_download(
             "backup_id": backup_id,
             "agent_id": agent_id,
             "password": password,
+        }
+    )
+    assert await client.receive_json() == snapshot
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        BackupAgentError,
+        BackupNotFound,
+    ],
+)
+@pytest.mark.usefixtures("mock_backups")
+async def test_can_decrypt_on_download_with_agent_error(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    error: Exception,
+) -> None:
+    """Test can decrypt on download."""
+
+    mock_agents = await setup_backup_integration(
+        hass,
+        with_hassio=False,
+        backups={"test.remote": [TEST_BACKUP_ABC123]},
+        remote_agents=["test.remote"],
+    )
+    client = await hass_ws_client(hass)
+
+    mock_agents["test.remote"].async_download_backup.side_effect = error
+    await client.send_json_auto_id(
+        {
+            "type": "backup/can_decrypt_on_download",
+            "backup_id": TEST_BACKUP_ABC123.backup_id,
+            "agent_id": "test.remote",
+            "password": "hunter2",
         }
     )
     assert await client.receive_json() == snapshot

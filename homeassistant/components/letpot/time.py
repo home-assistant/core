@@ -11,10 +11,9 @@ from letpot.models import LetPotDeviceStatus
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LetPotConfigEntry
-from .coordinator import LetPotDeviceCoordinator
+from .coordinator import LetPotConfigEntry, LetPotDeviceCoordinator
 from .entity import LetPotEntity, exception_handler
 
 # Each change pushes a 'full' device status with the change. The library will cache
@@ -55,7 +54,7 @@ TIME_SENSORS: tuple[LetPotTimeEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LetPotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up LetPot time entities based on a config entry."""
     coordinators = entry.runtime_data

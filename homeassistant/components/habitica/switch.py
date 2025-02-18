@@ -13,11 +13,14 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import HabiticaData, HabiticaDataUpdateCoordinator
+from .coordinator import (
+    HabiticaConfigEntry,
+    HabiticaData,
+    HabiticaDataUpdateCoordinator,
+)
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
 
 PARALLEL_UPDATES = 1
 
@@ -52,7 +55,7 @@ SWTICH_DESCRIPTIONS: tuple[HabiticaSwitchEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HabiticaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches from a config entry."""
 

@@ -23,31 +23,56 @@
       "connection_error": "Failed to connect to OneDrive.",
       "wrong_drive": "New account does not contain previously configured OneDrive.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
-      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "failed_to_create_folder": "Failed to create backup folder"
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "issues": {
+    "drive_full": {
+      "title": "OneDrive data cap exceeded",
+      "description": "Your OneDrive has exceeded your quota limit. This means your next backup will fail. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB."
+    },
+    "drive_almost_full": {
+      "title": "OneDrive near data cap",
+      "description": "Your OneDrive is near your quota limit. If you go over this limit your drive will be temporarily frozen and your backups will start failing. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB."
+    }
+  },
   "exceptions": {
-    "backup_not_found": {
-      "message": "Backup not found"
-    },
-    "backup_no_content": {
-      "message": "Backup has no content"
-    },
-    "backup_no_upload_session": {
-      "message": "Failed to start backup upload"
-    },
     "authentication_failed": {
       "message": "Authentication failed"
     },
     "failed_to_get_folder": {
       "message": "Failed to get {folder} folder"
     },
-    "failed_to_create_folder": {
-      "message": "Failed to create {folder} folder"
+    "failed_to_migrate_files": {
+      "message": "Failed to migrate metadata to separate files"
+    },
+    "update_failed": {
+      "message": "Failed to update drive state"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_size": {
+        "name": "Total available storage"
+      },
+      "used_size": {
+        "name": "Used storage"
+      },
+      "remaining_size": {
+        "name": "Remaining storage"
+      },
+      "drive_state": {
+        "name": "Drive state",
+        "state": {
+          "normal": "Normal",
+          "nearing": "Nearing limit",
+          "critical": "Critical",
+          "exceeded": "Exceeded"
+        }
+      }
     }
   }
 }

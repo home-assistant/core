@@ -42,7 +42,7 @@ from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTempera
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from tests.common import (
     MockConfigEntry,
@@ -582,7 +582,7 @@ async def test_issue_aux_property_deprecated(
     async def async_setup_entry_climate_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test weather platform via config entry."""
         async_add_entities([climate_entity])
