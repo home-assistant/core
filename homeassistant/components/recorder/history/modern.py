@@ -268,7 +268,7 @@ def get_significant_states_with_session(
         instance.database_engine.optimizer.slow_filesort_on_dependant_subquery
     )
     if include_start_time_state and slow_filesort_on_dependant_subquery:
-        # https://github.com/home-assistant/core/issues/132865
+        # https://github.com/home-assistant/core/issues/137178
         # If we include the start time state we need to limit the
         # number of metadata_ids we query for at a time to avoid
         # hitting limits in the MySQL/MariaDB optimizer that prevent
