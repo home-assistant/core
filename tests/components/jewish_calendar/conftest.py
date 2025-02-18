@@ -11,7 +11,6 @@ from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
-    DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -48,9 +47,14 @@ def jcal_params(request: pytest.FixtureRequest) -> dict | None:
     if not hasattr(request, "param"):
         return None
 
-    location_name, dtime, results = request.param
-    time_zone, latlng, candle_light = LOCATIONS[location_name]
+    if len(request.param) == 3:
+        location_name, dtime, results = request.param
+        havdalah_offset = 0
 
+    if len(request.param) == 4:
+        location_name, dtime, results, havdalah_offset = request.param
+
+    time_zone, latlng, candle_light = LOCATIONS[location_name]
     tz_info = dt_util.get_time_zone(time_zone)
     dtime = dtime.replace(tzinfo=tz_info)
     if isinstance(results, dict):
@@ -68,7 +72,7 @@ def jcal_params(request: pytest.FixtureRequest) -> dict | None:
         CONF_DIASPORA: location_name not in ("Jerusalem",),
         CONF_LOCATION: latlng,
         CONF_CANDLE_LIGHT_MINUTES: candle_light,
-        CONF_HAVDALAH_OFFSET_MINUTES: DEFAULT_HAVDALAH_OFFSET_MINUTES,
+        CONF_HAVDALAH_OFFSET_MINUTES: havdalah_offset,
     }
 
 
