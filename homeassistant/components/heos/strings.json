@@ -81,6 +81,14 @@
         }
       }
     },
+    "group_volume_down": {
+      "name": "Turn down group volume",
+      "description": "Turns down the group volume."
+    },
+    "group_volume_up": {
+      "name": "Turn up group volume",
+      "description": "Turns up the group volume."
+    },
     "sign_in": {
       "name": "Sign in",
       "description": "Signs in to a HEOS account.",
