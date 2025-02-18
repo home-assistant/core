@@ -171,9 +171,7 @@ async def test_jewish_calendar_sensor(
     setup_hass: None,
 ) -> None:
     """Test Jewish calendar sensor output."""
-    test_time = jcal_params["dtime"]
-
-    with freeze_time(test_time):
+    with freeze_time(test_time := jcal_params["test_time"]):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -501,11 +499,7 @@ async def test_shabbat_times_sensor(
     setup_hass: None,
 ) -> None:
     """Test sensor output for upcoming shabbat/yomtov times."""
-    test_time = jcal_params["dtime"]
-    result = jcal_params["results"]
-    language = config_entry.data[CONF_LANGUAGE]
-
-    with freeze_time(test_time):
+    with freeze_time(test_time := jcal_params["test_time"]):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -514,8 +508,8 @@ async def test_shabbat_times_sensor(
         async_fire_time_changed(hass, future)
         await hass.async_block_till_done()
 
-    for sensor_type, result_value in result.items():
-        if not sensor_type.startswith(language):
+    for sensor_type, result_value in jcal_params["results"].items():
+        if not sensor_type.startswith(language := config_entry.data[CONF_LANGUAGE]):
             continue
 
         sensor_type = sensor_type.replace(f"{language}_", "")
