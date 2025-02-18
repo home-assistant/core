@@ -1,12 +1,16 @@
 {
+  "common": {
+    "unit_system": "Unit system",
+    "time_zone": "Time zone"
+  },
   "config": {
     "step": {
       "user": {
-        "description": "Search [NOAA Tide Predictions](https://tidesandcurrents.noaa.gov/tide_predictions.html) to find a Station ID.",
+        "description": "Search [NOAA Tide Predictions](https://tidesandcurrents.noaa.gov/tide_predictions.html) to find a station ID.",
         "data": {
           "station_id": "Station ID",
-          "unit_system": "Unit System",
-          "time_zone": "Time Zone"
+          "unit_system": "[%key:component::noaa_tides::common::unit_system%]",
+          "time_zone": "[%key:component::noaa_tides::common::time_zone%]"
         }
       }
     },
@@ -21,8 +25,8 @@
     "step": {
       "init": {
         "data": {
-          "unit_system": "Unit System",
-          "time_zone": "Time Zone"
+          "unit_system": "[%key:component::noaa_tides::common::unit_system%]",
+          "time_zone": "[%key:component::noaa_tides::common::time_zone%]"
         }
       }
     }
