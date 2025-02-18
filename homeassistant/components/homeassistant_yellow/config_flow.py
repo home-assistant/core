@@ -79,10 +79,13 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         # We do not actually use any portion of `BaseFirmwareConfigFlow` beyond this
-        await self._probe_firmware_type()
+        await self._probe_firmware_info()
 
         # Kick off ZHA hardware discovery automatically if Zigbee firmware is running
-        if self._probed_firmware_type is ApplicationType.EZSP:
+        if (
+            self._probed_firmware_info is not None
+            and self._probed_firmware_info.firmware_type is ApplicationType.EZSP
+        ):
             discovery_flow.async_create_flow(
                 self.hass,
                 ZHA_DOMAIN,
@@ -98,7 +101,11 @@ class HomeAssistantYellowConfigFlow(BaseFirmwareConfigFlow, domain=DOMAIN):
             title=BOARD_NAME,
             data={
                 # Assume the firmware type is EZSP if we cannot probe it
-                FIRMWARE: (self._probed_firmware_type or ApplicationType.EZSP).value,
+                FIRMWARE: (
+                    self._probed_firmware_info.firmware_type
+                    if self._probed_firmware_info is not None
+                    else ApplicationType.EZSP
+                ).value,
             },
         )
 
@@ -285,13 +292,13 @@ class HomeAssistantYellowOptionsFlowHandler(
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
-        assert self._probed_firmware_type is not None
+        assert self._probed_firmware_info is not None
 
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                FIRMWARE: self._probed_firmware_type.value,
+                FIRMWARE: self._probed_firmware_info.firmware_type.value,
             },
         )
 

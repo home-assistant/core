@@ -65,13 +65,13 @@ class FakeFirmwareConfigFlow(BaseFirmwareConfigFlow, domain=TEST_DOMAIN):
         """Create the config entry."""
         assert self._device is not None
         assert self._hardware_name is not None
-        assert self._probed_firmware_type is not None
+        assert self._probed_firmware_info is not None
 
         return self.async_create_entry(
             title=self._hardware_name,
             data={
                 "device": self._device,
-                "firmware": self._probed_firmware_type.value,
+                "firmware": self._probed_firmware_info.firmware_type.value,
                 "hardware": self._hardware_name,
             },
         )
@@ -92,13 +92,13 @@ class FakeFirmwareOptionsFlowHandler(BaseFirmwareOptionsFlow):
 
     def _async_flow_finished(self) -> ConfigFlowResult:
         """Create the config entry."""
-        assert self._probed_firmware_type is not None
+        assert self._probed_firmware_info is not None
 
         self.hass.config_entries.async_update_entry(
             entry=self.config_entry,
             data={
                 **self.config_entry.data,
-                "firmware": self._probed_firmware_type.value,
+                "firmware": self._probed_firmware_info.firmware_type.value,
             },
             options=self.config_entry.options,
         )
