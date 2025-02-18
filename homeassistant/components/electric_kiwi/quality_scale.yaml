@@ -41,7 +41,7 @@ rules:
   docs-installation-parameters:
     status: exempt
     comment: |
-      Handled by OAuth flow
+      Users cannot be issued client id and secret
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
