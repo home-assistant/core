@@ -1,5 +1,8 @@
 {
   "services": {
+    "group_volume_set": {
+      "service": "mdi:volume-medium"
+    },
     "sign_in": {
       "service": "mdi:login"
     },

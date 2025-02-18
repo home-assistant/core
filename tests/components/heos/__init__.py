@@ -34,6 +34,7 @@ class MockHeos(Heos):
         self.player_set_play_state: AsyncMock = AsyncMock()
         self.player_set_volume: AsyncMock = AsyncMock()
         self.set_group: AsyncMock = AsyncMock()
+        self.set_group_volume: AsyncMock = AsyncMock()
         self.sign_in: AsyncMock = AsyncMock()
         self.sign_out: AsyncMock = AsyncMock()
 
