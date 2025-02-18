@@ -669,26 +669,25 @@ class MQTT:
         result: int | None = None
         self._available_future = client_available
         self._should_reconnect = True
+        connect_partial = partial(
+            self._mqttc.connect,
+            host=self.conf[CONF_BROKER],
+            port=self.conf.get(CONF_PORT, DEFAULT_PORT),
+            keepalive=self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
+            # See:
+            # https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
+            # `clean_start` (bool) – (MQTT v5.0 only) `True`, `False` or
+            # `MQTT_CLEAN_START_FIRST_ONLY`. Sets the MQTT v5.0 clean_start flag
+            #  always, never or on the first successful connect only,
+            # respectively. MQTT session data (such as outstanding messages and
+            # subscriptions) is cleared on successful connect when the
+            # clean_start flag is set. For MQTT v3.1.1, the clean_session
+            # argument of Client should be used for similar result.
+            clean_start=True if self.is_mqttv5 else mqtt.MQTT_CLEAN_START_FIRST_ONLY,
+        )
         try:
             async with self._connection_lock, self._async_connect_in_executor():
-                result = await self.hass.async_add_executor_job(
-                    self._mqttc.connect,
-                    self.conf[CONF_BROKER],
-                    self.conf.get(CONF_PORT, DEFAULT_PORT),
-                    self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
-                    "",  # bind_address default
-                    0,  # bind_port default
-                    # See:
-                    # https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
-                    # `clean_start` (bool) – (MQTT v5.0 only) `True`, `False` or
-                    # `MQTT_CLEAN_START_FIRST_ONLY`. Sets the MQTT v5.0 clean_start flag
-                    #  always, never or on the first successful connect only,
-                    # respectively. MQTT session data (such as outstanding messages and
-                    # subscriptions) is cleared on successful connect when the
-                    # clean_start flag is set. For MQTT v3.1.1, the clean_session
-                    # argument of Client should be used for similar result.
-                    True if self.is_mqttv5 else mqtt.MQTT_CLEAN_START_FIRST_ONLY,
-                )
+                result = await self.hass.async_add_executor_job(connect_partial)
         except (OSError, mqtt.WebsocketConnectionError) as err:
             _LOGGER.error("Failed to connect to MQTT server due to exception: %s", err)
             self._async_connection_result(False)

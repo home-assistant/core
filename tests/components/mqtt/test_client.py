@@ -1271,7 +1271,7 @@ async def test_publish_error(
     with patch(
         "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
     ) as mock_client:
-        mock_client().connect = lambda *args: 1
+        mock_client().connect = lambda **kwargs: 1
         mock_client().publish().rc = 1
         assert await hass.config_entries.async_setup(entry.entry_id)
         with pytest.raises(HomeAssistantError):
@@ -1387,21 +1387,21 @@ async def test_setup_mqtt_client_clean_session_and_protocol(
                 mqtt.CONF_BROKER: "mock-broker",
                 CONF_PROTOCOL: "3.1",
             },
-            call("mock-broker", 1883, 60, "", 0, 3),
+            call(host="mock-broker", port=1883, keepalive=60, clean_start=3),
         ),
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
                 CONF_PROTOCOL: "3.1.1",
             },
-            call("mock-broker", 1883, 60, "", 0, 3),
+            call(host="mock-broker", port=1883, keepalive=60, clean_start=3),
         ),
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
                 CONF_PROTOCOL: "5",
             },
-            call("mock-broker", 1883, 60, "", 0, True),
+            call(host="mock-broker", port=1883, keepalive=60, clean_start=True),
         ),
     ],
     ids=["v3.1", "v3.1.1", "v5"],
