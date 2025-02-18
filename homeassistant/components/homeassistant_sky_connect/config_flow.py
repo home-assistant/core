@@ -10,7 +10,10 @@ from homeassistant.components.homeassistant_hardware import (
     firmware_config_flow,
     silabs_multiprotocol_addon,
 )
-from homeassistant.components.homeassistant_hardware.util import ApplicationType
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    FirmwareInfo,
+)
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryBaseFlow,
@@ -202,6 +205,14 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
         )
         self._hardware_name = self._hw_variant.full_name
         self._device = self._usb_info.device
+
+        self._probed_firmware_info = FirmwareInfo(
+            device=self._device,
+            firmware_type=ApplicationType(self.config_entry.data["firmware"]),
+            firmware_version=None,
+            source="guess",
+            owners=[],
+        )
 
         # Regenerate the translation placeholders
         self._get_translation_placeholders()

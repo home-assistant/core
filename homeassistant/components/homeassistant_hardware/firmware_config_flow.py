@@ -521,20 +521,13 @@ class BaseFirmwareConfigFlow(BaseFirmwareInstallFlow, ConfigFlow):
 class BaseFirmwareOptionsFlow(BaseFirmwareInstallFlow, OptionsFlow):
     """Zigbee and Thread options flow handlers."""
 
+    _probed_firmware_info: FirmwareInfo
+
     def __init__(self, config_entry: ConfigEntry, *args: Any, **kwargs: Any) -> None:
         """Instantiate options flow."""
         super().__init__(*args, **kwargs)
 
         self._config_entry = config_entry
-
-        assert self._device is not None
-        self._probed_firmware_info = FirmwareInfo(
-            device=self._device,
-            firmware_type=ApplicationType(self.config_entry.data["firmware"]),
-            firmware_version=None,
-            source="guess",
-            owners=[],
-        )
 
         # Make `context` a regular dictionary
         self.context = {}
