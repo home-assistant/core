@@ -129,7 +129,6 @@ async def test_discovery_fails_to_connect_aborts(
     hass: HomeAssistant, discovery_data: SsdpServiceInfo, controller: MockHeos
 ) -> None:
     """Test discovery aborts when trying to connect to host."""
-    # Single discovered, selects preferred host, shows confirm
     controller.connect.side_effect = HeosError()
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
