@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from typing import Any
 
 from homeassistant.components.humidifier import (
     DEFAULT_MAX_HUMIDITY,
@@ -52,7 +53,7 @@ class EcobeeHumidifier(HumidifierEntity):
     _attr_has_entity_name = True
     _attr_name = None
 
-    def __init__(self, data, thermostat_index):
+    def __init__(self, data, thermostat_index) -> None:
         """Initialize ecobee humidifier platform."""
         self.data = data
         self.thermostat_index = thermostat_index
@@ -80,11 +81,11 @@ class EcobeeHumidifier(HumidifierEntity):
         )
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if device is available."""
         return self.thermostat["runtime"]["connected"]
 
-    async def async_update(self):
+    async def async_update(self) -> None:
         """Get the latest state from the thermostat."""
         if self.update_without_throttle:
             await self.data.update(no_throttle=True)
@@ -96,12 +97,12 @@ class EcobeeHumidifier(HumidifierEntity):
             self._last_humidifier_on_mode = self.mode
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return True if the humidifier is on."""
         return self.mode != MODE_OFF
 
     @property
-    def mode(self):
+    def mode(self) -> str:
         """Return the current mode, e.g., off, auto, manual."""
         return self.thermostat["settings"]["humidifierMode"]
 
@@ -118,9 +119,11 @@ class EcobeeHumidifier(HumidifierEntity):
         except KeyError:
             return None
 
-    def set_mode(self, mode):
+    def set_mode(self, mode: str) -> None:
         """Set humidifier mode (auto, off, manual)."""
-        if mode.lower() not in (self.available_modes):
+        if self.available_modes is None:
+            raise NotImplementedError("Humidifier does not support modes.")
+        if mode.lower() not in self.available_modes:
             raise ValueError(
                 f"Invalid mode value: {mode}  Valid values are"
                 f" {', '.join(self.available_modes)}."
@@ -134,10 +137,10 @@ class EcobeeHumidifier(HumidifierEntity):
         self.data.ecobee.set_humidity(self.thermostat_index, humidity)
         self.update_without_throttle = True
 
-    def turn_off(self, **kwargs):
+    def turn_off(self, **kwargs: Any) -> None:
         """Set humidifier to off mode."""
         self.set_mode(MODE_OFF)
 
-    def turn_on(self, **kwargs):
+    def turn_on(self, **kwargs: Any) -> None:
         """Set humidifier to on mode."""
         self.set_mode(self._last_humidifier_on_mode)
