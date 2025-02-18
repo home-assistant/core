@@ -34,6 +34,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 _LOGGER = logging.getLogger(__name__)
 
+type StarlinkConfigEntry = ConfigEntry[StarlinkUpdateCoordinator]
+
 
 @dataclass
 class StarlinkData:
@@ -51,9 +53,9 @@ class StarlinkData:
 class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     """Coordinates updates between all Starlink sensors defined in this file."""
 
-    config_entry: ConfigEntry
+    config_entry: StarlinkConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: StarlinkConfigEntry) -> None:
         """Initialize an UpdateCoordinator for a group of sensors."""
         self.channel_context = ChannelContext(target=config_entry.data[CONF_IP_ADDRESS])
         self.history_stats_start = None
