@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/remote_calendar",
   "iot_class": "cloud_polling",
   "loggers": ["ical"],
+  "quality_scale": "bronze",
   "requirements": ["ical==8.2.0"]
 }

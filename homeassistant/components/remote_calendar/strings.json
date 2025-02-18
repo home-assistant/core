@@ -17,6 +17,7 @@
       "unsupported_protocol": "Request URL is missing an 'http://' or 'https://' protocol",
       "url_not_reachable": "URL is not reachable",
       "not_authorized": "You are not authorized to access this URL",
+      "no_calendar_found": "No calendar found at the provided URL",
       "unknown_url_type": "Unknown URL type"
     }
   }

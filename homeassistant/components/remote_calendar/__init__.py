@@ -1,7 +1,8 @@
-"""The Local Calendar integration."""
+"""The Remote Calendar integration."""
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,30 +17,24 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR]
 
+type RemoteCalendarConfigEntry = ConfigEntry[RemoteCalendarDataUpdateCoordinator]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Local Calendar from a config entry."""
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: RemoteCalendarConfigEntry
+) -> bool:
+    """Set up Remote Calendar from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     coordinator = RemoteCalendarDataUpdateCoordinator(hass, entry.data)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-
+    _LOGGER.debug("Remote Calendar setup entry")
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: RemoteCalendarConfigEntry
+) -> bool:
     """Handle unload of an entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-# async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
-#     """Handle removal of an entry."""
-#     key = slugify(entry.data[CONF_CALENDAR_NAME])
-#     path = Path(hass.config.path(STORAGE_PATH.format(key=key)))
-
-#     def unlink(path: Path) -> None:
-#         path.unlink(missing_ok=True)
-
-#     await hass.async_add_executor_job(unlink, path)

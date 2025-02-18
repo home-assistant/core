@@ -1,4 +1,4 @@
-"""Config flow for Local Calendar integration."""
+"""Config flow for Remote Calendar integration."""
 
 from __future__ import annotations
 
@@ -6,6 +6,8 @@ import logging
 from typing import Any
 
 from httpx import ConnectError, HTTPStatusError, UnsupportedProtocol
+from ical.calendar_stream import IcsCalendarStream
+from ical.exceptions import CalendarParseError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -13,7 +15,7 @@ from homeassistant.const import CONF_URL
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util import slugify
 
-from .const import CONF_CALENDAR_NAME, CONF_STORAGE_KEY, DOMAIN
+from .const import CONF_CALENDAR_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,7 +25,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Local Calendar."""
+    """Handle a config flow for Remote Calendar."""
 
     VERSION = 1
 
@@ -41,15 +43,13 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         errors: dict = {}
         _LOGGER.debug("User input: %s", user_input)
-        key = slugify(user_input[CONF_CALENDAR_NAME])
-        user_input[CONF_STORAGE_KEY] = key
-        self.data = user_input
+        await self.async_set_unique_id(slugify(user_input[CONF_URL]))
         client = get_async_client(self.hass)
         _LOGGER.debug("User input in fetch url: %s", user_input)
         if user_input is not None:
             headers: dict = {}
             try:
-                await client.get(user_input[CONF_URL], headers=headers)
+                res = await client.get(user_input[CONF_URL], headers=headers)
             except UnsupportedProtocol as err:
                 errors["base"] = "unsupported_protocol"
                 _LOGGER.debug("Unsupported Protokol: %s", err)
@@ -63,9 +63,18 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown_url_type"
                 _LOGGER.debug("ValueError: %s", err)
             else:
-                return self.async_create_entry(
-                    title=self.data[CONF_CALENDAR_NAME], data=self.data
-                )
+                try:
+                    res.raise_for_status()
+                    await self.hass.async_add_executor_job(
+                        IcsCalendarStream.calendar_from_ics, res.text
+                    )
+                except CalendarParseError as err:
+                    errors["base"] = "no_calendar_found"
+                    _LOGGER.debug("No calendar found: %s", err)
+                else:
+                    return self.async_create_entry(
+                        title=user_input[CONF_CALENDAR_NAME], data=user_input
+                    )
 
         return self.async_show_form(
             step_id="user",

@@ -1,11 +1,11 @@
-"""Calendar platform for a Local Calendar."""
+"""Calendar platform for a Remote Calendar."""
 
 from __future__ import annotations
 
-import asyncio
 from datetime import date, datetime, timedelta
 import logging
 
+from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
 
@@ -13,6 +13,7 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import CONF_CALENDAR_NAME
@@ -20,22 +21,26 @@ from .coordinator import RemoteCalendarDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
+type RemoteCalendarConfigEntry = ConfigEntry[RemoteCalendarDataUpdateCoordinator]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RemoteCalendarConfigEntry,
     async_add_entities: AddEntitiesCallback,
 ) -> None:
-    """Set up the local calendar platform."""
+    """Set up the remote calendar platform."""
     coordinator = entry.runtime_data
-
     name = entry.data[CONF_CALENDAR_NAME]
-    entity = RemoteCalendarEntity(coordinator, name, unique_id=entry.entry_id)
-    async_add_entities([entity], True)
+    entity = RemoteCalendarEntity(coordinator, name, unique_id=entry.unique_id)
+    async_add_entities([entity])
 
 
-class RemoteCalendarEntity(CalendarEntity):
-    """A calendar entity backed by a local iCalendar file."""
+class RemoteCalendarEntity(
+    CoordinatorEntity[RemoteCalendarDataUpdateCoordinator], CalendarEntity
+):
+    """A calendar entity backed by a remote iCalendar url."""
 
     _attr_has_entity_name = True
 
@@ -45,17 +50,18 @@ class RemoteCalendarEntity(CalendarEntity):
         name: str,
         unique_id: str,
     ) -> None:
-        """Initialize LocalCalendarEntity."""
-        self._client = None
-        self._calendar = IcsCalendarStream.calendar_from_ics(coordinator.data)
+        """Initialize RemoteCalendarEntity."""
+        super().__init__(coordinator)
         self.coordinator = coordinator
-        self._calendar_lock = asyncio.Lock()
         self._event: CalendarEvent | None = None
-        self._etag = None
-        self._track_fetch = None
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._update_interval = timedelta(minutes=15)
+        self._attr_should_poll = True
+
+    @property
+    def _calendar(self) -> Calendar:
+        """Get the calendar data."""
+        return IcsCalendarStream.calendar_from_ics(self.coordinator.data)
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -74,9 +80,6 @@ class RemoteCalendarEntity(CalendarEntity):
 
     async def async_update(self) -> None:
         """Update entity state with the next upcoming event."""
-        self._calendar = await self.hass.async_add_executor_job(
-            IcsCalendarStream.calendar_from_ics, self.coordinator.data
-        )
         now = dt_util.now()
         events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
         if event := next(events, None):
