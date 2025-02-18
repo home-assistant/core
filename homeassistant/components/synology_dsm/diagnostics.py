@@ -56,8 +56,7 @@ async def async_get_config_entry_diagnostics(
                     "status": device.device_status,
                     "size_total": device.device_size_total(False),
                 }
-                for part_id in device.device_partitions:
-                    partition = device.get_device_partition(part_id)
+                for partition in device.device_partitions.values():
                     if partition is not None:
                         diag_data["external_usb"]["partitions"][part_id] = {
                             "name": partition.partition_title,
