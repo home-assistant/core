@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Generic, cast
+from typing import Any, cast
 
 from ring_doorbell import (
     RingCapability,
@@ -16,6 +16,7 @@ from ring_doorbell import (
 )
 
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -33,13 +34,7 @@ from homeassistant.helpers.typing import StateType
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
-from .entity import (
-    DeprecatedInfo,
-    RingDeviceT,
-    RingEntity,
-    RingEntityDescription,
-    async_check_create_deprecated,
-)
+from .entity import DeprecatedInfo, RingDeviceT, RingEntity, RingEntityDescription
 
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
@@ -54,20 +49,16 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    entities = [
-        RingSensor(device, devices_coordinator, description)
-        for description in SENSOR_TYPES
-        for device in ring_data.devices.all_devices
-        if description.exists_fn(device)
-        and async_check_create_deprecated(
-            hass,
-            Platform.SENSOR,
-            f"{device.id}-{description.key}",
-            description,
-        )
-    ]
-
-    async_add_entities(entities)
+    RingSensor.process_devices(
+        hass,
+        lambda device, description: RingSensor(
+            device, devices_coordinator, description
+        ),
+        devices_coordinator,
+        async_add_entities=async_add_entities,
+        domain=SENSOR_DOMAIN,
+        descriptions=SENSOR_TYPES,
+    )
 
 
 class RingSensor(RingEntity[RingDeviceT], SensorEntity):
@@ -82,9 +73,7 @@ class RingSensor(RingEntity[RingDeviceT], SensorEntity):
         description: RingSensorEntityDescription[RingDeviceT],
     ) -> None:
         """Initialize a sensor for Ring device."""
-        super().__init__(device, coordinator)
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}-{description.key}"
+        super().__init__(device, coordinator, description)
         self._attr_entity_registry_enabled_default = (
             description.entity_registry_enabled_default
         )
@@ -93,7 +82,6 @@ class RingSensor(RingEntity[RingDeviceT], SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Call update method."""
-
         self._device = cast(
             RingDeviceT,
             self._get_coordinator_data().get_device(self._device.device_api_id),
@@ -137,7 +125,7 @@ def _get_last_event_attrs(
 
 @dataclass(frozen=True, kw_only=True)
 class RingSensorEntityDescription(
-    SensorEntityDescription, RingEntityDescription, Generic[RingDeviceT]
+    SensorEntityDescription, RingEntityDescription[RingDeviceT]
 ):
     """Describes Ring sensor entity."""
 

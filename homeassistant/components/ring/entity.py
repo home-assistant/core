@@ -1,9 +1,9 @@
 """Base class for Ring entity."""
 
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from dataclasses import dataclass
 import logging
-from typing import Any, Concatenate, Generic, TypeVar, cast
+from typing import Any, Concatenate, Generic, Self, TypeVar, cast
 
 from ring_doorbell import (
     AuthenticationError,
@@ -19,8 +19,9 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.entity import EntityDescription
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import (
     BaseCoordinatorEntity,
@@ -49,10 +50,14 @@ class DeprecatedInfo:
 
 
 @dataclass(frozen=True, kw_only=True)
-class RingEntityDescription(EntityDescription):
+class RingEntityDescription(EntityDescription, Generic[RingDeviceT]):
     """Base class for a ring entity description."""
 
     deprecated_info: DeprecatedInfo | None = None
+    exists_fn: Callable[[RingDeviceT], bool]
+    unique_id_fn: Callable[[Self, RingDeviceT], str] = (
+        lambda self, device: f"{device.device_api_id}-{self.key}"
+    )
 
 
 def exception_wrap[_RingBaseEntityT: RingBaseEntity[Any, Any], **_P, _R](
@@ -101,9 +106,9 @@ def refresh_after[_RingEntityT: RingEntity[Any], **_P](
 
 def async_check_create_deprecated(
     hass: HomeAssistant,
-    platform: Platform,
+    platform: str,
     unique_id: str,
-    entity_description: RingEntityDescription,
+    entity_description: RingEntityDescription[RingDeviceT],
 ) -> bool:
     """Return true if the entitty should be created based on the deprecated_info.
 
@@ -170,17 +175,77 @@ class RingBaseEntity(
         self,
         device: RingDeviceT,
         coordinator: _RingCoordinatorT,
+        description: RingEntityDescription[RingDeviceT],
     ) -> None:
         """Initialize a sensor for Ring device."""
         super().__init__(coordinator, context=device.id)
         self._device = device
+        self.entity_description = description
+        self._attr_unique_id = description.unique_id_fn(description, device)
         self._attr_extra_state_attributes = {}
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},  # device_id is the mac
             manufacturer="Ring",
             model=device.model,
             name=device.name,
         )
+
+    @classmethod
+    def process_devices[
+        _D: RingEntityDescription[Any],
+    ](
+        cls,
+        hass: HomeAssistant,
+        create_fn: Callable[[RingDeviceT, _D], Self],
+        devices_coordinator: RingDataCoordinator,
+        *,
+        async_add_entities: AddEntitiesCallback,
+        domain: str,
+        descriptions: Iterable[_D],
+    ) -> None:
+        """Process device entities."""
+        processed_device_ids: set[int] = set()
+
+        def _entities_for_device(device: RingDeviceT) -> list[Self]:
+            """Get all the entities for a device."""
+            return [
+                create_fn(device, description)
+                for description in descriptions
+                if description.exists_fn(device)
+                and async_check_create_deprecated(
+                    hass,
+                    domain,
+                    description.unique_id_fn(description, device),
+                    description,
+                )
+            ]
+
+        def _async_add_new_device_entities() -> None:
+            """Handle new devices."""
+            # Remove any device ids that the coordinator has removed so
+            # they will be re-added if they re-appear.
+            for removed_device_id in devices_coordinator.removed_device_ids:
+                processed_device_ids.discard(removed_device_id)
+
+            if (
+                new_device_ids := devices_coordinator.device_api_ids
+                - processed_device_ids
+            ):
+                entities: list[Self] = []
+                for device_api_id in new_device_ids:
+                    device = cast(
+                        RingDeviceT,
+                        devices_coordinator.ring_api.devices().get_device(
+                            device_api_id
+                        ),
+                    )
+                    entities.extend(_entities_for_device(device))
+                    processed_device_ids.add(device_api_id)
+
+                async_add_entities(entities)
+
+        _async_add_new_device_entities()
+        devices_coordinator.async_add_listener(_async_add_new_device_entities)
 
 
 class RingEntity(RingBaseEntity[RingDataCoordinator, RingDeviceT], CoordinatorEntity):
