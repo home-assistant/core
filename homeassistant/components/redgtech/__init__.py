@@ -4,8 +4,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from .const import DOMAIN
 from redgtech_api import RedgtechAPI
+from typing import TypedDict
 
 _LOGGER = logging.getLogger(__name__)
+
+class RedgtechEntryData(TypedDict):
+    config: dict
+    entities: list
 
 PLATFORMS: list[Platform] = [Platform.SWITCH]
 

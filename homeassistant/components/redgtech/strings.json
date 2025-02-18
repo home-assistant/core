@@ -1,67 +1,27 @@
 {
-    "config": {
-        "step": {
-            "user": {
-                "title": "User Configuration",
-                "description": "Please enter your email address.",
-                "data": {
-                    "email": "Email",
-                    "password": "Password"
-                }
-            }
+  "config": {
+    "step": {
+      "user": {
+        "title": "User Configuration",
+        "description": "Please enter your email address.",
+        "data": {
+          "email": {
+            "label": "Email",
+            "description": "Enter your email address for authentication."
+          },
+          "password": {
+            "label": "Password",
+            "description": "Enter your password for authentication."
+          }
+        },
+        "errors": {
+          "invalid_auth": "Invalid authentication.",
+          "invalid_email": "Invalid email address.",
+          "invalid_password": "Invalid password.",
+          "email_required": "Email is required.",
+          "password_required": "Password is required."
         }
-    },
-    "common": {
-      "generic": {
-        "model": "Model",
-        "ui_managed": "Managed via UI"
-      },
-      "device_automation": {
-        "condition_type": {
-          "is_on": "{entity_name} is on",
-          "is_off": "{entity_name} is off"
-        },
-        "extra_fields": {
-          "above": "Above",
-          "below": "Below",
-          "for": "Duration",
-          "to": "To",
-          "value": "Value",
-          "zone": "Zone"
-        },
-        "trigger_type": {
-          "changed_states": "{entity_name} turned on or off",
-          "turned_on": "{entity_name} turned on",
-          "turned_off": "{entity_name} turned off"
-        },
-        "action_type": {
-          "toggle": "Toggle {entity_name}",
-          "turn_on": "Turn on {entity_name}",
-          "turn_off": "Turn off {entity_name}"
-        }
-      },
-      "action": {
-        "connect": "Connect",
-        "disconnect": "Disconnect",
-        "enable": "Enable",
-        "disable": "Disable",
-        "open": "Open",
-        "close": "Close",
-        "reload": "Reload",
-        "restart": "Restart",
-        "start": "Start",
-        "stop": "Stop",
-        "pause": "Pause",
-        "turn_on": "Turn on",
-        "turn_off": "Turn off",
-        "toggle": "Toggle"
-      },
-      "time": {
-        "sunday": "Sunday"
-      },
-      "state": {
-        "not_home": "Away"
-      },
-      "config_flow": {}
+      }
     }
   }
+}

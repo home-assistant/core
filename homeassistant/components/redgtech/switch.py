@@ -20,10 +20,16 @@ async def async_setup_entry(hass, config_entry, async_add_entities):
 
     entities = []
     if coordinator.data:
+        existing_entities = hass.data.get(DOMAIN, {}).get("entities", [])
         for item in coordinator.data.get("boards", []):
-            categories = item.get("displayCategories", "")
-            if "SWITCH" in categories:
-                entities.append(RedgtechSwitch(coordinator, item, api))
+            entity_id = item.get("endpointId", "")
+            if entity_id not in existing_entities:
+                categories = item.get("displayCategories", "")
+                if "SWITCH" in categories:
+                    entities.append(RedgtechSwitch(coordinator, item, api))
+                    existing_entities.append(entity_id)
+
+        hass.data.setdefault(DOMAIN, {})["entities"] = existing_entities
 
     async_add_entities(entities)
 

@@ -1,12 +1,11 @@
 {
     "domain": "redgtech",
     "name": "Redgtech",
-    "codeowners": [],
+    "codeowners": ["@jonhsady", "@luan-nvg"],
     "documentation": "https://www.home-assistant.io/integrations/redgtech",
     "iot_class": "cloud_polling",
-    "logo": "/brands/redgtech/logo.png",
     "integration_type": "service",
     "config_flow": true,
-    "quality_scale": "silver",
-    "requirements": ["redgtech-api==0.1.14"]
+    "quality_scale": "bronze",
+    "requirements": ["redgtech-api==0.1.16"]
 }
