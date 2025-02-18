@@ -76,16 +76,14 @@ async def async_setup_entry(
 ) -> None:
     """Create the Evohome Controller, and its Zones."""
 
-    coordinator: EvoDataUpdateCoordinator = config_entry.runtime_data
-    loc_idx = coordinator.loc_idx
+    coordinator: EvoDataUpdateCoordinator = config_entry.runtime_data["coordinator"]
     tcs = coordinator.tcs
 
     _LOGGER.debug(
-        "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
+        "Found the Location/Controller (%s), id=%s, name=%s",
         tcs.model,
         tcs.id,
         tcs.location.name,
-        loc_idx,
     )
 
     entities: list[EvoController | EvoZone] = [EvoController(coordinator, tcs)]

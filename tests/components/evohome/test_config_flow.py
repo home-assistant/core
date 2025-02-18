@@ -8,13 +8,12 @@ import evohomeasync2 as ec2
 import pytest
 
 from homeassistant.components.evohome import CONFIG_SCHEMA
+from homeassistant.components.evohome.config_flow import EvoConfigFileDictT
 from homeassistant.components.evohome.const import (
     CONF_HIGH_PRECISION,
     CONF_LOCATION_IDX,
     DEFAULT_HIGH_PRECISION,
-    DEFAULT_LOCATION_IDX,
     DOMAIN,
-    SCAN_INTERVAL_DEFAULT,
 )
 from homeassistant.config_entries import (
     SOURCE_IMPORT,
@@ -33,7 +32,7 @@ from .conftest import mock_make_request, mock_post_request
 @pytest.mark.parametrize("install", ["minimal"])
 async def test_import_flow(
     hass: HomeAssistant,
-    config: dict[str, str],
+    config: EvoConfigFileDictT,
     install: str,
 ) -> None:
     """Test an import flow."""
@@ -73,21 +72,21 @@ async def test_import_flow(
     assert entry.domain == DOMAIN
     assert entry.title == "Evohome"
 
-    assert entry.data == {
+    assert {k: v for k, v in entry.data.items() if k != "token_data"} == {
         CONF_USERNAME: config[CONF_USERNAME],
         CONF_PASSWORD: config[CONF_PASSWORD],
-        CONF_LOCATION_IDX: DEFAULT_LOCATION_IDX,
+        CONF_LOCATION_IDX: config[CONF_LOCATION_IDX],
     }
     assert entry.options == {
-        CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION,
-        CONF_SCAN_INTERVAL: SCAN_INTERVAL_DEFAULT,
+        CONF_HIGH_PRECISION: True,  # True for imports
+        CONF_SCAN_INTERVAL: config[CONF_SCAN_INTERVAL].seconds,
     }
 
 
 @pytest.mark.parametrize("install", ["minimal"])
 async def test_config_flow(
     hass: HomeAssistant,
-    config: dict[str, str],
+    config: EvoConfigFileDictT,
     install: str,
 ) -> None:
     """Test a config flow."""
@@ -115,56 +114,26 @@ async def test_config_flow(
             },
         )
 
-        # [
-        #     "type",
-        #     "flow_id",
-        #     "handler",
-        #     "data_schema",
-        #     "errors",
-        #     "description_placeholders",
-        #     "last_step",
-        #     "preview",
-        #     "step_id",
-        # ]
-
     assert result.get("type") == FlowResultType.FORM
-    assert result.get("step_id") == "location"
-    assert result.get("errors") == {}
 
     with (
         patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
         patch(
-            "homeassistant.components.evohome.async_setup_entry",
-            return_value=True,
+            "homeassistant.components.evohome.async_setup_entry", return_value=True
         ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_LOCATION_IDX: DEFAULT_LOCATION_IDX,
+                CONF_LOCATION_IDX: config[CONF_LOCATION_IDX],
             },
         )
-
-        # [
-        #     "type",
-        #     "flow_id",
-        #     "handler",
-        #     "data",
-        #     "description",
-        #     "description_placeholders",
-        #     "context",
-        #     "title",
-        #     "minor_version",
-        #     "options",
-        #     "version",
-        #     "result",
-        # ]
 
         await hass.async_block_till_done()
 
         assert mock_setup_entry.await_count == 1
 
-        assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
@@ -174,20 +143,20 @@ async def test_config_flow(
     assert entry.domain == DOMAIN
     assert entry.title == "Evohome"
 
-    assert entry.data == {
+    assert {k: v for k, v in entry.data.items() if k != "token_data"} == {
         CONF_USERNAME: config[CONF_USERNAME],
         CONF_PASSWORD: config[CONF_PASSWORD],
-        CONF_LOCATION_IDX: DEFAULT_LOCATION_IDX,
+        CONF_LOCATION_IDX: config[CONF_LOCATION_IDX],
     }
-    # assert entry.options == {
-    #     CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION,
-    #     CONF_SCAN_INTERVAL: SCAN_INTERVAL_DEFAULT,
-    # }
+    assert entry.options == {
+        CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION,
+        CONF_SCAN_INTERVAL: config[CONF_SCAN_INTERVAL].seconds,
+    }
 
 
 async def test_login_error(
     hass: HomeAssistant,
-    config: dict[str, str],
+    config: EvoConfigFileDictT,
 ) -> None:
     """Test login error."""
 

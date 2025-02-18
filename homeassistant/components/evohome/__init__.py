@@ -12,8 +12,6 @@ from datetime import timedelta
 import logging
 from typing import Final
 
-import evohomeasync as ec1
-import evohomeasync2 as ec2
 from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
 from evohomeasync2.schemas.const import (
     S2_DURATION as SZ_DURATION,
@@ -22,7 +20,7 @@ from evohomeasync2.schemas.const import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -33,7 +31,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType
@@ -50,7 +47,6 @@ from .const import (
     EvoService,
 )
 from .coordinator import EvoDataUpdateCoordinator
-from .storage import TokenManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -93,37 +89,31 @@ PLATFORMS = (Platform.CLIMATE, Platform.WATER_HEATER)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up evohome integration from YAML (deprecated)."""
-    # Return True but do nothing else to avoid old YAML configs interfering
+
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+            )
+        )
+
     return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Load the Evohome config entry."""
 
-    token_manager = TokenManager(
-        hass,
-        config_entry.data[CONF_USERNAME],
-        config_entry.data[CONF_PASSWORD],
-        async_get_clientsession(hass),
-    )
     coordinator = EvoDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        ec2.EvohomeClient(token_manager),
-        name=f"{DOMAIN}_coordinator",
-        update_interval=config_entry.data[CONF_SCAN_INTERVAL],
-        location_idx=config_entry.data[CONF_LOCATION_IDX],
-        client_v1=ec1.EvohomeClient(token_manager),
+        hass, _LOGGER, config_entry=config_entry, name=f"{DOMAIN}_coordinator"
     )
 
-    await coordinator.async_register_shutdown()
     await coordinator.async_first_refresh()
 
     if not coordinator.last_update_success:
         _LOGGER.error(f"Failed to fetch initial data: {coordinator.last_exception}")  # noqa: G004
         return False
 
-    config_entry.runtime_data = coordinator
+    config_entry.runtime_data = {"coordinator": coordinator}
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

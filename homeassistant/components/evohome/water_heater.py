@@ -43,7 +43,7 @@ async def async_setup_entry(
 ) -> None:
     """Create an Evohome DHW controller (if any)."""
 
-    coordinator: EvoDataUpdateCoordinator = config_entry.runtime_data
+    coordinator: EvoDataUpdateCoordinator = config_entry.runtime_data["coordinator"]
     tcs = coordinator.tcs
 
     if tcs.hotwater is None:  # not all systems have DHW
