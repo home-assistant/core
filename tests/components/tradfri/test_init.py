@@ -77,6 +77,7 @@ async def test_remove_stale_devices(
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(tradfri.DOMAIN, "stale_device_id")},
+        name="stale-device",
     )
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
@@ -166,7 +167,7 @@ async def test_migrate_config_entry_and_identifiers(
     # Update bulb 1 device to have both config-entry IDs
     # This is to simulate existing data scenario with older version of tradfri component
     gateway_1_bulb = device_registry.async_get_device(
-        identifiers={(tradfri.DOMAIN, f"65537-{GATEWAY_ID1}")}
+        identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID1}-65537")}
     )
     device_registry.async_update_device(
         gateway_1_bulb.id,
@@ -176,7 +177,7 @@ async def test_migrate_config_entry_and_identifiers(
     # Remove bulb 1 from gateway 2 completely
     # This is to simulate existing data scenario with older version of tradfri component
     gateway_2_bulb = device_registry.async_get_device(
-        identifiers={(tradfri.DOMAIN, f"65537-{GATEWAY_ID2}")}
+        identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID2}-65537")}
     )
     device_registry.async_remove_device(gateway_2_bulb.id)
 
@@ -207,7 +208,7 @@ async def test_migrate_config_entry_and_identifiers(
     )
     assert (
         device_registry.async_get_device(
-            identifiers={(tradfri.DOMAIN, f"65537-{GATEWAY_ID1}")}
+            identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID1}-65537")}
         ).id
         == gateway_1_bulb.id
     )
@@ -220,7 +221,7 @@ async def test_migrate_config_entry_and_identifiers(
         device_registry, config_entry2.entry_id
     )
     assert len(device_entries) == 2
-    assert device_entries[1].identifiers == {(tradfri.DOMAIN, f"65537-{GATEWAY_ID2}")}
+    assert device_entries[1].identifiers == {(tradfri.DOMAIN, f"{GATEWAY_ID2}-65537")}
 
     # Validate that gateway 2 bulb 1 only has only gateway 2's config ID associated to it
     assert device_entries[1].config_entries == {config_entry2.entry_id}
