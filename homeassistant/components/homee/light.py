@@ -1,4 +1,4 @@
-"""The homee light platform."""
+"""The Homee light platform."""
 
 from typing import Any
 
@@ -88,7 +88,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the homee platform for the light integration."""
+    """Add the Homee platform for the light entity."""
 
     for node in config_entry.runtime_data.nodes:
         if is_light_node(node):
@@ -99,7 +99,7 @@ async def async_setup_entry(
 
 
 class HomeeLight(HomeeNodeEntity, LightEntity):
-    """Representation of a homee light."""
+    """Representation of a Homee light."""
 
     def __init__(
         self,
@@ -107,7 +107,7 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         light: dict[AttributeType, HomeeAttribute],
         entry: HomeeConfigEntry,
     ) -> None:
-        """Initialize a homee light."""
+        """Initialize a Homee light."""
         super().__init__(node, entry)
 
         self._on_off_attr: HomeeAttribute = light[AttributeType.ON_OFF]
@@ -177,7 +177,7 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
             )
             await self.async_set_value(self._dimmer_attr, target_value)
         else:
-            # If no brightness value is given, just torn on.
+            # If no brightness value is given, just turn on.
             await self.async_set_value(self._on_off_attr, 1)
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs and self._temp_attr is not None:
@@ -203,7 +203,7 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         if self._col_attr is not None:
             color_modes.add(ColorMode.HS)
 
-        # if no other color modes are available, set one of those
+        # If no other color modes are available, set one of those.
         if len(color_modes) == 0:
             if self._dimmer_attr is not None:
                 color_modes.add(ColorMode.BRIGHTNESS)
