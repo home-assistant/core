@@ -468,8 +468,8 @@ async def test_remove_entry(
         hass: HomeAssistant, entry: config_entries.ConfigEntry
     ) -> None:
         """Mock removing an entry."""
-        # Check that the entry is not yet removed from config entries
-        assert hass.config_entries.async_get_entry(entry.entry_id)
+        # Check that the entry is no longer in the config entries
+        assert not hass.config_entries.async_get_entry(entry.entry_id)
         remove_entry_calls.append(None)
 
     entity = MockEntity(unique_id="1234", name="Test Entity")
@@ -2623,7 +2623,7 @@ async def test_entry_setup_invalid_state(
     ("unload_result", "expected_result", "expected_state", "has_runtime_data"),
     [
         (True, True, config_entries.ConfigEntryState.NOT_LOADED, False),
-        (False, False, config_entries.ConfigEntryState.LOADED, True),
+        (False, False, config_entries.ConfigEntryState.FAILED_UNLOAD, True),
     ],
 )
 async def test_entry_unload(
@@ -2648,7 +2648,7 @@ async def test_entry_unload(
         """Mock unload entry."""
         unload_entry_calls.append(None)
         verify_runtime_data()
-        assert entry.state is config_entries.ConfigEntryState.LOADED
+        assert entry.state is config_entries.ConfigEntryState.UNLOAD_IN_PROGRESS
         return unload_result
 
     entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)

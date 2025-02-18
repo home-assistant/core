@@ -63,6 +63,7 @@ SKU_TO_BASE_DEVICE = {
     # Air Purifiers
     "LV-PUR131S": "LV-PUR131S",
     "LV-RH131S": "LV-PUR131S",  # Alt ID Model LV-PUR131S
+    "LV-RH131S-WM": "LV-PUR131S",  # Alt ID Model LV-PUR131S
     "Core200S": "Core200S",
     "LAP-C201S-AUSR": "Core200S",  # Alt ID Model Core200S
     "LAP-C202S-WUSR": "Core200S",  # Alt ID Model Core200S

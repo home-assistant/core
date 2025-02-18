@@ -79,6 +79,11 @@
         }
       }
     },
+    "switch": {
+      "filter_cycle_2_enabled": {
+        "name": "Filter cycle 2 enabled"
+      }
+    },
     "time": {
       "filter_cycle_start": {
         "name": "Filter cycle {index} start"

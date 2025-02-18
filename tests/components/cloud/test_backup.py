@@ -3,12 +3,12 @@
 from collections.abc import AsyncGenerator, Generator
 from io import StringIO
 from typing import Any
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import ANY, Mock, PropertyMock, patch
 
 from aiohttp import ClientError
 from hass_nabucasa import CloudError
 from hass_nabucasa.api import CloudApiNonRetryableError
-from hass_nabucasa.files import FilesError
+from hass_nabucasa.files import FilesError, StorageType
 import pytest
 
 from homeassistant.components.backup import (
@@ -90,7 +90,26 @@ def mock_list_files() -> Generator[MagicMock]:
                     "size": 34519040,
                     "storage-type": "backup",
                 },
-            }
+            },
+            {
+                "Key": "462e16810d6841228828d9dd2f9e341f.tar",
+                "LastModified": "2024-11-22T10:49:01.182Z",
+                "Size": 34519040,
+                "Metadata": {
+                    "addons": [],
+                    "backup_id": "23e64aed",
+                    "date": "2024-11-22T11:48:48.727189+01:00",
+                    "database_included": True,
+                    "extra_metadata": {},
+                    "folders": [],
+                    "homeassistant_included": True,
+                    "homeassistant_version": "2024.12.0.dev0",
+                    "name": "Core 2024.12.0.dev0",
+                    "protected": False,
+                    "size": 34519040,
+                    "storage-type": "backup",
+                },
+            },
         ]
         yield list_files
 
@@ -148,7 +167,21 @@ async def test_agents_list_backups(
             "name": "Core 2024.12.0.dev0",
             "failed_agent_ids": [],
             "with_automatic_settings": None,
-        }
+        },
+        {
+            "addons": [],
+            "agents": {"cloud.cloud": {"protected": False, "size": 34519040}},
+            "backup_id": "23e64aed",
+            "date": "2024-11-22T11:48:48.727189+01:00",
+            "database_included": True,
+            "extra_metadata": {},
+            "folders": [],
+            "homeassistant_included": True,
+            "homeassistant_version": "2024.12.0.dev0",
+            "name": "Core 2024.12.0.dev0",
+            "failed_agent_ids": [],
+            "with_automatic_settings": None,
+        },
     ]
 
 
@@ -242,6 +275,10 @@ async def test_agents_download(
     resp = await client.get(f"/api/backup/download/{backup_id}?agent_id=cloud.cloud")
     assert resp.status == 200
     assert await resp.content.read() == b"backup data"
+    cloud.files.download.assert_called_once_with(
+        filename="462e16810d6841228828d9dd2f9e341e.tar",
+        storage_type=StorageType.BACKUP,
+    )
 
 
 @pytest.mark.usefixtures("cloud_logged_in", "mock_list_files")
@@ -317,7 +354,14 @@ async def test_agents_upload(
             data={"file": StringIO(backup_data)},
         )
 
-    assert len(cloud.files.upload.mock_calls) == 1
+    cloud.files.upload.assert_called_once_with(
+        storage_type=StorageType.BACKUP,
+        open_stream=ANY,
+        filename=f"{cloud.client.prefs.instance_id}.tar",
+        base64md5hash=ANY,
+        metadata=ANY,
+        size=ANY,
+    )
     metadata = cloud.files.upload.mock_calls[-1].kwargs["metadata"]
     assert metadata["backup_id"] == backup_id
 
@@ -552,6 +596,7 @@ async def test_agents_upload_wrong_size(
 async def test_agents_delete(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    cloud: Mock,
     mock_delete_file: Mock,
 ) -> None:
     """Test agent delete backup."""
@@ -568,7 +613,11 @@ async def test_agents_delete(
 
     assert response["success"]
     assert response["result"] == {"agent_errors": {}}
-    mock_delete_file.assert_called_once()
+    mock_delete_file.assert_called_once_with(
+        cloud,
+        filename="462e16810d6841228828d9dd2f9e341e.tar",
+        storage_type=StorageType.BACKUP,
+    )
 
 
 @pytest.mark.parametrize("side_effect", [ClientError, CloudError])

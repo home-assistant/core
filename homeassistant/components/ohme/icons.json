@@ -6,6 +6,9 @@
       }
     },
     "number": {
+      "preconditioning_duration": {
+        "default": "mdi:fan-clock"
+      },
       "target_percentage": {
         "default": "mdi:battery-heart"
       }
