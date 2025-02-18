@@ -86,16 +86,20 @@ def decimal_to_rgb_list(color: float) -> list[int]:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add the Homee platform for the light entity."""
 
+    entities: list[HomeeLight] = []
     for node in config_entry.runtime_data.nodes:
-        if is_light_node(node):
-            async_add_devices(
-                HomeeLight(node, light, config_entry)
-                for light in get_light_attribute_sets(node)
-            )
+        entities.extend(
+            HomeeLight(node, light, config_entry)
+            for light in get_light_attribute_sets(node)
+            if is_light_node(node)
+        )
+
+    if entities:
+        async_add_entities(entities)
 
 
 class HomeeLight(HomeeNodeEntity, LightEntity):
