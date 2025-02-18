@@ -671,6 +671,8 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
+    # Water Tank Level Sensor
+    # Note: Undocumented
     "ywcgq": (
         SwitchEntityDescription(
             key=DPCode.UPPER_SWITCH,
