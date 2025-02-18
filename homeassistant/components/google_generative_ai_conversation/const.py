@@ -8,7 +8,7 @@ CONF_PROMPT = "prompt"
 
 CONF_RECOMMENDED = "recommended"
 CONF_CHAT_MODEL = "chat_model"
-RECOMMENDED_CHAT_MODEL = "models/gemini-1.5-flash-latest"
+RECOMMENDED_CHAT_MODEL = "models/gemini-2.0-flash"
 CONF_TEMPERATURE = "temperature"
 RECOMMENDED_TEMPERATURE = 1.0
 CONF_TOP_P = "top_p"

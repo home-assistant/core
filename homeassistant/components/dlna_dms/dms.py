@@ -16,7 +16,7 @@ from async_upnp_client.const import NotificationSubType
 from async_upnp_client.exceptions import UpnpActionError, UpnpConnectionError, UpnpError
 from async_upnp_client.profiles.dlna import ContentDirectoryErrorCode, DmsDevice
 from didl_lite import didl_lite
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import BrowseError, MediaClass

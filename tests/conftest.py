@@ -90,7 +90,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util, location
+from homeassistant.util import dt as dt_util, location as location_util
 from homeassistant.util.async_ import create_eager_task, get_scheduled_timer_handles
 from homeassistant.util.json import json_loads
 
@@ -102,6 +102,7 @@ from .typing import (
     MqttMockHAClient,
     MqttMockHAClientGenerator,
     MqttMockPahoClient,
+    RecorderInstanceContextManager,
     RecorderInstanceGenerator,
     WebSocketGenerator,
 )
@@ -117,6 +118,7 @@ from .common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
     MockConfigEntry,
+    MockMqttReasonCode,
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
@@ -250,7 +252,9 @@ def check_real[**_P, _R](func: Callable[_P, Coroutine[Any, Any, _R]]):
 
 
 # Guard a few functions that would make network connections
-location.async_detect_location_info = check_real(location.async_detect_location_info)
+location_util.async_detect_location_info = check_real(
+    location_util.async_detect_location_info
+)
 
 
 @pytest.fixture(name="caplog")
@@ -966,17 +970,23 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
         def _async_fire_mqtt_message(topic, payload, qos, retain):
             async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
             mid = get_mid()
-            hass.loop.call_soon(mock_client.on_publish, 0, 0, mid)
+            hass.loop.call_soon(
+                mock_client.on_publish, Mock(), 0, mid, MockMqttReasonCode(), None
+            )
             return FakeInfo(mid)
 
         def _subscribe(topic, qos=0):
             mid = get_mid()
-            hass.loop.call_soon(mock_client.on_subscribe, 0, 0, mid)
+            hass.loop.call_soon(
+                mock_client.on_subscribe, Mock(), 0, mid, [MockMqttReasonCode()], None
+            )
             return (0, mid)
 
         def _unsubscribe(topic):
             mid = get_mid()
-            hass.loop.call_soon(mock_client.on_unsubscribe, 0, 0, mid)
+            hass.loop.call_soon(
+                mock_client.on_unsubscribe, Mock(), 0, mid, [MockMqttReasonCode()], None
+            )
             return (0, mid)
 
         def _connect(*args, **kwargs):
@@ -985,7 +995,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
             # the behavior.
             mock_client.reconnect()
             hass.loop.call_soon_threadsafe(
-                mock_client.on_connect, mock_client, None, 0, 0, 0
+                mock_client.on_connect, mock_client, None, 0, MockMqttReasonCode()
             )
             mock_client.on_socket_open(
                 mock_client, None, Mock(fileno=Mock(return_value=-1))
@@ -1062,7 +1072,7 @@ async def _mqtt_mock_entry(
 
         # connected set to True to get a more realistic behavior when subscribing
         mock_mqtt_instance.connected = True
-        mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, 0, 0)
+        mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, MockMqttReasonCode())
 
         async_dispatcher_send(hass, mqtt.MQTT_CONNECTION_STATE, True)
         await hass.async_block_till_done()
@@ -1177,15 +1187,31 @@ async def mqtt_mock_entry(
 @pytest.fixture(autouse=True, scope="session")
 def mock_network() -> Generator[None]:
     """Mock network."""
-    with patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=[
-            Mock(
-                nice_name="eth0",
-                ips=[Mock(is_IPv6=False, ip="10.10.10.10", network_prefix=24)],
-                index=0,
-            )
-        ],
+    with (
+        patch(
+            "homeassistant.components.network.util.ifaddr.get_adapters",
+            return_value=[
+                Mock(
+                    nice_name="eth0",
+                    ips=[Mock(is_IPv6=False, ip="10.10.10.10", network_prefix=24)],
+                    index=0,
+                )
+            ],
+        ),
+        patch(
+            "homeassistant.components.network.async_get_loaded_adapters",
+            return_value=[
+                {
+                    "auto": True,
+                    "default": True,
+                    "enabled": True,
+                    "index": 0,
+                    "ipv4": [{"address": "10.10.10.10", "network_prefix": 24}],
+                    "ipv6": [],
+                    "name": "eth0",
+                }
+            ],
+        ),
     ):
         yield
 
@@ -1534,7 +1560,7 @@ async def async_test_recorder(
     enable_migrate_event_type_ids: bool,
     enable_migrate_entity_ids: bool,
     enable_migrate_event_ids: bool,
-) -> AsyncGenerator[RecorderInstanceGenerator]:
+) -> AsyncGenerator[RecorderInstanceContextManager]:
     """Yield context manager to setup recorder instance."""
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.components import recorder
@@ -1700,7 +1726,7 @@ async def async_test_recorder(
 
 @pytest.fixture
 async def async_setup_recorder_instance(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> AsyncGenerator[RecorderInstanceGenerator]:
     """Yield callable to setup recorder instance."""
 
@@ -1713,7 +1739,7 @@ async def async_setup_recorder_instance(
             expected_setup_result: bool = True,
             wait_recorder: bool = True,
             wait_recorder_setup: bool = True,
-        ) -> AsyncGenerator[recorder.Recorder]:
+        ) -> recorder.Recorder:
             """Set up and return recorder instance."""
 
             return await stack.enter_async_context(
@@ -1732,7 +1758,7 @@ async def async_setup_recorder_instance(
 @pytest.fixture
 async def recorder_mock(
     recorder_config: dict[str, Any] | None,
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     hass: HomeAssistant,
 ) -> AsyncGenerator[recorder.Recorder]:
     """Fixture with in-memory recorder."""

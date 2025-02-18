@@ -42,6 +42,7 @@ from homeassistant.components.homeassistant.exposed_entities import (
 from homeassistant.const import EVENT_STATE_CHANGED, MATCH_ALL
 from homeassistant.helpers import (
     area_registry as ar,
+    chat_session,
     device_registry as dr,
     entity_registry as er,
     floor_registry as fr,
@@ -52,8 +53,10 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_added_domain
+from homeassistant.util import language as language_util
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
+from .chat_log import AssistantContent, async_get_chat_log
 from .const import (
     DATA_DEFAULT_ENTITY,
     DEFAULT_EXPOSED_ATTRIBUTES,
@@ -62,7 +65,6 @@ from .const import (
 )
 from .entity import ConversationEntity
 from .models import ConversationInput, ConversationResult
-from .session import ChatMessage, async_get_chat_session
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
 _LOGGER = logging.getLogger(__name__)
@@ -348,7 +350,12 @@ class DefaultAgent(ConversationEntity):
     async def async_process(self, user_input: ConversationInput) -> ConversationResult:
         """Process a sentence."""
         response: intent.IntentResponse | None = None
-        async with async_get_chat_session(self.hass, user_input) as chat_session:
+        with (
+            chat_session.async_get_chat_session(
+                self.hass, user_input.conversation_id
+            ) as session,
+            async_get_chat_log(self.hass, session, user_input) as chat_log,
+        ):
             # Check if a trigger matched
             if trigger_result := await self.async_recognize_sentence_trigger(
                 user_input
@@ -373,17 +380,15 @@ class DefaultAgent(ConversationEntity):
                 )
 
             speech: str = response.speech.get("plain", {}).get("speech", "")
-            chat_session.async_add_message(
-                ChatMessage(
-                    role="assistant",
+            chat_log.async_add_assistant_content_without_tools(
+                AssistantContent(
                     agent_id=user_input.agent_id,
                     content=speech,
-                    native=response,
                 )
             )
 
             return ConversationResult(
-                response=response, conversation_id=chat_session.conversation_id
+                response=response, conversation_id=session.conversation_id
             )
 
     async def _async_process_intent_result(
@@ -798,36 +803,13 @@ class DefaultAgent(ConversationEntity):
         intent_response: intent.IntentResponse,
         recognize_result: RecognizeResult,
     ) -> str:
-        # Make copies of the states here so we can add translated names for responses.
-        matched = [
-            state_copy
-            for state in intent_response.matched_states
-            if (state_copy := core.State.from_dict(state.as_dict()))
-        ]
-        unmatched = [
-            state_copy
-            for state in intent_response.unmatched_states
-            if (state_copy := core.State.from_dict(state.as_dict()))
-        ]
-        all_states = matched + unmatched
-        domains = {state.domain for state in all_states}
-        translations = await translation.async_get_translations(
-            self.hass, language, "entity_component", domains
-        )
-
-        # Use translated state names
-        for state in all_states:
-            device_class = state.attributes.get("device_class", "_")
-            key = f"component.{state.domain}.entity_component.{device_class}.state.{state.state}"
-            state.state = translations.get(key, state.state)
-
         # Get first matched or unmatched state.
         # This is available in the response template as "state".
         state1: core.State | None = None
         if intent_response.matched_states:
-            state1 = matched[0]
+            state1 = intent_response.matched_states[0]
         elif intent_response.unmatched_states:
-            state1 = unmatched[0]
+            state1 = intent_response.unmatched_states[0]
 
         # Render response template
         speech_slots = {
@@ -849,11 +831,13 @@ class DefaultAgent(ConversationEntity):
                 "query": {
                     # Entity states that matched the query (e.g, "on")
                     "matched": [
-                        template.TemplateState(self.hass, state) for state in matched
+                        template.TemplateState(self.hass, state)
+                        for state in intent_response.matched_states
                     ],
                     # Entity states that did not match the query
                     "unmatched": [
-                        template.TemplateState(self.hass, state) for state in unmatched
+                        template.TemplateState(self.hass, state)
+                        for state in intent_response.unmatched_states
                     ],
                 },
             }
@@ -931,25 +915,19 @@ class DefaultAgent(ConversationEntity):
     def _load_intents(self, language: str) -> LanguageIntents | None:
         """Load all intents for language (run inside executor)."""
         intents_dict: dict[str, Any] = {}
-        language_variant: str | None = None
         supported_langs = set(get_languages())
 
         # Choose a language variant upfront and commit to it for custom
         # sentences, etc.
-        all_language_variants = {lang.lower(): lang for lang in supported_langs}
+        lang_matches = language_util.matches(language, supported_langs)
 
-        # en-US, en_US, en, ...
-        for maybe_variant in _get_language_variations(language):
-            matching_variant = all_language_variants.get(maybe_variant.lower())
-            if matching_variant:
-                language_variant = matching_variant
-                break
-
-        if not language_variant:
+        if not lang_matches:
             _LOGGER.warning(
                 "Unable to find supported language variant for %s", language
             )
             return None
+
+        language_variant = lang_matches[0]
 
         # Load intents for this language variant
         lang_variant_intents = get_intents(language_variant, json_load=json_load)
@@ -1506,12 +1484,6 @@ def _get_match_error_response(
         # Entity is not in correct state
         assert constraints.states
         state = next(iter(constraints.states))
-        if constraints.domains:
-            # Translate if domain is available
-            domain = next(iter(constraints.domains))
-            state = translation.async_translate_state(
-                hass, state, domain, None, None, None
-            )
 
         return ErrorKey.ENTITY_WRONG_STATE, {"state": state}
 

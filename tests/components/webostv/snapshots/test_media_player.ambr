@@ -1,4 +1,14 @@
 # serializer version: 1
+# name: test_command
+  dict({
+    'media_player.lg_webos_tv_model': dict({
+      'muted': False,
+      'returnValue': True,
+      'scenario': 'mastervolume_tv_speaker_ext',
+      'volume': 1,
+    }),
+  })
+# ---
 # name: test_entity_attributes
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -29,6 +39,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -51,9 +62,17 @@
     'name': 'LG webOS TV MODEL',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
+    'serial_number': '1234567890',
     'suggested_area': None,
     'sw_version': 'major.minor',
     'via_device_id': None,
+  })
+# ---
+# name: test_select_sound_output
+  dict({
+    'media_player.lg_webos_tv_model': dict({
+      'method': 'setSystemSettings',
+      'returnValue': True,
+    }),
   })
 # ---
