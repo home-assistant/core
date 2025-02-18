@@ -18,6 +18,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfLength,
     UnitOfPower,
     UnitOfTime,
 )
@@ -759,6 +760,28 @@ SENSORS: dict[str, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         *BATTERY_SENSORS,
+    ),
+    # Water Tank Level Sensor
+    # Note: Undocumented
+    "ywcgq": (
+        TuyaSensorEntityDescription(
+            key=DPCode.LIQUID_STATE,
+            translation_key="liquid_state",
+            device_class=SensorDeviceClass.ENUM,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LIQUID_DEPTH,
+            translation_key="liquid_depth",
+            device_class=SensorDeviceClass.DISTANCE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfLength.METERS,
+        ),
+        TuyaSensorEntityDescription(
+            key=DPCode.LIQUID_LEVEL_PERCENT,
+            translation_key="liquid_level_percent",
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+        ),
     ),
     # Vibration Sensor
     # https://developer.tuya.com/en/docs/iot/categoryzd?id=Kaiuz3a5vrzno
