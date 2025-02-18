@@ -35,6 +35,18 @@
         }
       }
     },
+    "fan": {
+      "filter": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "bio_mode": "Bio mode",
+              "pulse_mode": "Pulse mode"
+            }
+          }
+        }
+      }
+    },
     "light": {
       "channel": {
         "name": "Channel {channel_id}",

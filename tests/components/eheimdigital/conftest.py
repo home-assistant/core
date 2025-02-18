@@ -4,9 +4,16 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from eheimdigital.classic_led_ctrl import EheimDigitalClassicLEDControl
+from eheimdigital.classic_vario import EheimDigitalClassicVario
 from eheimdigital.heater import EheimDigitalHeater
 from eheimdigital.hub import EheimDigitalHub
-from eheimdigital.types import EheimDeviceType, HeaterMode, HeaterUnit, LightMode
+from eheimdigital.types import (
+    EheimDeviceType,
+    FilterMode,
+    HeaterMode,
+    HeaterUnit,
+    LightMode,
+)
 import pytest
 
 from homeassistant.components.eheimdigital.const import DOMAIN
@@ -60,8 +67,25 @@ def heater_mock():
 
 
 @pytest.fixture
+def classic_vario_mock():
+    """Mock a classicVARIO device."""
+    classic_vario_mock = MagicMock(spec=EheimDigitalClassicVario)
+    classic_vario_mock.mac_address = "00:00:00:00:00:03"
+    classic_vario_mock.device_type = EheimDeviceType.VERSION_EHEIM_CLASSIC_VARIO
+    classic_vario_mock.name = "Mock classicVARIO"
+    classic_vario_mock.aquarium_name = "Mock Aquarium"
+    classic_vario_mock.sw_version = "1.0.0_1.0.0"
+    classic_vario_mock.current_speed = 75
+    classic_vario_mock.is_active = True
+    classic_vario_mock.filter_mode = FilterMode.MANUAL
+    return classic_vario_mock
+
+
+@pytest.fixture
 def eheimdigital_hub_mock(
-    classic_led_ctrl_mock: MagicMock, heater_mock: MagicMock
+    classic_led_ctrl_mock: MagicMock,
+    heater_mock: MagicMock,
+    classic_vario_mock: MagicMock,
 ) -> Generator[AsyncMock]:
     """Mock eheimdigital hub."""
     with (
@@ -77,6 +101,7 @@ def eheimdigital_hub_mock(
         eheimdigital_hub_mock.return_value.devices = {
             "00:00:00:00:00:01": classic_led_ctrl_mock,
             "00:00:00:00:00:02": heater_mock,
+            "00:00:00:00:00:03": classic_vario_mock,
         }
         eheimdigital_hub_mock.return_value.main = classic_led_ctrl_mock
         yield eheimdigital_hub_mock

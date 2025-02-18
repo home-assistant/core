@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "fan": {
+      "filter": {
+        "default": "mdi:pump",
+        "state": {
+          "off": "mdi:pump-off"
+        }
+      }
+    }
+  }
+}
