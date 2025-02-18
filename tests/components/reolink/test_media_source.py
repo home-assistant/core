@@ -249,7 +249,6 @@ async def test_browsing_h265_encoding(
 
     browse_root_id = f"CAM|{entry_id}|{TEST_CHANNEL}"
 
-    # browse resolution select/camera recording days when main encoding unsupported
     mock_status = MagicMock()
     mock_status.year = TEST_YEAR
     mock_status.month = TEST_MONTH
