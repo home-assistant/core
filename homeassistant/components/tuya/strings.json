@@ -170,6 +170,18 @@
       "volume": {
         "name": "Volume"
       },
+      "installation_height": {
+        "name": "Installation height"
+      },
+      "liquid_depth_max": {
+        "name": "Sensor to full-line distance"
+      },
+      "max_set": {
+        "name": "Water upper level alarm"
+      },
+      "mini_set": {
+        "name": "Water lower level alarm"
+      },
       "minimum_brightness": {
         "name": "Minimum brightness"
       },
@@ -637,6 +649,20 @@
           "level_5": "Level 5",
           "level_6": "Level 6"
         }
+      },
+      "liquid_state": {
+        "name": "Liquid state",
+        "state": {
+          "normal": "Normal",
+          "lower_alarm": "Lower Alarm",
+          "upper_alarm": "Upper Alarm"
+        }
+      },
+      "liquid_depth": {
+        "name": "Liquid depth"
+      },
+      "liquid_level_percent": {
+        "name": "Liquid level percent"
       }
     },
     "switch": {
@@ -846,6 +872,9 @@
       },
       "sterilization": {
         "name": "Sterilization"
+      },
+      "upper_switch": {
+        "name": "Sleep switch"
       }
     }
   }

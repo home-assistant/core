@@ -212,6 +212,7 @@ class DPCode(StrEnum):
     HUMIDITY_INDOOR = "humidity_indoor"  # Indoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    INSTALLATION_HEIGHT = "installation_height"
     IPC_WORK_MODE = "ipc_work_mode"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
@@ -220,11 +221,17 @@ class DPCode(StrEnum):
     LEVEL_CURRENT = "level_current"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
+    LIQUID_DEPTH = "liquid_depth"
+    LIQUID_DEPTH_MAX = "liquid_depth_max"
+    LIQUID_LEVEL_PERCENT = "liquid_level_percent"
+    LIQUID_STATE = "liquid_state"
     LOCK = "lock"  # Lock / Child lock
     MASTER_MODE = "master_mode"  # alarm mode
     MACH_OPERATE = "mach_operate"
     MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
+    MAX_SET = "max_set"
+    MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
     MOODLIGHTING = "moodlighting"  # Mood light
     MOTION_RECORD = "motion_record"
@@ -350,6 +357,7 @@ class DPCode(StrEnum):
     TOTAL_PM = "total_pm"
     TOTAL_POWER = "total_power"
     TVOC = "tvoc"
+    UPPER_SWITCH = "upper_switch"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization
