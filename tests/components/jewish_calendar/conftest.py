@@ -48,15 +48,15 @@ def jcal_params(request: pytest.FixtureRequest) -> dict | None:
         return None
 
     if len(request.param) == 3:
-        location_name, dtime, results = request.param
+        location_name, test_time, results = request.param
         havdalah_offset = 0
 
     if len(request.param) == 4:
-        location_name, dtime, results, havdalah_offset = request.param
+        location_name, test_time, results, havdalah_offset = request.param
 
     time_zone, latlng, candle_light = LOCATIONS[location_name]
     tz_info = dt_util.get_time_zone(time_zone)
-    dtime = dtime.replace(tzinfo=tz_info)
+    test_time = test_time.replace(tzinfo=tz_info)
     if isinstance(results, dict):
         results = {
             key: value.replace(tzinfo=tz_info)
@@ -66,7 +66,7 @@ def jcal_params(request: pytest.FixtureRequest) -> dict | None:
         }
 
     return {
-        "dtime": dtime,
+        "test_time": test_time,
         "results": results,
         CONF_TIME_ZONE: time_zone,
         CONF_DIASPORA: location_name not in ("Jerusalem",),

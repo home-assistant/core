@@ -114,9 +114,7 @@ async def test_issur_melacha_sensor(
     setup_hass: None,
 ) -> None:
     """Test Issur Melacha sensor output."""
-    test_time = jcal_params["dtime"]
-    result = jcal_params["results"]
-    with freeze_time(test_time):
+    with freeze_time(jcal_params["test_time"]):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -124,7 +122,7 @@ async def test_issur_melacha_sensor(
             hass.states.get(
                 "binary_sensor.jewish_calendar_issur_melacha_in_effect"
             ).state
-            == result["state"]
+            == (result := jcal_params["results"])["state"]
         )
 
         with freeze_time(result["update"]):
@@ -148,13 +146,13 @@ async def test_issur_melacha_sensor(
     indirect=True,
 )
 async def test_issur_melacha_sensor_update(
-    hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    jcal_params: dict,
+    config_entry: MockConfigEntry,
+    setup_hass: None,
 ) -> None:
     """Test Issur Melacha sensor output."""
-    test_time = jcal_params["dtime"]
-    result = jcal_params["results"]
-
-    with freeze_time(test_time):
+    with freeze_time(test_time := jcal_params["test_time"]):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -162,7 +160,7 @@ async def test_issur_melacha_sensor_update(
             hass.states.get(
                 "binary_sensor.jewish_calendar_issur_melacha_in_effect"
             ).state
-            == result[0]
+            == jcal_params["results"][0]
         )
 
     test_time += timedelta(microseconds=1)
@@ -173,7 +171,7 @@ async def test_issur_melacha_sensor_update(
             hass.states.get(
                 "binary_sensor.jewish_calendar_issur_melacha_in_effect"
             ).state
-            == result[1]
+            == jcal_params["results"][1]
         )
 
 
