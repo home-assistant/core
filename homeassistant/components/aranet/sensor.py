@@ -77,7 +77,7 @@ SENSOR_DESCRIPTIONS = {
     "status": AranetSensorEntityDescription(
         key="threshold",
         translation_key="threshold",
-        name="threshold",
+        name="Threshold",
         device_class=SensorDeviceClass.ENUM,
         options=[status.name.lower() for status in Color],
     ),
