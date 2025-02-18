@@ -237,7 +237,7 @@ async def _get_client_and_ha_id(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up Home Connect component."""
 
-    async def _async_service_program(call: ServiceCall, start: bool):
+    async def _async_service_program(call: ServiceCall, start: bool) -> None:
         """Execute calls to services taking a program."""
         program = call.data[ATTR_PROGRAM]
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
@@ -323,7 +323,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def _async_service_set_program_options(call: ServiceCall, active: bool):
+    async def _async_service_set_program_options(
+        call: ServiceCall, active: bool
+    ) -> None:
         """Execute calls to services taking a program."""
         option_key = call.data[ATTR_KEY]
         value = call.data[ATTR_VALUE]
@@ -396,7 +398,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def _async_service_command(call: ServiceCall, command_key: CommandKey):
+    async def _async_service_command(
+        call: ServiceCall, command_key: CommandKey
+    ) -> None:
         """Execute calls to services executing a command."""
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
 
@@ -412,15 +416,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def async_service_option_active(call: ServiceCall):
+    async def async_service_option_active(call: ServiceCall) -> None:
         """Service for setting an option for an active program."""
         await _async_service_set_program_options(call, True)
 
-    async def async_service_option_selected(call: ServiceCall):
+    async def async_service_option_selected(call: ServiceCall) -> None:
         """Service for setting an option for a selected program."""
         await _async_service_set_program_options(call, False)
 
-    async def async_service_setting(call: ServiceCall):
+    async def async_service_setting(call: ServiceCall) -> None:
         """Service for changing a setting."""
         key = call.data[ATTR_KEY]
         value = call.data[ATTR_VALUE]
@@ -439,19 +443,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def async_service_pause_program(call: ServiceCall):
+    async def async_service_pause_program(call: ServiceCall) -> None:
         """Service for pausing a program."""
         await _async_service_command(call, CommandKey.BSH_COMMON_PAUSE_PROGRAM)
 
-    async def async_service_resume_program(call: ServiceCall):
+    async def async_service_resume_program(call: ServiceCall) -> None:
         """Service for resuming a paused program."""
         await _async_service_command(call, CommandKey.BSH_COMMON_RESUME_PROGRAM)
 
-    async def async_service_select_program(call: ServiceCall):
+    async def async_service_select_program(call: ServiceCall) -> None:
         """Service for selecting a program."""
         await _async_service_program(call, False)
 
-    async def async_service_set_program_and_options(call: ServiceCall):
+    async def async_service_set_program_and_options(call: ServiceCall) -> None:
         """Service for setting a program and options."""
         data = dict(call.data)
         program = data.pop(ATTR_PROGRAM, None)
@@ -521,7 +525,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def async_service_start_program(call: ServiceCall):
+    async def async_service_start_program(call: ServiceCall) -> None:
         """Service for starting a program."""
         await _async_service_program(call, True)
 
