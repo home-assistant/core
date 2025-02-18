@@ -89,6 +89,11 @@ SUPPORTED_SCHEMA_KEYS = {
 }
 
 
+def _camel_to_snake(name: str) -> str:
+    """Convert camel case to snake case."""
+    return "".join(["_" + c.lower() if c.isupper() else c for c in name]).lstrip("_")
+
+
 def _format_schema(schema: dict[str, Any]) -> Schema:
     """Format the schema to be compatible with Gemini API."""
     if subschemas := schema.get("allOf"):
@@ -101,8 +106,11 @@ def _format_schema(schema: dict[str, Any]) -> Schema:
 
     result = {}
     for key, val in schema.items():
+        key = _camel_to_snake(key)
         if key not in SUPPORTED_SCHEMA_KEYS:
             continue
+        if key == "any_of":
+            val = [_format_schema(subschema) for subschema in val]
         if key == "type":
             val = val.upper()
         if key == "items":
@@ -122,7 +130,7 @@ def _format_schema(schema: dict[str, Any]) -> Schema:
         # An object with undefined properties is not supported by Gemini API.
         # Fallback to JSON string. This will probably fail for most tools that want it,
         # but we don't have a better fallback strategy so far.
-        result["properties"] = {"json": {"type_": "STRING"}}
+        result["properties"] = {"json": {"type": "STRING"}}
         result["required"] = []
     return cast(Schema, result)
 

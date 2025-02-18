@@ -1,6 +1,5 @@
 """Tests helpers."""
 
-from collections.abc import Generator
 from unittest.mock import Mock, patch
 
 import pytest
@@ -15,14 +14,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_genai() -> Generator[None]:
-    """Mock the genai call in async_setup_entry."""
-    with patch("google.ai.generativelanguage_v1beta.ModelServiceAsyncClient.get_model"):
-        yield
-
-
-@pytest.fixture
-def mock_config_entry(hass: HomeAssistant, mock_genai: None) -> MockConfigEntry:
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
         domain="google_generative_ai_conversation",

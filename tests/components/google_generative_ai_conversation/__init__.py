@@ -23,7 +23,7 @@ CLIENT_ERROR_401 = ClientError(
         __class__=requests.Response,
         json=Mock(
             return_value={
-                "message": "Unauthorized",
+                "message": "Unauthorized API_KEY_INVALID",
                 "status": "unauthorized",
             }
         ),

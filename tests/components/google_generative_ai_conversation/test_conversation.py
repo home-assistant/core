@@ -4,7 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from freezegun import freeze_time
-from google.ai.generativelanguage_v1beta.types.content import FunctionCall
+from google.genai.types import FunctionCall
 import pytest
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
@@ -487,7 +487,7 @@ async def test_escape_decode() -> None:
 
 
 @pytest.mark.parametrize(
-    ("openapi", "protobuf"),
+    ("openapi", "genai_schema"),
     [
         (
             {"type": "string", "enum": ["a", "b", "c"]},
@@ -499,21 +499,20 @@ async def test_escape_decode() -> None:
         ),
         (
             {"anyOf": [{"type": "integer"}, {"type": "number"}]},
-            {
-                # TODO is this a bug?
-                # "type": "INTEGER"
-            },
+            {"any_of": [{"type": "INTEGER"}, {"type": "NUMBER"}]},
         ),
         (
             {
-                "anyOf": [
-                    {"anyOf": [{"type": "integer"}, {"type": "number"}]},
-                    {"anyOf": [{"type": "integer"}, {"type": "number"}]},
+                "any_of": [
+                    {"any_of": [{"type": "integer"}, {"type": "number"}]},
+                    {"any_of": [{"type": "integer"}, {"type": "number"}]},
                 ]
             },
             {
-                # TODO is this a bug?
-                # "type": "INTEGER"
+                "any_of": [
+                    {"any_of": [{"type": "INTEGER"}, {"type": "NUMBER"}]},
+                    {"any_of": [{"type": "INTEGER"}, {"type": "NUMBER"}]},
+                ]
             },
         ),
         ({"type": "string", "format": "lower"}, {"format": "lower", "type": "STRING"}),
@@ -538,7 +537,7 @@ async def test_escape_decode() -> None:
             {"type": "object", "additionalProperties": True},
             {
                 "type": "OBJECT",
-                "properties": {"json": {"type_": "STRING"}},
+                "properties": {"json": {"type": "STRING"}},
                 "required": [],
             },
         ),
@@ -548,6 +547,6 @@ async def test_escape_decode() -> None:
         ),
     ],
 )
-async def test_format_schema(openapi, protobuf) -> None:
+async def test_format_schema(openapi, genai_schema) -> None:
     """Test _format_schema."""
-    assert _format_schema(openapi) == protobuf
+    assert _format_schema(openapi) == genai_schema

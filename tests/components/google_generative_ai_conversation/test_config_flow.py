@@ -178,7 +178,11 @@ async def test_options_switching(
     expected_options,
 ) -> None:
     """Test the options form."""
-    hass.config_entries.async_update_entry(mock_config_entry, options=current_options)
+    with patch("google.genai.models.AsyncModels.get"):
+        hass.config_entries.async_update_entry(
+            mock_config_entry, options=current_options
+        )
+        await hass.async_block_till_done()
     options_flow = await hass.config_entries.options.async_init(
         mock_config_entry.entry_id
     )
