@@ -271,7 +271,7 @@ def get_significant_states_with_session(
         # https://github.com/home-assistant/core/issues/137178
         # If we include the start time state we need to limit the
         # number of metadata_ids we query for at a time to avoid
-        # hitting limits in the MySQL/MariaDB optimizer that prevent
+        # hitting limits in the MySQL optimizer that prevent
         # the start time state query from using an index-only optimization
         # to find the start time state.
         iter_metadata_ids = chunked_or_all(metadata_ids, MAX_IDS_FOR_INDEXED_GROUP_BY)
