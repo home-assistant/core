@@ -11,16 +11,11 @@ from homeassistant.components.jewish_calendar.const import (
     CONF_CANDLE_LIGHT_MINUTES,
     CONF_DIASPORA,
     CONF_HAVDALAH_OFFSET_MINUTES,
+    DEFAULT_HAVDALAH_OFFSET_MINUTES,
     DEFAULT_NAME,
     DOMAIN,
 )
-from homeassistant.const import (
-    CONF_LANGUAGE,
-    CONF_LATITUDE,
-    CONF_LOCATION,
-    CONF_LONGITUDE,
-    CONF_TIME_ZONE,
-)
+from homeassistant.const import CONF_LANGUAGE, CONF_LOCATION, CONF_TIME_ZONE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -39,15 +34,6 @@ LOCATIONS = {
 
 
 @pytest.fixture
-def mock_config_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    return MockConfigEntry(
-        title=DEFAULT_NAME,
-        domain=DOMAIN,
-    )
-
-
-@pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
@@ -62,13 +48,14 @@ def jcal_params(request: pytest.FixtureRequest) -> dict | None:
     if not hasattr(request, "param"):
         return None
 
-    location_name, dtime, results, havdalah_offset = request.param
+    location_name, dtime, results = request.param
     time_zone, latlng, candle_light = LOCATIONS[location_name]
 
     tz_info = dt_util.get_time_zone(time_zone)
+    dtime = dtime.replace(tzinfo=tz_info)
     if isinstance(results, dict):
         results = {
-            key: value.replace(tzinfo=time_zone)
+            key: value.replace(tzinfo=tz_info)
             if isinstance(value, dt.datetime)
             else value
             for key, value in results.items()
@@ -77,11 +64,11 @@ def jcal_params(request: pytest.FixtureRequest) -> dict | None:
     return {
         "dtime": dtime,
         "results": results,
-        CONF_TIME_ZONE: tz_info,
-        CONF_DIASPORA: location_name in ("jerusalem",),
+        CONF_TIME_ZONE: time_zone,
+        CONF_DIASPORA: location_name not in ("Jerusalem",),
         CONF_LOCATION: latlng,
         CONF_CANDLE_LIGHT_MINUTES: candle_light,
-        CONF_HAVDALAH_OFFSET_MINUTES: havdalah_offset,
+        CONF_HAVDALAH_OFFSET_MINUTES: DEFAULT_HAVDALAH_OFFSET_MINUTES,
     }
 
 
@@ -92,30 +79,34 @@ def language(request: pytest.FixtureRequest) -> str:
 
 
 @pytest.fixture
-async def setup_integration(
-    hass: HomeAssistant, jcal_params: dict | None, language: str
-) -> MockConfigEntry:
-    """Set up the jewish_calendar integration for testing."""
-
-    entry = MockConfigEntry(
-        title=DEFAULT_NAME, domain=DOMAIN, data={CONF_LANGUAGE: language}
-    )
+async def setup_hass(hass: HomeAssistant, jcal_params: dict | None) -> None:
+    """Set up Home Assistant for testing the jewish_calendar integration."""
 
     if jcal_params:
-        entry.data |= {
-            CONF_DIASPORA: jcal_params["diaspora"],
-            CONF_TIME_ZONE: jcal_params["time_zone"],
-            CONF_LOCATION: {
-                CONF_LATITUDE: jcal_params["latlng"].lat,
-                CONF_LONGITUDE: jcal_params["latlng"].lng,
-            },
+        await hass.config.async_set_time_zone(jcal_params[CONF_TIME_ZONE])
+        hass.config.latitude = jcal_params[CONF_LOCATION].lat
+        hass.config.longitude = jcal_params[CONF_LOCATION].lng
+
+
+@pytest.fixture
+def config_entry(jcal_params: dict | None, language: str) -> MockConfigEntry:
+    """Set up the jewish_calendar integration for testing."""
+    param_data = {}
+    param_options = {}
+
+    if jcal_params:
+        param_data = {
+            CONF_DIASPORA: jcal_params[CONF_DIASPORA],
+            CONF_TIME_ZONE: jcal_params[CONF_TIME_ZONE],
         }
-        entry.options = {
-            CONF_CANDLE_LIGHT_MINUTES: jcal_params["candle_light"],
-            CONF_HAVDALAH_OFFSET_MINUTES: jcal_params["havdalah_offset"],
+        param_options = {
+            CONF_CANDLE_LIGHT_MINUTES: jcal_params[CONF_CANDLE_LIGHT_MINUTES],
+            CONF_HAVDALAH_OFFSET_MINUTES: jcal_params[CONF_HAVDALAH_OFFSET_MINUTES],
         }
 
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    return entry
+    return MockConfigEntry(
+        title=DEFAULT_NAME,
+        domain=DOMAIN,
+        data={CONF_LANGUAGE: language, **param_data},
+        options=param_options,
+    )
