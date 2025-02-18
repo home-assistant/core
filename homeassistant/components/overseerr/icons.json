@@ -21,11 +21,32 @@
       },
       "available_requests": {
         "default": "mdi:message-bulleted"
+      },
+      "total_issues": {
+        "default": "mdi:alert"
+      },
+      "video_issues": {
+        "default": "mdi:video-marker"
+      },
+      "audio_issues": {
+        "default": "mdi:volume-low"
+      },
+      "subtitle_issues": {
+        "default": "mdi:subtitles"
+      },
+      "other_issues": {
+        "default": "mdi:alert-circle"
+      },
+      "open_issues": {
+        "default": "mdi:alert"
       }
     },
     "event": {
       "last_media_event": {
         "default": "mdi:multimedia"
+      },
+      "last_issue_event": {
+        "default": "mdi:alert"
       }
     }
   },

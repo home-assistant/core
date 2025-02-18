@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.core import HomeAssistant
 
 from . import CONF_CLOUDHOOK_URL
-from .coordinator import OverseerrConfigEntry
+from .coordinator import OverseerrConfigEntry, OverseerrData
 
 
 async def async_get_config_entry_diagnostics(
@@ -18,9 +18,9 @@ async def async_get_config_entry_diagnostics(
 
     has_cloudhooks = CONF_CLOUDHOOK_URL in entry.data
 
-    data = entry.runtime_data
+    data: OverseerrData = entry.runtime_data.data
 
     return {
         "has_cloudhooks": has_cloudhooks,
-        "coordinator_data": asdict(data.data),
+        "coordinator_data": asdict(data),
     }

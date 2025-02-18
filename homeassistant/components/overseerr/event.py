@@ -38,6 +38,17 @@ EVENTS: tuple[OverseerrEventEntityDescription, ...] = (
         ],
         nullable_fields=["comment", "issue"],
     ),
+    OverseerrEventEntityDescription(
+        key="issue",
+        translation_key="last_issue_event",
+        event_types=[
+            "reported",
+            "comment",
+            "resolved",
+            "reopened",
+        ],
+        nullable_fields=["comment"],
+    ),
 )
 
 
@@ -108,7 +119,6 @@ class OverseerrEvent(OverseerrEntity, EventEntity):
 
 def parse_event(event: dict[str, Any], nullable_fields: list[str]) -> dict[str, Any]:
     """Parse event."""
-    event.pop("notification_type")
     event.pop("image")
     for field in nullable_fields:
         event.pop(field)
@@ -122,4 +132,6 @@ def parse_event(event: dict[str, Any], nullable_fields: list[str]) -> dict[str, 
                 media[field] = None
     if (request := event.get("request")) is not None:
         request["request_id"] = int(request["request_id"])
+    if (issue := event.get("issue")) is not None:
+        issue["issue_id"] = int(issue["issue_id"])
     return event
