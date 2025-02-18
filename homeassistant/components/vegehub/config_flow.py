@@ -7,7 +7,6 @@ from vegehub import VegeHub
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.webhook import (
     async_generate_id as webhook_generate_id,
     async_generate_url as webhook_generate_url,
@@ -20,6 +19,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_WEBHOOK_ID,
 )
+from homeassistant.helpers.service_info import zeroconf
 from homeassistant.util.network import is_ip_address
 
 from .const import DOMAIN
