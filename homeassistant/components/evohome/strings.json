@@ -2,7 +2,7 @@
   "services": {
     "set_system_mode": {
       "name": "Set system mode",
-      "description": "Sets the system mode, either indefinitely, or for a specified period of time, after which it will revert to Auto mode. Not all systems support all modes.",
+      "description": "Sets the system mode, either indefinitely, or for a specified period of time, after which it will revert to Auto. Not all systems support all modes.",
       "fields": {
         "mode": {
           "name": "[%key:common::config_flow::data::mode%]",
