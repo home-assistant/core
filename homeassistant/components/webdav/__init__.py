@@ -9,7 +9,7 @@ from aiowebdav2.exceptions import UnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS
@@ -48,14 +48,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
 
     entry.runtime_data = client
 
-    _async_notify_backup_listeners_soon(hass)
-
+    _async_notify_backup_listeners(hass)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bool:
     """Unload a WebDAV config entry."""
-    _async_notify_backup_listeners_soon(hass)
+    _async_notify_backup_listeners(hass)
     return True
 
 
@@ -63,9 +62,3 @@ def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
     """Notify all backup listeners."""
     for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
         listener()
-
-
-@callback
-def _async_notify_backup_listeners_soon(hass: HomeAssistant) -> None:
-    """Schedule a notification of all backup listeners."""
-    hass.loop.call_soon(_async_notify_backup_listeners, hass)
