@@ -284,6 +284,7 @@ FLOWS = {
         "igloohome",
         "imap",
         "imgw_pib",
+        "imou_life",
         "improv_ble",
         "incomfort",
         "inkbird",
