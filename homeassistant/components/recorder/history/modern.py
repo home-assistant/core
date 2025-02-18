@@ -151,7 +151,7 @@ def _significant_states_stmt(
     no_attributes: bool,
     include_start_time_state: bool,
     run_start_ts: float | None,
-    slow_filesort_on_dependant_subquery: bool,
+    filesort_on_dependant_subquery: bool,
 ) -> Select | CompoundSelect:
     """Query the database for significant state changes."""
     include_last_changed = not significant_changes_only
@@ -190,7 +190,7 @@ def _significant_states_stmt(
                 metadata_ids,
                 no_attributes,
                 include_last_changed,
-                slow_filesort_on_dependant_subquery,
+                filesort_on_dependant_subquery,
             ).subquery(),
             no_attributes,
             include_last_changed,
@@ -264,10 +264,10 @@ def get_significant_states_with_session(
     rows: list[Row] = []
     if TYPE_CHECKING:
         assert instance.database_engine is not None
-    slow_filesort_on_dependant_subquery = (
-        instance.database_engine.optimizer.slow_filesort_on_dependant_subquery
+    filesort_on_dependant_subquery = (
+        instance.database_engine.optimizer.filesort_on_dependant_subquery
     )
-    if include_start_time_state and slow_filesort_on_dependant_subquery:
+    if include_start_time_state and filesort_on_dependant_subquery:
         # https://github.com/home-assistant/core/issues/132865
         # If we include the start time state we need to limit the
         # number of metadata_ids we query for at a time to avoid
@@ -288,7 +288,7 @@ def get_significant_states_with_session(
             no_attributes,
             include_start_time_state,
             oldest_ts,
-            slow_filesort_on_dependant_subquery,
+            filesort_on_dependant_subquery,
         )
         row_chunk = cast(
             list[Row],
@@ -322,7 +322,7 @@ def _generate_significant_states_with_session_stmt(
     no_attributes: bool,
     include_start_time_state: bool,
     oldest_ts: float | None,
-    slow_filesort_on_dependant_subquery: bool,
+    filesort_on_dependant_subquery: bool,
 ) -> StatementLambdaElement:
     return lambda_stmt(
         lambda: _significant_states_stmt(
@@ -335,7 +335,7 @@ def _generate_significant_states_with_session_stmt(
             no_attributes,
             include_start_time_state,
             oldest_ts,
-            slow_filesort_on_dependant_subquery,
+            filesort_on_dependant_subquery,
         ),
         track_on=[
             bool(single_metadata_id),
@@ -344,7 +344,7 @@ def _generate_significant_states_with_session_stmt(
             significant_changes_only,
             no_attributes,
             include_start_time_state,
-            slow_filesort_on_dependant_subquery,
+            filesort_on_dependant_subquery,
         ],
     )
 
@@ -619,10 +619,10 @@ def _get_start_time_state_for_entities_stmt(
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
-    slow_filesort_on_dependant_subquery: bool,
+    filesort_on_dependant_subquery: bool,
 ) -> Select:
     """Baked query to get states for specific entities."""
-    if slow_filesort_on_dependant_subquery:
+    if filesort_on_dependant_subquery:
         # Simple group-by for MySQL, must use less
         # than 1000 metadata_ids in the IN clause for MySQL
         # or it will optimize poorly.
@@ -717,7 +717,7 @@ def _get_start_time_state_stmt(
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
-    slow_filesort_on_dependant_subquery: bool,
+    filesort_on_dependant_subquery: bool,
 ) -> Select:
     """Return the states at a specific point in time."""
     if single_metadata_id:
@@ -737,7 +737,7 @@ def _get_start_time_state_stmt(
         metadata_ids,
         no_attributes,
         include_last_changed,
-        slow_filesort_on_dependant_subquery,
+        filesort_on_dependant_subquery,
     )
 
 

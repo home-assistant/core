@@ -464,7 +464,7 @@ def setup_connection_for_dialect(
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
     slow_range_in_select = False
-    slow_filesort_on_dependant_subquery = False
+    filesort_on_dependant_subquery = False
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
@@ -531,7 +531,7 @@ def setup_connection_for_dialect(
             else:
                 # MySQL
                 # https://github.com/home-assistant/core/issues/137178
-                slow_filesort_on_dependant_subquery = True
+                filesort_on_dependant_subquery = True
 
             slow_range_in_select = bool(
                 not version
@@ -571,7 +571,7 @@ def setup_connection_for_dialect(
         version=version,
         optimizer=DatabaseOptimizer(
             slow_range_in_select=slow_range_in_select,
-            slow_filesort_on_dependant_subquery=slow_filesort_on_dependant_subquery,
+            filesort_on_dependant_subquery=filesort_on_dependant_subquery,
         ),
         max_bind_vars=DEFAULT_MAX_BIND_VARS,
     )

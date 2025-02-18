@@ -46,4 +46,4 @@ class DatabaseOptimizer:
     # 999 elements since as soon as we hit 1000 elements MySQL
     # will no longer use the group_index_range optimization.
     # https://github.com/home-assistant/core/issues/132865#issuecomment-2543160459
-    slow_filesort_on_dependant_subquery: bool
+    filesort_on_dependant_subquery: bool

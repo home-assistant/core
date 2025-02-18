@@ -2032,12 +2032,12 @@ def _generate_statistics_at_time_stmt(
     metadata_ids: set[int],
     start_time_ts: float,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-    slow_filesort_on_dependant_subquery: bool,
+    filesort_on_dependant_subquery: bool,
 ) -> StatementLambdaElement:
     """Create the statement for finding the statistics for a given time."""
 
     stmt = _generate_select_columns_for_types_stmt(table, types)
-    if slow_filesort_on_dependant_subquery:
+    if filesort_on_dependant_subquery:
         # Simple group-by for MySQL, must use less
         # than 1000 metadata_ids in the IN clause for MySQL
         # or it will optimize poorly.
@@ -2105,8 +2105,8 @@ def _statistics_at_time(
     if TYPE_CHECKING:
         assert instance.database_engine is not None
     if (
-        slow_filesort_on_dependant_subquery
-        := instance.database_engine.optimizer.slow_filesort_on_dependant_subquery
+        filesort_on_dependant_subquery
+        := instance.database_engine.optimizer.filesort_on_dependant_subquery
     ):
         # https://github.com/home-assistant/core/issues/132865
         # If we include the start time state we need to limit the
@@ -2123,7 +2123,7 @@ def _statistics_at_time(
             metadata_ids_chunk,
             start_time_ts,
             types,
-            slow_filesort_on_dependant_subquery,
+            filesort_on_dependant_subquery,
         )
         row_chunk = cast(list[Row], execute_stmt_lambda_element(session, stmt))
         if rows:
