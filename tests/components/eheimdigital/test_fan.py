@@ -27,8 +27,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import init_integration
+
 from tests.common import MockConfigEntry, snapshot_platform
-from tests.components.eheimdigital.conftest import init_integration
 
 
 @pytest.mark.usefixtures("classic_vario_mock")
