@@ -264,10 +264,10 @@
         "name": "{location} schedule turn-on"
       },
       "relative_hour_to_start_wm": {
-        "name": "Delay starts in"
+        "name": "Delayed start"
       },
       "relative_hour_to_start_wm_for_location": {
-        "name": "{location} delay starts in"
+        "name": "{location} delayed start"
       },
       "relative_hour_to_stop": {
         "name": "Schedule turn-off"
@@ -276,10 +276,10 @@
         "name": "{location} schedule turn-off"
       },
       "relative_hour_to_stop_wm": {
-        "name": "Delay ends in"
+        "name": "Delayed end"
       },
       "relative_hour_to_stop_wm_for_location": {
-        "name": "{location} delay ends in"
+        "name": "{location} delayed end"
       },
       "sleep_timer_relative_hour_to_stop": {
         "name": "Sleep timer"
