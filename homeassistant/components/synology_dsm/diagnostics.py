@@ -46,8 +46,7 @@ async def async_get_config_entry_diagnostics(
     }
 
     if syno_api.external_usb is not None:
-        for dev_id in syno_api.external_usb.get_devices:
-            device = syno_api.external_usb.get_device(dev_id)
+        for device in api.external_usb.get_devices.values():
             if device is not None:
                 diag_data["external_usb"]["devices"][device.device_id] = {
                     "name": device.device_name,
