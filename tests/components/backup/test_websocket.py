@@ -1361,6 +1361,14 @@ async def test_config_update(
             "type": "backup/config/update",
             "agents": {"test-agent1": {"favorite": True}},
         },
+        {
+            "type": "backup/config/update",
+            "retention": {"copies": 0},
+        },
+        {
+            "type": "backup/config/update",
+            "retention": {"days": 0},
+        },
     ],
 )
 async def test_config_update_errors(
