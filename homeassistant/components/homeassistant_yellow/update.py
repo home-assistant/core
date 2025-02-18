@@ -23,7 +23,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, RADIO_DEVICE
+from .const import DOMAIN, FIRMWARE, RADIO_DEVICE, RADIO_MANUFACTURER, RADIO_MODEL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -76,7 +76,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         ),
     }
 
-    bootloader_reset_type = "yellow"
+    bootloader_reset_type = "yellow"  # Triggers a GPIO reset
 
     def __init__(
         self,
@@ -90,8 +90,8 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         self._attr_unique_id = f"yellow_{self.entity_description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, "yellow")},
-            manufacturer="Nabu Casa",
-            model="Home Assistant Yellow",
+            manufacturer=RADIO_MANUFACTURER,
+            model=RADIO_MODEL,
         )
 
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
@@ -99,6 +99,6 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             self._config_entry,
             data={
                 **self._config_entry.data,
-                "firmware": firmware_info.firmware_type,
+                FIRMWARE: firmware_info.firmware_type,
             },
         )

@@ -7,6 +7,15 @@ from typing import Self
 DOMAIN = "homeassistant_sky_connect"
 DOCS_WEB_FLASHER_URL = "https://skyconnect.home-assistant.io/firmware-update/"
 
+FIRMWARE = "firmware"
+SERIAL_NUMBER = "serial_number"
+MANUFACTURER = "manufacturer"
+PRODUCT = "product"
+DESCRIPTION = "description"
+PID = "pid"
+VID = "vid"
+DEVICE = "device"
+
 
 @dataclasses.dataclass(frozen=True)
 class VariantInfo:
