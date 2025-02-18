@@ -28,7 +28,7 @@ class _LatLng(NamedTuple):
 
 LOCATIONS = {
     "Jerusalem": ("Asia/Jerusalem", _LatLng(31.7683, 35.2137), 40),
-    "NYC": ("America/New_York", _LatLng(40.7128, -74.006), 18),
+    "New York": ("America/New_York", _LatLng(40.7128, -74.006), 18),
 }
 
 
@@ -82,7 +82,7 @@ def language(request: pytest.FixtureRequest) -> str:
     return getattr(request, "param", "english")
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 async def setup_hass(hass: HomeAssistant, jcal_params: dict | None) -> None:
     """Set up Home Assistant for testing the jewish_calendar integration."""
 
