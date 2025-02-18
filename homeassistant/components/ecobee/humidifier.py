@@ -104,15 +104,11 @@ class EcobeeHumidifier(HumidifierEntity):
             self._last_humidifier_on_mode = self.mode
 
     @property
-    def action(self) -> HumidifierAction | None:
+    def action(self) -> HumidifierAction:
         """Return the current action."""
-        actions = [
-            ECOBEE_HUMIDIFIER_ACTION_TO_HASS[status]
-            for status in self.thermostat["equipmentStatus"].split(",")
-            if status in ECOBEE_HUMIDIFIER_ACTION_TO_HASS
-        ]
-        if actions:
-            return actions[0]
+        for status in self.thermostat["equipmentStatus"].split(","):
+            if status in ECOBEE_HUMIDIFIER_ACTION_TO_HASS:
+                return ECOBEE_HUMIDIFIER_ACTION_TO_HASS[status]
         return HumidifierAction.IDLE if self.is_on else HumidifierAction.OFF
 
     @property
