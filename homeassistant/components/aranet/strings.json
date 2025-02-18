@@ -27,9 +27,9 @@
       "threshold_indication": {
         "state": {
           "error": "Error",
-          "green": "Normal",
-          "yellow": "Elevated",
-          "red": "Unhealthy"
+          "green": "Green",
+          "yellow": "Yellow",
+          "red": "Red"
         }
       }
     }
