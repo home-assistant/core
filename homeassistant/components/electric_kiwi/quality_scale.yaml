@@ -64,15 +64,15 @@ rules:
     comment: |
       Web services only
   docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
+  docs-examples: done
+  docs-known-limitations: done
   docs-supported-devices:
     status: exempt
     comment: |
       No devices
   docs-supported-functions: todo
   docs-troubleshooting: todo
-  docs-use-cases: todo
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |
