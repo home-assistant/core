@@ -399,7 +399,7 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
 
 
 def create_engine_test_for_schema_version_postfix(
-    *args, hass: HomeAssistant, schema_version_postfix: str, **kwargs
+    *args, schema_version_postfix: str, **kwargs
 ):
     """Test version of create_engine that initializes with old schema.
 
@@ -408,10 +408,15 @@ def create_engine_test_for_schema_version_postfix(
     schema_module = get_schema_module_path(schema_version_postfix)
     importlib.import_module(schema_module)
     old_db_schema = sys.modules[schema_module]
+    instance: Recorder | None = None
+    if "hass" in kwargs:
+        hass: HomeAssistant = kwargs.pop("hass")
+        instance = recorder.get_instance(hass)
     engine = create_engine(*args, **kwargs)
-    instance = recorder.get_instance(hass)
-    instance.engine = engine
-    sqlalchemy_event.listen(engine, "connect", instance._setup_recorder_connection)
+    if instance is not None:
+        instance = recorder.get_instance(hass)
+        instance.engine = engine
+        sqlalchemy_event.listen(engine, "connect", instance._setup_recorder_connection)
     old_db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         session.add(
