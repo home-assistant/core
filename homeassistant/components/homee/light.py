@@ -132,6 +132,9 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
             self._attr_translation_placeholders = {
                 "instance": str(self._on_off_attr.instance)
             }
+        else:
+            # If a device has only one light, it will get its name.
+            self._attr_name = None
         self._attr_unique_id = (
             f"{entry.runtime_data.settings.uid}-{self._node.id}-{self._on_off_attr.id}"
         )
@@ -148,17 +151,9 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
     @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the color of the light."""
-        # Handle color temperature mode
-        if self._mode_attr is not None:
-            mode = self._mode_attr.current_value
-
-            # Light is in color temperature mode
-            if mode == 2:
-                return None
-
         assert self._col_attr is not None
         rgb = decimal_to_rgb_list(self._col_attr.current_value)
-        return color_RGB_to_hs(rgb[0], rgb[1], rgb[2])
+        return color_RGB_to_hs(*rgb)
 
     @property
     def color_temp_kelvin(self) -> int:

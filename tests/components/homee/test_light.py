@@ -182,6 +182,12 @@ async def test_light_attributes(
     assert attributes["min_color_temp_kelvin"] == 2202
     assert attributes["max_color_temp_kelvin"] == 4000
 
+    attributes = hass.states.get("light.test_light_light_3").attributes
+    assert attributes["friendly_name"] == "Test Light Light 3"
+    assert attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
+    assert attributes["color_mode"] == ColorMode.BRIGHTNESS
+    assert attributes["brightness"] == 102
+
     attributes = hass.states.get("light.test_light_light_4").attributes
     assert attributes["friendly_name"] == "Test Light Light 4"
     assert attributes["supported_color_modes"] == [ColorMode.ONOFF]
@@ -195,7 +201,8 @@ async def test_light_attributes_temp_only(
 ) -> None:
     """Test if lights get the correct supported modes."""
     await setup_mock_light("light_single.json", hass, mock_homee, mock_config_entry)
-    attributes = hass.states.get("light.test_light_none").attributes
+    attributes = hass.states.get("light.test_light").attributes
+    assert attributes["friendly_name"] == "Test Light"
     assert attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
     assert attributes["color_mode"] == ColorMode.COLOR_TEMP
     assert attributes["min_color_temp_kelvin"] == 2000
