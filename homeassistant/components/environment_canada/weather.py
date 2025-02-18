@@ -35,8 +35,12 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -60,7 +64,8 @@ ICON_CONDITION_MAP = {
     ATTR_CONDITION_HAIL: [26, 27],
 }
 
-SERVICE_ENVIRONMENT_CANADA_FORECAST = "forecast"
+SERVICE_ENVIRONMENT_CANADA_FORECASTS = "get_forecasts"
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -82,9 +87,10 @@ async def async_setup_entry(
 
     platform = entity_platform.async_get_current_platform()
     platform.async_register_entity_service(
-        SERVICE_ENVIRONMENT_CANADA_FORECAST,
+        SERVICE_ENVIRONMENT_CANADA_FORECASTS,
         None,
-        "_async_environment_canada_forecast",
+        "_async_environment_canada_forecasts",
+        supports_response=SupportsResponse.ONLY,
     )
 
 
@@ -194,12 +200,23 @@ class ECWeatherEntity(
         """Return the hourly forecast in native units."""
         return get_forecast(self.ec_data, True)
 
-    @callback
-    def _async_environment_canada_forecast(self) -> list[ExtendedForecast] | None:
-        """Return the hourly forecast in native units."""
-        return cast(
-            list[ExtendedForecast], get_forecast(self.ec_data, False, with_summary=True)
-        )
+    def _async_environment_canada_forecasts(self) -> ServiceResponse:
+        """Return the native Environment Canada forecast."""
+        daily = []
+        for f in self.ec_data.daily_forecasts:
+            day = f.copy()
+            day["timestamp"] = day["timestamp"].isoformat()
+            daily.append(day)
+
+        hourly = []
+        for f in self.ec_data.hourly_forecasts:
+            hour = f.copy()
+            hour["timestamp"] = hour["period"].isoformat()
+            del hour["period"]
+            hourly.append(hour)
+
+        return {"daily_forecast": daily, "hourly_forecast": hourly}
+
 
 def get_forecast(ec_data, hourly) -> list[Forecast] | None:
     """Build the forecast array."""

@@ -1,4 +1,4 @@
-forecast:
+get_forecasts:
   target:
     entity:
       integration: environment_canada
