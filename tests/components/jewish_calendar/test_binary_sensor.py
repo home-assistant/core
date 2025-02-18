@@ -15,57 +15,57 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 MELACHA_PARAMS = [
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 1, 16, 0),
         {"state": STATE_ON, "update": dt(2018, 9, 1, 20, 14), "new_state": STATE_OFF},
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 1, 20, 21),
         {"state": STATE_OFF, "update": dt(2018, 9, 2, 6, 21), "new_state": STATE_OFF},
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 7, 13, 1),
         {"state": STATE_OFF, "update": dt(2018, 9, 7, 19, 4), "new_state": STATE_ON},
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 8, 21, 25),
         {"state": STATE_OFF, "update": dt(2018, 9, 9, 6, 27), "new_state": STATE_OFF},
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 9, 21, 25),
         {"state": STATE_ON, "update": dt(2018, 9, 10, 6, 28), "new_state": STATE_ON},
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 10, 21, 25),
         {"state": STATE_ON, "update": dt(2018, 9, 11, 6, 29), "new_state": STATE_ON},
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 11, 11, 25),
         {"state": STATE_ON, "update": dt(2018, 9, 11, 19, 57), "new_state": STATE_OFF},
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 29, 16, 25),
         {"state": STATE_ON, "update": dt(2018, 9, 29, 19, 25), "new_state": STATE_OFF},
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 29, 21, 25),
         {"state": STATE_OFF, "update": dt(2018, 9, 30, 6, 48), "new_state": STATE_OFF},
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 30, 21, 25),
         {"state": STATE_ON, "update": dt(2018, 10, 1, 6, 49), "new_state": STATE_ON},
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 10, 1, 21, 25),
         {"state": STATE_ON, "update": dt(2018, 10, 2, 6, 50), "new_state": STATE_ON},
     ),
@@ -108,10 +108,7 @@ MELACHA_TEST_IDS = [
     "jcal_params", MELACHA_PARAMS, ids=MELACHA_TEST_IDS, indirect=True
 )
 async def test_issur_melacha_sensor(
-    hass: HomeAssistant,
-    jcal_params: dict,
-    config_entry: MockConfigEntry,
-    setup_hass: None,
+    hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry
 ) -> None:
     """Test Issur Melacha sensor output."""
     with freeze_time(jcal_params["test_time"]):
@@ -139,17 +136,14 @@ async def test_issur_melacha_sensor(
 @pytest.mark.parametrize(
     "jcal_params",
     [
-        ("NYC", dt(2020, 10, 23, 17, 44, 59, 999999), [STATE_OFF, STATE_ON]),
-        ("NYC", dt(2020, 10, 24, 18, 42, 59, 999999), [STATE_ON, STATE_OFF]),
+        ("New York", dt(2020, 10, 23, 17, 44, 59, 999999), [STATE_OFF, STATE_ON]),
+        ("New York", dt(2020, 10, 24, 18, 42, 59, 999999), [STATE_ON, STATE_OFF]),
     ],
     ids=["before_candle_lighting", "before_havdalah"],
     indirect=True,
 )
 async def test_issur_melacha_sensor_update(
-    hass: HomeAssistant,
-    jcal_params: dict,
-    config_entry: MockConfigEntry,
-    setup_hass: None,
+    hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry
 ) -> None:
     """Test Issur Melacha sensor output."""
     with freeze_time(test_time := jcal_params["test_time"]):
