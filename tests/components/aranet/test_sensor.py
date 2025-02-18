@@ -214,11 +214,11 @@ async def test_sensors_aranet4(
     assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
     assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
-    status_sensor = hass.states.get("sensor.aranet4_12345_concentration_level")
+    status_sensor = hass.states.get("sensor.aranet4_12345_threshold_indication")
     status_sensor_attrs = status_sensor.attributes
     assert status_sensor.state == "green"
     assert (
-        status_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Concentration Level"
+        status_sensor_attrs[ATTR_FRIENDLY_NAME] == "Aranet4 12345 Threshold Indication"
     )
     assert status_sensor_attrs[ATTR_OPTIONS] == ["error", "green", "yellow", "red"]
 
@@ -299,11 +299,12 @@ async def test_sensors_aranetrn(
     assert interval_sensor_attrs[ATTR_UNIT_OF_MEASUREMENT] == "s"
     assert interval_sensor_attrs[ATTR_STATE_CLASS] == "measurement"
 
-    status_sensor = hass.states.get("sensor.aranetrn_12345_concentration_level")
+    status_sensor = hass.states.get("sensor.aranetrn_12345_threshold_indication")
     status_sensor_attrs = status_sensor.attributes
     assert status_sensor.state == "green"
     assert (
-        status_sensor_attrs[ATTR_FRIENDLY_NAME] == "AranetRn+ 12345 Concentration Level"
+        status_sensor_attrs[ATTR_FRIENDLY_NAME]
+        == "AranetRn+ 12345 Threshold Indication"
     )
     assert status_sensor_attrs[ATTR_OPTIONS] == ["error", "green", "yellow", "red"]
 

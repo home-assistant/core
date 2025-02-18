@@ -24,7 +24,7 @@
   },
   "entity": {
     "sensor": {
-      "concentration_level": {
+      "threshold_indication": {
         "state": {
           "error": "Error",
           "green": "Normal",
