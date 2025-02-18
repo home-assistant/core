@@ -20,6 +20,8 @@ class MockHeos(Heos):
         self.get_input_sources: AsyncMock = AsyncMock()
         self.get_playlists: AsyncMock = AsyncMock()
         self.get_players: AsyncMock = AsyncMock()
+        self.group_volume_down: AsyncMock = AsyncMock()
+        self.group_volume_up: AsyncMock = AsyncMock()
         self.load_players: AsyncMock = AsyncMock()
         self.play_media: AsyncMock = AsyncMock()
         self.play_preset_station: AsyncMock = AsyncMock()
