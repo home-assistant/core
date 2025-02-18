@@ -28,6 +28,9 @@ from .const import (
     FEED_NAME,
     FEED_TAG,
     LOGGER,
+    SYNC_MODE,
+    SYNC_MODE_AUTO,
+    SYNC_MODE_MANUAL,
 )
 
 
@@ -104,7 +107,23 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                     "mode": "dropdown",
                     "multiple": True,
                 }
+                if user_input.get(SYNC_MODE) == SYNC_MODE_AUTO:
+                    return self.async_create_entry(
+                        title=sensor_name(self.url),
+                        data={
+                            CONF_URL: self.url,
+                            CONF_API_KEY: self.api_key,
+                            CONF_ONLY_INCLUDE_FEEDID: [
+                                feed[FEED_ID] for feed in result[CONF_MESSAGE]
+                            ],
+                        },
+                    )
                 return await self.async_step_choose_feeds()
+        sync_mode_dropdown = {
+            "options": [SYNC_MODE_MANUAL, SYNC_MODE_AUTO],
+            "mode": "dropdown",
+            "translation_key": SYNC_MODE,
+        }
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
@@ -112,6 +131,9 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
                     {
                         vol.Required(CONF_URL): str,
                         vol.Required(CONF_API_KEY): str,
+                        vol.Required(SYNC_MODE, default=SYNC_MODE_MANUAL): selector(
+                            {"select": sync_mode_dropdown}
+                        ),
                     }
                 ),
                 user_input,
