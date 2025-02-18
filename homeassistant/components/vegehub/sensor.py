@@ -59,7 +59,7 @@ class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
         self._unit_of_measurement = UnitOfElectricPotential.VOLT
         self._attr_device_class = SensorDeviceClass.VOLTAGE
         self._attr_translation_key = "analog_sensor"
-        self.latest_value: float | None = None
+        self._attr_available = False
 
         self._attr_suggested_unit_of_measurement = self._unit_of_measurement
         self._attr_native_unit_of_measurement = self._unit_of_measurement
@@ -78,8 +78,10 @@ class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if self.coordinator.data is not None and self._attr_unique_id is not None:
-            self._attr_native_value = self.coordinator.data.get(self._attr_unique_id)
-        else:
-            self._attr_available = False
+        if (
+            self.coordinator.data is not None
+            and self._attr_unique_id is not None
+            and self._attr_unique_id in self.coordinator.data
+        ):
+            self._attr_native_value = self.coordinator.data[self._attr_unique_id]
         super()._handle_coordinator_update()
