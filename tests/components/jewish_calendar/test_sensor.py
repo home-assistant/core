@@ -7,7 +7,7 @@ from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
 
-from homeassistant.components.jewish_calendar.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.jewish_calendar.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
@@ -18,9 +18,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize("language", ["english", "hebrew"])
-async def test_jewish_calendar_min_config(
-    hass: HomeAssistant, config_entry: MockConfigEntry
-) -> None:
+async def test_min_config(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
     """Test minimum jewish calendar configuration."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -219,7 +217,7 @@ SHABBAT_PARAMS = [
             "english_parshat_hashavua": "Ki Tavo",
             "hebrew_parshat_hashavua": "כי תבוא",
         },
-        # "havdalah_offset": 50,
+        50,  # Havdalah offset
     ),
     (
         "NYC",
@@ -553,14 +551,15 @@ OMER_TEST_IDS = [
 
 @pytest.mark.parametrize(("test_time", "result"), OMER_PARAMS, ids=OMER_TEST_IDS)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_omer_sensor(hass: HomeAssistant, test_time, result) -> None:
+async def test_omer_sensor(
+    hass: HomeAssistant, config_entry: MockConfigEntry, test_time, result
+) -> None:
     """Test Omer Count sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
     with freeze_time(test_time):
-        entry = MockConfigEntry(title=DEFAULT_NAME, domain=DOMAIN)
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         future = test_time + timedelta(seconds=30)
@@ -588,14 +587,15 @@ DAFYOMI_TEST_IDS = [
 
 @pytest.mark.parametrize(("test_time", "result"), DAFYOMI_PARAMS, ids=DAFYOMI_TEST_IDS)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_dafyomi_sensor(hass: HomeAssistant, test_time, result) -> None:
+async def test_dafyomi_sensor(
+    hass: HomeAssistant, config_entry: MockConfigEntry, test_time, result
+) -> None:
     """Test Daf Yomi sensor output."""
     test_time = test_time.replace(tzinfo=dt_util.get_time_zone(hass.config.time_zone))
 
     with freeze_time(test_time):
-        entry = MockConfigEntry(title=DEFAULT_NAME, domain=DOMAIN)
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         future = test_time + timedelta(seconds=30)
