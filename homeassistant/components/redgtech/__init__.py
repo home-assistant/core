@@ -56,7 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Unloading Redgtech entry: %s", entry.entry_id)
-    # Fechar a sessão HTTP
     api = RedgtechAPI(entry.data.get("access_token"))
     await api.close()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
