@@ -310,7 +310,7 @@
     },
     "repeat_set": {
       "name": "Set repeat",
-      "description": "Enables or disables the repeat mode.",
+      "description": "Sets the repeat mode.",
       "fields": {
         "repeat": {
           "name": "Repeat mode",
