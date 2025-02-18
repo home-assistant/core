@@ -94,10 +94,22 @@ BINARY_SENSORS = (
         translation_key="lost",
     ),
     HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_BOTTLE_COOLER,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="bottle_cooler_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
         key=StatusKey.REFRIGERATION_COMMON_DOOR_CHILLER_COMMON,
         boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
         device_class=BinarySensorDeviceClass.DOOR,
         translation_key="chiller_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_FLEX_COMPARTMENT,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="flex_compartment_door",
     ),
     HomeConnectBinarySensorEntityDescription(
         key=StatusKey.REFRIGERATION_COMMON_DOOR_FREEZER,
@@ -110,6 +122,12 @@ BINARY_SENSORS = (
         boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
         device_class=BinarySensorDeviceClass.DOOR,
         translation_key="refrigerator_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_WINE_COMPARTMENT,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="wine_compartment_door",
     ),
 )
 
