@@ -690,48 +690,43 @@ class SqueezeBoxMediaPlayerEntity(
                     "0",
                     str(return_items),
                     ("tags:" + tags) if tags else "tags:laay",
-                    "search:" + search_string if search_string is not None else "",
                 ]
             case "favorites":
-                _param = [
-                    "items",
-                    "0",
-                    str(return_items),
-                    "search:" + search_string if search_string is not None else "",
-                ]
+                _param = ["items", "0", str(return_items)]
             case "artists":
                 _param = [
                     "0",
                     str(return_items),
                     ("tags:" + tags) if tags else "",
-                    "search:" + search_string if search_string is not None else "",
                 ]
             case "genres":
                 _param = [
                     "0",
                     str(return_items),
                     ("tags:" + tags) if tags else "",
-                    "search:" + search_string if search_string is not None else "",
                 ]
             case "tracks":
                 _param = [
                     "0",
                     str(return_items),
                     ("tags:" + tags) if tags else "tags:aglQrTy",
-                    "search:" + search_string if search_string is not None else "",
                 ]
             case "playlists":
                 _param = [
                     "0",
                     str(return_items),
                     ("tags:" + tags) if tags else "",
-                    "search:" + search_string if search_string is not None else "",
                 ]
             case "players":
                 _param = ["0", str(return_items)]
             case _:
                 _LOGGER.debug("Invalid Search Service Command")
                 return None
+
+        if command != "players":
+            _param.append(
+                "search:" + search_string if search_string is not None else ""
+            )
 
         return await self.async_call_query(command, _param, response)
 
