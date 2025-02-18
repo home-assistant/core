@@ -82,7 +82,7 @@ rules:
   entity-disabled-by-default:
     status: exempt
     comment: |
-      No disabled entities
+      No unnecessary or noisy entities
   entity-translations: done
   exception-translations: todo
   icon-translations: done
