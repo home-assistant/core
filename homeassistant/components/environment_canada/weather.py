@@ -37,6 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -59,6 +60,7 @@ ICON_CONDITION_MAP = {
     ATTR_CONDITION_HAIL: [26, 27],
 }
 
+SERVICE_ENVIRONMENT_CANADA_FORECAST = "forecast"
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -77,6 +79,13 @@ async def async_setup_entry(
         entity_registry.async_remove(hourly_entity_id)
 
     async_add_entities([ECWeatherEntity(config_entry.runtime_data.weather_coordinator)])
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_ENVIRONMENT_CANADA_FORECAST,
+        None,
+        "_async_environment_canada_forecast",
+    )
 
 
 def _calculate_unique_id(config_entry_unique_id: str | None, hourly: bool) -> str:
@@ -185,6 +194,12 @@ class ECWeatherEntity(
         """Return the hourly forecast in native units."""
         return get_forecast(self.ec_data, True)
 
+    @callback
+    def _async_environment_canada_forecast(self) -> list[ExtendedForecast] | None:
+        """Return the hourly forecast in native units."""
+        return cast(
+            list[ExtendedForecast], get_forecast(self.ec_data, False, with_summary=True)
+        )
 
 def get_forecast(ec_data, hourly) -> list[Forecast] | None:
     """Build the forecast array."""

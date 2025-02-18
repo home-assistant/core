@@ -1,3 +1,9 @@
+forecast:
+  target:
+    entity:
+      integration: environment_canada
+      domain: weather
+
 set_radar_type:
   target:
     entity:
