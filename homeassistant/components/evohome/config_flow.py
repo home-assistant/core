@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import Any, NotRequired, TypedDict
+import logging
+from typing import Any, Final, NotRequired, TypedDict
 
 import evohomeasync2 as ec2
 import voluptuous as vol
@@ -15,8 +16,8 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed  # , ConfigEntryNotReady
+from homeassistant.core import callback
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
@@ -29,7 +30,7 @@ from .const import (
     SCAN_INTERVAL_DEFAULT,
     SCAN_INTERVAL_MINIMUM,
 )
-from .storage import TokenManager
+from .storage import TokenDataT, TokenManager
 
 STEP_USER_SCHEMA = vol.Schema(
     {
@@ -58,14 +59,27 @@ STEP_PRECISION_SCHEMA = vol.Schema(
     }
 )
 
+SZ_TOKEN_DATA: Final = "token_data"
+
+
+_LOGGER = logging.getLogger(__name__.rsplit(".", 1)[0])
+
 
 class EvoConfigFileDictT(TypedDict):
     """The Evohome configuration.yaml data (under evohome:)."""
 
     username: str
     password: str
-    location_idx: NotRequired[int]
-    scan_interval: NotRequired[timedelta]
+    location_idx: int
+    scan_interval: timedelta
+
+
+class EvoRuntimeDataT(TypedDict):
+    """The Evohome runtime data."""
+
+    coordinator: str
+    password: str
+    token_manager: NotRequired[int]
 
 
 class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -88,28 +102,26 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by configuration file."""
 
-        # the configuration file CONFIG_SCHEMA required username and password,
-        # but location_idx and scan_interval were optional
-
-        config_import[CONF_LOCATION_IDX] = config_import.get(
-            CONF_LOCATION_IDX, DEFAULT_LOCATION_IDX
+        # before testing the credentials (i.e. for load/save callbacks)
+        self._config.update(
+            {k: v for k, v in config_import.items() if k != CONF_SCAN_INTERVAL}
         )
 
-        # high_precision must now be explicitly enabled
-        self._option[CONF_HIGH_PRECISION] = DEFAULT_HIGH_PRECISION
-        self._option[CONF_SCAN_INTERVAL] = config_import.pop(
-            CONF_SCAN_INTERVAL, SCAN_INTERVAL_DEFAULT
-        )
-
+        # first, check credentials, which will _abort_if_unique_id_configured()
         self._token_manager = await self._test_credentials(
-            self.hass, config_import[CONF_USERNAME], config_import[CONF_PASSWORD]
+            config_import[CONF_USERNAME], config_import[CONF_PASSWORD]
         )
+
         self._client = await self._test_location_idx(
             self._token_manager,
             config_import[CONF_LOCATION_IDX],
         )
 
-        self._config.update(config_import)
+        # a timedelta is not serializable, so convert to seconds
+        self._option[CONF_SCAN_INTERVAL] = config_import[CONF_SCAN_INTERVAL].seconds
+
+        # previously, high_precision were implicitly enabled, so enable for imports
+        self._option[CONF_HIGH_PRECISION] = True
 
         return self.async_create_entry(
             title="Evohome", data=self._config, options=self._option
@@ -120,15 +132,21 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the reauth step (username/password) when BadUserCredentials raised."""
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
+            # before testing the credentials (i.e. for load/save callbacks)
+            self._config.update(user_input)
+
             self._token_manager = await self._test_credentials(
-                self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
             )
 
-            self._config.update(user_input)
             return self.async_create_entry(title="Evohome", data=self._config)
 
-        return self.async_show_form(step_id="user", data_schema=STEP_USER_SCHEMA)
+        return self.async_show_form(
+            step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -138,10 +156,14 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # before testing the credentials (i.e. for load/save callbacks)
+            self._config.update(user_input)
+
             try:
                 self._token_manager = await self._test_credentials(
-                    self.hass, user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
+
             except ec2.BadUserCredentialsError:
                 errors["base"] = "invalid_auth"
 
@@ -180,43 +202,53 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="location", data_schema=STEP_LOCATION_SCHEMA, errors=errors
         )
 
-    @staticmethod
-    async def _test_credentials(
-        hass: HomeAssistant, username: str, password: str
-    ) -> TokenManager:
+    async def _test_credentials(self, username: str, password: str) -> TokenManager:
         """Validate the user credentials (that authentication is successful)."""
 
         token_manager = TokenManager(
-            hass,
             username,
             password,
-            async_get_clientsession(hass),
+            async_get_clientsession(self.hass),
+            cache_loader=self._load_token_data,
+            cache_saver=self._save_token_data,
+            logger=_LOGGER,
         )
 
         # fetch a new access token from the vendor (i.e. not from the cache)
         assert not token_manager.refresh_token
+
         try:
-            await (
-                token_manager.fetch_access_token()
-            )  # ? raise ec2.BadUserCredentialsError:
+            await token_manager.get_access_token()
+
         except ec2.BadUserCredentialsError as err:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryAuthFailed(str(err)) from err
+
+        except ec2.AuthenticationFailedError as err:
+            raise ConfigEntryNotReady(str(err)) from err
+
+        await self.async_set_unique_id(username.lower())
+        self._abort_if_unique_id_configured()
+
         return token_manager
 
-    @staticmethod
     async def _test_location_idx(
-        token_manager: TokenManager, location_idx: int
+        self, token_manager: TokenManager, location_idx: int
     ) -> ec2.EvohomeClient:
         """Validate the location_idx (that the location exists)."""
 
         client = ec2.EvohomeClient(token_manager)
 
-        await client.update(dont_update_status=True)  # ? raise ec2.EvohomeError:
+        try:
+            await client.update(dont_update_status=True)  # ? raise ec2.EvohomeError:
+
+        except ec2.ApiRequestFailedError as err:
+            raise ConfigEntryNotReady(str(err)) from err
 
         try:
             client.locations[location_idx]
+
         except IndexError as err:
-            raise IndexError(
+            raise ConfigEntryAuthFailed(
                 f"""
                     Config error: 'location_idx' = {location_idx},
                     but the valid range is 0-{len(client.locations) - 1}.
@@ -231,6 +263,16 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_get_options_flow(config_entry: ConfigEntry) -> EvoOptionsFlowHandler:
         """Define the options flow for Evohome."""
         return EvoOptionsFlowHandler(config_entry)
+
+    async def _load_token_data(self, client_id: str) -> TokenDataT | None:
+        """Return token data as from an empty cache."""
+        return None  # will force user credentials to be validated
+
+    async def _save_token_data(self, client_id: str, token_data: TokenDataT) -> None:
+        """Save the token data to the config entry, so it can be used later."""
+
+        if client_id == self._config[CONF_USERNAME]:
+            self._config[SZ_TOKEN_DATA] = token_data
 
 
 class EvoOptionsFlowHandler(OptionsFlow):

@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from unittest.mock import patch
 
 import evohomeasync2 as ec2
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.evohome import EvoData
 from homeassistant.components.evohome.const import DOMAIN
+from homeassistant.components.evohome.coordinator import EvoDataUpdateCoordinator
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -27,8 +26,11 @@ async def test_setup_platform(
 ) -> None:
     """Test entities and their states after setup of evohome."""
 
-    evo_data: EvoData = hass.data.get(DOMAIN)  # type: ignore[assignment]
-    update_interval: timedelta = evo_data.coordinator.update_interval  # type: ignore[assignment]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+    coordinator: EvoDataUpdateCoordinator = config_entry.runtime_data["coordinator"]
+
+    update_interval = coordinator.update_interval
+    assert update_interval is not None  # mypy hint
 
     # confirm initial state after coordinator.async_first_refresh()...
     state = hass.states.get("climate.my_home")

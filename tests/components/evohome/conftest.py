@@ -9,12 +9,25 @@ from typing import Any
 from unittest.mock import MagicMock, patch
 
 import evohomeasync2 as ec2
+from evohomeasync2 import EvohomeClient
 from evohomeasync2.auth import AbstractTokenManager, Auth
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.evohome.const import DOMAIN
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.components.evohome.config_flow import EvoConfigFileDictT
+from homeassistant.components.evohome.const import (
+    CONF_HIGH_PRECISION,
+    CONF_LOCATION_IDX,
+    DEFAULT_LOCATION_IDX,
+    DOMAIN,
+    SCAN_INTERVAL_DEFAULT,
+)
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_SCAN_INTERVAL,
+    CONF_USERNAME,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, slugify
@@ -132,12 +145,32 @@ def mock_make_request(install: str) -> Callable:
 
 
 @pytest.fixture
-def config() -> dict[str, str]:
+def config() -> EvoConfigFileDictT:
     "Return a default/minimal configuration."
     return {
         CONF_USERNAME: USERNAME,
-        CONF_PASSWORD: "password",
+        CONF_PASSWORD: "P@ssw0rd",
+        CONF_LOCATION_IDX: DEFAULT_LOCATION_IDX,
+        CONF_SCAN_INTERVAL: SCAN_INTERVAL_DEFAULT,
     }
+
+
+@pytest.fixture(name="config_entry")
+def config_entry_fixture(config: dict[str, Any]) -> MockConfigEntry:
+    """Define a config entry fixture."""
+
+    options = {
+        CONF_HIGH_PRECISION: True,
+        CONF_SCAN_INTERVAL: config.pop(CONF_SCAN_INTERVAL).total_seconds(),
+    }
+
+    return MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="uuid",
+        unique_id="1234",
+        data=config,
+        options=options,
+    )
 
 
 async def setup_evohome(
@@ -165,7 +198,9 @@ async def setup_evohome(
 
     with (
         # patch("homeassistant.components.evohome.ec1.EvohomeClient", return_value=None),
-        patch("homeassistant.components.evohome.ec2.EvohomeClient") as mock_client,
+        patch(
+            "homeassistant.components.evohome.coordinator.ec2.EvohomeClient"
+        ) as mock_client,
         patch(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",
             mock_post_request(install),
@@ -176,7 +211,7 @@ async def setup_evohome(
 
         def evohome_client(*args, **kwargs) -> ec2.EvohomeClient:
             nonlocal evo
-            evo = ec2.EvohomeClient(*args, **kwargs)
+            evo = EvohomeClient(*args, **kwargs)  # NOTE: don't use ec2.EvohomeClient
             return evo
 
         mock_client.side_effect = evohome_client
@@ -184,9 +219,9 @@ async def setup_evohome(
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: config})
         await hass.async_block_till_done()
 
-        mock_client.assert_called_once()
+        mock_client.assert_called()  # called twice
 
-        assert isinstance(evo, ec2.EvohomeClient)
+        assert isinstance(evo, EvohomeClient)
         assert evo._token_manager.client_id == config[CONF_USERNAME]
         assert evo._token_manager._secret == config[CONF_PASSWORD]
 
@@ -229,20 +264,3 @@ def zone_id(evohome: MagicMock) -> str:
     zone: ec2.Zone = evo.tcs.zones[0]
 
     return f"{Platform.CLIMATE}.{slugify(zone.name)}"
-
-
-@pytest.fixture(name="config_entry")
-def config_entry_fixture(config: dict[str, Any]) -> MockConfigEntry:
-    """Define a config entry fixture."""
-
-    config |= {
-        "location_idx": 0,
-        "scan_interval": timedelta(seconds=300),
-    }
-
-    return MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="uuid",
-        unique_id="1234",
-        data=config,
-    )

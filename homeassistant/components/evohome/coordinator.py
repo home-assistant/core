@@ -24,13 +24,20 @@ from evohomeasync2.const import (
 )
 from evohomeasync2.schemas.typedefs import EvoLocStatusResponseT, EvoTcsConfigResponseT
 
-from homeassistant.const import CONF_SCAN_INTERVAL
+from homeassistant import config_entries
+from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .config_flow import SZ_TOKEN_DATA
+from .storage import TokenDataT, TokenManager
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
     """Coordinator for evohome integration/client."""
+
+    config_entry: config_entries.ConfigEntry
 
     # These will not be None after _async_setup())
     loc: ec2.Location
@@ -40,27 +47,36 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         logger: logging.Logger,
-        client_v2: ec2.EvohomeClient,
         *,
+        config_entry: config_entries.ConfigEntry,
         name: str,
-        update_interval: timedelta,
-        location_idx: int,
-        client_v1: ec1.EvohomeClient | None = None,
     ) -> None:
         """Class to manage fetching data."""
 
         super().__init__(
             hass,
             logger,
-            config_entry=None,
+            config_entry=config_entry,
             name=name,
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=config_entry.options[CONF_SCAN_INTERVAL]),
         )
 
-        self.client = client_v2
-        self.client_v1 = client_v1
+        token_manager = TokenManager(
+            config_entry.data[CONF_USERNAME],
+            config_entry.data[CONF_PASSWORD],
+            async_get_clientsession(hass),
+            self._load_token_data,
+            self._save_token_data,
+            logger=logger,
+        )
 
-        self.loc_idx = location_idx
+        self.client = ec2.EvohomeClient(token_manager)
+
+        self.client_v1 = (
+            ec1.EvohomeClient(token_manager)
+            if config_entry.options["high_precision"]
+            else None
+        )
 
         self.data: EvoLocStatusResponseT = None  # type: ignore[assignment]
         self.temps: dict[str, float | None] = {}
@@ -94,12 +110,14 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
         except ec2.EvohomeError as err:
             raise UpdateFailed(err) from err
 
+        loc_idx = self.config_entry.data["location_idx"]
+
         try:
-            self.loc = self.client.locations[self.loc_idx]
+            self.loc = self.client.locations[loc_idx]
         except IndexError as err:
             raise UpdateFailed(
                 f"""
-                    Config error: 'location_idx' = {self.loc_idx},
+                    Config error: 'location_idx' = {loc_idx},
                     but the valid range is 0-{len(self.client.locations) - 1}.
                     Unable to continue. Fix any configuration errors and restart HA
                 """
@@ -240,3 +258,17 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
             self._first_refresh_done = True
 
         return self.loc.status
+
+    async def _load_token_data(self, client_id: str) -> TokenDataT | None:
+        """Return token data from the config entry (user credentials are validated)."""
+
+        if client_id != self.config_entry.data[CONF_USERNAME]:
+            return None
+        return self.config_entry.data.get(SZ_TOKEN_DATA)
+
+    async def _save_token_data(self, client_id: str, token_data: TokenDataT) -> None:
+        """Save the token data to the config entry, so it can be used later."""
+
+        if client_id == self.config_entry.data[CONF_USERNAME]:
+            data = dict(self.config_entry.data) | {SZ_TOKEN_DATA: token_data}
+            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
