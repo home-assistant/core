@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Generator
 from copy import copy
 from datetime import datetime, timedelta
 import json
@@ -42,9 +43,9 @@ async def mock_recorder_before_hass(
 
 
 @pytest.fixture(autouse=True)
-def db_schema_42():
+def db_schema_42(hass: HomeAssistant) -> Generator[None]:
     """Fixture to initialize the db with the old schema 42."""
-    with old_db_schema("42"):
+    with old_db_schema(hass, "42"):
         yield
 
 

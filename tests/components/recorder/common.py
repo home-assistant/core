@@ -15,7 +15,7 @@ from typing import Any, Literal, cast
 from unittest.mock import MagicMock, patch, sentinel
 
 from freezegun import freeze_time
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, event as sqlalchemy_event
 from sqlalchemy.orm.session import Session
 
 from homeassistant import core as ha
@@ -399,7 +399,7 @@ def convert_pending_events_to_event_types(instance: Recorder, session: Session) 
 
 
 def create_engine_test_for_schema_version_postfix(
-    *args, schema_version_postfix: str, **kwargs
+    *args, hass: HomeAssistant, schema_version_postfix: str, **kwargs
 ):
     """Test version of create_engine that initializes with old schema.
 
@@ -409,6 +409,9 @@ def create_engine_test_for_schema_version_postfix(
     importlib.import_module(schema_module)
     old_db_schema = sys.modules[schema_module]
     engine = create_engine(*args, **kwargs)
+    instance = recorder.get_instance(hass)
+    instance.engine = engine
+    sqlalchemy_event.listen(engine, "connect", instance._setup_recorder_connection)
     old_db_schema.Base.metadata.create_all(engine)
     with Session(engine) as session:
         session.add(
@@ -429,7 +432,7 @@ def get_schema_module_path(schema_version_postfix: str) -> str:
 
 
 @contextmanager
-def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
+def old_db_schema(hass: HomeAssistant, schema_version_postfix: str) -> Iterator[None]:
     """Fixture to initialize the db with the old schema."""
     schema_module = get_schema_module_path(schema_version_postfix)
     importlib.import_module(schema_module)
@@ -449,6 +452,7 @@ def old_db_schema(schema_version_postfix: str) -> Iterator[None]:
             CREATE_ENGINE_TARGET,
             new=partial(
                 create_engine_test_for_schema_version_postfix,
+                hass=hass,
                 schema_version_postfix=schema_version_postfix,
             ),
         ),

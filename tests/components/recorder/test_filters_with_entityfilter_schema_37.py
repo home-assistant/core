@@ -35,9 +35,9 @@ from .common import async_wait_recording_done, old_db_schema
 
 # This test is for schema 37 and below (32 is new enough to test)
 @pytest.fixture(autouse=True)
-def db_schema_32():
+def db_schema_32(hass: HomeAssistant) -> None:
     """Fixture to initialize the db with the old schema 32."""
-    with old_db_schema("32"):
+    with old_db_schema(hass, "32"):
         yield
 
 
