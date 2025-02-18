@@ -24,7 +24,7 @@
   },
   "entity": {
     "sensor": {
-      "threshold_indication": {
+      "threshold": {
         "state": {
           "error": "Error",
           "green": "Green",
