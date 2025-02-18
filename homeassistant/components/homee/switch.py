@@ -67,7 +67,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_devices: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Setups the switch platform for the Homee component."""
+    """Set up the switch platform for the Homee component."""
 
     for node in config_entry.runtime_data.nodes:
         async_add_devices(
@@ -99,9 +99,12 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
         """Initialize a Homee switch entity."""
         super().__init__(attribute, entry)
         self.entity_description = description
-        if not (attribute.type == AttributeType.ON_OFF and attribute.instance == 0):
-            self._attr_translation_key = description.key
-        if attribute.instance > 0:
+        if attribute.instance == 0:
+            if attribute.type == AttributeType.ON_OFF:
+                self._attr_name = None
+            else:
+                self._attr_translation_key = description.key
+        else:
             self._attr_translation_key = f"{description.key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
