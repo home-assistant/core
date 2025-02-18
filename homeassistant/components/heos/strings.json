@@ -71,6 +71,16 @@
     }
   },
   "services": {
+    "group_volume_set": {
+      "name": "Set group volume",
+      "description": "Sets the group's volume while preserving member volume ratios.",
+      "fields": {
+        "volume_level": {
+          "name": "Level",
+          "description": "The volume. 0 is inaudible, 1 is the maximum volume."
+        }
+      }
+    },
     "sign_in": {
       "name": "Sign in",
       "description": "Signs in to a HEOS account.",
@@ -93,6 +103,9 @@
   "exceptions": {
     "action_error": {
       "message": "Unable to {action}: {error}"
+    },
+    "entity_not_grouped": {
+      "message": "Entity {entity_id} is not joined to a group"
     },
     "entity_not_found": {
       "message": "Entity {entity_id} was not found"
