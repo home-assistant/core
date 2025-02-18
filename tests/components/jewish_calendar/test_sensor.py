@@ -98,7 +98,7 @@ TEST_PARAMS = [
         "parshat_hashavua",
     ),
     (
-        ("NYC", dt(2018, 9, 8), {"state": dt(2018, 9, 8, 19, 47), "attr": None}),
+        ("New York", dt(2018, 9, 8), {"state": dt(2018, 9, 8, 19, 47), "attr": None}),
         "hebrew",
         "t_set_hakochavim",
     ),
@@ -164,11 +164,7 @@ TEST_IDS = [
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_jewish_calendar_sensor(
-    hass: HomeAssistant,
-    jcal_params: dict,
-    config_entry: MockConfigEntry,
-    sensor: str,
-    setup_hass: None,
+    hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry, sensor: str
 ) -> None:
     """Test Jewish calendar sensor output."""
     with freeze_time(test_time := jcal_params["test_time"]):
@@ -193,7 +189,7 @@ async def test_jewish_calendar_sensor(
 
 SHABBAT_PARAMS = [
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 1, 16, 0),
         {
             "english_upcoming_candle_lighting": dt(2018, 8, 31, 19, 12),
@@ -205,7 +201,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 1, 16, 0),
         {
             "english_upcoming_candle_lighting": dt(2018, 8, 31, 19, 12),
@@ -218,7 +214,7 @@ SHABBAT_PARAMS = [
         50,  # Havdalah offset
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 1, 20, 0),
         {
             "english_upcoming_shabbat_candle_lighting": dt(2018, 8, 31, 19, 12),
@@ -230,7 +226,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 1, 20, 21),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 7, 19),
@@ -242,7 +238,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 7, 13, 1),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 7, 19),
@@ -254,7 +250,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 8, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 9, 18, 57),
@@ -268,7 +264,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 9, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 9, 18, 57),
@@ -282,7 +278,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 10, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 9, 18, 57),
@@ -296,7 +292,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 28, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 28, 18, 25),
@@ -308,7 +304,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 29, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 30, 18, 22),
@@ -322,7 +318,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 9, 30, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 30, 18, 22),
@@ -336,7 +332,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2018, 10, 1, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 30, 18, 22),
@@ -390,7 +386,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2016, 6, 11, 8, 25),
         {
             "english_upcoming_candle_lighting": dt(2016, 6, 10, 20, 9),
@@ -404,7 +400,7 @@ SHABBAT_PARAMS = [
         },
     ),
     (
-        "NYC",
+        "New York",
         dt(2016, 6, 12, 8, 25),
         {
             "english_upcoming_candle_lighting": dt(2016, 6, 10, 20, 9),
@@ -493,10 +489,7 @@ SHABBAT_TEST_IDS = [
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_shabbat_times_sensor(
-    hass: HomeAssistant,
-    jcal_params: dict,
-    config_entry: MockConfigEntry,
-    setup_hass: None,
+    hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry
 ) -> None:
     """Test sensor output for upcoming shabbat/yomtov times."""
     with freeze_time(test_time := jcal_params["test_time"]):
