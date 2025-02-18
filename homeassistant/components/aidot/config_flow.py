@@ -1,6 +1,7 @@
 """Config flow for Aidot integration."""
 
 from __future__ import annotations
+
 import logging
 from typing import Any
 
@@ -48,6 +49,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.device_list: list[Any] = []
         self.product_list: list[Any] = []
         self.selected_house: dict[Any, Any] = {}
+        self.selected_region = ""
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
@@ -62,6 +64,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         selected_contry_obj = item
                         break
                 self.__login_control.change_country_code(selected_contry_obj)
+                self.selected_region = selected_contry_obj["region"]
 
                 self.login_response = await self.__login_control.async_post_login(
                     self.hass,
@@ -126,6 +129,17 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for item in self.house_list:
                     if item["name"] == user_input.get(CONF_CHOOSE_HOUSE):
                         self.selected_house = item
+                identifier = (
+                    "username:"
+                    + self.login_response["username"]
+                    + ","
+                    + "house_id:"
+                    + self.selected_house["id"]
+                    + "region"
+                    + self.selected_region
+                )
+                await self.async_set_unique_id(identifier)
+                self._abort_if_unique_id_configured()
 
                 # get device_list
                 self.device_list = await self.__login_control.async_get_devices(
@@ -139,9 +153,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     self.product_list = await self.__login_control.async_get_products(
                         self.hass, self.accessToken, productIds
                     )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except InvalidHost:
+                errors["host"] = "cannot_connect"
 
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
             title = self.login_response["username"] + " " + self.selected_house["name"]
             return self.async_create_entry(
                 title=title,

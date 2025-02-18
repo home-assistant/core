@@ -3,11 +3,8 @@
   "name": "AiDot Lights Local",
   "codeowners": ["@s1eedz", "@HongBryan"],
   "config_flow": true,
-  "dependencies": [],
   "documentation": "https://www.home-assistant.io/integrations/aidot",
-  "homekit": {},
   "iot_class": "local_polling",
-  "requirements": ["python-aidot==0.1.2"],
-  "ssdp": [],
-  "zeroconf": []
+  "quality_scale": "bronze",
+  "requirements": ["python-aidot==0.1.2"]
 }

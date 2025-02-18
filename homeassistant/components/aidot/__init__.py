@@ -14,13 +14,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .const import DOMAIN
+from .coordinator import AidotConfigEntry, AidotCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.LIGHT]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> bool:
     """Set up aidot from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})["device_list"] = entry.data["device_list"]
@@ -34,6 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         discover, hass.data[DOMAIN]["login_response"]["id"]
     )
 
+    coordinator = AidotCoordinator(hass, entry)
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
