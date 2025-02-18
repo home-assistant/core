@@ -46,7 +46,7 @@ async def async_get_config_entry_diagnostics(
     }
 
     if syno_api.external_usb is not None:
-        for device in api.external_usb.get_devices.values():
+        for device in syno_api.external_usb.get_devices.values():
             if device is not None:
                 diag_data["external_usb"]["devices"][device.device_id] = {
                     "name": device.device_name,
@@ -58,7 +58,7 @@ async def async_get_config_entry_diagnostics(
                 }
                 for partition in device.device_partitions.values():
                     if partition is not None:
-                        diag_data["external_usb"]["partitions"][part_id] = {
+                        diag_data["external_usb"]["partitions"][partition.name_id] = {
                             "name": partition.partition_title,
                             "filesystem": partition.filesystem,
                             "share_name": partition.share_name,
