@@ -5,7 +5,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_MAC, UnitOfElectricPotential
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, MODEL
@@ -15,10 +15,10 @@ from .coordinator import VegeHubCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Vegetronix sensors from a config entry."""
-    sensors = []
+    sensors: list[VegeHubSensor] = []
     mac_address = config_entry.data[CONF_MAC]
     num_sensors = config_entry.runtime_data.hub.num_sensors
     num_actuators = config_entry.runtime_data.hub.num_actuators
@@ -38,11 +38,10 @@ async def async_setup_entry(
 
         sensors.append(sensor)
 
-    if sensors:
-        async_add_entities(sensors)
+    async_add_entities(sensors)
 
 
-class VegeHubSensor(CoordinatorEntity, SensorEntity):
+class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
     """Class for VegeHub Analog Sensors."""
 
     def __init__(
@@ -79,15 +78,8 @@ class VegeHubSensor(CoordinatorEntity, SensorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        value = None
         if self.coordinator.data is not None and self._attr_unique_id is not None:
-            value = self.coordinator.data.get(self._attr_unique_id)
-        # Only set a new value if there is one available in the coordinator.
-        if value is not None:
-            self.latest_value = value
-            super()._handle_coordinator_update()
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the state of the sensor."""
-        return self.latest_value
+            self._attr_native_value = self.coordinator.data.get(self._attr_unique_id)
+        else:
+            self._attr_available = False
+        super()._handle_coordinator_update()
