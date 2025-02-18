@@ -299,7 +299,7 @@
       "description": "Removes all items from the playlist."
     },
     "shuffle_set": {
-      "name": "Shuffle set",
+      "name": "Set shuffle",
       "description": "Enables or disables the shuffle mode.",
       "fields": {
         "shuffle": {
@@ -309,7 +309,7 @@
       }
     },
     "repeat_set": {
-      "name": "Repeat set",
+      "name": "Set repeat",
       "description": "Enables or disables the repeat mode.",
       "fields": {
         "repeat": {
