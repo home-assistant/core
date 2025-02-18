@@ -805,7 +805,7 @@ async def websocket_add_node(
     ]
     msg[DATA_UNSUBSCRIBE] = unsubs
 
-    if controller.inclusion_state == InclusionState.INCLUDING:
+    if controller.inclusion_state in (InclusionState.INCLUDING, InclusionState.BUSY):
         connection.send_result(
             msg[ID],
             True,  # Inclusion is already in progress
