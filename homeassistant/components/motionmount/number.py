@@ -14,6 +14,8 @@ from . import MotionMountConfigEntry
 from .const import DOMAIN
 from .entity import MotionMountEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

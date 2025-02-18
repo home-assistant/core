@@ -407,6 +407,12 @@
       },
       "power_level_for_location": {
         "default": "mdi:radiator"
+      },
+      "cycle_count": {
+        "default": "mdi:counter"
+      },
+      "cycle_count_for_location": {
+        "default": "mdi:counter"
       }
     }
   }
