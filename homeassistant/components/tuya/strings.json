@@ -654,8 +654,8 @@
         "name": "Liquid state",
         "state": {
           "normal": "Normal",
-          "lower_alarm": "Lower Alarm",
-          "upper_alarm": "Upper Alarm"
+          "lower_alarm": "Lower alarm",
+          "upper_alarm": "Upper alarm"
         }
       },
       "liquid_depth": {
