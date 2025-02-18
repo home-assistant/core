@@ -134,7 +134,7 @@
         },
         "summary_menu": {
           "title": "Configuration summary",
-          "description": "Following entities are about\nto be set up for MQTT device {mqtt_device}:\n{mqtt_items}.\n\nDecide what to do next:",
+          "description": "Following entities are about\nto be (re)configured for MQTT device {mqtt_device}:\n{mqtt_items}.\n\nDecide what to do next:",
           "menu_options": {
             "entity": "Add an entity to {mqtt_device}",
             "update_entity": "Update entity properties",
