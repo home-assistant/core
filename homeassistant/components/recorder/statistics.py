@@ -2131,7 +2131,7 @@ def _statistics_at_time(
         else:
             # If we have no rows yet, we can just assign the chunk
             # as this is the common case since its rare that
-            # we exceed the MAX_IDS_FOR_START_TIME_QUERY limit
+            # we exceed the MAX_IDS_FOR_INDEXED_GROUP_BY limit
             rows = row_chunk
     return rows
 
