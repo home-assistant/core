@@ -16,6 +16,7 @@ from homeassistant.components.climate import (
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
+    HVACAction,
     HVACMode,
 )
 from homeassistant.const import UnitOfTemperature
@@ -217,7 +218,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
                 if tuya_mode in TUYA_HVAC_TO_HA:
                     ha_mode = TUYA_HVAC_TO_HA[tuya_mode]
                     self._hvac_to_tuya[ha_mode] = tuya_mode
-                    self._attr_hvac_modes.append(ha_mode)
+                    if ha_mode not in self._attr_hvac_modes:
+                        self._attr_hvac_modes.append(ha_mode)
                 else:
                     unknown_hvac_modes.append(tuya_mode)
 
@@ -293,7 +295,7 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             )
         self._send_command(commands)
 
-    def set_preset_mode(self, preset_mode):
+    def set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
         commands = [{"code": DPCode.MODE, "value": preset_mode}]
         self._send_command(commands)
@@ -420,8 +422,8 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
     @property
     def hvac_mode(self) -> HVACMode:
         """Return hvac mode."""
-        # If the switch off, hvac mode is off as well. Unless the switch
-        # the switch is on or doesn't exists of course...
+        # If the switch off, hvac mode is off as well.
+        # Unless the switch is on or doesn't exists of course...
         if not self.device.status.get(DPCode.SWITCH, True):
             return HVACMode.OFF
 
@@ -440,6 +442,20 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
             return self.entity_description.switch_only_hvac_mode
 
         return HVACMode.OFF
+
+    @property
+    def hvac_action(self) -> HVACAction | None:
+        """Return current hvac action."""
+        res: HVACAction | None = None
+        if self.device.status.get(DPCode.SWITCH, True):
+            valve: str = self.device.status.get(DPCode.VALVE_STATE)
+            if valve == "open":
+                res = HVACAction.HEATING
+            elif valve == "close":
+                res = HVACAction.IDLE
+        else:
+            res = HVACAction.OFF
+        return res
 
     @property
     def preset_mode(self) -> str | None:
@@ -482,5 +498,5 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
         self._send_command([{"code": DPCode.SWITCH, "value": True}])
 
     def turn_off(self) -> None:
-        """Turn the device on, retaining current HVAC (if supported)."""
+        """Turn the device off, retaining current HVAC (if supported)."""
         self._send_command([{"code": DPCode.SWITCH, "value": False}])
