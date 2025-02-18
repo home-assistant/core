@@ -134,7 +134,7 @@ def get_webhook_handler(
         data = await request.json()
         sensor_data = update_data_to_latest_dict(data)
         if coordinator and sensor_data:
-            await coordinator.async_update_data(sensor_data)
+            coordinator.async_set_updated_data(sensor_data)
 
         return HomeAssistantView.json(result="OK", status_code=HTTPStatus.OK)
 

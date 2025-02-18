@@ -18,7 +18,3 @@ class VegeHubCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize VegeHub data coordinator."""
         super().__init__(hass, _LOGGER, name=f"{device_id} DataUpdateCoordinator")
         self.device_id = device_id
-
-    async def async_update_data(self, new_data: dict[str, Any]) -> None:
-        """Update the coordinator with new data from the webhook."""
-        super().async_set_updated_data(new_data)
