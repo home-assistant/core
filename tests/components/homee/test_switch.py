@@ -104,6 +104,23 @@ async def test_switch_device_class(
     )
 
 
+async def test_switch_no_name(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test switch gets no name when it is the main feature of the device."""
+    mock_homee.nodes = [build_mock_node("switch_single.json")]
+    mock_homee.nodes[0].profile = 2002
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("switch.test_switch_single").attributes["friendly_name"]
+        == "Test Switch Single"
+    )
+
+
 async def test_switch_device_class_no_outlet(
     hass: HomeAssistant,
     mock_homee: MagicMock,
