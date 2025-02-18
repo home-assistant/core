@@ -266,7 +266,7 @@ class PGLabDiscovery:
 
         async_unsubscribe_topics(hass, self._substate)
 
-    async def add_entity(self, entity: Entity, device_id: str):
+    def add_entity(self, entity: Entity, device_id: str):
         """Save a new PG LAB device entity."""
 
         # Be sure that the device is been discovered.
