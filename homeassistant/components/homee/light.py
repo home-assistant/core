@@ -90,16 +90,12 @@ async def async_setup_entry(
 ) -> None:
     """Add the Homee platform for the light entity."""
 
-    entities: list[HomeeLight] = []
-    for node in config_entry.runtime_data.nodes:
-        entities.extend(
-            HomeeLight(node, light, config_entry)
-            for light in get_light_attribute_sets(node)
-            if is_light_node(node)
-        )
-
-    if entities:
-        async_add_entities(entities)
+    async_add_entities(
+        HomeeLight(node, light, config_entry)
+        for node in config_entry.runtime_data.nodes
+        for light in get_light_attribute_sets(node)
+        if is_light_node(node)
+    )
 
 
 class HomeeLight(HomeeNodeEntity, LightEntity):
