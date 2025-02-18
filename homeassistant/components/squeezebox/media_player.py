@@ -160,6 +160,26 @@ async def async_setup_entry(
     entry.async_on_unload(async_at_start(hass, start_server_discovery))
 
 
+def get_announce_volume(extra: dict) -> float | None:
+    """Get announce volume from extra service data."""
+    if ATTR_ANNOUNCE_VOLUME not in extra:
+        return None
+    announce_volume = float(extra[ATTR_ANNOUNCE_VOLUME])
+    if not (0 < announce_volume <= 1):
+        raise ValueError
+    return announce_volume * 100
+
+
+def get_announce_timeout(extra: dict) -> int | None:
+    """Get announce volume from extra service data."""
+    if ATTR_ANNOUNCE_TIMEOUT not in extra:
+        return None
+    announce_timeout = int(extra[ATTR_ANNOUNCE_TIMEOUT])
+    if announce_timeout < 1:
+        raise ValueError
+    return announce_timeout
+
+
 class SqueezeBoxMediaPlayerEntity(
     CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator], MediaPlayerEntity
 ):
@@ -476,35 +496,23 @@ class SqueezeBoxMediaPlayerEntity(
 
             extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
             cmd = "announce"
-            if raw_announce_volume := extra.get(ATTR_ANNOUNCE_VOLUME):
-                try:
-                    announce_volume = float(raw_announce_volume)
-                    if not (0 < announce_volume <= 1):
-                        raise ServiceValidationError(
-                            f"{ATTR_ANNOUNCE_VOLUME} must be a number greater than 0 and less than or equal to 1"
-                        ) from None
-                except ValueError:
-                    raise ServiceValidationError(
-                        f"{ATTR_ANNOUNCE_VOLUME} must be a number greater than 0 and less than or equal to 1"
-                    ) from None
-                self._player.set_announce_volume(int(announce_volume * 100))
+            try:
+                announce_volume = get_announce_volume(extra)
+            except ValueError:
+                raise ServiceValidationError(
+                    f"{ATTR_ANNOUNCE_VOLUME} must be a number greater than 0 and less than or equal to 1"
+                ) from None
             else:
-                self._player.set_announce_volume(None)
+                self._player.set_announce_volume(announce_volume)
 
-            if raw_announce_timeout := extra.get(ATTR_ANNOUNCE_TIMEOUT):
-                try:
-                    announce_timeout = int(raw_announce_timeout)
-                    if announce_timeout < 1:
-                        raise ServiceValidationError(
-                            f"{ATTR_ANNOUNCE_TIMEOUT} must be an integer greater than 0"
-                        ) from None
-                except ValueError:
-                    raise ServiceValidationError(
-                        f"{ATTR_ANNOUNCE_TIMEOUT} must be an integer greater than 0"
-                    ) from None
-                self._player.set_announce_timeout(int(announce_timeout))
+            try:
+                announce_timeout = get_announce_timeout(extra)
+            except ValueError:
+                raise ServiceValidationError(
+                    f"{ATTR_ANNOUNCE_TIMEOUT} must be a whole number greater than 0"
+                ) from None
             else:
-                self._player.set_announce_timeout(None)
+                self._player.set_announce_timeout(announce_timeout)
 
         if media_type in MediaType.MUSIC:
             if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
