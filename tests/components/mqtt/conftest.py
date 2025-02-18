@@ -2,10 +2,8 @@
 
 import asyncio
 from collections.abc import AsyncGenerator, Generator
-import contextlib
 from pathlib import Path
 from random import getrandbits
-import shutil
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -59,13 +57,6 @@ async def mock_temp_dir(
         ) as mocked_temp_dir,
     ):
         yield mocked_temp_dir
-
-    # Clean up temp files after test
-    def _cleanup() -> None:
-        with contextlib.suppress(OSError):
-            shutil.rmtree(tmp_path)
-
-    await hass.async_add_executor_job(_cleanup)
 
 
 @pytest.fixture
