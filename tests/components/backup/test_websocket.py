@@ -2158,7 +2158,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test.test-agent"]},
-                "retention": {"copies": 0, "days": None},
+                "retention": {"copies": 1, "days": None},
                 "schedule": {"recurrence": "daily"},
             },
             {
@@ -2232,7 +2232,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test.test-agent"]},
-                "retention": {"copies": 0, "days": None},
+                "retention": {"copies": 1, "days": None},
                 "schedule": {"recurrence": "daily"},
             },
             {
@@ -2301,7 +2301,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test.test-agent"]},
-                "retention": {"copies": 0, "days": None},
+                "retention": {"copies": 1, "days": None},
                 "schedule": {"recurrence": "daily"},
             },
             {
@@ -3019,7 +3019,7 @@ async def test_config_retention_copies_logic_manual_backup(
                 {
                     "type": "backup/config/update",
                     "create_backup": {"agent_ids": ["test-agent"]},
-                    "retention": {"copies": None, "days": 0},
+                    "retention": {"copies": None, "days": 1},
                     "schedule": {"recurrence": "never"},
                 }
             ],
