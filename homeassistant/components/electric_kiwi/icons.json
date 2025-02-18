@@ -13,11 +13,6 @@
       "hop_power_savings": {
         "default": "mdi:percent"
       }
-    },
-    "select": {
-      "hop_selector": {
-        "default": "mdi:lightning-bolt"
-      }
     }
   }
 }

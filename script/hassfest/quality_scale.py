@@ -1393,7 +1393,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "egardia",
     "eight_sleep",
     "electrasmart",
-    "electric_kiwi",
     "elevenlabs",
     "eliqonline",
     "elkm1",
