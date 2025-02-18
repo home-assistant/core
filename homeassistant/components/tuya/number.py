@@ -312,6 +312,8 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
+    # Water Tank Level Sensor
+    # Note: Undocumented
     "ywcgq": (
         NumberEntityDescription(
             key=DPCode.INSTALLATION_HEIGHT,
