@@ -7,20 +7,12 @@ from hdate.holidays import HolidayDatabase
 from hdate.parasha import Parasha
 import pytest
 
-from homeassistant.components.jewish_calendar.const import (
-    CONF_CANDLE_LIGHT_MINUTES,
-    CONF_DIASPORA,
-    CONF_HAVDALAH_OFFSET_MINUTES,
-    DEFAULT_NAME,
-    DOMAIN,
-)
+from homeassistant.components.jewish_calendar.const import DEFAULT_NAME, DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
-
-from . import make_jerusalem_test_params, make_nyc_test_params
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -204,7 +196,8 @@ async def test_jewish_calendar_sensor(
 
 
 SHABBAT_PARAMS = [
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 9, 1, 16, 0),
         {
             "english_upcoming_candle_lighting": dt(2018, 8, 31, 19, 12),
@@ -215,7 +208,8 @@ SHABBAT_PARAMS = [
             "hebrew_parshat_hashavua": "כי תבוא",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 9, 1, 16, 0),
         {
             "english_upcoming_candle_lighting": dt(2018, 8, 31, 19, 12),
@@ -225,9 +219,10 @@ SHABBAT_PARAMS = [
             "english_parshat_hashavua": "Ki Tavo",
             "hebrew_parshat_hashavua": "כי תבוא",
         },
-        havdalah_offset=50,
+        # "havdalah_offset": 50,
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 9, 1, 20, 0),
         {
             "english_upcoming_shabbat_candle_lighting": dt(2018, 8, 31, 19, 12),
@@ -238,7 +233,8 @@ SHABBAT_PARAMS = [
             "hebrew_parshat_hashavua": "כי תבוא",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 9, 1, 20, 21),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 7, 19),
@@ -249,7 +245,8 @@ SHABBAT_PARAMS = [
             "hebrew_parshat_hashavua": "נצבים",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 9, 7, 13, 1),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 7, 19),
@@ -260,7 +257,8 @@ SHABBAT_PARAMS = [
             "hebrew_parshat_hashavua": "נצבים",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 9, 8, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 9, 18, 57),
@@ -273,7 +271,8 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "ערב ראש השנה",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 9, 9, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 9, 18, 57),
@@ -286,7 +285,8 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "א' ראש השנה",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 9, 10, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 9, 18, 57),
@@ -299,7 +299,8 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "ב' ראש השנה",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 9, 28, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 28, 18, 25),
@@ -310,7 +311,8 @@ SHABBAT_PARAMS = [
             "hebrew_parshat_hashavua": "none",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 9, 29, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 30, 18, 22),
@@ -323,7 +325,8 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "הושענא רבה",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 9, 30, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 30, 18, 22),
@@ -336,7 +339,8 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "שמיני עצרת",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2018, 10, 1, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 9, 30, 18, 22),
@@ -349,10 +353,11 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "שמחת תורה",
         },
     ),
-    make_jerusalem_test_params(
+    (
+        "Jerusalem",
         dt(2018, 9, 29, 21, 25),
         {
-            "english_upcoming_candle_lighting": dt(2018, 9, 30, 17, 45),
+            "english_upcoming_candle_lighting": dt(2018, 9, 30, 17, 46),
             "english_upcoming_havdalah": dt(2018, 10, 1, 19, 1),
             "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 17, 39),
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
@@ -362,10 +367,11 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "הושענא רבה",
         },
     ),
-    make_jerusalem_test_params(
+    (
+        "Jerusalem",
         dt(2018, 9, 30, 21, 25),
         {
-            "english_upcoming_candle_lighting": dt(2018, 9, 30, 17, 45),
+            "english_upcoming_candle_lighting": dt(2018, 9, 30, 17, 46),
             "english_upcoming_havdalah": dt(2018, 10, 1, 19, 1),
             "english_upcoming_shabbat_candle_lighting": dt(2018, 10, 5, 17, 39),
             "english_upcoming_shabbat_havdalah": dt(2018, 10, 6, 18, 54),
@@ -375,7 +381,8 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "שמיני עצרת, שמחת תורה",
         },
     ),
-    make_jerusalem_test_params(
+    (
+        "Jerusalem",
         dt(2018, 10, 1, 21, 25),
         {
             "english_upcoming_candle_lighting": dt(2018, 10, 5, 17, 39),
@@ -386,7 +393,8 @@ SHABBAT_PARAMS = [
             "hebrew_parshat_hashavua": "בראשית",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2016, 6, 11, 8, 25),
         {
             "english_upcoming_candle_lighting": dt(2016, 6, 10, 20, 9),
@@ -399,7 +407,8 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "ערב שבועות",
         },
     ),
-    make_nyc_test_params(
+    (
+        "NYC",
         dt(2016, 6, 12, 8, 25),
         {
             "english_upcoming_candle_lighting": dt(2016, 6, 10, 20, 9),
@@ -412,7 +421,8 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "שבועות",
         },
     ),
-    make_jerusalem_test_params(
+    (
+        "Jerusalem",
         dt(2017, 9, 21, 8, 25),
         {
             "english_upcoming_candle_lighting": dt(2017, 9, 20, 17, 58),
@@ -425,7 +435,8 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "א' ראש השנה",
         },
     ),
-    make_jerusalem_test_params(
+    (
+        "Jerusalem",
         dt(2017, 9, 22, 8, 25),
         {
             "english_upcoming_candle_lighting": dt(2017, 9, 20, 17, 58),
@@ -438,7 +449,8 @@ SHABBAT_PARAMS = [
             "hebrew_holiday": "ב' ראש השנה",
         },
     ),
-    make_jerusalem_test_params(
+    (
+        "Jerusalem",
         dt(2017, 9, 23, 8, 25),
         {
             "english_upcoming_candle_lighting": dt(2017, 9, 20, 17, 58),
@@ -479,57 +491,25 @@ SHABBAT_TEST_IDS = [
 ]
 
 
-@pytest.mark.parametrize("language", ["english", "hebrew"])
+@pytest.mark.parametrize("language", ["english", "hebrew"], indirect=True)
 @pytest.mark.parametrize(
-    (
-        "now",
-        "candle_lighting",
-        "havdalah",
-        "diaspora",
-        "tzname",
-        "latitude",
-        "longitude",
-        "result",
-    ),
-    SHABBAT_PARAMS,
-    ids=SHABBAT_TEST_IDS,
+    "jcal_params", SHABBAT_PARAMS, ids=SHABBAT_TEST_IDS, indirect=True
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_shabbat_times_sensor(
     hass: HomeAssistant,
-    language,
-    now,
-    candle_lighting,
-    havdalah,
-    diaspora,
-    tzname,
-    latitude,
-    longitude,
-    result,
+    jcal_params: dict,
+    config_entry: MockConfigEntry,
+    setup_hass: None,
 ) -> None:
     """Test sensor output for upcoming shabbat/yomtov times."""
-    time_zone = dt_util.get_time_zone(tzname)
-    test_time = now.replace(tzinfo=time_zone)
-
-    await hass.config.async_set_time_zone(tzname)
-    hass.config.latitude = latitude
-    hass.config.longitude = longitude
+    test_time = jcal_params["dtime"]
+    result = jcal_params["results"]
+    language = config_entry.data[CONF_LANGUAGE]
 
     with freeze_time(test_time):
-        entry = MockConfigEntry(
-            title=DEFAULT_NAME,
-            domain=DOMAIN,
-            data={
-                CONF_LANGUAGE: language,
-                CONF_DIASPORA: diaspora,
-            },
-            options={
-                CONF_CANDLE_LIGHT_MINUTES: candle_lighting,
-                CONF_HAVDALAH_OFFSET_MINUTES: havdalah,
-            },
-        )
-        entry.add_to_hass(hass)
-        await hass.config_entries.async_setup(entry.entry_id)
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         future = test_time + timedelta(seconds=30)
