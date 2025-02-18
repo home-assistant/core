@@ -40,7 +40,7 @@ def is_light_node(node: HomeeNode) -> bool:
 
 
 def get_color_mode(supported_modes: set[ColorMode]) -> ColorMode:
-    """Determine the color mode from the available attributes."""
+    """Determine the color mode from the supported modes."""
     if ColorMode.HS in supported_modes:
         return ColorMode.HS
     if ColorMode.COLOR_TEMP in supported_modes:
