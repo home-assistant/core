@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare==2.43.0
+PyViCare==2.43.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.0.2
+aioesphomeapi==29.1.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -431,7 +431,7 @@ aiowithings==3.1.5
 aioymaps==1.2.5
 
 # homeassistant.components.airgradient
-airgradient==0.9.1
+airgradient==0.9.2
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -3113,7 +3113,7 @@ yeelight==0.7.16
 yeelightsunflower==0.0.10
 
 # homeassistant.components.yolink
-yolink-api==0.4.7
+yolink-api==0.4.8
 
 # homeassistant.components.youless
 youless-api==2.2.0
