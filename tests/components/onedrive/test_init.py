@@ -1,9 +1,11 @@
 """Test the OneDrive setup."""
 
+from copy import deepcopy
 from html import escape
 from json import dumps
 from unittest.mock import MagicMock
 
+from onedrive_personal_sdk.const import DriveState
 from onedrive_personal_sdk.exceptions import AuthenticationError, OneDriveException
 import pytest
 from syrupy import SnapshotAssertion
@@ -11,7 +13,7 @@ from syrupy import SnapshotAssertion
 from homeassistant.components.onedrive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import setup_integration
 from .const import BACKUP_METADATA, MOCK_BACKUP_FILE, MOCK_DRIVE
@@ -131,3 +133,38 @@ async def test_device(
     device = device_registry.async_get_device({(DOMAIN, MOCK_DRIVE.id)})
     assert device
     assert device == snapshot
+
+
+@pytest.mark.parametrize(
+    (
+        "drive_state",
+        "issue_key",
+        "issue_exists",
+    ),
+    [
+        (DriveState.NORMAL, "drive_full", False),
+        (DriveState.NORMAL, "drive_almost_full", False),
+        (DriveState.CRITICAL, "drive_almost_full", True),
+        (DriveState.CRITICAL, "drive_full", False),
+        (DriveState.EXCEEDED, "drive_almost_full", False),
+        (DriveState.EXCEEDED, "drive_full", True),
+    ],
+)
+async def test_data_cap_issues(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+    drive_state: DriveState,
+    issue_key: str,
+    issue_exists: bool,
+) -> None:
+    """Make sure we get issues for high data usage."""
+    mock_drive = deepcopy(MOCK_DRIVE)
+    assert mock_drive.quota
+    mock_drive.quota.state = drive_state
+    mock_onedrive_client.get_drive.return_value = mock_drive
+    await setup_integration(hass, mock_config_entry)
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, issue_key)
+    assert (issue is not None) == issue_exists
