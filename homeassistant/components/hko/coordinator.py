@@ -26,6 +26,7 @@ from homeassistant.components.weather import (
     ATTR_FORECAST_TEMP_LOW,
     ATTR_FORECAST_TIME,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -69,8 +70,15 @@ _LOGGER = logging.getLogger(__name__)
 class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """HKO Update Coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, session: ClientSession, district: str, location: str
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        session: ClientSession,
+        district: str,
+        location: str,
     ) -> None:
         """Update data via library."""
         self.location = location
@@ -80,6 +88,7 @@ class HKOUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(minutes=15),
         )

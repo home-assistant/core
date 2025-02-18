@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Awaitable, Callable, Coroutine
+from collections.abc import Awaitable, Callable, Coroutine, Sequence
 from datetime import datetime
 from functools import reduce, wraps
 from operator import ior
@@ -35,7 +35,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
@@ -88,14 +88,21 @@ HA_HEOS_REPEAT_TYPE_MAP = {v: k for k, v in HEOS_HA_REPEAT_TYPE_MAP.items()}
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: HeosConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: HeosConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add media players for a config entry."""
-    devices = [
-        HeosMediaPlayer(entry.runtime_data, player)
-        for player in entry.runtime_data.heos.players.values()
-    ]
-    async_add_entities(devices)
+
+    def add_entities_callback(players: Sequence[HeosPlayer]) -> None:
+        """Add entities for each player."""
+        async_add_entities(
+            [HeosMediaPlayer(entry.runtime_data, player) for player in players]
+        )
+
+    coordinator = entry.runtime_data
+    coordinator.async_add_platform_callback(add_entities_callback)
+    add_entities_callback(list(coordinator.heos.players.values()))
 
 
 type _FuncType[**_P] = Callable[_P, Awaitable[Any]]
