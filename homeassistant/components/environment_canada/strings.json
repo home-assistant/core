@@ -123,5 +123,9 @@
         }
       }
     }
+    "get_forecasts": {
+      "name": "Get forecasts",
+      "description": "Retrieves the forecast from selected weather services.",
+    }
   }
 }
