@@ -9,6 +9,7 @@ from homeassistant.components.humidifier import (
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
     MODE_AUTO,
+    HumidifierAction,
     HumidifierDeviceClass,
     HumidifierEntity,
     HumidifierEntityFeature,
@@ -40,6 +41,12 @@ async def async_setup_entry(
             entities.append(EcobeeHumidifier(data, index))
 
     async_add_entities(entities, True)
+
+
+ECOBEE_HUMIDIFIER_ACTION_TO_HASS = {
+    "humidifier": HumidifierAction.HUMIDIFYING,
+    "dehumidifier": HumidifierAction.DRYING,
+}
 
 
 class EcobeeHumidifier(HumidifierEntity):
@@ -95,6 +102,18 @@ class EcobeeHumidifier(HumidifierEntity):
         self.thermostat = self.data.ecobee.get_thermostat(self.thermostat_index)
         if self.mode != MODE_OFF:
             self._last_humidifier_on_mode = self.mode
+
+    @property
+    def action(self) -> HumidifierAction | None:
+        """Return the current action."""
+        actions = [
+            ECOBEE_HUMIDIFIER_ACTION_TO_HASS[status]
+            for status in self.thermostat["equipmentStatus"].split(",")
+            if status in ECOBEE_HUMIDIFIER_ACTION_TO_HASS
+        ]
+        if actions:
+            return actions[0]
+        return HumidifierAction.IDLE if self.is_on else HumidifierAction.OFF
 
     @property
     def is_on(self) -> bool:
