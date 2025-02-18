@@ -314,7 +314,7 @@
       "fields": {
         "repeat": {
           "name": "Repeat mode",
-          "description": "Whether the media should be played in a loop or not."
+          "description": "Whether the media (one or all) should be played in a loop or not."
         }
       }
     },
