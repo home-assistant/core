@@ -803,6 +803,23 @@
         "name": "Refrigerator door"
       }
     },
+    "button": {
+      "open_door": {
+        "name": "Open door"
+      },
+      "partly_open_door": {
+        "name": "Partly open door"
+      },
+      "pause_program": {
+        "name": "Pause program"
+      },
+      "resume_program": {
+        "name": "Resume program"
+      },
+      "stop_program": {
+        "name": "Stop program"
+      }
+    },
     "light": {
       "cooking_lighting": {
         "name": "Functional light"

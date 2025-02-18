@@ -9,6 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
+    ArrayOfCommands,
     ArrayOfEvents,
     ArrayOfHomeAppliances,
     ArrayOfOptions,
@@ -47,6 +48,9 @@ MOCK_PROGRAMS: dict[str, Any] = load_json_object_fixture("home_connect/programs.
 MOCK_SETTINGS: dict[str, Any] = load_json_object_fixture("home_connect/settings.json")
 MOCK_STATUS = ArrayOfStatus.from_dict(
     load_json_object_fixture("home_connect/status.json")["data"]
+)
+MOCK_AVAILABLE_COMMANDS: dict[str, Any] = load_json_object_fixture(
+    "home_connect/available_commands.json"
 )
 
 
@@ -324,6 +328,14 @@ async def _get_setting_side_effect(ha_id: str, setting_key: SettingKey):
     raise HomeConnectApiError("error.key", "error description")
 
 
+async def _get_available_commands_side_effect(ha_id: str) -> ArrayOfCommands:
+    """Get available commands."""
+    for appliance in MOCK_APPLIANCES.homeappliances:
+        if appliance.ha_id == ha_id and appliance.type in MOCK_AVAILABLE_COMMANDS:
+            return ArrayOfCommands.from_dict(MOCK_AVAILABLE_COMMANDS[appliance.type])
+    raise HomeConnectApiError("error.key", "error description")
+
+
 @pytest.fixture(name="client")
 def mock_client(request: pytest.FixtureRequest) -> MagicMock:
     """Fixture to mock Client from HomeConnect."""
@@ -360,6 +372,7 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
             event_queue, EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
         ),
     )
+    mock.stop_program = AsyncMock()
     mock.set_active_program_option = AsyncMock(
         side_effect=_get_set_program_options_side_effect(event_queue),
     )
@@ -379,6 +392,9 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
     mock.get_setting = AsyncMock(side_effect=_get_setting_side_effect)
     mock.get_status = AsyncMock(return_value=copy.deepcopy(MOCK_STATUS))
     mock.get_all_programs = AsyncMock(side_effect=_get_all_programs_side_effect)
+    mock.get_available_commands = AsyncMock(
+        side_effect=_get_available_commands_side_effect
+    )
     mock.put_command = AsyncMock()
 
     mock.side_effect = mock
@@ -410,6 +426,7 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
     mock.start_program = AsyncMock(side_effect=exception)
     mock.stop_program = AsyncMock(side_effect=exception)
     mock.set_selected_program = AsyncMock(side_effect=exception)
+    mock.stop_program = AsyncMock(side_effect=exception)
     mock.set_active_program_option = AsyncMock(side_effect=exception)
     mock.set_active_program_options = AsyncMock(side_effect=exception)
     mock.set_selected_program_option = AsyncMock(side_effect=exception)
@@ -419,6 +436,7 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
     mock.get_setting = AsyncMock(side_effect=exception)
     mock.get_status = AsyncMock(side_effect=exception)
     mock.get_all_programs = AsyncMock(side_effect=exception)
+    mock.get_available_commands = AsyncMock(side_effect=exception)
     mock.put_command = AsyncMock(side_effect=exception)
 
     return mock
