@@ -1,0 +1,9 @@
+{
+  "entity": {
+    "sensor": {
+      "container_state": {
+        "default": "mdi:state-machine"
+      }
+    }
+  }
+}
