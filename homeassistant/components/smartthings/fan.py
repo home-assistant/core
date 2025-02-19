@@ -18,6 +18,7 @@ from homeassistant.util.percentage import (
 from homeassistant.util.scaling import int_states_in_range
 
 from . import FullDevice, SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 SPEED_RANGE = (1, 3)  # off is not included
@@ -33,15 +34,15 @@ async def async_setup_entry(
     async_add_entities(
         SmartThingsFan(entry_data.client, device)
         for device in entry_data.devices.values()
-        if Capability.SWITCH in device.status["main"]
+        if Capability.SWITCH in device.status[MAIN]
         and any(
-            capability in device.status["main"]
+            capability in device.status[MAIN]
             for capability in (
                 Capability.FAN_SPEED,
                 Capability.AIR_CONDITIONER_FAN_MODE,
             )
         )
-        and Capability.THERMOSTAT_COOLING_SETPOINT not in device.status["main"]
+        and Capability.THERMOSTAT_COOLING_SETPOINT not in device.status[MAIN]
     )
 
 

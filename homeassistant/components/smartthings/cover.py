@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 VALUE_TO_STATE = {
@@ -43,7 +44,7 @@ async def async_setup_entry(
     async_add_entities(
         SmartThingsCover(entry_data.client, device, capability)
         for device in entry_data.devices.values()
-        for capability in device.status["main"]
+        for capability in device.status[MAIN]
         if capability in CAPABILITIES
     )
 

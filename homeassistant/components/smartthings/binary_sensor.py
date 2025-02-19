@@ -17,6 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 
@@ -110,7 +111,7 @@ async def async_setup_entry(
         )
         for device in entry_data.devices.values()
         for capability, attribute_map in CAPABILITY_TO_SENSORS.items()
-        if capability in device.status["main"]
+        if capability in device.status[MAIN]
         for attribute, description in attribute_map.items()
     )
 

@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 CAPABILITIES = (
@@ -41,8 +42,8 @@ async def async_setup_entry(
     async_add_entities(
         SmartThingsLight(entry_data.client, device)
         for device in entry_data.devices.values()
-        if Capability.SWITCH in device.status["main"]
-        and any(capability in device.status["main"] for capability in CAPABILITIES)
+        if Capability.SWITCH in device.status[MAIN]
+        and any(capability in device.status[MAIN] for capability in CAPABILITIES)
     )
 
 

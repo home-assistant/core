@@ -11,6 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 ST_STATE_LOCKED = "locked"
@@ -34,7 +35,7 @@ async def async_setup_entry(
     async_add_entities(
         SmartThingsLock(entry_data.client, device, {Capability.LOCK})
         for device in entry_data.devices.values()
-        if Capability.LOCK in device.status["main"]
+        if Capability.LOCK in device.status[MAIN]
     )
 
 

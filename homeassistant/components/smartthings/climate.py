@@ -27,6 +27,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 ATTR_OPERATION_STATE = "operation_state"
@@ -120,14 +121,13 @@ async def async_setup_entry(
     entities: list[ClimateEntity] = [
         SmartThingsAirConditioner(entry_data.client, device)
         for device in entry_data.devices.values()
-        if all(capability in device.status["main"] for capability in AC_CAPABILITIES)
+        if all(capability in device.status[MAIN] for capability in AC_CAPABILITIES)
     ]
     entities.extend(
         SmartThingsThermostat(entry_data.client, device)
         for device in entry_data.devices.values()
         if all(
-            capability in device.status["main"]
-            for capability in THERMOSTAT_CAPABILITIES
+            capability in device.status[MAIN] for capability in THERMOSTAT_CAPABILITIES
         )
     )
     async_add_entities(entities)

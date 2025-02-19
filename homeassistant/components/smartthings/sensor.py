@@ -33,6 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import FullDevice, SmartThingsConfigEntry
+from .const import MAIN
 from .entity import SmartThingsEntity
 
 THERMOSTAT_CAPABILITIES = {
@@ -769,13 +770,13 @@ async def async_setup_entry(
     async_add_entities(
         SmartThingsSensor(entry_data.client, device, description, capability, attribute)
         for device in entry_data.devices.values()
-        for capability, attributes in device.status["main"].items()
+        for capability, attributes in device.status[MAIN].items()
         if capability in CAPABILITY_TO_SENSORS
         for attribute in attributes
         for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
         if not description.capability_ignore_list
         or not any(
-            all(capability in device.status["main"] for capability in capability_list)
+            all(capability in device.status[MAIN] for capability in capability_list)
             for capability_list in description.capability_ignore_list
         )
     )
