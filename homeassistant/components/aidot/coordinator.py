@@ -1,47 +1,35 @@
-"""DataUpdateCoordinator for Aidot."""
+"""Coordinator for Aidot."""
 
-from dataclasses import dataclass
-from datetime import timedelta
 import logging
+from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
-
-from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 
 type AidotConfigEntry = ConfigEntry[AidotCoordinator]
 
 
-@dataclass
-class AidotData:
-    """Class for data update."""
-
-
-class AidotCoordinator(DataUpdateCoordinator[AidotData]):
+class AidotCoordinator:
     """Class to manage fetching Aidot data."""
 
     config_entry: AidotConfigEntry
+    device_list: list[dict[str, Any]]
+    login_response: dict[str, Any]
+    product_list: list[dict[str, Any]]
 
     def __init__(
         self,
         hass: HomeAssistant,
         config_entry: AidotConfigEntry,
+        device_list: list[dict[str, Any]],
+        login_response: dict[str, Any],
+        product_list: list[dict[str, Any]],
     ) -> None:
         """Initialize coordinator."""
-
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=DOMAIN,
-            update_interval=DEFAULT_SCAN_INTERVAL,
-        )
+        self.config_entry = config_entry
         self.identifier = config_entry.entry_id
-
-    async def _async_update_data(self) -> AidotData:
-        """Update data async."""
-        return AidotData()
+        self.device_list = device_list
+        self.login_response = login_response
+        self.product_list = product_list

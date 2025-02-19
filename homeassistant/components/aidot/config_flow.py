@@ -5,7 +5,14 @@ from __future__ import annotations
 import logging
 from typing import Any
 
-from aidot.login_const import DEFAULT_COUNTRY_NAME, SUPPORTED_COUNTRY_NAMES
+from aidot.login_const import (
+    CONF_DEVICE_LIST,
+    CONF_LOGIN_RESPONSE,
+    CONF_PRODUCT_LIST,
+    CONF_SELECTED_HOUSE,
+    DEFAULT_COUNTRY_NAME,
+    SUPPORTED_COUNTRY_NAMES,
+)
 from aidot.login_control import LoginControl
 import voluptuous as vol
 
@@ -140,10 +147,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=title,
                 data={
-                    "login_response": self.login_response,
-                    "selected_house": self.selected_house,
-                    "device_list": self.device_list,
-                    "product_list": self.product_list,
+                    CONF_LOGIN_RESPONSE: self.login_response,
+                    CONF_SELECTED_HOUSE: self.selected_house,
+                    CONF_DEVICE_LIST: self.device_list,
+                    CONF_PRODUCT_LIST: self.product_list,
                 },
             )
 

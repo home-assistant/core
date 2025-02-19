@@ -25,6 +25,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import DOMAIN
+from .coordinator import AidotCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,9 +34,10 @@ async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up Light."""
-    device_list = hass.data[DOMAIN].get("device_list", [])
-    user_info = hass.data[DOMAIN].get("login_response", {})
-    products = hass.data[DOMAIN].get("products", {})
+    coordinator: AidotCoordinator = entry.runtime_data
+    device_list = coordinator.device_list
+    user_info = coordinator.login_response
+    products = coordinator.product_list
     for product in products:
         for device in device_list:
             if device["productId"] == product["id"]:

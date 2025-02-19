@@ -7,13 +7,14 @@ import logging
 from typing import Any
 
 from aidot.discover import Discover
+from aidot.login_const import CONF_DEVICE_LIST, CONF_LOGIN_RESPONSE, CONF_PRODUCT_LIST
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 
-from .const import DOMAIN
 from .coordinator import AidotConfigEntry, AidotCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -24,20 +25,23 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 async def async_setup_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> bool:
     """Set up aidot from a config entry."""
 
-    hass.data.setdefault(DOMAIN, {})["device_list"] = entry.data["device_list"]
-    hass.data.setdefault(DOMAIN, {})["login_response"] = entry.data["login_response"]
-    hass.data.setdefault(DOMAIN, {})["products"] = entry.data["product_list"]
+    coordinator = AidotCoordinator(
+        hass,
+        entry,
+        entry.data[CONF_DEVICE_LIST],
+        entry.data[CONF_LOGIN_RESPONSE],
+        entry.data[CONF_PRODUCT_LIST],
+    )
+    entry.runtime_data = coordinator
 
     def discover(dev_id, event: Mapping[str, Any]):
         hass.bus.async_fire(dev_id, event)
 
-    await Discover().broadcast_message(
-        discover, hass.data[DOMAIN]["login_response"]["id"]
-    )
+    try:
+        await Discover().broadcast_message(discover, coordinator.login_response["id"])
+    except OSError as err:
+        raise ConfigEntryError from err
 
-    coordinator = AidotCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -56,10 +60,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # This is called when an entry/configured device is to be removed. The class
     # needs to unload itself, and remove callbacks. See the classes for further
     # details
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop("device_list", None)
-        hass.data[DOMAIN].pop("login_response", None)
-        hass.data[DOMAIN].pop("products", None)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
