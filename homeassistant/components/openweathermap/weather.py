@@ -17,6 +17,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from . import OpenweathermapConfigEntry
 from .const import (
@@ -38,11 +39,13 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
+    OWM_MODE_AIRPOLLUTION,
     OWM_MODE_FREE_FORECAST,
     OWM_MODE_V25,
     OWM_MODE_V30,
 )
-from .coordinator import WeatherUpdateCoordinator
+
+# from .coordinator import WeatherUpdateCoordinator
 
 
 async def async_setup_entry(
@@ -56,13 +59,16 @@ async def async_setup_entry(
     mode = domain_data.mode
     weather_coordinator = domain_data.coordinator
 
+    if mode == OWM_MODE_AIRPOLLUTION:
+        return
+
     unique_id = f"{config_entry.unique_id}"
     owm_weather = OpenWeatherMapWeather(name, unique_id, mode, weather_coordinator)
 
     async_add_entities([owm_weather], False)
 
 
-class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordinator]):
+class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[DataUpdateCoordinator]):
     """Implementation of an OpenWeatherMap sensor."""
 
     _attr_attribution = ATTRIBUTION
@@ -79,10 +85,10 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
         name: str,
         unique_id: str,
         mode: str,
-        weather_coordinator: WeatherUpdateCoordinator,
+        coordinator: DataUpdateCoordinator,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(weather_coordinator)
+        super().__init__(coordinator)
         self._attr_name = name
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
