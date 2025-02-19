@@ -603,7 +603,7 @@ async def receive_file(
             await fut
 
 
-def async_setup_config_entry_backup_listeners(
+def async_setup_config_entry_backup_agents_listeners(
     hass: HomeAssistant,
     integration_domain: str,
     hass_key: HassKey,
