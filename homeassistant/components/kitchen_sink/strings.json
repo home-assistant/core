@@ -11,7 +11,6 @@
   },
   "config_subentries": {
     "entity": {
-      "title": "Add entity",
       "step": {
         "add_sensor": {
           "description": "Configure the new sensor",
@@ -27,7 +26,12 @@
             "state": "Initial state"
           }
         }
-      }
+      },
+      "initiate_flow": {
+        "user": "Add sensor",
+        "reconfigure": "Reconfigure sensor"
+      },
+      "entry_type": "Sensor"
     }
   },
   "options": {
