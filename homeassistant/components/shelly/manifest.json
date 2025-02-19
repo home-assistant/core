@@ -13,6 +13,9 @@
     {
       "type": "_http._tcp.local.",
       "name": "shelly*"
+    },
+    {
+      "type": "_shelly._tcp.local."
     }
   ]
 }

@@ -132,6 +132,7 @@ async def test_update_firmware(
 
     event_function(MOCK_FIRMWARE_DONE)
 
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
         sw_version="v2.7.5",
     )
@@ -153,6 +154,7 @@ async def test_update_zigbee2_firmware(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test update of zigbee2 firmware where available."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info.from_dict(
         load_json_object_fixture("info-MR1.json", DOMAIN)
     )
@@ -195,6 +197,7 @@ async def test_update_legacy_firmware_v2(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test firmware update for legacy v2 firmware."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
         sw_version="v2.0.18",
         legacy_api=1,
@@ -220,6 +223,7 @@ async def test_update_legacy_firmware_v2(
 
     event_function(MOCK_FIRMWARE_DONE)
 
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
         sw_version="v2.7.5",
     )
@@ -333,6 +337,7 @@ async def test_update_release_notes(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test firmware release notes."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info.from_dict(
         load_json_object_fixture("info-MR1.json", DOMAIN)
     )

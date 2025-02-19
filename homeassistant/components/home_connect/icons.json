@@ -18,6 +18,9 @@
     "set_option_selected": {
       "service": "mdi:gesture-tap"
     },
+    "set_program_and_options": {
+      "service": "mdi:form-select"
+    },
     "change_setting": {
       "service": "mdi:cog"
     }

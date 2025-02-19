@@ -85,9 +85,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up forked-daapd from a config entry."""
-    host = config_entry.data[CONF_HOST]
-    port = config_entry.data[CONF_PORT]
-    password = config_entry.data[CONF_PASSWORD]
+    host: str = config_entry.data[CONF_HOST]
+    port: int = config_entry.data[CONF_PORT]
+    password: str = config_entry.data[CONF_PASSWORD]
     forked_daapd_api = ForkedDaapdAPI(
         async_get_clientsession(hass), host, port, password
     )
@@ -95,8 +95,6 @@ async def async_setup_entry(
         clientsession=async_get_clientsession(hass),
         api=forked_daapd_api,
         ip_address=host,
-        api_port=port,
-        api_password=password,
         config_entry=config_entry,
     )
 
@@ -240,9 +238,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
 
     _attr_should_poll = False
 
-    def __init__(
-        self, clientsession, api, ip_address, api_port, api_password, config_entry
-    ):
+    def __init__(self, clientsession, api, ip_address, config_entry):
         """Initialize the ForkedDaapd Master Device."""
         # Leave the api public so the browse media helpers can use it
         self.api = api
@@ -269,7 +265,7 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self._on_remove = None
         self._available = False
         self._clientsession = clientsession
-        self._config_entry = config_entry
+        self._entry_id = config_entry.entry_id
         self.update_options(config_entry.options)
         self._paused_event = asyncio.Event()
         self._pause_requested = False
@@ -282,42 +278,42 @@ class ForkedDaapdMaster(MediaPlayerEntity):
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_PLAYER.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_PLAYER.format(self._entry_id),
                 self._update_player,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_QUEUE.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_QUEUE.format(self._entry_id),
                 self._update_queue,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_OUTPUTS.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_OUTPUTS.format(self._entry_id),
                 self._update_outputs,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_MASTER.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_MASTER.format(self._entry_id),
                 self._update_callback,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_CONFIG_OPTIONS_UPDATE.format(self._config_entry.entry_id),
+                SIGNAL_CONFIG_OPTIONS_UPDATE.format(self._entry_id),
                 self.update_options,
             )
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                SIGNAL_UPDATE_DATABASE.format(self._config_entry.entry_id),
+                SIGNAL_UPDATE_DATABASE.format(self._entry_id),
                 self._update_database,
             )
         )
@@ -411,9 +407,9 @@ class ForkedDaapdMaster(MediaPlayerEntity):
             self._track_info = defaultdict(str)
 
     @property
-    def unique_id(self):
+    def unique_id(self) -> str:
         """Return unique ID."""
-        return self._config_entry.entry_id
+        return self._entry_id
 
     @property
     def available(self) -> bool:

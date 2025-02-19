@@ -155,6 +155,8 @@ class ConfigEntryState(Enum):
     """An error occurred when trying to unload the entry"""
     SETUP_IN_PROGRESS = "setup_in_progress", False
     """The config entry is setting up."""
+    UNLOAD_IN_PROGRESS = "unload_in_progress", False
+    """The config entry is being unloaded."""
 
     _recoverable: bool
 
@@ -955,18 +957,25 @@ class ConfigEntry[_DataT = Any]:
                 )
             return False
 
+        if domain_is_integration:
+            self._async_set_state(hass, ConfigEntryState.UNLOAD_IN_PROGRESS, None)
         try:
             result = await component.async_unload_entry(hass, self)
 
             assert isinstance(result, bool)
 
-            # Only adjust state if we unloaded the component
-            if domain_is_integration and result:
-                await self._async_process_on_unload(hass)
-                if hasattr(self, "runtime_data"):
-                    object.__delattr__(self, "runtime_data")
+            # Only do side effects if we unloaded the integration
+            if domain_is_integration:
+                if result:
+                    await self._async_process_on_unload(hass)
+                    if hasattr(self, "runtime_data"):
+                        object.__delattr__(self, "runtime_data")
 
-                self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                    self._async_set_state(hass, ConfigEntryState.NOT_LOADED, None)
+                else:
+                    self._async_set_state(
+                        hass, ConfigEntryState.FAILED_UNLOAD, "Unload failed"
+                    )
 
         except Exception as exc:
             _LOGGER.exception(
@@ -2052,9 +2061,9 @@ class ConfigEntries:
             else:
                 unload_success = await self.async_unload(entry_id, _lock=False)
 
+            del self._entries[entry.entry_id]
             await entry.async_remove(self.hass)
 
-            del self._entries[entry.entry_id]
             self.async_update_issues()
             self._async_schedule_save()
 

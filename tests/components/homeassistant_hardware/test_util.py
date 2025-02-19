@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.hassio import AddonError, AddonInfo, AddonState
+from homeassistant.components.hassio import (
+    AddonError,
+    AddonInfo,
+    AddonManager,
+    AddonState,
+)
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_register_firmware_info_provider,
 )
@@ -11,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningAddon,
     OwningIntegration,
+    get_otbr_addon_firmware_info,
     guess_firmware_info,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -247,3 +253,30 @@ async def test_firmware_info(hass: HomeAssistant) -> None:
     )
 
     assert (await firmware_info2.is_running(hass)) is False
+
+
+async def test_get_otbr_addon_firmware_info_failure(hass: HomeAssistant) -> None:
+    """Test getting OTBR addon firmware info failure due to bad API call."""
+
+    otbr_addon_manager = AsyncMock(spec_set=AddonManager)
+    otbr_addon_manager.async_get_addon_info.side_effect = AddonError()
+
+    assert (await get_otbr_addon_firmware_info(hass, otbr_addon_manager)) is None
+
+
+async def test_get_otbr_addon_firmware_info_failure_bad_options(
+    hass: HomeAssistant,
+) -> None:
+    """Test getting OTBR addon firmware info failure due to bad addon options."""
+
+    otbr_addon_manager = AsyncMock(spec_set=AddonManager)
+    otbr_addon_manager.async_get_addon_info.return_value = AddonInfo(
+        available=True,
+        hostname="core_some_addon_slug",
+        options={},  # `device` is missing
+        state=AddonState.RUNNING,
+        update_available=False,
+        version="1.0.0",
+    )
+
+    assert (await get_otbr_addon_firmware_info(hass, otbr_addon_manager)) is None

@@ -29,6 +29,16 @@
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
     }
   },
+  "issues": {
+    "drive_full": {
+      "title": "OneDrive data cap exceeded",
+      "description": "Your OneDrive has exceeded your quota limit. This means your next backup will fail. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB."
+    },
+    "drive_almost_full": {
+      "title": "OneDrive near data cap",
+      "description": "Your OneDrive is near your quota limit. If you go over this limit your drive will be temporarily frozen and your backups will start failing. Please free up some space or upgrade your OneDrive plan. Currently using {used} GiB of {total} GiB."
+    }
+  },
   "exceptions": {
     "authentication_failed": {
       "message": "Authentication failed"
@@ -38,6 +48,31 @@
     },
     "failed_to_migrate_files": {
       "message": "Failed to migrate metadata to separate files"
+    },
+    "update_failed": {
+      "message": "Failed to update drive state"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "total_size": {
+        "name": "Total available storage"
+      },
+      "used_size": {
+        "name": "Used storage"
+      },
+      "remaining_size": {
+        "name": "Remaining storage"
+      },
+      "drive_state": {
+        "name": "Drive state",
+        "state": {
+          "normal": "Normal",
+          "nearing": "Nearing limit",
+          "critical": "Critical",
+          "exceeded": "Exceeded"
+        }
+      }
     }
   }
 }
