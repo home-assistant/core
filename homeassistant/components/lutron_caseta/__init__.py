@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import asyncio
-from contextlib import suppress
 from itertools import chain
 import logging
 import ssl
@@ -190,9 +189,15 @@ async def async_setup_entry(
             async with asyncio.timeout(timeout):
                 await future
         except TimeoutError as ex:
-            connect_task.cancel()
-            with suppress(asyncio.CancelledError):
-                await connect_task
+            if future != connect_task:
+                connect_task.cancel()
+                try:
+                    await connect_task
+                except asyncio.CancelledError:
+                    if (current_task := asyncio.current_task()) and (
+                        current_task.cancelling()
+                    ):
+                        raise
             await bridge.close()
             raise ConfigEntryNotReady(f"Timed out while {name} {host}") from ex
 
