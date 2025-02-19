@@ -26,7 +26,9 @@
           "device_id": "[%key:common::config_flow::data::device%]",
           "device_class": "[%key:component::template::config::step::sensor::data::device_class%]",
           "name": "[%key:common::config_flow::data::name%]",
-          "state": "[%key:component::template::config::step::sensor::data::state%]"
+          "state": "[%key:component::template::config::step::sensor::data::state%]",
+          "delay_off": "Delay off state until time",
+          "delay_on": "Delay on state after time"
         },
         "data_description": {
           "device_id": "[%key:component::template::config::step::sensor::data_description::device_id%]"
