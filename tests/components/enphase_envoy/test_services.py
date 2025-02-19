@@ -89,13 +89,13 @@ async def test_service_load_unload(
     ],
     indirect=["mock_envoy"],
 )
-async def test_service_get_raw_tariff(
+async def test_service_get_raw(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
     service: str,
 ) -> None:
-    """Test service calls for get_firmware service."""
+    """Test service calls for get_raw service."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
@@ -136,20 +136,20 @@ async def test_service_get_raw_tariff(
     ],
     indirect=["mock_envoy"],
 )
-async def test_service_get_firmware_exceptions(
+async def test_service_get_raw_exceptions(
     hass: HomeAssistant,
     mock_envoy: AsyncMock,
     config_entry: MockConfigEntry,
     service: str,
 ) -> None:
-    """Test service calls for get_firmware service with faulty service data."""
+    """Test service calls for get_raw service with faulty service data."""
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, config_entry)
     assert config_entry.state is ConfigEntryState.LOADED
 
     with pytest.raises(
         ServiceValidationError,
-        match=f"No Envoy found: get_raw_tariff {'123456789'}",
+        match=f"No Envoy configuration entry found: {service} {'123456789'}",
     ):
         await hass.services.async_call(
             DOMAIN,

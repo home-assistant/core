@@ -405,16 +405,16 @@
       "message": "Failed to execute {action} for {entity}, host: {host}: {args}"
     },
     "not_initialized": {
-      "message": "{service}: Enphase envoy is not yet initialized"
+      "message": "{service}: Enphase envoy is not yet initialized {args}"
     },
     "not_collected": {
-      "message": "{service}: this endpoint is not collected by the Envoy"
+      "message": "{service}: this endpoint is not collected by the Envoy {args}"
     },
     "envoy_service_error": {
       "message": "Error in Envoy Service: {service} {args}"
     },
-    "envoy_service_envoy_not_found": {
-      "message": "No Envoy found: {service} {args}"
+    "envoy_service_no_config": {
+      "message": "No Envoy configuration entry found: {service} {args}"
     },
     "envoy_service_invalid_parameter": {
       "message": "Invalid parameters passed to Envoy service: {service} {args}"

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from typing import Never
 
 from pyenphase.const import URL_TARIFF
 import voluptuous as vol
@@ -20,14 +21,21 @@ from .const import DOMAIN
 from .coordinator import EnphaseUpdateCoordinator
 
 ATTR_CONFIG_ENTRY_ID = "config_entry_id"
-SERVICE_GET_RAW_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
-    }
-)
 RAW_SERVICE_LIST: dict[str, str] = {"get_raw_tariff": URL_TARIFF}
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _raise_validation(call: ServiceCall, key: str, param: str = "") -> Never:
+    """Raise Servicevalidation error."""
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key=key,
+        translation_placeholders={
+            "service": call.service,
+            "args": param,
+        },
+    )
 
 
 def _find_envoy_coordinator(
@@ -36,21 +44,18 @@ def _find_envoy_coordinator(
     """Find envoy config entry from service data and return envoy coordinator."""
     identifier = str(call.data.get(ATTR_CONFIG_ENTRY_ID))
     if not (entry := hass.config_entries.async_get_entry(identifier)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="envoy_service_envoy_not_found",
-            translation_placeholders={
-                "service": call.service,
-                "args": identifier,
-            },
-        )
+        _raise_validation(call, "envoy_service_no_config", identifier)
     if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="not_initialized",
-            translation_placeholders={"service": call.service},
-        )
+        _raise_validation(call, "not_initialized", identifier)
+
     coordinator: EnphaseUpdateCoordinator = entry.runtime_data
+    if (
+        not (coordinator)
+        or not (envoy_to_use := coordinator.envoy)
+        or not envoy_to_use.data
+        or not envoy_to_use.data.raw
+    ):
+        _raise_validation(call, "not_initialized", identifier)
     return coordinator
 
 
@@ -61,18 +66,10 @@ async def setup_hass_services(hass: HomeAssistant) -> ServiceResponse:
         """Return tariff data from envoy.data.raw cache."""
         coordinator = _find_envoy_coordinator(hass, call)
         envoy_to_use = coordinator.envoy
-        if not envoy_to_use.data or not envoy_to_use.data.raw:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="not_initialized",
-                translation_placeholders={"service": call.service},
-            )
-        if not (data := envoy_to_use.data.raw.get(RAW_SERVICE_LIST[call.service])):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="not_collected",
-                translation_placeholders={"service": call.service},
-            )
+        if not envoy_to_use.data or not (
+            data := envoy_to_use.data.raw.get(RAW_SERVICE_LIST[call.service])
+        ):
+            _raise_validation(call, "not_collected", call.service)
         return {"raw": data}
 
     # declare services
@@ -81,7 +78,7 @@ async def setup_hass_services(hass: HomeAssistant) -> ServiceResponse:
             DOMAIN,
             service,
             get_raw_service,
-            schema=SERVICE_GET_RAW_SCHEMA,
+            schema=vol.Schema({vol.Required(ATTR_CONFIG_ENTRY_ID): str}),
             supports_response=SupportsResponse.OPTIONAL,
         )
 
