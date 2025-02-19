@@ -7,6 +7,8 @@ import logging
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
+from .const import POLLING_INTERVAL
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -21,11 +23,7 @@ class HomelinkCoordinator(DataUpdateCoordinator):
             # Name of the data. For logging purposes.
             name="Homelink Coordinator",
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=5),
-            # Set always_update to `False` if the data returned from the
-            # api can be compared via `__eq__` to avoid duplicate updates
-            # being dispatched to listeners
-            always_update=True,
+            update_interval=timedelta(seconds=POLLING_INTERVAL),
         )
         self.provider = provider
         self.last_sync_timestamp = None
