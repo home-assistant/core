@@ -863,7 +863,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         )
         data_schema = self.add_suggested_values_to_schema(
             data_schema,
-            self._subentry_data["device"] if user_input is not None else user_input,
+            self._subentry_data["device"] if user_input is None else user_input,
         )
         return self.async_show_form(
             step_id="device",
