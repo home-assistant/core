@@ -17,7 +17,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-@config_entries.HANDLERS.register(DOMAIN)
 class SRPFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
     """Config flow to handle homelink OAuth2 authentication."""
 
