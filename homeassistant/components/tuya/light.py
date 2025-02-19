@@ -392,6 +392,10 @@ LIGHTS["cz"] = LIGHTS["kg"]
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 LIGHTS["pc"] = LIGHTS["kg"]
 
+# Smart Camera - Low power consumption camera (duplicate of `sp`)
+# Undocumented, see https://github.com/home-assistant/core/issues/132844
+LIGHTS["dghsxj"] = LIGHTS["sp"]
+
 # Dimmer (duplicate of `tgq`)
 # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
 LIGHTS["tdq"] = LIGHTS["tgq"]
