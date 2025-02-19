@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pyheos import CommandAuthenticationError, CommandFailedError, HeosError
+from pyheos import CommandAuthenticationError, CommandFailedError, HeosError, HeosSystem
 import pytest
 
 from homeassistant.components.heos.const import DOMAIN
@@ -69,57 +69,46 @@ async def test_create_entry_when_host_valid(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["result"].unique_id == DOMAIN
-    assert result["title"] == "HEOS System (via 127.0.0.1)"
+    assert result["title"] == "HEOS System"
     assert result["data"] == data
     assert controller.connect.call_count == 2  # Also called in async_setup_entry
     assert controller.disconnect.call_count == 1
 
 
-async def test_create_entry_when_friendly_name_valid(
-    hass: HomeAssistant, controller: MockHeos
-) -> None:
-    """Test result type is create entry when friendly name is valid."""
-    hass.data[DOMAIN] = {"Office (127.0.0.1)": "127.0.0.1"}
-    data = {CONF_HOST: "Office (127.0.0.1)"}
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=data
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == DOMAIN
-    assert result["title"] == "HEOS System (via 127.0.0.1)"
-    assert result["data"] == {CONF_HOST: "127.0.0.1"}
-    assert controller.connect.call_count == 2  # Also called in async_setup_entry
-    assert controller.disconnect.call_count == 1
-    assert DOMAIN not in hass.data
-
-
-async def test_discovery_shows_create_form(
+async def test_discovery(
     hass: HomeAssistant,
     discovery_data: SsdpServiceInfo,
     discovery_data_bedroom: SsdpServiceInfo,
+    controller: MockHeos,
+    system: HeosSystem,
 ) -> None:
-    """Test discovery shows form to confirm setup."""
-
-    # Single discovered host shows form for user to finish setup.
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
-    )
-    assert hass.data[DOMAIN] == {"Office (127.0.0.1)": "127.0.0.1"}
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    # Subsequent discovered hosts append to discovered hosts and abort.
+    """Test discovery shows form to confirm, then creates entry."""
+    # Single discovered, selects preferred host, shows confirm
+    controller.get_system_info.return_value = system
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data_bedroom
     )
-    assert hass.data[DOMAIN] == {
-        "Office (127.0.0.1)": "127.0.0.1",
-        "Bedroom (127.0.0.2)": "127.0.0.2",
-    }
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_in_progress"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_discovery"
+    assert controller.connect.call_count == 1
+    assert controller.get_system_info.call_count == 1
+    assert controller.disconnect.call_count == 1
+
+    # Subsequent discovered hosts abort.
+    subsequent_result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
+    )
+    assert subsequent_result["type"] is FlowResultType.ABORT
+    assert subsequent_result["reason"] == "already_in_progress"
+
+    # Confirm set up
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == DOMAIN
+    assert result["title"] == "HEOS System"
+    assert result["data"] == {CONF_HOST: "127.0.0.1"}
 
 
 async def test_discovery_flow_aborts_already_setup(
@@ -134,6 +123,20 @@ async def test_discovery_flow_aborts_already_setup(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_discovery_fails_to_connect_aborts(
+    hass: HomeAssistant, discovery_data: SsdpServiceInfo, controller: MockHeos
+) -> None:
+    """Test discovery aborts when trying to connect to host."""
+    controller.connect.side_effect = HeosError()
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_SSDP}, data=discovery_data
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert controller.connect.call_count == 1
+    assert controller.disconnect.call_count == 1
 
 
 async def test_reconfigure_validates_and_updates_config(
