@@ -44,7 +44,7 @@ from homeassistant.core import (
 from homeassistant.helpers import entity_platform, entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .const import DOMAIN, SERVICE_ENVIRONMENT_CANADA_FORECASTS
 from .coordinator import ECConfigEntry, ECDataUpdateCoordinator
 
 # Icon codes from http://dd.weatheroffice.ec.gc.ca/citypage_weather/
@@ -63,8 +63,6 @@ ICON_CONDITION_MAP = {
     ATTR_CONDITION_FOG: [20, 21, 23, 24, 44],
     ATTR_CONDITION_HAIL: [26, 27],
 }
-
-SERVICE_ENVIRONMENT_CANADA_FORECASTS = "get_forecasts"
 
 
 async def async_setup_entry(
