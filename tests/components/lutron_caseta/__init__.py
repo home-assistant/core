@@ -311,11 +311,15 @@ class MockBridge:
 
 
 async def async_setup_integration(
-    hass: HomeAssistant, mock_bridge: MockBridge
+    hass: HomeAssistant, mock_bridge: MockBridge, config_entry_id: str | None = None
 ) -> MockConfigEntry:
     """Set up a mock bridge."""
-    mock_entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA)
-    mock_entry.add_to_hass(hass)
+    if config_entry_id is None:
+        mock_entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA)
+        mock_entry.add_to_hass(hass)
+        config_entry_id = mock_entry.entry_id
+    else:
+        mock_entry = hass.config_entries.async_get_entry(config_entry_id)
 
     def create_tls_factory(
         *args: Any, on_connect_callback: Callable[[], None], **kwargs: Any
@@ -328,6 +332,6 @@ async def async_setup_integration(
         "homeassistant.components.lutron_caseta.Smartbridge.create_tls",
         create_tls_factory,
     ):
-        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.config_entries.async_setup(config_entry_id)
         await hass.async_block_till_done()
     return mock_entry
