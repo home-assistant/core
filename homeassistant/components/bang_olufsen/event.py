@@ -51,31 +51,32 @@ async def async_setup_entry(
         )
 
     # Check for connected Beoremote One
-    if remotes := await get_remotes(config_entry.runtime_data.client):
-        for remote in remotes:
-            # Add Light keys
-            entities.extend(
-                [
-                    BangOlufsenRemoteKeyEvent(
-                        config_entry,
-                        remote,
-                        f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
-                    )
-                    for key_type in BEO_REMOTE_KEYS
-                ]
-            )
+    remotes = await get_remotes(config_entry.runtime_data.client)
 
-            # Add Control keys
-            entities.extend(
-                [
-                    BangOlufsenRemoteKeyEvent(
-                        config_entry,
-                        remote,
-                        f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}",
-                    )
-                    for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
-                ]
-            )
+    for remote in remotes:
+        # Add Light keys
+        entities.extend(
+            [
+                BangOlufsenRemoteKeyEvent(
+                    config_entry,
+                    remote,
+                    f"{BEO_REMOTE_SUBMENU_LIGHT}/{key_type}",
+                )
+                for key_type in BEO_REMOTE_KEYS
+            ]
+        )
+
+        # Add Control keys
+        entities.extend(
+            [
+                BangOlufsenRemoteKeyEvent(
+                    config_entry,
+                    remote,
+                    f"{BEO_REMOTE_SUBMENU_CONTROL}/{key_type}",
+                )
+                for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
+            ]
+        )
 
     async_add_entities(new_entities=entities)
 

@@ -44,26 +44,25 @@ async def _handle_remote_devices(
 ) -> None:
     """Add or remove paired Beoremote One devices."""
     # Check for connected Beoremote One remotes
-    if remotes := await get_remotes(client):
-        for remote in remotes:
-            if TYPE_CHECKING:
-                assert remote.serial_number
-                assert config_entry.unique_id
+    remotes = await get_remotes(client)
 
-            # Create Beoremote One device
-            device_registry = dr.async_get(hass)
-            device_registry.async_get_or_create(
-                config_entry_id=config_entry.entry_id,
-                identifiers={
-                    (DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")
-                },
-                name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}-{config_entry.unique_id}",
-                model=BangOlufsenModel.BEOREMOTE_ONE,
-                serial_number=remote.serial_number,
-                sw_version=remote.app_version,
-                manufacturer=MANUFACTURER,
-                via_device=(DOMAIN, config_entry.unique_id),
-            )
+    for remote in remotes:
+        if TYPE_CHECKING:
+            assert remote.serial_number
+            assert config_entry.unique_id
+
+        # Create Beoremote One device
+        device_registry = dr.async_get(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={(DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")},
+            name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}-{config_entry.unique_id}",
+            model=BangOlufsenModel.BEOREMOTE_ONE,
+            serial_number=remote.serial_number,
+            sw_version=remote.app_version,
+            manufacturer=MANUFACTURER,
+            via_device=(DOMAIN, config_entry.unique_id),
+        )
 
     # If the remote is no longer available, then delete the device.
     # The remote may appear as being available to the device after has been unpaired on the remote
