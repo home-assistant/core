@@ -15,6 +15,7 @@ from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     SourceType,
 )
+from homeassistant.components.zone import ENTITY_ID_HOME
 from homeassistant.const import (
     ATTR_EDITABLE,
     ATTR_GPS_ACCURACY,
@@ -530,7 +531,23 @@ class Person(
                 latest_not_home = _get_latest(latest_not_home, state)
 
         if latest_non_gps_home:
-            latest = latest_non_gps_home
+            home_zone = self.hass.states.get(ENTITY_ID_HOME)
+            if home_zone and (
+                latest_non_gps_home.attributes.get(ATTR_LATITUDE) is None
+                and latest_non_gps_home.attributes.get(ATTR_LONGITUDE) is None
+            ):
+                latest = State(
+                    latest_non_gps_home.entity_id,
+                    latest_non_gps_home.state,
+                    {
+                        **latest_non_gps_home.attributes,
+                        ATTR_LATITUDE: home_zone.attributes.get(ATTR_LATITUDE),
+                        ATTR_LONGITUDE: home_zone.attributes.get(ATTR_LONGITUDE),
+                    },
+                    latest_non_gps_home.last_updated,
+                )
+            else:
+                latest = latest_non_gps_home
         elif latest_gps:
             latest = latest_gps
         else:
