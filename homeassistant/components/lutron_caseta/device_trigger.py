@@ -283,8 +283,8 @@ PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LIP = {
     "off": 4,  # 'Number': 4 in LIP
 }
 PADDLE_SWITCH_PICO_BUTTON_TYPES_TO_LEAP = {
-    "on": 1,  # 'Name': 'Button 1' in LEAP
-    "off": 3,  # 'Name': 'Button 3' in LEAP
+    "on": 0,  # 'ButtonNumber': 0 in LEAP
+    "off": 2,  # 'ButtonNumber': 2 in LEAP
 }
 PADDLE_SWITCH_PICO_TRIGGER_SCHEMA = LUTRON_BUTTON_TRIGGER_SCHEMA.extend(
     {
