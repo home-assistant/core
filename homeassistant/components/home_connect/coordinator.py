@@ -269,7 +269,7 @@ class HomeConnectCoordinator(
             await self.async_refresh()
 
     @callback
-    def _call_event_listener(self, event_message: EventMessage):
+    def _call_event_listener(self, event_message: EventMessage) -> None:
         """Call listener for event."""
         for event in event_message.data.items:
             for listener in self.context_listeners.get(
@@ -278,7 +278,7 @@ class HomeConnectCoordinator(
                 listener()
 
     @callback
-    def _call_all_event_listeners_for_appliance(self, ha_id: str):
+    def _call_all_event_listeners_for_appliance(self, ha_id: str) -> None:
         for listener, context in self._listeners.values():
             if isinstance(context, tuple) and context[0] == ha_id:
                 listener()

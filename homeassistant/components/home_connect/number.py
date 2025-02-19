@@ -97,6 +97,16 @@ NUMBERS = (
         device_class=NumberDeviceClass.TEMPERATURE,
         translation_key="wine_compartment_3_setpoint_temperature",
     ),
+    NumberEntityDescription(
+        key=SettingKey.LAUNDRY_CARE_WASHER_I_DOS_1_BASE_LEVEL,
+        device_class=NumberDeviceClass.VOLUME,
+        translation_key="washer_i_dos_1_base_level",
+    ),
+    NumberEntityDescription(
+        key=SettingKey.LAUNDRY_CARE_WASHER_I_DOS_2_BASE_LEVEL,
+        device_class=NumberDeviceClass.VOLUME,
+        translation_key="washer_i_dos_2_base_level",
+    ),
 )
 
 NUMBER_OPTIONS = (
