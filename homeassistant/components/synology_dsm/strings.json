@@ -116,6 +116,9 @@
       "device_size_total": {
         "name": "Device size"
       },
+      "device_status": {
+        "name": "Status"
+      },
       "disk_smart_status": {
         "name": "Status (smart)"
       },
@@ -152,14 +155,14 @@
       "network_up": {
         "name": "Upload throughput"
       },
-      "partitions_all_percentage_used": {
-        "name": "Partitions used"
+      "partition_percentage_used": {
+        "name": "Partition used"
       },
-      "partitions_all_size_total": {
-        "name": "Partitions size"
+      "partition_size_total": {
+        "name": "Partition size"
       },
-      "partitions_all_size_used": {
-        "name": "Partitions used space"
+      "partition_size_used": {
+        "name": "Partition used space"
       },
       "temperature": {
         "name": "[%key:component::sensor::entity_component::temperature::name%]"
