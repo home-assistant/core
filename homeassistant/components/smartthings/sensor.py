@@ -795,7 +795,7 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         attribute: Attribute,
     ) -> None:
         """Init the class."""
-        super().__init__(client, device, [capability])
+        super().__init__(client, device, {capability})
         self._attr_name = f"{device.device.label} {entity_description.name}"
         self._attr_unique_id = f"{device.device.device_id}{entity_description.unique_id_separator}{entity_description.key}"
         self._attribute = attribute

@@ -73,12 +73,12 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
         super().__init__(
             client,
             device,
-            [
+            {
                 Capability.COLOR_CONTROL,
                 Capability.COLOR_TEMPERATURE,
                 Capability.SWITCH_LEVEL,
                 Capability.SWITCH,
-            ],
+            },
         )
         color_modes = set()
         if self.supports_capability(Capability.COLOR_TEMPERATURE):

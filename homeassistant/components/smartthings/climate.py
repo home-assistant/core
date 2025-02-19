@@ -141,7 +141,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
         super().__init__(
             client,
             device,
-            [
+            {
                 Capability.THERMOSTAT_FAN_MODE,
                 Capability.THERMOSTAT_MODE,
                 Capability.TEMPERATURE_MEASUREMENT,
@@ -149,7 +149,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
                 Capability.THERMOSTAT_OPERATING_STATE,
                 Capability.THERMOSTAT_COOLING_SETPOINT,
                 Capability.RELATIVE_HUMIDITY_MEASUREMENT,
-            ],
+            },
         )
         self._attr_supported_features = self._determine_features()
 
@@ -330,7 +330,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         super().__init__(
             client,
             device,
-            [
+            {
                 Capability.AIR_CONDITIONER_MODE,
                 Capability.SWITCH,
                 Capability.FAN_OSCILLATION_MODE,
@@ -339,7 +339,7 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                 Capability.TEMPERATURE_MEASUREMENT,
                 Capability.CUSTOM_AIR_CONDITIONER_OPTIONAL_MODE,
                 Capability.DEMAND_RESPONSE_LOAD_CONTROL,
-            ],
+            },
         )
         self._attr_hvac_modes = self._determine_hvac_modes()
         self._attr_preset_modes = self._determine_preset_modes()

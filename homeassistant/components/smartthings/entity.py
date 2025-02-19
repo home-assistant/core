@@ -20,7 +20,7 @@ class SmartThingsEntity(Entity):
     _attr_should_poll = False
 
     def __init__(
-        self, client: SmartThings, device: FullDevice, capabilities: list[Capability]
+        self, client: SmartThings, device: FullDevice, capabilities: set[Capability]
     ) -> None:
         """Initialize the instance."""
         self.client = client

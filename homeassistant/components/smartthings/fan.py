@@ -55,11 +55,11 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         super().__init__(
             client,
             device,
-            [
+            {
                 Capability.SWITCH,
                 Capability.FAN_SPEED,
                 Capability.AIR_CONDITIONER_FAN_MODE,
-            ],
+            },
         )
         self._attr_supported_features = self._determine_features()
 

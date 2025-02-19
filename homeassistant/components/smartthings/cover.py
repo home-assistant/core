@@ -60,12 +60,12 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         super().__init__(
             client,
             device,
-            [
+            {
                 capability,
                 Capability.BATTERY,
                 Capability.WINDOW_SHADE_LEVEL,
                 Capability.SWITCH_LEVEL,
-            ],
+            },
         )
         self.capability = capability
         self._attr_supported_features = (

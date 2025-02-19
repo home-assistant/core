@@ -129,7 +129,7 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         attribute: Attribute,
     ) -> None:
         """Init the class."""
-        super().__init__(client, device, [capability])
+        super().__init__(client, device, {capability})
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
