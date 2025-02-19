@@ -34,24 +34,18 @@ rules:
   docs-installation-parameters: done
   docs-configuration-parameters:
     status: exempt
-    comment: This integration does provide configuration options
+    comment: This integration does not provide configuration options
   # Gold
-  entity-translations:
-    status: exempt
-    comment: This integration does not provide any entities that are suitable for translations. The media_player entity's name is simply the friendly name of the device.
+  entity-translations: done
   entity-device-class: done
   devices: done
   entity-category: done
-  entity-disabled-by-default:
-    status: exempt
-    comment: This integration only provides a single entity that is enabled by default
+  entity-disabled-by-default: done
   discovery: done
   stale-devices:
     status: exempt
     comment: No devices should be removed at this point.
-  diagnostics:
-    status: todo
-    comment: Needs to be implemented
+  diagnostics: done
   exception-translations: done
   icon-translations: done
   reconfiguration-flow:
@@ -68,16 +62,10 @@ rules:
     status: todo
     comment: Could be better.
   docs-supported-devices: done
-  docs-supported-functions:
-    status: todo
-    comment: Could be better.
+  docs-supported-functions: done
   docs-data-update: done
-  docs-known-limitations:
-    status: todo
-    comment: Is currently not described.
-  docs-troubleshooting:
-    status: todo
-    comment: Is currently not described, but may not be necessary?
+  docs-known-limitations: done
+  docs-troubleshooting: done
   docs-examples:
     status: todo
     comment: Action examples are provided but not any blueprints.
