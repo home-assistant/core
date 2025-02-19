@@ -22,6 +22,10 @@ class RedgtechConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             try:
                 access_token = await api.login(email, password)
+            except Exception as e:
+                _LOGGER.exception("Login failed")
+                errors["base"] = "cannot_connect"
+            else:
                 if access_token:
                     _LOGGER.debug("Login successful, token received.")
 
@@ -37,10 +41,6 @@ class RedgtechConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 
                 _LOGGER.error("Login failed: No access token received")
                 errors["base"] = "invalid_auth"
-
-            except Exception as e:
-                _LOGGER.error("Login failed: %s", e)
-                errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="user",
