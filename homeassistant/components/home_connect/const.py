@@ -87,7 +87,7 @@ PROGRAMS_TRANSLATION_KEYS_MAP = {
     value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
 }
 
-REFERENCE_MAP_ID_OPTIONS = {
+AVAILABLE_MAPS_ENUM = {
     bsh_key_to_translation_key(option): option
     for option in (
         "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.TempMap",
@@ -305,7 +305,7 @@ PROGRAM_ENUM_OPTIONS = {
     for option_key, options in (
         (
             OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_REFERENCE_MAP_ID,
-            REFERENCE_MAP_ID_OPTIONS,
+            AVAILABLE_MAPS_ENUM,
         ),
         (
             OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_CLEANING_MODE,

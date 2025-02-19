@@ -6,11 +6,14 @@ from unittest.mock import MagicMock
 from aiohomeconnect.model import (
     ArrayOfEvents,
     ArrayOfPrograms,
+    ArrayOfSettings,
     Event,
     EventKey,
     EventMessage,
     EventType,
+    GetSetting,
     ProgramKey,
+    SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectError
 from aiohomeconnect.model.program import (
@@ -18,6 +21,7 @@ from aiohomeconnect.model.program import (
     EnumerateProgramConstraints,
     Execution,
 )
+from aiohomeconnect.model.setting import SettingConstraints
 import pytest
 
 from homeassistant.components.home_connect.const import DOMAIN
@@ -410,6 +414,132 @@ async def test_select_exception_handling(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {"entity_id": entity_id, "option": program_to_set},
+            blocking=True,
+        )
+    assert getattr(client_with_exception, mock_attr).call_count == 2
+
+
+@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "setting_key",
+        "expected_options",
+        "value_to_set",
+        "expected_value_call_arg",
+    ),
+    [
+        (
+            "select.hood_functional_light_color_temperature",
+            SettingKey.COOKING_HOOD_COLOR_TEMPERATURE,
+            {
+                "cooking_hood_enum_type_color_temperature_warm",
+                "cooking_hood_enum_type_color_temperature_neutral",
+                "cooking_hood_enum_type_color_temperature_cold",
+            },
+            "cooking_hood_enum_type_color_temperature_neutral",
+            "Cooking.Hood.EnumType.ColorTemperature.neutral",
+        ),
+        (
+            "select.hood_ambient_light_color",
+            SettingKey.BSH_COMMON_AMBIENT_LIGHT_COLOR,
+            {
+                "b_s_h_common_enum_type_ambient_light_color_custom_color",
+                *[str(i) for i in range(1, 100)],
+            },
+            "42",
+            "BSH.Common.EnumType.AmbientLightColor.Color42",
+        ),
+    ],
+)
+async def test_select_functionality(
+    appliance_ha_id: str,
+    entity_id: str,
+    setting_key: SettingKey,
+    expected_options: set[str],
+    value_to_set: str,
+    expected_value_call_arg: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test select functionality."""
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert set(entity_state.attributes[ATTR_OPTIONS]) == expected_options
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, "option": value_to_set},
+    )
+    await hass.async_block_till_done()
+
+    client.set_setting.assert_called_once()
+    assert client.set_setting.call_args.args == (appliance_ha_id,)
+    assert client.set_setting.call_args.kwargs == {
+        "setting_key": setting_key,
+        "value": expected_value_call_arg,
+    }
+    assert hass.states.is_state(entity_id, value_to_set)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "setting_key", "allowed_value", "value_to_set", "mock_attr"),
+    [
+        (
+            "select.hood_functional_light_color_temperature",
+            SettingKey.COOKING_HOOD_COLOR_TEMPERATURE,
+            "Cooking.Hood.EnumType.ColorTemperature.neutral",
+            "cooking_hood_enum_type_color_temperature_neutral",
+            "set_setting",
+        ),
+    ],
+)
+async def test_number_entity_error(
+    entity_id: str,
+    setting_key: SettingKey,
+    allowed_value: str,
+    value_to_set: str,
+    mock_attr: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client_with_exception: MagicMock,
+) -> None:
+    """Test number entity error."""
+    client_with_exception.get_settings.side_effect = None
+    client_with_exception.get_settings.return_value = ArrayOfSettings(
+        [
+            GetSetting(
+                key=setting_key,
+                raw_key=setting_key.value,
+                value=value_to_set,
+                constraints=SettingConstraints(allowed_values=[allowed_value]),
+            )
+        ]
+    )
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client_with_exception)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(HomeConnectError):
+        await getattr(client_with_exception, mock_attr)()
+
+    with pytest.raises(
+        HomeAssistantError, match=r"Error.*assign.*value.*to.*setting.*"
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, "option": value_to_set},
             blocking=True,
         )
     assert getattr(client_with_exception, mock_attr).call_count == 2

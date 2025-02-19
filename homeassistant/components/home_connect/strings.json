@@ -1179,6 +1179,32 @@
           "laundry_care_washer_dryer_program_wash_and_dry_60": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_wash_and_dry_60%]",
           "laundry_care_washer_dryer_program_wash_and_dry_90": "[%key:component::home_connect::selector::programs::options::laundry_care_washer_dryer_program_wash_and_dry_90%]"
         }
+      },
+      "current_map": {
+        "name": "Current map",
+        "state": {
+          "consumer_products_cleaning_robot_enum_type_available_maps_temp_map": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_temp_map%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map1": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map1%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map2": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map2%]",
+          "consumer_products_cleaning_robot_enum_type_available_maps_map3": "[%key:component::home_connect::selector::available_maps::options::consumer_products_cleaning_robot_enum_type_available_maps_map3%]"
+        }
+      },
+      "functional_light_color_temperature": {
+        "name": "Functional light color temperature",
+        "state": {
+          "cooking_hood_enum_type_color_temperature_custom": "Custom",
+          "cooking_hood_enum_type_color_temperature_warm": "Warm",
+          "cooking_hood_enum_type_color_temperature_warm_to_neutral": "Warm to Neutral",
+          "cooking_hood_enum_type_color_temperature_neutral": "Neutral",
+          "cooking_hood_enum_type_color_temperature_neutral_to_cold": "Neutral to Cold",
+          "cooking_hood_enum_type_color_temperature_cold": "Cold"
+        }
+      },
+      "ambient_light_color": {
+        "name": "Ambient light color",
+        "state": {
+          "b_s_h_common_enum_type_ambient_light_color_custom_color": "Custom"
+        }
       }
     },
     "sensor": {
