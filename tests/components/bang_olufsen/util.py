@@ -28,7 +28,7 @@ def get_remote_entity_ids() -> list[str]:
     # Add remote light key Event entity ids
     entity_ids.extend(
         [
-            f"event.beoremote_one_55555555_{BEO_REMOTE_SUBMENU_LIGHT.lower()}_{key_type.lower()}".replace(
+            f"event.beoremote_one_55555555_11111111_{BEO_REMOTE_SUBMENU_LIGHT.lower()}_{key_type.lower()}".replace(
                 "func", "function_"
             ).replace("digit", "digit_")
             for key_type in BEO_REMOTE_KEYS
@@ -38,7 +38,7 @@ def get_remote_entity_ids() -> list[str]:
     # Add remote control key Event entity ids
     entity_ids.extend(
         [
-            f"event.beoremote_one_55555555_{BEO_REMOTE_SUBMENU_CONTROL.lower()}_{key_type.lower()}".replace(
+            f"event.beoremote_one_55555555_11111111_{BEO_REMOTE_SUBMENU_CONTROL.lower()}_{key_type.lower()}".replace(
                 "func", "function_"
             ).replace("digit", "digit_")
             for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)

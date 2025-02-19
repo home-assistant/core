@@ -23,7 +23,12 @@ from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .const import TEST_NAME, TEST_REMOTE_SERIAL
+from .const import (
+    TEST_NAME,
+    TEST_REMOTE_SERIAL,
+    TEST_REMOTE_SERIAL_PAIRED,
+    TEST_SERIAL_NUMBER,
+)
 from .util import get_button_entity_ids, get_remote_entity_ids
 
 from tests.common import MockConfigEntry
@@ -134,7 +139,7 @@ async def test_on_remote_control_already_added(
 
     # Check device and API call count (called once during init and once in async_setup_entry in event.py)
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
-    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL)})
+    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (remote and button events and media_player)
     assert (
@@ -154,7 +159,7 @@ async def test_on_remote_control_already_added(
 
     # Check device and API call count (triggered once by the WebSocket notification)
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
-    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL)})
+    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities
     entity_ids_available = list(entity_registry.entities.keys())
@@ -182,7 +187,7 @@ async def test_on_remote_control_paired(
 
     # Check device and API call count (called once during init and once in async_setup_entry in event.py)
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
-    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL)})
+    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (button events and media_player)
     assert (
@@ -224,8 +229,10 @@ async def test_on_remote_control_paired(
 
     # Check device and API call count
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 5
-    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL)})
-    assert device_registry.async_get_device({(DOMAIN, "66666666")})
+    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
+    assert device_registry.async_get_device(
+        {(DOMAIN, f"66666666_{TEST_SERIAL_NUMBER}")}
+    )
 
     # Check logger
     assert (

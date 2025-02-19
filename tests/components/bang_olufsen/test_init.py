@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_registry import EntityRegistry
 from .const import (
     TEST_FRIENDLY_NAME,
     TEST_MODEL_BALANCE,
-    TEST_REMOTE_SERIAL,
+    TEST_REMOTE_SERIAL_PAIRED,
     TEST_SERIAL_NUMBER,
 )
 from .util import get_remote_entity_ids
@@ -68,7 +68,7 @@ async def test_setup_entry_remote_unpaired(
 
     # Check device and API call count (called once during init and once in async_setup_entry in event.py)
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
-    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL)})
+    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check entities
     for entity_id in get_remote_entity_ids():
@@ -82,7 +82,7 @@ async def test_setup_entry_remote_unpaired(
 
     # Check device and API call count
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
-    assert not device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL)})
+    assert not device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check entities
     for entity_id in get_remote_entity_ids():

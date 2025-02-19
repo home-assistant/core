@@ -68,10 +68,11 @@ TEST_HOST_4 = "192.168.0.4"
 
 # Beoremote One
 TEST_REMOTE_SERIAL = "55555555"
+TEST_REMOTE_SERIAL_PAIRED = f"{TEST_REMOTE_SERIAL}_{TEST_SERIAL_NUMBER}"
 TEST_REMOTE_SW_VERSION = "1.0.0"
 
 TEST_BUTTON_EVENT_ENTITY_ID = "event.beosound_balance_11111111_play_pause"
-TEST_REMOTE_KEY_EVENT_ENTITY_ID = "event.beoremote_one_55555555_control_play"
+TEST_REMOTE_KEY_EVENT_ENTITY_ID = "event.beoremote_one_55555555_11111111_control_play"
 
 TEST_HOSTNAME_ZEROCONF = TEST_NAME.replace(" ", "-") + ".local."
 TEST_TYPE_ZEROCONF = "_bangolufsen._tcp.local."
