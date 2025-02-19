@@ -124,8 +124,8 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def async_step_error_retry(
         self,
-        errors: dict[str, str],
         user_input: dict[str, Any] | None = None,
+        errors: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         """Handle error in setup process and allow retry."""
         if user_input is not None:
@@ -136,8 +136,8 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_create_entry(self) -> ConfigFlowResult:
         """Create a config entry for the device."""
-        # This step is the same for both user and zeroconf initiated flows
-        # and so gets called from both async_step_user and async_step_zeroconf_confirm
+        # This step is the same for both user and zeroconf initiated flows and so
+        # gets called from both async_step_user and async_step_zeroconf_confirm
 
         errors: dict[str, str] = {}
         webhook_id = webhook_generate_id()
