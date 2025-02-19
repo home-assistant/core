@@ -32,9 +32,6 @@ async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle aidot config flow."""
 
-    VERSION = 1
-    CONNECTION_CLASS = config_entries.CONN_CLASS_LOCAL_PUSH
-
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.__login_control = LoginControl()
