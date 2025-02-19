@@ -80,10 +80,6 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.device.serial_number
 
-    async def async_update(self) -> None:
-        """Refresh unit state."""
-        await self.device.update()
-
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
