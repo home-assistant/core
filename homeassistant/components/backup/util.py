@@ -610,10 +610,7 @@ def async_setup_config_entry_backup_agents_listeners(
 ) -> None:
     """Set up backup listeners for a config entry.
 
-    We need a get the config entry during async_get_backup_agents through hass.config_entries.async_loaded_entries).
-    Since we want to ensure the entry is in that list during load and not in that list during unload.
-    Since we would call the listeners during setup_/unload_entry, this poses a race,
-    so we need to listen for config entry changes and notify the backup listeners when a config entry changes state from LOADED.
+    Integrations can't call the backup agents listeners from the integration's `async_setup_entry`, because the config entry's state is not changed to `ConfigEntryState.LOADED` until after `async_setup_entry` return. This helper listens to config entry state changes, and calls the listeners when a config entry changes to or from state `ConfigEntryState.LOADED`.
     """
 
     def async_notify_backup_listeners(hass: HomeAssistant) -> None:
