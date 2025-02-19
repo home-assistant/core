@@ -182,8 +182,8 @@ async def async_setup_entry(
 
     connect_task = hass.async_create_task(bridge.connect())
     for future, name, timeout in (
-        (connected_future, "connecting", CONNECT_TIMEOUT),
-        (connect_task, "configuring", CONFIGURE_TIMEOUT),
+        (connected_future, "connect", CONNECT_TIMEOUT),
+        (connect_task, "configure", CONFIGURE_TIMEOUT),
     ):
         try:
             async with asyncio.timeout(timeout):
@@ -191,7 +191,7 @@ async def async_setup_entry(
         except TimeoutError as ex:
             connect_task.cancel()
             await bridge.close()
-            raise ConfigEntryNotReady(f"Timed out while {name} {host}") from ex
+            raise ConfigEntryNotReady(f"Timed out on {name} for {host}") from ex
 
     if not bridge.is_connected():
         raise ConfigEntryNotReady(f"Connection failed to {host}")

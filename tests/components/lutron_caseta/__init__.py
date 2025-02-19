@@ -1,5 +1,6 @@
 """Tests for the Lutron Caseta integration."""
 
+import asyncio
 from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
@@ -89,8 +90,9 @@ _LEAP_DEVICE_TYPES = {
 class MockBridge:
     """Mock Lutron bridge that emulates configured connected status."""
 
-    def __init__(self, can_connect=True) -> None:
+    def __init__(self, can_connect=True, timeout_on_connect=False) -> None:
         """Initialize MockBridge instance with configured mock connectivity."""
+        self.timeout_on_connect = timeout_on_connect
         self.can_connect = can_connect
         self.is_currently_connected = False
         self.areas = self.load_areas()
@@ -101,6 +103,8 @@ class MockBridge:
 
     async def connect(self):
         """Connect the mock bridge."""
+        if self.timeout_on_connect:
+            await asyncio.sleep(10)
         if self.can_connect:
             self.is_currently_connected = True
 
@@ -310,12 +314,22 @@ class MockBridge:
         self.is_currently_connected = False
 
 
+def make_mock_entry() -> MockConfigEntry:
+    """Create a mock config entry."""
+    return MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA)
+
+
 async def async_setup_integration(
-    hass: HomeAssistant, mock_bridge: MockBridge, config_entry_id: str | None = None
+    hass: HomeAssistant,
+    mock_bridge: MockBridge,
+    config_entry_id: str | None = None,
+    can_connect: bool = True,
+    timeout_during_connect: bool = False,
+    timeout_during_configure: bool = False,
 ) -> MockConfigEntry:
     """Set up a mock bridge."""
     if config_entry_id is None:
-        mock_entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA)
+        mock_entry = make_mock_entry()
         mock_entry.add_to_hass(hass)
         config_entry_id = mock_entry.entry_id
     else:
@@ -325,8 +339,11 @@ async def async_setup_integration(
         *args: Any, on_connect_callback: Callable[[], None], **kwargs: Any
     ) -> None:
         """Return a mock bridge."""
-        on_connect_callback()
-        return mock_bridge(can_connect=True)
+        if not timeout_during_connect:
+            on_connect_callback()
+        return mock_bridge(
+            can_connect=can_connect, timeout_on_connect=timeout_during_configure
+        )
 
     with patch(
         "homeassistant.components.lutron_caseta.Smartbridge.create_tls",
