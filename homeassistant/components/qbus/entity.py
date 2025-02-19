@@ -13,7 +13,7 @@ from qbusmqttapi.state import QbusMqttState
 from homeassistant.components.mqtt import ReceiveMessage, client as mqtt
 from homeassistant.helpers.device_registry import DeviceInfo, format_mac
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import QbusControllerCoordinator
@@ -26,7 +26,7 @@ def add_new_outputs(
     added_outputs: list[QbusMqttOutput],
     filter_fn: Callable[[QbusMqttOutput], bool],
     entity_type: type[QbusEntity],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Call async_add_entities for new outputs."""
 
