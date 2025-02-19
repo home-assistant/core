@@ -39,9 +39,9 @@ from .manager import (
 )
 from .models import AddonInfo, AgentBackup, BackupNotFound, Folder
 from .util import (
+    async_setup_config_entry_backup_listeners,
     suggested_filename,
     suggested_filename_from_name_date,
-    async_setup_config_entry_backup_listeners,
 )
 from .websocket import async_register_websocket_handlers
 
@@ -135,4 +135,4 @@ def async_get_manager(hass: HomeAssistant) -> BackupManager:
     if DATA_MANAGER not in hass.data:
         raise HomeAssistantError("Backup integration is not available")
 
-    retur
+    return hass.data[DATA_MANAGER]
