@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from pysmartthings import SmartThings
 from pysmartthings.models import Attribute, Capability, Command, DeviceEvent
@@ -11,7 +11,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
 from . import FullDevice
-from .const import DOMAIN
+from .const import DOMAIN, MAIN
 
 
 class SmartThingsEntity(Entity):
@@ -26,9 +26,9 @@ class SmartThingsEntity(Entity):
         self.client = client
         self.capabilities = capabilities
         self._internal_state = {
-            capability: device.status["main"][capability]
+            capability: device.status[MAIN][capability]
             for capability in capabilities
-            if capability in device.status["main"]
+            if capability in device.status[MAIN]
         }
         self.device = device
         self._attr_name = device.device.label
@@ -38,6 +38,21 @@ class SmartThingsEntity(Entity):
             identifiers={(DOMAIN, device.device.device_id)},
             name=device.device.label,
         )
+        if (ocf := device.status[MAIN].get(Capability.OCF)) is not None:
+            self._attr_device_info.update(
+                {
+                    "manufacturer": cast(
+                        str | None, ocf[Attribute.MANUFACTURER_NAME].value
+                    ),
+                    "model": cast(str | None, ocf[Attribute.MODEL_NUMBER].value),
+                    "hw_version": cast(
+                        str | None, ocf[Attribute.HARDWARE_VERSION].value
+                    ),
+                    "sw_version": cast(
+                        str | None, ocf[Attribute.OCF_FIRMWARE_VERSION].value
+                    ),
+                }
+            )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
@@ -60,7 +75,7 @@ class SmartThingsEntity(Entity):
 
     def supports_capability(self, capability: Capability) -> bool:
         """Test if device supports a capability."""
-        return capability in self.device.status["main"]
+        return capability in self.device.status[MAIN]
 
     def get_attribute_value(self, capability: Capability, attribute: Attribute) -> Any:
         """Get the value of a device attribute."""
@@ -85,5 +100,5 @@ class SmartThingsEntity(Entity):
         if argument is not None:
             kwargs["argument"] = argument
         await self.client.execute_device_command(
-            self.device.device.device_id, capability, command, "main", **kwargs
+            self.device.device.device_id, capability, command, MAIN, **kwargs
         )

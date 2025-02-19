@@ -207,7 +207,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '1.0',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -218,15 +218,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Samsung Electronics',
+    'model': 'ARTIK051_KRAC_18K|10193441|60010132001111110200000000000000',
     'model_id': None,
     'name': 'AC Office Granit',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '0.1.0',
     'via_device_id': None,
   })
 # ---
@@ -240,7 +240,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'Realtek',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -251,15 +251,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Samsung Electronics',
+    'model': 'ARA-WW-TP1-22-COMMON|10229641|60010523001511014600083200800000',
     'model_id': None,
     'name': 'Aire Dormitorio Principal',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'ARA-WW-TP1-22-COMMON_11240702',
     'via_device_id': None,
   })
 # ---
@@ -273,7 +273,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'MediaTek',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -284,15 +284,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP2X_DA-KS-MICROWAVE-0101X|40436241|50040100011411000200000000000000',
     'model_id': None,
     'name': 'Microwave',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'AKS-WW-TP2-20-MICROWAVE-OTR_40230125',
     'via_device_id': None,
   })
 # ---
@@ -306,7 +306,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'MediaTek',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -317,15 +317,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Samsung Electronics',
+    'model': 'TP2X_REF_20K|00115641|0004014D011411200103000020000000',
     'model_id': None,
     'name': 'Refrigerator',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'A-RFWW-TP2-21-COMMON_20220110',
     'via_device_id': None,
   })
 # ---
@@ -339,7 +339,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '1.0',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -350,15 +350,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Samsung Electronics',
+    'model': 'powerbot_7000_17M|50016055|80010404011141000100000000000000',
     'model_id': None,
     'name': 'Robot vacuum',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '1.0',
     'via_device_id': None,
   })
 # ---
@@ -372,7 +372,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'ARTIK051',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -383,15 +383,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_DW_A51_20_COMMON|30007242|40010201001311000101000000000000',
     'model_id': None,
     'name': 'Dishwasher',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'DA_DW_A51_20_COMMON_30230714',
     'via_device_id': None,
   })
 # ---
@@ -405,7 +405,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'ARTIK051',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -416,15 +416,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_WM_A51_20_COMMON|20233741|3000000100111100020B000000000000',
     'model_id': None,
     'name': 'Dryer',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'DA_WM_A51_20_COMMON_30230708',
     'via_device_id': None,
   })
 # ---
@@ -438,7 +438,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'MediaTek',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -449,15 +449,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Samsung Electronics',
+    'model': 'DA_WM_TP2_20_COMMON|20233741|2001000100131100022B010000000000',
     'model_id': None,
     'name': 'Washer',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'DA_WM_TP2_20_COMMON_30230804',
     'via_device_id': None,
   })
 # ---
@@ -801,7 +801,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -812,15 +812,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Samsung Electronics',
+    'model': 'HW-Q990C',
     'model_id': None,
     'name': 'Soundbar Living',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'SAT-iMX8M23WWC-1010.5',
     'via_device_id': None,
   })
 # ---
@@ -834,7 +834,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '0-0',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -845,15 +845,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Samsung Electronics',
+    'model': 'UN49MU8000',
     'model_id': None,
     'name': '[TV] Samsung 8 Series (49)',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'T-KTMAKUC-1290.3',
     'via_device_id': None,
   })
 # ---
