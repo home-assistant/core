@@ -27,6 +27,7 @@ from homeassistant.components.backup import (
     AddonInfo,
     AgentBackup,
     BackupAgent,
+    BackupConfig,
     BackupManagerError,
     BackupNotFound,
     BackupReaderWriter,
@@ -632,6 +633,9 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         except SupervisorError as err:
             _LOGGER.debug("Could not get restore job %s: %s", restore_job_id, err)
             unsub()
+
+    async def async_validate_config(self, *, config: BackupConfig) -> None:
+        """Validate backup config."""
 
     @callback
     def _async_listen_job_events(
