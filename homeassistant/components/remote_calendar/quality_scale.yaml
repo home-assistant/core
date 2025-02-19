@@ -30,7 +30,10 @@ rules:
   log-when-unavailable: done
   entity-unavailable: done
   action-exceptions: done
-  reauthentication-flow: done
+  reauthentication-flow:
+    status: exempt
+    comment: |
+      There is no authentication required.
   parallel-updates: done
   test-coverage: done
   integration-owner: done
@@ -41,7 +44,9 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics:
+    status: todo
+    comment: Diagnostics not implemented, yet.
   discovery-update-info:
     status: todo
     comment: Discovery not implemented, yet.
@@ -71,6 +76,6 @@ rules:
   stale-devices: done
 
   # Platinum
-  async-dependency: done
+  async-dependency: todo
   inject-websession: done
-  strict-typing: done
+  strict-typing: todo

@@ -38,7 +38,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[str]):
         )
         self._etag = None
         self._client = get_async_client(hass)
-        self._url = config_entry["url"]
+        self._url = config_entry.data["url"]
 
     async def _async_update_data(self) -> str:
         """Update data from the url."""
@@ -46,5 +46,4 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[str]):
         headers: dict = {}
         res = await self._client.get(self._url, headers=headers)
         res.raise_for_status()
-        _LOGGER.debug("res %s", res)
         return res.text

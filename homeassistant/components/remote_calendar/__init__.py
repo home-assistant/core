@@ -25,7 +25,7 @@ async def async_setup_entry(
 ) -> bool:
     """Set up Remote Calendar from a config entry."""
     hass.data.setdefault(DOMAIN, {})
-    coordinator = RemoteCalendarDataUpdateCoordinator(hass, entry.data)
+    coordinator = RemoteCalendarDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

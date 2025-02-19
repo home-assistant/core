@@ -4,8 +4,9 @@
   "codeowners": ["@Thomas55555"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/remote_calendar",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["ical"],
   "quality_scale": "bronze",
-  "requirements": ["ical==8.2.0"]
+  "requirements": ["ical==8.3.0"]
 }

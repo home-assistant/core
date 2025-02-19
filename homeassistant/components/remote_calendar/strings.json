@@ -7,6 +7,10 @@
         "data": {
           "calendar_name": "Calendar Name",
           "url": "Calendar URL"
+        },
+        "data_description": {
+          "calendar_name": "The name of the calendar shown in th UI.",
+          "url": "The URL of the remote calendar."
         }
       }
     },

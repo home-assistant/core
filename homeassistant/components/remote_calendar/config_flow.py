@@ -40,6 +40,7 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict = {}
         _LOGGER.debug("User input: %s", user_input)
         await self.async_set_unique_id(slugify(user_input[CONF_URL]))
+        self._abort_if_unique_id_configured()
         client = get_async_client(self.hass)
         _LOGGER.debug("User input in fetch url: %s", user_input)
         if user_input is not None:
