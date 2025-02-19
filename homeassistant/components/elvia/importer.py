@@ -150,6 +150,7 @@ class ElviaImporter:
                 source=DOMAIN,
                 statistic_id=statistic_id,
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+                has_circular_mean=False,
             ),
             statistics=statistics,
         )

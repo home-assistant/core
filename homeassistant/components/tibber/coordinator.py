@@ -165,5 +165,6 @@ class TibberDataCoordinator(DataUpdateCoordinator[None]):
                     source=TIBBER_DOMAIN,
                     statistic_id=statistic_id,
                     unit_of_measurement=unit,
+                    has_circular_mean=False,
                 )
                 async_add_external_statistics(self.hass, metadata, statistics)
