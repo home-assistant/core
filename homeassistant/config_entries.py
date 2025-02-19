@@ -199,9 +199,9 @@ RECONFIGURE_NOTIFICATION_ID = "config_entry_reconfigure"
 
 EVENT_FLOW_DISCOVERED = "config_entry_discovered"
 
-SIGNAL_CONFIG_ENTRY_CHANGED = SignalType["ConfigEntryChange", "ConfigEntry"](
-    "config_entry_changed"
-)
+SIGNAL_CONFIG_ENTRY_CHANGED = SignalType[
+    "ConfigEntryChange", "ConfigEntry", ConfigEntryState | None
+]("config_entry_changed")
 
 
 @cache
@@ -1041,6 +1041,7 @@ class ConfigEntry[_DataT = Any]:
         """Set the state of the config entry."""
         if state not in NO_RESET_TRIES_STATES:
             self._tries = 0
+        previous_state = self.state
         _setter = object.__setattr__
         _setter(self, "state", state)
         _setter(self, "reason", reason)
@@ -1055,7 +1056,11 @@ class ConfigEntry[_DataT = Any]:
         # in storage and we do not want to clear the cache on every state change
         # since state changes are frequent.
         async_dispatcher_send_internal(
-            hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
+            hass,
+            SIGNAL_CONFIG_ENTRY_CHANGED,
+            ConfigEntryChange.UPDATED,
+            self,
+            previous_state,
         )
 
     async def async_migrate(self, hass: HomeAssistant) -> bool:
@@ -1626,7 +1631,7 @@ class ConfigEntriesFlowManager(
         if existing_entry is not None:
             # Unload and remove the existing entry, but don't clean up devices and
             # entities until the new entry is added
-            await self.config_entries._async_remove(existing_entry.entry_id)  # noqa: SLF001
+            await self.config_entries._async_remove(existing_entry.entry_id)
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
@@ -2277,8 +2282,9 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
-        | UndefinedType = UNDEFINED,
+        discovery_keys: (
+            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
+        ) = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2314,8 +2320,9 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
-        | UndefinedType = UNDEFINED,
+        discovery_keys: (
+            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
+        ) = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2718,7 +2725,10 @@ class ConfigEntries:
                 continue
             issues.add(issue.issue_id)
 
-        for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+        for (
+            domain,
+            unique_ids,
+        ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
             # flipr creates duplicates during migration, and asks users to
             # remove the duplicate. We don't need warn about it here too.
             # We should remove the special case for "flipr" in HA Core 2025.4,

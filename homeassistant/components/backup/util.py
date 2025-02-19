@@ -624,10 +624,14 @@ def async_setup_config_entry_backup_listeners(
     def async_on_config_entry_changed(
         change: ConfigEntryChange,
         entry: ConfigEntry,
+        old_state: ConfigEntryState | None,
     ) -> None:
         if change != ConfigEntryChange.UPDATED or entry.domain != integration_domain:
             return
-        if entry.state not in (ConfigEntryState.LOADED, ConfigEntryState.NOT_LOADED):
+        if entry.state is old_state or (
+            entry.state is not ConfigEntryState.LOADED
+            and old_state is not ConfigEntryState.LOADED
+        ):
             return
         async_notify_backup_listeners(hass)
 
