@@ -8,7 +8,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "host": "Host name or IP address of a HEOS-capable product (preferrably one connected via wire to the network)."
+          "host": "Host name or IP address of a HEOS-capable product (preferably one connected via wire to the network)."
         }
       },
       "reconfigure": {
@@ -80,6 +80,14 @@
           "description": "The volume. 0 is inaudible, 1 is the maximum volume."
         }
       }
+    },
+    "group_volume_down": {
+      "name": "Turn down group volume",
+      "description": "Turns down the group volume."
+    },
+    "group_volume_up": {
+      "name": "Turn up group volume",
+      "description": "Turns up the group volume."
     },
     "sign_in": {
       "name": "Sign in",

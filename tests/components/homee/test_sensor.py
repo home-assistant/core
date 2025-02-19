@@ -28,6 +28,7 @@ async def test_up_down_values(
 ) -> None:
     """Test values for up/down sensor."""
     mock_homee.nodes = [build_mock_node("sensors.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.test_multisensor_state").state == OPEN_CLOSE_MAP[0]
@@ -56,6 +57,7 @@ async def test_window_position(
 ) -> None:
     """Test values for window handle position."""
     mock_homee.nodes = [build_mock_node("sensors.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
     assert (
@@ -88,6 +90,7 @@ async def test_brightness_sensor(
 ) -> None:
     """Test brightness sensor's lx & klx units and naming of multi-instance sensors."""
     mock_homee.nodes = [build_mock_node("sensors.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
     sensor_state = hass.states.get("sensor.test_multisensor_illuminance_1")
@@ -112,6 +115,7 @@ async def test_sensor_snapshot(
 ) -> None:
     """Test the multisensor snapshot."""
     mock_homee.nodes = [build_mock_node("sensors.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
     entity_registry.async_update_entity(
         "sensor.test_multisensor_node_state", disabled_by=None

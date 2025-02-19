@@ -80,6 +80,9 @@
       },
       "one_touch_filter": {
         "default": "mdi:air-filter"
+      },
+      "water_heater_operation_mode": {
+        "default": "mdi:power"
       }
     },
     "climate": {

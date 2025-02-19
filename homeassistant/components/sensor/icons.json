@@ -156,6 +156,9 @@
     "weight": {
       "default": "mdi:weight"
     },
+    "wind_direction": {
+      "default": "mdi:compass-rose"
+    },
     "wind_speed": {
       "default": "mdi:weather-windy"
     }
