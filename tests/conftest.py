@@ -1271,7 +1271,8 @@ def evict_faked_translations(translations_once) -> Generator[_patch]:
                 for component_path in component_paths
             ):
                 continue
-            cache.loaded["en"].discard(domain)
+            for loaded_for_lang in cache.loaded.values():
+                loaded_for_lang.discard(domain)
 
 
 @pytest.fixture
