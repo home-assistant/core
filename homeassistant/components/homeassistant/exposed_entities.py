@@ -124,6 +124,9 @@ class ExposedEntities:
         websocket_api.async_register_command(self._hass, ws_expose_new_entities_get)
         websocket_api.async_register_command(self._hass, ws_expose_new_entities_set)
         websocket_api.async_register_command(self._hass, ws_list_exposed_entities)
+        websocket_api.async_register_command(
+            self._hass, ws_list_entities_exposed_to_assistant
+        )
         await self._async_load_data()
 
     @callback
@@ -449,6 +452,30 @@ def ws_list_exposed_entities(
             if "should_expose" not in settings:
                 continue
             result[entity_id][assistant] = settings["should_expose"]
+    connection.send_result(msg["id"], {"exposed_entities": result})
+
+
+@callback
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "homeassistant/expose_entity/list_exposed",
+        vol.Required("assistant"): vol.In(KNOWN_ASSISTANTS),
+    }
+)
+def ws_list_entities_exposed_to_assistant(
+    hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
+) -> None:
+    """List entities which are exposed to an assistant."""
+    exposed_entities = hass.data[DATA_EXPOSED_ENTITIES]
+    assistant = msg.get("assistant")
+    entity_registry = er.async_get(hass)
+    result = [
+        entity_id
+        for entity_id in chain(exposed_entities.entities, entity_registry.entities)
+        if assistant in (entity_settings := async_get_entity_settings(hass, entity_id))
+        and entity_settings[assistant]["should_expose"]
+    ]
     connection.send_result(msg["id"], {"exposed_entities": result})
 
 
