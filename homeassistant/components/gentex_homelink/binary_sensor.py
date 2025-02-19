@@ -13,7 +13,7 @@ import homeassistant.helpers.device_registry as dr
 
 # Import the device class from the component that you want to support
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -25,7 +25,7 @@ SCAN_INTERVAL = timedelta(seconds=5)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up homelink from a config entry."""
     coordinator = config_entry.runtime_data["coordinator"]
@@ -34,8 +34,6 @@ async def async_setup_entry(
     await provider.enable()
 
     device_data = await provider.discover()
-
-    logging.info(device_data)
 
     for device in device_data:
         device_info = DeviceInfo(
