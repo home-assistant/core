@@ -14,13 +14,14 @@ from evohomeasync2.auth import AbstractTokenManager, Auth
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.evohome import CONFIG_SCHEMA
 from homeassistant.components.evohome.config_flow import EvoConfigFileDictT
 from homeassistant.components.evohome.const import (
     CONF_HIGH_PRECISION,
     CONF_LOCATION_IDX,
     DEFAULT_LOCATION_IDX,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    SCAN_INTERVAL_DEFAULT,
 )
 from homeassistant.const import (
     CONF_PASSWORD,
@@ -147,28 +148,29 @@ def mock_make_request(install: str) -> Callable:
 @pytest.fixture
 def config() -> EvoConfigFileDictT:
     "Return a default/minimal configuration."
-    return {
+    config = {
         CONF_USERNAME: USERNAME,
         CONF_PASSWORD: "P@ssw0rd",
         CONF_LOCATION_IDX: DEFAULT_LOCATION_IDX,
-        CONF_SCAN_INTERVAL: SCAN_INTERVAL_DEFAULT,
+        CONF_SCAN_INTERVAL: timedelta(seconds=DEFAULT_SCAN_INTERVAL),
     }
+    return CONFIG_SCHEMA({DOMAIN: config})[DOMAIN]
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(config: dict[str, Any]) -> MockConfigEntry:
+def config_entry_fixture(config: EvoConfigFileDictT) -> MockConfigEntry:
     """Define a config entry fixture."""
 
     options = {
         CONF_HIGH_PRECISION: True,
-        CONF_SCAN_INTERVAL: config.pop(CONF_SCAN_INTERVAL).total_seconds(),
+        CONF_SCAN_INTERVAL: config[CONF_SCAN_INTERVAL].seconds,
     }
 
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="uuid",
         unique_id="1234",
-        data=config,
+        data={k: v for k, v in config.items() if k != CONF_SCAN_INTERVAL},
         options=options,
     )
 

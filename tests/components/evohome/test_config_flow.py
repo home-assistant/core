@@ -8,7 +8,10 @@ import evohomeasync2 as ec2
 import pytest
 
 from homeassistant.components.evohome import CONFIG_SCHEMA
-from homeassistant.components.evohome.config_flow import EvoConfigFileDictT
+from homeassistant.components.evohome.config_flow import (
+    DEFAULT_OPTIONS,
+    EvoConfigFileDictT,
+)
 from homeassistant.components.evohome.const import (
     CONF_HIGH_PRECISION,
     CONF_LOCATION_IDX,
@@ -53,7 +56,7 @@ async def test_import_flow(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
-            data=CONFIG_SCHEMA(config.copy()),
+            data=CONFIG_SCHEMA(config),
         )
 
         await hass.async_block_till_done()
@@ -108,7 +111,7 @@ async def test_config_flow(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
+            user_input={
                 CONF_USERNAME: config[CONF_USERNAME],
                 CONF_PASSWORD: config[CONF_PASSWORD],
             },
@@ -124,7 +127,7 @@ async def test_config_flow(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
+            user_input={
                 CONF_LOCATION_IDX: config[CONF_LOCATION_IDX],
             },
         )
@@ -148,8 +151,51 @@ async def test_config_flow(
         CONF_PASSWORD: config[CONF_PASSWORD],
         CONF_LOCATION_IDX: config[CONF_LOCATION_IDX],
     }
+
+    assert entry.options == DEFAULT_OPTIONS
+
+    # now the options flow....
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "scan_interval"
+    assert result.get("errors") == {}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_SCAN_INTERVAL: config[CONF_SCAN_INTERVAL].seconds,
+        },
+    )
+
+    assert result.get("type") == FlowResultType.FORM
+    assert result.get("step_id") == "high_precision"
+    assert result.get("errors") == {}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_HIGH_PRECISION: not DEFAULT_HIGH_PRECISION,
+        },
+    )
+
+    assert result.get("type") == FlowResultType.CREATE_ENTRY
+
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert entry.source == SOURCE_USER
+    assert entry.state == ConfigEntryState.LOADED
+
+    assert entry.domain == DOMAIN
+    assert entry.title == "Evohome"
+
+    assert {k: v for k, v in entry.data.items() if k != "token_data"} == {
+        CONF_USERNAME: config[CONF_USERNAME],
+        CONF_PASSWORD: config[CONF_PASSWORD],
+        CONF_LOCATION_IDX: config[CONF_LOCATION_IDX],
+    }
     assert entry.options == {
-        CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION,
+        CONF_HIGH_PRECISION: not DEFAULT_HIGH_PRECISION,
         CONF_SCAN_INTERVAL: config[CONF_SCAN_INTERVAL].seconds,
     }
 
