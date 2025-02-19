@@ -189,15 +189,7 @@ async def async_setup_entry(
             async with asyncio.timeout(timeout):
                 await future
         except TimeoutError as ex:
-            if future != connect_task:
-                connect_task.cancel()
-                try:
-                    await connect_task
-                except asyncio.CancelledError:
-                    if (current_task := asyncio.current_task()) and (
-                        current_task.cancelling()
-                    ):
-                        raise
+            connect_task.cancel()
             await bridge.close()
             raise ConfigEntryNotReady(f"Timed out while {name} {host}") from ex
 
