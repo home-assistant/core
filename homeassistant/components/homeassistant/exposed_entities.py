@@ -474,7 +474,7 @@ def ws_list_entities_exposed_to_assistant(
         entity_id
         for entity_id in chain(exposed_entities.entities, entity_registry.entities)
         if assistant in (entity_settings := async_get_entity_settings(hass, entity_id))
-        and entity_settings[assistant]["should_expose"]
+        and entity_settings[assistant].get("should_expose")
     ]
     connection.send_result(msg["id"], {"exposed_entities": result})
 
