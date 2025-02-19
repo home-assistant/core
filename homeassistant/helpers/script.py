@@ -634,9 +634,9 @@ class _ScriptRun:
         if result and result.conversation_response is not UNDEFINED:
             self._conversation_response = result.conversation_response
 
-    ## Flow control steps ##
+    ## Flow control actions ##
 
-    ### Group steps ###
+    ### Sequence actions ###
 
     @async_trace_path("parallel")
     async def async_step_parallel(self) -> None:
@@ -663,7 +663,7 @@ class _ScriptRun:
         sequence = await self._script._async_get_sequence_script(self._step)  # noqa: SLF001
         await self._async_run_script(sequence)
 
-    ### Condition steps ###
+    ### Condition actions ###
 
     async def _async_get_condition(self, config: ConfigType) -> ConditionCheckerType:
         return await self._script._async_get_condition(config)  # noqa: SLF001
@@ -932,7 +932,7 @@ class _ScriptRun:
         else:
             self._variables.pop("repeat", None)  # Not set if count = 0
 
-    ### Stop steps ###
+    ### Stop actions ###
 
     async def async_step_stop(self) -> None:
         """Stop script execution."""
@@ -956,7 +956,7 @@ class _ScriptRun:
             response = None
         raise _StopScript(stop, response)
 
-    ## Variable steps ##
+    ## Variable actions ##
 
     async def async_step_variables(self) -> None:
         """Set a variable value."""
@@ -965,7 +965,7 @@ class _ScriptRun:
             self._hass, self._variables, render_as_defaults=False
         )
 
-    ## External action steps ##
+    ## External actions ##
 
     async def async_step_call_service(self) -> None:
         """Call the service specified in the action."""
@@ -1053,7 +1053,7 @@ class _ScriptRun:
             context=self._context,
         )
 
-    ## Time-based steps ##
+    ## Time-based actions ##
 
     @overload
     def _async_futures_with_timeout(
@@ -1279,7 +1279,7 @@ class _ScriptRun:
             futures, timeout_handle, timeout_future, unsub
         )
 
-    ## Conversation steps ##
+    ## Conversation actions ##
 
     async def async_step_set_conversation_response(self) -> None:
         """Set conversation response."""
