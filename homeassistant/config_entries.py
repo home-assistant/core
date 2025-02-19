@@ -1253,7 +1253,9 @@ class ConfigEntry[_DataT = Any]:
         )
 
     @callback
-    def async_create_task[_R](
+    def async_create_task[
+        _R
+    ](
         self,
         hass: HomeAssistant,
         target: Coroutine[Any, Any, _R],
@@ -1277,7 +1279,9 @@ class ConfigEntry[_DataT = Any]:
         return task
 
     @callback
-    def async_create_background_task[_R](
+    def async_create_background_task[
+        _R
+    ](
         self,
         hass: HomeAssistant,
         target: Coroutine[Any, Any, _R],
@@ -1631,7 +1635,9 @@ class ConfigEntriesFlowManager(
         if existing_entry is not None:
             # Unload and remove the existing entry, but don't clean up devices and
             # entities until the new entry is added
-            await self.config_entries._async_remove(existing_entry.entry_id)
+            await self.config_entries._async_remove(
+                existing_entry.entry_id
+            )  # noqa: SLF001
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
@@ -2516,7 +2522,7 @@ class ConfigEntries:
     ) -> None:
         """Dispatch a config entry change."""
         async_dispatcher_send_internal(
-            self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, change_type, entry
+            self.hass, SIGNAL_CONFIG_ENTRY_CHANGED, change_type, entry, None
         )
 
     async def async_forward_entry_setups(
