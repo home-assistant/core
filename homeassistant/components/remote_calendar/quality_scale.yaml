@@ -23,7 +23,7 @@ rules:
   docs-installation-instructions: todo
   docs-removal-instructions: todo
   docs-actions: todo
-  brands: todo
+  brands: done
 
   # Silver
   config-entry-unloading: done
@@ -49,12 +49,8 @@ rules:
     comment: Diagnostics not implemented, yet.
   discovery-update-info:
     status: todo
-    comment: Discovery not implemented, yet.
   discovery:
     status: todo
-    comment: |
-      Most of the mowers are connected with a SIM card, some of the also have a
-      Wifi connection. Check, if discovery with Wifi is possible
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: done
