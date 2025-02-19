@@ -13,6 +13,7 @@ from sqlalchemy.orm.session import Session
 
 from homeassistant.components import recorder
 from homeassistant.components.recorder import db_schema
+from homeassistant.components.recorder.const import MAX_IDS_FOR_INDEXED_GROUP_BY
 from homeassistant.components.recorder.util import session_scope
 from homeassistant.core import HomeAssistant
 
@@ -190,3 +191,9 @@ def instrument_migration(
         instrumented_migration.live_migration_done_stall.set()
         instrumented_migration.non_live_migration_done_stall.set()
         yield instrumented_migration
+
+
+@pytest.fixture(params=[1, 2, MAX_IDS_FOR_INDEXED_GROUP_BY])
+def ids_for_start_time_chunk_sizes(request: pytest.FixtureRequest) -> int:
+    """Fixture to test different chunk sizes for start time query."""
+    return request.param
