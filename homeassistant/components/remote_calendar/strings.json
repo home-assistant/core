@@ -24,5 +24,13 @@
       "no_calendar_found": "No calendar found at the provided URL",
       "unknown_url_type": "Unknown URL type"
     }
+  },
+  "exceptions": {
+    "unable_to_fetch": {
+      "message": "Unable to fetch calendar data: {err}"
+    },
+    "unable_to_parse": {
+      "message": "Unable to parse calendar data: {err}"
+    }
   }
 }

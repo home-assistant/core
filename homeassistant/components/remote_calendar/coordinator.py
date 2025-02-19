@@ -9,9 +9,8 @@ from ical.exceptions import CalendarParseError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
@@ -50,13 +49,21 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[str]):
             res = await self._client.get(self._url, headers=headers)
             res.raise_for_status()
         except (UnsupportedProtocol, ConnectError, HTTPStatusError, ValueError) as err:
-            raise ConfigEntryNotReady from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_fetch",
+                translation_placeholders={"err": str(err)},
+            ) from err
         else:
             try:
                 await self.hass.async_add_executor_job(
                     IcsCalendarStream.calendar_from_ics, res.text
                 )
             except CalendarParseError as err:
-                raise ConfigEntryNotReady from err
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_parse",
+                    translation_placeholders={"err": str(err)},
+                ) from err
             else:
                 return res.text
