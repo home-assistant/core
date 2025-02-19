@@ -185,21 +185,6 @@ class IntentCache:
         self.cache.clear()
 
 
-def _get_language_variations(language: str) -> Iterable[str]:
-    """Generate language codes with and without region."""
-    yield language
-
-    parts = re.split(r"([-_])", language)
-    if len(parts) == 3:
-        lang, sep, region = parts
-        if sep == "_":
-            # en_US -> en-US
-            yield f"{lang}-{region}"
-
-        # en-US -> en
-        yield lang
-
-
 async def async_setup_default_agent(
     hass: core.HomeAssistant,
     entity_component: EntityComponent[ConversationEntity],
