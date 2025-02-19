@@ -30,9 +30,10 @@ _LOGGER = logging.getLogger(__name__)
 class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for VegeHub integration."""
 
+    _hub: VegeHub
+
     def __init__(self) -> None:
         """Initialize the VegeHub config flow."""
-        self._hub: VegeHub | None = None
         self._hostname: str = ""
         self._discovered: dict[str, Any] = {}
 
@@ -47,24 +48,12 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # User-supplied IP address is invalid.
                 _LOGGER.error("Invalid IP address")
                 errors["base"] = "invalid_ip"
-                return self.async_show_form(
-                    step_id="user",
-                    data_schema=vol.Schema(
-                        {
-                            vol.Required(
-                                CONF_IP_ADDRESS, default=user_input[CONF_IP_ADDRESS]
-                            ): str,
-                        }
-                    ),
-                    errors=errors,
-                )
 
-            self._hub = VegeHub(user_input[CONF_IP_ADDRESS])
-
-            self._hostname = self._hub.ip_address
-
-            # Proceed to create the config entry
-            return await self._async_create_entry()
+            if not errors:
+                self._hub = VegeHub(user_input[CONF_IP_ADDRESS])
+                self._hostname = self._hub.ip_address
+                # Proceed to create the config entry
+                return await self._async_create_entry()
 
         # Show the form to allow the user to manually enter the IP address
         return self.async_show_form(
@@ -74,7 +63,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_IP_ADDRESS): str,
                 }
             ),
-            errors={},
+            errors=errors,
         )
 
     async def async_step_zeroconf(
@@ -90,6 +79,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._hostname = discovery_info.hostname.removesuffix(".local.")
         config_url = f"http://{discovery_info.hostname[:-1]}:{discovery_info.port}"
 
+        # Create a VegeHub object to interact with the device
         self._hub = VegeHub(device_ip)
 
         try:
@@ -109,6 +99,8 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self._hub.mac_address)
         self._abort_if_unique_id_configured()
 
+        # Add title and configuration URL to the context so that the device discovery
+        # tile has the correct title, and a "Visit Device" link available.
         self.context.update(
             {
                 "title_placeholders": {"host": self._hostname + " (" + device_ip + ")"},
@@ -117,7 +109,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
         # If the device is new, allow the user to continue setup
-        return self.async_show_form(step_id="zeroconf_confirm")
+        return await self.async_step_zeroconf_confirm()
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
@@ -127,20 +119,26 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_create_entry()
 
         # Show the confirmation form
+        self._set_confirm_only()
         return self.async_show_form(step_id="zeroconf_confirm")
 
     async def async_step_error_retry(
-        self, user_input: dict[str, Any] | None = None
+        self,
+        errors: dict[str, str],
+        user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle error in setup process and allow retry."""
         if user_input is not None:
             return await self._async_create_entry()
 
         # Show the confirmation form
-        return self.async_show_form(step_id="error_retry")
+        return self.async_show_form(step_id="error_retry", errors=errors)
 
     async def _async_create_entry(self) -> ConfigFlowResult:
         """Create a config entry for the device."""
+        # This step is the same for both user and zeroconf initiated flows
+        # and so gets called from both async_step_user and async_step_zeroconf_confirm
+
         errors: dict[str, str] = {}
         webhook_id = webhook_generate_id()
         webhook_url = webhook_generate_url(
@@ -149,10 +147,6 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             allow_external=False,
             allow_ip=True,
         )
-
-        # This should be impossible, but mypy demands that we check for None
-        if self._hub is None:
-            return self.async_abort(reason="unknown_error")
 
         # Send the webhook address to the hub as its server target.
         # This step should only happen when the config flow happens, not
@@ -171,8 +165,10 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "cannot_connect"
 
         if len(errors) > 0:
-            return self.async_show_form(step_id="error_retry", errors=errors)
+            # If there are errors, show the retry form and present the errors.
+            return await self.async_step_error_retry(errors=errors)
 
+        # Save the discovered device info to be passed in the info_data
         self._discovered = {
             CONF_IP_ADDRESS: self._hub.ip_address,
             CONF_HOST: self._hostname,
