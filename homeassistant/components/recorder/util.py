@@ -524,6 +524,13 @@ def setup_connection_for_dialect(
                         instance.hass,
                         version,
                     )
+                slow_range_in_select = bool(
+                    not version
+                    or version < MARIADB_WITH_FIXED_IN_QUERIES_105
+                    or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
+                    or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
+                    or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
+                )
             elif not version or version < MIN_VERSION_MYSQL:
                 _raise_if_version_unsupported(
                     version or version_string, "MySQL", MIN_VERSION_MYSQL
@@ -532,14 +539,6 @@ def setup_connection_for_dialect(
                 # MySQL
                 # https://github.com/home-assistant/core/issues/137178
                 slow_dependant_subquery = True
-
-            slow_range_in_select = bool(
-                not version
-                or version < MARIADB_WITH_FIXED_IN_QUERIES_105
-                or MARIA_DB_106 <= version < MARIADB_WITH_FIXED_IN_QUERIES_106
-                or MARIA_DB_107 <= version < MARIADB_WITH_FIXED_IN_QUERIES_107
-                or MARIA_DB_108 <= version < MARIADB_WITH_FIXED_IN_QUERIES_108
-            )
 
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
