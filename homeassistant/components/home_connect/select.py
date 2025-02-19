@@ -15,24 +15,20 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
-from .const import APPLIANCES_WITH_PROGRAMS, DOMAIN, SVE_TRANSLATION_PLACEHOLDER_PROGRAM
+from .const import (
+    APPLIANCES_WITH_PROGRAMS,
+    DOMAIN,
+    PROGRAMS_TRANSLATION_KEYS_MAP,
+    SVE_TRANSLATION_PLACEHOLDER_PROGRAM,
+    TRANSLATION_KEYS_PROGRAMS_MAP,
+)
 from .coordinator import (
     HomeConnectApplianceData,
     HomeConnectConfigEntry,
     HomeConnectCoordinator,
 )
 from .entity import HomeConnectEntity
-from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
-
-TRANSLATION_KEYS_PROGRAMS_MAP = {
-    bsh_key_to_translation_key(program.value): cast(ProgramKey, program)
-    for program in ProgramKey
-    if program != ProgramKey.UNKNOWN
-}
-
-PROGRAMS_TRANSLATION_KEYS_MAP = {
-    value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
-}
+from .utils import get_dict_from_home_connect_error
 
 
 @dataclass(frozen=True, kw_only=True)
