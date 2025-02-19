@@ -50,6 +50,7 @@ async def test_demo_statistics(hass: HomeAssistant) -> None:
         "statistic_id": f"{DOMAIN}:temperature_outdoor",
         "statistics_unit_of_measurement": "°C",
         "unit_class": "temperature",
+        "has_circular_mean": False,
     } in statistic_ids
     assert {
         "display_unit_of_measurement": "kWh",
@@ -60,6 +61,7 @@ async def test_demo_statistics(hass: HomeAssistant) -> None:
         "statistic_id": f"{DOMAIN}:energy_consumption_kwh",
         "statistics_unit_of_measurement": "kWh",
         "unit_class": "energy",
+        "has_circular_mean": False,
     } in statistic_ids
 
 
@@ -80,6 +82,7 @@ async def test_demo_statistics_growth(hass: HomeAssistant) -> None:
         "unit_of_measurement": "m³",
         "has_mean": False,
         "has_sum": True,
+        "has_circular_mean": False,
     }
     statistics = [
         {
