@@ -132,6 +132,7 @@ DEVICE_TYPE_SELECT_MAP: dict[DeviceType, tuple[SelectEntityDescription, ...]] = 
     DeviceType.WASHTOWER_WASHER: (
         OPERATION_SELECT_DESC[ThinQProperty.WASHER_OPERATION_MODE],
     ),
+    DeviceType.WATER_HEATER: (SELECT_DESC[ThinQProperty.CURRENT_JOB_MODE],),
     DeviceType.WINE_CELLAR: (OPERATION_SELECT_DESC[ThinQProperty.LIGHT_BRIGHTNESS],),
 }
 

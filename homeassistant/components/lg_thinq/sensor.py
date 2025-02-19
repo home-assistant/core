@@ -476,6 +476,9 @@ DEVICE_TYPE_SENSOR_MAP: dict[DeviceType, tuple[SensorEntityDescription, ...]] = 
     DeviceType.WASHTOWER_DRYER: WASHER_SENSORS,
     DeviceType.WASHTOWER: WASHER_SENSORS,
     DeviceType.WASHTOWER_WASHER: WASHER_SENSORS,
+    DeviceType.WATER_HEATER: (
+        TEMPERATURE_SENSOR_DESC[ThinQProperty.CURRENT_TEMPERATURE],
+    ),
     DeviceType.WATER_PURIFIER: (
         RUN_STATE_SENSOR_DESC[ThinQProperty.COCK_STATE],
         RUN_STATE_SENSOR_DESC[ThinQProperty.STERILIZING_STATE],
