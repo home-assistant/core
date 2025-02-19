@@ -45,7 +45,12 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN as HEOS_DOMAIN, SERVICE_GROUP_VOLUME_SET
+from .const import (
+    DOMAIN as HEOS_DOMAIN,
+    SERVICE_GROUP_VOLUME_DOWN,
+    SERVICE_GROUP_VOLUME_SET,
+    SERVICE_GROUP_VOLUME_UP,
+)
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
 PARALLEL_UPDATES = 0
@@ -105,6 +110,12 @@ async def async_setup_entry(
         SERVICE_GROUP_VOLUME_SET,
         {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
         "async_set_group_volume_level",
+    )
+    platform.async_register_entity_service(
+        SERVICE_GROUP_VOLUME_DOWN, None, "async_group_volume_down"
+    )
+    platform.async_register_entity_service(
+        SERVICE_GROUP_VOLUME_UP, None, "async_group_volume_up"
     )
 
     def add_entities_callback(players: Sequence[HeosPlayer]) -> None:
@@ -371,6 +382,28 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
         await self.coordinator.heos.set_group_volume(
             self._player.group_id, int(volume_level * 100)
         )
+
+    @catch_action_error("group volume down")
+    async def async_group_volume_down(self) -> None:
+        """Turn group volume down for media player."""
+        if self._player.group_id is None:
+            raise ServiceValidationError(
+                translation_domain=HEOS_DOMAIN,
+                translation_key="entity_not_grouped",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        await self.coordinator.heos.group_volume_down(self._player.group_id)
+
+    @catch_action_error("group volume up")
+    async def async_group_volume_up(self) -> None:
+        """Turn group volume up for media player."""
+        if self._player.group_id is None:
+            raise ServiceValidationError(
+                translation_domain=HEOS_DOMAIN,
+                translation_key="entity_not_grouped",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        await self.coordinator.heos.group_volume_up(self._player.group_id)
 
     @catch_action_error("join players")
     async def async_join_players(self, group_members: list[str]) -> None:
