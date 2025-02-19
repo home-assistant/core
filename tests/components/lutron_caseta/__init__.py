@@ -104,7 +104,7 @@ class MockBridge:
     async def connect(self):
         """Connect the mock bridge."""
         if self.timeout_on_connect:
-            await asyncio.sleep(10)
+            await asyncio.Event().wait()  # wait forever
         if self.can_connect:
             self.is_currently_connected = True
 
