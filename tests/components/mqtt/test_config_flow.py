@@ -2634,11 +2634,10 @@ async def test_subentry_configflow(
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={
-            "name": "Milk notifier",
-            "sw_version": "1.0",
-            "hw_version": "2.1 rev a",
-            "model": "Bottle XL",
-            "model_id": "mn002",
+            "name": "Beer notifier",
+            "sw_version": "1.1",
+            "model": "Beer bottle XL",
+            "model_id": "bn003",
             "configuration_url": "https://example.com",
         },
     )
@@ -2661,7 +2660,7 @@ async def test_subentry_configflow(
     assert result["step_id"] == "entity_platform_config"
     assert result["errors"] == {}
     assert result["description_placeholders"] == {
-        "mqtt_device": '"Milk notifier"',
+        "mqtt_device": '"Beer notifier"',
         "platform": "notify",
         "object_id": "bla123",
     }
@@ -2682,7 +2681,7 @@ async def test_subentry_configflow(
     assert result["menu_options"] == ["entity", "update_entity", "device", "finish"]
     assert result["step_id"] == "summary_menu"
     assert result["description_placeholders"] == {
-        "mqtt_device": '"Milk notifier"',
+        "mqtt_device": '"Beer notifier"',
         "mqtt_items": '"notify_bla123"',
     }
 
@@ -2737,26 +2736,52 @@ async def test_subentry_configflow(
     ]
     assert result["step_id"] == "summary_menu"
     assert result["description_placeholders"] == {
+        "mqtt_device": '"Beer notifier"',
+        "mqtt_items": '"notify_bla123", "notify_bla456"',
+    }
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"next_step_id": "device"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "device"
+
+    # Update the device details for the second time
+    # this should not impact the entities already configured
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            "name": "Milk notifier",
+            "sw_version": "1.0",
+            "hw_version": "2.1 rev a",
+            "model": "Bottle XL",
+            "model_id": "mn002",
+            "configuration_url": "https://example.com",
+        },
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "summary_menu"
+
+    assert result["description_placeholders"] == {
         "mqtt_device": '"Milk notifier"',
         "mqtt_items": '"notify_bla123", "notify_bla456"',
     }
+
     # Finish the subentry flow
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"], {"next_step_id": "finish"}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Milk notifier"
-    expected_data = MOCK_SUBENTRY_DATA
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == expected_data
 
     subentry_id = next(iter(config_entry.subentries.keys()))
     assert config_entry.subentries == {
         subentry_id: config_entries.ConfigSubentry(
-            data=expected_data,
+            data=MOCK_SUBENTRY_DATA,
             subentry_id=subentry_id,
             subentry_type="device",
-            title=expected_data["device"]["name"],
+            title=MOCK_SUBENTRY_DATA["device"]["name"],
             unique_id=None,
         )
     }
@@ -3283,7 +3308,7 @@ async def test_subentry_reconfigure_update_device_properties(
         "finish_reconfigure",
     ]
 
-    # assert we can update an entity
+    # assert we can update the device info
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {"next_step_id": "device"},

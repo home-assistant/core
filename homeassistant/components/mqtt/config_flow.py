@@ -847,7 +847,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         validate_field("configuration_url", cv.url, user_input, errors, "invalid_url")
         if not errors and user_input is not None:
             self._subentry_data["device"] = cast(MqttDeviceData, user_input)
-            if self.source == SOURCE_RECONFIGURE:
+            if self._subentry_data["components"]:
                 return await self.async_step_summary_menu()
             return await self.async_step_entity()
 
