@@ -606,7 +606,7 @@ async def receive_file(
 def async_setup_config_entry_backup_agents_listeners(
     hass: HomeAssistant,
     integration_domain: str,
-    hass_key: HassKey,
+    backup_agents_listeners: list[Callable[[], None]],
 ) -> None:
     """Set up backup listeners for a config entry.
 
