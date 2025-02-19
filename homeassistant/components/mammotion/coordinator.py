@@ -10,7 +10,10 @@ from typing import TYPE_CHECKING, Any, cast
 from aiohttp import ClientConnectorError
 import betterproto
 from pymammotion import CloudIOTGateway
-from pymammotion.aliyun.cloud_gateway import DeviceOfflineException
+from pymammotion.aliyun.cloud_gateway import (
+    DeviceOfflineException,
+    GatewayTimeoutException,
+)
 from pymammotion.aliyun.model.aep_response import AepResponse
 from pymammotion.aliyun.model.connect_response import ConnectResponse
 from pymammotion.aliyun.model.dev_by_account_response import (
@@ -135,15 +138,26 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     async def async_send_command(self, command: str, **kwargs: Any) -> bool:
         """Send command."""
+        if not self.manager.get_device_by_name(self.device_name).mower_state.online:
+            return False
+
         try:
             await self.manager.send_command_with_args(
                 self.device.deviceName, command, **kwargs
             )
+            self.update_failures = 0
             return True
         except EXPIRED_CREDENTIAL_EXCEPTIONS:
             self.update_failures += 1
             await self.async_login()
             return False
+        except GatewayTimeoutException as exc:
+            self.update_failures += 1
+            if self.update_failures > 5:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN, translation_key="command_failed"
+                ) from exc
+            await self.async_send_command(command, **kwargs)
         except DeviceOfflineException:
             """Device is offline try bluetooth if we have it."""
             try:
@@ -173,19 +187,16 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         if device_entry is None:
             return
 
-        new_swversion = self.data.mower_state.sw_version
+        new_swversion = mower.mower_state.swversion
 
         if new_swversion is not None or new_swversion != device_entry.sw_version:
             device_registry.async_update_device(
                 device_entry.id, sw_version=new_swversion
             )
 
-        # model_id = None
-        # if has_field(mower.sys.device_product_type_info):
-        #     model_id = mower.sys.device_product_type_info.main_product_type
-        #
-        # if model_id is not None or model_id != device_entry.model_id:
-        #     device_registry.async_update_device(device_entry.id, model_id=model_id)
+        if model_id := mower.mower_state.model_id:
+            if model_id is not None or model_id != device_entry.model_id:
+                device_registry.async_update_device(device_entry.id, model_id=model_id)
 
     def store_cloud_credentials(self) -> None:
         """Store cloud credentials in config entry."""
@@ -437,16 +448,16 @@ class MammotionReportUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevi
 
         except DeviceOfflineException:
             """Device is offline try bluetooth if we have it."""
-            data = self.manager.get_device_by_name(self.device_name).mower_state
+            device = self.manager.get_device_by_name(self.device_name)
+            device.mower_state.online = False
+            data = device.mower_state
             return data
 
         LOGGER.debug("Updated Mammotion device %s", self.device_name)
         LOGGER.debug("================= Debug Log =================")
         LOGGER.debug(
             "Mammotion device data: %s",
-            asdict(
-                self.manager.get_device_by_name(self.device_name).mower_state.device
-            ),
+            asdict(self.manager.get_device_by_name(self.device_name).mower_state),
         )
         LOGGER.debug("==================================")
 
@@ -721,7 +732,9 @@ class MammotionMaintenanceUpdateCoordinator(MammotionBaseUpdateCoordinator[Maint
 
         except DeviceOfflineException:
             """Device is offline try bluetooth if we have it."""
-            data = self.manager.get_device_by_name(self.device_name).mower_state
+            device = self.manager.get_device_by_name(self.device_name)
+            device.mower_state.online = False
+            data = device.mower_state
             return data
 
         self.updated_once = True
@@ -757,7 +770,6 @@ class MammotionDeviceVersionUpdateCoordinator(
 
         if not self.enabled:
             return self.data
-
         try:
             await self.async_send_command("get_device_version_main")
             await self.async_send_command("get_device_version_info")
@@ -765,9 +777,9 @@ class MammotionDeviceVersionUpdateCoordinator(
             await self.check_firmware_version()
         except DeviceOfflineException:
             """Device is offline try bluetooth if we have it."""
-            data = self.manager.get_device_by_name(
-                self.device_name
-            ).mower_state.mower_state
+            device = self.manager.get_device_by_name(self.device_name)
+            device.mower_state.online = False
+            data = device.mower_state.mower_state
             return data
 
         data = self.manager.get_device_by_name(self.device_name).mower_state.mower_state
