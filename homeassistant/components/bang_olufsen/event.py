@@ -136,6 +136,7 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
     """Event class for Beoremote One key events."""
 
     _attr_event_types = BEO_REMOTE_KEY_EVENTS
+    _attr_icon = "mdi:remote"
 
     def __init__(
         self,
