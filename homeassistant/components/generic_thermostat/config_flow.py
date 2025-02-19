@@ -9,9 +9,16 @@ import voluptuous as vol
 
 from homeassistant.components import fan, switch
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.const import CONF_NAME, DEGREE
+from homeassistant.const import (
+    CONF_NAME,
+    DEGREE,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+)
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
+    SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
     SchemaFlowFormStep,
 )
@@ -24,11 +31,15 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
     CONF_MIN_TEMP,
+    CONF_PRECISION,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_TEMP_STEP,
     DEFAULT_TOLERANCE,
     DOMAIN,
 )
+
+PRECISIONS = [PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]
 
 OPTIONS_SCHEMA = {
     vol.Required(CONF_AC_MODE): selector.BooleanSelector(
@@ -69,6 +80,36 @@ OPTIONS_SCHEMA = {
             mode=selector.NumberSelectorMode.BOX, unit_of_measurement=DEGREE, step=0.1
         )
     ),
+    vol.Optional(CONF_PRECISION): vol.All(
+        selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                options=[
+                    selector.SelectOptionDict(
+                        value=str(precision),
+                        label=f"{precision}{DEGREE}",
+                    )
+                    for precision in PRECISIONS
+                ],
+            )
+        ),
+        vol.Coerce(float),
+    ),
+    vol.Optional(CONF_TEMP_STEP): vol.All(
+        selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                mode=selector.SelectSelectorMode.DROPDOWN,
+                options=[
+                    selector.SelectOptionDict(
+                        value=str(precision),
+                        label=f"{precision}{DEGREE}",
+                    )
+                    for precision in PRECISIONS
+                ],
+            )
+        ),
+        vol.Coerce(float),
+    ),
 }
 
 PRESETS_SCHEMA = {
@@ -91,8 +132,22 @@ CONFIG_FLOW = {
     "presets": SchemaFlowFormStep(vol.Schema(PRESETS_SCHEMA)),
 }
 
+
+async def get_options_schema(handler: SchemaCommonFlowHandler) -> vol.Schema:
+    """Get options schema."""
+    if CONF_PRECISION in handler.options:
+        for p in PRECISIONS:
+            if handler.options[CONF_PRECISION] == p:
+                handler.options[CONF_PRECISION] = str(p)
+    if CONF_TEMP_STEP in handler.options:
+        for p in PRECISIONS:
+            if handler.options[CONF_TEMP_STEP] == p:
+                handler.options[CONF_TEMP_STEP] = str(p)
+    return vol.Schema(OPTIONS_SCHEMA)
+
+
 OPTIONS_FLOW = {
-    "init": SchemaFlowFormStep(vol.Schema(OPTIONS_SCHEMA), next_step="presets"),
+    "init": SchemaFlowFormStep(get_options_schema, next_step="presets"),
     "presets": SchemaFlowFormStep(vol.Schema(PRESETS_SCHEMA)),
 }
 
