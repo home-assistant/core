@@ -41,16 +41,16 @@ from .const import (
     ATTR_PERIOD,
     ATTR_SETPOINT,
     CONF_LOCATION_IDX,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    SCAN_INTERVAL_DEFAULT,
-    SCAN_INTERVAL_MINIMUM,
+    MINIMUM_SCAN_INTERVAL,
     EvoService,
 )
 from .coordinator import EvoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA: Final = vol.Schema(
+CONFIG_SCHEMA: Final = vol.Schema(  # scan_interval here is a timedelta
     {
         DOMAIN: vol.Schema(
             {
@@ -58,8 +58,11 @@ CONFIG_SCHEMA: Final = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
                 vol.Optional(
-                    CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT
-                ): vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
+                    CONF_SCAN_INTERVAL, default=timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+                ): vol.All(
+                    cv.time_period,
+                    vol.Range(min=timedelta(seconds=MINIMUM_SCAN_INTERVAL)),
+                ),
             }
         )
     },

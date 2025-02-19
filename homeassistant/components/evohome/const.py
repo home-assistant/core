@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 from enum import StrEnum, unique
 from typing import Final
 
@@ -17,10 +16,11 @@ DEFAULT_LOCATION_IDX: Final = 0
 CONF_HIGH_PRECISION: Final = "high_precision"
 DEFAULT_HIGH_PRECISION: Final = False
 
-USER_DATA: Final = "user_data"
+DEFAULT_SCAN_INTERVAL: Final = 60 * 5  # seconds
+MAXIMUM_SCAN_INTERVAL: Final = 60 * 15
+MINIMUM_SCAN_INTERVAL: Final = 60
 
-SCAN_INTERVAL_DEFAULT: Final = timedelta(seconds=300)
-SCAN_INTERVAL_MINIMUM: Final = timedelta(seconds=60)
+USER_DATA: Final = "user_data"
 
 ATTR_PERIOD: Final = "period"  # number of days
 ATTR_DURATION: Final = "duration"  # number of minutes, <24h
