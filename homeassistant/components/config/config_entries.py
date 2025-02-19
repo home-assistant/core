@@ -582,7 +582,9 @@ async def config_entries_subscribe(
 
     @callback
     def async_forward_config_entry_changes(
-        change: config_entries.ConfigEntryChange, entry: config_entries.ConfigEntry
+        change: config_entries.ConfigEntryChange,
+        entry: config_entries.ConfigEntry,
+        state: config_entries.ConfigEntryState | None = None,
     ) -> None:
         """Forward config entry state events to websocket."""
         if type_filter:
