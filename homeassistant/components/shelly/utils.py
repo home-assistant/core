@@ -315,6 +315,14 @@ def get_model_name(info: dict[str, Any]) -> str:
     return cast(str, MODEL_NAMES.get(info["type"], info["type"]))
 
 
+def get_device_info_model(device: BlockDevice | RpcDevice) -> str | None:
+    """Return the device model for deviceinfo."""
+    if isinstance(device, RpcDevice) and (model := device.xmod_info.get("n")):
+        return cast(str, model)
+
+    return cast(str, MODEL_NAMES.get(device.model))
+
+
 def get_rpc_channel_name(device: RpcDevice, key: str) -> str:
     """Get name based on device and channel name."""
     key = key.replace("emdata", "em")

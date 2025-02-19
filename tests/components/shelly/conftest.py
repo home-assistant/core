@@ -476,6 +476,7 @@ def _mock_rpc_device(version: str | None = None):
         script_getcode=AsyncMock(
             side_effect=lambda script_id: {"data": MOCK_SCRIPTS[script_id - 1]}
         ),
+        xmod_info={},
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
