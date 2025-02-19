@@ -20,9 +20,17 @@ import aiohttp
 from securetar import SecureTarError, SecureTarFile, SecureTarReadError
 
 from homeassistant.backup_restore import password_to_key
-from homeassistant.core import HomeAssistant
+from homeassistant.config_entries import (
+    SIGNAL_CONFIG_ENTRY_CHANGED,
+    ConfigEntry,
+    ConfigEntryChange,
+    ConfigEntryState,
+)
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import BUF_SIZE, LOGGER
@@ -593,3 +601,38 @@ async def receive_file(
     finally:
         if fut is not None:
             await fut
+
+
+def async_setup_config_entry_backup_listeners(
+    hass: HomeAssistant,
+    integration_domain: str,
+    hass_key: HassKey,
+) -> None:
+    """Set up backup listeners for a config entry.
+
+    We need a get the config entry during async_get_backup_agents through hass.config_entries.async_loaded_entries).
+    Since we want to ensure the entry is in that list during load and not in that list during unload.
+    Since we would call the listeners during setup_/unload_entry, this poses a race,
+    so we need to listen for config entry changes and notify the backup listeners when a config entry changes state from LOADED.
+    """
+
+    def async_notify_backup_listeners(hass: HomeAssistant) -> None:
+        for listener in hass.data.get(hass_key, []):
+            listener()
+
+    @callback
+    def async_on_config_entry_changed(
+        change: ConfigEntryChange,
+        entry: ConfigEntry,
+    ) -> None:
+        if change != ConfigEntryChange.UPDATED or entry.domain != integration_domain:
+            return
+        if entry.state not in (ConfigEntryState.LOADED, ConfigEntryState.NOT_LOADED):
+            return
+        async_notify_backup_listeners(hass)
+
+    async_dispatcher_connect(
+        hass,
+        SIGNAL_CONFIG_ENTRY_CHANGED,
+        async_on_config_entry_changed,
+    )
