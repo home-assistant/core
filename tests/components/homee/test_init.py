@@ -2,6 +2,9 @@
 
 from unittest.mock import MagicMock
 
+from pyHomee import HomeeAuthFailedException, HomeeConnectionFailedException
+import pytest
+
 from homeassistant.components.homee.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -11,6 +14,46 @@ from . import build_mock_node, setup_integration
 from .conftest import HOMEE_ID, HOMEE_NAME
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.parametrize(
+    "side_eff",
+    [
+        HomeeConnectionFailedException("connection timed out"),
+        HomeeAuthFailedException("wrong username or password"),
+    ],
+)
+async def test_connection_errors(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_eff: Exception,
+) -> None:
+    """Test if connection errors on startup are handled correctly."""
+    mock_homee.get_access_token.side_effect = side_eff
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_connection_listener(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test if loss of connection is sensed correctly."""
+    mock_homee.nodes = [build_mock_node("homee.json")]
+    await setup_integration(hass, mock_config_entry)
+
+    mock_homee.add_connection_listener.call_args_list[0][0][0](False)
+    await hass.async_block_till_done()
+    assert "Disconnected from Homee" in caplog.text
+    mock_homee.add_connection_listener.call_args_list[0][0][0](True)
+    await hass.async_block_till_done()
+    assert "Reconnected to Homee" in caplog.text
 
 
 async def test_general_data(

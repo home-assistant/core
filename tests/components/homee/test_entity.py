@@ -25,19 +25,19 @@ async def test_entity_connection_listener(
     await setup_integration(hass, mock_config_entry)
 
     states = hass.states.get("sensor.test_multisensor_energy_1")
-    assert states.state != STATE_UNAVAILABLE
+    assert states.state is not STATE_UNAVAILABLE
 
     mock_homee.add_connection_listener.call_args_list[1][0][0](False)
     await hass.async_block_till_done()
 
     states = hass.states.get("sensor.test_multisensor_energy_1")
-    assert states.state == STATE_UNAVAILABLE
+    assert states.state is STATE_UNAVAILABLE
 
     mock_homee.add_connection_listener.call_args_list[1][0][0](True)
     await hass.async_block_till_done()
 
     states = hass.states.get("sensor.test_multisensor_energy_1")
-    assert states.state != STATE_UNAVAILABLE
+    assert states.state is not STATE_UNAVAILABLE
 
 
 async def test_node_entity_connection_listener(
