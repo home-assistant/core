@@ -2,12 +2,9 @@
 
 import logging
 
-from httpx import ConnectError, HTTPStatusError, UnsupportedProtocol
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import RemoteCalendarDataUpdateCoordinator
@@ -26,10 +23,7 @@ async def async_setup_entry(
     """Set up Remote Calendar from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     coordinator = RemoteCalendarDataUpdateCoordinator(hass, entry)
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except (UnsupportedProtocol, ConnectError, HTTPStatusError, ValueError) as err:
-        raise ConfigEntryNotReady(f"Failed to fetch calendar data: {err}") from err
+    await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
