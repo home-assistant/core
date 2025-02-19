@@ -506,9 +506,8 @@ def setup_connection_for_dialect(
             result = query_on_connection(dbapi_connection, "SELECT VERSION()")
             version_string = result[0][0]
             version = _extract_version_from_server_response(version_string)
-            is_maria_db = "mariadb" in version_string.lower()
 
-            if is_maria_db:
+            if "mariadb" in version_string.lower():
                 if not version or version < MIN_VERSION_MARIA_DB:
                     _raise_if_version_unsupported(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
