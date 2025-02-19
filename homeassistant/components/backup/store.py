@@ -16,7 +16,7 @@ if TYPE_CHECKING:
 STORE_DELAY_SAVE = 30
 STORAGE_KEY = DOMAIN
 STORAGE_VERSION = 1
-STORAGE_VERSION_MINOR = 4
+STORAGE_VERSION_MINOR = 5
 
 
 class StoredBackupData(TypedDict):
@@ -61,7 +61,14 @@ class _BackupStore(Store[StoredBackupData]):
                     data["config"]["schedule"]["days"] = [state]
                     data["config"]["schedule"]["recurrence"] = "custom_days"
             if old_minor_version < 4:
-                # Version 1.4 adds automatic_backups_configured
+                # Workaround for a bug in frontend which incorrectly set days to 0
+                # instead of to None for unlimited retention.
+                if data["config"]["retention"]["copies"] == 0:
+                    data["config"]["retention"]["copies"] = None
+                if data["config"]["retention"]["days"] == 0:
+                    data["config"]["retention"]["days"] = None
+            if old_minor_version < 5:
+                # Version 1.5 adds automatic_backups_configured
                 data["config"]["automatic_backups_configured"] = (
                     data["config"]["create_backup"]["password"] is not None
                 )

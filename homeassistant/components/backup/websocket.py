@@ -369,8 +369,10 @@ async def handle_config_info(
         ),
         vol.Optional("retention"): vol.Schema(
             {
-                vol.Optional("copies"): vol.Any(int, None),
-                vol.Optional("days"): vol.Any(int, None),
+                # Note: We can't use cv.positive_int because it allows 0 even
+                # though 0 is not positive.
+                vol.Optional("copies"): vol.Any(vol.All(int, vol.Range(min=1)), None),
+                vol.Optional("days"): vol.Any(vol.All(int, vol.Range(min=1)), None),
             },
         ),
         vol.Optional("schedule"): vol.Schema(
