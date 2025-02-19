@@ -1,7 +1,7 @@
 {
   "config": {
     "error": {
-      "api_error": "An error occured in the pyemoncms API : {details}"
+      "api_error": "An error occurred in the pyemoncms API : {details}"
     },
     "step": {
       "user": {
