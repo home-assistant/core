@@ -10,7 +10,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
@@ -40,16 +40,16 @@ BUTTON_DESCRIPTIONS: dict[AttributeType, ButtonEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add the Homee platform for the button component."""
 
-    for node in config_entry.runtime_data.nodes:
-        async_add_devices(
-            HomeeButton(attribute, config_entry, BUTTON_DESCRIPTIONS[attribute.type])
-            for attribute in node.attributes
-            if (attribute.type in BUTTON_DESCRIPTIONS and attribute.editable)
-        )
+    async_add_entities(
+        HomeeButton(attribute, config_entry, BUTTON_DESCRIPTIONS[attribute.type])
+        for node in config_entry.runtime_data.nodes
+        for attribute in node.attributes
+        if (attribute.type in BUTTON_DESCRIPTIONS and attribute.editable)
+    )
 
 
 class HomeeButton(HomeeEntity, ButtonEntity):
@@ -66,11 +66,12 @@ class HomeeButton(HomeeEntity, ButtonEntity):
         """Initialize a Homee button entity."""
         super().__init__(attribute, entry)
         self.entity_description = description
-        if not (
-            (attribute.type == AttributeType.IMPULSE) and (attribute.instance == 0)
-        ):
-            self._attr_translation_key = description.key
-        if attribute.instance > 0:
+        if attribute.instance == 0:
+            if attribute.type == AttributeType.IMPULSE:
+                self._attr_name = None
+            else:
+                self._attr_translation_key = description.key
+        else:
             self._attr_translation_key = f"{description.key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
