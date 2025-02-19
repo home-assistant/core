@@ -96,6 +96,7 @@ async def test_zigbee_type_sensors(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test for zigbee type sensor with second radio."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info.from_dict(
         load_json_object_fixture("info-MR1.json", DOMAIN)
     )
