@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-from typing import Any
 
 from homelink.provider import Provider
 
@@ -14,11 +13,11 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
 from .const import DOMAIN
-from .coordinator import HomelinkCoordinator
+from .coordinator import HomelinkCoordinator, HomeLinkData
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 
-type HomeLinkConfigEntry = ConfigEntry[dict[str, Any]]
+type HomeLinkConfigEntry = ConfigEntry[HomeLinkData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> bool:
@@ -42,11 +41,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> 
     provider = Provider(authenticated_session)
     coordinator = HomelinkCoordinator(hass, provider, entry)
 
-    entry.runtime_data = {
-        "provider": provider,
-        "coordinator": coordinator,
-        "last_update_id": None,
-    }
+    entry.runtime_data = HomeLinkData(
+        provider=provider, coordinator=coordinator, last_update_id=None
+    )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     await coordinator.async_config_entry_first_refresh()
