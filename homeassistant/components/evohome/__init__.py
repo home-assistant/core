@@ -8,13 +8,10 @@ Note that the API used by this integration's client does not support cooling.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Final
 
-import evohomeasync as ec1
-import evohomeasync2 as ec2
 from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
 from evohomeasync2.schemas.const import (
     S2_DURATION as SZ_DURATION,
@@ -23,6 +20,7 @@ from evohomeasync2.schemas.const import (
 )
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PASSWORD,
@@ -32,12 +30,9 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_DURATION_DAYS,
@@ -52,7 +47,6 @@ from .const import (
     EvoService,
 )
 from .coordinator import EvoDataUpdateCoordinator
-from .storage import TokenManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,63 +84,48 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
     }
 )
 
-EVOHOME_KEY: HassKey[EvoData] = HassKey(DOMAIN)
-
-
-@dataclass
-class EvoData:
-    """Dataclass for storing evohome data."""
-
-    coordinator: EvoDataUpdateCoordinator
-    loc_idx: int
-    tcs: ec2.ControlSystem
+PLATFORMS = (Platform.CLIMATE, Platform.WATER_HEATER)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Evohome integration."""
+    """Set up evohome integration from YAML (deprecated)."""
 
-    token_manager = TokenManager(
-        hass,
-        config[DOMAIN][CONF_USERNAME],
-        config[DOMAIN][CONF_PASSWORD],
-        async_get_clientsession(hass),
-    )
+    if DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+            )
+        )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Load the Evohome config entry."""
+
     coordinator = EvoDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        ec2.EvohomeClient(token_manager),
-        name=f"{DOMAIN}_coordinator",
-        update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
-        location_idx=config[DOMAIN][CONF_LOCATION_IDX],
-        client_v1=ec1.EvohomeClient(token_manager),
+        hass, _LOGGER, config_entry=config_entry, name=f"{DOMAIN}_coordinator"
     )
 
-    await coordinator.async_register_shutdown()
     await coordinator.async_first_refresh()
 
     if not coordinator.last_update_success:
         _LOGGER.error(f"Failed to fetch initial data: {coordinator.last_exception}")  # noqa: G004
         return False
 
-    assert coordinator.tcs is not None  # mypy
+    config_entry.runtime_data = {"coordinator": coordinator}
 
-    hass.data[EVOHOME_KEY] = EvoData(
-        coordinator=coordinator,
-        loc_idx=coordinator.loc_idx,
-        tcs=coordinator.tcs,
-    )
-
-    hass.async_create_task(
-        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
-    )
-    if coordinator.tcs.hotwater:
-        hass.async_create_task(
-            async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
-        )
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
     setup_service_functions(hass, coordinator)
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload the Evohome config entry."""
+
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 @callback

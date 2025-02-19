@@ -12,6 +12,10 @@ STORAGE_VER: Final = 1
 STORAGE_KEY: Final = DOMAIN
 
 CONF_LOCATION_IDX: Final = "location_idx"
+DEFAULT_LOCATION_IDX: Final = 0
+
+CONF_HIGH_PRECISION: Final = "high_precision"
+DEFAULT_HIGH_PRECISION: Final = False
 
 USER_DATA: Final = "user_data"
 

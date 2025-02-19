@@ -20,7 +20,7 @@ class _SessionDataT(TypedDict):
     session_id_expires: NotRequired[str]  # 2024-07-27T23:57:30+01:00
 
 
-class _TokenStoreT(TypedDict):
+class _TokenDataT(TypedDict):
     username: str
     refresh_token: str
     access_token: str
@@ -50,14 +50,14 @@ ACCESS_TOKEN_EXP_DTM, ACCESS_TOKEN_EXP_STR = dt_pair(dt_util.now() + timedelta(h
 USERNAME_DIFF: Final = f"not_{USERNAME}"
 USERNAME_SAME: Final = USERNAME
 
-_TEST_STORAGE_BASE: Final[_TokenStoreT] = {
+_TEST_STORAGE_BASE: Final[_TokenDataT] = {
     SZ_USERNAME: USERNAME_SAME,
     SZ_REFRESH_TOKEN: REFRESH_TOKEN,
     SZ_ACCESS_TOKEN: ACCESS_TOKEN,
     SZ_ACCESS_TOKEN_EXPIRES: ACCESS_TOKEN_EXP_STR,
 }
 
-TEST_STORAGE_DATA: Final[dict[str, _TokenStoreT]] = {
+TEST_STORAGE_DATA: Final[dict[str, _TokenDataT]] = {
     "sans_session_id": _TEST_STORAGE_BASE,
     "null_session_id": _TEST_STORAGE_BASE | {SZ_USER_DATA: None},  # type: ignore[dict-item]
     "with_session_id": _TEST_STORAGE_BASE | {SZ_USER_DATA: {"session_id": SESSION_ID}},
@@ -92,7 +92,7 @@ async def test_auth_tokens_null(
         pass
 
     # Confirm the expected tokens were cached to storage...
-    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
+    data: _TokenDataT = hass_storage[DOMAIN]["data"]
 
     assert data[SZ_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
@@ -120,7 +120,7 @@ async def test_auth_tokens_same(
         pass
 
     # Confirm the expected tokens were cached to storage...
-    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
+    data: _TokenDataT = hass_storage[DOMAIN]["data"]
 
     assert data[SZ_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == REFRESH_TOKEN
@@ -151,7 +151,7 @@ async def test_auth_tokens_past(
         pass
 
     # Confirm the expected tokens were cached to storage...
-    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
+    data: _TokenDataT = hass_storage[DOMAIN]["data"]
 
     assert data[SZ_USERNAME] == USERNAME_SAME
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
@@ -180,7 +180,7 @@ async def test_auth_tokens_diff(
         pass
 
     # Confirm the expected tokens were cached to storage...
-    data: _TokenStoreT = hass_storage[DOMAIN]["data"]
+    data: _TokenDataT = hass_storage[DOMAIN]["data"]
 
     assert data[SZ_USERNAME] == USERNAME_DIFF
     assert data[SZ_REFRESH_TOKEN] == f"new_{REFRESH_TOKEN}"
