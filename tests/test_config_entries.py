@@ -4841,6 +4841,7 @@ async def test_setup_raise_entry_error_from_first_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
@@ -4881,6 +4882,7 @@ async def test_setup_not_raise_entry_error_from_future_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
@@ -4960,6 +4962,7 @@ async def test_setup_raise_auth_failed_from_first_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
@@ -5012,6 +5015,7 @@ async def test_setup_raise_auth_failed_from_future_coordinator_update(
             hass,
             logging.getLogger(__name__),
             name="any",
+            config_entry=entry,
             update_method=_async_update_data,
             update_interval=timedelta(seconds=1000),
         )
