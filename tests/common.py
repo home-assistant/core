@@ -1867,23 +1867,6 @@ async def snapshot_platform(
         assert state == snapshot(name=f"{entity_entry.entity_id}-state")
 
 
-def reset_translation_cache(hass: HomeAssistant, components: list[str]) -> None:
-    """Reset translation cache for specified components.
-
-    Use this if you are mocking a core component (for example via
-    mock_integration), to ensure that the mocked translations are not
-    persisted in the shared session cache.
-    """
-    translations_cache = translation._async_get_translations_cache(hass)
-    for loaded_components in translations_cache.cache_data.loaded.values():
-        for component_to_unload in components:
-            loaded_components.discard(component_to_unload)
-    for loaded_categories in translations_cache.cache_data.cache.values():
-        for loaded_components in loaded_categories.values():
-            for component_to_unload in components:
-                loaded_components.pop(component_to_unload, None)
-
-
 @lru_cache
 def get_quality_scale(integration: str) -> dict[str, QualityScaleStatus]:
     """Load quality scale for integration."""
