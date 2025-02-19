@@ -847,7 +847,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         validate_field("configuration_url", cv.url, user_input, errors, "invalid_url")
         if not errors and user_input is not None:
             self._subentry_data["device"] = cast(MqttDeviceData, user_input)
-            if self._subentry_data["components"]:
+            if self.source == SOURCE_RECONFIGURE:
                 return await self.async_step_summary_menu()
             return await self.async_step_entity()
 
@@ -1021,7 +1021,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                     component_data.pop(field)
                 component_data.update(user_input)
                 self._object_id = None
-                return await self.async_step_summary_menu()
+                if self.source == SOURCE_RECONFIGURE:
+                    return await self.async_step_summary_menu()
+                return await self.async_step_confirm()
+
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         else:
             data_schema = self.add_suggested_values_to_schema(
@@ -1040,6 +1043,31 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             last_step=False,
         )
 
+    async def async_step_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Confirm creating a new MQTT device."""
+        mqtt_device = f'"{self._subentry_data["device"]["name"]}"'
+        component: dict[str, Any] = next(
+            iter(self._subentry_data["components"].values())
+        )
+        entity_name = component.get("name", component["object_id"])
+        platform = component["platform"]
+        if user_input is not None:
+            return self.async_create_entry(
+                data=self._subentry_data, title=self._subentry_data["device"]["name"]
+            )
+
+        return self.async_show_form(
+            step_id="confirm",
+            description_placeholders={
+                "mqtt_device": mqtt_device,
+                "entity": entity_name,
+                "platform": platform,
+            },
+            last_step=True,
+        )
+
     async def async_step_summary_menu(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -1056,9 +1084,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if len(self._subentry_data["components"]) > 1:
             menu_options.append("delete_entity")
         menu_options.append("device")
-        menu_options.append(
-            "finish_reconfigure" if self.source == SOURCE_RECONFIGURE else "finish"
-        )
+        menu_options.append("finish_reconfigure")
         return self.async_show_menu(
             step_id="summary_menu",
             menu_options=menu_options,
@@ -1094,14 +1120,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             subentry,
             data=self._subentry_data,
             title=self._subentry_data["device"]["name"],
-        )
-
-    async def async_step_finish(
-        self, user_input: dict[str, Any] | None = None
-    ) -> SubentryFlowResult:
-        """Create the subentry."""
-        return self.async_create_entry(
-            data=self._subentry_data, title=self._subentry_data["device"]["name"]
         )
 
 
