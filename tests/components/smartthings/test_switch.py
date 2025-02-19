@@ -6,6 +6,7 @@ from pysmartthings.models import Attribute, Capability, Command
 import pytest
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.smartthings.const import MAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -61,7 +62,7 @@ async def test_switch_turn_on_off(
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
-        "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", Capability.SWITCH, command, "main"
+        "10e06a70-ee7d-4832-85e9-a0a06a7a05bd", Capability.SWITCH, command, MAIN
     )
 
 

@@ -11,6 +11,7 @@ from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
 )
+from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
     ATTR_BATTERY_LEVEL,
     ATTR_ENTITY_ID,
@@ -70,7 +71,7 @@ async def test_cover_open_close(
         "571af102-15db-4030-b76b-245a691f74a5",
         Capability.WINDOW_SHADE,
         command,
-        "main",
+        MAIN,
     )
 
 
@@ -93,7 +94,7 @@ async def test_cover_set_position(
         "571af102-15db-4030-b76b-245a691f74a5",
         Capability.SWITCH_LEVEL,
         Command.SET_LEVEL,
-        "main",
+        MAIN,
         argument=25,
     )
 
@@ -105,7 +106,7 @@ async def test_cover_battery(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test battery extra state attribute."""
-    devices.get_device_status.return_value["main"][Capability.BATTERY] = {
+    devices.get_device_status.return_value[MAIN][Capability.BATTERY] = {
         Attribute.BATTERY: Status(50)
     }
     await setup_integration(hass, mock_config_entry)
@@ -122,7 +123,7 @@ async def test_cover_battery_updating(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test battery extra state attribute."""
-    devices.get_device_status.return_value["main"][Capability.BATTERY] = {
+    devices.get_device_status.return_value[MAIN][Capability.BATTERY] = {
         Attribute.BATTERY: Status(50)
     }
     await setup_integration(hass, mock_config_entry)

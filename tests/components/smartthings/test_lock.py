@@ -7,6 +7,7 @@ import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockState
+from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import ATTR_ENTITY_ID, SERVICE_LOCK, SERVICE_UNLOCK, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -57,7 +58,7 @@ async def test_lock_unlock(
         "a9f587c5-5d8b-4273-8907-e7f609af5158",
         Capability.LOCK,
         command,
-        "main",
+        MAIN,
     )
 
 

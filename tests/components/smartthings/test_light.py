@@ -16,6 +16,7 @@ from homeassistant.components.light import (
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
+from homeassistant.components.smartthings.const import MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -61,7 +62,7 @@ async def test_all_entities(
                     "cb958955-b015-498c-9e62-fc0c51abd054",
                     Capability.SWITCH,
                     Command.ON,
-                    "main",
+                    MAIN,
                 )
             ],
         ),
@@ -72,14 +73,14 @@ async def test_all_entities(
                     "cb958955-b015-498c-9e62-fc0c51abd054",
                     Capability.COLOR_TEMPERATURE,
                     Command.SET_COLOR_TEMPERATURE,
-                    "main",
+                    MAIN,
                     argument=4000,
                 ),
                 call(
                     "cb958955-b015-498c-9e62-fc0c51abd054",
                     Capability.SWITCH,
                     Command.ON,
-                    "main",
+                    MAIN,
                 ),
             ],
         ),
@@ -90,14 +91,14 @@ async def test_all_entities(
                     "cb958955-b015-498c-9e62-fc0c51abd054",
                     Capability.COLOR_CONTROL,
                     Command.SET_COLOR,
-                    "main",
+                    MAIN,
                     argument={"hue": 97.2222, "saturation": 90.0},
                 ),
                 call(
                     "cb958955-b015-498c-9e62-fc0c51abd054",
                     Capability.SWITCH,
                     Command.ON,
-                    "main",
+                    MAIN,
                 ),
             ],
         ),
@@ -108,7 +109,7 @@ async def test_all_entities(
                     "cb958955-b015-498c-9e62-fc0c51abd054",
                     Capability.SWITCH_LEVEL,
                     Command.SET_LEVEL,
-                    "main",
+                    MAIN,
                     argument=[20, 0],
                 )
             ],
@@ -120,7 +121,7 @@ async def test_all_entities(
                     "cb958955-b015-498c-9e62-fc0c51abd054",
                     Capability.SWITCH_LEVEL,
                     Command.SET_LEVEL,
-                    "main",
+                    MAIN,
                     argument=[20, 3],
                 )
             ],
@@ -157,7 +158,7 @@ async def test_turn_on_light(
                     "cb958955-b015-498c-9e62-fc0c51abd054",
                     Capability.SWITCH,
                     Command.OFF,
-                    "main",
+                    MAIN,
                 )
             ],
         ),
@@ -168,7 +169,7 @@ async def test_turn_on_light(
                     "cb958955-b015-498c-9e62-fc0c51abd054",
                     Capability.SWITCH_LEVEL,
                     Command.SET_LEVEL,
-                    "main",
+                    MAIN,
                     argument=[0, 3],
                 )
             ],

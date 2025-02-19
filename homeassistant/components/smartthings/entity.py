@@ -61,7 +61,7 @@ class SmartThingsEntity(Entity):
             self.async_on_remove(
                 self.client.add_device_event_listener(
                     self.device.device.device_id,
-                    "main",
+                    MAIN,
                     capability,
                     self._update_handler,
                 )
