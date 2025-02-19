@@ -74,7 +74,7 @@ RPC_NEW_SWITCHES = {
         is_on=lambda status: bool(status["value"]),
         method_on="Boolean.Set",
         method_off="Boolean.Set",
-        method_params_fn=lambda id, _: {"id": id},
+        method_params_fn=lambda id, value: {"id": id, "value": value},
     ),
     "script": RpcSwitchDescription(
         key="script",
@@ -82,7 +82,7 @@ RPC_NEW_SWITCHES = {
         is_on=lambda status: bool(status["running"]),
         method_on="Script.Start",
         method_off="Script.Stop",
-        method_params_fn=lambda id, value: {"id": id, "value": value},
+        method_params_fn=lambda id, _: {"id": id},
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.CONFIG,
     ),
