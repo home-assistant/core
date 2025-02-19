@@ -518,9 +518,9 @@ class _ScriptRun:
                         trace_set_result(enabled=False)
                         return
 
-                handler = SCRIPT_STEPS[action]
+                handler = f"_async_step_{action}"
                 try:
-                    await handler(self)
+                    await getattr(self, handler)()
                 except Exception as ex:  # noqa: BLE001
                     self._handle_exception(
                         ex, continue_on_error, self._log_exceptions or log_exceptions
@@ -639,7 +639,7 @@ class _ScriptRun:
     ### Sequence actions ###
 
     @async_trace_path("parallel")
-    async def async_step_parallel(self) -> None:
+    async def _async_step_parallel(self) -> None:
         """Run a sequence in parallel."""
         scripts = await self._script._async_get_parallel_scripts(self._step)  # noqa: SLF001
 
@@ -658,7 +658,7 @@ class _ScriptRun:
                 raise result
 
     @async_trace_path("sequence")
-    async def async_step_sequence(self) -> None:
+    async def _async_step_sequence(self) -> None:
         """Run a sequence."""
         sequence = await self._script._async_get_sequence_script(self._step)  # noqa: SLF001
         await self._async_run_script(sequence)
@@ -695,7 +695,7 @@ class _ScriptRun:
 
         return traced_test_conditions(self._hass, self._variables)
 
-    async def async_step_choose(self) -> None:
+    async def _async_step_choose(self) -> None:
         """Choose a sequence."""
         choose_data = await self._script._async_get_choose_data(self._step)  # noqa: SLF001
 
@@ -716,7 +716,7 @@ class _ScriptRun:
             with trace_path(["default"]):
                 await self._async_run_script(choose_data["default"])
 
-    async def async_step_condition(self) -> None:
+    async def _async_step_condition(self) -> None:
         """Test if condition is matching."""
         self._script.last_action = self._action.get(
             CONF_ALIAS, self._action[CONF_CONDITION]
@@ -736,7 +736,7 @@ class _ScriptRun:
         if not check:
             raise _ConditionFail
 
-    async def async_step_if(self) -> None:
+    async def _async_step_if(self) -> None:
         """If sequence."""
         if_data = await self._script._async_get_if_data(self._step)  # noqa: SLF001
 
@@ -761,7 +761,7 @@ class _ScriptRun:
                 await self._async_run_script(if_data["if_else"])
 
     @async_trace_path("repeat")
-    async def async_step_repeat(self) -> None:  # noqa: C901
+    async def _async_step_repeat(self) -> None:  # noqa: C901
         """Repeat a sequence."""
         description = self._action.get(CONF_ALIAS, "sequence")
         repeat = self._action[CONF_REPEAT]
@@ -934,7 +934,7 @@ class _ScriptRun:
 
     ### Stop actions ###
 
-    async def async_step_stop(self) -> None:
+    async def _async_step_stop(self) -> None:
         """Stop script execution."""
         stop = self._action[CONF_STOP]
         error = self._action.get(CONF_ERROR, False)
@@ -958,7 +958,7 @@ class _ScriptRun:
 
     ## Variable actions ##
 
-    async def async_step_variables(self) -> None:
+    async def _async_step_variables(self) -> None:
         """Set a variable value."""
         self._step_log("setting variables")
         self._variables = self._action[CONF_VARIABLES].async_render(
@@ -967,7 +967,7 @@ class _ScriptRun:
 
     ## External actions ##
 
-    async def async_step_call_service(self) -> None:
+    async def _async_step_call_service(self) -> None:
         """Call the service specified in the action."""
         self._step_log("call service")
 
@@ -1012,14 +1012,14 @@ class _ScriptRun:
         if response_variable:
             self._variables[response_variable] = response_data
 
-    async def async_step_device(self) -> None:
+    async def _async_step_device(self) -> None:
         """Perform the device automation specified in the action."""
         self._step_log("device automation")
         await device_action.async_call_action_from_config(
             self._hass, self._action, self._variables, self._context
         )
 
-    async def async_step_event(self) -> None:
+    async def _async_step_event(self) -> None:
         """Fire an event."""
         self._step_log(self._action.get(CONF_ALIAS, self._action[CONF_EVENT]))
         event_data = {}
@@ -1041,7 +1041,7 @@ class _ScriptRun:
             self._action[CONF_EVENT], event_data, context=self._context
         )
 
-    async def async_step_scene(self) -> None:
+    async def _async_step_scene(self) -> None:
         """Activate the scene specified in the action."""
         self._step_log("activate scene")
         trace_set_result(scene=self._action[CONF_SCENE])
@@ -1116,7 +1116,7 @@ class _ScriptRun:
             )
             raise _AbortScript from ex
 
-    async def async_step_delay(self) -> None:
+    async def _async_step_delay(self) -> None:
         """Handle delay."""
         delay_delta = self._get_pos_time_period_template(CONF_DELAY)
 
@@ -1183,7 +1183,7 @@ class _ScriptRun:
         else:
             wait_var["remaining"] = None
 
-    async def async_step_wait_for_trigger(self) -> None:
+    async def _async_step_wait_for_trigger(self) -> None:
         """Wait for a trigger event."""
         timeout = self._get_timeout_seconds_from_action()
 
@@ -1235,7 +1235,7 @@ class _ScriptRun:
             futures, timeout_handle, timeout_future, remove_triggers
         )
 
-    async def async_step_wait_template(self) -> None:
+    async def _async_step_wait_template(self) -> None:
         """Handle a wait template."""
         timeout = self._get_timeout_seconds_from_action()
         self._step_log("wait template", timeout)
@@ -1281,7 +1281,7 @@ class _ScriptRun:
 
     ## Conversation actions ##
 
-    async def async_step_set_conversation_response(self) -> None:
+    async def _async_step_set_conversation_response(self) -> None:
         """Set conversation response."""
         self._step_log("setting conversation response")
         resp: template.Template | None = self._action[CONF_SET_CONVERSATION_RESPONSE]
@@ -1292,26 +1292,6 @@ class _ScriptRun:
                 variables=self._variables, parse_result=False
             )
         trace_set_result(conversation_response=self._conversation_response)
-
-
-SCRIPT_STEPS = {
-    cv.SCRIPT_ACTION_ACTIVATE_SCENE: _ScriptRun.async_step_scene,
-    cv.SCRIPT_ACTION_CALL_SERVICE: _ScriptRun.async_step_call_service,
-    cv.SCRIPT_ACTION_CHECK_CONDITION: _ScriptRun.async_step_condition,
-    cv.SCRIPT_ACTION_CHOOSE: _ScriptRun.async_step_choose,
-    cv.SCRIPT_ACTION_DELAY: _ScriptRun.async_step_delay,
-    cv.SCRIPT_ACTION_DEVICE_AUTOMATION: _ScriptRun.async_step_device,
-    cv.SCRIPT_ACTION_FIRE_EVENT: _ScriptRun.async_step_event,
-    cv.SCRIPT_ACTION_IF: _ScriptRun.async_step_if,
-    cv.SCRIPT_ACTION_PARALLEL: _ScriptRun.async_step_parallel,
-    cv.SCRIPT_ACTION_REPEAT: _ScriptRun.async_step_repeat,
-    cv.SCRIPT_ACTION_SEQUENCE: _ScriptRun.async_step_sequence,
-    cv.SCRIPT_ACTION_SET_CONVERSATION_RESPONSE: _ScriptRun.async_step_set_conversation_response,
-    cv.SCRIPT_ACTION_STOP: _ScriptRun.async_step_stop,
-    cv.SCRIPT_ACTION_VARIABLES: _ScriptRun.async_step_variables,
-    cv.SCRIPT_ACTION_WAIT_FOR_TRIGGER: _ScriptRun.async_step_wait_for_trigger,
-    cv.SCRIPT_ACTION_WAIT_TEMPLATE: _ScriptRun.async_step_wait_template,
-}
 
 
 class _QueuedScriptRun(_ScriptRun):
