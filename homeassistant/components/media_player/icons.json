@@ -32,6 +32,9 @@
     }
   },
   "services": {
+    "browse_media": {
+      "service": "mdi:folder-search"
+    },
     "clear_playlist": {
       "service": "mdi:playlist-remove"
     },

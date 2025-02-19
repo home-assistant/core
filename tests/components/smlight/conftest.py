@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pysmlight.exceptions import SmlightAuthError
 from pysmlight.sse import sseClient
 from pysmlight.web import CmdWrapper, Firmware, Info, Sensors
 import pytest
@@ -81,9 +82,16 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
     ):
         api = smlight_mock.return_value
         api.host = MOCK_HOST
-        api.get_info.return_value = Info.from_dict(
-            load_json_object_fixture("info.json", DOMAIN)
-        )
+
+        def get_info_side_effect(*args, **kwargs) -> Info:
+            """Return the info."""
+            if api.check_auth_needed.return_value and not api.authenticate.called:
+                raise SmlightAuthError
+
+            return Info.from_dict(load_json_object_fixture("info.json", DOMAIN))
+
+        api.get_info.side_effect = get_info_side_effect
+
         api.get_sensors.return_value = Sensors.from_dict(
             load_json_object_fixture("sensors.json", DOMAIN)
         )

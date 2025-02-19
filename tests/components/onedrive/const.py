@@ -3,12 +3,15 @@
 from html import escape
 from json import dumps
 
+from onedrive_personal_sdk.const import DriveState, DriveType
 from onedrive_personal_sdk.models.items import (
     AppRoot,
-    Contributor,
+    Drive,
+    DriveQuota,
     File,
     Folder,
     Hashes,
+    IdentitySet,
     ItemParentReference,
     User,
 )
@@ -31,7 +34,7 @@ BACKUP_METADATA = {
     "size": 34519040,
 }
 
-CONTRIBUTOR = Contributor(
+IDENTITY_SET = IdentitySet(
     user=User(
         display_name="John Doe",
         id="id",
@@ -47,7 +50,7 @@ MOCK_APPROOT = AppRoot(
     parent_reference=ItemParentReference(
         drive_id="mock_drive_id", id="id", path="path"
     ),
-    created_by=CONTRIBUTOR,
+    created_by=IDENTITY_SET,
 )
 
 MOCK_BACKUP_FOLDER = Folder(
@@ -58,7 +61,7 @@ MOCK_BACKUP_FOLDER = Folder(
     parent_reference=ItemParentReference(
         drive_id="mock_drive_id", id="id", path="path"
     ),
-    created_by=CONTRIBUTOR,
+    created_by=IDENTITY_SET,
 )
 
 MOCK_BACKUP_FILE = File(
@@ -73,7 +76,7 @@ MOCK_BACKUP_FILE = File(
     ),
     mime_type="application/x-tar",
     description="",
-    created_by=CONTRIBUTOR,
+    created_by=IDENTITY_SET,
 )
 
 MOCK_METADATA_FILE = File(
@@ -96,5 +99,20 @@ MOCK_METADATA_FILE = File(
             }
         )
     ),
-    created_by=CONTRIBUTOR,
+    created_by=IDENTITY_SET,
+)
+
+
+MOCK_DRIVE = Drive(
+    id="mock_drive_id",
+    name="My Drive",
+    drive_type=DriveType.PERSONAL,
+    owner=IDENTITY_SET,
+    quota=DriveQuota(
+        deleted=5,
+        remaining=805306368,
+        state=DriveState.NEARING,
+        total=5368709120,
+        used=4250000000,
+    ),
 )

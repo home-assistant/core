@@ -12,7 +12,7 @@ from bimmer_connected.vehicle.doors_windows import LockState
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN as BMW_DOMAIN, BMWConfigEntry
 from .coordinator import BMWDataUpdateCoordinator
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BMWConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the MyBMW lock from config entry."""
     coordinator = config_entry.runtime_data
