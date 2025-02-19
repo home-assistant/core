@@ -1,6 +1,7 @@
 """Makes requests to the state server and stores the resulting data so that the buttons can access it."""
 
 import asyncio
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
@@ -13,6 +14,15 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import POLLING_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class HomeLinkData:
+    """Class for HomeLink integration runtime data."""
+
+    provider: Provider
+    coordinator: DataUpdateCoordinator
+    last_update_id: str | None
 
 
 class HomelinkCoordinator(DataUpdateCoordinator):

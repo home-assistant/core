@@ -28,8 +28,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up homelink from a config entry."""
-    coordinator = config_entry.runtime_data["coordinator"]
-    provider = config_entry.runtime_data["provider"]
+    coordinator = config_entry.runtime_data.coordinator
+    provider = config_entry.runtime_data.provider
 
     await provider.enable()
 
