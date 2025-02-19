@@ -59,6 +59,14 @@ async def async_setup_entry(
             SmartTubReminder(controller.coordinator, spa, reminder)
             for reminder in controller.coordinator.data[spa.id][ATTR_REMINDERS].values()
         )
+        for sensor in controller.coordinator.data[spa.id][ATTR_STATUS].sensors:
+            name = sensor.name.strip("{}")
+            if name.startswith("cover-"):
+                entities.append(SmartTubCoverSensor(controller.coordinator, spa, sensor))
+            else:
+                # use generic sensor class for any unrecognized sensors
+                entities.append(SmartTubExternalSensor(controller.coordinator, spa, sensor))
+
 
     async_add_entities(entities)
 
@@ -190,20 +198,19 @@ class SmartTubExternalSensor(SmartTubEntity):
         super().__init__(coordinator, spa, self._human_readable_name(sensor))
     
     @staticmethod
-    def _human_readable_name(self, sensor):
+    def _human_readable_name(sensor):
         return ' '.join(word.capitalize() for word in sensor.name.strip('{}').split('-'))
     
 
 class SmartTubCoverSensor(SmartTubExternalSensor):
     _attr_device_class = BinarySensorDeviceClass.OPENING
 
-    def __init__(self, spa, sensor: SpaSensor):
-        self.spa = spa
-        self.sensor = sensor
+    def __init__(self, coordinator, spa, sensor: SpaSensor):
+        super().__init__(coordinator, spa, sensor)
     
     @property
     def is_on(self) -> bool:
-        """Return true if an error is signaled."""
+        """Return False if the cover is closed, True if open."""
         # magnet is True when the cover is closed, False when open
-        # device class OPENING wants True for open, False for closed
+        # device class OPENING wants True to mean open, False to mean closed
         return not self.sensor.magnet

@@ -176,19 +176,3 @@ class SmartTubSecondaryFiltrationCycle(SmartTubBuiltinSensor):
         ]
         await self.cycle.set_mode(mode)
         await self.coordinator.async_request_refresh()
-
-
-class SmartTubExternalSensor(SmartTubEntity):
-    """Class for additional BLE wireless sensors sold separately."""
-
-    def __init__(self, coordinator, spa, sensor: smarttub.SmartTubSensor):
-        super().__init__(coordinator, spa, self._human_readable_name(sensor))
-    
-    @staticmethod
-    def _human_readable_name(self, sensor):
-        return ' '.join(word.capitalize() for word in sensor.name.strip('{}').split('-'))
-    
-class SmartTubCoverSensor(SmartTubExternalSensor):
-    def __init__(self, spa, sensor: smarttub.SmartTubCoverSensor):
-        self.spa = spa
-        self.sensor = sensor
