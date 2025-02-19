@@ -100,7 +100,7 @@ PyTransportNSW==0.1.1
 PyTurboJPEG==1.7.5
 
 # homeassistant.components.vicare
-PyViCare==2.43.0
+PyViCare==2.43.1
 
 # homeassistant.components.xiaomi_aqara
 PyXiaomiGateway==0.14.3
@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.0.2
+aioesphomeapi==29.1.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -1103,7 +1103,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.21.1
+habluetooth==3.22.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.92.0
@@ -1559,7 +1559,7 @@ omnilogic==0.4.5
 ondilo==0.5.0
 
 # homeassistant.components.onedrive
-onedrive-personal-sdk==0.0.10
+onedrive-personal-sdk==0.0.11
 
 # homeassistant.components.onvif
 onvif-zeep-async==3.2.5
@@ -2259,7 +2259,7 @@ pyrituals==0.0.6
 pyroute2==0.7.5
 
 # homeassistant.components.rympro
-pyrympro==0.0.8
+pyrympro==0.0.9
 
 # homeassistant.components.sabnzbd
 pysabnzbd==1.1.1
@@ -3076,7 +3076,7 @@ xbox-webapi==2.1.0
 xiaomi-ble==0.33.0
 
 # homeassistant.components.knx
-xknx==3.5.0
+xknx==3.6.0
 
 # homeassistant.components.knx
 xknxproject==3.8.1
@@ -3131,7 +3131,7 @@ zamg==0.3.6
 zengge==0.2
 
 # homeassistant.components.zeroconf
-zeroconf==0.144.3
+zeroconf==0.145.1
 
 # homeassistant.components.zeversolar
 zeversolar==0.3.2

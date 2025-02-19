@@ -548,7 +548,7 @@
     },
     "cancel_quest": {
       "name": "Cancel a pending quest",
-      "description": "Cancels a quest that has not yet startet. All accepted and pending invitations will be canceled and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
+      "description": "Cancels a quest that has not yet started. All accepted and pending invitations will be canceled and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
