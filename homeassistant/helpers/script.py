@@ -614,107 +614,6 @@ class _ScriptRun:
             level=level,
         )
 
-    def _get_pos_time_period_template(self, key: str) -> timedelta:
-        try:
-            return cv.positive_time_period(  # type: ignore[no-any-return]
-                template.render_complex(self._action[key], self._variables)
-            )
-        except (exceptions.TemplateError, vol.Invalid) as ex:
-            self._log(
-                "Error rendering %s %s template: %s",
-                self._script.name,
-                key,
-                ex,
-                level=logging.ERROR,
-            )
-            raise _AbortScript from ex
-
-    async def _async_delay_step(self) -> None:
-        """Handle delay."""
-        delay_delta = self._get_pos_time_period_template(CONF_DELAY)
-
-        self._step_log(f"delay {delay_delta}")
-
-        delay = delay_delta.total_seconds()
-        self._changed()
-        if not delay:
-            # Handle an empty delay
-            trace_set_result(delay=delay, done=True)
-            return
-
-        trace_set_result(delay=delay, done=False)
-        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
-            delay
-        )
-
-        try:
-            await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
-        finally:
-            if timeout_future.done():
-                trace_set_result(delay=delay, done=True)
-            else:
-                timeout_handle.cancel()
-
-    def _get_timeout_seconds_from_action(self) -> float | None:
-        """Get the timeout from the action."""
-        if CONF_TIMEOUT in self._action:
-            return self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
-        return None
-
-    async def _async_wait_template_step(self) -> None:
-        """Handle a wait template."""
-        timeout = self._get_timeout_seconds_from_action()
-        self._step_log("wait template", timeout)
-
-        self._variables["wait"] = {"remaining": timeout, "completed": False}
-        trace_set_result(wait=self._variables["wait"])
-
-        wait_template = self._action[CONF_WAIT_TEMPLATE]
-
-        # check if condition already okay
-        if condition.async_template(self._hass, wait_template, self._variables, False):
-            self._variables["wait"]["completed"] = True
-            self._changed()
-            return
-
-        if timeout == 0:
-            self._changed()
-            self._async_handle_timeout()
-            return
-
-        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
-            timeout
-        )
-        done = self._hass.loop.create_future()
-        futures.append(done)
-
-        @callback
-        def async_script_wait(
-            entity_id: str, from_s: State | None, to_s: State | None
-        ) -> None:
-            """Handle script after template condition is true."""
-            self._async_set_remaining_time_var(timeout_handle)
-            self._variables["wait"]["completed"] = True
-            _set_result_unless_done(done)
-
-        unsub = async_track_template(
-            self._hass, wait_template, async_script_wait, self._variables
-        )
-        self._changed()
-        await self._async_wait_with_optional_timeout(
-            futures, timeout_handle, timeout_future, unsub
-        )
-
-    def _async_set_remaining_time_var(
-        self, timeout_handle: asyncio.TimerHandle | None
-    ) -> None:
-        """Set the remaining time variable for a wait step."""
-        wait_var = self._variables["wait"]
-        if timeout_handle:
-            wait_var["remaining"] = timeout_handle.when() - self._hass.loop.time()
-        else:
-            wait_var["remaining"] = None
-
     async def _async_run_long_action[_T](
         self, long_task: asyncio.Task[_T]
     ) -> _T | None:
@@ -1078,6 +977,8 @@ class _ScriptRun:
             with trace_path("else"):
                 await self._async_run_script(if_data["if_else"])
 
+    ## Time-based steps ##
+
     @overload
     def _async_futures_with_timeout(
         self,
@@ -1123,6 +1024,88 @@ class _ScriptRun:
             )
             futures.append(timeout_future)
         return futures, timeout_handle, timeout_future
+
+    def _get_pos_time_period_template(self, key: str) -> timedelta:
+        try:
+            return cv.positive_time_period(  # type: ignore[no-any-return]
+                template.render_complex(self._action[key], self._variables)
+            )
+        except (exceptions.TemplateError, vol.Invalid) as ex:
+            self._log(
+                "Error rendering %s %s template: %s",
+                self._script.name,
+                key,
+                ex,
+                level=logging.ERROR,
+            )
+            raise _AbortScript from ex
+
+    async def _async_delay_step(self) -> None:
+        """Handle delay."""
+        delay_delta = self._get_pos_time_period_template(CONF_DELAY)
+
+        self._step_log(f"delay {delay_delta}")
+
+        delay = delay_delta.total_seconds()
+        self._changed()
+        if not delay:
+            # Handle an empty delay
+            trace_set_result(delay=delay, done=True)
+            return
+
+        trace_set_result(delay=delay, done=False)
+        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
+            delay
+        )
+
+        try:
+            await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
+        finally:
+            if timeout_future.done():
+                trace_set_result(delay=delay, done=True)
+            else:
+                timeout_handle.cancel()
+
+    def _get_timeout_seconds_from_action(self) -> float | None:
+        """Get the timeout from the action."""
+        if CONF_TIMEOUT in self._action:
+            return self._get_pos_time_period_template(CONF_TIMEOUT).total_seconds()
+        return None
+
+    def _async_handle_timeout(self) -> None:
+        """Handle timeout."""
+        self._variables["wait"]["remaining"] = 0.0
+        if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
+            self._log(_TIMEOUT_MSG)
+            trace_set_result(wait=self._variables["wait"], timeout=True)
+            raise _AbortScript from TimeoutError()
+
+    async def _async_wait_with_optional_timeout(
+        self,
+        futures: list[asyncio.Future[None]],
+        timeout_handle: asyncio.TimerHandle | None,
+        timeout_future: asyncio.Future[None] | None,
+        unsub: Callable[[], None],
+    ) -> None:
+        try:
+            await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
+            if timeout_future and timeout_future.done():
+                self._async_handle_timeout()
+        finally:
+            if timeout_future and not timeout_future.done() and timeout_handle:
+                timeout_handle.cancel()
+
+            unsub()
+
+    def _async_set_remaining_time_var(
+        self, timeout_handle: asyncio.TimerHandle | None
+    ) -> None:
+        """Set the remaining time variable for a wait step."""
+        wait_var = self._variables["wait"]
+        if timeout_handle:
+            wait_var["remaining"] = timeout_handle.when() - self._hass.loop.time()
+        else:
+            wait_var["remaining"] = None
 
     async def _async_wait_for_trigger_step(self) -> None:
         """Wait for a trigger event."""
@@ -1176,30 +1159,49 @@ class _ScriptRun:
             futures, timeout_handle, timeout_future, remove_triggers
         )
 
-    def _async_handle_timeout(self) -> None:
-        """Handle timeout."""
-        self._variables["wait"]["remaining"] = 0.0
-        if not self._action.get(CONF_CONTINUE_ON_TIMEOUT, True):
-            self._log(_TIMEOUT_MSG)
-            trace_set_result(wait=self._variables["wait"], timeout=True)
-            raise _AbortScript from TimeoutError()
+    async def _async_wait_template_step(self) -> None:
+        """Handle a wait template."""
+        timeout = self._get_timeout_seconds_from_action()
+        self._step_log("wait template", timeout)
 
-    async def _async_wait_with_optional_timeout(
-        self,
-        futures: list[asyncio.Future[None]],
-        timeout_handle: asyncio.TimerHandle | None,
-        timeout_future: asyncio.Future[None] | None,
-        unsub: Callable[[], None],
-    ) -> None:
-        try:
-            await asyncio.wait(futures, return_when=asyncio.FIRST_COMPLETED)
-            if timeout_future and timeout_future.done():
-                self._async_handle_timeout()
-        finally:
-            if timeout_future and not timeout_future.done() and timeout_handle:
-                timeout_handle.cancel()
+        self._variables["wait"] = {"remaining": timeout, "completed": False}
+        trace_set_result(wait=self._variables["wait"])
 
-            unsub()
+        wait_template = self._action[CONF_WAIT_TEMPLATE]
+
+        # check if condition already okay
+        if condition.async_template(self._hass, wait_template, self._variables, False):
+            self._variables["wait"]["completed"] = True
+            self._changed()
+            return
+
+        if timeout == 0:
+            self._changed()
+            self._async_handle_timeout()
+            return
+
+        futures, timeout_handle, timeout_future = self._async_futures_with_timeout(
+            timeout
+        )
+        done = self._hass.loop.create_future()
+        futures.append(done)
+
+        @callback
+        def async_script_wait(
+            entity_id: str, from_s: State | None, to_s: State | None
+        ) -> None:
+            """Handle script after template condition is true."""
+            self._async_set_remaining_time_var(timeout_handle)
+            self._variables["wait"]["completed"] = True
+            _set_result_unless_done(done)
+
+        unsub = async_track_template(
+            self._hass, wait_template, async_script_wait, self._variables
+        )
+        self._changed()
+        await self._async_wait_with_optional_timeout(
+            futures, timeout_handle, timeout_future, unsub
+        )
 
     async def _async_variables_step(self) -> None:
         """Set a variable value."""
