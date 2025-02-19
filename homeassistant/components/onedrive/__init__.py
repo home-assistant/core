@@ -137,4 +137,3 @@ async def _migrate_backup_files(client: OneDriveClient, backup_folder_id: str) -
                 data=ItemUpdate(description=""),
             )
             _LOGGER.debug("Migrated backup file %s", file.name)
-    files = await client.list_drive_items(backup_folder_id)
