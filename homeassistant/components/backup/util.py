@@ -30,7 +30,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
-from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import JsonObjectType, json_loads_object
 
 from .const import BUF_SIZE, LOGGER
@@ -608,14 +607,13 @@ def async_setup_config_entry_backup_agents_listeners(
     integration_domain: str,
     backup_agents_listeners: list[Callable[[], None]],
 ) -> None:
-    """Set up backup listeners for a config entry.
+    """Call backup agents listeners when a config entry is loaded or unloaded.
 
-    Integrations can't call the backup agents listeners from the integration's `async_setup_entry`, because the config entry's state is not changed to `ConfigEntryState.LOADED` until after `async_setup_entry` return. This helper listens to config entry state changes, and calls the listeners when a config entry changes to or from state `ConfigEntryState.LOADED`.
+    Integrations can't call the backup agents listeners from the integration's `async_setup_entry`,
+    because the config entry's state is not changed to `ConfigEntryState.LOADED` until after `async_setup_entry` return.
+    This helper listens to config entry state changes,
+    and calls the listeners when a config entry changes to or from state `ConfigEntryState.LOADED`.
     """
-
-    def async_notify_backup_listeners(hass: HomeAssistant) -> None:
-        for listener in hass.data.get(hass_key, []):
-            listener()
 
     @callback
     def async_on_config_entry_changed(
@@ -630,7 +628,8 @@ def async_setup_config_entry_backup_agents_listeners(
             and old_state is not ConfigEntryState.LOADED
         ):
             return
-        async_notify_backup_listeners(hass)
+        for listener in backup_agents_listeners:
+            listener()
 
     async_dispatcher_connect(
         hass,

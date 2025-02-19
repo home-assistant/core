@@ -15,7 +15,9 @@ from onedrive_personal_sdk.exceptions import (
 )
 from onedrive_personal_sdk.models.items import ItemUpdate
 
-from homeassistant.components.backup import async_setup_config_entry_backup_listeners
+from homeassistant.components.backup import (
+    async_setup_config_entry_backup_agents_listeners,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
@@ -25,6 +27,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .coordinator import (
@@ -37,6 +40,14 @@ PLATFORMS = [Platform.SENSOR]
 
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the OneDrive component."""
+    async_setup_config_entry_backup_agents_listeners(
+        hass, DOMAIN, hass.data.get(DATA_BACKUP_AGENT_LISTENERS, [])
+    )
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
@@ -98,7 +109,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
         ) from err
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    async_setup_config_entry_backup_listeners(hass, DOMAIN, DATA_BACKUP_AGENT_LISTENERS)
 
     return True
 

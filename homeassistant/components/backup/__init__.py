@@ -39,7 +39,7 @@ from .manager import (
 )
 from .models import AddonInfo, AgentBackup, BackupNotFound, Folder
 from .util import (
-    async_setup_config_entry_backup_listeners,
+    async_setup_config_entry_backup_agents_listeners,
     suggested_filename,
     suggested_filename_from_name_date,
 )
@@ -70,7 +70,7 @@ __all__ = [
     "RestoreBackupState",
     "WrittenBackup",
     "async_get_manager",
-    "async_setup_config_entry_backup_listeners",
+    "async_setup_config_entry_backup_agents_listeners",
     "suggested_filename",
     "suggested_filename_from_name_date",
 ]
