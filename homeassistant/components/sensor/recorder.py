@@ -54,7 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 
 DEFAULT_STATISTICS = {
     SensorStateClass.MEASUREMENT: {"mean", "min", "max"},
-    SensorStateClass.MEASUREMENT_CIRCULAR: {"circular_mean"},
+    SensorStateClass.MEASUREMENT_ANGLE: {"circular_mean"},
     SensorStateClass.TOTAL: {"sum"},
     SensorStateClass.TOTAL_INCREASING: {"sum"},
 }
