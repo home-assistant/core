@@ -7,42 +7,16 @@ import re
 
 import yarl
 
-# RFC6890 - IP addresses of loopback interfaces
-IPV6_IPV4_LOOPBACK = ip_network("::ffff:127.0.0.0/104")
-
-LOOPBACK_NETWORKS = (
-    ip_network("127.0.0.0/8"),
-    ip_network("::1/128"),
-    IPV6_IPV4_LOOPBACK,
-)
-
-# RFC6890 - Address allocation for Private Internets
-PRIVATE_NETWORKS = (
-    ip_network("10.0.0.0/8"),
-    ip_network("172.16.0.0/12"),
-    ip_network("192.168.0.0/16"),
-    ip_network("fd00::/8"),
-    ip_network("::ffff:10.0.0.0/104"),
-    ip_network("::ffff:172.16.0.0/108"),
-    ip_network("::ffff:192.168.0.0/112"),
-)
-
-# RFC6890 - Link local ranges
-LINK_LOCAL_NETWORKS = (
-    ip_network("169.254.0.0/16"),
-    ip_network("fe80::/10"),
-    ip_network("::ffff:169.254.0.0/112"),
-)
-
 
 def is_loopback(address: IPv4Address | IPv6Address) -> bool:
     """Check if an address is a loopback address."""
-    return address.is_loopback or address in IPV6_IPV4_LOOPBACK
+    # the ::ffff: check is a workaround for python/cpython#117566
+    return address.is_loopback or address in ip_network("::ffff:127.0.0.0/104")
 
 
 def is_private(address: IPv4Address | IPv6Address) -> bool:
     """Check if an address is a unique local non-loopback address."""
-    return any(address in network for network in PRIVATE_NETWORKS)
+    return address.is_private and not is_loopback(address) and not address.is_link_local
 
 
 def is_link_local(address: IPv4Address | IPv6Address) -> bool:
