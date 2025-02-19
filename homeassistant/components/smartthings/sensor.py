@@ -156,7 +156,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.CARBON_DIOXIDE: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.CARBON_DIOXIDE,
-                name="Carbon Dioxide Measurement",
+                name="Carbon Dioxide",
                 native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO2,
                 state_class=SensorStateClass.MEASUREMENT,
@@ -177,7 +177,7 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.CARBON_MONOXIDE_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.CARBON_MONOXIDE_LEVEL,
-                name="Carbon Monoxide Measurement",
+                name="Carbon Monoxide Level",
                 native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
                 device_class=SensorDeviceClass.CO,
                 state_class=SensorStateClass.MEASUREMENT,
@@ -206,17 +206,16 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
-    # part of the proposed spec
-    #     Capability.dryer_mode: [
-    #         Map(
-    #             Attribute.dryer_mode,
-    #             "Dryer Mode",
-    #             None,
-    #             None,
-    #             None,
-    #             EntityCategory.DIAGNOSTIC,
-    #         )
-    #     ],
+    # part of the proposed spec, no fixtures
+    Capability.DRYER_MODE: {
+        Attribute.DRYER_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.DRYER_MODE,
+                name="Dryer Mode",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        ]
+    },
     Capability.DRYER_OPERATING_STATE: {
         Attribute.MACHINE_STATE: [
             SmartThingsSensorEntityDescription(
@@ -355,22 +354,24 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # part of the proposed spec
-    #     Capability.media_playback_repeat: [
-    #         Map(
-    #             Attribute.playback_repeat_mode,
-    #             "Media Playback Repeat",
-    #             None,
-    #             None,
-    #             None,
-    #             None,
-    #         )
-    #     ],
-    #     Capability.media_playback_shuffle: [
-    #         Map(
-    #             Attribute.playback_shuffle, "Media Playback Shuffle", None, None, None, None
-    #         )
-    #     ],
+    # part of the proposed spec, no fixtures
+    Capability.MEDIA_PLAYBACK_REPEAT: {
+        Attribute.PLAYBACK_REPEAT_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.PLAYBACK_REPEAT_MODE,
+                name="Media Playback Repeat",
+            )
+        ]
+    },
+    # part of the proposed spec, no fixtures
+    Capability.MEDIA_PLAYBACK_SHUFFLE: {
+        Attribute.PLAYBACK_SHUFFLE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.PLAYBACK_SHUFFLE,
+                name="Media Playback Shuffle",
+            )
+        ]
+    },
     Capability.MEDIA_PLAYBACK: {
         Attribute.PLAYBACK_STATUS: [
             SmartThingsSensorEntityDescription(
@@ -491,16 +492,15 @@ CAPABILITY_TO_SENSORS: dict[
         ]
     },
     # part of the proposed spec
-    #     Capability.refrigeration_setpoint: [
-    #         Map(
-    #             Attribute.refrigeration_setpoint,
-    #             "Refrigeration Setpoint",
-    #             None,
-    #             SensorDeviceClass.TEMPERATURE,
-    #             None,
-    #             None,
-    #         )
-    #     ],
+    Capability.REFRIGERATION_SETPOINT: {
+        Attribute.REFRIGERATION_SETPOINT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.REFRIGERATION_SETPOINT,
+                name="Refrigeration Setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+            )
+        ]
+    },
     Capability.RELATIVE_HUMIDITY_MEASUREMENT: {
         Attribute.HUMIDITY: [
             SmartThingsSensorEntityDescription(
