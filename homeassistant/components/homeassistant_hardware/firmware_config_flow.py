@@ -350,9 +350,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         assert self._device is not None
         assert self._hardware_name is not None
 
-        if not await self._probe_firmware_info(
-            probe_methods=(ApplicationType.GECKO_BOOTLOADER, ApplicationType.EZSP)
-        ):
+        if not await self._probe_firmware_info(probe_methods=(ApplicationType.EZSP,)):
             return self.async_abort(
                 reason="unsupported_firmware",
                 description_placeholders=self._get_translation_placeholders(),
@@ -476,9 +474,7 @@ class BaseFirmwareInstallFlow(ConfigEntryBaseFlow, ABC):
         """Confirm OTBR setup."""
         assert self._device is not None
 
-        if not await self._probe_firmware_info(
-            probe_methods=(ApplicationType.GECKO_BOOTLOADER, ApplicationType.SPINEL)
-        ):
+        if not await self._probe_firmware_info(probe_methods=(ApplicationType.SPINEL,)):
             return self.async_abort(
                 reason="unsupported_firmware",
                 description_placeholders=self._get_translation_placeholders(),
