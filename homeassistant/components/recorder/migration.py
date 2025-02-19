@@ -1994,16 +1994,24 @@ class _SchemaVersion48Migrator(_SchemaVersionMigrator, target_version=48):
 class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
     def _apply_update(self) -> None:
         """Version specific update method."""
+        for table in ("statistics", "statistics_short_term"):
+            _add_columns(
+                self.session_maker,
+                table,
+                [f"circular_mean {self.column_types.double_type}"],
+            )
+
         _add_columns(
             self.session_maker,
-            "statistics",
-            [f"circular_mean {self.column_types.double_type}"],
+            "statistics_meta",
+            ["has_circular_mean BOOLEAN"],
         )
-        _add_columns(
-            self.session_maker,
-            "statistics_short_term",
-            [f"circular_mean {self.column_types.double_type}"],
-        )
+
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            connection.execute(
+                text("UPDATE statistics_meta SET has_circular_mean = false")
+            )
 
 
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(

@@ -305,6 +305,7 @@ def mock_sensor_statistics():
                 "name": None,
                 "statistic_id": entity_id,
                 "unit_of_measurement": "dogs",
+                "has_circular_mean": False,
             },
             "stat": {"start": start},
         }
@@ -536,6 +537,7 @@ async def test_rename_entity_collision(
         "source": "test",
         "statistic_id": "sensor.test99",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     with session_scope(hass=hass) as session:
@@ -623,6 +625,7 @@ async def test_rename_entity_collision_states_meta_check_disabled(
         "source": "test",
         "statistic_id": "sensor.test99",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     with session_scope(hass=hass) as session:
@@ -736,6 +739,7 @@ async def test_import_statistics(
         "source": source,
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     import_fn(hass, external_metadata, (external_statistics1, external_statistics2))
@@ -772,6 +776,7 @@ async def test_import_statistics(
             "source": source,
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
+            "has_circular_mean": False,
         }
     ]
     metadata = get_metadata(hass, statistic_ids={statistic_id})
@@ -785,6 +790,7 @@ async def test_import_statistics(
                 "source": source,
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
+                "has_circular_mean": False,
             },
         )
     }
@@ -862,6 +868,7 @@ async def test_import_statistics(
             "source": source,
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
+            "has_circular_mean": False,
         }
     ]
     metadata = get_metadata(hass, statistic_ids={statistic_id})
@@ -875,6 +882,7 @@ async def test_import_statistics(
                 "source": source,
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
+                "has_circular_mean": False,
             },
         )
     }
@@ -963,6 +971,7 @@ async def test_external_statistics_errors(
         "source": "test",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     # Attempt to insert statistics for an entity
@@ -1051,6 +1060,7 @@ async def test_import_statistics_errors(
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     # Attempt to insert statistics for an external source
@@ -1180,6 +1190,7 @@ async def test_daily_statistics_sum(
         "source": "test",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     async_add_external_statistics(hass, external_metadata, external_statistics)
@@ -1350,6 +1361,7 @@ async def test_weekly_statistics_mean(
         "source": "test",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     async_add_external_statistics(hass, external_metadata, external_statistics)
@@ -1495,6 +1507,7 @@ async def test_weekly_statistics_sum(
         "source": "test",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     async_add_external_statistics(hass, external_metadata, external_statistics)
@@ -1675,6 +1688,7 @@ async def test_monthly_statistics_sum(
         "source": "test",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     async_add_external_statistics(hass, external_metadata, external_statistics)
@@ -1981,6 +1995,7 @@ async def test_change(
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     async_import_statistics(hass, external_metadata, external_statistics)
@@ -2320,6 +2335,7 @@ async def test_change_with_none(
         "source": "test",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     async_add_external_statistics(hass, external_metadata, external_statistics)

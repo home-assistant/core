@@ -31,6 +31,7 @@ QUERY_STATISTIC_META = (
     StatisticsMeta.has_mean,
     StatisticsMeta.has_sum,
     StatisticsMeta.name,
+    StatisticsMeta.has_circular_mean,
 )
 
 INDEX_ID: Final = 0
@@ -40,11 +41,12 @@ INDEX_UNIT_OF_MEASUREMENT: Final = 3
 INDEX_HAS_MEAN: Final = 4
 INDEX_HAS_SUM: Final = 5
 INDEX_NAME: Final = 6
+INDEX_HAS_CIRCULAR_MEAN: Final = 7
 
 
 def _generate_get_metadata_stmt(
     statistic_ids: set[str] | None = None,
-    statistic_type: Literal["mean", "sum"] | None = None,
+    statistic_type: Literal["mean", "sum", "circular_mean"] | None = None,
     statistic_source: str | None = None,
 ) -> StatementLambdaElement:
     """Generate a statement to fetch metadata."""
@@ -57,6 +59,8 @@ def _generate_get_metadata_stmt(
         stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
     elif statistic_type == "sum":
         stmt += lambda q: q.where(StatisticsMeta.has_sum == true())
+    elif statistic_type == "circular_mean":
+        stmt += lambda q: q.where(StatisticsMeta.has_circular_mean == true())
     return stmt
 
 
@@ -113,6 +117,7 @@ class StatisticsMetaManager:
                     "source": row[INDEX_SOURCE],
                     "statistic_id": statistic_id,
                     "unit_of_measurement": row[INDEX_UNIT_OF_MEASUREMENT],
+                    "has_circular_mean": row[INDEX_HAS_CIRCULAR_MEAN],
                 }
                 id_meta = (row_id, meta)
                 results[statistic_id] = id_meta
@@ -164,6 +169,7 @@ class StatisticsMetaManager:
             or old_metadata["name"] != new_metadata["name"]
             or old_metadata["unit_of_measurement"]
             != new_metadata["unit_of_measurement"]
+            or old_metadata["has_circular_mean"] != new_metadata["has_circular_mean"]
         ):
             return None, metadata_id
 
@@ -174,6 +180,7 @@ class StatisticsMetaManager:
                 StatisticsMeta.has_sum: new_metadata["has_sum"],
                 StatisticsMeta.name: new_metadata["name"],
                 StatisticsMeta.unit_of_measurement: new_metadata["unit_of_measurement"],
+                StatisticsMeta.has_circular_mean: new_metadata["has_circular_mean"],
             },
             synchronize_session=False,
         )

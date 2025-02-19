@@ -564,6 +564,7 @@ def compile_statistics(  # noqa: C901
             "source": RECORDER_DOMAIN,
             "statistic_id": entity_id,
             "unit_of_measurement": statistics_unit,
+            "has_circular_mean": "circular_mean" in wanted_statistics[entity_id],
         }
 
         # Make calculations
@@ -726,6 +727,7 @@ def list_statistic_ids(
             "source": RECORDER_DOMAIN,
             "statistic_id": entity_id,
             "unit_of_measurement": attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+            "has_circular_mean": "circular_mean" in provided_statistics,
         }
 
     return result

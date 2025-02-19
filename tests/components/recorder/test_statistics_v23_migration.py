@@ -91,6 +91,7 @@ async def test_delete_duplicates(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
     external_energy_statistics_2 = (
         {
@@ -131,6 +132,7 @@ async def test_delete_duplicates(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
     external_co2_statistics = (
         {
@@ -161,6 +163,7 @@ async def test_delete_duplicates(
         "source": "test",
         "statistic_id": "test:fossil_percentage",
         "unit_of_measurement": "%",
+        "has_circular_mean": False,
     }
 
     # Create some duplicated statistics with schema version 23
@@ -279,6 +282,7 @@ async def test_delete_duplicates_many(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
     external_energy_statistics_2 = (
         {
@@ -319,6 +323,7 @@ async def test_delete_duplicates_many(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
     external_co2_statistics = (
         {
@@ -349,6 +354,7 @@ async def test_delete_duplicates_many(
         "source": "test",
         "statistic_id": "test:fossil_percentage",
         "unit_of_measurement": "%",
+        "has_circular_mean": False,
     }
 
     # Create some duplicated statistics with schema version 23
@@ -475,6 +481,7 @@ async def test_delete_duplicates_non_identical(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
     external_energy_statistics_2 = (
         {
@@ -515,6 +522,7 @@ async def test_delete_duplicates_non_identical(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     # Create some duplicated statistics with schema version 23
@@ -635,6 +643,7 @@ async def test_delete_duplicates_short_term(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
     statistic_row = {
         "start": period4,

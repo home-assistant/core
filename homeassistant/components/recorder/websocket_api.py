@@ -532,6 +532,7 @@ async def ws_adjust_sum_statistics(
             vol.Required("source"): str,
             vol.Required("statistic_id"): str,
             vol.Required("unit_of_measurement"): vol.Any(str, None),
+            vol.Required("has_circular_mean"): bool,
         },
         vol.Required("stats"): [
             {
@@ -542,6 +543,7 @@ async def ws_adjust_sum_statistics(
                 vol.Optional("last_reset"): vol.Any(cv.datetime, None),
                 vol.Optional("state"): vol.Any(float, int),
                 vol.Optional("sum"): vol.Any(float, int),
+                vol.Optional("circular_mean"): vol.Any(float, int),
             }
         ],
     }

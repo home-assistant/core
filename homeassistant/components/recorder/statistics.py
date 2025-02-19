@@ -869,6 +869,7 @@ def _statistic_by_id_from_metadata(
             "source": meta["source"],
             "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
             "unit_of_measurement": meta["unit_of_measurement"],
+            "has_circular_mean": meta["has_circular_mean"],
         }
         for _, meta in metadata.values()
     }
@@ -888,6 +889,7 @@ def _flatten_list_statistic_ids_metadata_result(
             "source": info["source"],
             "statistics_unit_of_measurement": info["unit_of_measurement"],
             "unit_class": info["unit_class"],
+            "has_circular_mean": info["has_circular_mean"],
         }
         for _id, info in result.items()
     ]
@@ -943,6 +945,7 @@ def list_statistic_ids(
                     "source": meta["source"],
                     "unit_class": UNIT_CLASSES.get(meta["unit_of_measurement"]),
                     "unit_of_measurement": meta["unit_of_measurement"],
+                    "has_circular_mean": meta["has_circular_mean"],
                 }
 
     # Return a list of statistic_id + metadata
@@ -1238,7 +1241,9 @@ def _get_max_mean_min_statistic_in_sub_period(
     if "min" in types:
         columns = columns.add_columns(func.min(table.min))
     if "circular_mean" in types:
-        columns = columns.add_columns(query_circular_mean(table.circular_mean))
+        columns = columns.add_columns(
+            query_circular_mean(table.circular_mean).label("circular_mean")
+        )
 
     stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
         columns, start_time, end_time, table, metadata_id
@@ -1716,14 +1721,17 @@ def _extract_metadata_and_discard_impossible_columns(
     metadata_ids = []
     has_mean = False
     has_sum = False
+    has_circular_mean = False
     for metadata_id, stats_metadata in metadata.values():
         metadata_ids.append(metadata_id)
         has_mean |= stats_metadata["has_mean"]
         has_sum |= stats_metadata["has_sum"]
+        has_circular_mean |= stats_metadata["has_circular_mean"]
     if not has_mean:
         types.discard("mean")
         types.discard("min")
         types.discard("max")
+    if not has_circular_mean:
         types.discard("circular_mean")
     if not has_sum:
         types.discard("sum")

@@ -312,6 +312,7 @@ async def test_statistic_during_period(
         "source": "recorder",
         "statistic_id": "sensor.test",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     recorder.get_instance(hass).async_import_statistics(
@@ -351,6 +352,7 @@ async def test_statistic_during_period(
         "mean": None,
         "min": None,
         "change": None,
+        "circular_mean": None,
     }
 
     # This should include imported_statistics_5min[:]
@@ -367,6 +369,7 @@ async def test_statistic_during_period(
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]),
         "min": min(stat["min"] for stat in imported_stats_5min[:]),
         "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
+        "circular_mean": None,
     }
 
     # This should also include imported_statistics_5min[:]
@@ -395,6 +398,7 @@ async def test_statistic_during_period(
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]),
         "min": min(stat["min"] for stat in imported_stats_5min[:]),
         "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
+        "circular_mean": None,
     }
 
     # This should also include imported_statistics_5min[:]
@@ -423,6 +427,7 @@ async def test_statistic_during_period(
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[:]),
         "min": min(stat["min"] for stat in imported_stats_5min[:]),
         "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"],
+        "circular_mean": None,
     }
 
     # This should include imported_statistics_5min[26:]
@@ -447,6 +452,7 @@ async def test_statistic_during_period(
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[26:]),
         "min": min(stat["min"] for stat in imported_stats_5min[26:]),
         "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[25]["sum"],
+        "circular_mean": None,
     }
 
     # This should also include imported_statistics_5min[26:]
@@ -470,6 +476,7 @@ async def test_statistic_during_period(
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[26:]),
         "min": min(stat["min"] for stat in imported_stats_5min[26:]),
         "change": imported_stats_5min[-1]["sum"] - imported_stats_5min[25]["sum"],
+        "circular_mean": None,
     }
 
     # This should include imported_statistics_5min[:26]
@@ -494,6 +501,7 @@ async def test_statistic_during_period(
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[:26]),
         "min": min(stat["min"] for stat in imported_stats_5min[:26]),
         "change": imported_stats_5min[25]["sum"] - 0,
+        "circular_mean": None,
     }
 
     # This should include imported_statistics_5min[26:32] (less than a full hour)
@@ -524,6 +532,7 @@ async def test_statistic_during_period(
         "mean": fmean(stat["mean"] for stat in imported_stats_5min[26:32]),
         "min": min(stat["min"] for stat in imported_stats_5min[26:32]),
         "change": imported_stats_5min[31]["sum"] - imported_stats_5min[25]["sum"],
+        "circular_mean": None,
     }
 
     # This should include imported_statistics[2:] + imported_statistics_5min[36:]
@@ -547,6 +556,7 @@ async def test_statistic_during_period(
         "min": min(stat["min"] for stat in imported_stats_5min[24 - offset :]),
         "change": imported_stats_5min[-1]["sum"]
         - imported_stats_5min[23 - offset]["sum"],
+        "circular_mean": None,
     }
 
     # This should also include imported_statistics[2:] + imported_statistics_5min[36:]
@@ -567,6 +577,7 @@ async def test_statistic_during_period(
         "min": min(stat["min"] for stat in imported_stats_5min[24 - offset :]),
         "change": imported_stats_5min[-1]["sum"]
         - imported_stats_5min[23 - offset]["sum"],
+        "circular_mean": None,
     }
 
     # This should include imported_statistics[2:3]
@@ -592,6 +603,7 @@ async def test_statistic_during_period(
         "min": min(stat["min"] for stat in imported_stats_5min[slice_start:slice_end]),
         "change": imported_stats_5min[slice_end - 1]["sum"]
         - imported_stats_5min[slice_start - 1]["sum"],
+        "circular_mean": None,
     }
 
     # Test we can get only selected types
@@ -625,6 +637,7 @@ async def test_statistic_during_period(
         "min": min(stat["min"] for stat in imported_stats_5min[:]) / 1000,
         "change": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"])
         / 1000,
+        "circular_mean": None,
     }
 
     # Test we can automatically convert units
@@ -648,6 +661,7 @@ async def test_statistic_during_period(
         "min": min(stat["min"] for stat in imported_stats_5min[:]) * 1000,
         "change": (imported_stats_5min[-1]["sum"] - imported_stats_5min[0]["sum"])
         * 1000,
+        "circular_mean": None,
     }
     with session_scope(hass=hass, read_only=True) as session:
         stats = get_latest_short_term_statistics_with_session(
@@ -709,6 +723,7 @@ async def test_statistic_during_period_hole(
         "source": "recorder",
         "statistic_id": "sensor.test",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     recorder.get_instance(hass).async_import_statistics(
@@ -732,6 +747,7 @@ async def test_statistic_during_period_hole(
         "mean": fmean(stat["mean"] for stat in imported_stats[:]),
         "min": min(stat["min"] for stat in imported_stats[:]),
         "change": imported_stats[-1]["sum"] - imported_stats[0]["sum"],
+        "circular_mean": None,
     }
 
     # This should also include imported_stats[:]
@@ -756,6 +772,7 @@ async def test_statistic_during_period_hole(
         "mean": fmean(stat["mean"] for stat in imported_stats[:]),
         "min": min(stat["min"] for stat in imported_stats[:]),
         "change": imported_stats[-1]["sum"] - imported_stats[0]["sum"],
+        "circular_mean": None,
     }
 
     # This should also include imported_stats[:]
@@ -778,6 +795,7 @@ async def test_statistic_during_period_hole(
         "mean": fmean(stat["mean"] for stat in imported_stats[:]),
         "min": min(stat["min"] for stat in imported_stats[:]),
         "change": imported_stats[-1]["sum"] - imported_stats[0]["sum"],
+        "circular_mean": None,
     }
 
     # This should include imported_stats[1:4]
@@ -802,6 +820,7 @@ async def test_statistic_during_period_hole(
         "mean": fmean(stat["mean"] for stat in imported_stats[1:4]),
         "min": min(stat["min"] for stat in imported_stats[1:4]),
         "change": imported_stats[3]["sum"] - imported_stats[1]["sum"],
+        "circular_mean": None,
     }
 
     # This should also include imported_stats[1:4]
@@ -826,6 +845,7 @@ async def test_statistic_during_period_hole(
         "mean": fmean(stat["mean"] for stat in imported_stats[1:4]),
         "min": min(stat["min"] for stat in imported_stats[1:4]),
         "change": imported_stats[3]["sum"] - imported_stats[1]["sum"],
+        "circular_mean": None,
     }
 
 
@@ -902,6 +922,7 @@ async def test_statistic_during_period_partial_overlap(
         "source": "recorder",
         "statistic_id": statId,
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     recorder.get_instance(hass).async_import_statistics(
@@ -937,6 +958,7 @@ async def test_statistic_during_period_partial_overlap(
         "max": 390,
         "min": 0,
         "mean": 195,
+        "circular_mean": None,
     }
 
     async def assert_stat_during_fixed(client, start_time, end_time, expect):
@@ -1795,6 +1817,7 @@ async def test_list_statistic_ids(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
 
@@ -1817,6 +1840,7 @@ async def test_list_statistic_ids(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
 
@@ -1842,6 +1866,7 @@ async def test_list_statistic_ids(
                 "source": "recorder",
                 "statistics_unit_of_measurement": statistics_unit,
                 "unit_class": unit_class,
+                "has_circular_mean": False,
             }
         ]
     else:
@@ -1863,6 +1888,7 @@ async def test_list_statistic_ids(
                 "source": "recorder",
                 "statistics_unit_of_measurement": statistics_unit,
                 "unit_class": unit_class,
+                "has_circular_mean": False,
             }
         ]
     else:
@@ -1970,6 +1996,7 @@ async def test_list_statistic_ids_unit_change(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
 
@@ -1991,6 +2018,7 @@ async def test_list_statistic_ids_unit_change(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
 
@@ -2212,6 +2240,7 @@ async def test_update_statistics_metadata(
             "source": "recorder",
             "statistics_unit_of_measurement": "kW",
             "unit_class": "power",
+            "has_circular_mean": False,
         }
     ]
 
@@ -2239,6 +2268,7 @@ async def test_update_statistics_metadata(
             "source": "recorder",
             "statistics_unit_of_measurement": new_unit,
             "unit_class": new_unit_class,
+            "has_circular_mean": False,
         }
     ]
 
@@ -2328,6 +2358,7 @@ async def test_change_statistics_unit(
             "source": "recorder",
             "statistics_unit_of_measurement": "kW",
             "unit_class": "power",
+            "has_circular_mean": False,
         }
     ]
 
@@ -2379,6 +2410,7 @@ async def test_change_statistics_unit(
             "source": "recorder",
             "statistics_unit_of_measurement": "W",
             "unit_class": "power",
+            "has_circular_mean": False,
         }
     ]
 
@@ -2432,6 +2464,7 @@ async def test_change_statistics_unit(
             "source": "recorder",
             "statistics_unit_of_measurement": "W",
             "unit_class": "power",
+            "has_circular_mean": False,
         }
     ]
 
@@ -2459,6 +2492,7 @@ async def test_change_statistics_unit_errors(
             "source": "recorder",
             "statistics_unit_of_measurement": "kW",
             "unit_class": "power",
+            "has_circular_mean": False,
         }
     ]
 
@@ -2775,6 +2809,7 @@ async def test_get_statistics_metadata(
         "source": "test",
         "statistic_id": "test:total_gas",
         "unit_of_measurement": unit,
+        "has_circular_mean": False,
     }
 
     async_add_external_statistics(
@@ -2800,6 +2835,7 @@ async def test_get_statistics_metadata(
             "source": "test",
             "statistics_unit_of_measurement": unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
 
@@ -2831,6 +2867,7 @@ async def test_get_statistics_metadata(
             "source": "recorder",
             "statistics_unit_of_measurement": attributes["unit_of_measurement"],
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
 
@@ -2858,6 +2895,7 @@ async def test_get_statistics_metadata(
             "source": "recorder",
             "statistics_unit_of_measurement": attributes["unit_of_measurement"],
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
 
@@ -2907,6 +2945,7 @@ async def test_import_statistics(
         "source": source,
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     await client.send_json_auto_id(
@@ -2953,6 +2992,7 @@ async def test_import_statistics(
             "source": source,
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
+            "has_circular_mean": False,
         }
     ]
     metadata = get_metadata(hass, statistic_ids={statistic_id})
@@ -2966,6 +3006,7 @@ async def test_import_statistics(
                 "source": source,
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
+                "has_circular_mean": False,
             },
         )
     }
@@ -3121,6 +3162,7 @@ async def test_adjust_sum_statistics_energy(
         "source": source,
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     await client.send_json_auto_id(
@@ -3171,6 +3213,7 @@ async def test_adjust_sum_statistics_energy(
             "source": source,
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
+            "has_circular_mean": False,
         }
     ]
     metadata = get_metadata(hass, statistic_ids={statistic_id})
@@ -3184,6 +3227,7 @@ async def test_adjust_sum_statistics_energy(
                 "source": source,
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "kWh",
+                "has_circular_mean": False,
             },
         )
     }
@@ -3314,6 +3358,7 @@ async def test_adjust_sum_statistics_gas(
         "source": source,
         "statistic_id": statistic_id,
         "unit_of_measurement": "m³",
+        "has_circular_mean": False,
     }
 
     await client.send_json_auto_id(
@@ -3364,6 +3409,7 @@ async def test_adjust_sum_statistics_gas(
             "source": source,
             "statistics_unit_of_measurement": "m³",
             "unit_class": "volume",
+            "has_circular_mean": False,
         }
     ]
     metadata = get_metadata(hass, statistic_ids={statistic_id})
@@ -3377,6 +3423,7 @@ async def test_adjust_sum_statistics_gas(
                 "source": source,
                 "statistic_id": statistic_id,
                 "unit_of_measurement": "m³",
+                "has_circular_mean": False,
             },
         )
     }
@@ -3524,6 +3571,7 @@ async def test_adjust_sum_statistics_errors(
         "source": source,
         "statistic_id": statistic_id,
         "unit_of_measurement": statistic_unit,
+        "has_circular_mean": False,
     }
 
     await client.send_json_auto_id(
@@ -3575,6 +3623,7 @@ async def test_adjust_sum_statistics_errors(
             "source": source,
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     metadata = get_metadata(hass, statistic_ids={statistic_id})
@@ -3588,6 +3637,7 @@ async def test_adjust_sum_statistics_errors(
                 "source": source,
                 "statistic_id": statistic_id,
                 "unit_of_measurement": state_unit,
+                "has_circular_mean": False,
             },
         )
     }
@@ -3684,6 +3734,7 @@ async def test_import_statistics_with_last_reset(
         "source": "test",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
+        "has_circular_mean": False,
     }
 
     async_add_external_statistics(

@@ -60,6 +60,7 @@ class StatisticMetaData(TypedDict):
     source: str
     statistic_id: str
     unit_of_measurement: str | None
+    has_circular_mean: bool
 
 
 class CalendarStatisticPeriod(TypedDict, total=False):
