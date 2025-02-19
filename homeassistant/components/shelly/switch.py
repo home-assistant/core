@@ -67,7 +67,7 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     method_params_fn: Callable[[int | None, bool], dict]
 
 
-RPC_NEW_SWITCHES = {
+RPC_SWITCHES = {
     "boolean": RpcSwitchDescription(
         key="boolean",
         sub_key="value",
@@ -190,7 +190,7 @@ def async_setup_rpc_entry(
         async_remove_shelly_entity(hass, "light", unique_id)
 
     async_setup_entry_rpc(
-        hass, config_entry, async_add_entities, RPC_NEW_SWITCHES, RpcNewSwitch
+        hass, config_entry, async_add_entities, RPC_SWITCHES, RpcSwitch
     )
 
     # the user can remove virtual components from the device configuration, so we need
@@ -327,7 +327,7 @@ class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
         await self.call_rpc("Switch.Set", {"id": self._id, "on": False})
 
 
-class RpcNewSwitch(ShellyRpcAttributeEntity, SwitchEntity):
+class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a switch on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
