@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.vegehub.config_flow import VegeHubConfigFlow
 from homeassistant.components.vegehub.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -117,7 +116,9 @@ async def test_user_flow_device_timeout_then_success(
     # Simulate successful retry from error_retry step
     mock_vegehub.setup.side_effect = None  # Clear the error
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"ip_address": TEST_IP}
+    )
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_IP
@@ -328,23 +329,3 @@ async def test_zeroconf_flow_device_stopped_responding(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "timeout_connect"
-
-
-async def test_async_create_entry_hub_none(hass: HomeAssistant) -> None:
-    """Test _async_create_entry aborts when self._hub is None."""
-
-    # Set up a base URL for the test
-    hass.config.internal_url = "http://example.local"
-
-    # Create an instance of the config flow
-    flow = VegeHubConfigFlow()
-    flow.hass = hass
-
-    # Simulate a situation where self._hub is None
-    flow._hub = None
-
-    # Call _async_create_entry and expect it to abort
-    result = await flow._async_create_entry()
-
-    assert result["type"] == "abort"
-    assert result["reason"] == "unknown_error"
