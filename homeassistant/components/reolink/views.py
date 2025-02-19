@@ -47,6 +47,7 @@ class PlaybackProxyView(HomeAssistantView):
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize a proxy view."""
         self.hass = hass
+        _LOGGER.error("TEST")
         self.session = async_get_clientsession(
             hass,
             verify_ssl=False,
@@ -85,7 +86,7 @@ class PlaybackProxyView(HomeAssistantView):
 
         if _LOGGER.isEnabledFor(logging.DEBUG):
             _LOGGER.debug(
-                "Opening VOD stream from %s: %s",
+                "Opening proxy VOD stream from %s: %s",
                 host.api.camera_name(ch),
                 host.api.hide_password(reolink_url),
             )
