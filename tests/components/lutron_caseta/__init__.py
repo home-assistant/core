@@ -1,5 +1,7 @@
 """Tests for the Lutron Caseta integration."""
 
+from collections.abc import Callable
+from typing import Any
 from unittest.mock import patch
 
 from homeassistant.components.lutron_caseta import DOMAIN
@@ -82,20 +84,6 @@ _LEAP_DEVICE_TYPES = {
         "PalladiomKeypad",
     ],
 }
-
-
-async def async_setup_integration(hass: HomeAssistant, mock_bridge) -> MockConfigEntry:
-    """Set up a mock bridge."""
-    mock_entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA)
-    mock_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.lutron_caseta.Smartbridge.create_tls"
-    ) as create_tls:
-        create_tls.return_value = mock_bridge(can_connect=True)
-        await hass.config_entries.async_setup(mock_entry.entry_id)
-        await hass.async_block_till_done()
-    return mock_entry
 
 
 class MockBridge:
@@ -320,3 +308,26 @@ class MockBridge:
     async def close(self):
         """Close the mock bridge connection."""
         self.is_currently_connected = False
+
+
+async def async_setup_integration(
+    hass: HomeAssistant, mock_bridge: MockBridge
+) -> MockConfigEntry:
+    """Set up a mock bridge."""
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=ENTRY_MOCK_DATA)
+    mock_entry.add_to_hass(hass)
+
+    def create_tls_factory(
+        *args: Any, on_connect_callback: Callable[[], None], **kwargs: Any
+    ) -> None:
+        """Return a mock bridge."""
+        on_connect_callback()
+        return mock_bridge(can_connect=True)
+
+    with patch(
+        "homeassistant.components.lutron_caseta.Smartbridge.create_tls",
+        create_tls_factory,
+    ):
+        await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+    return mock_entry
