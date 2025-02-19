@@ -189,9 +189,6 @@ def async_setup_rpc_entry(
         unique_id = f"{coordinator.mac}-switch:{id_}"
         async_remove_shelly_entity(hass, "light", unique_id)
 
-    coordinator = config_entry.runtime_data.rpc
-    assert coordinator
-
     async_setup_entry_rpc(
         hass, config_entry, async_add_entities, RPC_NEW_SWITCHES, RpcNewSwitch
     )
@@ -331,7 +328,7 @@ class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
 
 
 class RpcNewSwitch(ShellyRpcAttributeEntity, SwitchEntity):
-    """Entity that controls a virtual boolean component on RPC based Shelly devices."""
+    """Entity that controls a switch on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
     _attr_has_entity_name = True
