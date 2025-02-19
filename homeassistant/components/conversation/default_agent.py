@@ -1324,6 +1324,8 @@ class DefaultAgent(ConversationEntity):
     async def async_handle_intents(
         self,
         user_input: ConversationInput,
+        *,
+        intent_filter: Callable[[RecognizeResult], bool] | None = None,
     ) -> intent.IntentResponse | None:
         """Try to match sentence against registered intents and return response.
 
@@ -1331,7 +1333,9 @@ class DefaultAgent(ConversationEntity):
         Returns None if no match or a matching error occurred.
         """
         result = await self.async_recognize_intent(user_input, strict_intents_only=True)
-        if not isinstance(result, RecognizeResult):
+        if not isinstance(result, RecognizeResult) or (
+            intent_filter is not None and intent_filter(result)
+        ):
             # No error message on failed match
             return None
 
