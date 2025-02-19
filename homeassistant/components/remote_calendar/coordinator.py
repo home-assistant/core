@@ -3,8 +3,13 @@
 from datetime import timedelta
 import logging
 
+from httpx import ConnectError, HTTPStatusError, UnsupportedProtocol
+from ical.calendar_stream import IcsCalendarStream
+from ical.exceptions import CalendarParseError
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -40,8 +45,18 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[str]):
 
     async def _async_update_data(self) -> str:
         """Update data from the url."""
-        _LOGGER.debug("Fetching data from %s", self._url)
         headers: dict = {}
-        res = await self._client.get(self._url, headers=headers)
-        res.raise_for_status()
-        return res.text
+        try:
+            res = await self._client.get(self._url, headers=headers)
+            res.raise_for_status()
+        except (UnsupportedProtocol, ConnectError, HTTPStatusError, ValueError) as err:
+            raise ConfigEntryNotReady from err
+        else:
+            try:
+                await self.hass.async_add_executor_job(
+                    IcsCalendarStream.calendar_from_ics, res.text
+                )
+            except CalendarParseError as err:
+                raise ConfigEntryNotReady from err
+            else:
+                return res.text
