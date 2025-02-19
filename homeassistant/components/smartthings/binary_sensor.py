@@ -28,89 +28,71 @@ class SmartThingsBinarySensorEntityDescription(BinarySensorEntityDescription):
 
 
 CAPABILITY_TO_SENSORS: dict[
-    Capability, dict[Attribute, list[SmartThingsBinarySensorEntityDescription]]
+    Capability, dict[Attribute, SmartThingsBinarySensorEntityDescription]
 ] = {
     Capability.ACCELERATION_SENSOR: {
-        Attribute.ACCELERATION: [
-            SmartThingsBinarySensorEntityDescription(
-                key=Attribute.ACCELERATION,
-                device_class=BinarySensorDeviceClass.MOVING,
-                is_on_key="active",
-            )
-        ]
+        Attribute.ACCELERATION: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.ACCELERATION,
+            device_class=BinarySensorDeviceClass.MOVING,
+            is_on_key="active",
+        )
     },
     Capability.CONTACT_SENSOR: {
-        Attribute.CONTACT: [
-            SmartThingsBinarySensorEntityDescription(
-                key=Attribute.CONTACT,
-                device_class=BinarySensorDeviceClass.DOOR,
-                is_on_key="open",
-            )
-        ]
+        Attribute.CONTACT: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.CONTACT,
+            device_class=BinarySensorDeviceClass.DOOR,
+            is_on_key="open",
+        )
     },
     Capability.FILTER_STATUS: {
-        Attribute.FILTER_STATUS: [
-            SmartThingsBinarySensorEntityDescription(
-                key=Attribute.FILTER_STATUS,
-                device_class=BinarySensorDeviceClass.PROBLEM,
-                is_on_key="replace",
-            )
-        ]
+        Attribute.FILTER_STATUS: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.FILTER_STATUS,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            is_on_key="replace",
+        )
     },
     Capability.MOTION_SENSOR: {
-        Attribute.MOTION: [
-            SmartThingsBinarySensorEntityDescription(
-                key=Attribute.MOTION,
-                device_class=BinarySensorDeviceClass.MOTION,
-                is_on_key="active",
-            )
-        ]
+        Attribute.MOTION: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.MOTION,
+            device_class=BinarySensorDeviceClass.MOTION,
+            is_on_key="active",
+        )
     },
     Capability.PRESENCE_SENSOR: {
-        Attribute.PRESENCE: [
-            SmartThingsBinarySensorEntityDescription(
-                key=Attribute.PRESENCE,
-                device_class=BinarySensorDeviceClass.PRESENCE,
-                is_on_key="present",
-            )
-        ]
+        Attribute.PRESENCE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.PRESENCE,
+            device_class=BinarySensorDeviceClass.PRESENCE,
+            is_on_key="present",
+        )
     },
     Capability.SOUND_SENSOR: {
-        Attribute.SOUND: [
-            SmartThingsBinarySensorEntityDescription(
-                key=Attribute.SOUND,
-                device_class=BinarySensorDeviceClass.SOUND,
-                is_on_key="detected",
-            )
-        ]
+        Attribute.SOUND: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.SOUND,
+            device_class=BinarySensorDeviceClass.SOUND,
+            is_on_key="detected",
+        )
     },
     Capability.TAMPER_ALERT: {
-        Attribute.TAMPER: [
-            SmartThingsBinarySensorEntityDescription(
-                key=Attribute.TAMPER,
-                device_class=BinarySensorDeviceClass.PROBLEM,
-                is_on_key="detected",
-                entity_category=EntityCategory.DIAGNOSTIC,
-            )
-        ]
+        Attribute.TAMPER: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.TAMPER,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            is_on_key="detected",
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
     },
     Capability.VALVE: {
-        Attribute.VALVE: [
-            SmartThingsBinarySensorEntityDescription(
-                key=Attribute.VALVE,
-                device_class=BinarySensorDeviceClass.OPENING,
-                is_on_key="open",
-            )
-        ]
+        Attribute.VALVE: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.VALVE,
+            device_class=BinarySensorDeviceClass.OPENING,
+            is_on_key="open",
+        )
     },
     Capability.WATER_SENSOR: {
-        Attribute.WATER: [
-            SmartThingsBinarySensorEntityDescription(
-                key=Attribute.WATER,
-                device_class=BinarySensorDeviceClass.MOISTURE,
-                is_on_key="wet",
-            )
-        ]
+        Attribute.WATER: SmartThingsBinarySensorEntityDescription(
+            key=Attribute.WATER,
+            device_class=BinarySensorDeviceClass.MOISTURE,
+            is_on_key="wet",
+        )
     },
 }
 
@@ -127,10 +109,9 @@ async def async_setup_entry(
             entry_data.client, device, description, capability, attribute
         )
         for device in entry_data.devices.values()
-        for capability, attributes in device.status["main"].items()
-        if capability in CAPABILITY_TO_SENSORS
-        for attribute in attributes
-        for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
+        for capability, attribute_map in CAPABILITY_TO_SENSORS.items()
+        if capability in device.status["main"]
+        for attribute, description in attribute_map.items()
     )
 
 
