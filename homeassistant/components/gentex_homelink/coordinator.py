@@ -6,6 +6,7 @@ import logging
 
 from homelink.provider import Provider
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -17,7 +18,9 @@ _LOGGER = logging.getLogger(__name__)
 class HomelinkCoordinator(DataUpdateCoordinator):
     """HomeLink integration coordinator."""
 
-    def __init__(self, hass: HomeAssistant, provider: Provider, config_entry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, provider: Provider, config_entry: ConfigEntry
+    ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
