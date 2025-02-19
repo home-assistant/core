@@ -29,6 +29,7 @@ class HomelinkCoordinator(DataUpdateCoordinator):
             name="Homelink Coordinator",
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(seconds=POLLING_INTERVAL),
+            config_entry=config_entry,
         )
         self.provider = provider
         self.last_sync_timestamp = None
