@@ -20,7 +20,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utc_from_timestamp
 
 from .coordinator import NextcloudConfigEntry
@@ -602,7 +602,7 @@ SENSORS: Final[list[NextcloudSensorEntityDescription]] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: NextcloudConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Nextcloud sensors."""
     coordinator = entry.runtime_data

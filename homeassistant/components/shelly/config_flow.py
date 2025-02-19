@@ -164,7 +164,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(self.info[CONF_MAC])
+                await self.async_set_unique_id(
+                    self.info[CONF_MAC], raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured({CONF_HOST: host})
                 self.host = host
                 self.port = port

@@ -11,6 +11,7 @@ from greeclimate.discovery import Discovery, Listener
 from greeclimate.exceptions import DeviceNotBoundError, DeviceTimeoutError
 from greeclimate.network import Response
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.json import json_dumps
@@ -32,12 +33,16 @@ _LOGGER = logging.getLogger(__name__)
 class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Manages polling for state changes from the device."""
 
-    def __init__(self, hass: HomeAssistant, device: Device) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, device: Device
+    ) -> None:
         """Initialize the data update coordinator."""
-        DataUpdateCoordinator.__init__(
-            self,
+        super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN}-{device.device_info.name}",
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
             always_update=False,
@@ -117,10 +122,11 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class DiscoveryService(Listener):
     """Discovery event handler for gree devices."""
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize discovery service."""
         super().__init__()
         self.hass = hass
+        self.entry = entry
 
         self.discovery = Discovery(DISCOVERY_TIMEOUT)
         self.discovery.add_listener(self)
@@ -144,7 +150,7 @@ class DiscoveryService(Listener):
             device.device_info.ip,
             device.device_info.port,
         )
-        coordo = DeviceDataUpdateCoordinator(self.hass, device)
+        coordo = DeviceDataUpdateCoordinator(self.hass, self.entry, device)
         self.hass.data[DOMAIN][COORDINATORS].append(coordo)
         await coordo.async_refresh()
 

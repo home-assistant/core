@@ -208,6 +208,14 @@ HOMEKIT = {
         "always_discover": False,
         "domain": "nanoleaf",
     },
+    "NL69": {
+        "always_discover": False,
+        "domain": "nanoleaf",
+    },
+    "NL81": {
+        "always_discover": False,
+        "domain": "nanoleaf",
+    },
     "Netatmo Relay": {
         "always_discover": True,
         "domain": "netatmo",
@@ -793,6 +801,11 @@ ZEROCONF = {
     "_rio._tcp.local.": [
         {
             "domain": "russound_rio",
+        },
+    ],
+    "_shelly._tcp.local.": [
+        {
+            "domain": "shelly",
         },
     ],
     "_sideplay._tcp.local.": [

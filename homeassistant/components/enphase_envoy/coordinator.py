@@ -55,6 +55,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=entry_data[CONF_NAME],
             update_interval=SCAN_INTERVAL,
             always_update=False,
