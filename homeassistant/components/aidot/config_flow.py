@@ -5,21 +5,16 @@ from __future__ import annotations
 import logging
 from typing import Any
 
+from aidot.login_const import DEFAULT_COUNTRY_NAME, SUPPORTED_COUNTRY_NAMES
 from aidot.login_control import LoginControl
 import voluptuous as vol
 
 from homeassistant import config_entries, exceptions
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CLOUD_SERVERS,
-    CONF_CHOOSE_HOUSE,
-    CONF_PASSWORD,
-    CONF_SERVER_COUNTRY,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from .const import CONF_CHOOSE_HOUSE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,7 +44,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.device_list: list[Any] = []
         self.product_list: list[Any] = []
         self.selected_house: dict[Any, Any] = {}
-        self.selected_region = ""
 
     async def async_step_user(self, user_input=None) -> ConfigFlowResult:
         """Handle the initial step."""
@@ -57,14 +51,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 # get ContryCode
-                selected_contry_name = user_input[CONF_SERVER_COUNTRY]
-                selected_contry_obj = {}
-                for item in CLOUD_SERVERS:
-                    if item["name"] == selected_contry_name:
-                        selected_contry_obj = item
-                        break
-                self.__login_control.change_country_code(selected_contry_obj)
-                self.selected_region = selected_contry_obj["region"]
+                selected_contry_name = user_input[CONF_COUNTRY]
+                self.__login_control.change_country_name(selected_contry_name)
 
                 self.login_response = await self.__login_control.async_post_login(
                     self.hass,
@@ -97,13 +85,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is None:
             user_input = {}
 
-        counties_name = [item["name"] for item in CLOUD_SERVERS]
         DATA_SCHEMA = vol.Schema(
             {
                 vol.Required(
-                    CONF_SERVER_COUNTRY,
-                    default=user_input.get(CONF_SERVER_COUNTRY, "United States"),
-                ): vol.In(counties_name),
+                    CONF_COUNTRY,
+                    default=user_input.get(CONF_COUNTRY, DEFAULT_COUNTRY_NAME),
+                ): vol.In(SUPPORTED_COUNTRY_NAMES),
                 vol.Required(
                     CONF_USERNAME, default=user_input.get(CONF_USERNAME, vol.UNDEFINED)
                 ): str,
@@ -129,14 +116,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 for item in self.house_list:
                     if item["name"] == user_input.get(CONF_CHOOSE_HOUSE):
                         self.selected_house = item
-                identifier = (
-                    "username:"
-                    + self.login_response["username"]
-                    + ","
-                    + "house_id:"
-                    + self.selected_house["id"]
-                    + "region"
-                    + self.selected_region
+                identifier = self.__login_control.get_identifier(
+                    self.selected_house["id"]
                 )
                 await self.async_set_unique_id(identifier)
                 self._abort_if_unique_id_configured()

@@ -6,13 +6,8 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.aidot.config_flow import CannotConnect, InvalidHost
-from homeassistant.components.aidot.const import (
-    CONF_CHOOSE_HOUSE,
-    CONF_PASSWORD,
-    CONF_SERVER_COUNTRY,
-    CONF_USERNAME,
-    DOMAIN,
-)
+from homeassistant.components.aidot.const import CONF_CHOOSE_HOUSE, DOMAIN
+from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -139,7 +134,7 @@ async def test_config_flow_cloud_login_success(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_EMAIL,
             CONF_PASSWORD: TEST_PASSWORD,
         },
@@ -162,7 +157,7 @@ async def test_config_flow_cloud_get_houses(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_EMAIL,
             CONF_PASSWORD: TEST_PASSWORD,
         },
@@ -189,7 +184,7 @@ async def test_config_flow_cloud_multi_houses(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_SERVER_COUNTRY: TEST_COUNTRY,
+                CONF_COUNTRY: TEST_COUNTRY,
                 CONF_USERNAME: TEST_EMAIL,
                 CONF_PASSWORD: TEST_PASSWORD,
             },
@@ -213,7 +208,7 @@ async def test_config_flow_cloud_get_device_list(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_EMAIL,
             CONF_PASSWORD: TEST_PASSWORD,
         },
@@ -251,7 +246,7 @@ async def test_config_flow_cloud_not_devices(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_EMAIL,
             CONF_PASSWORD: TEST_PASSWORD,
         },
@@ -292,7 +287,7 @@ async def test_config_flow_cloud_not_houses(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_SERVER_COUNTRY: TEST_COUNTRY,
+                CONF_COUNTRY: TEST_COUNTRY,
                 CONF_USERNAME: TEST_EMAIL,
                 CONF_PASSWORD: TEST_PASSWORD,
             },
@@ -315,7 +310,7 @@ async def test_config_flow_cloud_not_products(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_EMAIL,
             CONF_PASSWORD: TEST_PASSWORD,
         },
@@ -357,7 +352,7 @@ async def test_config_flow_cloud_mission_token(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_SERVER_COUNTRY: TEST_COUNTRY,
+            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_EMAIL,
             CONF_PASSWORD: TEST_PASSWORD,
         },
@@ -420,7 +415,7 @@ async def test_config_flow_cloud_login_failed(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_SERVER_COUNTRY: TEST_COUNTRY,
+                CONF_COUNTRY: TEST_COUNTRY,
                 CONF_USERNAME: TEST_EMAIL,
                 CONF_PASSWORD: TEST_PASSWORD,
             },
@@ -447,7 +442,7 @@ async def test_config_flow_cloud_connect_error(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_SERVER_COUNTRY: TEST_COUNTRY,
+                CONF_COUNTRY: TEST_COUNTRY,
                 CONF_USERNAME: TEST_EMAIL,
                 CONF_PASSWORD: TEST_PASSWORD,
             },
@@ -472,7 +467,7 @@ async def test_config_flow_cloud_invalid_host(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
-                CONF_SERVER_COUNTRY: TEST_COUNTRY,
+                CONF_COUNTRY: TEST_COUNTRY,
                 CONF_USERNAME: TEST_EMAIL,
                 CONF_PASSWORD: TEST_PASSWORD,
             },
