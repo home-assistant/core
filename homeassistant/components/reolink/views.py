@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
+import asyncio
 from base64 import urlsafe_b64decode, urlsafe_b64encode
 from http import HTTPStatus
 import logging
-import asyncio
 
 from aiohttp import ClientError, ClientTimeout, web
 from reolink_aio.enums import VodRequestType
@@ -112,7 +112,13 @@ class PlaybackProxyView(HomeAssistantView):
                 await host.api.expire_session(unsubscribe=False)
                 self._download_mutex.release()
                 return await self.get(
-                    request, config_entry_id, channel, stream_res, vod_type, filename, retry
+                    request,
+                    config_entry_id,
+                    channel,
+                    stream_res,
+                    vod_type,
+                    filename,
+                    retry,
                 )
 
             # Reolink typo "apolication/octet-stream" instead of "application/octet-stream"
@@ -150,6 +156,6 @@ class PlaybackProxyView(HomeAssistantView):
             reolink_response.release()
             await response.write_eof()
         finally:
-            if self._download_mutex.locked()
+            if self._download_mutex.locked():
                 self._download_mutex.release()
         return response
