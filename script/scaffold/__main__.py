@@ -40,17 +40,20 @@ def run_process(name: str, cmd: list[str], info: Info) -> None:
     If the sub process was successful print a success message, otherwise
     print an error message and raise a subprocess.CalledProcessError.
     """
-    print(f"Running {name}...")
+    print(f"Command: {' '.join(cmd)}")
+    print()
     result: subprocess.CompletedProcess = subprocess.run(cmd, check=False)
     if result.returncode == 0:
-        print(f"{name} completed successfully.")
+        print()
+        print(f"Completed {name} successfully.")
         print()
         return
 
-    print(f"Fatal Error: '{name}' failed with exit code {result.returncode}")
+    print()
+    print(f"Fatal Error: {name} failed with exit code {result.returncode}")
     print()
     if info.is_new:
-        print("This is a bug, please report an issue.")
+        print("This is a bug, please report an issue!")
     else:
         print(
             "This may be an existing issue with your integration,",
@@ -99,7 +102,7 @@ def main() -> int:
     # Always output sub commands as the output will contain useful information if a command fails.
     print("Running hassfest to pick up new information.")
     run_process(
-        "script.hassfest",
+        "hassfest",
         [
             "python",
             "-m",
@@ -114,14 +117,14 @@ def main() -> int:
 
     print("Running gen_requirements_all to pick up new information.")
     run_process(
-        "script.gen_requirements_all",
+        "gen_requirements_all",
         ["python", "-m", "script.gen_requirements_all"],
         info,
     )
 
-    print("Running script/translations_develop to pick up new translation strings.")
+    print("Running translations to pick up new translation strings.")
     run_process(
-        "script.translations",
+        "translations",
         [
             "python",
             "-m",
