@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Any
 
 from pysmartthings import SmartThings
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings.models import Attribute, Capability, Command, DeviceEvent
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -53,15 +53,9 @@ class SmartThingsEntity(Entity):
             )
         self._update_attr()
 
-    def _update_handler(
-        self,
-        capability: Capability,
-        attribute: Attribute,
-        value: str | float | dict[str, Any] | list[Any] | None,
-        data: dict[str, Any] | None,
-    ) -> None:
-        self._internal_state[capability][attribute].value = value
-        self._internal_state[capability][attribute].data = data
+    def _update_handler(self, event: DeviceEvent) -> None:
+        self._internal_state[event.capability][event.attribute].value = event.value
+        self._internal_state[event.capability][event.attribute].data = event.data
         self._handle_update()
 
     def supports_capability(self, capability: Capability) -> bool:
