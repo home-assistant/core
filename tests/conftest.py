@@ -1234,7 +1234,7 @@ def mock_get_source_ip() -> Generator[_patch]:
 
 @pytest.fixture(autouse=True, scope="session")
 def translations_once() -> Generator[_patch]:
-    """Only load translations once per module.
+    """Only load translations once per session.
 
     Note: To avoid issues with tests that mock integrations, translations for
     mocked integrations are cleaned up by the evict_faked_translations fixture.
