@@ -13,6 +13,9 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a Home Assistant SkyConnect config entry."""
+
+    await hass.config_entries.async_forward_entry_setups(entry, ["update"])
+
     return True
 
 
@@ -48,6 +51,18 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 data=new_data,
                 version=1,
                 minor_version=2,
+            )
+
+        if config_entry.minor_version == 2:
+            # Add a `firmware_version` key
+            hass.config_entries.async_update_entry(
+                config_entry,
+                data={
+                    **config_entry.data,
+                    "firmware_version": None,
+                },
+                version=1,
+                minor_version=3,
             )
 
         _LOGGER.debug(

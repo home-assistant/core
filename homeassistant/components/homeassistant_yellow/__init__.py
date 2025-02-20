@@ -55,6 +55,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             data=ZHA_HW_DISCOVERY_DATA,
         )
 
+    await hass.config_entries.async_forward_entry_setups(entry, ["update"])
+
     return True
 
 
