@@ -1870,7 +1870,7 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             and "hassio.local" in create_backup.agent_ids
         ):
             automatic_agents = [self._local_agent_id, *automatic_agents]
-        await config.update(
+        config.update(
             create_backup=CreateBackupParametersDict(
                 agent_ids=automatic_agents,
                 include_addons=None,
