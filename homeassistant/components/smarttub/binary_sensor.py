@@ -129,12 +129,10 @@ class SmartTubReminder(SmartTubEntity, BinarySensorEntity):
     async def async_snooze(self, days):
         """Snooze this reminder for the specified number of days."""
         await self.reminder.snooze(days)
-        await self.coordinator.async_request_refresh()
 
     async def async_reset(self, days):
         """Dismiss this reminder, and reset it to the specified number of days."""
         await self.reminder.reset(days)
-        await self.coordinator.async_request_refresh()
 
 
 class SmartTubError(SmartTubEntity, BinarySensorEntity):
