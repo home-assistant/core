@@ -1,7 +1,9 @@
 """Test homee lights."""
 
-from unittest.mock import MagicMock, patch
+from typing import Any
+from unittest.mock import MagicMock, call, patch
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
@@ -45,10 +47,27 @@ async def setup_mock_light(
     await setup_integration(hass, mock_config_entry)
 
 
+@pytest.mark.parametrize(
+    ("data", "calls"),
+    [
+        ({}, [call(1, 1, 1)]),
+        ({ATTR_BRIGHTNESS: 255}, [call(1, 2, 100)]),
+        (
+            {
+                ATTR_BRIGHTNESS: 255,
+                ATTR_COLOR_TEMP_KELVIN: 4300,
+            },
+            [call(1, 2, 100), call(1, 4, 4300)],
+        ),
+        ({ATTR_HS_COLOR: (100, 100)}, [call(1, 1, 1), call(1, 3, 5635840)]),
+    ],
+)
 async def test_turn_on(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
+    data: dict[str, Any],
+    calls: list[call],
 ) -> None:
     """Test turning on the light."""
     await setup_mock_light(hass, mock_homee, mock_config_entry, "lights.json")
@@ -56,50 +75,10 @@ async def test_turn_on(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_light_light_1"},
+        {ATTR_ENTITY_ID: "light.test_light_light_1"} | data,
         blocking=True,
     )
-    mock_homee.set_value.assert_called_once_with(1, 1, 1)
-    mock_homee.reset_mock()
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_light_light_1", ATTR_BRIGHTNESS: 255},
-        blocking=True,
-    )
-    mock_homee.set_value.assert_called_once_with(1, 2, 100)
-    mock_homee.reset_mock()
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: "light.test_light_light_1",
-            ATTR_BRIGHTNESS: 255,
-            ATTR_COLOR_TEMP_KELVIN: 4300,
-        },
-        blocking=True,
-    )
-
-    calls = mock_homee.set_value.call_args_list
-    assert calls[0][0] == (1, 2, 100)
-    assert calls[1][0] == (1, 4, 4300)
-    mock_homee.reset_mock()
-
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {
-            ATTR_ENTITY_ID: "light.test_light_light_1",
-            ATTR_HS_COLOR: (100, 100),
-        },
-        blocking=True,
-    )
-
-    calls = mock_homee.set_value.call_args_list
-    assert calls[0][0] == (1, 1, 1)
-    assert calls[1][0] == (1, 3, 5635840)
+    assert mock_homee.set_value.call_args_list == calls
 
 
 async def test_turn_off(
