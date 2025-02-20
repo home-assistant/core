@@ -247,6 +247,8 @@ build.json @home-assistant/supervisor
 /tests/components/camera/ @home-assistant/core
 /homeassistant/components/cast/ @emontnemery
 /tests/components/cast/ @emontnemery
+/homeassistant/components/ccl/ @fkiscd
+/tests/components/ccl/ @fkiscd
 /homeassistant/components/ccm15/ @ocalvo
 /tests/components/ccm15/ @ocalvo
 /homeassistant/components/cert_expiry/ @jjlawren
