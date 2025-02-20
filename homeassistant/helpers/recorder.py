@@ -60,16 +60,6 @@ def async_initialize_recorder(hass: HomeAssistant) -> None:
     async_setup(hass)
 
 
-async def async_wait_recorder(hass: HomeAssistant) -> bool:
-    """Wait for recorder to initialize and return connection status.
-
-    Returns False immediately if the recorder is not enabled.
-    """
-    if DOMAIN not in hass.data:
-        return False
-    return await hass.data[DOMAIN].db_connected
-
-
 @functools.lru_cache(maxsize=1)
 def get_instance(hass: HomeAssistant) -> Recorder:
     """Get the recorder instance."""
