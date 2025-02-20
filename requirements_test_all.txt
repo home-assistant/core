@@ -1816,7 +1816,7 @@ pypoint==3.0.0
 pyprof2calltree==1.4.5
 
 # homeassistant.components.prosegur
-pyprosegur==0.0.9
+pyprosegur==0.0.13
 
 # homeassistant.components.prusalink
 pyprusalink==2.1.1
