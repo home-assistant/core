@@ -102,6 +102,116 @@
       "invalid_inclusion": "The client certificate and private key must be configured together"
     }
   },
+  "config_subentries": {
+    "device": {
+      "title": "Add MQTT device",
+      "step": {
+        "device": {
+          "title": "Configure MQTT device details",
+          "description": "Enter the MQTT device details:",
+          "data": {
+            "name": "[%key:common::config_flow::data::name%]",
+            "configuration_url": "Configuration URL",
+            "sw_version": "Software version",
+            "hw_version": "The hardware version of the device.",
+            "model": "Model",
+            "model_id": "Model ID"
+          },
+          "data_description": {
+            "name": "The name of the manually added MQTT device.",
+            "configuration_url": "A link to the webpage that can manage the configuration of this device. Can be either a 'http://', 'https://' or an internal 'homeassistant://' URL.",
+            "sw_version": "The software version of the device. E.g. '2025.1.0'.",
+            "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
+            "model": "E.g. 'Cleanmaster Pro'.",
+            "model_id": "E.g. '123NK2PRO'."
+          }
+        },
+        "summary_menu": {
+          "title": "Reconfigure {mqtt_device}",
+          "description": "Entities set up:\n{mqtt_items}.\n\nDecide what to do next:",
+          "menu_options": {
+            "entity": "Add another entity to {mqtt_device}",
+            "update_entity": "Update entity properties",
+            "delete_entity": "Delete an entity",
+            "device": "Update device properties",
+            "finish_reconfigure": "Save changes"
+          }
+        },
+        "entity": {
+          "title": "Configure MQTT device {mqtt_device}",
+          "description": "Select the type of entity and configure the basic settings",
+          "data": {
+            "platform": "Type of entity",
+            "object_id": "Entity ID",
+            "name": "Entity name",
+            "encoding": "Encoding",
+            "qos": "QoS"
+          },
+          "data_description": {
+            "platform": "The type of the entity to configure.",
+            "object_id": "An ID to be used as base to generate the entity_id.",
+            "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device](https://www.home-assistant.io/integrations/mqtt/#naming-of-mqtt-entities).",
+            "encoding": "The encoding of the payloads received. Defaults to 'utf-8'. Set to `None` to allow to process raw payloads.",
+            "qos": "The QoS value this entity should subscrive with."
+          }
+        },
+        "delete_entity": {
+          "title": "Delete entity",
+          "description": "Delete an entity. The entity will be removed from the device. Removing an entity will break any automations or scripts that depend on it.",
+          "data": {
+            "component": "Entity"
+          },
+          "data_description": {
+            "component": "Select the entity you want to delete. Minimal one entity is required."
+          }
+        },
+        "update_entity": {
+          "title": "Select entity",
+          "description": "Select the entity you want to update",
+          "data": {
+            "component": "Entity"
+          },
+          "data_description": {
+            "component": "Select the entity you want to update."
+          }
+        },
+        "entity_platform_config": {
+          "title": "Configure MQTT device {mqtt_device}",
+          "description": "Please configure details for {platform} entity \"{object_id}\":",
+          "data": {
+            "command_topic": "Command topic",
+            "command_template": "Command template",
+            "icon": "Icon",
+            "entity_picture": "Entity picture",
+            "entity_category": "Entity category",
+            "retain": "Retain"
+          },
+          "data_description": {
+            "command_topic": "The publishing topic that will be used to control the {platform} entity.",
+            "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
+            "icon": "The icon assigned to the entity \"{object_id}\".",
+            "entity_picture": "An URL to a picture to be assigned \"{object_id}\".",
+            "entity_category": "The entity category for \"{object_id}\". Leave empty if no category is to be set.",
+            "retain": "Select if values published by \"{object_id}\" should be retained at the MQTT broker."
+          }
+        }
+      },
+      "abort": {
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "create_entry": {
+        "default": "MQTT device with {platform} entity {entity} was set up successfully.\n\nNote that you can reconfigure the MQTT device at any time, e.g. to add more entities."
+      },
+      "error": {
+        "invalid_input": "Invalid value",
+        "invalid_subscribe_topic": "Invalid subscribe topic",
+        "invalid_template": "Invalid template",
+        "invalid_url": "Invalid URL",
+        "object_id_not_unique": "This Entity ID is already used for this device",
+        "object_id_not_mutable": "The Entity ID is not mutable when reconfiguring an entity. Instead remove the entity, and re-add it"
+      }
+    }
+  },
   "device_automation": {
     "trigger_type": {
       "button_short_press": "\"{subtype}\" pressed",
@@ -215,6 +325,17 @@
     }
   },
   "selector": {
+    "entity_category": {
+      "options": {
+        "diagnostic": "Diagnostic",
+        "config": "Configuration"
+      }
+    },
+    "platform": {
+      "options": {
+        "notify": "Notify"
+      }
+    },
     "set_ca_cert": {
       "options": {
         "off": "[%key:common::state::off%]",
