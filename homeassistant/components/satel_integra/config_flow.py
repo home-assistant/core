@@ -21,6 +21,7 @@ from homeassistant.helpers import config_validation as cv, selector
 from .const import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
+    CONF_OUTPUTS,
     CONF_ZONE_TYPE,
     CONF_ZONES,
     DEFAULT_CONF_ARM_HOME_MODE,
@@ -121,6 +122,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_CODE: user_input.get(CONF_CODE),
                         CONF_DEVICE_PARTITIONS: {},
                         CONF_ZONES: {},
+                        CONF_OUTPUTS: {},
                     },
                 )
 
@@ -145,21 +147,21 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 class SatelOptionsFlow(OptionsFlow):
     """Handle Satel options flow."""
 
-    editing_partition: str
-    editing_zone: str
+    editing_entry: str
 
     def __init__(self, config_entry: SatelConfigEntry) -> None:
         """Initialize Satel options."""
         self.options = deepcopy(dict(config_entry.options))
         self.partition_options = self.options.get(CONF_DEVICE_PARTITIONS, {})
         self.zone_options = self.options.get(CONF_ZONES, {})
+        self.output_options = self.options.get(CONF_OUTPUTS, {})
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Init step."""
         return self.async_show_menu(
-            step_id="init", menu_options=["general", "partitions", "zones"]
+            step_id="init", menu_options=["general", "partitions", "zones", "outputs"]
         )
 
     async def async_step_general(
@@ -178,7 +180,7 @@ class SatelOptionsFlow(OptionsFlow):
     async def async_step_partitions(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Partitions step."""
+        """Partition configuration step."""
         errors = {}
         if user_input is not None:
             selected_partition = str(user_input[CONF_ACTION_NUMBER])
@@ -198,7 +200,7 @@ class SatelOptionsFlow(OptionsFlow):
                 self.partition_options.pop(selected_partition)
                 return self.async_create_entry(data=self.options)
             else:
-                self.editing_partition = selected_partition
+                self.editing_entry = selected_partition
                 return await self.async_step_partition_details()
 
         return self.async_show_form(
@@ -212,10 +214,10 @@ class SatelOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Partition details step."""
         if user_input is not None:
-            self.partition_options[self.editing_partition] = user_input
+            self.partition_options[self.editing_entry] = user_input
             return self.async_create_entry(data=self.options)
 
-        existing_partition_config = self.partition_options.get(self.editing_partition)
+        existing_partition_config = self.partition_options.get(self.editing_entry)
 
         return self.async_show_form(
             step_id="partition_details",
@@ -227,7 +229,7 @@ class SatelOptionsFlow(OptionsFlow):
     async def async_step_zones(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Zones step."""
+        """Zone configuration step."""
         errors = {}
         if user_input is not None:
             selected_zone = str(user_input[CONF_ACTION_NUMBER])
@@ -244,7 +246,7 @@ class SatelOptionsFlow(OptionsFlow):
                 self.zone_options.pop(selected_zone)
                 return self.async_create_entry(data=self.options)
             else:
-                self.editing_zone = selected_zone
+                self.editing_entry = selected_zone
                 return await self.async_step_zone_details()
 
         return self.async_show_form(
@@ -258,16 +260,62 @@ class SatelOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Zone details step."""
         if user_input is not None:
-            _LOGGER.info(user_input)
-            _LOGGER.info(self.options)
-            self.zone_options[self.editing_zone] = user_input
+            self.zone_options[self.editing_entry] = user_input
             return self.async_create_entry(data=self.options)
 
-        existing_zone_config = self.zone_options.get(self.editing_zone)
+        existing_zone_config = self.zone_options.get(self.editing_entry)
 
         return self.async_show_form(
             step_id="zone_details",
             data_schema=self.add_suggested_values_to_schema(
                 ZONE_SCHEMA, existing_zone_config
+            ),
+        )
+
+    async def async_step_outputs(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Output configuration step."""
+        errors = {}
+        if user_input is not None:
+            selected_output = str(user_input[CONF_ACTION_NUMBER])
+            selected_action = user_input[CONF_ACTION]
+
+            if (
+                selected_action in [ACTION_DELETE, ACTION_EDIT]
+                and selected_output not in self.output_options
+            ):
+                errors["base"] = "unknown_output"
+            elif (
+                selected_action == ACTION_ADD and selected_output in self.output_options
+            ):
+                errors["base"] = "already_exists"
+            elif selected_action == ACTION_DELETE:
+                self.output_options.pop(selected_output)
+                return self.async_create_entry(data=self.options)
+            else:
+                self.editing_entry = selected_output
+                return await self.async_step_output_details()
+
+        return self.async_show_form(
+            step_id="outputs",
+            data_schema=OPTIONS_ACTION_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_output_details(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Output details step."""
+        if user_input is not None:
+            self.output_options[self.editing_entry] = user_input
+            return self.async_create_entry(data=self.options)
+
+        existing_output_config = self.output_options.get(self.editing_entry)
+
+        return self.async_show_form(
+            step_id="output_details",
+            data_schema=self.add_suggested_values_to_schema(
+                ZONE_SCHEMA, existing_output_config
             ),
         )
