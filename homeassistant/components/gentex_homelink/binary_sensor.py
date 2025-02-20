@@ -15,6 +15,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import HomeLinkCoordinator
 from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -43,7 +44,7 @@ async def async_setup_entry(
         )
 
         buttons = [
-            HomelinkBinarySensor(b.id, b.name, device_info, coordinator)
+            HomeLinkBinarySensor(b.id, b.name, device_info, coordinator)
             for b in device.buttons
         ]
         async_add_entities(buttons)
@@ -53,7 +54,7 @@ async def async_setup_entry(
             registry.async_update_device(buttons[0].device_entry.id, name=device.name)
 
 
-class HomelinkBinarySensor(CoordinatorEntity, BinarySensorEntity):
+class HomeLinkBinarySensor(CoordinatorEntity[HomeLinkCoordinator], BinarySensorEntity):
     """Binary sensor."""
 
     def __init__(self, id, name, device_info, coordinator) -> None:

@@ -26,7 +26,7 @@ class HomeLinkData:
     last_update_id: str | None
 
 
-class HomelinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """HomeLink integration coordinator."""
 
     def __init__(
@@ -40,7 +40,7 @@ class HomelinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hass,
             _LOGGER,
             # Name of the data. For logging purposes.
-            name="Homelink Coordinator",
+            name="HomeLink Coordinator",
             # Polling interval. Will only be polled if there are subscribers.
             update_interval=timedelta(seconds=POLLING_INTERVAL),
             config_entry=config_entry,
