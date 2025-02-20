@@ -1658,9 +1658,7 @@ class ConfigEntriesFlowManager(
         if existing_entry is not None:
             # Unload and remove the existing entry, but don't clean up devices and
             # entities until the new entry is added
-            await self.config_entries._async_remove(  # noqa: SLF001
-                existing_entry.entry_id
-            )
+            await self.config_entries._async_remove(existing_entry.entry_id)  # noqa: SLF001
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
@@ -2311,9 +2309,8 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: (
-            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
-        ) = UNDEFINED,
+        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
+        | UndefinedType = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2349,9 +2346,8 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: (
-            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
-        ) = UNDEFINED,
+        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
+        | UndefinedType = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2754,10 +2750,7 @@ class ConfigEntries:
                 continue
             issues.add(issue.issue_id)
 
-        for (
-            domain,
-            unique_ids,
-        ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+        for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
             # flipr creates duplicates during migration, and asks users to
             # remove the duplicate. We don't need warn about it here too.
             # We should remove the special case for "flipr" in HA Core 2025.4,
