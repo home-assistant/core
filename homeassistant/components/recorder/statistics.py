@@ -16,6 +16,7 @@ from time import time as time_time
 from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 from sqlalchemy import (
+    Engine,
     Function,
     Select,
     and_,
@@ -124,17 +125,32 @@ QUERY_STATISTICS_SHORT_TERM = (
 )
 
 
-def query_circular_mean(column: str | InstrumentedAttribute) -> Function[Any]:
+def query_circular_mean(
+    column: str | InstrumentedAttribute, engine: Engine
+) -> Function[Any]:
     """Return the sqlalchemy function for circular mean."""
     # https://en.wikipedia.org/wiki/Circular_mean
     radians = func.radians(column)
-    # Modulo 360 to normalize the result [0, 360]
-    return func.mod(
-        func.degrees(
-            func.atan2(func.sum(func.sin(radians)), func.sum(func.cos(radians)))
-        ),
-        360,
+    mean_fn = func.degrees(
+        func.atan2(func.sum(func.sin(radians)), func.sum(func.cos(radians)))
     )
+
+    if engine.dialect.name == SupportedDialect.POSTGRESQL:
+        # Postgres doesn't support modulo on double precision
+        return mean_fn
+
+    # Modulo 360 to normalize the result [0, 360]
+    return func.mod(mean_fn, 360)
+
+
+def adjust_circular_mean(engine: Engine, value: float) -> float:
+    """Adjust circular mean if needed."""
+    if engine.dialect.name == SupportedDialect.POSTGRESQL:
+        # Postgres doesn't support modulo on double precision
+        # so we have to do it in Python
+        return value % 360
+
+    return value
 
 
 QUERY_STATISTICS_SUMMARY_MEAN = (
@@ -142,7 +158,6 @@ QUERY_STATISTICS_SUMMARY_MEAN = (
     func.avg(StatisticsShortTerm.mean),
     func.min(StatisticsShortTerm.min),
     func.max(StatisticsShortTerm.max),
-    query_circular_mean(StatisticsShortTerm.circular_mean),
 )
 
 QUERY_STATISTICS_SUMMARY_SUM = (
@@ -409,11 +424,14 @@ def get_start_time() -> datetime:
 
 
 def _compile_hourly_statistics_summary_mean_stmt(
-    start_time_ts: float, end_time_ts: float
+    start_time_ts: float, end_time_ts: float, engine: Engine
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
     return lambda_stmt(
-        lambda: select(*QUERY_STATISTICS_SUMMARY_MEAN)
+        lambda: select(
+            *QUERY_STATISTICS_SUMMARY_MEAN,
+            query_circular_mean(StatisticsShortTerm.circular_mean, engine),
+        )
         .filter(StatisticsShortTerm.start_ts >= start_time_ts)
         .filter(StatisticsShortTerm.start_ts < end_time_ts)
         .group_by(StatisticsShortTerm.metadata_id)
@@ -439,7 +457,9 @@ def _compile_hourly_statistics_last_sum_stmt(
     )
 
 
-def _compile_hourly_statistics(session: Session, start: datetime) -> None:
+def _compile_hourly_statistics(
+    session: Session, start: datetime, engine: Engine
+) -> None:
     """Compile hourly statistics.
 
     This will summarize 5-minute statistics for one hour:
@@ -453,7 +473,9 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
 
     # Compute last hour's average, min, max
     summary: dict[int, StatisticDataTimestamp] = {}
-    stmt = _compile_hourly_statistics_summary_mean_stmt(start_time_ts, end_time_ts)
+    stmt = _compile_hourly_statistics_summary_mean_stmt(
+        start_time_ts, end_time_ts, engine
+    )
     stats = execute_stmt_lambda_element(session, stmt)
 
     if stats:
@@ -464,7 +486,7 @@ def _compile_hourly_statistics(session: Session, start: datetime) -> None:
                 "mean": _mean,
                 "min": _min,
                 "max": _max,
-                "circular_mean": _circular_mean,
+                "circular_mean": adjust_circular_mean(engine, _circular_mean),
             }
 
     stmt = _compile_hourly_statistics_last_sum_stmt(start_time_ts, end_time_ts)
@@ -651,7 +673,8 @@ def _compile_statistics(
 
     if start.minute == 55:
         # A full hour is ready, summarize it
-        _compile_hourly_statistics(session, start)
+        assert instance.engine is not None
+        _compile_hourly_statistics(session, start, instance.engine)
 
     session.add(StatisticsRuns(start=start))
 
@@ -1233,6 +1256,7 @@ def _get_max_mean_min_statistic_in_sub_period(
     table: type[StatisticsBase],
     types: set[Literal["max", "mean", "min", "change", "circular_mean"]],
     metadata_id: int,
+    engine: Engine,
 ) -> None:
     """Return max, mean and min during the period."""
     # Calculate max, mean, min
@@ -1246,7 +1270,7 @@ def _get_max_mean_min_statistic_in_sub_period(
         columns = columns.add_columns(func.min(table.min))
     if "circular_mean" in types:
         columns = columns.add_columns(
-            query_circular_mean(table.circular_mean).label("circular_mean")
+            query_circular_mean(table.circular_mean, engine).label("circular_mean")
         )
 
     stmt = _generate_max_mean_min_statistic_in_sub_period_stmt(
@@ -1267,6 +1291,7 @@ def _get_max_mean_min_statistic_in_sub_period(
         "circular_mean" in types
         and (new_circular_mean := stats[0].circular_mean) is not None
     ):
+        new_circular_mean = adjust_circular_mean(engine, new_circular_mean)
         values = [new_circular_mean]
         if (old_circular_mean := result.get("circular_mean")) is not None:
             values.append(old_circular_mean)
@@ -1287,6 +1312,7 @@ def _get_max_mean_min_statistic(
     tail_only: bool,
     metadata_id: int,
     types: set[Literal["max", "mean", "min", "change", "circular_mean"]],
+    engine: Engine,
 ) -> dict[str, float | None]:
     """Return max, mean and min during the period.
 
@@ -1306,6 +1332,7 @@ def _get_max_mean_min_statistic(
             StatisticsShortTerm,
             types,
             metadata_id,
+            engine,
         )
 
     if not tail_only:
@@ -1317,6 +1344,7 @@ def _get_max_mean_min_statistic(
             Statistics,
             types,
             metadata_id,
+            engine,
         )
 
     if head_start_time is not None:
@@ -1328,6 +1356,7 @@ def _get_max_mean_min_statistic(
             StatisticsShortTerm,
             types,
             metadata_id,
+            engine,
         )
 
     if "max" in types:
@@ -1551,10 +1580,9 @@ def statistic_during_period(
 
     with session_scope(hass=hass, read_only=True) as session:
         # Fetch metadata for the given statistic_id
+        instance = get_instance(hass)
         if not (
-            metadata := get_instance(hass).statistics_meta_manager.get(
-                session, statistic_id
-            )
+            metadata := instance.statistics_meta_manager.get(session, statistic_id)
         ):
             return result
 
@@ -1630,6 +1658,7 @@ def statistic_during_period(
             main_end_time = end_time if tail_start_time is None else tail_start_time
 
         if not types.isdisjoint({"max", "mean", "min", "circular_mean"}):
+            assert instance.engine is not None
             result = _get_max_mean_min_statistic(
                 session,
                 head_start_time,
@@ -1641,6 +1670,7 @@ def statistic_during_period(
                 tail_only,
                 metadata_id,
                 types,
+                instance.engine,
             )
 
         if "change" in types:
