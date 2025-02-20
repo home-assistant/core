@@ -872,9 +872,6 @@
       },
       "sterilization": {
         "name": "Sterilization"
-      },
-      "upper_switch": {
-        "name": "Sleep switch"
       }
     }
   }
