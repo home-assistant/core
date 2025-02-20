@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/energyid",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "bronze",
-  "requirements": ["energyid-webhooks==0.0.6"]
+  "quality_scale": "silver",
+  "requirements": ["energyid-webhooks==0.0.8"]
 }
