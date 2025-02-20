@@ -32,7 +32,7 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import CLIENT_ERROR_401, CLIENT_ERROR_500
+from . import CLIENT_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 
 from tests.common import MockConfigEntry
 
@@ -215,7 +215,7 @@ async def test_options_switching(
             "cannot_connect",
         ),
         (
-            CLIENT_ERROR_401,
+            CLIENT_ERROR_API_KEY_INVALID,
             "invalid_auth",
         ),
         (Exception, "unknown"),

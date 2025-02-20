@@ -17,13 +17,13 @@ CLIENT_ERROR_500 = ClientError(
         ),
     ),
 )
-CLIENT_ERROR_401 = ClientError(
-    401,
+CLIENT_ERROR_API_KEY_INVALID = ClientError(
+    400,
     Mock(
         __class__=requests.Response,
         json=Mock(
             return_value={
-                "message": "Unauthorized API_KEY_INVALID",
+                "message": "'reason': API_KEY_INVALID",
                 "status": "unauthorized",
             }
         ),

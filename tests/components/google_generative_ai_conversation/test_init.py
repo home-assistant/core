@@ -10,7 +10,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from . import CLIENT_ERROR_500
+from . import CLIENT_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
 
 from tests.common import MockConfigEntry
 
@@ -228,6 +228,11 @@ async def test_generate_content_service_with_non_image(hass: HomeAssistant) -> N
             Timeout,
             ConfigEntryState.SETUP_RETRY,
             False,
+        ),
+        (
+            CLIENT_ERROR_API_KEY_INVALID,
+            ConfigEntryState.SETUP_ERROR,
+            True,
         ),
     ],
 )
