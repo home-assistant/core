@@ -18,6 +18,7 @@ from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
     MacAddressMismatchError,
+    RpcCallError,
 )
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
@@ -43,6 +44,7 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import (
     CONF_BLE_SCANNER_MODE,
     CONF_GEN,
+    CONF_SCRIPT,
     CONF_SLEEP_PERIOD,
     DOMAIN,
     LOGGER,
@@ -60,6 +62,7 @@ from .utils import (
     get_rpc_device_wakeup_period,
     get_ws_context,
     mac_address_from_name,
+    rpc_device_has_script_support,
 )
 
 CONFIG_SCHEMA: Final = vol.Schema(
@@ -77,6 +80,21 @@ BLE_SCANNER_OPTIONS = [
 ]
 
 INTERNAL_WIFI_AP_IP = "192.168.33.1"
+
+
+async def async_script_supported(device: RpcDevice) -> bool:
+    """Check if the device supports scripts."""
+
+    # Model Wall Display does not support scripts
+    # even if Script.List method is available
+    if device.model == MODEL_WALL_DISPLAY:
+        return False
+
+    try:
+        await device.script_list()
+    except RpcCallError:
+        return False
+    return True
 
 
 async def validate_input(
@@ -109,6 +127,7 @@ async def validate_input(
         )
         try:
             await rpc_device.initialize()
+            script_supported = await async_script_supported(rpc_device)
             sleep_period = get_rpc_device_wakeup_period(rpc_device.status)
         finally:
             await rpc_device.shutdown()
@@ -118,6 +137,7 @@ async def validate_input(
             CONF_SLEEP_PERIOD: sleep_period,
             "model": rpc_device.xmod_info.get("p") or rpc_device.shelly.get("model"),
             CONF_GEN: gen,
+            CONF_SCRIPT: script_supported,
         }
 
     # Gen1
@@ -138,6 +158,7 @@ async def validate_input(
         CONF_SLEEP_PERIOD: sleep_period,
         "model": block_device.model,
         CONF_GEN: gen,
+        CONF_SCRIPT: False,
     }
 
 
@@ -145,7 +166,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     host: str = ""
     port: int = DEFAULT_HTTP_PORT
@@ -200,6 +221,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                                 CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                                 "model": device_info["model"],
                                 CONF_GEN: device_info[CONF_GEN],
+                                CONF_SCRIPT: device_info[CONF_SCRIPT],
                             },
                         )
                     errors["base"] = "firmware_not_fully_provisioned"
@@ -240,6 +262,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                             "model": device_info["model"],
                             CONF_GEN: device_info[CONF_GEN],
+                            CONF_SCRIPT: device_info[CONF_SCRIPT],
                         },
                     )
                 errors["base"] = "firmware_not_fully_provisioned"
@@ -349,6 +372,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
                         "model": self.device_info["model"],
                         CONF_GEN: self.device_info[CONF_GEN],
+                        CONF_SCRIPT: self.device_info[CONF_SCRIPT],
                     },
                 )
             self._set_confirm_only()
@@ -463,11 +487,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return (
-            get_device_entry_gen(config_entry) in RPC_GENERATIONS
-            and not config_entry.data.get(CONF_SLEEP_PERIOD)
-            and config_entry.data.get("model") != MODEL_WALL_DISPLAY
-        )
+        return rpc_device_has_script_support(config_entry)
 
 
 class OptionsFlowHandler(OptionsFlow):
