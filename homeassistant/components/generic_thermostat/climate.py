@@ -69,8 +69,10 @@ from .const import (
     CONF_MAX_TEMP,
     CONF_MIN_DUR,
     CONF_MIN_TEMP,
+    CONF_PRECISION,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_TEMP_STEP,
     DEFAULT_TOLERANCE,
     DOMAIN,
     PLATFORMS,
@@ -82,9 +84,7 @@ DEFAULT_NAME = "Generic Thermostat"
 
 CONF_INITIAL_HVAC_MODE = "initial_hvac_mode"
 CONF_KEEP_ALIVE = "keep_alive"
-CONF_PRECISION = "precision"
 CONF_TARGET_TEMP = "target_temp"
-CONF_TEMP_STEP = "target_temp_step"
 
 
 PRESETS_SCHEMA: VolDictType = {
@@ -112,7 +112,8 @@ PLATFORM_SCHEMA_COMMON = vol.Schema(
             vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
         vol.Optional(CONF_TEMP_STEP): vol.All(
-            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE])
+            vol.Coerce(float),
+            vol.In([PRECISION_TENTHS, PRECISION_HALVES, PRECISION_WHOLE]),
         ),
         vol.Optional(CONF_UNIQUE_ID): cv.string,
         **PRESETS_SCHEMA,
