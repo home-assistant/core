@@ -2945,7 +2945,6 @@ async def test_import_statistics(
         "source": source,
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
-        "has_circular_mean": False,
     }
 
     await client.send_json_auto_id(
@@ -3162,7 +3161,6 @@ async def test_adjust_sum_statistics_energy(
         "source": source,
         "statistic_id": statistic_id,
         "unit_of_measurement": "kWh",
-        "has_circular_mean": False,
     }
 
     await client.send_json_auto_id(
@@ -3358,7 +3356,6 @@ async def test_adjust_sum_statistics_gas(
         "source": source,
         "statistic_id": statistic_id,
         "unit_of_measurement": "m³",
-        "has_circular_mean": False,
     }
 
     await client.send_json_auto_id(
@@ -3571,7 +3568,6 @@ async def test_adjust_sum_statistics_errors(
         "source": source,
         "statistic_id": statistic_id,
         "unit_of_measurement": statistic_unit,
-        "has_circular_mean": False,
     }
 
     await client.send_json_auto_id(
