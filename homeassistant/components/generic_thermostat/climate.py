@@ -553,8 +553,8 @@ class GenericThermostat(ClimateEntity, RestoreEntity):
                         self.heater_entity_id,
                     )
                     await self._async_heater_turn_on()
-            elif (self.ac_mode and self._cur_temp > min_temp) or (
-                not self.ac_mode and self._cur_temp < max_temp
+            elif (self.ac_mode and self._cur_temp > max_temp) or (
+                not self.ac_mode and self._cur_temp < min_temp
             ):
                 _LOGGER.debug("Turning on heater %s", self.heater_entity_id)
                 await self._async_heater_turn_on()
