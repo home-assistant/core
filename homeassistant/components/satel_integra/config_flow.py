@@ -208,7 +208,14 @@ class SatelOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Init step."""
         return self.async_show_menu(
-            step_id="init", menu_options=["general", "partitions", "zones", "outputs"]
+            step_id="init",
+            menu_options=[
+                "general",
+                "partitions",
+                "zones",
+                "outputs",
+                "switchable_outputs",
+            ],
         )
 
     async def async_step_general(
