@@ -653,12 +653,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             for agent_id in create_backup.agent_ids
         ]
         await config.update(
-            create_backup=CreateBackupParametersDict(
-                agent_ids=automatic_agents,
-                include_addons=None,
-                include_all_addons=False,
-                include_folders=None,
-            )
+            create_backup=CreateBackupParametersDict(agent_ids=automatic_agents)
         )
 
     @callback
