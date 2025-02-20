@@ -120,7 +120,7 @@ async def test_number_operation_storage_with_error(
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, config_entry)
 
-    test_entity = f"{Platform.NUMBER}.{use_serial}_{target}"
+    test_entity = f"number.{use_serial}_{target}"
 
     mock_envoy.set_reserve_soc.side_effect = EnvoyError("Test")
     with pytest.raises(
@@ -164,12 +164,10 @@ async def test_number_operation_relays(
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, config_entry)
 
-    entity_base = f"{Platform.NUMBER}."
-
     assert (dry_contact := mock_envoy.data.dry_contact_settings[relay])
     assert (name := dry_contact.load_name.lower().replace(" ", "_"))
 
-    test_entity = f"{entity_base}{name}_{target}"
+    test_entity = f"number.{name}_{target}"
 
     assert (entity_state := hass.states.get(test_entity))
     assert float(entity_state.state) == expected_value
@@ -208,12 +206,10 @@ async def test_number_operation_relays_with_error(
     with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.NUMBER]):
         await setup_integration(hass, config_entry)
 
-    entity_base = f"{Platform.NUMBER}."
-
     assert (dry_contact := mock_envoy.data.dry_contact_settings[relay])
     assert (name := dry_contact.load_name.lower().replace(" ", "_"))
 
-    test_entity = f"{entity_base}{name}_{target}"
+    test_entity = f"number.{name}_{target}"
 
     mock_envoy.update_dry_contact.side_effect = EnvoyError("Test")
     with pytest.raises(
