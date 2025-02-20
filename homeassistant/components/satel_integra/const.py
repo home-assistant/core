@@ -8,6 +8,7 @@ from homeassistant.config_entries import ConfigEntry
 
 DEFAULT_CONF_ARM_HOME_MODE = 1
 DEFAULT_PORT = 7094
+DEFAULT_ZONE_TYPE = "motion"
 
 DOMAIN = "satel_integra"
 
@@ -19,6 +20,7 @@ CONF_OUTPUTS = "outputs"
 CONF_SWITCHABLE_OUTPUTS = "switchable_outputs"
 
 ZONES = "zones"
+
 
 SIGNAL_PANEL_MESSAGE = "satel_integra.panel_message"
 

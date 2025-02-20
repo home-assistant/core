@@ -4,21 +4,34 @@ import collections
 import logging
 
 from satel_integra.satel_integra import AsyncSatel
+import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_IMPORT
-from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_NAME,
+    CONF_PORT,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
     CONF_OUTPUTS,
     CONF_SWITCHABLE_OUTPUTS,
+    CONF_ZONE_TYPE,
     CONF_ZONES,
+    DEFAULT_CONF_ARM_HOME_MODE,
+    DEFAULT_PORT,
+    DEFAULT_ZONE_TYPE,
     DOMAIN,
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_PANEL_MESSAGE,
@@ -31,6 +44,54 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SWITCH]
+
+
+ZONE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_ZONE_TYPE, default=DEFAULT_ZONE_TYPE): cv.string,
+    }
+)
+EDITABLE_OUTPUT_SCHEMA = vol.Schema({vol.Required(CONF_NAME): cv.string})
+PARTITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Optional(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.In(
+            [1, 2, 3]
+        ),
+    }
+)
+
+
+def is_alarm_code_necessary(value):
+    """Check if alarm code must be configured."""
+    if value.get(CONF_SWITCHABLE_OUTPUTS) and CONF_CODE not in value:
+        raise vol.Invalid("You need to specify alarm code to use switchable_outputs")
+
+    return value
+
+
+CONFIG_SCHEMA = vol.Schema(
+    {
+        DOMAIN: vol.All(
+            {
+                vol.Required(CONF_HOST): cv.string,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+                vol.Optional(CONF_CODE): cv.string,
+                vol.Optional(CONF_DEVICE_PARTITIONS, default={}): {
+                    vol.Coerce(int): PARTITION_SCHEMA
+                },
+                vol.Optional(CONF_ZONES, default={}): {vol.Coerce(int): ZONE_SCHEMA},
+                vol.Optional(CONF_OUTPUTS, default={}): {vol.Coerce(int): ZONE_SCHEMA},
+                vol.Optional(CONF_SWITCHABLE_OUTPUTS, default={}): {
+                    vol.Coerce(int): EDITABLE_OUTPUT_SCHEMA
+                },
+            },
+            is_alarm_code_necessary,
+        )
+    },
+    extra=vol.ALLOW_EXTRA,
+)
 
 
 async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
