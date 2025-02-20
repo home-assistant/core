@@ -76,7 +76,6 @@ RPC_EVENT: Final = ShellyRpcEventDescription(
 RPC_TEST_EVENT: Final = ShellyRpcEventDescription(
     key="smoke",
     translation_key="smoke",
-    device_class=None,
 )
 SCRIPT_EVENT: Final = ShellyRpcEventDescription(
     key="script",
@@ -115,16 +114,13 @@ async def async_setup_entry(
                     continue
 
                 entities.append(
-                    ShellyRpcTestEvent(
-                        coordinator, attribute, ["alarm_test"], entry.original_name
-                    )
+                    ShellyRpcTestEvent(coordinator, attribute, entry.original_name)
                 )
 
         else:
             smoke_instances = get_rpc_key_instances(coordinator.device.status, "smoke")
             entities.extend(
-                ShellyRpcTestEvent(coordinator, smoke, ["alarm_test"])
-                for smoke in smoke_instances
+                ShellyRpcTestEvent(coordinator, key) for key in smoke_instances
             )
 
             key_instances = get_rpc_key_instances(
@@ -271,17 +267,16 @@ class ShellyRpcEvent(CoordinatorEntity[ShellyRpcCoordinator], EventEntity):
 class ShellyRpcTestEvent(ShellyRpcEvent):
     """Represent RPC test event entity."""
 
+    _attr_event_types = ["alarm_test"]
+
     def __init__(
         self,
         coordinator: ShellyRpcCoordinator,
         key: str,
-        event_types: list[str],
         name: str | None = None,
     ) -> None:
         """Initialize Shelly test event entity."""
         super().__init__(coordinator, key, RPC_TEST_EVENT, name)
-
-        self._attr_event_types = event_types
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
