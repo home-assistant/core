@@ -5,15 +5,16 @@ import logging
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlparse
 
-from pyheos import CommandAuthenticationError, Heos, HeosError, HeosOptions
+from pyheos import (
+    CommandAuthenticationError,
+    ConnectionState,
+    Heos,
+    HeosError,
+    HeosOptions,
+)
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntryState,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import selector
@@ -48,13 +49,19 @@ async def _validate_host(host: str, errors: dict[str, str]) -> bool:
 
 
 async def _validate_auth(
-    user_input: dict[str, str], heos: Heos, errors: dict[str, str]
+    user_input: dict[str, str], entry: HeosConfigEntry, errors: dict[str, str]
 ) -> bool:
     """Validate authentication by signing in or out, otherwise populate errors if needed."""
+    can_validate = (
+        hasattr(entry, "runtime_data")
+        and entry.runtime_data.heos.connection_state is ConnectionState.CONNECTED
+    )
     if not user_input:
         # Log out (neither username nor password provided)
+        if not can_validate:
+            return True
         try:
-            await heos.sign_out()
+            await entry.runtime_data.heos.sign_out()
         except HeosError:
             errors["base"] = "unknown"
             _LOGGER.exception("Unexpected error occurred during sign-out")
@@ -73,8 +80,12 @@ async def _validate_auth(
         return False
 
     # Attempt to login (both username and password provided)
+    if not can_validate:
+        return True
     try:
-        await heos.sign_in(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
+        await entry.runtime_data.heos.sign_in(
+            user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+        )
     except CommandAuthenticationError as err:
         errors["base"] = "invalid_auth"
         _LOGGER.warning("Failed to sign-in to HEOS Account: %s", err)
@@ -86,7 +97,7 @@ async def _validate_auth(
     else:
         _LOGGER.debug(
             "Successfully signed-in to HEOS Account: %s",
-            heos.signed_in_username,
+            entry.runtime_data.heos.signed_in_username,
         )
         return True
 
@@ -205,8 +216,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         entry: HeosConfigEntry = self._get_reauth_entry()
         if user_input is not None:
-            assert entry.state is ConfigEntryState.LOADED
-            if await _validate_auth(user_input, entry.runtime_data.heos, errors):
+            if await _validate_auth(user_input, entry, errors):
                 return self.async_update_reload_and_abort(entry, options=user_input)
 
         return self.async_show_form(
@@ -227,8 +237,7 @@ class HeosOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            entry: HeosConfigEntry = self.config_entry
-            if await _validate_auth(user_input, entry.runtime_data.heos, errors):
+            if await _validate_auth(user_input, self.config_entry, errors):
                 return self.async_create_entry(data=user_input)
 
         return self.async_show_form(

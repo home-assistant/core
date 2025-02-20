@@ -1,5 +1,7 @@
 """Config flow for OneDrive."""
 
+from __future__ import annotations
+
 from collections.abc import Mapping
 import logging
 from typing import Any, cast
@@ -14,15 +16,19 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     SOURCE_USER,
     ConfigFlowResult,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
-from .const import CONF_FOLDER_ID, CONF_FOLDER_NAME, DOMAIN, OAUTH_SCOPES
+from .const import CONF_DELETE_PERMANENTLY, CONF_FOLDER_ID, CONF_FOLDER_NAME, DOMAIN, OAUTH_SCOPES
+from .coordinator import OneDriveConfigEntry
 
 FOLDER_NAME_SCHEMA = vol.Schema({vol.Required(CONF_FOLDER_NAME): str})
+
 
 
 class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -208,3 +214,38 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Reconfigure the entry."""
         return await self.async_step_user()
+     
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: OneDriveConfigEntry,
+    ) -> OneDriveOptionsFlowHandler:
+        """Create the options flow."""
+        return OneDriveOptionsFlowHandler()
+
+
+class OneDriveOptionsFlowHandler(OptionsFlow):
+    """Handles options flow for the component."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options for OneDrive."""
+        if user_input:
+            return self.async_create_entry(title="", data=user_input)
+
+        options_schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_DELETE_PERMANENTLY,
+                    default=self.config_entry.options.get(
+                        CONF_DELETE_PERMANENTLY, False
+                    ),
+                ): bool,
+            }
+        )
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=options_schema,
+        )

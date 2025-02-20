@@ -105,6 +105,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> 
     _async_notify_backup_listeners_soon(hass)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
+    async def update_listener(hass: HomeAssistant, entry: OneDriveConfigEntry) -> None:
+        await hass.config_entries.async_reload(entry.entry_id)
+
+    entry.async_on_unload(entry.add_update_listener(update_listener))
+
     return True
 
 

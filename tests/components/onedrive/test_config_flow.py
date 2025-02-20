@@ -11,6 +11,7 @@ from homeassistant import config_entries
 from homeassistant.components.onedrive.const import (
     CONF_FOLDER_ID,
     CONF_FOLDER_NAME,
+    CONF_DELETE_PERMANENTLY,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
@@ -327,8 +328,8 @@ async def test_reauth_flow_id_changed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_drive"
-
-
+  
+  
 @pytest.mark.usefixtures("current_request_with_host")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
@@ -425,3 +426,30 @@ async def test_reconfigure_flow_id_changed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_drive"
+
+    
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DELETE_PERMANENTLY: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        CONF_DELETE_PERMANENTLY: True,
+    }
+
