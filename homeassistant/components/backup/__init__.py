@@ -16,7 +16,7 @@ from .agent import (
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
 )
-from .config import BackupConfig
+from .config import BackupConfig, CreateBackupParametersDict
 from .const import DATA_MANAGER, DOMAIN
 from .http import async_register_http_views
 from .manager import (
@@ -55,6 +55,7 @@ __all__ = [
     "BackupReaderWriter",
     "BackupReaderWriterError",
     "CreateBackupEvent",
+    "CreateBackupParametersDict",
     "CreateBackupStage",
     "CreateBackupState",
     "Folder",

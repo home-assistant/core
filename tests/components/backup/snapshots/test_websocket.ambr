@@ -625,7 +625,7 @@
         }),
         'create_backup': dict({
           'agent_ids': list([
-            'backup.local',
+            'hassio.local',
             'test-agent',
           ]),
           'include_addons': None,
