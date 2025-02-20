@@ -68,3 +68,26 @@ def mock_tuya_login_control() -> Generator[MagicMock]:
             },
         )
         yield login_control
+
+
+@pytest.fixture
+def mock_tuya_device() -> Generator[MagicMock]:
+    """Return a mocked Tuya device."""
+    with patch("tuya_sharing.CustomerDevice", autospec=True) as device_mock:
+        device = device_mock.return_value
+        # Meaningless UUIDs
+        device.id = "20b86c73-21d9-46de-81a4-9c06e4d9666b"
+        device.name = "c6065fba-eef6-48cc-a00d-113fa673ff98"
+        device.product_name = "f89c1e61-bf9e-46a0-aff0-7c749c405dfa"
+        device.product_id = "bd9ee8fe-e0dd-42f8-b3ce-8c8fad984fda"
+        yield device
+
+
+@pytest.fixture
+def mock_tuya_manager() -> Generator[MagicMock]:
+    """Return a mocked Tuya manager."""
+    with patch("tuya_sharing.Manager", autospec=True) as manager_mock:
+        manager = manager_mock.return_value
+        # Meaningless UUIDs
+        manager.terminal_id = "7cd96aff-6ec8-4006-b093-3dbff7947591"
+        yield manager
