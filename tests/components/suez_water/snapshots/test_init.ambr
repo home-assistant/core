@@ -1,0 +1,231 @@
+# serializer version: 1
+# name: test_statistics[water_consumption_statistics][test_statistics_call1]
+  defaultdict({
+    'suez_water:123456_water_consumption_statistics': list([
+      dict({
+        'end': 1733043600.0,
+        'last_reset': None,
+        'start': 1733040000.0,
+        'state': 500.0,
+        'sum': 500.0,
+      }),
+      dict({
+        'end': 1733130000.0,
+        'last_reset': None,
+        'start': 1733126400.0,
+        'state': 500.0,
+        'sum': 1000.0,
+      }),
+      dict({
+        'end': 1733216400.0,
+        'last_reset': None,
+        'start': 1733212800.0,
+        'state': 500.0,
+        'sum': 1500.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics[water_consumption_statistics][test_statistics_call2]
+  defaultdict({
+    'suez_water:123456_water_consumption_statistics': list([
+      dict({
+        'end': 1733043600.0,
+        'last_reset': None,
+        'start': 1733040000.0,
+        'state': 500.0,
+        'sum': 500.0,
+      }),
+      dict({
+        'end': 1733130000.0,
+        'last_reset': None,
+        'start': 1733126400.0,
+        'state': 500.0,
+        'sum': 1000.0,
+      }),
+      dict({
+        'end': 1733216400.0,
+        'last_reset': None,
+        'start': 1733212800.0,
+        'state': 500.0,
+        'sum': 1500.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics[water_consumption_statistics][test_statistics_call3]
+  defaultdict({
+    'suez_water:123456_water_consumption_statistics': list([
+      dict({
+        'end': 1733043600.0,
+        'last_reset': None,
+        'start': 1733040000.0,
+        'state': 500.0,
+        'sum': 500.0,
+      }),
+      dict({
+        'end': 1733130000.0,
+        'last_reset': None,
+        'start': 1733126400.0,
+        'state': 500.0,
+        'sum': 1000.0,
+      }),
+      dict({
+        'end': 1733216400.0,
+        'last_reset': None,
+        'start': 1733212800.0,
+        'state': 500.0,
+        'sum': 1500.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics[water_consumption_statistics][test_statistics_call4]
+  defaultdict({
+    'suez_water:123456_water_consumption_statistics': list([
+      dict({
+        'end': 1733043600.0,
+        'last_reset': None,
+        'start': 1733040000.0,
+        'state': 500.0,
+        'sum': 500.0,
+      }),
+      dict({
+        'end': 1733130000.0,
+        'last_reset': None,
+        'start': 1733126400.0,
+        'state': 500.0,
+        'sum': 1000.0,
+      }),
+      dict({
+        'end': 1733216400.0,
+        'last_reset': None,
+        'start': 1733212800.0,
+        'state': 500.0,
+        'sum': 1500.0,
+      }),
+      dict({
+        'end': 1733389200.0,
+        'last_reset': None,
+        'start': 1733385600.0,
+        'state': 500.0,
+        'sum': 2000.0,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics[water_cost_statistics][test_statistics_call1]
+  defaultdict({
+    'suez_water:123456_water_cost_statistics': list([
+      dict({
+        'end': 1733043600.0,
+        'last_reset': None,
+        'start': 1733040000.0,
+        'state': 2.37,
+        'sum': 2.37,
+      }),
+      dict({
+        'end': 1733130000.0,
+        'last_reset': None,
+        'start': 1733126400.0,
+        'state': 2.37,
+        'sum': 4.74,
+      }),
+      dict({
+        'end': 1733216400.0,
+        'last_reset': None,
+        'start': 1733212800.0,
+        'state': 2.37,
+        'sum': 7.11,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics[water_cost_statistics][test_statistics_call2]
+  defaultdict({
+    'suez_water:123456_water_cost_statistics': list([
+      dict({
+        'end': 1733043600.0,
+        'last_reset': None,
+        'start': 1733040000.0,
+        'state': 2.37,
+        'sum': 2.37,
+      }),
+      dict({
+        'end': 1733130000.0,
+        'last_reset': None,
+        'start': 1733126400.0,
+        'state': 2.37,
+        'sum': 4.74,
+      }),
+      dict({
+        'end': 1733216400.0,
+        'last_reset': None,
+        'start': 1733212800.0,
+        'state': 2.37,
+        'sum': 7.11,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics[water_cost_statistics][test_statistics_call3]
+  defaultdict({
+    'suez_water:123456_water_cost_statistics': list([
+      dict({
+        'end': 1733043600.0,
+        'last_reset': None,
+        'start': 1733040000.0,
+        'state': 2.37,
+        'sum': 2.37,
+      }),
+      dict({
+        'end': 1733130000.0,
+        'last_reset': None,
+        'start': 1733126400.0,
+        'state': 2.37,
+        'sum': 4.74,
+      }),
+      dict({
+        'end': 1733216400.0,
+        'last_reset': None,
+        'start': 1733212800.0,
+        'state': 2.37,
+        'sum': 7.11,
+      }),
+    ]),
+  })
+# ---
+# name: test_statistics[water_cost_statistics][test_statistics_call4]
+  defaultdict({
+    'suez_water:123456_water_cost_statistics': list([
+      dict({
+        'end': 1733043600.0,
+        'last_reset': None,
+        'start': 1733040000.0,
+        'state': 2.37,
+        'sum': 2.37,
+      }),
+      dict({
+        'end': 1733130000.0,
+        'last_reset': None,
+        'start': 1733126400.0,
+        'state': 2.37,
+        'sum': 4.74,
+      }),
+      dict({
+        'end': 1733216400.0,
+        'last_reset': None,
+        'start': 1733212800.0,
+        'state': 2.37,
+        'sum': 7.11,
+      }),
+      dict({
+        'end': 1733389200.0,
+        'last_reset': None,
+        'start': 1733385600.0,
+        'state': 2.37,
+        'sum': 9.48,
+      }),
+    ]),
+  })
+# ---
