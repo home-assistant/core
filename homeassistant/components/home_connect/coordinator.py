@@ -367,14 +367,16 @@ class HomeConnectCoordinator(
                 )
             else:
                 programs.extend(all_programs.programs)
+                current_program_key = None
+                program_options = None
                 for program, event_key in (
-                    (
-                        all_programs.active,
-                        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                    ),
                     (
                         all_programs.selected,
                         EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+                    ),
+                    (
+                        all_programs.active,
+                        EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
                     ),
                 ):
                     if program and program.key:
@@ -386,22 +388,25 @@ class HomeConnectCoordinator(
                             "",
                             program.key,
                         )
-                        options = await self.get_options_definitions(
-                            appliance.ha_id, program.key
+                        current_program_key = program.key
+                        program_options = program.options
+                if current_program_key:
+                    options = await self.get_options_definitions(
+                        appliance.ha_id, current_program_key
+                    )
+                    for option in program_options or []:
+                        option_event_key = EventKey(option.key)
+                        events[option_event_key] = Event(
+                            option_event_key,
+                            option.key,
+                            0,
+                            "",
+                            "",
+                            option.value,
+                            option.name,
+                            display_value=option.display_value,
+                            unit=option.unit,
                         )
-                        for option in program.options or []:
-                            option_event_key = EventKey(option.key)
-                            events[option_event_key] = Event(
-                                option_event_key,
-                                option.key,
-                                0,
-                                "",
-                                "",
-                                option.value,
-                                option.name,
-                                display_value=option.display_value,
-                                unit=option.unit,
-                            )
 
         appliance_data = HomeConnectApplianceData(
             events=events,
