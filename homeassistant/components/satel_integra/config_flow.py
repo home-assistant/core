@@ -121,13 +121,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
                     },
-                    options={
-                        CONF_CODE: user_input.get(CONF_CODE),
-                        CONF_DEVICE_PARTITIONS: {},
-                        CONF_ZONES: {},
-                        CONF_OUTPUTS: {},
-                        CONF_SWITCHABLE_OUTPUTS: {},
-                    },
+                    options={CONF_CODE: user_input.get(CONF_CODE)},
                 )
 
             errors["base"] = "cannot_connect"
@@ -154,12 +148,29 @@ class SatelOptionsFlow(OptionsFlow):
     editing_entry: str
 
     def __init__(self, config_entry: SatelConfigEntry) -> None:
-        """Initialize Satel options."""
+        """Initialize Satel options flow."""
+        self._initialize_options(config_entry)
+
+        self.partition_options = self.options[CONF_DEVICE_PARTITIONS]
+        self.zone_options = self.options[CONF_ZONES]
+        self.output_options = self.options[CONF_OUTPUTS]
+        self.switchable_output_options = self.options[CONF_SWITCHABLE_OUTPUTS]
+
+    def _initialize_options(self, config_entry: SatelConfigEntry):
+        """Initialize default options."""
         self.options = deepcopy(dict(config_entry.options))
-        self.partition_options = self.options.get(CONF_DEVICE_PARTITIONS, {})
-        self.zone_options = self.options.get(CONF_ZONES, {})
-        self.output_options = self.options.get(CONF_OUTPUTS, {})
-        self.switchable_output_options = self.options.get(CONF_SWITCHABLE_OUTPUTS, {})
+
+        if CONF_DEVICE_PARTITIONS not in self.options:
+            self.options[CONF_DEVICE_PARTITIONS] = {}
+
+        if CONF_ZONES not in self.options:
+            self.options[CONF_ZONES] = {}
+
+        if CONF_OUTPUTS not in self.options:
+            self.options[CONF_OUTPUTS] = {}
+
+        if CONF_SWITCHABLE_OUTPUTS not in self.options:
+            self.options[CONF_SWITCHABLE_OUTPUTS] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
