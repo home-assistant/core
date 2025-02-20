@@ -66,7 +66,7 @@ OPTIONS_ACTION_SCHEMA = vol.Schema(
 PARTITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
-        vol.Optional(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.In(
+        vol.Required(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.In(
             [1, 2, 3]
         ),
     }
@@ -102,7 +102,10 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_HOST: user_input[CONF_HOST],
                         CONF_PORT: user_input[CONF_PORT],
                     },
-                    options={CONF_CODE: user_input.get(CONF_CODE)},
+                    options={
+                        CONF_CODE: user_input.get(CONF_CODE),
+                        CONF_DEVICE_PARTITIONS: {},
+                    },
                 )
 
             errors["base"] = "cannot_connect"
