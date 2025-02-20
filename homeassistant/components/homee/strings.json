@@ -61,6 +61,11 @@
         "name": "Ventilate"
       }
     },
+    "light": {
+      "light_instance": {
+        "name": "Light {instance}"
+      }
+    },
     "sensor": {
       "brightness_instance": {
         "name": "Illuminance {instance}"
