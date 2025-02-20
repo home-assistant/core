@@ -1,5 +1,8 @@
 """Arcam sensors."""
 
+from collections.abc import Callable
+import re
+
 from arcam.fmj.state import State
 
 from homeassistant.components.sensor import (
@@ -21,6 +24,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Sensor entry setup."""
+    entities: list[SensorEntity] = []
+
     client = config_entry.runtime_data
     uuid = config_entry.unique_id or config_entry.entry_id
     device_info = DeviceInfo(
@@ -32,276 +37,152 @@ async def async_setup_entry(
         name=config_entry.title,
     )
 
-    entities: list[SensorEntity] = []
     for zn in (1, 2):
         zone = State(client, zn)
         entities.append(
-            IncomingVideoResolutionHorizontalSensor(device_info, zone, uuid)
+            ArcamFmjSensor(
+                device_info,
+                uuid,
+                zone,
+                "Incoming Video Resolution, Horizontal",
+                lambda zone: getattr(
+                    zone.get_incoming_video_parameters(), "horizontal_resolution", None
+                ),
+                SensorStateClass.MEASUREMENT,
+                "px",
+            )
         )
-        entities.append(IncomingVideoResolutionVerticalSensor(device_info, zone, uuid))
-        entities.append(IncomingVideoRefreshRateSensor(device_info, zone, uuid))
-        entities.append(IncomingVideoAspectRatioSensor(device_info, zone, uuid))
-        entities.append(IncomingVideoColorspaceSensor(device_info, zone, uuid))
-        entities.append(IncomingAudioFormatSensor(device_info, zone, uuid))
-        entities.append(IncomingAudioConfigurationSensor(device_info, zone, uuid))
-        entities.append(IncomingAudioSampleRateSensor(device_info, zone, uuid))
+        entities.append(
+            ArcamFmjSensor(
+                device_info,
+                uuid,
+                zone,
+                "Incoming Video Resolution, Vertical",
+                lambda zone: getattr(
+                    zone.get_incoming_video_parameters(), "vertical_resolution", None
+                ),
+                SensorStateClass.MEASUREMENT,
+                "px",
+            )
+        )
+        entities.append(
+            ArcamFmjSensor(
+                device_info,
+                uuid,
+                zone,
+                "Incoming Video Refresh Rate",
+                lambda zone: getattr(
+                    zone.get_incoming_video_parameters(), "refresh_rate", None
+                ),
+                SensorStateClass.MEASUREMENT,
+                "Hz",
+                SensorDeviceClass.FREQUENCY,
+            )
+        )
+        entities.append(
+            ArcamFmjSensor(
+                device_info,
+                uuid,
+                zone,
+                "Incoming Video Aspect Ratio",
+                lambda zone: getattr(
+                    getattr(zone.get_incoming_video_parameters(), "aspect_ratio", None),
+                    "name",
+                    None,
+                ),
+            )
+        )
+        entities.append(
+            ArcamFmjSensor(
+                device_info,
+                uuid,
+                zone,
+                "Incoming Video Colorspace",
+                lambda zone: getattr(
+                    getattr(zone.get_incoming_video_parameters(), "colorspace", None),
+                    "name",
+                    None,
+                ),
+            )
+        )
+        entities.append(
+            ArcamFmjSensor(
+                device_info,
+                uuid,
+                zone,
+                "Incoming Audio Format",
+                lambda zone: getattr(zone.get_incoming_audio_format()[0], "name", None),
+            )
+        )
+        entities.append(
+            ArcamFmjSensor(
+                device_info,
+                uuid,
+                zone,
+                "Incoming Audio Configuration",
+                lambda zone: getattr(zone.get_incoming_audio_format()[1], "name", None),
+            )
+        )
+        entities.append(
+            ArcamFmjSensor(
+                device_info,
+                uuid,
+                zone,
+                "Incoming Audio Sample Rate",
+                lambda zone: zone.get_incoming_audio_sample_rate(),
+                SensorStateClass.MEASUREMENT,
+                "Hz",
+                SensorDeviceClass.FREQUENCY,
+            )
+        )
 
     async_add_entities(entities)
 
 
-class IncomingVideoResolutionHorizontalSensor(SensorEntity):
+class ArcamFmjSensor(SensorEntity):
     """Metadata sensor."""
 
     def __init__(
         self,
         device_info: DeviceInfo,
-        state: State,
         uuid: str,
+        state: State,
+        name: str,
+        value_f: Callable[[State], int | str | None],
+        state_class: SensorStateClass | None = None,
+        unit_of_measurement: str | None = None,
+        device_class: SensorDeviceClass | None = None,
     ) -> None:
         """Initialize sensor."""
         self._state = state
-        self._attr_name = f"Zone {state.zn} Incoming Video Resolution, Horizontal"
-        self._attr_unique_id = f"{uuid}-{state.zn}-incoming-video-resolution-horizontal"
+        self._attr_name = f"Zone {state.zn} {name}"
+        self._attr_unique_id = f"{uuid}-{state.zn}-{re.sub(r'\W+', '-', name.lower())}"
         self._attr_entity_registry_enabled_default = False
         self._attr_device_info = device_info
+        self._value_f = value_f
+        self._state_class = state_class
+        self._unit_of_measurement = unit_of_measurement
+        self._device_class = device_class
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> int | str | None:
         """Sensor value."""
-        return getattr(
-            self._state.get_incoming_video_parameters(), "horizontal_resolution", None
-        )
+        return self._value_f(self._state)
 
     @property
-    def native_unit_of_measurement(self) -> str:
-        """Unit of measure."""
-        return "px"
-
-    @property
-    def state_class(self) -> SensorStateClass:
+    def state_class(self) -> SensorStateClass | None:
         """State class."""
-        return SensorStateClass.MEASUREMENT
+        return self._state_class
 
     @property
-    def suggested_display_precision(self) -> int:
-        """Display precision."""
-        return 0
-
-
-class IncomingVideoResolutionVerticalSensor(SensorEntity):
-    """Metadata sensor."""
-
-    def __init__(
-        self,
-        device_info: DeviceInfo,
-        state: State,
-        uuid: str,
-    ) -> None:
-        """Initialize sensor."""
-        self._state = state
-        self._attr_name = f"Zone {state.zn} Incoming Video Resolution, Vertical"
-        self._attr_unique_id = f"{uuid}-{state.zn}-incoming-video-resolution-vertical"
-        self._attr_entity_registry_enabled_default = False
-        self._attr_device_info = device_info
-
-    @property
-    def native_value(self) -> int | None:
-        """Sensor value."""
-        return getattr(
-            self._state.get_incoming_video_parameters(), "vertical_resolution", None
-        )
-
-    @property
-    def native_unit_of_measurement(self) -> str:
+    def native_unit_of_measurement(self) -> str | None:
         """Unit of measure."""
-        return "px"
+        return self._unit_of_measurement
 
     @property
-    def state_class(self) -> SensorStateClass:
-        """State class."""
-        return SensorStateClass.MEASUREMENT
-
-    @property
-    def suggested_display_precision(self) -> int:
-        """Display precision."""
-        return 0
-
-
-class IncomingVideoRefreshRateSensor(SensorEntity):
-    """Metadata sensor."""
-
-    def __init__(
-        self,
-        device_info: DeviceInfo,
-        state: State,
-        uuid: str,
-    ) -> None:
-        """Initialize sensor."""
-        self._state = state
-        self._attr_name = f"Zone {state.zn} Incoming Video Refresh Rate"
-        self._attr_unique_id = f"{uuid}-{state.zn}-incoming-video-refresh-rate"
-        self._attr_entity_registry_enabled_default = False
-        self._attr_device_info = device_info
-
-    @property
-    def native_value(self) -> int | None:
-        """Sensor value."""
-        return getattr(
-            self._state.get_incoming_video_parameters(), "refresh_rate", None
-        )
-
-    @property
-    def device_class(self) -> SensorDeviceClass:
+    def device_class(self) -> SensorDeviceClass | None:
         """Device class."""
-        return SensorDeviceClass.FREQUENCY
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Unit of measure."""
-        return "Hz"
-
-    @property
-    def state_class(self) -> SensorStateClass:
-        """State class."""
-        return SensorStateClass.MEASUREMENT
-
-    @property
-    def suggested_display_precision(self) -> int:
-        """Display precision."""
-        return 0
-
-
-class IncomingVideoAspectRatioSensor(SensorEntity):
-    """Metadata sensor."""
-
-    def __init__(
-        self,
-        device_info: DeviceInfo,
-        state: State,
-        uuid: str,
-    ) -> None:
-        """Initialize sensor."""
-        self._state = state
-        self._attr_name = f"Zone {state.zn} Incoming Video Aspect Ratio"
-        self._attr_unique_id = f"{uuid}-{state.zn}-incoming-video-aspect-ratio"
-        self._attr_entity_registry_enabled_default = False
-        self._attr_device_info = device_info
-
-    @property
-    def native_value(self) -> str | None:
-        """Sensor value."""
-        return getattr(
-            getattr(self._state.get_incoming_video_parameters(), "aspect_ratio", None),
-            "name",
-            None,
-        )
-
-
-class IncomingVideoColorspaceSensor(SensorEntity):
-    """Metadata sensor."""
-
-    def __init__(
-        self,
-        device_info: DeviceInfo,
-        state: State,
-        uuid: str,
-    ) -> None:
-        """Initialize sensor."""
-        self._state = state
-        self._attr_name = f"Zone {state.zn} Incoming Video Colorspace"
-        self._attr_unique_id = f"{uuid}-{state.zn}-incoming-video-colorspace"
-        self._attr_entity_registry_enabled_default = False
-        self._attr_device_info = device_info
-
-    @property
-    def native_value(self) -> str | None:
-        """Sensor value."""
-        return getattr(
-            getattr(self._state.get_incoming_video_parameters(), "colorspace", None),
-            "name",
-            None,
-        )
-
-
-class IncomingAudioFormatSensor(SensorEntity):
-    """Metadata sensor."""
-
-    def __init__(
-        self,
-        device_info: DeviceInfo,
-        state: State,
-        uuid: str,
-    ) -> None:
-        """Initialize sensor."""
-        self._state = state
-        self._attr_name = f"Zone {state.zn} Incoming Audio Format"
-        self._attr_unique_id = f"{uuid}-{state.zn}-incoming-audio-format"
-        self._attr_entity_registry_enabled_default = False
-        self._attr_device_info = device_info
-
-    @property
-    def native_value(self) -> str | None:
-        """Sensor value."""
-        return getattr(self._state.get_incoming_audio_format()[0], "name", None)
-
-
-class IncomingAudioConfigurationSensor(SensorEntity):
-    """Metadata sensor."""
-
-    def __init__(
-        self,
-        device_info: DeviceInfo,
-        state: State,
-        uuid: str,
-    ) -> None:
-        """Initialize sensor."""
-        self._state = state
-        self._attr_name = f"Zone {state.zn} Incoming Audio Configuration"
-        self._attr_unique_id = f"{uuid}-{state.zn}-incoming-audio-configuration"
-        self._attr_entity_registry_enabled_default = False
-        self._attr_device_info = device_info
-
-    @property
-    def native_value(self) -> str | None:
-        """Sensor value."""
-        return getattr(self._state.get_incoming_audio_format()[1], "name", None)
-
-
-class IncomingAudioSampleRateSensor(SensorEntity):
-    """Metadata sensor."""
-
-    def __init__(
-        self,
-        device_info: DeviceInfo,
-        state: State,
-        uuid: str,
-    ) -> None:
-        """Initialize sensor."""
-        self._state = state
-        self._attr_name = f"Zone {state.zn} Incoming Audio Sample Rate"
-        self._attr_unique_id = f"{uuid}-{state.zn}-incoming-audio-sample-rate"
-        self._attr_entity_registry_enabled_default = False
-        self._attr_device_info = device_info
-
-    @property
-    def native_value(self) -> int:
-        """Sensor value."""
-        return self._state.get_incoming_audio_sample_rate()
-
-    @property
-    def device_class(self) -> SensorDeviceClass:
-        """Device class."""
-        return SensorDeviceClass.FREQUENCY
-
-    @property
-    def native_unit_of_measurement(self) -> str:
-        """Unit of measure."""
-        return "Hz"
-
-    @property
-    def state_class(self) -> SensorStateClass:
-        """State class."""
-        return SensorStateClass.MEASUREMENT
+        return self._device_class
 
     @property
     def suggested_display_precision(self) -> int:
