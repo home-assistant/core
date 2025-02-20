@@ -173,8 +173,8 @@
       "installation_height": {
         "name": "Installation height"
       },
-      "liquid_depth_max": {
-        "name": "Sensor to full-line distance"
+      "sensor_distance_to_max": {
+        "name": "Sensor to full-line"
       },
       "max_set": {
         "name": "Water upper level alarm"
@@ -654,8 +654,8 @@
         "name": "Liquid state",
         "state": {
           "normal": "Normal",
-          "lower_alarm": "Lower Alarm",
-          "upper_alarm": "Upper Alarm"
+          "lower_alarm": "Lower alarm",
+          "upper_alarm": "Upper alarm"
         }
       },
       "liquid_depth": {
@@ -872,9 +872,6 @@
       },
       "sterilization": {
         "name": "Sterilization"
-      },
-      "upper_switch": {
-        "name": "Sleep switch"
       }
     }
   }

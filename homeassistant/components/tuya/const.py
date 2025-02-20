@@ -222,7 +222,6 @@ class DPCode(StrEnum):
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
     LIQUID_DEPTH = "liquid_depth"
-    LIQUID_DEPTH_MAX = "liquid_depth_max"
     LIQUID_LEVEL_PERCENT = "liquid_level_percent"
     LIQUID_STATE = "liquid_state"
     LOCK = "lock"  # Lock / Child lock
@@ -282,6 +281,7 @@ class DPCode(StrEnum):
     ROLL_BRUSH = "roll_brush"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
+    SENSOR_DISTANCE_TO_MAX = "liquid_depth_max"  # Distance from the ultrasonic sensor to the maximum (100%) water level
     SENSOR_HUMIDITY = "sensor_humidity"
     SENSOR_TEMPERATURE = "sensor_temperature"
     SHAKE = "shake"  # Oscillating
@@ -357,7 +357,7 @@ class DPCode(StrEnum):
     TOTAL_PM = "total_pm"
     TOTAL_POWER = "total_power"
     TVOC = "tvoc"
-    UPPER_SWITCH = "upper_switch"
+    SLEEP_SWITCH = "upper_switch"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization

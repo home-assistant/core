@@ -673,8 +673,8 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
     ),
     "ywcgq": (
         SwitchEntityDescription(
-            key=DPCode.UPPER_SWITCH,
-            translation_key="upper_switch",
+            key=DPCode.SLEEP_SWITCH,
+            translation_key="sleep",
             entity_category=EntityCategory.CONFIG,
         ),
     ),

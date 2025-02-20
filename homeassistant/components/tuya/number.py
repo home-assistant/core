@@ -321,8 +321,8 @@ NUMBERS: dict[str, tuple[NumberEntityDescription, ...]] = {
             native_unit_of_measurement=UnitOfLength.METERS,
         ),
         NumberEntityDescription(
-            key=DPCode.LIQUID_DEPTH_MAX,
-            translation_key="liquid_depth_max",
+            key=DPCode.SENSOR_DISTANCE_TO_MAX,
+            translation_key="sensor_distance_to_max",
             entity_category=EntityCategory.CONFIG,
             device_class=NumberDeviceClass.DISTANCE,
             native_unit_of_measurement=UnitOfLength.METERS,
