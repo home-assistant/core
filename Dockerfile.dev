@@ -52,7 +52,7 @@ USER vscode
 ENV VIRTUAL_ENV="/home/vscode/.local/ha-venv"
 RUN uv python install 3.13.2 \
     && export UV_PYTHON_BIN=$(uv python find 3.13.2) \
-    && uv venv $VIRTUAL_ENV -p $UV_PYTHON_BIN
+    && uv venv $VIRTUAL_ENV -p "$UV_PYTHON_BIN"
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 WORKDIR /tmp
