@@ -17,8 +17,8 @@
           "description": "State to write."
         },
         "slave": {
-          "name": "Client",
-          "description": "Address of the Modbus unit/client."
+          "name": "Server",
+          "description": "Address of the Modbus unit/server."
         },
         "hub": {
           "name": "Hub",
