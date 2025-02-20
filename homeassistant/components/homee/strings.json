@@ -156,11 +156,25 @@
           "tilted": "Tilted"
         }
       }
+    },
+    "switch": {
+      "external_binary_input": {
+        "name": "Child lock"
+      },
+      "manual_operation": {
+        "name": "Manual operation"
+      },
+      "on_off_instance": {
+        "name": "Switch {instance}"
+      },
+      "watchdog": {
+        "name": "Watchdog"
+      }
     }
   },
   "exceptions": {
     "connection_closed": {
-      "message": "Could not connect to Homee while setting attribute"
+      "message": "Could not connect to Homee while setting attribute."
     }
   }
 }

@@ -20,6 +20,9 @@ class MockHeos(Heos):
         self.get_input_sources: AsyncMock = AsyncMock()
         self.get_playlists: AsyncMock = AsyncMock()
         self.get_players: AsyncMock = AsyncMock()
+        self.group_volume_down: AsyncMock = AsyncMock()
+        self.group_volume_up: AsyncMock = AsyncMock()
+        self.get_system_info: AsyncMock = AsyncMock()
         self.load_players: AsyncMock = AsyncMock()
         self.play_media: AsyncMock = AsyncMock()
         self.play_preset_station: AsyncMock = AsyncMock()
@@ -34,6 +37,7 @@ class MockHeos(Heos):
         self.player_set_play_state: AsyncMock = AsyncMock()
         self.player_set_volume: AsyncMock = AsyncMock()
         self.set_group: AsyncMock = AsyncMock()
+        self.set_group_volume: AsyncMock = AsyncMock()
         self.sign_in: AsyncMock = AsyncMock()
         self.sign_out: AsyncMock = AsyncMock()
 

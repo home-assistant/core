@@ -21,7 +21,7 @@
         }
       },
       "state_characteristic": {
-        "description": "Read the documention for further details on available options and how to use them.",
+        "description": "Read the documentation for further details on available options and how to use them.",
         "data": {
           "state_characteristic": "Statistic characteristic"
         },
@@ -30,7 +30,7 @@
         }
       },
       "options": {
-        "description": "Read the documention for further details on how to configure the statistics sensor using these options.",
+        "description": "Read the documentation for further details on how to configure the statistics sensor using these options.",
         "data": {
           "sampling_size": "Sampling size",
           "max_age": "Max age",

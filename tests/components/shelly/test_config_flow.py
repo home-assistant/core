@@ -117,6 +117,73 @@ async def test_form(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_user_flow_overrides_existing_discovery(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test setting up from the user flow when the devices is already discovered."""
+    with (
+        patch(
+            "homeassistant.components.shelly.config_flow.get_info",
+            return_value={
+                "mac": "AABBCCDDEEFF",
+                "model": MODEL_PLUS_2PM,
+                "auth": False,
+                "gen": 2,
+                "port": 80,
+            },
+        ),
+        patch(
+            "homeassistant.components.shelly.async_setup", return_value=True
+        ) as mock_setup,
+        patch(
+            "homeassistant.components.shelly.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        discovery_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            data=ZeroconfServiceInfo(
+                ip_address=ip_address("1.1.1.1"),
+                ip_addresses=[ip_address("1.1.1.1")],
+                hostname="mock_hostname",
+                name="shelly2pm-aabbccddeeff",
+                port=None,
+                properties={ATTR_PROPERTIES_ID: "shelly2pm-aabbccddeeff"},
+                type="mock_type",
+            ),
+            context={"source": config_entries.SOURCE_ZEROCONF},
+        )
+        assert discovery_result["type"] is FlowResultType.FORM
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {}
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {"host": "1.1.1.1", "port": 80},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Test name"
+    assert result2["data"] == {
+        "host": "1.1.1.1",
+        "port": 80,
+        "model": MODEL_PLUS_2PM,
+        "sleep_period": 0,
+        "gen": 2,
+    }
+    assert result2["context"]["unique_id"] == "AABBCCDDEEFF"
+    assert len(mock_setup.mock_calls) == 1
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    # discovery flow should have been aborted
+    assert not hass.config_entries.flow.async_progress(DOMAIN)
+
+
 async def test_form_gen1_custom_port(
     hass: HomeAssistant,
     mock_block_device: Mock,
