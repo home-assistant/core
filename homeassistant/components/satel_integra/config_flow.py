@@ -56,7 +56,10 @@ CODE_SCHEMA = vol.Schema(
 
 OPTIONS_ACTION_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ACTION_NUMBER): int,
+        vol.Required(CONF_ACTION_NUMBER): vol.All(
+            int,
+            vol.Range(min=1),
+        ),
         vol.Required(CONF_ACTION): selector.SelectSelector(
             selector.SelectSelectorConfig(
                 translation_key="action_selector",
