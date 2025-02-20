@@ -139,8 +139,8 @@
             "entity": "Add another entity to {mqtt_device}",
             "update_entity": "Update entity properties",
             "delete_entity": "Delete an entity",
-            "device": "Edit device properties",
-            "finish_reconfigure": "Finish reconfiguring {mqtt_device}"
+            "device": "Update device properties",
+            "finish_reconfigure": "Save changes"
           }
         },
         "entity": {

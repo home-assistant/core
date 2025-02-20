@@ -2689,15 +2689,6 @@ async def test_subentry_configflow(
         },
     )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-
-    # Finish confirm form
-    result = await hass.config_entries.subentries.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Milk notifier"
 
@@ -2766,12 +2757,12 @@ async def test_subentry_reconfigure_remove_entity(
         assert entity_entry.config_subentry_id == subentry_id
 
     # assert menu options, we have the option to delete one entity
+    # we have no option to save and finish yet
     assert result["menu_options"] == [
         "entity",
         "update_entity",
         "delete_entity",
         "device",
-        "finish_reconfigure",
     ]
 
     # assert we can delete an entity
@@ -2874,12 +2865,12 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
         assert entity_entry.config_subentry_id == subentry_id
 
     # assert menu options, we have the option to delete one entity
+    # we have no option to save and finish yet
     assert result["menu_options"] == [
         "entity",
         "update_entity",
         "delete_entity",
         "device",
-        "finish_reconfigure",
     ]
 
     # assert we can update an entity
@@ -3005,11 +2996,11 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     assert entity_entry.config_subentry_id == subentry_id
 
     # assert menu options, we do not have the option to delete an entity
+    # we have no option to save and finish yet
     assert result["menu_options"] == [
         "entity",
         "update_entity",
         "device",
-        "finish_reconfigure",
     ]
 
     # assert we can update the entity, there is no select step
@@ -3111,11 +3102,11 @@ async def test_subentry_reconfigure_add_entity(
     assert entity_entry.config_subentry_id == subentry_id
 
     # assert menu options, we do not have the option to delete an entity
+    # we have no option to save and finish yet
     assert result["menu_options"] == [
         "entity",
         "update_entity",
         "device",
-        "finish_reconfigure",
     ]
 
     # assert we can update the entity, there is no select step
@@ -3226,12 +3217,12 @@ async def test_subentry_reconfigure_update_device_properties(
     assert device["model_id"] == "mn002"
 
     # assert menu options, we have the option to delete one entity
+    # we have no option to save and finish yet
     assert result["menu_options"] == [
         "entity",
         "update_entity",
         "delete_entity",
         "device",
-        "finish_reconfigure",
     ]
 
     # assert we can update the device info

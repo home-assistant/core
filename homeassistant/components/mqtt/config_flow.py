@@ -866,6 +866,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
     _subentry_data: MqttSubentryData
     _object_id: str | None = None
     _component_id: str | None = None
+    _dirty: bool = False
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -893,6 +894,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if not errors and user_input is not None:
             self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, user_input)
             if self.source == SOURCE_RECONFIGURE:
+                self._dirty = True
                 return await self.async_step_summary_menu()
             return await self.async_step_entity()
 
@@ -997,6 +999,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Select the entity to delete."""
         if user_input:
+            self._dirty = True
             del self._subentry_data["components"][user_input["component"]]
             return await self.async_step_summary_menu()
         entities = list(self._subentry_data["components"].keys())
@@ -1053,6 +1056,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 component_data.update(user_input)
                 self._object_id = None
                 if self.source == SOURCE_RECONFIGURE:
+                    self._dirty = True
                     return await self.async_step_summary_menu()
                 return self._async_create_entry()
 
@@ -1111,7 +1115,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if len(self._subentry_data["components"]) > 1:
             menu_options.append("delete_entity")
         menu_options.append(CONF_DEVICE)
-        menu_options.append("finish_reconfigure")
+        if self._dirty:
+            menu_options.append("finish_reconfigure")
         return self.async_show_menu(
             step_id="summary_menu",
             menu_options=menu_options,
