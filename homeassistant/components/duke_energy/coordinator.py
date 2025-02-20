@@ -145,6 +145,7 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR
                 if meter["serviceType"] == "ELECTRIC"
                 else UnitOfVolume.CENTUM_CUBIC_FEET,
+                has_circular_mean=False,
             )
 
             _LOGGER.debug(

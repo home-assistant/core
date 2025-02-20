@@ -583,6 +583,8 @@ class StatisticsBase:
     last_reset_ts = Column(TIMESTAMP_TYPE)
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
+    # *** Not originally in v32, only added for recorder to startup ok
+    circular_mean = Column(Boolean)
 
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
@@ -636,6 +638,8 @@ class StatisticsMeta(Base):  # type: ignore[misc,valid-type]
     has_mean = Column(Boolean)
     has_sum = Column(Boolean)
     name = Column(String(255))
+    # *** Not originally in v32, only added for recorder to startup ok
+    has_circular_mean = Column(Boolean)
 
     @staticmethod
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:

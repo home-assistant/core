@@ -631,6 +631,8 @@ class StatisticsMeta(Base):  # type: ignore[misc,valid-type]
     has_mean = Column(Boolean)
     has_sum = Column(Boolean)
     name = Column(String(255))
+    # *** Not originally in v30, only added for recorder to startup ok
+    has_circular_mean = Column(Boolean)
 
     @staticmethod
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:

@@ -286,6 +286,7 @@ async def test_compile_hourly_statistics(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -400,6 +401,7 @@ async def test_compile_hourly_statistics_with_some_same_last_updated(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -509,6 +511,7 @@ async def test_compile_hourly_statistics_with_all_same_last_updated(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -616,6 +619,7 @@ async def test_compile_hourly_statistics_only_state_is_and_end_of_period(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -696,6 +700,7 @@ async def test_compile_hourly_statistics_purged_state_changes(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -787,6 +792,7 @@ async def test_compile_hourly_statistics_wrong_unit(
             "source": "recorder",
             "statistics_unit_of_measurement": "°C",
             "unit_class": "temperature",
+            "has_circular_mean": False,
         },
         {
             "display_unit_of_measurement": "invalid",
@@ -797,6 +803,7 @@ async def test_compile_hourly_statistics_wrong_unit(
             "statistic_id": "sensor.test2",
             "statistics_unit_of_measurement": "invalid",
             "unit_class": None,
+            "has_circular_mean": False,
         },
         {
             "display_unit_of_measurement": None,
@@ -807,6 +814,7 @@ async def test_compile_hourly_statistics_wrong_unit(
             "statistic_id": "sensor.test3",
             "statistics_unit_of_measurement": None,
             "unit_class": "unitless",
+            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test6",
@@ -817,6 +825,7 @@ async def test_compile_hourly_statistics_wrong_unit(
             "source": "recorder",
             "statistics_unit_of_measurement": "°C",
             "unit_class": "temperature",
+            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test7",
@@ -827,6 +836,7 @@ async def test_compile_hourly_statistics_wrong_unit(
             "source": "recorder",
             "statistics_unit_of_measurement": "°C",
             "unit_class": "temperature",
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -998,6 +1008,7 @@ async def test_compile_hourly_sum_statistics_amount(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -1202,6 +1213,7 @@ async def test_compile_hourly_sum_statistics_amount_reset_every_state_change(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1311,6 +1323,7 @@ async def test_compile_hourly_sum_statistics_amount_invalid_last_reset(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1407,6 +1420,7 @@ async def test_compile_hourly_sum_statistics_nan_inf_state(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -1551,6 +1565,7 @@ async def test_compile_hourly_sum_statistics_negative_state(
         "statistic_id": entity_id,
         "statistics_unit_of_measurement": statistics_unit,
         "unit_class": unit_class,
+        "has_circular_mean": False,
     } in statistic_ids
     stats = statistics_during_period(hass, zero, period="5minute")
     assert stats[entity_id] == [
@@ -1651,6 +1666,7 @@ async def test_compile_hourly_sum_statistics_total_no_reset(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -1764,6 +1780,7 @@ async def test_compile_hourly_sum_statistics_total_increasing(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -1890,6 +1907,7 @@ async def test_compile_hourly_sum_statistics_total_increasing_small_dip(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -1994,6 +2012,7 @@ async def test_compile_hourly_energy_statistics_unsupported(
             "source": "recorder",
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
+            "has_circular_mean": False,
         }
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -2096,6 +2115,7 @@ async def test_compile_hourly_energy_statistics_multiple(
             "source": "recorder",
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
+            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test2",
@@ -2106,6 +2126,7 @@ async def test_compile_hourly_energy_statistics_multiple(
             "source": "recorder",
             "statistics_unit_of_measurement": "kWh",
             "unit_class": "energy",
+            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test3",
@@ -2116,6 +2137,7 @@ async def test_compile_hourly_energy_statistics_multiple(
             "source": "recorder",
             "statistics_unit_of_measurement": "Wh",
             "unit_class": "energy",
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, period0, period="5minute")
@@ -2515,6 +2537,7 @@ async def test_list_statistic_ids(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     for stat_type in ("mean", "sum", "dogs"):
@@ -2530,6 +2553,7 @@ async def test_list_statistic_ids(
                     "source": "recorder",
                     "statistics_unit_of_measurement": statistics_unit,
                     "unit_class": unit_class,
+                    "has_circular_mean": False,
                 },
             ]
         else:
@@ -2637,6 +2661,7 @@ async def test_compile_hourly_statistics_changing_units_1(
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -2672,6 +2697,7 @@ async def test_compile_hourly_statistics_changing_units_1(
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -2763,6 +2789,7 @@ async def test_compile_hourly_statistics_changing_units_2(
             "source": "recorder",
             "statistics_unit_of_measurement": "cats",
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -2845,6 +2872,7 @@ async def test_compile_hourly_statistics_changing_units_3(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -2880,6 +2908,7 @@ async def test_compile_hourly_statistics_changing_units_3(
             "source": "recorder",
             "statistics_unit_of_measurement": statistics_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -2962,6 +2991,7 @@ async def test_compile_hourly_statistics_convert_units_1(
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit_1,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3009,6 +3039,7 @@ async def test_compile_hourly_statistics_convert_units_1(
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit_1,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3125,6 +3156,7 @@ async def test_compile_hourly_statistics_equivalent_units_1(
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3156,6 +3188,7 @@ async def test_compile_hourly_statistics_equivalent_units_1(
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit2,
             "unit_class": unit_class2,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3247,6 +3280,7 @@ async def test_compile_hourly_statistics_equivalent_units_2(
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3331,6 +3365,7 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3380,6 +3415,7 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3439,6 +3475,7 @@ async def test_compile_hourly_statistics_changing_device_class_1(
             "source": "recorder",
             "statistics_unit_of_measurement": state_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3543,6 +3580,7 @@ async def test_compile_hourly_statistics_changing_device_class_2(
             "source": "recorder",
             "statistics_unit_of_measurement": statistic_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3592,6 +3630,7 @@ async def test_compile_hourly_statistics_changing_device_class_2(
             "source": "recorder",
             "statistics_unit_of_measurement": statistic_unit,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     stats = statistics_during_period(hass, zero, period="5minute")
@@ -3684,6 +3723,7 @@ async def test_compile_hourly_statistics_changing_state_class(
             "source": "recorder",
             "statistics_unit_of_measurement": None,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     metadata = get_metadata(hass, statistic_ids={"sensor.test1"})
@@ -3697,6 +3737,7 @@ async def test_compile_hourly_statistics_changing_state_class(
                 "source": "recorder",
                 "statistic_id": "sensor.test1",
                 "unit_of_measurement": None,
+                "has_circular_mean": False,
             },
         )
     }
@@ -3726,6 +3767,7 @@ async def test_compile_hourly_statistics_changing_state_class(
             "source": "recorder",
             "statistics_unit_of_measurement": None,
             "unit_class": unit_class,
+            "has_circular_mean": False,
         },
     ]
     metadata = get_metadata(hass, statistic_ids={"sensor.test1"})
@@ -3739,6 +3781,7 @@ async def test_compile_hourly_statistics_changing_state_class(
                 "source": "recorder",
                 "statistic_id": "sensor.test1",
                 "unit_of_measurement": None,
+                "has_circular_mean": False,
             },
         )
     }
@@ -3930,6 +3973,7 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
             "source": "recorder",
             "statistics_unit_of_measurement": "%",
             "unit_class": "unitless",
+            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test2",
@@ -3940,6 +3984,7 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
             "source": "recorder",
             "statistics_unit_of_measurement": "%",
             "unit_class": "unitless",
+            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test3",
@@ -3950,6 +3995,7 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
             "source": "recorder",
             "statistics_unit_of_measurement": "%",
             "unit_class": "unitless",
+            "has_circular_mean": False,
         },
         {
             "statistic_id": "sensor.test4",
@@ -3960,6 +4006,7 @@ async def test_compile_statistics_hourly_daily_monthly_summary(
             "source": "recorder",
             "statistics_unit_of_measurement": "EUR",
             "unit_class": None,
+            "has_circular_mean": False,
         },
     ]
 
