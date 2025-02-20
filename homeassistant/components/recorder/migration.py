@@ -2004,14 +2004,8 @@ class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
         _add_columns(
             self.session_maker,
             "statistics_meta",
-            ["has_circular_mean BOOLEAN"],
+            ["has_circular_mean BOOLEAN DEFAULT FALSE NOT NULL"],
         )
-
-        with session_scope(session=self.session_maker()) as session:
-            connection = session.connection()
-            connection.execute(
-                text("UPDATE statistics_meta SET has_circular_mean = false")
-            )
 
 
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(

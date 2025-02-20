@@ -312,7 +312,6 @@ async def test_statistic_during_period(
         "source": "recorder",
         "statistic_id": "sensor.test",
         "unit_of_measurement": "kWh",
-        "has_circular_mean": False,
     }
 
     recorder.get_instance(hass).async_import_statistics(
@@ -723,7 +722,6 @@ async def test_statistic_during_period_hole(
         "source": "recorder",
         "statistic_id": "sensor.test",
         "unit_of_measurement": "kWh",
-        "has_circular_mean": False,
     }
 
     recorder.get_instance(hass).async_import_statistics(
@@ -922,7 +920,6 @@ async def test_statistic_during_period_partial_overlap(
         "source": "recorder",
         "statistic_id": statId,
         "unit_of_measurement": "kWh",
-        "has_circular_mean": False,
     }
 
     recorder.get_instance(hass).async_import_statistics(
@@ -2809,7 +2806,6 @@ async def test_get_statistics_metadata(
         "source": "test",
         "statistic_id": "test:total_gas",
         "unit_of_measurement": unit,
-        "has_circular_mean": False,
     }
 
     async_add_external_statistics(
@@ -3730,7 +3726,6 @@ async def test_import_statistics_with_last_reset(
         "source": "test",
         "statistic_id": "test:total_energy_import",
         "unit_of_measurement": "kWh",
-        "has_circular_mean": False,
     }
 
     async_add_external_statistics(

@@ -82,7 +82,6 @@ async def test_demo_statistics_growth(hass: HomeAssistant) -> None:
         "unit_of_measurement": "m³",
         "has_mean": False,
         "has_sum": True,
-        "has_circular_mean": False,
     }
     statistics = [
         {

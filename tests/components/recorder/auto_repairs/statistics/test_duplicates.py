@@ -65,7 +65,6 @@ async def test_duplicate_statistics_handle_integrity_error(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
-        "has_circular_mean": False,
     }
     external_energy_statistics_1 = [
         {
@@ -150,7 +149,6 @@ async def test_delete_metadata_duplicates(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
-        "has_circular_mean": False,
     }
     external_energy_metadata_2 = {
         "has_mean": False,
@@ -159,7 +157,6 @@ async def test_delete_metadata_duplicates(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
-        "has_circular_mean": False,
     }
     external_co2_metadata = {
         "has_mean": True,
@@ -168,7 +165,6 @@ async def test_delete_metadata_duplicates(
         "source": "test",
         "statistic_id": "test:fossil_percentage",
         "unit_of_measurement": "%",
-        "has_circular_mean": False,
     }
 
     def add_statistics_meta(hass: HomeAssistant) -> None:
@@ -261,7 +257,6 @@ async def test_delete_metadata_duplicates_many(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_1",
         "unit_of_measurement": "kWh",
-        "has_circular_mean": False,
     }
     external_energy_metadata_2 = {
         "has_mean": False,
@@ -270,7 +265,6 @@ async def test_delete_metadata_duplicates_many(
         "source": "test",
         "statistic_id": "test:total_energy_import_tariff_2",
         "unit_of_measurement": "kWh",
-        "has_circular_mean": False,
     }
     external_co2_metadata = {
         "has_mean": True,
@@ -279,7 +273,6 @@ async def test_delete_metadata_duplicates_many(
         "source": "test",
         "statistic_id": "test:fossil_percentage",
         "unit_of_measurement": "%",
-        "has_circular_mean": False,
     }
 
     def add_statistics_meta(hass: HomeAssistant) -> None:

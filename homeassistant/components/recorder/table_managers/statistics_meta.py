@@ -177,7 +177,10 @@ class StatisticsMetaManager:
             or old_metadata["name"] != new_metadata["name"]
             or old_metadata["unit_of_measurement"]
             != new_metadata["unit_of_measurement"]
-            or old_metadata["has_circular_mean"] != new_metadata["has_circular_mean"]
+            or old_metadata["has_circular_mean"]
+            != new_metadata.get(
+                "has_circular_mean", False
+            )  # To avoid backwards incompatibility
         ):
             return None, metadata_id
 

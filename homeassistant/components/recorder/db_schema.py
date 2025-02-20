@@ -851,7 +851,9 @@ class _StatisticsMeta:
     has_mean: Mapped[bool | None] = mapped_column(Boolean)
     has_sum: Mapped[bool | None] = mapped_column(Boolean)
     name: Mapped[str | None] = mapped_column(String(255))
-    has_circular_mean: Mapped[bool | None] = mapped_column(Boolean)
+    has_circular_mean: Mapped[bool] = mapped_column(
+        Boolean, default=False, nullable=False
+    )
 
     @staticmethod
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
