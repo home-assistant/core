@@ -176,8 +176,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
         zone_radius: float = zone.attributes["radius"]
         distance_to_edge: int = round(distance_to_centre - zone_radius)
-        # return 0 if distance to edge is negative as that means the device is located inside the zone
-        # but the device's current zone is a different one than the zone in this distance calculation
+        # return 0 when we've arrived the zone
         return max(distance_to_edge, 0)
 
     def _calc_direction_of_travel(
