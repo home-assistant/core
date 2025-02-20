@@ -111,7 +111,13 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
             else:
                 await self.device.set_air_temp_setpoint_home(temperature)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise HomeAssistantError from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                },
+            ) from exc
         finally:
             await self.coordinator.async_refresh()
 

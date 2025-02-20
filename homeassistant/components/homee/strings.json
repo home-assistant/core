@@ -26,6 +26,41 @@
     }
   },
   "entity": {
+    "button": {
+      "automatic_mode": {
+        "name": "Automatic mode"
+      },
+      "briefly_open": {
+        "name": "Briefly open"
+      },
+      "identification_mode": {
+        "name": "Identification mode"
+      },
+      "impulse_instance": {
+        "name": "Impulse {instance}"
+      },
+      "light": {
+        "name": "Light"
+      },
+      "light_instance": {
+        "name": "Light {instance}"
+      },
+      "open_partial": {
+        "name": "Open partially"
+      },
+      "permanently_open": {
+        "name": "Open permanently"
+      },
+      "reset_meter": {
+        "name": "Reset meter"
+      },
+      "reset_meter_instance": {
+        "name": "Reset meter {instance}"
+      },
+      "ventilate": {
+        "name": "Ventilate"
+      }
+    },
     "number": {
       "down_position": {
         "name": "Down Position"
@@ -204,11 +239,25 @@
           "tilted": "Tilted"
         }
       }
+    },
+    "switch": {
+      "external_binary_input": {
+        "name": "Child lock"
+      },
+      "manual_operation": {
+        "name": "Manual operation"
+      },
+      "on_off_instance": {
+        "name": "Switch {instance}"
+      },
+      "watchdog": {
+        "name": "Watchdog"
+      }
     }
   },
   "exceptions": {
     "connection_closed": {
-      "message": "Could not connect to Homee while setting attribute"
+      "message": "Could not connect to Homee while setting attribute."
     },
     "not_editable": {
       "message": "{entity} is currently not changeable."
