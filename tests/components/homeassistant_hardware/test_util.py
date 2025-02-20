@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant.components.hassio import (
     AddonError,
     AddonInfo,
@@ -18,6 +20,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     OwningIntegration,
     get_otbr_addon_firmware_info,
     guess_firmware_info,
+    probe_silabs_firmware_type,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -280,3 +283,32 @@ async def test_get_otbr_addon_firmware_info_failure_bad_options(
     )
 
     assert (await get_otbr_addon_firmware_info(hass, otbr_addon_manager)) is None
+
+
+@pytest.mark.parametrize(
+    ("probe_result", "expected"),
+    [
+        (
+            FirmwareInfo(
+                device="/dev/ttyUSB0",
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                source="unknown",
+                owners=[],
+            ),
+            ApplicationType.EZSP,
+        ),
+        (None, None),
+    ],
+)
+async def test_get_probe_silabs_firmware_type(
+    probe_result: FirmwareInfo | None, expected: ApplicationType | None
+) -> None:
+    """Test getting the firmware type from the probe result."""
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.probe_silabs_firmware_info",
+        autospec=True,
+        return_value=probe_result,
+    ):
+        result = await probe_silabs_firmware_type("/dev/ttyUSB0")
+        assert result == expected
