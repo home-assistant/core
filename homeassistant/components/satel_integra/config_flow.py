@@ -9,6 +9,10 @@ from typing import Any
 from satel_integra.satel_integra import AsyncSatel
 import voluptuous as vol
 
+from homeassistant.components.binary_sensor import (
+    DEVICE_CLASSES_SCHEMA,
+    BinarySensorDeviceClass,
+)
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import callback
@@ -17,6 +21,8 @@ from homeassistant.helpers import config_validation as cv, selector
 from .const import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
+    CONF_ZONE_TYPE,
+    CONF_ZONES,
     DEFAULT_CONF_ARM_HOME_MODE,
     DEFAULT_PORT,
     DOMAIN,
@@ -72,6 +78,15 @@ PARTITION_SCHEMA = vol.Schema(
     }
 )
 
+ZONE_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): cv.string,
+        vol.Required(
+            CONF_ZONE_TYPE, default=BinarySensorDeviceClass.MOTION
+        ): DEVICE_CLASSES_SCHEMA,
+    }
+)
+
 
 class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Satel Integra config flow."""
@@ -105,6 +120,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                     options={
                         CONF_CODE: user_input.get(CONF_CODE),
                         CONF_DEVICE_PARTITIONS: {},
+                        CONF_ZONES: {},
                     },
                 )
 
@@ -130,18 +146,20 @@ class SatelOptionsFlow(OptionsFlow):
     """Handle Satel options flow."""
 
     editing_partition: str
+    editing_zone: str
 
     def __init__(self, config_entry: SatelConfigEntry) -> None:
         """Initialize Satel options."""
         self.options = deepcopy(dict(config_entry.options))
         self.partition_options = self.options.get(CONF_DEVICE_PARTITIONS, {})
+        self.zone_options = self.options.get(CONF_ZONES, {})
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Init step."""
         return self.async_show_menu(
-            step_id="init", menu_options=["general", "partitions"]
+            step_id="init", menu_options=["general", "partitions", "zones"]
         )
 
     async def async_step_general(
@@ -203,5 +221,53 @@ class SatelOptionsFlow(OptionsFlow):
             step_id="partition_details",
             data_schema=self.add_suggested_values_to_schema(
                 PARTITION_SCHEMA, existing_partition_config
+            ),
+        )
+
+    async def async_step_zones(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Zones step."""
+        errors = {}
+        if user_input is not None:
+            selected_zone = str(user_input[CONF_ACTION_NUMBER])
+            selected_action = user_input[CONF_ACTION]
+
+            if (
+                selected_action in [ACTION_DELETE, ACTION_EDIT]
+                and selected_zone not in self.zone_options
+            ):
+                errors["base"] = "unknown_zone"
+            elif selected_action == ACTION_ADD and selected_zone in self.zone_options:
+                errors["base"] = "already_exists"
+            elif selected_action == ACTION_DELETE:
+                self.zone_options.pop(selected_zone)
+                return self.async_create_entry(data=self.options)
+            else:
+                self.editing_zone = selected_zone
+                return await self.async_step_zone_details()
+
+        return self.async_show_form(
+            step_id="zones",
+            data_schema=OPTIONS_ACTION_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_zone_details(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Zone details step."""
+        if user_input is not None:
+            _LOGGER.info(user_input)
+            _LOGGER.info(self.options)
+            self.zone_options[self.editing_zone] = user_input
+            return self.async_create_entry(data=self.options)
+
+        existing_zone_config = self.zone_options.get(self.editing_zone)
+
+        return self.async_show_form(
+            step_id="zone_details",
+            data_schema=self.add_suggested_values_to_schema(
+                ZONE_SCHEMA, existing_zone_config
             ),
         )
