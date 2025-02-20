@@ -32,7 +32,7 @@ async def async_setup_entry(
         zone_name = device_config_data[CONF_NAME]
 
         device = SatelIntegraSwitch(
-            controller, zone_num, zone_name, config_entry.data.get(CONF_CODE)
+            controller, int(zone_num), zone_name, config_entry.data.get(CONF_CODE)
         )
         devices.append(device)
 

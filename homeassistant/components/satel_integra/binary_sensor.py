@@ -37,7 +37,12 @@ async def async_setup_entry(
         zone_type = device_config_data[CONF_ZONE_TYPE]
         zone_name = device_config_data[CONF_NAME]
         device = SatelIntegraBinarySensor(
-            controller, zone_num, zone_name, zone_type, CONF_ZONES, SIGNAL_ZONES_UPDATED
+            controller,
+            int(zone_num),
+            zone_name,
+            zone_type,
+            CONF_ZONES,
+            SIGNAL_ZONES_UPDATED,
         )
         devices.append(device)
 
@@ -48,7 +53,7 @@ async def async_setup_entry(
         zone_name = device_config_data[CONF_NAME]
         device = SatelIntegraBinarySensor(
             controller,
-            zone_num,
+            int(zone_num),
             zone_name,
             zone_type,
             CONF_OUTPUTS,

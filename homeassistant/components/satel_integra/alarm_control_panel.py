@@ -45,7 +45,7 @@ async def async_setup_entry(
         zone_name = device_config_data[CONF_NAME]
         arm_home_mode = device_config_data.get(CONF_ARM_HOME_MODE)
         device = SatelIntegraAlarmPanel(
-            controller, zone_name, arm_home_mode, partition_num
+            controller, zone_name, arm_home_mode, int(partition_num)
         )
         devices.append(device)
 
