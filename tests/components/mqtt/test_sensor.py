@@ -1409,6 +1409,7 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
+@pytest.mark.usefixtures("mock_temp_dir")
 @pytest.mark.parametrize(
     "hass_config",
     [
