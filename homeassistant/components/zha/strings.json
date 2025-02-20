@@ -1746,6 +1746,12 @@
       },
       "total_flow_reset_switch": {
         "name": "Total flow reset switch"
+      },
+      "do_not_disturb": {
+        "name": "Do not disturb"
+      },
+      "reverse_indicator_light": {
+        "name": "Reverse indication light"
       }
     }
   }
