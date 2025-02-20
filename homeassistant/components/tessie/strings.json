@@ -506,7 +506,7 @@
   },
   "exceptions": {
     "unknown": {
-      "message": "An unknown issue occured changing {name}."
+      "message": "An unknown issue occurred changing {name}."
     },
     "not_supported": {
       "message": "{name} is not supported."

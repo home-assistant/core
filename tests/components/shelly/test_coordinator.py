@@ -1011,3 +1011,22 @@ async def test_rpc_already_connected(
 
     assert "already connected" in caplog.text
     mock_rpc_device.initialize.assert_called_once()
+
+
+async def test_xmod_model_lookup(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test XMOD model look-up."""
+    xmod_model = "Test XMOD model name"
+    monkeypatch.setattr(mock_rpc_device, "xmod_info", {"n": xmod_model})
+    entry = await init_integration(hass, 2)
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, entry.entry_id)},
+        connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+    )
+    assert device
+    assert device.model == xmod_model

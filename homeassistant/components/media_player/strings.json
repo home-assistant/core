@@ -248,7 +248,7 @@
         },
         "media_content_type": {
           "name": "Content type",
-          "description": "The type of the content to play. Such as image, music, tv show, video, episode, channel, or playlist."
+          "description": "The type of the content to play, such as image, music, tv show, video, episode, channel, or playlist."
         },
         "enqueue": {
           "name": "Enqueue",
