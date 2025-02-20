@@ -9,7 +9,7 @@ from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -34,16 +34,22 @@ class PyLoadData:
     free_space: int
 
 
+type PyLoadConfigEntry = ConfigEntry[PyLoadCoordinator]
+
+
 class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
     """pyLoad coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: PyLoadConfigEntry
 
-    def __init__(self, hass: HomeAssistant, pyload: PyLoadAPI) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: PyLoadConfigEntry, pyload: PyLoadAPI
+    ) -> None:
         """Initialize pyLoad coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
@@ -79,3 +85,27 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
             ) from e
         except ParserError as e:
             raise UpdateFailed("Unable to parse data from pyLoad API") from e
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator."""
+
+        try:
+            await self.pyload.login()
+        except CannotConnect as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_request_exception",
+            ) from e
+        except ParserError as e:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="setup_parse_exception",
+            ) from e
+        except InvalidAuth as e:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="setup_authentication_exception",
+                translation_placeholders={
+                    CONF_USERNAME: self.config_entry.data[CONF_USERNAME]
+                },
+            ) from e

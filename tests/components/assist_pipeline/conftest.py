@@ -25,7 +25,7 @@ from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -225,7 +225,7 @@ async def init_supporting_components(
     async def async_setup_entry_stt_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test stt platform via config entry."""
         async_add_entities([mock_stt_provider_entity])
@@ -233,7 +233,7 @@ async def init_supporting_components(
     async def async_setup_entry_wake_word_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test wake word platform via config entry."""
         async_add_entities(
@@ -325,7 +325,7 @@ async def assist_device(
     async def async_setup_entry_select_platform(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up test select platform via config entry."""
         entities = [

@@ -8,7 +8,7 @@ from homeassistant.components.event import EventEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ID
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from . import ATTR_ACTION, ATTR_FULL_ID, ATTR_UUID, DOMAIN, LutronData
@@ -33,7 +33,7 @@ LEGACY_EVENT_TYPES: dict[LutronEventType, str] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron event platform."""
     entry_data: LutronData = hass.data[DOMAIN][config_entry.entry_id]

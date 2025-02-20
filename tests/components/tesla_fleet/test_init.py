@@ -156,14 +156,15 @@ async def test_vehicle_refresh_offline(
     mock_vehicle_state.reset_mock()
     mock_vehicle_data.reset_mock()
 
-    # Then the vehicle goes offline
+    # Then the vehicle goes offline despite saying its online
     mock_vehicle_data.side_effect = VehicleOffline
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    mock_vehicle_state.assert_not_called()
+    mock_vehicle_state.assert_called_once()
     mock_vehicle_data.assert_called_once()
+    mock_vehicle_state.reset_mock()
     mock_vehicle_data.reset_mock()
 
     # And stays offline
@@ -212,20 +213,15 @@ async def test_vehicle_refresh_ratelimited(
 
     assert (state := hass.states.get("sensor.test_battery_level"))
     assert state.state == "unknown"
-    assert mock_vehicle_data.call_count == 1
+
+    mock_vehicle_data.reset_mock()
 
     freezer.tick(VEHICLE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # Should not call for another 10 seconds
-    assert mock_vehicle_data.call_count == 1
-
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert mock_vehicle_data.call_count == 2
+    assert (state := hass.states.get("sensor.test_battery_level"))
+    assert state.state == "unknown"
 
 
 async def test_vehicle_sleep(

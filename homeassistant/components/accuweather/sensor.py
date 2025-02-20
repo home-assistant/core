@@ -25,7 +25,7 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -375,7 +375,7 @@ SENSOR_TYPES: tuple[AccuWeatherSensorDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AccuWeatherConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add AccuWeather entities from a config_entry."""
     observation_coordinator: AccuWeatherObservationDataUpdateCoordinator = (

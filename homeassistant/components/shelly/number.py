@@ -22,7 +22,7 @@ from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .const import BLU_TRV_TIMEOUT, CONF_SLEEP_PERIOD, LOGGER, VIRTUAL_NUMBER_MODE_MAP
@@ -238,7 +238,7 @@ RPC_NUMBERS: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up numbers for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:

@@ -40,7 +40,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import entity_platform, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordinator
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
@@ -87,7 +87,9 @@ def convert_condition(time: str, weather: tuple[tuple[str, int | None], ...]) ->
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: NWSConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: NWSConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NWS weather platform."""
     entity_registry = er.async_get(hass)
