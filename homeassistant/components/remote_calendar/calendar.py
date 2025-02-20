@@ -67,6 +67,12 @@ class RemoteCalendarEntity(
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
+        now = dt_util.now()
+        events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
+        if event := next(events, None):
+            self._event = _get_calendar_event(event)
+        else:
+            self._event = None
         return self._event
 
     async def async_get_events(
@@ -78,15 +84,6 @@ class RemoteCalendarEntity(
             end_date,
         )
         return [_get_calendar_event(event) for event in events]
-
-    async def async_update(self) -> None:
-        """Update entity state with the next upcoming event."""
-        now = dt_util.now()
-        events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
-        if event := next(events, None):
-            self._event = _get_calendar_event(event)
-        else:
-            self._event = None
 
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
