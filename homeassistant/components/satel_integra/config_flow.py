@@ -131,10 +131,7 @@ class SatelOptionsFlow(OptionsFlow):
     def __init__(self, config_entry: SatelConfigEntry) -> None:
         """Initialize Satel options."""
         self.options = deepcopy(dict(config_entry.options))
-
-    def _create_entry_with_options(self):
-        _LOGGER.debug(self.options)
-        return self.async_create_entry(data=self.options)
+        self.partition_options = self.options.get(CONF_DEVICE_PARTITIONS, {})
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -150,7 +147,7 @@ class SatelOptionsFlow(OptionsFlow):
         """General step."""
         if user_input is not None:
             self.options[CONF_CODE] = user_input.get(CONF_CODE)
-            return self._create_entry_with_options()
+            return self.async_create_entry(data=self.options)
 
         return self.async_show_form(
             step_id="general",
@@ -166,22 +163,19 @@ class SatelOptionsFlow(OptionsFlow):
             selected_partition = str(user_input[CONF_ACTION_NUMBER])
             selected_action = user_input[CONF_ACTION]
 
-            existing_partitions = self.options.get(CONF_DEVICE_PARTITIONS, {})
-
             if (
                 selected_action in (ACTION_EDIT, ACTION_DELETE)
-                and selected_partition not in existing_partitions
+                and selected_partition not in self.partition_options
             ):
                 errors["base"] = "unknown_partition"
             elif (
                 selected_action == ACTION_ADD
-                and selected_partition in existing_partitions
+                and selected_partition in self.partition_options
             ):
                 errors["base"] = "already_exists"
             elif selected_action == ACTION_DELETE:
-                existing_partitions.pop(selected_partition)
-                self.options[CONF_DEVICE_PARTITIONS] = existing_partitions
-                return self._create_entry_with_options()
+                self.partition_options.pop(selected_partition)
+                return self.async_create_entry(data=self.options)
             else:
                 self.editing_partition = selected_partition
                 return await self.async_step_partition_details()
@@ -196,14 +190,11 @@ class SatelOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Partition details step."""
-        existing_partitions = self.options.get(CONF_DEVICE_PARTITIONS, {})
-
         if user_input is not None:
-            existing_partitions[self.editing_partition] = user_input
-            self.options[CONF_DEVICE_PARTITIONS] = existing_partitions
-            return self._create_entry_with_options()
+            self.partition_options[self.editing_partition] = user_input
+            return self.async_create_entry(data=self.options)
 
-        existing_partition_config = existing_partitions.get(self.editing_partition)
+        existing_partition_config = self.partition_options.get(self.editing_partition)
 
         return self.async_show_form(
             step_id="partition_details",
