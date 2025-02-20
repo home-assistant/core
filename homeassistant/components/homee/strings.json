@@ -26,6 +26,59 @@
     }
   },
   "entity": {
+    "number": {
+      "down_position": {
+        "name": "Down Position"
+      },
+      "down_slat_position": {
+        "name": "Down Slat Position"
+      },
+      "down_time": {
+        "name": "Down-movement duration"
+      },
+      "endposition_configuration": {
+        "name": "End position"
+      },
+      "motion_alarm_cancelation_delay": {
+        "name": "Motion alarm Delay"
+      },
+      "open_window_detection_sensibility": {
+        "name": "Window Open Sensibility"
+      },
+      "polling_interval": {
+        "name": "Polling Interval"
+      },
+      "shutter_slat_time": {
+        "name": "Slat Turn Duration"
+      },
+      "slat_max_angle": {
+        "name": "Maximum Slat Angle"
+      },
+      "slat_min_angle": {
+        "name": "Minimum Slat Angle"
+      },
+      "slat_steps": {
+        "name": "Slat Steps"
+      },
+      "target_temperature": {
+        "name": "Target Temperature"
+      },
+      "temperature_offset": {
+        "name": "Temperature Offset"
+      },
+      "up_time": {
+        "name": "Up-movement duration"
+      },
+      "valve_position": {
+        "name": "Valve Position"
+      },
+      "wake_up_interval": {
+        "name": "Wake-Up Interval"
+      },
+      "wind_monitoring_state": {
+        "name": "Wind Monitoring State"
+      }
+    },
     "sensor": {
       "brightness_instance": {
         "name": "Illuminance {instance}"
@@ -156,6 +209,9 @@
   "exceptions": {
     "connection_closed": {
       "message": "Could not connect to Homee while setting attribute"
+    },
+    "not_editable": {
+      "message": "{entity} is currently not changeable."
     }
   }
 }
