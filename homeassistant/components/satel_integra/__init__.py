@@ -8,8 +8,8 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
@@ -22,7 +22,6 @@ from .const import (
     CONF_ZONE_NAME,
     CONF_ZONE_TYPE,
     CONF_ZONES,
-    DATA_SATEL,
     DEFAULT_CONF_ARM_HOME_MODE,
     DEFAULT_PORT,
     DEFAULT_ZONE_TYPE,
@@ -31,9 +30,13 @@ from .const import (
     SIGNAL_PANEL_MESSAGE,
     SIGNAL_ZONES_UPDATED,
     ZONES,
+    SatelConfigEntry,
+    SatelData,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SWITCH]
 
 ZONE_SCHEMA = vol.Schema(
     {
@@ -84,15 +87,20 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Satel Integra component."""
-    conf = config[DOMAIN]
+    """Set up  Satel Integra from YAML."""
+    return True
 
-    zones = conf.get(CONF_ZONES)
-    outputs = conf.get(CONF_OUTPUTS)
-    switchable_outputs = conf.get(CONF_SWITCHABLE_OUTPUTS)
-    host = conf.get(CONF_HOST)
-    port = conf.get(CONF_PORT)
-    partitions = conf.get(CONF_DEVICE_PARTITIONS)
+
+async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:
+    """Set up  Satel Integra from a config entry."""
+
+    host = entry.data[CONF_HOST]
+    port = entry.data[CONF_PORT]
+
+    zones: dict = {}
+    outputs: dict = {}
+    switchable_outputs: dict = {}
+    partitions: dict = {}
 
     monitored_outputs = collections.OrderedDict(
         list(outputs.items()) + list(switchable_outputs.items())
@@ -100,46 +108,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     controller = AsyncSatel(host, port, hass.loop, zones, monitored_outputs, partitions)
 
-    hass.data[DATA_SATEL] = controller
-
     result = await controller.connect()
 
     if not result:
-        return False
+        raise ConfigEntryNotReady("Controller failed to connect")
+
+    entry.runtime_data = SatelData(controller)
 
     @callback
     def _close(*_):
         controller.close()
 
+    entry.async_on_unload(_close)
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close)
 
-    _LOGGER.debug("Arm home config: %s, mode: %s ", conf, conf.get(CONF_ARM_HOME_MODE))
-
-    hass.async_create_task(
-        async_load_platform(hass, Platform.ALARM_CONTROL_PANEL, DOMAIN, conf, config)
-    )
-
-    hass.async_create_task(
-        async_load_platform(
-            hass,
-            Platform.BINARY_SENSOR,
-            DOMAIN,
-            {CONF_ZONES: zones, CONF_OUTPUTS: outputs},
-            config,
-        )
-    )
-
-    hass.async_create_task(
-        async_load_platform(
-            hass,
-            Platform.SWITCH,
-            DOMAIN,
-            {
-                CONF_SWITCHABLE_OUTPUTS: switchable_outputs,
-                CONF_DEVICE_CODE: conf.get(CONF_DEVICE_CODE),
-            },
-            config,
-        )
+    await hass.config_entries.async_forward_entry_setups(
+        entry,
+        PLATFORMS,
     )
 
     @callback
@@ -170,3 +155,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:
+    """Unloading the Satel platforms."""
+
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        controller = entry.runtime_data.controller
+        controller.close()
+
+    return unload_ok
