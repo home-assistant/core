@@ -13,13 +13,19 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import CURRENCY_DOLLAR, PERCENTAGE, EntityCategory
+
 from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback, AddConfigEntryEntitiesCallback
+
 from homeassistant.helpers.typing import StateType
 
 from . import MonarchMoneyConfigEntry
 from .const import GET_HOLDINGS_SERVICE_NAME
+
+from homeassistant.helpers.typing import StateType
+
+from .coordinator import MonarchMoneyConfigEntry
 from .entity import MonarchMoneyAccountEntity, MonarchMoneyCashFlowEntity
 
 
@@ -112,7 +118,7 @@ MONARCH_CASHFLOW_SENSORS: tuple[MonarchMoneyCashflowSensorEntityDescription, ...
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: MonarchMoneyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Monarch Money sensors for config entries."""
     mm_coordinator = config_entry.runtime_data

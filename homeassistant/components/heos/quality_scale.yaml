@@ -49,16 +49,16 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
-  stale-devices: todo
+  repair-issues: done
+  stale-devices: done
   # Platinum
   async-dependency: done
   inject-websession:

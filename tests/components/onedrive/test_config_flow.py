@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.onedrive.const import (
+    CONF_DELETE_PERMANENTLY,
     DOMAIN,
     OAUTH2_AUTHORIZE,
     OAUTH2_TOKEN,
@@ -70,6 +71,7 @@ async def test_full_flow(
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     mock_setup_entry: AsyncMock,
+    mock_onedrive_client_init: MagicMock,
 ) -> None:
     """Check full flow."""
 
@@ -78,6 +80,10 @@ async def test_full_flow(
     )
     await _do_get_token(hass, result, hass_client_no_auth, aioclient_mock)
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    # Ensure the token callback is set up correctly
+    token_callback = mock_onedrive_client_init.call_args[0][0]
+    assert await token_callback() == "mock-access-token"
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
@@ -218,3 +224,29 @@ async def test_reauth_flow_id_changed(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "wrong_drive"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test options flow."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DELETE_PERMANENTLY: True,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        CONF_DELETE_PERMANENTLY: True,
+    }

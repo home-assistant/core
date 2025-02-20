@@ -265,12 +265,11 @@ class AssistSatelliteEntity(entity.Entity):
             self._conversation_id = session.conversation_id
 
             if start_message:
-                async for _tool_response in chat_log.async_add_assistant_content(
+                chat_log.async_add_assistant_content_without_tools(
                     conversation.AssistantContent(
                         agent_id=self.entity_id, content=start_message
                     )
-                ):
-                    pass  # no tool responses.
+                )
 
         try:
             await self.async_start_conversation(announcement)
@@ -406,7 +405,10 @@ class AssistSatelliteEntity(entity.Entity):
     def _internal_on_pipeline_event(self, event: PipelineEvent) -> None:
         """Set state based on pipeline stage."""
         if event.type is PipelineEventType.WAKE_WORD_START:
-            self._set_state(AssistSatelliteState.IDLE)
+            # Only return to idle if we're not currently responding.
+            # The state will return to idle in tts_response_finished.
+            if self.state != AssistSatelliteState.RESPONDING:
+                self._set_state(AssistSatelliteState.IDLE)
         elif event.type is PipelineEventType.STT_START:
             self._set_state(AssistSatelliteState.LISTENING)
         elif event.type is PipelineEventType.INTENT_START:

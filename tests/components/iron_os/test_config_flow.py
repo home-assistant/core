@@ -106,3 +106,28 @@ async def test_async_step_bluetooth_devices_already_setup(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("discovery")
+async def test_async_step_user_setup_replaces_igonored_device(
+    hass: HomeAssistant, config_entry_ignored: AsyncMock
+) -> None:
+    """Test the user initiated form can replace an ignored device."""
+
+    config_entry_ignored.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == DEFAULT_NAME
+    assert result["data"] == {}
+    assert result["result"].unique_id == "c0:ff:ee:c0:ff:ee"
