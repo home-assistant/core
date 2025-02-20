@@ -35,7 +35,6 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the VegeHub config flow."""
         self._hostname: str = ""
-        self._discovered: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -168,20 +167,15 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # If there are errors, show the retry form and present the errors.
             return await self.async_step_error_retry(errors=errors)
 
-        # Save the discovered device info to be passed in the info_data
-        self._discovered = {
-            CONF_IP_ADDRESS: self._hub.ip_address,
-            CONF_HOST: self._hostname,
-            CONF_MAC: self._hub.mac_address,
-        }
-
         # Check if this device already exists
         await self.async_set_unique_id(self._hub.mac_address)
         self._abort_if_unique_id_configured()
 
         # Save Hub info to be used later when defining the VegeHub object
         info_data = {
-            **self._discovered,
+            CONF_IP_ADDRESS: self._hub.ip_address,
+            CONF_HOST: self._hostname,
+            CONF_MAC: self._hub.mac_address,
             CONF_DEVICE: self._hub.info,
             CONF_WEBHOOK_ID: webhook_id,
         }
