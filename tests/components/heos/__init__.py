@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from pyheos import Heos, HeosGroup, HeosOptions, HeosPlayer
+from pyheos import ConnectionState, Heos, HeosGroup, HeosOptions, HeosPlayer
 
 
 class MockHeos(Heos):
@@ -60,3 +60,7 @@ class MockHeos(Heos):
     def mock_set_signed_in_username(self, signed_in_username: str | None) -> None:
         """Set the signed in status on the mock instance."""
         self._signed_in_username = signed_in_username
+
+    def mock_set_connection_state(self, connection_state: ConnectionState) -> None:
+        """Set the connection state on the mock instance."""
+        self._connection._state = connection_state
