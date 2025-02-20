@@ -127,6 +127,7 @@ async def build_item_response(
     """Create response payload for search described by payload."""
 
     def update_squeezebox_maps(cmd: str | MediaType, type: str) -> None:
+        """Add items to maps for new apps or radios."""
         squeezebox_maps.media_type_to_squeezebox.update({cmd: cmd})
         squeezebox_maps.squeezebox_id_by_type.update({cmd: type})
         squeezebox_maps.content_type_media_class.update(
@@ -142,32 +143,31 @@ async def build_item_response(
     def build_response_apps_radios_category(
         _cmd: str | MediaType,
     ) -> tuple[str | MediaType, dict[str, MediaClass | None], bool, bool]:
-        _child_item_type: str | MediaType
-        _child_media_class: dict[str, MediaClass | None]
-        _can_play: bool
-        _can_expand: bool
-        _child_item_type = _cmd
-        _child_media_class = squeezebox_maps.content_type_media_class[_cmd]
-        _can_expand = True
-        _can_play = False
+        """Build item for App or radio category."""
+        _child_item_type: str | MediaType = _cmd
+        _child_media_class: dict[str, MediaClass | None] = (
+            squeezebox_maps.content_type_media_class[_cmd]
+        )
+        _can_expand: bool = True
+        _can_play: bool = False
         return (_child_item_type, _child_media_class, _can_expand, _can_play)
 
-    def build_response_known_apps(
+    def build_response_known_app(
         search_type: str, item: dict[str, Any]
     ) -> tuple[str | MediaType, dict[str, MediaClass | None], bool, bool]:
-        _child_item_type: str | MediaType
-        _child_media_class: dict[str, MediaClass | None]
-        _can_play: bool
-        _can_expand: bool
-        _child_item_type = search_type
-        _child_media_class = squeezebox_maps.content_type_media_class[search_type]
-        _can_play = bool(item["isaudio"] and item.get("url"))
-        _can_expand = item["hasitems"]
+        """Build item for app or radio."""
+        _child_item_type: str | MediaType = search_type
+        _child_media_class: dict[str, MediaClass | None] = (
+            squeezebox_maps.content_type_media_class[search_type]
+        )
+        _can_play: bool = bool(item["isaudio"] and item.get("url"))
+        _can_expand: bool = item["hasitems"]
         return (_child_item_type, _child_media_class, _can_expand, _can_play)
 
-    def build_response_favorites(
+    def build_response_favorite(
         item_id: str, item: dict[str, Any]
     ) -> tuple[str | MediaType, dict[str, MediaClass | None], bool, bool, str]:
+        """Build item for favorite."""
         _item_id: str = item_id
         _child_item_type: str | MediaType
         _child_media_class: dict[str, MediaClass | None]
@@ -209,7 +209,7 @@ async def build_item_response(
         internal_request: bool,
         entity: MediaPlayerEntity,
     ) -> str | None:
-        _item_thumbnail = None
+        _item_thumbnail: str | None = None
         if artwork_track_id := item.get("artwork_track_id"):
             if internal_request:
                 _item_thumbnail = player.generate_image_url_from_track_id(
@@ -282,11 +282,11 @@ async def build_item_response(
                     continue
 
                 child_item_type, child_media_class, can_expand, can_play = (
-                    build_response_known_apps(search_type, item)
+                    build_response_known_app(search_type, item)
                 )
             elif search_type == "Favorites":
                 child_item_type, child_media_class, can_expand, can_play, item_id = (
-                    build_response_favorites(item_id, item)
+                    build_response_favorite(item_id, item)
                 )
             elif item_type:
                 child_item_type = item_type
