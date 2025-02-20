@@ -5,23 +5,19 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING, Any
 
-from aiohttp import ClientError
-from nice_go import ApiError
-
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    DOMAIN,
     KNOWN_UNSUPPORTED_DEVICE_TYPES,
     SUPPORTED_DEVICE_TYPES,
     UNSUPPORTED_DEVICE_WARNING,
 )
 from .coordinator import NiceGOConfigEntry
 from .entity import NiceGOEntity
+from .util import retry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -29,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: NiceGOConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Nice G.O. switch."""
     coordinator = config_entry.runtime_data
@@ -65,26 +61,14 @@ class NiceGOSwitchEntity(NiceGOEntity, SwitchEntity):
             assert self.data.vacation_mode is not None
         return self.data.vacation_mode
 
+    @retry("switch_on_error")
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
 
-        try:
-            await self.coordinator.api.vacation_mode_on(self.data.id)
-        except (ApiError, ClientError) as error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="switch_on_error",
-                translation_placeholders={"exception": str(error)},
-            ) from error
+        await self.coordinator.api.vacation_mode_on(self.data.id)
 
+    @retry("switch_off_error")
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
 
-        try:
-            await self.coordinator.api.vacation_mode_off(self.data.id)
-        except (ApiError, ClientError) as error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="switch_off_error",
-                translation_placeholders={"exception": str(error)},
-            ) from error
+        await self.coordinator.api.vacation_mode_off(self.data.id)
