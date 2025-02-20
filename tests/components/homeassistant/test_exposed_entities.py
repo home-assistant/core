@@ -497,14 +497,26 @@ async def test_list_exposed_entities(
 
     entry1 = entity_registry.async_get_or_create("test", "test", "unique1")
     entry2 = entity_registry.async_get_or_create("test", "test", "unique2")
+    entity_registry.async_get_or_create("test", "test", "unique3")
 
     # Set options for registered entities
     await ws_client.send_json_auto_id(
         {
             "type": "homeassistant/expose_entity",
             "assistants": ["cloud.alexa", "cloud.google_assistant"],
-            "entity_ids": [entry1.entity_id, entry2.entity_id],
+            "entity_ids": [entry1.entity_id],
             "should_expose": True,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa", "cloud.google_assistant"],
+            "entity_ids": [entry2.entity_id],
+            "should_expose": False,
         }
     )
     response = await ws_client.receive_json()
@@ -515,10 +527,18 @@ async def test_list_exposed_entities(
         {
             "type": "homeassistant/expose_entity",
             "assistants": ["cloud.alexa", "cloud.google_assistant"],
-            "entity_ids": [
-                "test.test",
-                "test.test2",
-            ],
+            "entity_ids": ["test.test"],
+            "should_expose": True,
+        }
+    )
+    response = await ws_client.receive_json()
+    assert response["success"]
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "homeassistant/expose_entity",
+            "assistants": ["cloud.alexa", "cloud.google_assistant"],
+            "entity_ids": ["test.test2"],
             "should_expose": False,
         }
     )
@@ -531,10 +551,8 @@ async def test_list_exposed_entities(
     assert response["success"]
     assert response["result"] == {
         "exposed_entities": {
-            "test.test": {"cloud.alexa": False, "cloud.google_assistant": False},
-            "test.test2": {"cloud.alexa": False, "cloud.google_assistant": False},
+            "test.test": {"cloud.alexa": True, "cloud.google_assistant": True},
             "test.test_unique1": {"cloud.alexa": True, "cloud.google_assistant": True},
-            "test.test_unique2": {"cloud.alexa": True, "cloud.google_assistant": True},
         },
     }
 
