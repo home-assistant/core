@@ -212,6 +212,7 @@ class DPCode(StrEnum):
     HUMIDITY_INDOOR = "humidity_indoor"  # Indoor humidity
     HUMIDITY_SET = "humidity_set"  # Humidity setting
     HUMIDITY_VALUE = "humidity_value"  # Humidity
+    INSTALLATION_HEIGHT = "installation_height"
     IPC_WORK_MODE = "ipc_work_mode"
     LED_TYPE_1 = "led_type_1"
     LED_TYPE_2 = "led_type_2"
@@ -220,11 +221,16 @@ class DPCode(StrEnum):
     LEVEL_CURRENT = "level_current"
     LIGHT = "light"  # Light
     LIGHT_MODE = "light_mode"
+    LIQUID_DEPTH = "liquid_depth"
+    LIQUID_LEVEL_PERCENT = "liquid_level_percent"
+    LIQUID_STATE = "liquid_state"
     LOCK = "lock"  # Lock / Child lock
     MASTER_MODE = "master_mode"  # alarm mode
     MACH_OPERATE = "mach_operate"
     MANUAL_FEED = "manual_feed"
     MATERIAL = "material"  # Material
+    MAX_SET = "max_set"
+    MINI_SET = "mini_set"
     MODE = "mode"  # Working mode / Mode
     MOODLIGHTING = "moodlighting"  # Mood light
     MOTION_RECORD = "motion_record"
@@ -275,6 +281,7 @@ class DPCode(StrEnum):
     ROLL_BRUSH = "roll_brush"
     SEEK = "seek"
     SENSITIVITY = "sensitivity"  # Sensitivity
+    SENSOR_DISTANCE_TO_MAX = "liquid_depth_max"  # Distance from the ultrasonic sensor to the maximum (100%) water level
     SENSOR_HUMIDITY = "sensor_humidity"
     SENSOR_TEMPERATURE = "sensor_temperature"
     SHAKE = "shake"  # Oscillating
@@ -350,6 +357,7 @@ class DPCode(StrEnum):
     TOTAL_PM = "total_pm"
     TOTAL_POWER = "total_power"
     TVOC = "tvoc"
+    SLEEP_SWITCH = "upper_switch"
     UPPER_TEMP = "upper_temp"
     UPPER_TEMP_F = "upper_temp_f"
     UV = "uv"  # UV sterilization
