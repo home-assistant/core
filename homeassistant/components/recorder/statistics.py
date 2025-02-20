@@ -427,11 +427,13 @@ def _compile_hourly_statistics_summary_mean_stmt(
     start_time_ts: float, end_time_ts: float, engine: Engine
 ) -> StatementLambdaElement:
     """Generate the summary mean statement for hourly statistics."""
+    columns = (
+        *QUERY_STATISTICS_SUMMARY_MEAN,
+        query_circular_mean(StatisticsShortTerm.circular_mean, engine),
+    )
+
     return lambda_stmt(
-        lambda: select(
-            *QUERY_STATISTICS_SUMMARY_MEAN,
-            query_circular_mean(StatisticsShortTerm.circular_mean, engine),
-        )
+        lambda: select(*columns)
         .filter(StatisticsShortTerm.start_ts >= start_time_ts)
         .filter(StatisticsShortTerm.start_ts < end_time_ts)
         .group_by(StatisticsShortTerm.metadata_id)
