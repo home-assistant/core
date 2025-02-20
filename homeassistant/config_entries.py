@@ -1062,11 +1062,7 @@ class ConfigEntry[_DataT = Any]:
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )
 
-        hass.async_create_task(
-            self._async_process_on_state_change(hass),
-            f"config entry state change {self.entry_id} {state}",
-            eager_start=True,
-        )
+        self._async_process_on_state_change(hass)
 
     async def async_migrate(self, hass: HomeAssistant) -> bool:
         """Migrate an entry.
@@ -1191,7 +1187,7 @@ class ConfigEntry[_DataT = Any]:
             self._on_state_change = []
         self._on_state_change.append(func)
 
-    async def _async_process_on_state_change(self, hass: HomeAssistant) -> None:
+    def _async_process_on_state_change(self, hass: HomeAssistant) -> None:
         """Process the on_state_change callbacks and wait for pending tasks."""
         if self._on_state_change is not None:
             while self._on_state_change:
