@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_snapshot[button.test_button-entry]
+# name: test_button_snapshot[button.test_button-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -33,7 +33,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button-state]
+# name: test_button_snapshot[button.test_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Button',
@@ -46,7 +46,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_switch_snapshot[button.test_button_automatic_mode-entry]
+# name: test_button_snapshot[button.test_button_automatic_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -80,7 +80,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button_automatic_mode-state]
+# name: test_button_snapshot[button.test_button_automatic_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Button Automatic mode',
@@ -93,7 +93,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_switch_snapshot[button.test_button_briefly_open-entry]
+# name: test_button_snapshot[button.test_button_briefly_open-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -127,7 +127,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button_briefly_open-state]
+# name: test_button_snapshot[button.test_button_briefly_open-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Button Briefly open',
@@ -140,7 +140,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_switch_snapshot[button.test_button_identification_mode-entry]
+# name: test_button_snapshot[button.test_button_identification_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -174,7 +174,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button_identification_mode-state]
+# name: test_button_snapshot[button.test_button_identification_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'identify',
@@ -188,7 +188,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_switch_snapshot[button.test_button_impulse_1-entry]
+# name: test_button_snapshot[button.test_button_impulse_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -222,7 +222,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button_impulse_1-state]
+# name: test_button_snapshot[button.test_button_impulse_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Button Impulse 1',
@@ -235,7 +235,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_switch_snapshot[button.test_button_impulse_2-entry]
+# name: test_button_snapshot[button.test_button_impulse_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -269,7 +269,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button_impulse_2-state]
+# name: test_button_snapshot[button.test_button_impulse_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Button Impulse 2',
@@ -282,7 +282,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_switch_snapshot[button.test_button_light_impulse-entry]
+# name: test_button_snapshot[button.test_button_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -295,7 +295,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.test_button_light_impulse',
+    'entity_id': 'button.test_button_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -307,29 +307,29 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Light impulse',
+    'original_name': 'Light',
     'platform': 'homee',
     'previous_unique_id': None,
     'supported_features': 0,
-    'translation_key': 'light_impulse',
+    'translation_key': 'light',
     'unique_id': '00055511EECC-1-7',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button_light_impulse-state]
+# name: test_button_snapshot[button.test_button_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Button Light impulse',
+      'friendly_name': 'Test Button Light',
     }),
     'context': <ANY>,
-    'entity_id': 'button.test_button_light_impulse',
+    'entity_id': 'button.test_button_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_switch_snapshot[button.test_button_open_partially-entry]
+# name: test_button_snapshot[button.test_button_open_partially-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -363,7 +363,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button_open_partially-state]
+# name: test_button_snapshot[button.test_button_open_partially-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Button Open partially',
@@ -376,7 +376,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_switch_snapshot[button.test_button_open_permanently-entry]
+# name: test_button_snapshot[button.test_button_open_permanently-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -410,7 +410,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button_open_permanently-state]
+# name: test_button_snapshot[button.test_button_open_permanently-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Button Open permanently',
@@ -423,7 +423,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_switch_snapshot[button.test_button_reset_meter_1-entry]
+# name: test_button_snapshot[button.test_button_reset_meter_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -457,7 +457,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button_reset_meter_1-state]
+# name: test_button_snapshot[button.test_button_reset_meter_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Button Reset meter 1',
@@ -470,7 +470,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_switch_snapshot[button.test_button_reset_meter_2-entry]
+# name: test_button_snapshot[button.test_button_reset_meter_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -504,7 +504,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button_reset_meter_2-state]
+# name: test_button_snapshot[button.test_button_reset_meter_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Button Reset meter 2',
@@ -517,7 +517,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_switch_snapshot[button.test_button_ventilate-entry]
+# name: test_button_snapshot[button.test_button_ventilate-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -551,7 +551,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_snapshot[button.test_button_ventilate-state]
+# name: test_button_snapshot[button.test_button_ventilate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Button Ventilate',

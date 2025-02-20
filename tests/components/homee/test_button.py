@@ -34,7 +34,7 @@ async def test_button_press(
     mock_homee.set_value.assert_called_once_with(1, 5, 1)
 
 
-async def test_switch_snapshot(
+async def test_button_snapshot(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,

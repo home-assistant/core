@@ -39,11 +39,11 @@
       "impulse_instance": {
         "name": "Impulse {instance}"
       },
-      "light_impulse": {
-        "name": "Light impulse"
+      "light": {
+        "name": "Light"
       },
-      "light_impulse_instance": {
-        "name": "Light impulse {instance}"
+      "light_instance": {
+        "name": "Light {instance}"
       },
       "open_partial": {
         "name": "Open partially"

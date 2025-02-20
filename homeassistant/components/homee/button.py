@@ -24,7 +24,7 @@ BUTTON_DESCRIPTIONS: dict[AttributeType, ButtonEntityDescription] = {
         device_class=ButtonDeviceClass.IDENTIFY,
     ),
     AttributeType.IMPULSE: ButtonEntityDescription(key="impulse"),
-    AttributeType.LIGHT_IMPULSE: ButtonEntityDescription(key="light_impulse"),
+    AttributeType.LIGHT_IMPULSE: ButtonEntityDescription(key="light"),
     AttributeType.OPEN_PARTIAL_IMPULSE: ButtonEntityDescription(key="open_partial"),
     AttributeType.PERMANENTLY_OPEN_IMPULSE: ButtonEntityDescription(
         key="permanently_open"
