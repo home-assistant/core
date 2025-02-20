@@ -170,6 +170,11 @@ class StatisticsMetaManager:
         This call is not thread-safe and must be called from the
         recorder thread.
         """
+        if "has_circular_mean" not in new_metadata:
+            # To avoid breaking change as we added has_circular_mean in schema version 49
+            # Even when typing suggests it is always present, we need to check it and guard
+            # against it as custom integrations might not set it.
+            new_metadata["has_circular_mean"] = False  # type: ignore[unreachable]
         metadata_id, old_metadata = old_metadata_dict[statistic_id]
         if not (
             old_metadata["has_mean"] != new_metadata["has_mean"]
@@ -177,10 +182,7 @@ class StatisticsMetaManager:
             or old_metadata["name"] != new_metadata["name"]
             or old_metadata["unit_of_measurement"]
             != new_metadata["unit_of_measurement"]
-            or old_metadata["has_circular_mean"]
-            != new_metadata.get(
-                "has_circular_mean", False
-            )  # To avoid backwards incompatibility
+            or old_metadata["has_circular_mean"] != new_metadata["has_circular_mean"]
         ):
             return None, metadata_id
 
