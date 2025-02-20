@@ -113,7 +113,7 @@
       "title": "Add MQTT device",
       "step": {
         "device": {
-          "title": "Configure MQTT device detais",
+          "title": "Configure MQTT device details",
           "description": "Enter the MQTT device details:",
           "data": {
             "name": "[%key:common::config_flow::data::name%]",
@@ -145,7 +145,7 @@
         },
         "entity": {
           "title": "Configure MQTT device {mqtt_device}",
-          "description": "Configure the entity platform and the common entity properties",
+          "description": "Select the type of entity and configure the basic settings",
           "data": {
             "platform": "Type of entity",
             "object_id": "Entity ID",
@@ -160,10 +160,6 @@
             "encoding": "The encoding of the payloads received. Defaults to 'utf-8'. Set to `None` to allow to process raw payloads.",
             "qos": "The QoS value this entity should subscrive with."
           }
-        },
-        "confirm": {
-          "title": "Add MQTT-device",
-          "description": "Submit to set up MQTT device {mqtt_device} with {platform} entity {entity}?\n\nNote that you can reconfigure the MQTT device any time, e.g. to add more entities."
         },
         "delete_entity": {
           "title": "Delete entity",
@@ -186,7 +182,7 @@
           }
         },
         "entity_platform_config": {
-          "title": "Configure MQTT device \"{mqtt_device}\"",
+          "title": "Configure MQTT device {mqtt_device}",
           "description": "Please configure details for {platform} entity \"{object_id}\":",
           "data": {
             "command_topic": "Command topic",
@@ -208,6 +204,9 @@
       },
       "abort": {
         "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      },
+      "create_entry": {
+        "default": "MQTT device with {platform} entity {entity} was set up successfully.\n\nNote that you can reconfigure the MQTT device at any time, e.g. to add more entities."
       },
       "error": {
         "invalid_input": "Invalid value",
