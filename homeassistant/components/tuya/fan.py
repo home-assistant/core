@@ -256,7 +256,7 @@ class TuyaFanEntity(TuyaEntity, FanEntity):
         if self._speeds is not None:
             if (value := self.device.status.get(self._speeds.dpcode)) is None:
                 return None
-            return ordered_list_item_to_percentage(self._speeds.range, value)
+            return ordered_list_item_to_percentage(self._speeds.range, str(value))
 
         return None
 
