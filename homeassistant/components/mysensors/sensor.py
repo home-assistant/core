@@ -102,6 +102,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="V_DIRECTION",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     "V_WEIGHT": SensorEntityDescription(
         key="V_WEIGHT",

@@ -724,7 +724,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '34',
+    'state': '34.0',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_raw_nox-entry]
@@ -775,7 +775,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '16931',
+    'state': '16931.0',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_raw_pm2_5-entry]
@@ -878,7 +878,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '31792',
+    'state': '31792.0',
   })
 # ---
 # name: test_all_entities[indoor][sensor.airgradient_signal_strength-entry]
@@ -1280,7 +1280,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '16359',
+    'state': '16359.0',
   })
 # ---
 # name: test_all_entities[outdoor][sensor.airgradient_raw_voc-entry]
@@ -1331,7 +1331,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '30802',
+    'state': '30802.0',
   })
 # ---
 # name: test_all_entities[outdoor][sensor.airgradient_signal_strength-entry]
