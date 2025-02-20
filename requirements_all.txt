@@ -677,7 +677,7 @@ bthomehub5-devicelist==0.1.1
 btsmarthub-devicelist==0.2.3
 
 # homeassistant.components.buienradar
-buienradar==1.0.6
+buienradar==1.0.8
 
 # homeassistant.components.dhcp
 cached-ipaddress==0.8.0

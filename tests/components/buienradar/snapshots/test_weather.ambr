@@ -1,0 +1,231 @@
+# serializer version: 1
+# name: test_fetch_json_data
+  ReadOnlyDict({
+    'attribution': 'Data provided by buienradar.nl (Eindhoven (6370))',
+    'friendly_name': 'Buienradar',
+    'humidity': 81,
+    'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    'pressure': 1028.9,
+    'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+    'supported_features': <WeatherEntityFeature: 1>,
+    'temperature': 3.4,
+    'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+    'visibility': 7.95,
+    'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+    'wind_bearing': 56,
+    'wind_speed': 13.68,
+    'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_fetch_json_data_forecast[get_forecasts]
+  dict({
+    'weather.buienradar': dict({
+      'forecast': list([
+        dict({
+          'condition': 'pouring',
+          'datetime': '2025-02-10T00:00:00+01:00',
+          'precipitation': 1.0,
+          'temperature': 3.0,
+          'templow': 0.0,
+          'wind_bearing': 45,
+          'wind_speed': 12.96,
+        }),
+        dict({
+          'condition': 'pouring',
+          'datetime': '2025-02-11T00:00:00+01:00',
+          'precipitation': 1.0,
+          'temperature': 7.0,
+          'templow': -1.0,
+          'wind_bearing': 90,
+          'wind_speed': 12.96,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2025-02-12T00:00:00+01:00',
+          'precipitation': 0.0,
+          'temperature': 9.0,
+          'templow': -3.0,
+          'wind_bearing': 90,
+          'wind_speed': 7.42,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2025-02-13T00:00:00+01:00',
+          'precipitation': 0.0,
+          'temperature': 6.0,
+          'templow': -4.0,
+          'wind_bearing': 90,
+          'wind_speed': 12.96,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2025-02-14T00:00:00+01:00',
+          'precipitation': 0.0,
+          'temperature': 6.0,
+          'templow': -4.0,
+          'wind_bearing': 45,
+          'wind_speed': 7.42,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_fetch_json_data_forecast_workaround[get_forecasts]
+  dict({
+    'weather.buienradar': dict({
+      'forecast': list([
+        dict({
+          'condition': 'pouring',
+          'datetime': '2025-02-10T00:00:00+01:00',
+          'precipitation': 1.0,
+          'temperature': 3.0,
+          'templow': 0.0,
+          'wind_bearing': 45,
+          'wind_speed': 12.96,
+        }),
+        dict({
+          'condition': 'pouring',
+          'datetime': '2025-02-11T00:00:00+01:00',
+          'precipitation': 1.0,
+          'temperature': 7.0,
+          'templow': -1.0,
+          'wind_bearing': 90,
+          'wind_speed': 12.96,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2025-02-12T00:00:00+01:00',
+          'precipitation': 0.0,
+          'temperature': 9.0,
+          'templow': -3.0,
+          'wind_bearing': 90,
+          'wind_speed': 7.42,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2025-02-13T00:00:00+01:00',
+          'precipitation': 0.0,
+          'temperature': 6.0,
+          'templow': -4.0,
+          'wind_bearing': 90,
+          'wind_speed': 12.96,
+        }),
+        dict({
+          'condition': 'partlycloudy',
+          'datetime': '2025-02-14T00:00:00+01:00',
+          'precipitation': 0.0,
+          'temperature': 6.0,
+          'templow': -4.0,
+          'wind_bearing': 45,
+          'wind_speed': 7.42,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_fetch_json_data_noforecasts
+  ReadOnlyDict({
+    'attribution': 'Data provided by buienradar.nl (Eindhoven (6370))',
+    'friendly_name': 'Buienradar',
+    'humidity': 81,
+    'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    'pressure': 1028.9,
+    'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+    'supported_features': <WeatherEntityFeature: 1>,
+    'temperature': 3.4,
+    'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+    'visibility': 7.95,
+    'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+    'wind_bearing': 56,
+    'wind_speed': 13.68,
+    'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_fetch_json_data_workaround
+  ReadOnlyDict({
+    'attribution': 'Data provided by buienradar.nl (Eindhoven (6370))',
+    'friendly_name': 'Buienradar',
+    'humidity': 81,
+    'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    'pressure': 1028.9,
+    'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+    'supported_features': <WeatherEntityFeature: 1>,
+    'temperature': 3.4,
+    'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+    'visibility': 7.95,
+    'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+    'wind_bearing': 56,
+    'wind_speed': 13.68,
+    'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_fetch_no_json_data
+  ReadOnlyDict({
+    'friendly_name': 'Buienradar',
+    'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+    'supported_features': <WeatherEntityFeature: 1>,
+    'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+    'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+    'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_fetch_no_raindata
+  ReadOnlyDict({
+    'friendly_name': 'Buienradar',
+    'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+    'supported_features': <WeatherEntityFeature: 1>,
+    'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+    'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+    'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_fetch_unknow_attribution_values
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Data provided by buienradar.nl (TEST: missing attribution values (6275))',
+      'friendly_name': 'Buienradar',
+      'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+      'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+      'supported_features': <WeatherEntityFeature: 1>,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+      'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+      'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'weather.buienradar',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'cloudy',
+  })
+# ---
+# name: test_fetch_unknow_attribution_values.1
+  ReadOnlyDict({
+    'attribution': 'Data provided by buienradar.nl (TEST: missing attribution values (6275))',
+    'friendly_name': 'Buienradar',
+    'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+    'supported_features': <WeatherEntityFeature: 1>,
+    'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+    'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+    'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
+# name: test_unknown_condition
+  ReadOnlyDict({
+    'attribution': 'Data provided by buienradar.nl (TEST: unknown condition code (6391))',
+    'friendly_name': 'Buienradar',
+    'humidity': 78,
+    'precipitation_unit': <UnitOfPrecipitationDepth.MILLIMETERS: 'mm'>,
+    'pressure_unit': <UnitOfPressure.HPA: 'hPa'>,
+    'supported_features': <WeatherEntityFeature: 1>,
+    'temperature': 2.7,
+    'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
+    'visibility_unit': <UnitOfLength.KILOMETERS: 'km'>,
+    'wind_bearing': 57,
+    'wind_speed': 11.16,
+    'wind_speed_unit': <UnitOfSpeed.KILOMETERS_PER_HOUR: 'km/h'>,
+  })
+# ---
