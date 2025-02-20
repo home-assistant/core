@@ -103,10 +103,10 @@
   },
   "exceptions": {
     "setup_request_exception": {
-      "message": "Unable to connect and retrieve data from pyLoad API, try again later"
+      "message": "Unable to connect and retrieve data from pyLoad API"
     },
     "setup_parse_exception": {
-      "message": "Unable to parse data from pyLoad API, try again later"
+      "message": "Unable to parse data from pyLoad API"
     },
     "setup_authentication_exception": {
       "message": "Authentication failed for {username}, verify your login credentials"
