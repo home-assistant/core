@@ -138,11 +138,10 @@ async def test_user_flow_device_timeout_then_success(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "error_retry"
+    assert result["step_id"] == "user"
     assert "errors" in result
     assert result["errors"] == {"base": "timeout_connect"}
 
-    # Simulate successful retry from error_retry step
     mock_vegehub.setup.side_effect = None  # Clear the error
 
     result = await hass.config_entries.flow.async_configure(
@@ -177,11 +176,10 @@ async def test_user_flow_cannot_connect_404(
     )
 
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "error_retry"
+    assert result["step_id"] == "user"
     assert "errors" in result
     assert result["errors"] == {"base": "cannot_connect"}
 
-    # Simulate successful retry from error_retry step
     mock_vegehub.setup.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
@@ -381,7 +379,6 @@ async def test_zeroconf_flow_device_error_response(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "cannot_connect"
 
-    # Simulate successful retry from error_retry step
     mock_vegehub.setup.side_effect = None
 
     # Proceed to creating the entry
@@ -413,7 +410,6 @@ async def test_zeroconf_flow_device_stopped_responding(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"]["base"] == "timeout_connect"
 
-    # Simulate successful retry from error_retry step
     mock_vegehub.setup.side_effect = None
 
     # Proceed to creating the entry
