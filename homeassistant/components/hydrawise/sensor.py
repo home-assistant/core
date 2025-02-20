@@ -7,7 +7,10 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
-from pydrawise.schema import ControllerWaterUseSummary
+from pydrawise.schema import (
+    ControllerWaterUseSummary,
+    CustomSensorTypeEnum as SensorType,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -153,11 +156,7 @@ async def async_setup_entry(
             for zone in controller.zones
             for description in ZONE_SENSORS
         )
-        if (
-            coordinators.water_use.data.daily_water_summary[controller.id].total_use
-            is not None
-        ):
-            # we have a flow sensor for this controller
+        if any(s.model.sensor_type == SensorType.FLOW for s in controller.sensors):
             entities.extend(
                 HydrawiseSensor(coordinators.water_use, description, controller)
                 for description in FLOW_CONTROLLER_SENSORS
@@ -197,6 +196,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
         if (
             self.entity_description.key in FLOW_MEASUREMENT_KEYS
             and self.entity_description.device_class == SensorDeviceClass.VOLUME
+            and self.state is not None
             and round(self.state, 2) == 0.0
         ):
             return "mdi:water-outline"

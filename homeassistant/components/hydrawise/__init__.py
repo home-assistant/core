@@ -52,6 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
     )
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+    # The initial refresh will not pull data, so we need to manually refresh again.
+    await water_use_coordinator.async_refresh()
     return True
 
 
