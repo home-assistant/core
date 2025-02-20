@@ -13,7 +13,7 @@ from homeassistant.helpers import aiohttp_client, config_entry_oauth2_flow
 
 from . import api
 from .const import DOMAIN
-from .coordinator import HomelinkCoordinator, HomeLinkData
+from .coordinator import HomeLinkCoordinator, HomeLinkData
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
 
@@ -39,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> 
     )
 
     provider = Provider(authenticated_session)
-    coordinator = HomelinkCoordinator(hass, provider, entry)
+    coordinator = HomeLinkCoordinator(hass, provider, entry)
 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = HomeLinkData(
