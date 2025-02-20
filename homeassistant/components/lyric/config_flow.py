@@ -24,6 +24,12 @@ class OAuth2FlowHandler(
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @property
+    def extra_authorize_data(self) -> dict[str, Any]:
+        """Extra data that needs to be appended to the authorize url."""
+        appSelect = 1
+        return {"appSelect": " ".join(appSelect)}
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:

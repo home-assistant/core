@@ -1,6 +1,6 @@
 {
   "domain": "lyric",
-  "name": "Honeywell Lyric",
+  "name": "Resideo",
   "codeowners": ["@timmo001"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
