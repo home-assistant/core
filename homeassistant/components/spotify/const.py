@@ -19,6 +19,7 @@ SPOTIFY_SCOPES = [
     "playlist-read-private",
     "playlist-read-collaborative",
     "user-library-read",
+    "user-library-modify",
     "user-top-read",
     "user-read-playback-position",
     "user-read-recently-played",
