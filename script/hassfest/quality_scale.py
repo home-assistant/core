@@ -391,7 +391,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "fleetgo",
     "flexit",
     "flic",
-    "flick_electric",
     "flipr",
     "flo",
     "flock",
