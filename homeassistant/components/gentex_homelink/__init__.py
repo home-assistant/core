@@ -41,12 +41,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> 
     provider = Provider(authenticated_session)
     coordinator = HomelinkCoordinator(hass, provider, entry)
 
+    await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = HomeLinkData(
         provider=provider, coordinator=coordinator, last_update_id=None
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    await coordinator.async_config_entry_first_refresh()
     return True
 
 

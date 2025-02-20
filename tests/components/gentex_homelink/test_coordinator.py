@@ -105,14 +105,14 @@ async def test_get_state_updates(
         # Assert configuration worked without errors
         assert result
 
-        # Test successful setup and first data fetch. The buttons should turn on
+        # Test successful setup and first data fetch. The buttons should be off at the start
         logging.info("Initial sync")
         await hass.async_block_till_done(wait_background_tasks=True)
         states = hass.states.async_all()
         logging.info(states)
         assert (state != STATE_UNAVAILABLE for state in states)
-        buttons_on = [s.state == "on" for s in states]
-        assert all(buttons_on)
+        buttons_off = [s.state == "off" for s in states]
+        assert all(buttons_off)
 
         logging.info(
             "Fetch data again. Buttons should be off because the request has the same id"
