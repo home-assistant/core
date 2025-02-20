@@ -928,3 +928,65 @@ async def test_trigger_entity_restore_state_fail(
     state = hass.states.get("weather.test")
     assert state.state == STATE_UNKNOWN
     assert state.attributes.get("temperature") is None
+
+
+async def test_new_style_template_state_text(hass: HomeAssistant) -> None:
+    """Test the state text of a template."""
+    assert await async_setup_component(
+        hass,
+        "weather",
+        {
+            "weather": [
+                {"weather": {"platform": "demo"}},
+            ]
+        },
+    )
+    assert await async_setup_component(
+        hass,
+        "template",
+        {
+            "template": {
+                "weather": {
+                    "name": "test",
+                    "attribution_template": "{{ states('sensor.attribution') }}",
+                    "condition_template": "sunny",
+                    "temperature_template": "{{ states('sensor.temperature') | float }}",
+                    "humidity_template": "{{ states('sensor.humidity') | int }}",
+                    "pressure_template": "{{ states('sensor.pressure') }}",
+                    "wind_speed_template": "{{ states('sensor.windspeed') }}",
+                    "wind_bearing_template": "{{ states('sensor.windbearing') }}",
+                    "ozone_template": "{{ states('sensor.ozone') }}",
+                    "visibility_template": "{{ states('sensor.visibility') }}",
+                    "wind_gust_speed_template": "{{ states('sensor.wind_gust_speed') }}",
+                    "cloud_coverage_template": "{{ states('sensor.cloud_coverage') }}",
+                    "dew_point_template": "{{ states('sensor.dew_point') }}",
+                    "apparent_temperature_template": "{{ states('sensor.apparent_temperature') }}",
+                },
+            },
+        },
+    )
+
+    for attr, v_attr, value in (
+        (
+            "sensor.attribution",
+            ATTR_ATTRIBUTION,
+            "The custom attribution",
+        ),
+        ("sensor.temperature", ATTR_WEATHER_TEMPERATURE, 22.3),
+        ("sensor.humidity", ATTR_WEATHER_HUMIDITY, 60),
+        ("sensor.pressure", ATTR_WEATHER_PRESSURE, 1000),
+        ("sensor.windspeed", ATTR_WEATHER_WIND_SPEED, 20),
+        ("sensor.windbearing", ATTR_WEATHER_WIND_BEARING, 180),
+        ("sensor.ozone", ATTR_WEATHER_OZONE, 25),
+        ("sensor.visibility", ATTR_WEATHER_VISIBILITY, 4.6),
+        ("sensor.wind_gust_speed", ATTR_WEATHER_WIND_GUST_SPEED, 30),
+        ("sensor.cloud_coverage", ATTR_WEATHER_CLOUD_COVERAGE, 75),
+        ("sensor.dew_point", ATTR_WEATHER_DEW_POINT, 2.2),
+        ("sensor.apparent_temperature", ATTR_WEATHER_APPARENT_TEMPERATURE, 25),
+    ):
+        hass.states.async_set(attr, value)
+        await hass.async_block_till_done()
+        state = hass.states.get("weather.test")
+        assert state is not None
+        assert state.state == "sunny"
+        assert state.attributes.get(v_attr) == value
