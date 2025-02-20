@@ -15,13 +15,10 @@ from homeassistant.helpers import config_validation as cv, selector
 from .const import CONNECTION_TIMEOUT, DOMAIN
 from .coordinator import APCUPSdData
 
-_PORT_SELECTOR = vol.All(
-    selector.NumberSelector(
-        selector.NumberSelectorConfig(
-            min=1, max=65535, mode=selector.NumberSelectorMode.BOX
-        ),
-    ),
-    vol.Coerce(int),
+_PORT_SELECTOR = selector.NumberSelector(
+    selector.NumberSelectorConfig(
+        min=1, max=65535, mode=selector.NumberSelectorMode.BOX, step=1
+    )
 )
 
 _SCHEMA = vol.Schema(
