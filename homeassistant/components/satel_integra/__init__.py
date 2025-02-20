@@ -5,9 +5,12 @@ import logging
 
 from satel_integra.satel_integra import AsyncSatel
 
+from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_HOST, CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
@@ -16,6 +19,7 @@ from .const import (
     CONF_OUTPUTS,
     CONF_SWITCHABLE_OUTPUTS,
     CONF_ZONES,
+    DOMAIN,
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_PANEL_MESSAGE,
     SIGNAL_ZONES_UPDATED,
@@ -29,9 +33,55 @@ _LOGGER = logging.getLogger(__name__)
 PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR, Platform.SWITCH]
 
 
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, hass_config: ConfigType) -> bool:
     """Set up  Satel Integra from YAML."""
+
+    if config := hass_config.get(DOMAIN):
+        hass.async_create_task(_async_import(hass, config))
+
     return True
+
+
+async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
+    """Process YAML import."""
+
+    if not hass.config_entries.async_entries(DOMAIN):
+        # Start import flow
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+        )
+
+        if result.get("type") == FlowResultType.ABORT:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "deprecated_yaml_import_issue_connection",
+                breaks_in_ha_version="2025.8.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue_connection",
+                translation_placeholders={
+                    "domain": DOMAIN,
+                    "integration_title": "Satel Integra",
+                },
+            )
+            return
+
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_yaml_{DOMAIN}",
+        breaks_in_ha_version="2025.8.0",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "Satel Integra",
+        },
+    )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SatelConfigEntry) -> bool:

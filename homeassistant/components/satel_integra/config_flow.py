@@ -130,6 +130,37 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=CONNECTION_SCHEMA, errors=errors
         )
 
+    async def async_step_import(
+        self, import_config: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a flow initialized by import."""
+
+        valid = await self.test_connection(
+            import_config[CONF_HOST], import_config.get(CONF_PORT, DEFAULT_PORT)
+        )
+
+        if valid:
+            return self.async_create_entry(
+                title=import_config[CONF_HOST],
+                data={
+                    CONF_HOST: import_config[CONF_HOST],
+                    CONF_PORT: import_config.get(CONF_PORT, DEFAULT_PORT),
+                },
+                options={
+                    CONF_CODE: import_config.get(CONF_CODE),
+                    CONF_DEVICE_PARTITIONS: import_config.get(
+                        CONF_DEVICE_PARTITIONS, {}
+                    ),
+                    CONF_ZONES: import_config.get(CONF_ZONES, {}),
+                    CONF_OUTPUTS: import_config.get(CONF_OUTPUTS, {}),
+                    CONF_SWITCHABLE_OUTPUTS: import_config.get(
+                        CONF_SWITCHABLE_OUTPUTS, {}
+                    ),
+                },
+            )
+
+        return self.async_abort(reason="Failed to connect")
+
     async def test_connection(self, host, port) -> bool:
         """Test a connection to the Satel alarm."""
         controller = AsyncSatel(host, port, self.hass.loop)
