@@ -139,13 +139,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up SMLIGHT sensor based on a config entry."""
     coordinator = entry.runtime_data.data
-    entities: list[SmEntity] = [
+    entities: list[SmEntity] = list(
         chain(
             (SmInfoSensorEntity(coordinator, description) for description in INFO),
             (SmSensorEntity(coordinator, description) for description in SENSORS),
             (SmUptimeSensorEntity(coordinator, description) for description in UPTIME),
         )
-    ]
+    )
 
     radios = coordinator.data.info.radios
     assert radios is not None
