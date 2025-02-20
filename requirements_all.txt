@@ -600,7 +600,7 @@ bizkaibus==0.1.1
 bleak-esphome==2.7.1
 
 # homeassistant.components.bluetooth
-bleak-retry-connector==3.8.1
+bleak-retry-connector==3.9.0
 
 # homeassistant.components.bluetooth
 bleak==0.22.3
@@ -628,7 +628,7 @@ bluemaestro-ble==0.2.3
 bluetooth-adapters==0.21.4
 
 # homeassistant.components.bluetooth
-bluetooth-auto-recovery==1.4.2
+bluetooth-auto-recovery==1.4.4
 
 # homeassistant.components.bluetooth
 # homeassistant.components.ld2410_ble
@@ -1103,7 +1103,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.22.0
+habluetooth==3.22.1
 
 # homeassistant.components.cloud
 hass-nabucasa==0.92.0
