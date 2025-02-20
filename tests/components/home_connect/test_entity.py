@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
-    ArrayOfOptions,
     ArrayOfPrograms,
     Event,
     EventKey,
@@ -22,7 +21,10 @@ from aiohomeconnect.model.error import (
     HomeConnectError,
     SelectedProgramNotSetError,
 )
-from aiohomeconnect.model.program import ProgramDefinitionOption
+from aiohomeconnect.model.program import (
+    ProgramDefinitionConstraints,
+    ProgramDefinitionOption,
+)
 import pytest
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -33,6 +35,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
     Platform,
 )
 from homeassistant.core import HomeAssistant
@@ -48,16 +51,14 @@ def platforms() -> list[str]:
 
 
 @pytest.mark.parametrize(
-    ("array_of_programs_program_arg", "retrieve_options_method", "event_key"),
+    ("array_of_programs_program_arg", "event_key"),
     [
         (
             "active",
-            "get_active_program_options",
             EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
         ),
         (
             "selected",
-            "get_selected_program_options",
             EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
         ),
     ],
@@ -67,7 +68,9 @@ def platforms() -> list[str]:
         "appliance_ha_id",
         "option_entity_id",
         "options_state_stage_1",
-        "options_state_stage_2",
+        "options_availability_stage_2",
+        "option_without_default",
+        "option_without_constraints",
     ),
     [
         (
@@ -78,19 +81,25 @@ def platforms() -> list[str]:
                 OptionKey.DISHCARE_DISHWASHER_ECO_DRY: "switch.dishwasher_eco_dry",
             },
             [(STATE_ON, True), (STATE_OFF, False), (STATE_UNAVAILABLE, None)],
-            [(STATE_UNAVAILABLE, None), (STATE_ON, True), (STATE_OFF, False)],
+            [False, True, True],
+            (
+                OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS,
+                "switch.dishwasher_hygiene_plus",
+            ),
+            (OptionKey.DISHCARE_DISHWASHER_EXTRA_DRY, "switch.dishwasher_extra_dry"),
         )
     ],
     indirect=["appliance_ha_id"],
 )
 async def test_program_options_retrieval(
     array_of_programs_program_arg: str,
-    retrieve_options_method: str,
     event_key: EventKey,
     appliance_ha_id: str,
     option_entity_id: dict[OptionKey, str],
     options_state_stage_1: list[tuple[str, bool | None]],
-    options_state_stage_2: list[tuple[str, bool | None]],
+    options_availability_stage_2: list[bool],
+    option_without_default: tuple[OptionKey, str],
+    option_without_constraints: tuple[OptionKey, str],
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -98,22 +107,16 @@ async def test_program_options_retrieval(
     client: MagicMock,
 ) -> None:
     """Test that the options are correctly retrieved at the start and updated on program updates."""
-    assert options_state_stage_1 != options_state_stage_2, (
-        "available options should differ between stages"
-    )
     original_get_all_programs_mock = client.get_all_programs.side_effect
-    options_stages = [
-        [
-            Option(
-                option_key,
-                value,
-            )
-            for option_key, (_, value) in zip(
-                option_entity_id.keys(), options_state_stage, strict=True
-            )
-            if value is not None
-        ]
-        for options_state_stage in (options_state_stage_1, options_state_stage_2)
+    options_values = [
+        Option(
+            option_key,
+            value,
+        )
+        for option_key, (_, value) in zip(
+            option_entity_id.keys(), options_state_stage_1, strict=True
+        )
+        if value is not None
     ]
 
     async def get_all_programs_with_options_mock(ha_id: str) -> ArrayOfPrograms:
@@ -126,18 +129,13 @@ async def test_program_options_retrieval(
                 {
                     "programs": array_of_programs.programs,
                     array_of_programs_program_arg: Program(
-                        array_of_programs.programs[0].key, options=options_stages[0]
+                        array_of_programs.programs[0].key, options=options_values
                     ),
                 }
             )
         )
 
     client.get_all_programs = AsyncMock(side_effect=get_all_programs_with_options_mock)
-    setattr(
-        client,
-        retrieve_options_method,
-        AsyncMock(return_value=ArrayOfOptions(options_stages[1])),
-    )
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(
             ProgramKey.UNKNOWN,
@@ -145,6 +143,9 @@ async def test_program_options_retrieval(
                 ProgramDefinitionOption(
                     option_key,
                     "Boolean",
+                    constraints=ProgramDefinitionConstraints(
+                        default=False,
+                    ),
                 )
                 for option_key, (_, value) in zip(
                     option_entity_id.keys(), options_state_stage_1, strict=True
@@ -167,17 +168,34 @@ async def test_program_options_retrieval(
         return_value=ProgramDefinition(
             ProgramKey.UNKNOWN,
             options=[
+                *[
+                    ProgramDefinitionOption(
+                        option_key,
+                        "Boolean",
+                        constraints=ProgramDefinitionConstraints(
+                            default=False,
+                        ),
+                    )
+                    for option_key, available in zip(
+                        option_entity_id.keys(),
+                        options_availability_stage_2,
+                        strict=True,
+                    )
+                    if available
+                ],
                 ProgramDefinitionOption(
-                    option_key,
+                    option_without_default[0],
                     "Boolean",
-                )
-                for option_key, (_, value) in zip(
-                    option_entity_id.keys(), options_state_stage_2, strict=True
-                )
-                if value is not None
+                    constraints=ProgramDefinitionConstraints(),
+                ),
+                ProgramDefinitionOption(
+                    option_without_constraints[0],
+                    "Boolean",
+                ),
             ],
         )
     )
+
     await client.add_events(
         [
             EventMessage(
@@ -200,12 +218,16 @@ async def test_program_options_retrieval(
     )
     await hass.async_block_till_done()
 
-    assert getattr(client, retrieve_options_method).called
-
-    for entity_id, (state, _) in zip(
-        option_entity_id.values(), options_state_stage_2, strict=True
+    # Verify default values
+    # Every time the program is updated, the available options should use the default value if existing
+    for entity_id, available in zip(
+        option_entity_id.values(), options_availability_stage_2, strict=True
     ):
-        assert hass.states.is_state(entity_id, state)
+        assert hass.states.is_state(
+            entity_id, STATE_OFF if available else STATE_UNAVAILABLE
+        )
+    for _, entity_id in (option_without_default, option_without_constraints):
+        assert hass.states.is_state(entity_id, STATE_UNKNOWN)
 
 
 @pytest.mark.parametrize(

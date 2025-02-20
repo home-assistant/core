@@ -439,24 +439,21 @@ class HomeConnectCoordinator(
         options.clear()
         if program_key is not ProgramKey.UNKNOWN:
             options.update(await self.get_options_definitions(ha_id, program_key))
-        options_getter = (
-            self.client.get_active_program_options
-            if event_key is EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM
-            else self.client.get_selected_program_options
-        )
-        for option in (await options_getter(ha_id)).options:
-            option_event_key = EventKey(option.key)
-            events[option_event_key] = Event(
-                option_event_key,
-                option.key.value,
-                0,
-                "",
-                "",
-                option.value,
-                option.name,
-                display_value=option.display_value,
-                unit=option.unit,
-            )
+
+        for option in options.values():
+            option_value = option.constraints.default if option.constraints else None
+            if option_value is not None:
+                option_event_key = EventKey(option.key)
+                events[option_event_key] = Event(
+                    option_event_key,
+                    option.key.value,
+                    0,
+                    "",
+                    "",
+                    option_value,
+                    option.name,
+                    unit=option.unit,
+                )
         options_to_notify.update(options)
         for option_key in options_to_notify:
             for listener in self.context_listeners.get(
