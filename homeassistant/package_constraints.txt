@@ -19,7 +19,7 @@ audioop-lts==0.2.1
 av==13.1.0
 awesomeversion==24.6.0
 bcrypt==4.2.0
-bleak-retry-connector==3.8.1
+bleak-retry-connector==3.9.0
 bleak==0.22.3
 bluetooth-adapters==0.21.4
 bluetooth-auto-recovery==1.4.2
@@ -33,7 +33,7 @@ dbus-fast==2.33.0
 fnv-hash-fast==1.2.2
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.22.0
+habluetooth==3.22.1
 hass-nabucasa==0.92.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
