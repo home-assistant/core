@@ -48,7 +48,7 @@ orjson==3.10.12
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==11.1.0
-propcache==0.2.1
+propcache==0.3.0
 psutil-home-assistant==0.0.1
 PyJWT==2.10.1
 pymicro-vad==1.0.1
