@@ -61,6 +61,7 @@ class HomeLinkBinarySensor(CoordinatorEntity[HomeLinkCoordinator], BinarySensorE
         """Initialize the button."""
         super().__init__(coordinator, context=id)
         self.id = id
+        self._attr_has_entity_name = True
         self.name = name
         self.unique_id = f"{DOMAIN}.{id}"
         self.device_info = device_info
