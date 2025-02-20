@@ -142,6 +142,14 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             self._attr_supported_features |= (
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
+        # Supports swing mode.
+        if modes := self.data.swing_modes:
+            self._attr_swing_modes = modes
+            self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
+
+        if modes := self.data.swing_horizontal_modes:
+            self._attr_swing_horizontal_modes = modes
+            self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
     def _update_status(self) -> None:
         """Update status itself."""
@@ -150,6 +158,11 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         # Update fan, hvac and preset mode.
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
             self._attr_fan_mode = self.data.fan_mode
+        if self.supported_features & ClimateEntityFeature.SWING_MODE:
+            self._attr_swing_mode = self.data.swing_mode
+        if self.supported_features & ClimateEntityFeature.SWING_HORIZONTAL_MODE:
+            self._attr_swing_horizontal_mode = self.data.swing_horizontal_mode
+
         if self.data.is_on:
             hvac_mode = self._requested_hvac_mode or self.data.hvac_mode
             if hvac_mode in STR_TO_HVAC:
@@ -266,6 +279,32 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         )
         await self.async_call_api(
             self.coordinator.api.async_set_fan_mode(self.property_id, fan_mode)
+        )
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set new swing mode."""
+        _LOGGER.debug(
+            "[%s:%s] async_set_swing_mode: %s",
+            self.coordinator.device_name,
+            self.property_id,
+            swing_mode,
+        )
+        await self.async_call_api(
+            self.coordinator.api.async_set_swing_mode(self.property_id, swing_mode)
+        )
+
+    async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
+        """Set new swing horizontal mode."""
+        _LOGGER.debug(
+            "[%s:%s] async_set_swing_horizontal_mode: %s",
+            self.coordinator.device_name,
+            self.property_id,
+            swing_horizontal_mode,
+        )
+        await self.async_call_api(
+            self.coordinator.api.async_set_swing_horizontal_mode(
+                self.property_id, swing_horizontal_mode
+            )
         )
 
     def _round_by_step(self, temperature: float) -> float:
