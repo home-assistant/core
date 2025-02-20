@@ -1,0 +1,139 @@
+{
+  "common": {
+    "code_input_description": "Code to toggle switchable outputs",
+    "action_input": "Action to take",
+    "action_input_number": "Reference number to use",
+    "code": "Access code"
+  },
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "code": "[%key:component::satel_integra::common::code%]"
+        },
+        "data_description": {
+          "host": "The IP address of the alarm panel",
+          "port": "The port of the alarm panel",
+          "code": "[%key:component::satel_integra::common::code_input_description%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "menu_options": {
+          "general": "General settings",
+          "partitions": "Configure partitions",
+          "zones": "Configure zones",
+          "outputs": "Configure outputs",
+          "switchable_outputs": "Configure switchable outputs"
+        }
+      },
+      "general": {
+        "data": {
+          "code": "[%key:component::satel_integra::common::code%]"
+        },
+        "data_description": {
+          "code": "[%key:component::satel_integra::common::code_input_description%]"
+        }
+      },
+      "partitions": {
+        "title": "Partition configuration",
+        "description": "Select partition to configure",
+        "data": {
+          "action": "[%key:component::satel_integra::common::action_input%]",
+          "number": "[%key:component::satel_integra::common::action_input_number%]"
+        },
+        "data_description": {
+          "number": "Enter partition number to configure"
+        }
+      },
+      "partition_details": {
+        "title": "Editing partition {partition_number}",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "arm_home_mode": "Arm home mode"
+        }
+      },
+      "zones": {
+        "title": "Zone configuration",
+        "description": "Select zone to configure",
+        "data": {
+          "action": "[%key:component::satel_integra::common::action_input%]",
+          "number": "[%key:component::satel_integra::common::action_input_number%]"
+        },
+        "data_description": {
+          "number": "Enter zone number to configure"
+        }
+      },
+      "zone_details": {
+        "title": "Editing zone {zone_number}",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "type": "Type"
+        }
+      },
+      "outputs": {
+        "title": "Output configuration",
+        "description": "Select output to configure",
+        "data": {
+          "action": "[%key:component::satel_integra::common::action_input%]",
+          "number": "[%key:component::satel_integra::common::action_input_number%]"
+        },
+        "data_description": {
+          "number": "Enter output number to configure"
+        }
+      },
+      "output_details": {
+        "title": "Editing output {output_number}",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]",
+          "type": "Type"
+        }
+      },
+      "switchable_outputs": {
+        "title": "Switchable output configuration",
+        "description": "Select switchable output to configure",
+        "data": {
+          "action": "[%key:component::satel_integra::common::action_input%]",
+          "number": "[%key:component::satel_integra::common::action_input_number%]"
+        },
+        "data_description": {
+          "number": "Enter switchable output number to configure"
+        }
+      },
+      "switchable_output_details": {
+        "title": "Editing switchable output {switchable_output_number}",
+        "data": {
+          "name": "[%key:common::config_flow::data::name%]"
+        }
+      }
+    },
+    "error": {
+      "unknown_partition": "Partition not configured",
+      "unknown_zone": "Zone not configured",
+      "unknown_output": "Output not configured",
+      "unknown_switchable_output": "Switchable output not configured",
+      "partition_exists": "Partition already configured",
+      "zone_exists": "Zone already configured",
+      "output_exists": "Output already configured",
+      "switchable_output_exists": "Switchable output already configured"
+    }
+  },
+  "issues": {},
+  "selector": {
+    "action_selector": {
+      "options": {
+        "add": "Add",
+        "edit": "Edit",
+        "delete": "Delete"
+      }
+    }
+  }
+}

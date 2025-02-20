@@ -238,7 +238,7 @@ class SatelOptionsFlow(OptionsFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Partition configuration step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             selected_partition = str(user_input[CONF_ACTION_NUMBER])
             selected_action = user_input[CONF_ACTION]
@@ -252,7 +252,7 @@ class SatelOptionsFlow(OptionsFlow):
                 selected_action == ACTION_ADD
                 and selected_partition in self.partition_options
             ):
-                errors["base"] = "already_exists"
+                errors["base"] = "partition_exists"
             elif selected_action == ACTION_DELETE:
                 self.partition_options.pop(selected_partition)
                 return self.async_create_entry(data=self.options)
@@ -281,13 +281,14 @@ class SatelOptionsFlow(OptionsFlow):
             data_schema=self.add_suggested_values_to_schema(
                 PARTITION_SCHEMA, existing_partition_config
             ),
+            description_placeholders={"partition_number": self.editing_entry},
         )
 
     async def async_step_zones(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Zone configuration step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             selected_zone = str(user_input[CONF_ACTION_NUMBER])
             selected_action = user_input[CONF_ACTION]
@@ -298,7 +299,7 @@ class SatelOptionsFlow(OptionsFlow):
             ):
                 errors["base"] = "unknown_zone"
             elif selected_action == ACTION_ADD and selected_zone in self.zone_options:
-                errors["base"] = "already_exists"
+                errors["base"] = "zone_exists"
             elif selected_action == ACTION_DELETE:
                 self.zone_options.pop(selected_zone)
                 return self.async_create_entry(data=self.options)
@@ -327,13 +328,14 @@ class SatelOptionsFlow(OptionsFlow):
             data_schema=self.add_suggested_values_to_schema(
                 ZONE_SCHEMA, existing_zone_config
             ),
+            description_placeholders={"zone_number": self.editing_entry},
         )
 
     async def async_step_outputs(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Output configuration step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             selected_output = str(user_input[CONF_ACTION_NUMBER])
             selected_action = user_input[CONF_ACTION]
@@ -346,7 +348,7 @@ class SatelOptionsFlow(OptionsFlow):
             elif (
                 selected_action == ACTION_ADD and selected_output in self.output_options
             ):
-                errors["base"] = "already_exists"
+                errors["base"] = "output_exists"
             elif selected_action == ACTION_DELETE:
                 self.output_options.pop(selected_output)
                 return self.async_create_entry(data=self.options)
@@ -375,13 +377,14 @@ class SatelOptionsFlow(OptionsFlow):
             data_schema=self.add_suggested_values_to_schema(
                 ZONE_SCHEMA, existing_output_config
             ),
+            description_placeholders={"output_number": self.editing_entry},
         )
 
     async def async_step_switchable_outputs(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Switchable output configuration step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             selected_switchable_output = str(user_input[CONF_ACTION_NUMBER])
             selected_action = user_input[CONF_ACTION]
@@ -395,7 +398,7 @@ class SatelOptionsFlow(OptionsFlow):
                 selected_action == ACTION_ADD
                 and selected_switchable_output in self.switchable_output_options
             ):
-                errors["base"] = "already_exists"
+                errors["base"] = "switchable_output_exists"
             elif selected_action == ACTION_DELETE:
                 self.switchable_output_options.pop(selected_switchable_output)
                 return self.async_create_entry(data=self.options)
@@ -427,4 +430,5 @@ class SatelOptionsFlow(OptionsFlow):
             data_schema=self.add_suggested_values_to_schema(
                 SWITCHABLE_OUTPUT_SCHEM, existing_switchable_output_config
             ),
+            description_placeholders={"switchable_output_number": self.editing_entry},
         )
