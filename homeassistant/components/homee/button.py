@@ -48,14 +48,12 @@ async def async_setup_entry(
         HomeeButton(attribute, config_entry, BUTTON_DESCRIPTIONS[attribute.type])
         for node in config_entry.runtime_data.nodes
         for attribute in node.attributes
-        if (attribute.type in BUTTON_DESCRIPTIONS and attribute.editable)
+        if attribute.type in BUTTON_DESCRIPTIONS and attribute.editable
     )
 
 
 class HomeeButton(HomeeEntity, ButtonEntity):
     """Representation of a Homee button."""
-
-    entity_description: ButtonEntityDescription
 
     def __init__(
         self,

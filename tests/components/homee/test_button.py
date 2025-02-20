@@ -19,7 +19,7 @@ async def test_button_press(
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test turn-on service."""
+    """Test press button service."""
     mock_homee.nodes = [build_mock_node("buttons.json")]
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
