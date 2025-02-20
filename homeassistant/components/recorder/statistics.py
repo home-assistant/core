@@ -208,11 +208,15 @@ def mean(values: list[float]) -> float | None:
     return sum(values) / len(values)
 
 
+DEG_TO_RAD = math.pi / 180
+RAD_TO_DEG = 180 / math.pi
+
+
 def circular_mean(values: list[float]) -> float:
     """Return the circular mean of the values."""
-    sin_sum = sum(math.sin(math.radians(x)) for x in values)
-    cos_sum = sum(math.cos(math.radians(x)) for x in values)
-    return math.degrees(math.atan2(sin_sum, cos_sum)) % 360
+    sin_sum = sum(math.sin(x * DEG_TO_RAD) for x in values)
+    cos_sum = sum(math.cos(x * DEG_TO_RAD) for x in values)
+    return (RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360
 
 
 _LOGGER = logging.getLogger(__name__)

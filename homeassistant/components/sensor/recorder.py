@@ -158,7 +158,7 @@ def _time_weighted_circular_mean(
     """
     old_fstate: float | None = None
     old_start_time: datetime.datetime | None = None
-    values: list[float] = []
+    values: list[tuple[float, float]] = []
 
     for fstate, state in fstates:
         # The recorder will give us the last known state, which may be well
@@ -171,7 +171,7 @@ def _time_weighted_circular_mean(
             duration = start_time - old_start_time
             # Append same value for each second between state changes
             assert old_fstate is not None
-            values.extend(old_fstate for _ in range(int(duration.total_seconds())))
+            values.append((old_fstate, duration.total_seconds()))
 
         old_fstate = fstate
         old_start_time = start_time
@@ -180,13 +180,15 @@ def _time_weighted_circular_mean(
         # Accumulate the value, weighted by duration until end of the period
         assert old_start_time is not None
         duration = end - old_start_time
-        values.extend(old_fstate for _ in range(int(duration.total_seconds())))
+        values.append((old_fstate, duration.total_seconds()))
 
-    period_seconds = (end - start).total_seconds()
-    if period_seconds == 0:
-        # todo:
-        return 0.0
-    return statistics.circular_mean(values)
+    sin_sum = sum(
+        math.sin(x * statistics.DEG_TO_RAD) * duration for x, duration in values
+    )
+    cos_sum = sum(
+        math.cos(x * statistics.DEG_TO_RAD) * duration for x, duration in values
+    )
+    return (statistics.RAD_TO_DEG * math.atan2(sin_sum, cos_sum)) % 360
 
 
 def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
