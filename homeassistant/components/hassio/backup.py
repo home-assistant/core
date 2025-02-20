@@ -652,7 +652,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             agent_id if agent_id != core_agent_id else default_agent
             for agent_id in create_backup.agent_ids
         ]
-        await config.update(
+        config.update(
             create_backup=CreateBackupParametersDict(agent_ids=automatic_agents)
         )
 
