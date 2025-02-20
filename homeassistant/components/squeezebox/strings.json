@@ -92,16 +92,16 @@
           "description": "The items to play on LMS."
         },
         "search_type": {
-          "name": "Search Type",
-          "description": "Full text search for a string, or directly provide an item_id"
+          "name": "Search type",
+          "description": "Full text search for a string, or directly provide an item_id."
         },
         "search_string": {
-          "name": "Search String",
+          "name": "Search string",
           "description": "Search for items matching the search string or item_id."
         },
         "playlist_action": {
-          "name": "Playlist Action",
-          "description": "How should the item be added to the playlist"
+          "name": "Playlist action",
+          "description": "Define how the item should be added to the playlist."
         }
       }
     }
