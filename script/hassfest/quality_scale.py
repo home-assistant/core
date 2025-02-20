@@ -812,7 +812,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "pushsafer",
     "pvoutput",
     "pvpc_hourly_pricing",
-    "pyload",
     "qbittorrent",
     "qingping",
     "qld_bushfire",
