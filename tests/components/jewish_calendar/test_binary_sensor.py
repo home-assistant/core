@@ -14,99 +14,94 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 MELACHA_PARAMS = [
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 1, 16, 0),
         {"state": STATE_ON, "update": dt(2018, 9, 1, 20, 14), "new_state": STATE_OFF},
+        id="currently_first_shabbat",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 1, 20, 21),
         {"state": STATE_OFF, "update": dt(2018, 9, 2, 6, 21), "new_state": STATE_OFF},
+        id="after_first_shabbat",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 7, 13, 1),
         {"state": STATE_OFF, "update": dt(2018, 9, 7, 19, 4), "new_state": STATE_ON},
+        id="friday_upcoming_shabbat",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 8, 21, 25),
         {"state": STATE_OFF, "update": dt(2018, 9, 9, 6, 27), "new_state": STATE_OFF},
+        id="upcoming_rosh_hashana",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 9, 21, 25),
         {"state": STATE_ON, "update": dt(2018, 9, 10, 6, 28), "new_state": STATE_ON},
+        id="currently_rosh_hashana",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 10, 21, 25),
         {"state": STATE_ON, "update": dt(2018, 9, 11, 6, 29), "new_state": STATE_ON},
+        id="second_day_rosh_hashana_night",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 11, 11, 25),
         {"state": STATE_ON, "update": dt(2018, 9, 11, 19, 57), "new_state": STATE_OFF},
+        id="second_day_rosh_hashana_day",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 29, 16, 25),
         {"state": STATE_ON, "update": dt(2018, 9, 29, 19, 25), "new_state": STATE_OFF},
+        id="currently_shabbat_chol_hamoed",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 29, 21, 25),
         {"state": STATE_OFF, "update": dt(2018, 9, 30, 6, 48), "new_state": STATE_OFF},
+        id="upcoming_two_day_yomtov_in_diaspora",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 30, 21, 25),
         {"state": STATE_ON, "update": dt(2018, 10, 1, 6, 49), "new_state": STATE_ON},
+        id="currently_first_day_of_two_day_yomtov_in_diaspora",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 10, 1, 21, 25),
         {"state": STATE_ON, "update": dt(2018, 10, 2, 6, 50), "new_state": STATE_ON},
+        id="currently_second_day_of_two_day_yomtov_in_diaspora",
     ),
-    (
+    pytest.param(
         "Jerusalem",
         dt(2018, 9, 29, 21, 25),
         {"state": STATE_OFF, "update": dt(2018, 9, 30, 6, 29), "new_state": STATE_OFF},
+        id="upcoming_one_day_yom_tov_in_israel",
     ),
-    (
+    pytest.param(
         "Jerusalem",
         dt(2018, 10, 1, 11, 25),
         {"state": STATE_ON, "update": dt(2018, 10, 1, 19, 2), "new_state": STATE_OFF},
+        id="currently_one_day_yom_tov_in_israel",
     ),
-    (
+    pytest.param(
         "Jerusalem",
         dt(2018, 10, 1, 21, 25),
         {"state": STATE_OFF, "update": dt(2018, 10, 2, 6, 31), "new_state": STATE_OFF},
+        id="after_one_day_yom_tov_in_israel",
     ),
 ]
 
-MELACHA_TEST_IDS = [
-    "currently_first_shabbat",
-    "after_first_shabbat",
-    "friday_upcoming_shabbat",
-    "upcoming_rosh_hashana",
-    "currently_rosh_hashana",
-    "second_day_rosh_hashana_night",
-    "second_day_rosh_hashana_day",
-    "currently_shabbat_chol_hamoed",
-    "upcoming_two_day_yomtov_in_diaspora",
-    "currently_first_day_of_two_day_yomtov_in_diaspora",
-    "currently_second_day_of_two_day_yomtov_in_diaspora",
-    "upcoming_one_day_yom_tov_in_israel",
-    "currently_one_day_yom_tov_in_israel",
-    "after_one_day_yom_tov_in_israel",
-]
 
-
-@pytest.mark.parametrize(
-    "jcal_params", MELACHA_PARAMS, ids=MELACHA_TEST_IDS, indirect=True
-)
+@pytest.mark.parametrize("jcal_params", MELACHA_PARAMS, indirect=True)
 async def test_issur_melacha_sensor(
     hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry
 ) -> None:
