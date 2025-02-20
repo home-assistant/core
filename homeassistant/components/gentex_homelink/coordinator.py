@@ -25,7 +25,7 @@ class HomeLinkData:
     last_update_id: str | None
 
 
-class HomelinkCoordinator(DataUpdateCoordinator):
+class HomelinkCoordinator(DataUpdateCoordinator[dict]):
     """HomeLink integration coordinator."""
 
     def __init__(
