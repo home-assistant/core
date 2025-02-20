@@ -6,8 +6,13 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
+from aidot.const import (
+    CONF_DEVICE_LIST,
+    CONF_ID,
+    CONF_LOGIN_RESPONSE,
+    CONF_PRODUCT_LIST,
+)
 from aidot.discover import Discover
-from aidot.login_const import CONF_DEVICE_LIST, CONF_LOGIN_RESPONSE, CONF_PRODUCT_LIST
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
@@ -38,7 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> boo
         hass.bus.async_fire(dev_id, event)
 
     try:
-        await Discover().broadcast_message(discover, coordinator.login_response["id"])
+        await Discover().broadcast_message(
+            discover, coordinator.login_response[CONF_ID]
+        )
     except OSError as err:
         raise ConfigEntryError from err
 

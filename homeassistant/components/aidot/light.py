@@ -4,6 +4,25 @@ import ctypes
 import logging
 from typing import Any
 
+from aidot.const import (
+    CONF_AES_KEY,
+    CONF_HARDWARE_VERSION,
+    CONF_ID,
+    CONF_IDENTITY,
+    CONF_IPADDRESS,
+    CONF_MAC,
+    CONF_MAXVALUE,
+    CONF_MINVALUE,
+    CONF_MODEL_ID,
+    CONF_NAME,
+    CONF_PRODUCT,
+    CONF_PRODUCT_ID,
+    CONF_PROPERTIES,
+    CONF_SERVICE_MODULES,
+    CONF_TYPE,
+    Attribute,
+    Identity,
+)
 from aidot.lan import Lan
 
 from homeassistant.components.light import (
@@ -14,7 +33,7 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import (
@@ -40,15 +59,15 @@ async def async_setup_entry(
     products = coordinator.product_list
     for product in products:
         for device in device_list:
-            if device["productId"] == product["id"]:
-                device["product"] = product
+            if device[CONF_PRODUCT_ID] == product[CONF_ID]:
+                device[CONF_PRODUCT] = product
 
     async_add_entities(
         AidotLight(hass, device_info, user_info)
         for device_info in device_list
-        if device_info["type"] == "light"
-        and "aesKey" in device_info
-        and device_info["aesKey"][0] is not None
+        if device_info[CONF_TYPE] == Platform.LIGHT
+        and CONF_AES_KEY in device_info
+        and device_info[CONF_AES_KEY][0] is not None
     )
 
 
@@ -60,15 +79,15 @@ class AidotLight(LightEntity):
         super().__init__()
         self.device = device
         self.user_info = user_info
-        self._attr_unique_id = device["id"]
-        self._attr_name = device["name"]
+        self._attr_unique_id = device[CONF_ID]
+        self._attr_name = device[CONF_NAME]
         self.pingtask = None
         self.recvtask = None
 
-        modelId = device["modelId"]
+        modelId = device[CONF_MODEL_ID]
         manufacturer = modelId.split(".")[0]
         model = modelId[len(manufacturer) + 1 :]
-        mac = format_mac(device["mac"]) if device["mac"] is not None else ""
+        mac = format_mac(device[CONF_MAC]) if device[CONF_MAC] is not None else ""
         identifiers: set[tuple[str, str]] = (
             set({(DOMAIN, self._attr_unique_id)}) if self._attr_unique_id else set()
         )
@@ -77,20 +96,20 @@ class AidotLight(LightEntity):
             connections={(CONNECTION_NETWORK_MAC, mac)},
             manufacturer=manufacturer,
             model=model,
-            name=device["name"],
-            hw_version=device["hardwareVersion"],
+            name=device[CONF_NAME],
+            hw_version=device[CONF_HARDWARE_VERSION],
         )
         self._cct_min = 0
         self._cct_max = 0
 
         supported_color_modes = set()
-        if "product" in device and "serviceModules" in device["product"]:
-            for service in device["product"]["serviceModules"]:
-                if service["identity"] == "control.light.rgbw":
+        if CONF_PRODUCT in device and CONF_SERVICE_MODULES in device[CONF_PRODUCT]:
+            for service in device[CONF_PRODUCT][CONF_SERVICE_MODULES]:
+                if service[CONF_IDENTITY] == Identity.RGBW:
                     supported_color_modes.add(ColorMode.RGBW)
-                elif service["identity"] == "control.light.cct":
-                    self._cct_min = int(service["properties"][0]["minValue"])
-                    self._cct_max = int(service["properties"][0]["maxValue"])
+                elif service[CONF_IDENTITY] == Identity.CCT:
+                    self._cct_min = int(service[CONF_PROPERTIES][0][CONF_MINVALUE])
+                    self._cct_max = int(service[CONF_PROPERTIES][0][CONF_MAXVALUE])
                     supported_color_modes.add(ColorMode.COLOR_TEMP)
 
         if ColorMode.RGBW in supported_color_modes:
@@ -108,11 +127,11 @@ class AidotLight(LightEntity):
 
         async def handle_event(event):
             if not self.lanCtrl.connecting and not self.lanCtrl.connectAndLogin:
-                await self.lanCtrl.connect(event.data["ipAddress"])
+                await self.lanCtrl.connect(event.data[CONF_IPADDRESS])
                 self.pingtask = hass.loop.create_task(self.lanCtrl.ping_task())
                 self.recvtask = hass.loop.create_task(self.lanCtrl.recvData())
 
-        hass.bus.async_listen(device["id"], handle_event)
+        hass.bus.async_listen(device[CONF_ID], handle_event)
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.release)
 
@@ -173,9 +192,9 @@ class AidotLight(LightEntity):
     @property
     def color_mode(self) -> ColorMode | str | None:
         """Return the color mode of the light."""
-        if self.lanCtrl.colorMode == "rgbw":
+        if self.lanCtrl.colorMode == Attribute.RGBW:
             colorMode = ColorMode.RGBW
-        elif self.lanCtrl.colorMode == "cct":
+        elif self.lanCtrl.colorMode == Attribute.CCT:
             colorMode = ColorMode.COLOR_TEMP
         else:
             colorMode = ColorMode.BRIGHTNESS
