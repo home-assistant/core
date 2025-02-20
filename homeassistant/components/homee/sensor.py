@@ -122,7 +122,7 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     AttributeType.LEVEL: HomeeSensorEntityDescription(
         key="level",
         device_class=SensorDeviceClass.VOLUME_STORAGE,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     AttributeType.LINK_QUALITY: HomeeSensorEntityDescription(
         key="link_quality",

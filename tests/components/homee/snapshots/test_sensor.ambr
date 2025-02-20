@@ -783,7 +783,7 @@
     }),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -818,7 +818,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'volume_storage',
       'friendly_name': 'Test MultiSensor Level',
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
