@@ -229,7 +229,6 @@ async def test_reauth_flow_id_changed(
 async def test_options_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test options flow."""
     await setup_integration(hass, mock_config_entry)
