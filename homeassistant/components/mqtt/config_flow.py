@@ -36,12 +36,15 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_SW_VERSION,
     CONF_CLIENT_ID,
+    CONF_DEVICE,
     CONF_DISCOVERY,
     CONF_ENTITY_CATEGORY,
     CONF_HOST,
     CONF_ICON,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PAYLOAD,
+    CONF_PLATFORM,
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
@@ -92,8 +95,11 @@ from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_DISCOVERY_PREFIX,
+    CONF_ENCODING,
     CONF_ENTITY_PICTURE,
     CONF_KEEPALIVE,
+    CONF_OBJECT_ID,
+    CONF_QOS,
     CONF_RETAIN,
     CONF_TLS_INSECURE,
     CONF_TRANSPORT,
@@ -206,7 +212,7 @@ SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
     SelectSelectorConfig(
         options=[platform.value for platform in SUBENTRY_PLATFORMS],
         mode=SelectSelectorMode.DROPDOWN,
-        translation_key="platform",
+        translation_key=CONF_PLATFORM,
     )
 )
 ENTITY_CATEGORY_SELECTOR = SelectSelector(
@@ -231,7 +237,13 @@ class PlatformField:
     default: Any | None = None
 
 
-CORE_PLATFORM_FIELDS = ["platform", "object_id", "name", "encoding", "qos"]
+CORE_PLATFORM_FIELDS = [
+    CONF_PLATFORM,
+    CONF_OBJECT_ID,
+    CONF_NAME,
+    CONF_ENCODING,
+    CONF_QOS,
+]
 
 COMMON_PLATFORM_FIELDS = {
     CONF_ICON: PlatformField(ICON_SELECTOR, False, str),
@@ -261,6 +273,16 @@ MQTT_DEVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_MODEL): TEXT_SELECTOR,
         vol.Optional(ATTR_MODEL_ID): TEXT_SELECTOR,
         vol.Optional(ATTR_CONFIGURATION_URL): TEXT_SELECTOR,
+    }
+)
+
+MQTT_DEVICE_ENTITY_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_PLATFORM): SUBENTRY_PLATFORM_SELECTOR,
+        vol.Required(CONF_OBJECT_ID): TEXT_SELECTOR,
+        vol.Optional(CONF_NAME): TEXT_SELECTOR,
+        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): TEXT_SELECTOR,
+        vol.Optional(CONF_QOS, default=DEFAULT_QOS): QOS_SELECTOR,
     }
 )
 
@@ -334,7 +356,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
-        return {"device": MQTTSubentryFlowHandler}
+        return {CONF_DEVICE: MQTTSubentryFlowHandler}
 
     @staticmethod
     @callback
@@ -858,7 +880,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         validate_field("configuration_url", cv.url, user_input, errors, "invalid_url")
         if not errors and user_input is not None:
-            self._subentry_data["device"] = cast(MqttDeviceData, user_input)
+            self._subentry_data[CONF_DEVICE] = cast(MqttDeviceData, user_input)
             if self.source == SOURCE_RECONFIGURE:
                 return await self.async_step_summary_menu()
             return await self.async_step_entity()
@@ -866,10 +888,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         data_schema = MQTT_DEVICE_SCHEMA
         data_schema = self.add_suggested_values_to_schema(
             data_schema,
-            self._subentry_data["device"] if user_input is None else user_input,
+            self._subentry_data[CONF_DEVICE] if user_input is None else user_input,
         )
         return self.async_show_form(
-            step_id="device",
+            step_id=CONF_DEVICE,
             data_schema=data_schema,
             errors=errors,
             last_step=False,
@@ -880,16 +902,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Add or edit an mqtt entity."""
         errors: dict[str, str] = {}
-        mqtt_device = f'"{self._subentry_data["device"]["name"]}"'
-        data_schema = vol.Schema(
-            {
-                vol.Required("platform"): SUBENTRY_PLATFORM_SELECTOR,
-                vol.Required("object_id"): TEXT_SELECTOR,
-                vol.Optional("name"): TEXT_SELECTOR,
-                vol.Optional("encoding", default=DEFAULT_ENCODING): TEXT_SELECTOR,
-                vol.Optional("qos", default=DEFAULT_QOS): QOS_SELECTOR,
-            }
-        )
+        mqtt_device = f'"{self._subentry_data[CONF_DEVICE][CONF_NAME]}"'
+        data_schema = MQTT_DEVICE_ENTITY_SCHEMA
         if user_input is not None:
             # Add the component but check if the object ID is unique and not reconfiguring
             platform_object_id = (
@@ -897,16 +911,16 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             )
             if self._object_id != platform_object_id:
                 if platform_object_id in self._subentry_data["components"]:
-                    errors["object_id"] = "object_id_not_unique"
+                    errors[CONF_OBJECT_ID] = "object_id_not_unique"
                 if self._object_id is not None and self.source == SOURCE_RECONFIGURE:
-                    errors["object_id"] = "object_id_not_mutable"
+                    errors[CONF_OBJECT_ID] = "object_id_not_mutable"
             if not errors:
                 # Allow encoding explicitly to be set to `None`
                 if (
-                    "encoding" in user_input
-                    and str(user_input["encoding"]).lower() == "none"
+                    CONF_ENCODING in user_input
+                    and str(user_input[CONF_ENCODING]).lower() == "none"
                 ):
-                    user_input["encoding"] = ""
+                    user_input[CONF_ENCODING] = ""
                 self._object_id = platform_object_id
                 if component_data := self._subentry_data["components"].setdefault(
                     platform_object_id, {}
@@ -925,8 +939,11 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             suggested_values = deepcopy(
                 self._subentry_data["components"][self._object_id]
             )
-            if self._subentry_data["components"][self._object_id].get("encoding") == "":
-                suggested_values["encoding"] = "none"
+            if (
+                self._subentry_data["components"][self._object_id].get(CONF_ENCODING)
+                == ""
+            ):
+                suggested_values[CONF_ENCODING] = "none"
             data_schema = self.add_suggested_values_to_schema(
                 data_schema, suggested_values
             )
@@ -993,9 +1010,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         if TYPE_CHECKING:
             assert self._object_id is not None
-        mqtt_device = f'"{self._subentry_data["device"]["name"]}"'
-        platform = self._subentry_data["components"][self._object_id]["platform"]
-        object_id = self._subentry_data["components"][self._object_id]["object_id"]
+        mqtt_device = f'"{self._subentry_data[CONF_DEVICE][CONF_NAME]}"'
+        platform = self._subentry_data["components"][self._object_id][CONF_PLATFORM]
+        object_id = self._subentry_data["components"][self._object_id][CONF_OBJECT_ID]
         data_schema_fields = PLATFORM_FIELDS[platform] | COMMON_PLATFORM_FIELDS
         data_schema = vol.Schema(
             {
@@ -1039,8 +1056,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             data_schema=data_schema,
             description_placeholders={
                 "mqtt_device": mqtt_device,
-                "platform": platform,
-                "object_id": object_id,
+                CONF_PLATFORM: platform,
+                CONF_OBJECT_ID: object_id,
             },
             errors=errors,
             last_step=False,
@@ -1050,15 +1067,16 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Confirm creating a new MQTT device."""
-        mqtt_device = f'"{self._subentry_data["device"]["name"]}"'
+        mqtt_device = f'"{self._subentry_data[CONF_DEVICE][CONF_NAME]}"'
         component: dict[str, Any] = next(
             iter(self._subentry_data["components"].values())
         )
-        entity_name = component.get("name", component["object_id"])
-        platform = component["platform"]
+        entity_name = component.get(CONF_NAME, component[CONF_OBJECT_ID])
+        platform = component[CONF_PLATFORM]
         if user_input is not None:
             return self.async_create_entry(
-                data=self._subentry_data, title=self._subentry_data["device"]["name"]
+                data=self._subentry_data,
+                title=self._subentry_data[CONF_DEVICE][CONF_NAME],
             )
 
         return self.async_show_form(
@@ -1066,7 +1084,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             description_placeholders={
                 "mqtt_device": mqtt_device,
                 "entity": entity_name,
-                "platform": platform,
+                CONF_PLATFORM: platform,
             },
             last_step=True,
         )
@@ -1076,7 +1094,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Show summary menu and decide to add more entities or to finish the flow."""
         self._object_id = None
-        mqtt_device = f'"{self._subentry_data["device"]["name"]}"'
+        mqtt_device = f'"{self._subentry_data[CONF_DEVICE][CONF_NAME]}"'
         mqtt_items = ", ".join(
             f'"{component}"' for component in self._subentry_data["components"]
         )
@@ -1086,7 +1104,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         ]
         if len(self._subentry_data["components"]) > 1:
             menu_options.append("delete_entity")
-        menu_options.append("device")
+        menu_options.append(CONF_DEVICE)
         menu_options.append("finish_reconfigure")
         return self.async_show_menu(
             step_id="summary_menu",
@@ -1107,7 +1125,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         for unique_id, platform in [
             (
                 f"{subentry.subentry_id}_{component_id}",
-                subentry.data["components"][component_id]["platform"],
+                subentry.data["components"][component_id][CONF_PLATFORM],
             )
             for component_id in subentry.data["components"]
             if component_id not in self._subentry_data["components"]
@@ -1122,7 +1140,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             entry,
             subentry,
             data=self._subentry_data,
-            title=self._subentry_data["device"]["name"],
+            title=self._subentry_data[CONF_DEVICE][CONF_NAME],
         )
 
 
