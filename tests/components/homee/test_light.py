@@ -30,10 +30,10 @@ def mock_attribute_map(attributes) -> dict:
 
 
 async def setup_mock_light(
-    file: str,
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
+    file: str,
 ) -> None:
     """Setups the light node for the tests."""
     mock_homee.nodes = [build_mock_node(file)]
@@ -49,7 +49,7 @@ async def test_turn_on(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning on the light."""
-    await setup_mock_light("lights.json", hass, mock_homee, mock_config_entry)
+    await setup_mock_light(hass, mock_homee, mock_config_entry, "lights.json")
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -106,7 +106,7 @@ async def test_turn_off(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test turning off a light."""
-    await setup_mock_light("lights.json", hass, mock_homee, mock_config_entry)
+    await setup_mock_light(hass, mock_homee, mock_config_entry, "lights.json")
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -125,7 +125,7 @@ async def test_toggle(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test toggling a light."""
-    await setup_mock_light("lights.json", hass, mock_homee, mock_config_entry)
+    await setup_mock_light(hass, mock_homee, mock_config_entry, "lights.json")
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -161,7 +161,7 @@ async def test_light_attributes(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test if lights get the correct supported modes."""
-    await setup_mock_light("lights.json", hass, mock_homee, mock_config_entry)
+    await setup_mock_light(hass, mock_homee, mock_config_entry, "lights.json")
 
     attributes = hass.states.get("light.test_light_light_1").attributes
     assert attributes["friendly_name"] == "Test Light Light 1"
@@ -200,7 +200,7 @@ async def test_light_attributes_temp_only(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test if lights get the correct supported modes."""
-    await setup_mock_light("light_single.json", hass, mock_homee, mock_config_entry)
+    await setup_mock_light(hass, mock_homee, mock_config_entry, "light_single.json")
     attributes = hass.states.get("light.test_light").attributes
     assert attributes["friendly_name"] == "Test Light"
     assert attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
