@@ -59,14 +59,11 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
     async def _async_update_data(self) -> PyLoadData:
         """Fetch data from API endpoint."""
         try:
-            if not self.version:
-                self.version = await self.pyload.version()
             return PyLoadData(
                 **await self.pyload.get_status(),
                 free_space=await self.pyload.free_space(),
             )
-
-        except InvalidAuth as e:
+        except InvalidAuth:
             try:
                 await self.pyload.login()
             except InvalidAuth as exc:
@@ -75,10 +72,10 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
                     translation_key="setup_authentication_exception",
                     translation_placeholders={CONF_USERNAME: self.pyload.username},
                 ) from exc
-
-            raise UpdateFailed(
-                "Unable to retrieve data due to cookie expiration"
-            ) from e
+            _LOGGER.info(
+                "Unable to retrieve data due to cookie expiration, retrying after 20 seconds"
+            )
+            return self.data
         except CannotConnect as e:
             raise UpdateFailed(
                 "Unable to connect and retrieve data from pyLoad API"
@@ -91,6 +88,7 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
 
         try:
             await self.pyload.login()
+            self.version = await self.pyload.version()
         except CannotConnect as e:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
