@@ -1,6 +1,6 @@
 {
-  "id": 1,
-  "name": "Test Light",
+  "id": 2,
+  "name": "Another Test Light",
   "profile": 1002,
   "image": "default",
   "favorite": 0,
@@ -20,8 +20,8 @@
   "security": 0,
   "attributes": [
     {
-      "id": 5,
-      "node_id": 1,
+      "id": 12,
+      "node_id": 2,
       "instance": 0,
       "minimum": 0,
       "maximum": 1,
@@ -51,8 +51,8 @@
       }
     },
     {
-      "id": 6,
-      "node_id": 1,
+      "id": 13,
+      "node_id": 2,
       "instance": 0,
       "minimum": 0,
       "maximum": 100,
@@ -75,8 +75,8 @@
       }
     },
     {
-      "id": 8,
-      "node_id": 1,
+      "id": 14,
+      "node_id": 2,
       "instance": 0,
       "minimum": 2000,
       "maximum": 7000,

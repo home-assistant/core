@@ -1,6 +1,8 @@
 """Test homee lights."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
+
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -10,14 +12,14 @@ from homeassistant.components.light import (
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
-    ColorMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import build_mock_node, setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 def mock_attribute_map(attributes) -> dict:
@@ -155,55 +157,23 @@ async def test_toggle(
     mock_homee.set_value.assert_called_once_with(1, 1, 1)
 
 
-async def test_light_attributes(
+async def test_light_snapshot(
     hass: HomeAssistant,
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test if lights get the correct supported modes."""
-    await setup_mock_light(hass, mock_homee, mock_config_entry, "lights.json")
+    """Test snapshot of lights."""
+    mock_homee.nodes = [
+        build_mock_node("lights.json"),
+        build_mock_node("light_single.json"),
+    ]
+    for i in range(2):
+        mock_homee.nodes[i].attribute_map = mock_attribute_map(
+            mock_homee.nodes[i].attributes
+        )
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.LIGHT]):
+        await setup_integration(hass, mock_config_entry)
 
-    attributes = hass.states.get("light.test_light_light_1").attributes
-    assert attributes["friendly_name"] == "Test Light Light 1"
-    assert attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP, ColorMode.HS]
-    assert attributes["color_mode"] == ColorMode.HS
-    assert attributes["min_color_temp_kelvin"] == 153
-    assert attributes["max_color_temp_kelvin"] == 500
-    assert attributes["hs_color"] == (35.556, 52.941)
-    assert attributes["rgb_color"] == (255, 200, 120)
-    assert attributes["xy_color"] == (0.464, 0.402)
-
-    attributes = hass.states.get("light.test_light_light_2").attributes
-    assert attributes["friendly_name"] == "Test Light Light 2"
-    assert attributes["color_mode"] is None  # Since it is off.
-    assert attributes["brightness"] is None
-    assert attributes["color_temp_kelvin"] is None
-    assert attributes["hs_color"] is None
-    assert attributes["min_color_temp_kelvin"] == 2202
-    assert attributes["max_color_temp_kelvin"] == 4000
-
-    attributes = hass.states.get("light.test_light_light_3").attributes
-    assert attributes["friendly_name"] == "Test Light Light 3"
-    assert attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
-    assert attributes["color_mode"] == ColorMode.BRIGHTNESS
-    assert attributes["brightness"] == 102
-
-    attributes = hass.states.get("light.test_light_light_4").attributes
-    assert attributes["friendly_name"] == "Test Light Light 4"
-    assert attributes["supported_color_modes"] == [ColorMode.ONOFF]
-    assert attributes["color_mode"] is ColorMode.ONOFF
-
-
-async def test_light_attributes_temp_only(
-    hass: HomeAssistant,
-    mock_homee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test if lights get the correct supported modes."""
-    await setup_mock_light(hass, mock_homee, mock_config_entry, "light_single.json")
-    attributes = hass.states.get("light.test_light").attributes
-    assert attributes["friendly_name"] == "Test Light"
-    assert attributes["supported_color_modes"] == [ColorMode.COLOR_TEMP]
-    assert attributes["color_mode"] == ColorMode.COLOR_TEMP
-    assert attributes["min_color_temp_kelvin"] == 2000
-    assert attributes["max_color_temp_kelvin"] == 7000
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
