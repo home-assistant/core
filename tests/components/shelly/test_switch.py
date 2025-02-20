@@ -288,6 +288,8 @@ async def test_rpc_device_services(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device turn on/off services."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     await hass.services.async_call(
@@ -310,9 +312,14 @@ async def test_rpc_device_services(
 
 
 async def test_rpc_device_unique_ids(
-    hass: HomeAssistant, mock_rpc_device: Mock, entity_registry: EntityRegistry
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test RPC device unique_ids."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     entry = entity_registry.async_get("switch.test_switch_0")
@@ -340,6 +347,8 @@ async def test_rpc_set_state_errors(
 ) -> None:
     """Test RPC device set state connection/call errors."""
     monkeypatch.setattr(mock_rpc_device, "call_rpc", AsyncMock(side_effect=exc))
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     with pytest.raises(HomeAssistantError):
@@ -360,6 +369,8 @@ async def test_rpc_auth_error(
         "call_rpc",
         AsyncMock(side_effect=InvalidAuthError),
     )
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     entry = await init_integration(hass, 2)
 
     assert entry.state is ConfigEntryState.LOADED
@@ -416,6 +427,8 @@ async def test_wall_display_relay_mode(
     new_status["sys"]["relay_in_thermostat"] = False
     new_status.pop("thermostat:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
