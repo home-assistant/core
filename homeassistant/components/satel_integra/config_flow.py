@@ -22,6 +22,7 @@ from .const import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
     CONF_OUTPUTS,
+    CONF_SWITCHABLE_OUTPUTS,
     CONF_ZONE_TYPE,
     CONF_ZONES,
     DEFAULT_CONF_ARM_HOME_MODE,
@@ -88,6 +89,8 @@ ZONE_SCHEMA = vol.Schema(
     }
 )
 
+SWITCHABLE_OUTPUT_SCHEM = vol.Schema({vol.Required(CONF_NAME): cv.string})
+
 
 class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Satel Integra config flow."""
@@ -123,6 +126,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_DEVICE_PARTITIONS: {},
                         CONF_ZONES: {},
                         CONF_OUTPUTS: {},
+                        CONF_SWITCHABLE_OUTPUTS: {},
                     },
                 )
 
@@ -155,6 +159,7 @@ class SatelOptionsFlow(OptionsFlow):
         self.partition_options = self.options.get(CONF_DEVICE_PARTITIONS, {})
         self.zone_options = self.options.get(CONF_ZONES, {})
         self.output_options = self.options.get(CONF_OUTPUTS, {})
+        self.switchable_output_options = self.options.get(CONF_SWITCHABLE_OUTPUTS, {})
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -317,5 +322,57 @@ class SatelOptionsFlow(OptionsFlow):
             step_id="output_details",
             data_schema=self.add_suggested_values_to_schema(
                 ZONE_SCHEMA, existing_output_config
+            ),
+        )
+
+    async def async_step_switchable_outputs(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Switchable output configuration step."""
+        errors = {}
+        if user_input is not None:
+            selected_switchable_output = str(user_input[CONF_ACTION_NUMBER])
+            selected_action = user_input[CONF_ACTION]
+
+            if (
+                selected_action in [ACTION_DELETE, ACTION_EDIT]
+                and selected_switchable_output not in self.switchable_output_options
+            ):
+                errors["base"] = "unknown_switchable_output"
+            elif (
+                selected_action == ACTION_ADD
+                and selected_switchable_output in self.switchable_output_options
+            ):
+                errors["base"] = "already_exists"
+            elif selected_action == ACTION_DELETE:
+                self.switchable_output_options.pop(selected_switchable_output)
+                return self.async_create_entry(data=self.options)
+
+            else:
+                self.editing_entry = selected_switchable_output
+                return await self.async_step_switchable_output_details()
+
+        return self.async_show_form(
+            step_id="switchable_outputs",
+            data_schema=OPTIONS_ACTION_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_switchable_output_details(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Switchable output details step."""
+        if user_input is not None:
+            self.switchable_output_options[self.editing_entry] = user_input
+            return self.async_create_entry(data=self.options)
+
+        existing_switchable_output_config = self.switchable_output_options.get(
+            self.editing_entry
+        )
+
+        return self.async_show_form(
+            step_id="switchable_output_details",
+            data_schema=self.add_suggested_values_to_schema(
+                SWITCHABLE_OUTPUT_SCHEM, existing_switchable_output_config
             ),
         )
