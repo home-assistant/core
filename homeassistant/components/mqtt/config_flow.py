@@ -1043,7 +1043,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 self._object_id = None
                 if self.source == SOURCE_RECONFIGURE:
                     return await self.async_step_summary_menu()
-                return await self.async_step_confirm()
+                return self._async_create_entry()
 
             data_schema = self.add_suggested_values_to_schema(data_schema, user_input)
         else:
@@ -1063,7 +1063,8 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             last_step=False,
         )
 
-    async def async_step_confirm(
+    @callback
+    def _async_create_entry(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Confirm creating a new MQTT device."""
@@ -1073,20 +1074,14 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         )
         entity_name = component.get(CONF_NAME, component[CONF_OBJECT_ID])
         platform = component[CONF_PLATFORM]
-        if user_input is not None:
-            return self.async_create_entry(
-                data=self._subentry_data,
-                title=self._subentry_data[CONF_DEVICE][CONF_NAME],
-            )
-
-        return self.async_show_form(
-            step_id="confirm",
+        return self.async_create_entry(
+            data=self._subentry_data,
+            title=self._subentry_data[CONF_DEVICE][CONF_NAME],
             description_placeholders={
                 "mqtt_device": mqtt_device,
                 "entity": entity_name,
                 CONF_PLATFORM: platform,
             },
-            last_step=True,
         )
 
     async def async_step_summary_menu(
