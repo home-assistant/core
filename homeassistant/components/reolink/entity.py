@@ -118,7 +118,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         await super().async_added_to_hass()
         cmd_key = self.entity_description.cmd_key
         cmd_id = self.entity_description.cmd_id
-        callback_id = f"{self._attr_unique_id}_{self.platform.domain}"
+        callback_id = f"{self.platform.domain}_{self._attr_unique_id}"
         if cmd_key is not None:
             self._host.async_register_update_cmd(cmd_key)
         if cmd_id is not None:
@@ -130,7 +130,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
         cmd_id = self.entity_description.cmd_id
-        callback_id = f"{self._attr_unique_id}_{self.platform.domain}"
+        callback_id = f"{self.platform.domain}_{self._attr_unique_id}"
         if cmd_key is not None:
             self._host.async_unregister_update_cmd(cmd_key)
         if cmd_id is not None:
