@@ -27,22 +27,25 @@ async def test_min_config(hass: HomeAssistant, config_entry: MockConfigEntry) ->
 
 
 TEST_PARAMS = [
-    (
+    pytest.param(
         ("Jerusalem", dt(2018, 9, 3), {"state": "23 Elul 5778", "attr": None}),
         "english",
         "date",
+        id="date_output",
     ),
-    (
+    pytest.param(
         ("Jerusalem", dt(2018, 9, 3), {"state": 'כ"ג אלול ה\' תשע"ח', "attr": None}),
         "hebrew",
         "date",
+        id="date_output_hebrew",
     ),
-    (
+    pytest.param(
         ("Jerusalem", dt(2018, 9, 10), {"state": "א' ראש השנה", "attr": None}),
         "hebrew",
         "holiday",
+        id="holiday",
     ),
-    (
+    pytest.param(
         (
             "Jerusalem",
             dt(2018, 9, 10),
@@ -60,8 +63,9 @@ TEST_PARAMS = [
         ),
         "english",
         "holiday",
+        id="holiday_english",
     ),
-    (
+    pytest.param(
         (
             "Jerusalem",
             dt(2024, 12, 31),
@@ -79,8 +83,9 @@ TEST_PARAMS = [
         ),
         "english",
         "holiday",
+        id="holiday_multiple",
     ),
-    (
+    pytest.param(
         (
             "Jerusalem",
             dt(2018, 9, 8),
@@ -96,23 +101,27 @@ TEST_PARAMS = [
         ),
         "hebrew",
         "parshat_hashavua",
+        id="torah_reading",
     ),
-    (
+    pytest.param(
         ("New York", dt(2018, 9, 8), {"state": dt(2018, 9, 8, 19, 47), "attr": None}),
         "hebrew",
         "t_set_hakochavim",
+        id="first_stars_ny",
     ),
-    (
+    pytest.param(
         ("Jerusalem", dt(2018, 9, 8), {"state": dt(2018, 9, 8, 19, 21), "attr": None}),
         "hebrew",
         "t_set_hakochavim",
+        id="first_stars_jerusalem",
     ),
-    (
+    pytest.param(
         ("Jerusalem", dt(2018, 10, 14), {"state": "לך לך", "attr": None}),
         "hebrew",
         "parshat_hashavua",
+        id="torah_reading_weekday",
     ),
-    (
+    pytest.param(
         (
             "Jerusalem",
             dt(2018, 10, 14, 17, 0, 0),
@@ -120,8 +129,9 @@ TEST_PARAMS = [
         ),
         "hebrew",
         "date",
+        id="date_before_sunset",
     ),
-    (
+    pytest.param(
         (
             "Jerusalem",
             dt(2018, 10, 14, 19, 0, 0),
@@ -138,28 +148,14 @@ TEST_PARAMS = [
         ),
         "hebrew",
         "date",
+        id="date_after_sunset",
     ),
-]
-
-TEST_IDS = [
-    "date_output",
-    "date_output_hebrew",
-    "holiday",
-    "holiday_english",
-    "holiday_multiple",
-    "torah_reading",
-    "first_stars_ny",
-    "first_stars_jerusalem",
-    "torah_reading_weekday",
-    "date_before_sunset",
-    "date_after_sunset",
 ]
 
 
 @pytest.mark.parametrize(
     ("jcal_params", "language", "sensor"),
     TEST_PARAMS,
-    ids=TEST_IDS,
     indirect=["jcal_params", "language"],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -188,7 +184,7 @@ async def test_jewish_calendar_sensor(
 
 
 SHABBAT_PARAMS = [
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 1, 16, 0),
         {
@@ -199,8 +195,9 @@ SHABBAT_PARAMS = [
             "english_parshat_hashavua": "Ki Tavo",
             "hebrew_parshat_hashavua": "כי תבוא",
         },
+        id="currently_first_shabbat",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 1, 16, 0),
         {
@@ -212,8 +209,9 @@ SHABBAT_PARAMS = [
             "hebrew_parshat_hashavua": "כי תבוא",
         },
         50,  # Havdalah offset
+        id="currently_first_shabbat_with_havdalah_offset",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 1, 20, 0),
         {
@@ -224,8 +222,9 @@ SHABBAT_PARAMS = [
             "english_parshat_hashavua": "Ki Tavo",
             "hebrew_parshat_hashavua": "כי תבוא",
         },
+        id="currently_first_shabbat_bein_hashmashot_lagging_date",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 1, 20, 21),
         {
@@ -236,8 +235,9 @@ SHABBAT_PARAMS = [
             "english_parshat_hashavua": "Nitzavim",
             "hebrew_parshat_hashavua": "נצבים",
         },
+        id="after_first_shabbat",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 7, 13, 1),
         {
@@ -248,8 +248,9 @@ SHABBAT_PARAMS = [
             "english_parshat_hashavua": "Nitzavim",
             "hebrew_parshat_hashavua": "נצבים",
         },
+        id="friday_upcoming_shabbat",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 8, 21, 25),
         {
@@ -262,8 +263,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Erev Rosh Hashana",
             "hebrew_holiday": "ערב ראש השנה",
         },
+        id="upcoming_rosh_hashana",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 9, 21, 25),
         {
@@ -276,8 +278,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Rosh Hashana I",
             "hebrew_holiday": "א' ראש השנה",
         },
+        id="currently_rosh_hashana",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 10, 21, 25),
         {
@@ -290,8 +293,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Rosh Hashana II",
             "hebrew_holiday": "ב' ראש השנה",
         },
+        id="second_day_rosh_hashana",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 28, 21, 25),
         {
@@ -302,8 +306,9 @@ SHABBAT_PARAMS = [
             "english_parshat_hashavua": "none",
             "hebrew_parshat_hashavua": "none",
         },
+        id="currently_shabbat_chol_hamoed",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 29, 21, 25),
         {
@@ -316,8 +321,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Hoshana Raba",
             "hebrew_holiday": "הושענא רבה",
         },
+        id="upcoming_two_day_yomtov_in_diaspora",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 9, 30, 21, 25),
         {
@@ -330,8 +336,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Shmini Atzeret",
             "hebrew_holiday": "שמיני עצרת",
         },
+        id="currently_first_day_of_two_day_yomtov_in_diaspora",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2018, 10, 1, 21, 25),
         {
@@ -344,8 +351,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Simchat Torah",
             "hebrew_holiday": "שמחת תורה",
         },
+        id="currently_second_day_of_two_day_yomtov_in_diaspora",
     ),
-    (
+    pytest.param(
         "Jerusalem",
         dt(2018, 9, 29, 21, 25),
         {
@@ -358,8 +366,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Hoshana Raba",
             "hebrew_holiday": "הושענא רבה",
         },
+        id="upcoming_one_day_yom_tov_in_israel",
     ),
-    (
+    pytest.param(
         "Jerusalem",
         dt(2018, 9, 30, 21, 25),
         {
@@ -372,8 +381,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Shmini Atzeret, Simchat Torah",
             "hebrew_holiday": "שמיני עצרת, שמחת תורה",
         },
+        id="currently_one_day_yom_tov_in_israel",
     ),
-    (
+    pytest.param(
         "Jerusalem",
         dt(2018, 10, 1, 21, 25),
         {
@@ -384,8 +394,9 @@ SHABBAT_PARAMS = [
             "english_parshat_hashavua": "Bereshit",
             "hebrew_parshat_hashavua": "בראשית",
         },
+        id="after_one_day_yom_tov_in_israel",
     ),
-    (
+    pytest.param(
         "New York",
         dt(2016, 6, 11, 8, 25),
         {
@@ -398,8 +409,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Erev Shavuot",
             "hebrew_holiday": "ערב שבועות",
         },
+        id="currently_first_day_of_three_day_type1_yomtov_in_diaspora",  # Type 1 = Sat/Sun/Mon
     ),
-    (
+    pytest.param(
         "New York",
         dt(2016, 6, 12, 8, 25),
         {
@@ -412,8 +424,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Shavuot",
             "hebrew_holiday": "שבועות",
         },
+        id="currently_second_day_of_three_day_type1_yomtov_in_diaspora",  # Type 1 = Sat/Sun/Mon
     ),
-    (
+    pytest.param(
         "Jerusalem",
         dt(2017, 9, 21, 8, 25),
         {
@@ -426,8 +439,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Rosh Hashana I",
             "hebrew_holiday": "א' ראש השנה",
         },
+        id="currently_first_day_of_three_day_type2_yomtov_in_israel",  # Type 2 = Thurs/Fri/Sat
     ),
-    (
+    pytest.param(
         "Jerusalem",
         dt(2017, 9, 22, 8, 25),
         {
@@ -440,8 +454,9 @@ SHABBAT_PARAMS = [
             "english_holiday": "Rosh Hashana II",
             "hebrew_holiday": "ב' ראש השנה",
         },
+        id="currently_second_day_of_three_day_type2_yomtov_in_israel",  # Type 2 = Thurs/Fri/Sat
     ),
-    (
+    pytest.param(
         "Jerusalem",
         dt(2017, 9, 23, 8, 25),
         {
@@ -454,39 +469,13 @@ SHABBAT_PARAMS = [
             "english_holiday": "",
             "hebrew_holiday": "",
         },
+        id="currently_third_day_of_three_day_type2_yomtov_in_israel",  # Type 2 = Thurs/Fri/Sat
     ),
-]
-
-SHABBAT_TEST_IDS = [
-    "currently_first_shabbat",
-    "currently_first_shabbat_with_havdalah_offset",
-    "currently_first_shabbat_bein_hashmashot_lagging_date",
-    "after_first_shabbat",
-    "friday_upcoming_shabbat",
-    "upcoming_rosh_hashana",
-    "currently_rosh_hashana",
-    "second_day_rosh_hashana",
-    "currently_shabbat_chol_hamoed",
-    "upcoming_two_day_yomtov_in_diaspora",
-    "currently_first_day_of_two_day_yomtov_in_diaspora",
-    "currently_second_day_of_two_day_yomtov_in_diaspora",
-    "upcoming_one_day_yom_tov_in_israel",
-    "currently_one_day_yom_tov_in_israel",
-    "after_one_day_yom_tov_in_israel",
-    # Type 1 = Sat/Sun/Mon
-    "currently_first_day_of_three_day_type1_yomtov_in_diaspora",
-    "currently_second_day_of_three_day_type1_yomtov_in_diaspora",
-    # Type 2 = Thurs/Fri/Sat
-    "currently_first_day_of_three_day_type2_yomtov_in_israel",
-    "currently_second_day_of_three_day_type2_yomtov_in_israel",
-    "currently_third_day_of_three_day_type2_yomtov_in_israel",
 ]
 
 
 @pytest.mark.parametrize("language", ["english", "hebrew"], indirect=True)
-@pytest.mark.parametrize(
-    "jcal_params", SHABBAT_PARAMS, ids=SHABBAT_TEST_IDS, indirect=True
-)
+@pytest.mark.parametrize("jcal_params", SHABBAT_PARAMS, indirect=True)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_shabbat_times_sensor(
     hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry
@@ -519,24 +508,16 @@ async def test_shabbat_times_sensor(
 
 
 OMER_PARAMS = [
-    (dt(2019, 4, 21, 0), "1"),
-    (dt(2019, 4, 21, 23), "2"),
-    (dt(2019, 5, 23, 0), "33"),
-    (dt(2019, 6, 8, 0), "49"),
-    (dt(2019, 6, 9, 0), "0"),
-    (dt(2019, 1, 1, 0), "0"),
-]
-OMER_TEST_IDS = [
-    "first_day_of_omer",
-    "first_day_of_omer_after_tzeit",
-    "lag_baomer",
-    "last_day_of_omer",
-    "shavuot_no_omer",
-    "jan_1st_no_omer",
+    pytest.param(dt(2019, 4, 21, 0), "1", id="first_day_of_omer"),
+    pytest.param(dt(2019, 4, 21, 23), "2", id="first_day_of_omer_after_tzeit"),
+    pytest.param(dt(2019, 5, 23, 0), "33", id="lag_baomer"),
+    pytest.param(dt(2019, 6, 8, 0), "49", id="last_day_of_omer"),
+    pytest.param(dt(2019, 6, 9, 0), "0", id="shavuot_no_omer"),
+    pytest.param(dt(2019, 1, 1, 0), "0", id="jan_1st_no_omer"),
 ]
 
 
-@pytest.mark.parametrize(("test_time", "result"), OMER_PARAMS, ids=OMER_TEST_IDS)
+@pytest.mark.parametrize(("test_time", "result"), OMER_PARAMS)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_omer_sensor(
     hass: HomeAssistant, config_entry: MockConfigEntry, test_time, result
@@ -557,22 +538,15 @@ async def test_omer_sensor(
 
 
 DAFYOMI_PARAMS = [
-    (dt(2014, 4, 28, 0), "Beitzah 29"),
-    (dt(2020, 1, 4, 0), "Niddah 73"),
-    (dt(2020, 1, 5, 0), "Berachos 2"),
-    (dt(2020, 3, 7, 0), "Berachos 64"),
-    (dt(2020, 3, 8, 0), "Shabbos 2"),
-]
-DAFYOMI_TEST_IDS = [
-    "randomly_picked_date",
-    "end_of_cycle13",
-    "start_of_cycle14",
-    "cycle14_end_of_berachos",
-    "cycle14_start_of_shabbos",
+    pytest.param(dt(2014, 4, 28, 0), "Beitzah 29", id="randomly_picked_date"),
+    pytest.param(dt(2020, 1, 4, 0), "Niddah 73", id="end_of_cycle13"),
+    pytest.param(dt(2020, 1, 5, 0), "Berachos 2", id="start_of_cycle14"),
+    pytest.param(dt(2020, 3, 7, 0), "Berachos 64", id="cycle14_end_of_berachos"),
+    pytest.param(dt(2020, 3, 8, 0), "Shabbos 2", id="cycle14_start_of_shabbos"),
 ]
 
 
-@pytest.mark.parametrize(("test_time", "result"), DAFYOMI_PARAMS, ids=DAFYOMI_TEST_IDS)
+@pytest.mark.parametrize(("test_time", "result"), DAFYOMI_PARAMS)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_dafyomi_sensor(
     hass: HomeAssistant, config_entry: MockConfigEntry, test_time, result
