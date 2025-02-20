@@ -103,7 +103,7 @@ async def test_schema_update_calls(
                 schema_errors=set(),
                 start_version=0,
             ),
-            42,
+            49,
         ),
         call(
             instance,
@@ -111,7 +111,7 @@ async def test_schema_update_calls(
             engine,
             session_maker,
             migration.SchemaValidationStatus(
-                current_version=42,
+                current_version=49,
                 initial_version=0,
                 migration_needed=True,
                 non_live_data_migration_needed=True,
@@ -556,7 +556,7 @@ async def test_events_during_migration_queue_exhausted(
         (18, False),
         (22, False),
         (25, False),
-        (43, True),
+        (43, False),
     ],
 )
 async def test_schema_migrate(
