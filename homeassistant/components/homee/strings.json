@@ -62,11 +62,14 @@
       }
     },
     "number": {
+      "current_valve_position": {
+        "name": "Valve position"
+      },
       "down_position": {
-        "name": "Down Position"
+        "name": "Down position"
       },
       "down_slat_position": {
-        "name": "Down Slat Position"
+        "name": "Down slat position"
       },
       "down_time": {
         "name": "Down-movement duration"
@@ -75,43 +78,34 @@
         "name": "End position"
       },
       "motion_alarm_cancelation_delay": {
-        "name": "Motion alarm Delay"
+        "name": "Motion alarm delay"
       },
       "open_window_detection_sensibility": {
-        "name": "Window Open Sensibility"
+        "name": "Window open sensibility"
       },
       "polling_interval": {
-        "name": "Polling Interval"
+        "name": "Polling interval"
       },
       "shutter_slat_time": {
-        "name": "Slat Turn Duration"
+        "name": "Slat turn duration"
       },
       "slat_max_angle": {
-        "name": "Maximum Slat Angle"
+        "name": "Maximum slat angle"
       },
       "slat_min_angle": {
-        "name": "Minimum Slat Angle"
+        "name": "Minimum slat angle"
       },
       "slat_steps": {
-        "name": "Slat Steps"
-      },
-      "target_temperature": {
-        "name": "Target Temperature"
+        "name": "Slat steps"
       },
       "temperature_offset": {
-        "name": "Temperature Offset"
+        "name": "Temperature offset"
       },
       "up_time": {
         "name": "Up-movement duration"
       },
-      "valve_position": {
-        "name": "Valve Position"
-      },
       "wake_up_interval": {
-        "name": "Wake-Up Interval"
-      },
-      "wind_monitoring_state": {
-        "name": "Wind Monitoring State"
+        "name": "Wake-up interval"
       }
     },
     "sensor": {

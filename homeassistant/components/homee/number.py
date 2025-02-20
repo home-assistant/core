@@ -40,6 +40,7 @@ NUMBER_DESCRIPTIONS = {
     ),
     AttributeType.MOTION_ALARM_CANCELATION_DELAY: NumberEntityDescription(
         key="motion_alarm_cancelation_delay",
+        device_class=NumberDeviceClass.DURATION,
         entity_category=EntityCategory.CONFIG,
     ),
     AttributeType.OPEN_WINDOW_DETECTION_SENSIBILITY: NumberEntityDescription(
@@ -48,6 +49,7 @@ NUMBER_DESCRIPTIONS = {
     ),
     AttributeType.POLLING_INTERVAL: NumberEntityDescription(
         key="polling_interval",
+        device_class=NumberDeviceClass.DURATION,
         entity_category=EntityCategory.CONFIG,
     ),
     AttributeType.SHUTTER_SLAT_TIME: NumberEntityDescription(
@@ -79,10 +81,7 @@ NUMBER_DESCRIPTIONS = {
     ),
     AttributeType.WAKE_UP_INTERVAL: NumberEntityDescription(
         key="wake_up_interval",
-        entity_category=EntityCategory.CONFIG,
-    ),
-    AttributeType.WIND_MONITORING_STATE: NumberEntityDescription(
-        key="wind_monitoring_state",
+        device_class=NumberDeviceClass.DURATION,
         entity_category=EntityCategory.CONFIG,
     ),
 }
@@ -93,7 +92,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the number components."""
+    """Add the Homee platform for the number component."""
 
     async_add_entities(
         HomeeNumber(attribute, config_entry, NUMBER_DESCRIPTIONS[attribute.type])
@@ -132,11 +131,9 @@ class HomeeNumber(HomeeEntity, NumberEntity):
         return int(self._attribute.current_value)
 
     async def async_set_native_value(self, value: float) -> None:
-        """Update the current value."""
+        """Set the selected value."""
         if self._attribute.editable:
-            await self._entry.runtime_data.set_value(
-                self._attribute.node_id, self._attribute.id, value
-            )
+            await self.async_set_homee_value(value)
         else:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,

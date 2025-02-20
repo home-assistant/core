@@ -1,7 +1,7 @@
 """Test homee sensors."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
@@ -12,7 +12,7 @@ from homeassistant.components.homee.const import (
     WINDOW_MAP,
     WINDOW_MAP_REVERSED,
 )
-from homeassistant.const import LIGHT_LUX
+from homeassistant.const import LIGHT_LUX, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -116,13 +116,14 @@ async def test_sensor_snapshot(
     """Test the multisensor snapshot."""
     mock_homee.nodes = [build_mock_node("sensors.json")]
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    await setup_integration(hass, mock_config_entry)
-    entity_registry.async_update_entity(
-        "sensor.test_multisensor_node_state", disabled_by=None
-    )
-    await hass.async_block_till_done()
-    freezer.tick(timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.homee.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+        entity_registry.async_update_entity(
+            "sensor.test_multisensor_node_state", disabled_by=None
+        )
+        await hass.async_block_till_done()
+        freezer.tick(timedelta(seconds=30))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
