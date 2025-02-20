@@ -4797,22 +4797,25 @@ async def test_entry_reload_calls_on_unload_listeners(
 
 
 @pytest.mark.parametrize(
-    ("source_state", "target_state", "transition_method_name"),
+    ("source_state", "target_state", "transition_method_name", "call_count"),
     [
         (
             config_entries.ConfigEntryState.NOT_LOADED,
             config_entries.ConfigEntryState.LOADED,
             "async_setup",
+            2,
         ),
         (
             config_entries.ConfigEntryState.LOADED,
             config_entries.ConfigEntryState.NOT_LOADED,
             "async_unload",
+            2,
         ),
         (
             config_entries.ConfigEntryState.LOADED,
             config_entries.ConfigEntryState.LOADED,
             "async_reload",
+            4,
         ),
     ],
 )
@@ -4822,6 +4825,7 @@ async def test_entry_state_change_calls_listener(
     source_state: config_entries.ConfigEntryState,
     target_state: config_entries.ConfigEntryState,
     transition_method_name: str,
+    call_count: int,
 ) -> None:
     """Test listeners get called on entry state changes."""
     entry = MockConfigEntry(domain="comp", state=source_state)
@@ -4845,7 +4849,7 @@ async def test_entry_state_change_calls_listener(
     transition_method = getattr(manager, transition_method_name)
     await transition_method(entry.entry_id)
 
-    assert len(mock_state_change_callback.mock_calls) == 1
+    assert len(mock_state_change_callback.mock_calls) == call_count
     assert entry.state is target_state
 
 
