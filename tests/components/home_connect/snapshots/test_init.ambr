@@ -50,7 +50,7 @@
             'key': <OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_COFFEE_MILK_RATIO: 'ConsumerProducts.CoffeeMaker.Option.CoffeeMilkRatio'>,
             'name': None,
             'unit': None,
-            'value': 60,
+            'value': 'ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.50Percent',
           }),
         ]),
       }),
