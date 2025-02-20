@@ -23,6 +23,8 @@ from aiohomeconnect.model import (
     HomeAppliance,
     Option,
     Program,
+    ProgramDefinition,
+    ProgramKey,
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
@@ -339,6 +341,29 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
 
     mock.add_events = add_events
 
+    async def set_program_option_side_effect(ha_id: str, *_, **kwargs) -> None:
+        event_key = EventKey(kwargs["option_key"])
+        await event_queue.put(
+            [
+                EventMessage(
+                    ha_id,
+                    EventType.NOTIFY,
+                    ArrayOfEvents(
+                        [
+                            Event(
+                                key=event_key,
+                                raw_key=event_key.value,
+                                timestamp=0,
+                                level="",
+                                handling="",
+                                value=kwargs["value"],
+                            )
+                        ]
+                    ),
+                ),
+            ]
+        )
+
     async def stream_all_events() -> AsyncGenerator[EventMessage]:
         """Mock stream_all_events."""
         while True:
@@ -380,6 +405,17 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
     mock.get_status = AsyncMock(return_value=copy.deepcopy(MOCK_STATUS))
     mock.get_all_programs = AsyncMock(side_effect=_get_all_programs_side_effect)
     mock.put_command = AsyncMock()
+    mock.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(ProgramKey.UNKNOWN, options=[])
+    )
+    mock.get_active_program_options = AsyncMock(return_value=ArrayOfOptions([]))
+    mock.get_selected_program_options = AsyncMock(return_value=ArrayOfOptions([]))
+    mock.set_active_program_option = AsyncMock(
+        side_effect=set_program_option_side_effect
+    )
+    mock.set_selected_program_option = AsyncMock(
+        side_effect=set_program_option_side_effect
+    )
 
     mock.side_effect = mock
     return mock
@@ -420,6 +456,11 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
     mock.get_status = AsyncMock(side_effect=exception)
     mock.get_all_programs = AsyncMock(side_effect=exception)
     mock.put_command = AsyncMock(side_effect=exception)
+    mock.get_available_program = AsyncMock(side_effect=exception)
+    mock.get_active_program_options = AsyncMock(side_effect=exception)
+    mock.get_selected_program_options = AsyncMock(side_effect=exception)
+    mock.set_active_program_option = AsyncMock(side_effect=exception)
+    mock.set_selected_program_option = AsyncMock(side_effect=exception)
 
     return mock
 

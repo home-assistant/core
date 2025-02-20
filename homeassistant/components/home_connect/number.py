@@ -1,9 +1,10 @@
 """Provides number enties for Home Connect."""
 
+from dataclasses import dataclass
 import logging
 from typing import cast
 
-from aiohomeconnect.model import GetSetting, SettingKey
+from aiohomeconnect.model import GetSetting, OptionKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.number import (
@@ -11,6 +12,7 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
+from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -22,12 +24,31 @@ from .const import (
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
+    ApplianceType,
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
-from .entity import HomeConnectEntity
+from .entity import (
+    HomeConnectEntity,
+    HomeConnectOptionEntity,
+    HomeConnectOptionEntityDescription,
+)
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
+
+UNIT_MAP = {
+    "seconds": UnitOfTime.SECONDS,
+    "ml": UnitOfVolume.MILLILITERS,
+    "°C": UnitOfTemperature.CELSIUS,
+    "°F": UnitOfTemperature.FAHRENHEIT,
+}
+
+
+@dataclass(frozen=True, kw_only=True)
+class HomeConnectNumberOptionEntityDescription(
+    HomeConnectOptionEntityDescription, NumberEntityDescription
+):
+    """Entity description for entities that represents numeric options."""
 
 
 NUMBERS = (
@@ -88,6 +109,41 @@ NUMBERS = (
     ),
 )
 
+NUMBER_OPTIONS = (
+    HomeConnectNumberOptionEntityDescription(
+        key=OptionKey.BSH_COMMON_DURATION,
+        translation_key="duration",
+        appliance_types={ApplianceType.OVEN, ApplianceType.HOOD},
+    ),
+    HomeConnectNumberOptionEntityDescription(
+        key=OptionKey.BSH_COMMON_FINISH_IN_RELATIVE,
+        translation_key="finish_in_relative",
+        appliance_types={
+            ApplianceType.DRYER,
+            ApplianceType.WASHER,
+            ApplianceType.WASHER_DRYER,
+        },
+    ),
+    HomeConnectNumberOptionEntityDescription(
+        key=OptionKey.BSH_COMMON_START_IN_RELATIVE,
+        translation_key="start_in_relative",
+        appliance_types={ApplianceType.OVEN, ApplianceType.DISHWASHER},
+    ),
+    HomeConnectNumberOptionEntityDescription(
+        key=OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY,
+        translation_key="fill_quantity",
+        device_class=NumberDeviceClass.VOLUME,
+        native_step=1,
+        appliance_types={ApplianceType.COFFEE_MAKER},
+    ),
+    HomeConnectNumberOptionEntityDescription(
+        key=OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
+        translation_key="setpoint_temperature",
+        device_class=NumberDeviceClass.TEMPERATURE,
+        appliance_types={ApplianceType.OVEN},
+    ),
+)
+
 
 def _get_entities_for_appliance(
     entry: HomeConnectConfigEntry,
@@ -95,9 +151,16 @@ def _get_entities_for_appliance(
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
-        HomeConnectNumberEntity(entry.runtime_data, appliance, description)
-        for description in NUMBERS
-        if description.key in appliance.settings
+        *[
+            HomeConnectNumberEntity(entry.runtime_data, appliance, description)
+            for description in NUMBERS
+            if description.key in appliance.settings
+        ],
+        *[
+            HomeConnectOptionNumberEntity(entry.runtime_data, appliance, description)
+            for description in NUMBER_OPTIONS
+            if appliance.info.type in description.appliance_types
+        ],
     ]
 
 
@@ -184,3 +247,46 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
             or not hasattr(self, "_attr_native_step")
         ):
             await self.async_fetch_constraints()
+
+
+class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
+    """Number option class for Home Connect."""
+
+    entity_description: HomeConnectNumberOptionEntityDescription
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the native value of the entity."""
+        await self.async_set_option(value)
+
+    def update_native_value(self) -> None:
+        """Set the value of the entity."""
+        self._attr_native_value = cast(float | None, self.option_value)
+        option_definition = self.appliance.options.get(self.bsh_key)
+        if option_definition:
+            if option_definition.unit:
+                candidate_unit = UNIT_MAP.get(
+                    option_definition.unit, option_definition.unit
+                )
+                if (
+                    not hasattr(self, "_attr_native_unit_of_measurement")
+                    or candidate_unit != self._attr_native_unit_of_measurement
+                ):
+                    self._attr_native_unit_of_measurement = candidate_unit
+                    self.__dict__.pop("unit_of_measurement", None)
+            option_constraints = option_definition.constraints
+            if option_constraints:
+                if (
+                    not hasattr(self, "_attr_native_min_value")
+                    or self._attr_native_min_value != option_constraints.min
+                ) and option_constraints.min:
+                    self._attr_native_min_value = option_constraints.min
+                if (
+                    not hasattr(self, "_attr_native_max_value")
+                    or self._attr_native_max_value != option_constraints.max
+                ) and option_constraints.max:
+                    self._attr_native_max_value = option_constraints.max
+                if (
+                    not hasattr(self, "_attr_native_step")
+                    or self._attr_native_step != option_constraints.step_size
+                ) and option_constraints.step_size:
+                    self._attr_native_step = option_constraints.step_size
