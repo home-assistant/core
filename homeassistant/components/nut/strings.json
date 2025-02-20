@@ -80,7 +80,9 @@
   "entity": {
     "sensor": {
       "ambient_humidity": { "name": "Ambient humidity" },
+      "ambient_humidity_status": { "name": "Ambient humidity status" },
       "ambient_temperature": { "name": "Ambient temperature" },
+      "ambient_temperature_status": { "name": "Ambient temperature status" },
       "battery_alarm_threshold": { "name": "Battery alarm threshold" },
       "battery_capacity": { "name": "Battery capacity" },
       "battery_charge": { "name": "Battery charge" },
