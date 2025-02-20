@@ -18,6 +18,10 @@
             'data': b'image bytes',
             'mime_type': 'image/jpeg',
           }),
+          dict({
+            'data': b'image bytes',
+            'mime_type': 'text/plain',
+          }),
         ]),
       ),
       dict({

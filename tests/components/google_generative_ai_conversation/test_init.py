@@ -72,7 +72,7 @@ async def test_generate_content_service_with_image(
             "generate_content",
             {
                 "prompt": "Describe this image from my doorbell camera",
-                "image_filename": "doorbell_snapshot.jpg",
+                "filenames": ["doorbell_snapshot.jpg", "context.txt"],
             },
             blocking=True,
             return_response=True,
@@ -152,7 +152,7 @@ async def test_generate_content_service_with_image_not_allowed_path(
             "generate_content",
             {
                 "prompt": "Describe this image from my doorbell camera",
-                "image_filename": "doorbell_snapshot.jpg",
+                "filenames": "doorbell_snapshot.jpg",
             },
             blocking=True,
             return_response=True,
@@ -177,30 +177,7 @@ async def test_generate_content_service_with_image_not_exists(
             "generate_content",
             {
                 "prompt": "Describe this image from my doorbell camera",
-                "image_filename": "doorbell_snapshot.jpg",
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-
-@pytest.mark.usefixtures("mock_init_component")
-async def test_generate_content_service_with_non_image(hass: HomeAssistant) -> None:
-    """Test generate content service with a non image."""
-    with (
-        patch("pathlib.Path.exists", return_value=True),
-        patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("pathlib.Path.exists", return_value=True),
-        pytest.raises(
-            HomeAssistantError, match="`doorbell_snapshot.mp4` is not an image"
-        ),
-    ):
-        await hass.services.async_call(
-            "google_generative_ai_conversation",
-            "generate_content",
-            {
-                "prompt": "Describe this image from my doorbell camera",
-                "image_filename": "doorbell_snapshot.mp4",
+                "filenames": "doorbell_snapshot.jpg",
             },
             blocking=True,
             return_response=True,
