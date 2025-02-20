@@ -245,6 +245,7 @@ FLOWS = {
         "gpslogger",
         "gree",
         "growatt_server",
+        "gryfsmart",
         "guardian",
         "habitica",
         "harmony",
