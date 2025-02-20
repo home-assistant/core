@@ -6,44 +6,33 @@ import logging
 from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
+from homeassistant.const import CONF_CODE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_DEVICE_CODE,
-    CONF_SWITCHABLE_OUTPUTS,
-    CONF_ZONE_NAME,
-    DATA_SATEL,
-    SIGNAL_OUTPUTS_UPDATED,
-)
+from .const import CONF_SWITCHABLE_OUTPUTS, SIGNAL_OUTPUTS_UPDATED, SatelConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
-DEPENDENCIES = ["satel_integra"]
 
-
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: SatelConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Satel Integra switch devices."""
-    if not discovery_info:
-        return
 
-    configured_zones = discovery_info[CONF_SWITCHABLE_OUTPUTS]
-    controller = hass.data[DATA_SATEL]
+    configured_zones = config_entry.options.get(CONF_SWITCHABLE_OUTPUTS, {})
+    controller = config_entry.runtime_data.controller
 
     devices = []
 
     for zone_num, device_config_data in configured_zones.items():
-        zone_name = device_config_data[CONF_ZONE_NAME]
+        zone_name = device_config_data[CONF_NAME]
 
         device = SatelIntegraSwitch(
-            controller, zone_num, zone_name, discovery_info[CONF_DEVICE_CODE]
+            controller, zone_num, zone_name, config_entry.data.get(CONF_CODE)
         )
         devices.append(device)
 

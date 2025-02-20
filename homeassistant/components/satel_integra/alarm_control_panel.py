@@ -14,39 +14,35 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
-    CONF_ZONE_NAME,
-    DATA_SATEL,
     SIGNAL_PANEL_MESSAGE,
+    SatelConfigEntry,
 )
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: SatelConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up for Satel Integra alarm panels."""
-    if not discovery_info:
-        return
 
-    configured_partitions = discovery_info[CONF_DEVICE_PARTITIONS]
-    controller = hass.data[DATA_SATEL]
+    configured_partitions = config_entry.options.get(CONF_DEVICE_PARTITIONS, {})
+    controller = config_entry.runtime_data.controller
 
     devices = []
 
     for partition_num, device_config_data in configured_partitions.items():
-        zone_name = device_config_data[CONF_ZONE_NAME]
+        zone_name = device_config_data[CONF_NAME]
         arm_home_mode = device_config_data.get(CONF_ARM_HOME_MODE)
         device = SatelIntegraAlarmPanel(
             controller, zone_name, arm_home_mode, partition_num

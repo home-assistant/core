@@ -6,50 +6,46 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_OUTPUTS,
-    CONF_ZONE_NAME,
     CONF_ZONE_TYPE,
     CONF_ZONES,
-    DATA_SATEL,
     SIGNAL_OUTPUTS_UPDATED,
     SIGNAL_ZONES_UPDATED,
+    SatelConfigEntry,
 )
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    config_entry: SatelConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Satel Integra binary sensor devices."""
-    if not discovery_info:
-        return
 
-    configured_zones = discovery_info[CONF_ZONES]
-    controller = hass.data[DATA_SATEL]
+    configured_zones = config_entry.options.get(CONF_ZONES, {})
+    controller = config_entry.runtime_data.controller
 
     devices = []
 
     for zone_num, device_config_data in configured_zones.items():
         zone_type = device_config_data[CONF_ZONE_TYPE]
-        zone_name = device_config_data[CONF_ZONE_NAME]
+        zone_name = device_config_data[CONF_NAME]
         device = SatelIntegraBinarySensor(
             controller, zone_num, zone_name, zone_type, CONF_ZONES, SIGNAL_ZONES_UPDATED
         )
         devices.append(device)
 
-    configured_outputs = discovery_info[CONF_OUTPUTS]
+    configured_outputs = config_entry.options.get(CONF_OUTPUTS, {})
 
     for zone_num, device_config_data in configured_outputs.items():
         zone_type = device_config_data[CONF_ZONE_TYPE]
-        zone_name = device_config_data[CONF_ZONE_NAME]
+        zone_name = device_config_data[CONF_NAME]
         device = SatelIntegraBinarySensor(
             controller,
             zone_num,
