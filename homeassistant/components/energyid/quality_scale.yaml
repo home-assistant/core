@@ -68,9 +68,9 @@ rules:
 
   config-entry-unloading: done
 
-  docs-configuration-parameters: todo
+  docs-configuration-parameters: done
 
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
 
   entity-unavailable:
     status: exempt
