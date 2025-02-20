@@ -10,7 +10,6 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from homeassistant.helpers.entity import Entity
 
 from .const import DOMAIN
-from .discovery import PGLabDiscovery
 
 
 class PGLabEntity(Entity):
@@ -20,7 +19,6 @@ class PGLabEntity(Entity):
 
     def __init__(
         self,
-        discovery: PGLabDiscovery,
         device: PyPGLabDevice,
         entity: PyPGLabEntity,
     ) -> None:
@@ -29,7 +27,6 @@ class PGLabEntity(Entity):
         self._id = entity.id
         self._device_id = device.id
         self._entity = entity
-        self._discovery = discovery
 
         # Information about the device that is partially visible in the UI.
         self._attr_device_info = DeviceInfo(
@@ -43,26 +40,27 @@ class PGLabEntity(Entity):
             connections={(CONNECTION_NETWORK_MAC, device.mac)},
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Update the device discovery info."""
-
+    async def subscribe_to_update(self):
+        """Subscribe to the entity updates."""
         self._entity.set_on_state_callback(self.state_updated)
         await self._entity.subscribe_topics()
 
-        await super().async_added_to_hass()
+    async def unsubscribe_to_update(self):
+        """Unsubscribe to the entity updates."""
+        await self._entity.unsubscribe_topics()
+        self._entity.set_on_state_callback(None)
 
-        # Inform PGLab discovery instance that a new entity is available.
-        # This is important to know in case the device needs to be reconfigured
-        # and the entity can be potentially destroyed.
-        await self._discovery.add_entity(self, self._device_id)
+    async def async_added_to_hass(self) -> None:
+        """Update the device discovery info."""
+
+        await self.subscribe_to_update()
+        await super().async_added_to_hass()
 
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe when removed."""
 
         await super().async_will_remove_from_hass()
-
-        await self._entity.unsubscribe_topics()
-        self._entity.set_on_state_callback(None)
+        await self.unsubscribe_to_update()
 
     @callback
     def state_updated(self, payload: str) -> None:

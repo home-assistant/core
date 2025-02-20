@@ -13,7 +13,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PGLABConfigEntry
-from .discovery import PGLabDiscovery
 from .entity import PGLabEntity
 
 PARALLEL_UPDATES = 0
@@ -30,8 +29,13 @@ async def async_setup_entry(
     def async_discover(pglab_device: PyPGLabDevice, pglab_relay: PyPGLabRelay) -> None:
         """Discover and add a PGLab Relay."""
         pglab_discovery = config_entry.runtime_data
-        pglab_switch = PGLabSwitch(pglab_discovery, pglab_device, pglab_relay)
+        pglab_switch = PGLabSwitch(pglab_device, pglab_relay)
         async_add_entities([pglab_switch])
+
+        # Inform PGLab discovery instance that a new entity is available.
+        # This is important to know in case the device needs to be reconfigured
+        # and the entity can be potentially destroyed.
+        pglab_discovery.add_entity(pglab_switch, pglab_device.id)
 
     # Register the callback to create the switch entity when discovered.
     pglab_discovery = config_entry.runtime_data
@@ -45,14 +49,12 @@ class PGLabSwitch(PGLabEntity, SwitchEntity):
 
     def __init__(
         self,
-        pglab_discovery: PGLabDiscovery,
         pglab_device: PyPGLabDevice,
         pglab_relay: PyPGLabRelay,
     ) -> None:
         """Initialize the Switch class."""
 
         super().__init__(
-            discovery=pglab_discovery,
             device=pglab_device,
             entity=pglab_relay,
         )
