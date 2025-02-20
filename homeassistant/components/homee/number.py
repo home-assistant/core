@@ -10,11 +10,10 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
-from .const import DOMAIN, HOMEE_UNIT_TO_HA_UNIT
+from .const import HOMEE_UNIT_TO_HA_UNIT
 from .entity import HomeeEntity
 
 NUMBER_DESCRIPTIONS = {
@@ -122,7 +121,7 @@ class HomeeNumber(HomeeEntity, NumberEntity):
 
     @property
     def available(self) -> bool:
-        """Return the availability of the underlying node."""
+        """Return the availability of the entity."""
         return super().available and self._attribute.editable
 
     @property
@@ -132,11 +131,4 @@ class HomeeNumber(HomeeEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the selected value."""
-        if self._attribute.editable:
-            await self.async_set_homee_value(value)
-        else:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="not_editable",
-                translation_placeholders={"entity": str(self.name)},
-            )
+        await self.async_set_homee_value(value)
