@@ -18,7 +18,6 @@ from homeassistant.components.media_source import (
     Unresolvable,
 )
 from homeassistant.components.stream import create_stream
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -151,9 +150,7 @@ class ReolinkVODMediaSource(MediaSource):
 
         entity_reg = er.async_get(self.hass)
         device_reg = dr.async_get(self.hass)
-        for config_entry in self.hass.config_entries.async_entries(DOMAIN):
-            if config_entry.state != ConfigEntryState.LOADED:
-                continue
+        for config_entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
             channels: list[str] = []
             host = config_entry.runtime_data.host
             entities = er.async_entries_for_config_entry(
