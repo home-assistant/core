@@ -47,6 +47,11 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
 from .browse_media import (
+    CONTENT_TYPE_MEDIA_CLASS,
+    CONTENT_TYPE_TO_CHILD_TYPE,
+    MEDIA_TYPE_TO_SQUEEZEBOX,
+    SQUEEZEBOX_ID_BY_TYPE,
+    Squeezebox_maps,
     build_item_response,
     generate_playlist,
     library_payload,
@@ -241,6 +246,12 @@ class SqueezeBoxMediaPlayerEntity(
             manufacturer=_manufacturer,
         )
         self._known_apps: set[str] = set()
+        self._squeezebox_maps = Squeezebox_maps(
+            content_type_media_class=CONTENT_TYPE_MEDIA_CLASS,
+            content_type_to_child_type=CONTENT_TYPE_TO_CHILD_TYPE,
+            squeezebox_id_by_type=SQUEEZEBOX_ID_BY_TYPE,
+            media_type_to_squeezebox=MEDIA_TYPE_TO_SQUEEZEBOX,
+        )
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -531,9 +542,7 @@ class SqueezeBoxMediaPlayerEntity(
                     "search_type": MediaType.PLAYLIST,
                 }
                 playlist = await generate_playlist(
-                    self._player,
-                    payload,
-                    self.browse_limit,
+                    self._player, payload, self.browse_limit, self._squeezebox_maps
                 )
             except BrowseError:
                 # a list of urls
@@ -546,9 +555,7 @@ class SqueezeBoxMediaPlayerEntity(
                 "search_type": media_type,
             }
             playlist = await generate_playlist(
-                self._player,
-                payload,
-                self.browse_limit,
+                self._player, payload, self.browse_limit, self._squeezebox_maps
             )
 
             _LOGGER.debug("Generated playlist: %s", playlist)
@@ -647,7 +654,7 @@ class SqueezeBoxMediaPlayerEntity(
         )
 
         if media_content_type in [None, "library"]:
-            return await library_payload(self.hass, self._player)
+            return await library_payload(self.hass, self._player, self._squeezebox_maps)
 
         if media_content_id and media_source.is_media_source_id(media_content_id):
             return await media_source.async_browse_media(
@@ -660,7 +667,12 @@ class SqueezeBoxMediaPlayerEntity(
         }
 
         return await build_item_response(
-            self, self._player, payload, self.browse_limit, self._known_apps
+            self,
+            self._player,
+            payload,
+            self.browse_limit,
+            self._known_apps,
+            self._squeezebox_maps,
         )
 
     async def async_get_browse_image(
