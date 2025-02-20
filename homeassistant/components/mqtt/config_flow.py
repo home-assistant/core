@@ -36,9 +36,17 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
+    ATTR_CONFIGURATION_URL,
+    ATTR_HW_VERSION,
+    ATTR_MODEL,
+    ATTR_MODEL_ID,
+    ATTR_NAME,
+    ATTR_SW_VERSION,
     CONF_CLIENT_ID,
     CONF_DISCOVERY,
+    CONF_ENTITY_CATEGORY,
     CONF_HOST,
+    CONF_ICON,
     CONF_PASSWORD,
     CONF_PAYLOAD,
     CONF_PORT,
@@ -88,8 +96,12 @@ from .const import (
     CONF_CERTIFICATE,
     CONF_CLIENT_CERT,
     CONF_CLIENT_KEY,
+    CONF_COMMAND_TEMPLATE,
+    CONF_COMMAND_TOPIC,
     CONF_DISCOVERY_PREFIX,
+    CONF_ENTITY_PICTURE,
     CONF_KEEPALIVE,
+    CONF_RETAIN,
     CONF_TLS_INSECURE,
     CONF_TRANSPORT,
     CONF_WILL_MESSAGE,
@@ -233,24 +245,35 @@ class PlatformField:
 CORE_PLATFORM_FIELDS = ["platform", "object_id", "name", "encoding", "qos"]
 
 COMMON_PLATFORM_FIELDS = {
-    "icon": PlatformField(ICON_SELECTOR, False, str),
-    "entity_picture": PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
-    "entity_category": PlatformField(
+    CONF_ICON: PlatformField(ICON_SELECTOR, False, str),
+    CONF_ENTITY_PICTURE: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
+    CONF_ENTITY_CATEGORY: PlatformField(
         ENTITY_CATEGORY_SELECTOR, False, ENTITY_CATEGORIES_SCHEMA
     ),
-    "retain": PlatformField(BOOLEAN_SELECTOR, False, bool, default=DEFAULT_RETAIN),
+    CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool, default=DEFAULT_RETAIN),
 }
 
 PLATFORM_FIELDS = {
     "notify": {
-        "command_topic": PlatformField(
+        CONF_COMMAND_TOPIC: PlatformField(
             TEXT_SELECTOR, True, valid_publish_topic, "invalid_publish_topic"
         ),
-        "command_template": PlatformField(
+        CONF_COMMAND_TEMPLATE: PlatformField(
             TEMPLATE_SELECTOR, False, cv.template, "invalid_template"
         ),
     },
 }
+
+MQTT_DEVICE_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_NAME): TEXT_SELECTOR,
+        vol.Optional(ATTR_SW_VERSION): TEXT_SELECTOR,
+        vol.Optional(ATTR_HW_VERSION): TEXT_SELECTOR,
+        vol.Optional(ATTR_MODEL): TEXT_SELECTOR,
+        vol.Optional(ATTR_MODEL_ID): TEXT_SELECTOR,
+        vol.Optional(ATTR_CONFIGURATION_URL): TEXT_SELECTOR,
+    }
+)
 
 REAUTH_SCHEMA = vol.Schema(
     {
@@ -851,16 +874,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 return await self.async_step_summary_menu()
             return await self.async_step_entity()
 
-        data_schema = vol.Schema(
-            {
-                vol.Required("name"): TEXT_SELECTOR,
-                vol.Optional("sw_version"): TEXT_SELECTOR,
-                vol.Optional("hw_version"): TEXT_SELECTOR,
-                vol.Optional("model"): TEXT_SELECTOR,
-                vol.Optional("model_id"): TEXT_SELECTOR,
-                vol.Optional("configuration_url"): TEXT_SELECTOR,
-            }
-        )
+        data_schema = MQTT_DEVICE_SCHEMA
         data_schema = self.add_suggested_values_to_schema(
             data_schema,
             self._subentry_data["device"] if user_input is None else user_input,
