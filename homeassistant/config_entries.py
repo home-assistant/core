@@ -402,6 +402,7 @@ class ConfigEntry[_DataT = Any]:
     update_listeners: list[UpdateListenerType]
     _async_cancel_retry_setup: Callable[[], Any] | None
     _on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None
+    _on_state_change: list[Callable[[], Coroutine[Any, Any, None] | None]] | None
     setup_lock: asyncio.Lock
     _reauth_lock: asyncio.Lock
     _tasks: set[asyncio.Future[Any]]
@@ -525,6 +526,9 @@ class ConfigEntry[_DataT = Any]:
 
         # Hold list for actions to call on unload.
         _setter(self, "_on_unload", None)
+
+        # Hold list for actions to call on state change.
+        _setter(self, "_on_state_change", None)
 
         # Reload lock to prevent conflicting reloads
         _setter(self, "setup_lock", asyncio.Lock())
@@ -1058,6 +1062,12 @@ class ConfigEntry[_DataT = Any]:
             hass, SIGNAL_CONFIG_ENTRY_CHANGED, ConfigEntryChange.UPDATED, self
         )
 
+        hass.async_create_task(
+            self._async_process_on_state_change(hass),
+            f"config entry state change {self.entry_id} {state}",
+            eager_start=True,
+        )
+
     async def async_migrate(self, hass: HomeAssistant) -> bool:
         """Migrate an entry.
 
@@ -1137,22 +1147,8 @@ class ConfigEntry[_DataT = Any]:
             "version": self.version,
         }
 
-    @callback
-    def async_on_unload(
-        self, func: Callable[[], Coroutine[Any, Any, None] | None]
-    ) -> None:
-        """Add a function to call when config entry is unloaded."""
-        if self._on_unload is None:
-            self._on_unload = []
-        self._on_unload.append(func)
-
-    async def _async_process_on_unload(self, hass: HomeAssistant) -> None:
-        """Process the on_unload callbacks and wait for pending tasks."""
-        if self._on_unload is not None:
-            while self._on_unload:
-                if job := self._on_unload.pop()():
-                    self.async_create_task(hass, job, eager_start=True)
-
+    async def __async_cancel_pending_tasks_on_unload(self) -> None:
+        """Cancel all pending tasks when the entry unloads."""
         if not self._tasks and not self._background_tasks:
             return
 
@@ -1171,6 +1167,42 @@ class ConfigEntry[_DataT = Any]:
                 self.domain,
                 task,
             )
+
+    @callback
+    def async_on_unload(
+        self, func: Callable[[], Coroutine[Any, Any, None] | None]
+    ) -> None:
+        """Add a function to call when config entry is unloaded."""
+        if self._on_unload is None:
+            self._on_unload = []
+        self._on_unload.append(func)
+
+    async def _async_process_on_unload(self, hass: HomeAssistant) -> None:
+        """Process the on_unload callbacks and wait for pending tasks."""
+        if self._on_unload is not None:
+            while self._on_unload:
+                if job := self._on_unload.pop()():
+                    self.async_create_task(hass, job, eager_start=True)
+
+        await self.__async_cancel_pending_tasks_on_unload()
+
+    @callback
+    def async_on_state_change(
+        self, func: Callable[[], Coroutine[Any, Any, None] | None]
+    ) -> None:
+        """Add a function to call when a config entry changes its state."""
+        if self._on_state_change is None:
+            self._on_state_change = []
+        self._on_state_change.append(func)
+
+    async def _async_process_on_state_change(self, hass: HomeAssistant) -> None:
+        """Process the on_state_change callbacks and wait for pending tasks."""
+        if self._on_state_change is not None:
+            while self._on_state_change:
+                if job := self._on_state_change.pop()():
+                    self.async_create_task(hass, job, eager_start=True)
+
+        await self.__async_cancel_pending_tasks_on_unload()
 
     @callback
     def async_start_reauth(
@@ -1626,7 +1658,9 @@ class ConfigEntriesFlowManager(
         if existing_entry is not None:
             # Unload and remove the existing entry, but don't clean up devices and
             # entities until the new entry is added
-            await self.config_entries._async_remove(existing_entry.entry_id)  # noqa: SLF001
+            await self.config_entries._async_remove(  # noqa: SLF001
+                existing_entry.entry_id
+            )
         await self.config_entries.async_add(entry)
 
         if existing_entry is not None:
@@ -2277,8 +2311,9 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
-        | UndefinedType = UNDEFINED,
+        discovery_keys: (
+            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
+        ) = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2314,8 +2349,9 @@ class ConfigEntries:
         entry: ConfigEntry,
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
-        discovery_keys: MappingProxyType[str, tuple[DiscoveryKey, ...]]
-        | UndefinedType = UNDEFINED,
+        discovery_keys: (
+            MappingProxyType[str, tuple[DiscoveryKey, ...]] | UndefinedType
+        ) = UNDEFINED,
         minor_version: int | UndefinedType = UNDEFINED,
         options: Mapping[str, Any] | UndefinedType = UNDEFINED,
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
@@ -2718,7 +2754,10 @@ class ConfigEntries:
                 continue
             issues.add(issue.issue_id)
 
-        for domain, unique_ids in self._entries._domain_unique_id_index.items():  # noqa: SLF001
+        for (
+            domain,
+            unique_ids,
+        ) in self._entries._domain_unique_id_index.items():  # noqa: SLF001
             # flipr creates duplicates during migration, and asks users to
             # remove the duplicate. We don't need warn about it here too.
             # We should remove the special case for "flipr" in HA Core 2025.4,
