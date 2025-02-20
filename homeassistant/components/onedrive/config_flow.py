@@ -24,11 +24,16 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 from homeassistant.helpers.instance_id import async_get as async_get_instance_id
 
-from .const import CONF_DELETE_PERMANENTLY, CONF_FOLDER_ID, CONF_FOLDER_NAME, DOMAIN, OAUTH_SCOPES
+from .const import (
+    CONF_DELETE_PERMANENTLY,
+    CONF_FOLDER_ID,
+    CONF_FOLDER_NAME,
+    DOMAIN,
+    OAUTH_SCOPES,
+)
 from .coordinator import OneDriveConfigEntry
 
 FOLDER_NAME_SCHEMA = vol.Schema({vol.Required(CONF_FOLDER_NAME): str})
-
 
 
 class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -214,7 +219,7 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Reconfigure the entry."""
         return await self.async_step_user()
-     
+
     @staticmethod
     @callback
     def async_get_options_flow(
