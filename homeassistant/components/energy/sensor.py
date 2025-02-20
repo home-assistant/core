@@ -12,8 +12,8 @@ from typing import Any, Final, Literal, cast
 from homeassistant.components.sensor import (
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
+    RestoreSensor,
     SensorDeviceClass,
-    SensorEntity,
     SensorStateClass,
 )
 from homeassistant.components.sensor.recorder import reset_detected
@@ -222,7 +222,7 @@ def _set_result_unless_done(future: asyncio.Future[None]) -> None:
         future.set_result(None)
 
 
-class EnergyCostSensor(SensorEntity):
+class EnergyCostSensor(RestoreSensor):
     """Calculate costs incurred by consuming energy.
 
     This is intended as a fallback for when no specific cost sensor is available for the
@@ -320,7 +320,10 @@ class EnergyCostSensor(SensorEntity):
             # Initialize as it's the first time all required entities are in place or
             # only the price is missing. In the later case, cost will update the first
             # time the energy is updated after the price entity is in place.
-            self._reset(energy_state)
+            if self._attr_native_value is None:
+                self._reset(energy_state)
+            else:
+                self._last_energy_sensor_state = energy_state
             return
 
         energy_price, energy_price_unit = energy_price_tuple
@@ -416,6 +419,9 @@ class EnergyCostSensor(SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = sensor_data.native_value
+
         energy_state = self.hass.states.get(self._config[self._adapter.stat_energy_key])
         if energy_state:
             name = energy_state.name
