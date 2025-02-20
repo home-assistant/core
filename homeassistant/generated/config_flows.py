@@ -79,6 +79,7 @@ FLOWS = {
         "azure_data_explorer",
         "azure_devops",
         "azure_event_hub",
+        "backup_sftp",
         "baf",
         "balboa",
         "bang_olufsen",
