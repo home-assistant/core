@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import timedelta
-import logging
 import time
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -18,7 +17,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=5)
 
 
