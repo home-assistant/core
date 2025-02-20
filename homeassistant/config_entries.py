@@ -1147,8 +1147,22 @@ class ConfigEntry[_DataT = Any]:
             "version": self.version,
         }
 
-    async def __async_cancel_pending_tasks_on_unload(self) -> None:
-        """Cancel all pending tasks when the entry unloads."""
+    @callback
+    def async_on_unload(
+        self, func: Callable[[], Coroutine[Any, Any, None] | None]
+    ) -> None:
+        """Add a function to call when config entry is unloaded."""
+        if self._on_unload is None:
+            self._on_unload = []
+        self._on_unload.append(func)
+
+    async def _async_process_on_unload(self, hass: HomeAssistant) -> None:
+        """Process the on_unload callbacks and wait for pending tasks."""
+        if self._on_unload is not None:
+            while self._on_unload:
+                if job := self._on_unload.pop()():
+                    self.async_create_task(hass, job, eager_start=True)
+
         if not self._tasks and not self._background_tasks:
             return
 
@@ -1169,24 +1183,6 @@ class ConfigEntry[_DataT = Any]:
             )
 
     @callback
-    def async_on_unload(
-        self, func: Callable[[], Coroutine[Any, Any, None] | None]
-    ) -> None:
-        """Add a function to call when config entry is unloaded."""
-        if self._on_unload is None:
-            self._on_unload = []
-        self._on_unload.append(func)
-
-    async def _async_process_on_unload(self, hass: HomeAssistant) -> None:
-        """Process the on_unload callbacks and wait for pending tasks."""
-        if self._on_unload is not None:
-            while self._on_unload:
-                if job := self._on_unload.pop()():
-                    self.async_create_task(hass, job, eager_start=True)
-
-        await self.__async_cancel_pending_tasks_on_unload()
-
-    @callback
     def async_on_state_change(
         self, func: Callable[[], Coroutine[Any, Any, None] | None]
     ) -> None:
@@ -1201,8 +1197,6 @@ class ConfigEntry[_DataT = Any]:
             while self._on_state_change:
                 if job := self._on_state_change.pop()():
                     self.async_create_task(hass, job, eager_start=True)
-
-        await self.__async_cancel_pending_tasks_on_unload()
 
     @callback
     def async_start_reauth(
