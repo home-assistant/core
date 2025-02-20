@@ -4,6 +4,7 @@ import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import Any
 
 from homelink.provider import Provider
 
@@ -25,11 +26,14 @@ class HomeLinkData:
     last_update_id: str | None
 
 
-class HomelinkCoordinator(DataUpdateCoordinator[dict]):
+class HomelinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """HomeLink integration coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, provider: Provider, config_entry: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        provider: Provider,
+        config_entry: ConfigEntry[HomeLinkData],
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
@@ -46,8 +50,13 @@ class HomelinkCoordinator(DataUpdateCoordinator[dict]):
         self.last_sync_id = None
         self.config_entry = config_entry
 
-    async def _async_update_data(self):
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
+
+        if self.config_entry is None:
+            _LOGGER.error("Config entry is empty, unable to update data")
+            return {}
+
         # Note: asyncio.TimeoutError and aiohttp.ClientError are already
         # handled by the data update coordinator.
         async with asyncio.timeout(10):
