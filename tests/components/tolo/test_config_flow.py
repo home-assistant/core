@@ -12,6 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
+from tests.common import MockConfigEntry
+
 MOCK_DHCP_DATA = DhcpServiceInfo(
     ip="127.0.0.2", macaddress="001122334455", hostname="mock_hostname"
 )
@@ -34,6 +36,22 @@ def coordinator_toloclient() -> Mock:
         "homeassistant.components.tolo.coordinator.ToloClient", side_effect=Exception
     ) as toloclient:
         yield toloclient
+
+
+@pytest.fixture(name="config_entry")
+async def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Return a MockConfigEntry for testing."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="TOLO Steam Bath",
+        entry_id="1",
+        data={
+            CONF_HOST: "127.0.0.1",
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    return config_entry
 
 
 async def test_user_with_timed_out_host(hass: HomeAssistant, toloclient: Mock) -> None:
@@ -95,17 +113,7 @@ async def test_dhcp(
         DOMAIN, context={"source": SOURCE_DHCP}, data=MOCK_DHCP_DATA
     )
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "confirm"
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "TOLO Sauna"
-    assert result["data"][CONF_HOST] == "127.0.0.2"
-    assert result["result"].unique_id == "00:11:22:33:44:55"
+    assert result["step_id"] == "user"
 
 
 async def test_dhcp_invalid_device(hass: HomeAssistant, toloclient: Mock) -> None:
@@ -116,3 +124,25 @@ async def test_dhcp_invalid_device(hass: HomeAssistant, toloclient: Mock) -> Non
         DOMAIN, context={"source": SOURCE_DHCP}, data=MOCK_DHCP_DATA
     )
     assert result["type"] is FlowResultType.ABORT
+
+
+async def test_reconfigure(
+    hass: HomeAssistant,
+    toloclient: Mock,
+    coordinator_toloclient: Mock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration flow."""
+    result1 = await config_entry.start_reconfigure_flow(hass)
+
+    assert result1["step_id"] == "user"
+
+    toloclient().get_status.side_effect = lambda *args, **kwargs: object()
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result1["flow_id"],
+        user_input={CONF_HOST: "127.0.0.1"},
+    )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
