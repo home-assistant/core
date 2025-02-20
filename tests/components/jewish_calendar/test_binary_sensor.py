@@ -106,26 +106,18 @@ async def test_issur_melacha_sensor(
     hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry
 ) -> None:
     """Test Issur Melacha sensor output."""
+    sensor_id = "binary_sensor.jewish_calendar_issur_melacha_in_effect"
+    result = jcal_params["results"]
     with freeze_time(jcal_params["test_time"]):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert (
-            hass.states.get(
-                "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-            ).state
-            == (result := jcal_params["results"])["state"]
-        )
+        assert hass.states.get(sensor_id).state == result["state"]
 
-        with freeze_time(result["update"]):
-            async_fire_time_changed(hass, result["update"])
-            await hass.async_block_till_done()
-            assert (
-                hass.states.get(
-                    "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-                ).state
-                == result["new_state"]
-            )
+    with freeze_time(result["update"]):
+        async_fire_time_changed(hass, result["update"])
+        await hass.async_block_till_done()
+        assert hass.states.get(sensor_id).state == result["new_state"]
 
 
 @pytest.mark.parametrize(
@@ -141,27 +133,18 @@ async def test_issur_melacha_sensor_update(
     hass: HomeAssistant, jcal_params: dict, config_entry: MockConfigEntry
 ) -> None:
     """Test Issur Melacha sensor output."""
+    sensor_id = "binary_sensor.jewish_calendar_issur_melacha_in_effect"
     with freeze_time(test_time := jcal_params["test_time"]):
         config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert (
-            hass.states.get(
-                "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-            ).state
-            == jcal_params["results"][0]
-        )
+        assert hass.states.get(sensor_id).state == jcal_params["results"][0]
 
     test_time += timedelta(microseconds=1)
     with freeze_time(test_time):
         async_fire_time_changed(hass, test_time)
         await hass.async_block_till_done()
-        assert (
-            hass.states.get(
-                "binary_sensor.jewish_calendar_issur_melacha_in_effect"
-            ).state
-            == jcal_params["results"][1]
-        )
+        assert hass.states.get(sensor_id).state == jcal_params["results"][1]
 
 
 async def test_no_discovery_info(
