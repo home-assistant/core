@@ -5,9 +5,12 @@ from unittest.mock import Mock
 from homeassistant.components.shelly.const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
+    ATTR_COMPONENT,
     ATTR_DEVICE,
+    ATTR_TEST_TYPE,
     DOMAIN,
     EVENT_SHELLY_CLICK,
+    EVENT_SHELLY_TEST,
 )
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant
@@ -116,4 +119,38 @@ async def test_humanify_shelly_click_event_rpc_device(
     assert (
         event2["message"]
         == "'btn_down' click event for shellypro4pm-12345678 channel 2 Input was fired"
+    )
+
+
+async def test_humanify_shelly_test_event_rpc_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, mock_rpc_device: Mock
+) -> None:
+    """Test humanifying Shelly test event for rpc device."""
+    entry = await init_integration(hass, 2)
+    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+
+    hass.config.components.add("recorder")
+    assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
+
+    (event1,) = mock_humanify(
+        hass,
+        [
+            MockRow(
+                EVENT_SHELLY_TEST,
+                {
+                    ATTR_DEVICE_ID: device.id,
+                    ATTR_DEVICE: "shellyplussmoke-12345678",
+                    ATTR_COMPONENT: "smoke:0",
+                    ATTR_CHANNEL: 1,
+                    ATTR_TEST_TYPE: "alarm_test",
+                },
+            ),
+        ],
+    )
+
+    assert event1["name"] == "Shelly"
+    assert event1["domain"] == DOMAIN
+    assert (
+        event1["message"] == "'alarm_test' test event for component smoke:0 was fired"
     )

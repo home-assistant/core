@@ -14,8 +14,10 @@ from homeassistant.components.shelly import MacAddressMismatchError
 from homeassistant.components.shelly.const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
+    ATTR_COMPONENT,
     ATTR_DEVICE,
     ATTR_GENERATION,
+    ATTR_TEST_TYPE,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
     DOMAIN,
@@ -535,6 +537,48 @@ async def test_rpc_click_event(
         ATTR_CHANNEL: 1,
         ATTR_CLICK_TYPE: "single_push",
         ATTR_GENERATION: 2,
+    }
+
+
+async def test_rpc_test_event(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_rpc_device: Mock,
+    test_events: list[Event],
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC test event."""
+    entry = await init_integration(hass, 2)
+
+    device = dr.async_entries_for_config_entry(device_registry, entry.entry_id)[0]
+
+    # Generate alarm test from Smoke Plus
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "smoke:0",
+                    "event": "alarm_test",
+                    "id": 0,
+                    "ts": 1668522399.2,
+                    "state": True,
+                }
+            ],
+            "ts": 1738502399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(test_events) == 1
+    assert test_events[0].data == {
+        ATTR_DEVICE_ID: device.id,
+        ATTR_DEVICE: "test-host",
+        ATTR_CHANNEL: 1,
+        ATTR_COMPONENT: "smoke:0",
+        ATTR_GENERATION: 2,
+        ATTR_TEST_TYPE: "alarm_test",
     }
 
 
