@@ -61,6 +61,7 @@ from .const import (
     DEFAULT_VOLUME_STEP,
     DISCOVERY_TASK,
     DOMAIN,
+    DOMAIN_SERVER,
     KNOWN_PLAYERS,
     KNOWN_SERVERS,
     SIGNAL_PLAYER_DISCOVERED,
@@ -236,7 +237,7 @@ class SqueezeBoxMediaPlayerEntity(
             identifiers={(DOMAIN, self._attr_unique_id)},
             name=player.name,
             connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
-            via_device=(DOMAIN, coordinator.server_uuid),
+            via_device=(DOMAIN_SERVER, coordinator.server_uuid),
             model=player.model,
             manufacturer=_manufacturer,
         )
