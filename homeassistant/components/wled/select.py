@@ -159,9 +159,6 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
             self._attr_translation_placeholders = {"segment": str(segment)}
 
         self._attr_unique_id = f"{coordinator.data.info.mac_address}_palette_{segment}"
-        self._attr_options = [
-            palette.name for palette in self.coordinator.data.palettes.values()
-        ]
         self._segment = segment
 
     @property
@@ -173,6 +170,11 @@ class WLEDPaletteSelect(WLEDEntity, SelectEntity):
             return False
 
         return super().available
+
+    @property
+    def options(self) -> list[str]:
+        """Return the available palettes."""
+        return [palette.name for palette in self.coordinator.data.palettes.values()]
 
     @property
     def current_option(self) -> str | None:
