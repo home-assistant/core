@@ -1730,6 +1730,7 @@ pymicro-vad==1.0.1
 pymochad==0.2.0
 
 # homeassistant.components.modbus
+# homeassistant.components.stiebel_eltron
 pymodbus==3.8.3
 
 # homeassistant.components.monoprice
@@ -1910,6 +1911,9 @@ pyspeex-noise==1.0.2
 
 # homeassistant.components.squeezebox
 pysqueezebox==0.12.0
+
+# homeassistant.components.stiebel_eltron
+pystiebeleltron==0.1.0
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.3
