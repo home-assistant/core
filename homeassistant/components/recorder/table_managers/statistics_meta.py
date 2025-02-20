@@ -31,7 +31,6 @@ QUERY_STATISTIC_META = (
     StatisticsMeta.has_mean,
     StatisticsMeta.has_sum,
     StatisticsMeta.name,
-    StatisticsMeta.has_circular_mean,
 )
 
 INDEX_ID: Final = 0
@@ -48,9 +47,13 @@ def _generate_get_metadata_stmt(
     statistic_ids: set[str] | None = None,
     statistic_type: Literal["mean", "sum", "circular_mean"] | None = None,
     statistic_source: str | None = None,
+    schema_version: int = 0,
 ) -> StatementLambdaElement:
     """Generate a statement to fetch metadata."""
-    stmt = lambda_stmt(lambda: select(*QUERY_STATISTIC_META))
+    columns = list(QUERY_STATISTIC_META)
+    if schema_version >= 49:
+        columns.append(StatisticsMeta.has_circular_mean)
+    stmt = lambda_stmt(lambda: select(*columns))
     if statistic_ids:
         stmt += lambda q: q.where(StatisticsMeta.statistic_id.in_(statistic_ids))
     if statistic_source is not None:
@@ -59,7 +62,7 @@ def _generate_get_metadata_stmt(
         stmt += lambda q: q.where(StatisticsMeta.has_mean == true())
     elif statistic_type == "sum":
         stmt += lambda q: q.where(StatisticsMeta.has_sum == true())
-    elif statistic_type == "circular_mean":
+    elif schema_version >= 49 and statistic_type == "circular_mean":
         stmt += lambda q: q.where(StatisticsMeta.has_circular_mean == true())
     return stmt
 
@@ -104,7 +107,10 @@ class StatisticsMetaManager:
             for row in execute_stmt_lambda_element(
                 session,
                 _generate_get_metadata_stmt(
-                    statistic_ids, statistic_type, statistic_source
+                    statistic_ids,
+                    statistic_type,
+                    statistic_source,
+                    self.recorder.schema_version,
                 ),
                 orm_rows=False,
             ):
@@ -117,7 +123,9 @@ class StatisticsMetaManager:
                     "source": row[INDEX_SOURCE],
                     "statistic_id": statistic_id,
                     "unit_of_measurement": row[INDEX_UNIT_OF_MEASUREMENT],
-                    "has_circular_mean": row[INDEX_HAS_CIRCULAR_MEAN],
+                    "has_circular_mean": row[INDEX_HAS_CIRCULAR_MEAN]
+                    if self.recorder.schema_version >= 49
+                    else False,
                 }
                 id_meta = (row_id, meta)
                 results[statistic_id] = id_meta
