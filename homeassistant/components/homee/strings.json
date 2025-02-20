@@ -61,6 +61,11 @@
         "name": "Ventilate"
       }
     },
+    "light": {
+      "light_instance": {
+        "name": "Light {instance}"
+      }
+    },
     "number": {
       "current_valve_position": {
         "name": "Valve position"
