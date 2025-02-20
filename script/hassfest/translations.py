@@ -185,6 +185,8 @@ def gen_data_entry_schema(
         vol.Optional("abort"): {str: translation_value_validator},
         vol.Optional("progress"): {str: translation_value_validator},
         vol.Optional("create_entry"): {str: translation_value_validator},
+        vol.Optional("initiate_flow"): {str: translation_value_validator},
+        vol.Optional("entry_type"): translation_value_validator,
     }
     if flow_title == REQUIRED:
         schema[vol.Required("title")] = translation_value_validator
@@ -289,7 +291,7 @@ def gen_strings_schema(config: Config, integration: Integration) -> vol.Schema:
                 gen_data_entry_schema(
                     config=config,
                     integration=integration,
-                    flow_title=REQUIRED,
+                    flow_title=REMOVED,
                     require_step_title=False,
                 ),
                 slug_validator=vol.Any("_", cv.slug),
