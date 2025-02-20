@@ -257,9 +257,6 @@
   "exceptions": {
     "connection_closed": {
       "message": "Could not connect to Homee while setting attribute."
-    },
-    "not_editable": {
-      "message": "{entity} is currently not changeable."
     }
   }
 }
