@@ -82,7 +82,7 @@ async def async_block_recorder(hass: HomeAssistant, seconds: float) -> None:
 
 async def async_wait_recorder(hass: HomeAssistant) -> bool:
     """Wait for recorder to initialize and return connection status."""
-    return await hass.data[recorder_helper.DOMAIN].db_connected
+    return await hass.data[recorder_helper.DATA_RECORDER].db_connected
 
 
 def get_start_time(start: datetime) -> datetime:
