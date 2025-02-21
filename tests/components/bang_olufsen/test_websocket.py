@@ -137,8 +137,8 @@ async def test_on_remote_control_already_added(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check device and API call count (called once during init and once in async_setup_entry in event.py)
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
+    # Check device and API call count
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 1
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (remote and button events and media_player)
@@ -158,7 +158,7 @@ async def test_on_remote_control_already_added(
     await hass.async_block_till_done()
 
     # Check device and API call count (triggered once by the WebSocket notification)
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities
@@ -185,8 +185,8 @@ async def test_on_remote_control_paired(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    # Check device and API call count (called once during init and once in async_setup_entry in event.py)
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
+    # Check device and API call count
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 1
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
     # Check number of entities (button events and media_player)
@@ -228,7 +228,7 @@ async def test_on_remote_control_paired(
     await hass.async_block_till_done()
 
     # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 5
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
     assert device_registry.async_get_device(
         {(DOMAIN, f"66666666_{TEST_SERIAL_NUMBER}")}
@@ -251,6 +251,98 @@ async def test_on_remote_control_paired(
         + 1
     )
     assert entity_ids_available == snapshot
+
+
+async def test_on_remote_control_unpaired(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_registry: DeviceRegistry,
+    entity_registry: EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_mozart_client: AsyncMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the integration reloads when a remote has been unpaired."""
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    # Check device and API call count
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 1
+    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
+
+    # Check number of entities (button events and media_player)
+    assert (
+        len(list(entity_registry.entities.keys()))
+        == len(get_remote_entity_ids()) + len(get_button_entity_ids()) + 1
+    )
+    # "Unpair" the remote
+    mock_mozart_client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
+        items=[]
+    )
+    remote_callback = mock_mozart_client.get_notification_notifications.call_args[0][0]
+
+    # Trigger the notification
+    await remote_callback(
+        WebsocketNotificationTag(
+            value=WebsocketNotification.REMOTE_CONTROL_DEVICES.value
+        )
+    )
+    await hass.async_block_till_done()
+
+    # Check device and API call count
+    assert mock_mozart_client.get_bluetooth_remotes.call_count == 3
+    assert (
+        device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)}) is None
+    )
+
+    # Check logger
+    assert (
+        f"A Beoremote One has been paired or unpaired to {mock_config_entry.title}. Reloading config entry to add device and entities"
+        in caplog.text
+    )
+
+    # Check number of entities (button events and media_player)
+    entity_ids_available = list(entity_registry.entities.keys())
+
+    assert len(entity_ids_available) == +len(get_button_entity_ids()) + 1
+    assert entity_ids_available == snapshot
+
+
+# async def test_setup_entry_remote_unpaired(
+#     hass: HomeAssistant,
+#     device_registry: DeviceRegistry,
+#     entity_registry: EntityRegistry,
+#     mock_config_entry: MockConfigEntry,
+#     mock_mozart_client: AsyncMock,
+# ) -> None:
+#     """Test async_setup_entry where a remote has been unpaired and should be removed."""
+
+#     # Load entry
+#     mock_config_entry.add_to_hass(hass)
+#     await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+#     # Check device and API call count (called once during init and once in async_setup_entry in event.py)
+#     assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
+#     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
+
+#     # Check entities
+#     for entity_id in get_remote_entity_ids():
+#         assert entity_registry.async_get(entity_id)
+
+#     # "Unpair" the remote and reload config_entry
+#     mock_mozart_client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
+#         items=[]
+#     )
+#     hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
+
+#     # Check device and API call count
+#     assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
+#     assert not device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
+
+#     # Check entities
+#     for entity_id in get_remote_entity_ids():
+#         assert not entity_registry.async_get(entity_id)
 
 
 async def test_on_all_notifications_raw(

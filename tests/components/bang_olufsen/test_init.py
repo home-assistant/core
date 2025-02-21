@@ -3,21 +3,13 @@
 from unittest.mock import AsyncMock
 
 from aiohttp.client_exceptions import ServerTimeoutError
-from mozart_api.models import PairedRemoteResponse
 
 from homeassistant.components.bang_olufsen import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceRegistry
-from homeassistant.helpers.entity_registry import EntityRegistry
 
-from .const import (
-    TEST_FRIENDLY_NAME,
-    TEST_MODEL_BALANCE,
-    TEST_REMOTE_SERIAL_PAIRED,
-    TEST_SERIAL_NUMBER,
-)
-from .util import get_remote_entity_ids
+from .const import TEST_FRIENDLY_NAME, TEST_MODEL_BALANCE, TEST_SERIAL_NUMBER
 
 from tests.common import MockConfigEntry
 
@@ -51,42 +43,6 @@ async def test_setup_entry(
     assert mock_mozart_client.check_device_connection.call_count == 1
     assert mock_mozart_client.close_api_client.call_count == 0
     assert mock_mozart_client.connect_notifications.call_count == 1
-
-
-async def test_setup_entry_remote_unpaired(
-    hass: HomeAssistant,
-    device_registry: DeviceRegistry,
-    entity_registry: EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_mozart_client: AsyncMock,
-) -> None:
-    """Test async_setup_entry where a remote has been unpaired and should be removed."""
-
-    # Load entry
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    # Check device and API call count (called once during init and once in async_setup_entry in event.py)
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
-    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
-
-    # Check entities
-    for entity_id in get_remote_entity_ids():
-        assert entity_registry.async_get(entity_id)
-
-    # "Unpair" the remote and reload config_entry
-    mock_mozart_client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
-        items=[]
-    )
-    hass.config_entries.async_schedule_reload(mock_config_entry.entry_id)
-
-    # Check device and API call count
-    assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
-    assert not device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
-
-    # Check entities
-    for entity_id in get_remote_entity_ids():
-        assert not entity_registry.async_get(entity_id)
 
 
 async def test_setup_entry_failed(

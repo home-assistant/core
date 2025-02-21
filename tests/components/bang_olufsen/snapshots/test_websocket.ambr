@@ -299,3 +299,18 @@
     'event.beoremote_one_66666666_11111111_control_function_27',
   ])
 # ---
+# name: test_on_remote_control_unpaired
+  list([
+    'event.beosound_balance_11111111_bluetooth',
+    'event.beosound_balance_11111111_microphone',
+    'event.beosound_balance_11111111_next',
+    'event.beosound_balance_11111111_play_pause',
+    'event.beosound_balance_11111111_favourite_1',
+    'event.beosound_balance_11111111_favourite_2',
+    'event.beosound_balance_11111111_favourite_3',
+    'event.beosound_balance_11111111_favourite_4',
+    'event.beosound_balance_11111111_previous',
+    'event.beosound_balance_11111111_volume',
+    'media_player.beosound_balance_11111111',
+  ])
+# ---

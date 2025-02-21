@@ -9,6 +9,7 @@ from mozart_api.models import PairedRemote
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -24,8 +25,10 @@ from .const import (
     DEVICE_BUTTON_EVENTS,
     DEVICE_BUTTONS,
     DOMAIN,
+    MANUFACTURER,
     MODEL_SUPPORT_DEVICE_BUTTONS,
     MODEL_SUPPORT_MAP,
+    BangOlufsenModel,
     WebsocketNotification,
 )
 from .entity import BangOlufsenEntity
@@ -42,6 +45,7 @@ async def async_setup_entry(
     """Set up Event entities from config entry."""
     entities: list[BangOlufsenEvent] = []
 
+    # Add physical buttons
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
         entities.extend(
             BangOlufsenButtonEvent(config_entry, button_type)
@@ -75,6 +79,23 @@ async def async_setup_entry(
                 for key_type in (*BEO_REMOTE_KEYS, *BEO_REMOTE_CONTROL_KEYS)
             ]
         )
+
+    # If the remote is no longer available, then delete the device.
+    # The remote may appear as being available to the device after it has been unpaired on the remote
+    # As it has to be removed from the device on the app.
+
+    device_registry = dr.async_get(hass)
+    devices = device_registry.devices.get_devices_for_config_entry_id(
+        config_entry.entry_id
+    )
+    for device in devices:
+        if (
+            device.model == BangOlufsenModel.BEOREMOTE_ONE
+            and device.serial_number not in [remote.serial_number for remote in remotes]
+        ):
+            device_registry.async_update_device(
+                device.id, remove_config_entry_id=config_entry.entry_id
+            )
 
     async_add_entities(new_entities=entities)
 
@@ -152,8 +173,15 @@ class BangOlufsenRemoteKeyEvent(BangOlufsenEvent):
             f"{remote.serial_number}_{config_entry.unique_id}_{key_type}"
         )
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")}
+            identifiers={(DOMAIN, f"{remote.serial_number}_{config_entry.unique_id}")},
+            name=f"{BangOlufsenModel.BEOREMOTE_ONE}-{remote.serial_number}-{config_entry.unique_id}",
+            model=BangOlufsenModel.BEOREMOTE_ONE,
+            serial_number=remote.serial_number,
+            sw_version=remote.app_version,
+            manufacturer=MANUFACTURER,
+            via_device=(DOMAIN, self._unique_id),
         )
+
         # Make the native key name Home Assistant compatible
         self._attr_translation_key = key_type.lower().replace("/", "_")
 
