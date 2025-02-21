@@ -48,17 +48,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
 
     entry.runtime_data = client
 
-    _async_notify_backup_listeners(hass)
+    def async_notify_backup_listeners() -> None:
+        for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
+            listener()
+
+    entry.async_on_unload(entry.async_on_state_change(async_notify_backup_listeners))
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bool:
     """Unload a WebDAV config entry."""
-    _async_notify_backup_listeners(hass)
     return True
-
-
-def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
-    """Notify all backup listeners."""
-    for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
-        listener()
