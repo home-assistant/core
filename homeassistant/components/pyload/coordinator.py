@@ -72,7 +72,7 @@ class PyLoadCoordinator(DataUpdateCoordinator[PyLoadData]):
                     translation_key="setup_authentication_exception",
                     translation_placeholders={CONF_USERNAME: self.pyload.username},
                 ) from exc
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Unable to retrieve data due to cookie expiration, retrying after 20 seconds"
             )
             return self.data
