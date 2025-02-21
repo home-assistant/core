@@ -34,6 +34,8 @@ DATETIME_UPDATE = ButtonEntityDescription(
     entity_category=EntityCategory.CONFIG,
 )
 
+MODELS_THAT_SUPPORT_SETTING_DATETIME = {"TP358", "TP393"}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -41,9 +43,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the demo button platform."""
-    assert entry.unique_id is not None
-
-    availability_topic = f"{SIGNAL_AVAILABILITY_UPDATED}_{entry.entry_id}"
+    address = entry.unique_id
+    assert address is not None
+    availability_signal = f"{SIGNAL_AVAILABILITY_UPDATED}_{entry.entry_id}"
     entity_added = False
 
     @callback
@@ -54,40 +56,26 @@ async def async_setup_entry(
     ) -> None:
         nonlocal entity_added
         _LOGGER.debug(
-            "got update data=%s update=%s service_info=%s", data, update, service_info
+            "update data=%s update=%s service_info=%s", data, update, service_info
         )
-
-        assert entry.unique_id is not None
-        assert None in update.devices
-        assert update.devices[None].model is not None
-
-        if update.devices[None].model not in ("TP358", "TP393"):
+        sensor_device_info = update.devices[data.primary_device_id]
+        if sensor_device_info.model not in MODELS_THAT_SUPPORT_SETTING_DATETIME:
             return
 
         if not entity_added:
-            name = update.devices[None].name
+            name = sensor_device_info.name
             assert name is not None
-
             entity_added = True
-
-            async_add_entities(
-                [
-                    ThermoProDateTimeButtonEntity(
-                        availability_topic=availability_topic,
-                        address=entry.unique_id,
-                        device_name=name,
-                        description=DATETIME_UPDATE,
-                    )
-                ]
+            entity = ThermoProDateTimeButtonEntity(
+                availability_signal=availability_signal,
+                address=address,
+                description=DATETIME_UPDATE,
             )
+            async_add_entities([entity])
 
         if service_info.connectable:
-            _LOGGER.debug("sending availability '%s' for %s", True, availability_topic)
-            async_dispatcher_send(
-                hass,
-                availability_topic,
-                True,
-            )
+            _LOGGER.debug("sending availability '%s' for %s", True, availability_signal)
+            async_dispatcher_send(hass, availability_signal, True)
 
     entry.async_on_unload(
         async_dispatcher_connect(
@@ -103,17 +91,15 @@ class ThermoProDateTimeButtonEntity(
 
     def __init__(
         self,
-        availability_topic: str,
+        availability_signal: str,
         address: str,
-        device_name: str,
         description: ButtonEntityDescription,
     ) -> None:
         """Initialize the thermopro datetime button entity."""
         self.address = address
         self.entity_description = description
-        self.availability_topic = availability_topic
+        self._availability_signal = availability_signal
         self._attr_unique_id = f"{address}-{description.key}"
-
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, address)},
             connections={(dr.CONNECTION_BLUETOOTH, address)},
@@ -123,16 +109,15 @@ class ThermoProDateTimeButtonEntity(
         """Connect availability dispatcher."""
         await super().async_added_to_hass()
         _LOGGER.debug(
-            "registering for availability callback for %s", self.availability_topic
+            "registering for availability callback for %s", self._availability_signal
         )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                self.availability_topic,
+                self._availability_signal,
                 self._async_on_availability_changed,
             )
         )
-
         self.async_on_remove(
             async_track_unavailable(
                 self.hass, self._async_on_unavailable, self.address, connectable=True
@@ -149,7 +134,7 @@ class ThermoProDateTimeButtonEntity(
         _LOGGER.debug(
             "got availability callback with '%s' for %s",
             available,
-            self.availability_topic,
+            self._availability_signal,
         )
         self._attr_available = available
         self.async_write_ha_state()  # write state to state machine
@@ -157,10 +142,6 @@ class ThermoProDateTimeButtonEntity(
     async def async_press(self) -> None:
         """Set Date&Time for a given device."""
         address = self.address
-        ble = async_ble_device_from_address(self.hass, address, connectable=True)
-
-        assert ble is not None
-
-        tpd = ThermoProDevice(ble)
-
-        await tpd.set_datetime(now(), False)
+        ble_device = async_ble_device_from_address(self.hass, address, connectable=True)
+        assert ble_device is not None
+        await ThermoProDevice(ble_device).set_datetime(now(), False)
