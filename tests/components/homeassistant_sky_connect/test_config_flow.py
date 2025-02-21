@@ -76,7 +76,7 @@ async def test_config_flow(
             return_value=FirmwareInfo(
                 device=usb_data.device,
                 firmware_type=ApplicationType.EZSP,
-                firmware_version=None,
+                firmware_version="7.4.4.0 build 0",
                 owners=[],
                 source="probe",
             ),
@@ -92,6 +92,7 @@ async def test_config_flow(
     config_entry = result["result"]
     assert config_entry.data == {
         "firmware": "ezsp",
+        "firmware_version": "7.4.4.0 build 0",
         "device": usb_data.device,
         "manufacturer": usb_data.manufacturer,
         "pid": usb_data.pid,
@@ -161,7 +162,7 @@ async def test_options_flow(
             return_value=FirmwareInfo(
                 device=usb_data.device,
                 firmware_type=ApplicationType.EZSP,
-                firmware_version=None,
+                firmware_version="7.4.4.0 build 0",
                 owners=[],
                 source="probe",
             ),
@@ -177,6 +178,7 @@ async def test_options_flow(
 
     assert config_entry.data == {
         "firmware": "ezsp",
+        "firmware_version": "7.4.4.0 build 0",
         "device": usb_data.device,
         "manufacturer": usb_data.manufacturer,
         "pid": usb_data.pid,
