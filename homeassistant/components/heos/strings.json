@@ -23,7 +23,7 @@
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
-          "manage_host": "Allow Home Assistant to automatically select the best device to connect to (recommended). Uncheck to the use the manual entry entered below.",
+          "manage_host": "Allow Home Assistant to automatically select the best device to connect to (recommended). Uncheck to preserve a manual host entered below.",
           "host": "[%key:component::heos::config::step::user::data_description::host%]"
         }
       },

@@ -127,6 +127,8 @@ async def is_custom_host(host: str) -> bool:
         return True
     else:
         return host not in [host.ip_address for host in system_info.hosts]
+    finally:
+        await heos.disconnect()
 
 
 class HeosFlowHandler(ConfigFlow, domain=DOMAIN):

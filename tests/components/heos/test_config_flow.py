@@ -220,6 +220,21 @@ async def test_reconfigure_validates_and_updates_config(
     assert result["type"] is FlowResultType.ABORT
 
 
+async def test_reconfigure_ignores_modified_host_when_managed(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure ignores changed host when managed is enabled."""
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_HOST: "new host", CONF_MANAGE_HOST: True},
+    )
+    assert config_entry.data == {CONF_HOST: "127.0.0.1", CONF_MANAGE_HOST: True}
+    assert result["reason"] == "reconfigure_successful"
+    assert result["type"] is FlowResultType.ABORT
+
+
 async def test_reconfigure_cannot_connect_recovers(
     hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
 ) -> None:
