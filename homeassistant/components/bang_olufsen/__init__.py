@@ -77,7 +77,9 @@ async def _handle_remote_devices(
             device.model == BangOlufsenModel.BEOREMOTE_ONE
             and device.serial_number not in [remote.serial_number for remote in remotes]
         ):
-            device_registry.async_remove_device(device.id)
+            device_registry.async_update_device(
+                device.id, remove_config_entry_id=config_entry.entry_id
+            )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BangOlufsenConfigEntry) -> bool:
