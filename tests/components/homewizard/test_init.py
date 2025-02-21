@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import weakref
 
 from freezegun.api import FrozenDateTimeFactory
-from homewizard_energy.errors import DisabledError, UnauthorizedError
+from homewizard_energy.errors import DisabledError, RequestError, UnauthorizedError
 import pytest
 
 from homeassistant.components.homewizard.const import DOMAIN
@@ -210,3 +210,32 @@ async def test_disablederror_reloads_integration(
     flow = flows[0]
     assert flow.get("step_id") == "reauth_enable_api"
     assert flow.get("handler") == DOMAIN
+
+
+async def test_remove_entry_device_reachable(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+    mock_homewizardenergy_v2: MagicMock,
+) -> None:
+    """Test removing entry when device is reachable."""
+    mock_config_entry_v2.add_to_hass(hass)
+    await hass.config_entries.async_remove(mock_config_entry_v2.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_homewizardenergy_v2.delete_token.called
+
+
+@pytest.mark.parametrize("exception", [RequestError, TimeoutError, UnauthorizedError])
+async def test_remove_entry_device_not_reachable(
+    hass: HomeAssistant,
+    mock_config_entry_v2: MockConfigEntry,
+    mock_homewizardenergy_v2: MagicMock,
+    exception: Exception,
+) -> None:
+    """Test removing entry when device is not reachable."""
+    mock_homewizardenergy_v2.delete_token.side_effect = exception
+    mock_config_entry_v2.add_to_hass(hass)
+    await hass.config_entries.async_remove(mock_config_entry_v2.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_homewizardenergy_v2.delete_token.called

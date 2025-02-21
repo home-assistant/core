@@ -1,5 +1,7 @@
 """The Homewizard integration."""
 
+from contextlib import suppress
+
 from homewizard_energy import (
     HomeWizardEnergy,
     HomeWizardEnergyV1,
@@ -72,6 +74,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: HomeWizardConfigEntry) -> None:
+    """Try removing a token."""
+    if token := entry.data.get(CONF_TOKEN):
+        api = HomeWizardEnergyV2(
+            entry.data[CONF_IP_ADDRESS],
+            token=token,
+            clientsession=async_get_clientsession(hass),
+        )
+
+        # Ignore any error, because device may be unreachable
+        with suppress(Exception):
+            await api.delete_token()
 
 
 async def async_check_v2_support_and_create_issue(
