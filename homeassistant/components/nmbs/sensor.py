@@ -244,7 +244,7 @@ class NMBSLiveBoard(SensorEntity):
         attrs = {
             "departure": f"In {departure} minutes",
             "departure_minutes": departure,
-            "extra_train": int(self._attrs.is_extra) > 0,
+            "extra_train": self._attrs.is_extra,
             "vehicle_id": self._attrs.vehicle,
             "monitored_station": self._station.standard_name,
         }
@@ -336,7 +336,7 @@ class NMBSSensor(SensorEntity):
 
         delay = get_delay_in_minutes(self._attrs.departure.delay)
         departure = get_time_until(self._attrs.departure.time)
-        canceled = int(self._attrs.departure.canceled)
+        canceled = self._attrs.departure.canceled
 
         attrs = {
             "destination": self._attrs.departure.station,
@@ -413,7 +413,7 @@ class NMBSSensor(SensorEntity):
             return
 
         _LOGGER.debug("API returned connection: %r", connection)
-        if int(connection[0].departure.left) > 0:
+        if connection[0].departure.left:
             next_connection = connection[1]
         else:
             next_connection = connection[0]
