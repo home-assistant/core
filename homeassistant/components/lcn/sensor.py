@@ -119,9 +119,9 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
         )
 
         self._attr_native_unit_of_measurement = UNIT_OF_MEASUREMENT_MAPPING.get(
-            self.unit, None
+            self.unit
         )
-        self._attr_device_class = DEVICE_CLASS_MAPPING.get(self.unit, None)
+        self._attr_device_class = DEVICE_CLASS_MAPPING.get(self.unit)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
