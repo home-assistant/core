@@ -12,8 +12,8 @@
         },
         "data_description": {
           "host": "The hostname or IP address of the device running your pyLoad instance.",
-          "username": "The username used to access your pyLoad instance.",
-          "password": "The password associated with your pyLoad account.",
+          "username": "The username used to access the pyLoad instance.",
+          "password": "The password associated with the pyLoad account.",
           "port": "pyLoad uses port 8000 by default.",
           "ssl": "If enabled, the connection to the pyLoad instance will use HTTPS.",
           "verify_ssl": "If checked, the SSL certificate will be validated to ensure a secure connection."
