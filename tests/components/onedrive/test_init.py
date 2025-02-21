@@ -275,4 +275,4 @@ async def test_migration_guard_against_major_downgrade(
     )
 
     await setup_integration(hass, old_config_entry)
-    assert old_config_entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert old_config_entry.state is ConfigEntryState.MIGRATION_ERROR

@@ -42,9 +42,13 @@ class OneDriveConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
     MINOR_VERSION = 2
 
-    step_data: dict[str, Any] = {}
     client: OneDriveClient
     approot: AppRoot
+
+    def __init__(self) -> None:
+        """Initialize the OneDrive config flow."""
+        super().__init__()
+        self.step_data: dict[str, Any] = {}
 
     @property
     def logger(self) -> logging.Logger:
