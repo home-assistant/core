@@ -126,7 +126,12 @@
       "switchable_output_exists": "Switchable output already configured"
     }
   },
-  "issues": {},
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "YAML import failed due to a connection error",
+      "description": "Configuring {integration_title} using YAML is being removed but there was an connection error importing your existing configuration.\n\nEnsure connection to {integration_title} works and restart Home Assistant to try again or remove the `{domain}` YAML configuration from your configuration.yaml file and add the {integration_title} integration manually."
+    }
+  },
   "selector": {
     "action_selector": {
       "options": {

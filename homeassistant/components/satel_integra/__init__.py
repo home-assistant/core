@@ -116,12 +116,12 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                "deprecated_yaml_import_issue_connection",
+                "deprecated_yaml_import_issue_cannot_connect",
                 breaks_in_ha_version="2025.8.0",
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,
-                translation_key="deprecated_yaml_import_issue_connection",
+                translation_key="deprecated_yaml_import_issue_cannot_connect",
                 translation_placeholders={
                     "domain": DOMAIN,
                     "integration_title": "Satel Integra",
