@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from abc import abstractmethod
 from enum import StrEnum
 import logging
 from typing import TYPE_CHECKING
@@ -76,16 +75,6 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
 
         super().__init__(coordinator, self.entity_description)
 
-    @property
-    @abstractmethod
-    def tasks_order(self) -> list[UUID]:
-        """Return tasks order."""
-
-    @tasks_order.setter
-    @abstractmethod
-    def tasks_order(self, tasks_order: list[UUID]) -> None:
-        """Set the tasks order."""
-
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete Habitica tasks."""
         if len(uids) > 1 and self.entity_description.key is HabiticaTodoList.TODOS:
@@ -128,17 +117,22 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
         """Move an item in the To-do list."""
         if TYPE_CHECKING:
             assert self.todo_items
+        tasks_order = (
+            self.coordinator.data.user.tasksOrder.todos
+            if self.entity_description.key is HabiticaTodoList.TODOS
+            else self.coordinator.data.user.tasksOrder.dailys
+        )
 
         if previous_uid:
-            pos = self.tasks_order.index(UUID(previous_uid))
-            if pos < self.tasks_order.index(UUID(uid)):
+            pos = tasks_order.index(UUID(previous_uid))
+            if pos < tasks_order.index(UUID(uid)):
                 pos += 1
 
         else:
             pos = 0
 
         try:
-            self.tasks_order = (
+            tasks_order = (
                 await self.coordinator.habitica.reorder_task(UUID(uid), pos)
             ).data
         except TooManyRequestsError as e:
@@ -264,16 +258,6 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
     )
 
     @property
-    def tasks_order(self) -> list[UUID]:
-        """Return tasks order."""
-        return self.coordinator.data.user.tasksOrder.todos
-
-    @tasks_order.setter
-    def tasks_order(self, tasks_order: list[UUID]) -> None:
-        """Set the tasks order."""
-        self.coordinator.data.user.tasksOrder.todos = tasks_order
-
-    @property
     def todo_items(self) -> list[TodoItem]:
         """Return the todo items."""
 
@@ -298,8 +282,9 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
             tasks,
             key=lambda task: (
                 float("inf")
-                if (uid := (UUID(task.uid))) not in self.tasks_order
-                else self.tasks_order.index(uid)
+                if (uid := (UUID(task.uid)))
+                not in (tasks_order := self.coordinator.data.user.tasksOrder.todos)
+                else tasks_order.index(uid)
             ),
         )
 
@@ -349,16 +334,6 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
     )
 
     @property
-    def tasks_order(self) -> list[UUID]:
-        """Return tasks order."""
-        return self.coordinator.data.user.tasksOrder.dailys
-
-    @tasks_order.setter
-    def tasks_order(self, tasks_order: list[UUID]) -> None:
-        """Set the tasks order."""
-        self.coordinator.data.user.tasksOrder.dailys = tasks_order
-
-    @property
     def todo_items(self) -> list[TodoItem]:
         """Return the dailies.
 
@@ -393,7 +368,8 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
             tasks,
             key=lambda task: (
                 float("inf")
-                if (uid := (UUID(task.uid))) not in self.tasks_order
-                else self.tasks_order.index(uid)
+                if (uid := (UUID(task.uid)))
+                not in (tasks_order := self.coordinator.data.user.tasksOrder.dailys)
+                else tasks_order.index(uid)
             ),
         )
