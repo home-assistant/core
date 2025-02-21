@@ -7,6 +7,11 @@ create_task:
       example: "do this ^today #from_hass"
       selector:
         text:
+    list_id:
+      required: false
+      example: "1234567"
+      selector:
+        text:
     id:
       example: myid
       selector:

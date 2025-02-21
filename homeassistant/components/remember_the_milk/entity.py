@@ -10,6 +10,8 @@ from homeassistant.helpers.entity import Entity
 
 _LOGGER = logging.getLogger(__name__)
 
+from .const import CONF_LIST_ID
+
 
 class RememberTheMilkEntity(Entity):
     """Representation of an interface to Remember The Milk."""
@@ -54,6 +56,7 @@ class RememberTheMilkEntity(Entity):
         try:
             task_name = call.data[CONF_NAME]
             hass_id = call.data.get(CONF_ID)
+            call_list_id = call.data.get(CONF_LIST_ID)
             rtm_id = None
             if hass_id is not None:
                 rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
@@ -61,8 +64,11 @@ class RememberTheMilkEntity(Entity):
             timeline = result.timeline.value
 
             if hass_id is None or rtm_id is None:
+                extra_args = {}
+                if call_list_id is not None:
+                    extra_args[CONF_LIST_ID] = call_list_id
                 result = self._rtm_api.rtm.tasks.add(
-                    timeline=timeline, name=task_name, parse="1"
+                    timeline=timeline, name=task_name, parse="1", **extra_args
                 )
                 _LOGGER.debug(
                     "Created new task '%s' in account %s", task_name, self.name
@@ -77,7 +83,7 @@ class RememberTheMilkEntity(Entity):
             else:
                 self._rtm_api.rtm.tasks.setName(
                     name=task_name,
-                    list_id=rtm_id[0],
+                    list_id=call_list_id or rtm_id[0],
                     taskseries_id=rtm_id[1],
                     task_id=rtm_id[2],
                     timeline=timeline,
