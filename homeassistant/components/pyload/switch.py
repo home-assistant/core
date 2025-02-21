@@ -22,6 +22,8 @@ from .const import DOMAIN
 from .coordinator import PyLoadConfigEntry, PyLoadData
 from .entity import BasePyLoadEntity
 
+PARALLEL_UPDATES = 1
+
 
 class PyLoadSwitch(StrEnum):
     """PyLoad Switch Entities."""

@@ -17,10 +17,12 @@ from pyheos import (
     RepeatType,
     const as heos_const,
 )
+import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_VOLUME_LEVEL,
     BrowseMedia,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
@@ -33,13 +35,22 @@ from homeassistant.components.media_player import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_platform,
+    entity_registry as er,
+)
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util.dt import utcnow
 
-from .const import DOMAIN as HEOS_DOMAIN
+from .const import (
+    DOMAIN as HEOS_DOMAIN,
+    SERVICE_GROUP_VOLUME_DOWN,
+    SERVICE_GROUP_VOLUME_SET,
+    SERVICE_GROUP_VOLUME_UP,
+)
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
 PARALLEL_UPDATES = 0
@@ -93,6 +104,19 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add media players for a config entry."""
+    # Register custom entity services
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        SERVICE_GROUP_VOLUME_SET,
+        {vol.Required(ATTR_MEDIA_VOLUME_LEVEL): cv.small_float},
+        "async_set_group_volume_level",
+    )
+    platform.async_register_entity_service(
+        SERVICE_GROUP_VOLUME_DOWN, None, "async_group_volume_down"
+    )
+    platform.async_register_entity_service(
+        SERVICE_GROUP_VOLUME_UP, None, "async_group_volume_up"
+    )
 
     def add_entities_callback(players: Sequence[HeosPlayer]) -> None:
         """Add entities for each player."""
@@ -345,6 +369,41 @@ class HeosMediaPlayer(CoordinatorEntity[HeosCoordinator], MediaPlayerEntity):
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self._player.set_volume(int(volume * 100))
+
+    @catch_action_error("set group volume level")
+    async def async_set_group_volume_level(self, volume_level: float) -> None:
+        """Set group volume level."""
+        if self._player.group_id is None:
+            raise ServiceValidationError(
+                translation_domain=HEOS_DOMAIN,
+                translation_key="entity_not_grouped",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        await self.coordinator.heos.set_group_volume(
+            self._player.group_id, int(volume_level * 100)
+        )
+
+    @catch_action_error("group volume down")
+    async def async_group_volume_down(self) -> None:
+        """Turn group volume down for media player."""
+        if self._player.group_id is None:
+            raise ServiceValidationError(
+                translation_domain=HEOS_DOMAIN,
+                translation_key="entity_not_grouped",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        await self.coordinator.heos.group_volume_down(self._player.group_id)
+
+    @catch_action_error("group volume up")
+    async def async_group_volume_up(self) -> None:
+        """Turn group volume up for media player."""
+        if self._player.group_id is None:
+            raise ServiceValidationError(
+                translation_domain=HEOS_DOMAIN,
+                translation_key="entity_not_grouped",
+                translation_placeholders={"entity_id": self.entity_id},
+            )
+        await self.coordinator.heos.group_volume_up(self._player.group_id)
 
     @catch_action_error("join players")
     async def async_join_players(self, group_members: list[str]) -> None:
