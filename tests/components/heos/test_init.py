@@ -191,35 +191,27 @@ async def test_async_migrate_entry_newer_fails(
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
+@pytest.mark.parametrize(
+    ("host", "expected_manage_host"), [("127.0.0.1", True), ("custom-host", False)]
+)
 async def test_async_migrate_entry_v1_1_to_v1_2(
     hass: HomeAssistant,
     config_entry_v1: MockConfigEntry,
     controller: MockHeos,
     system: HeosSystem,
+    host: str,
+    expected_manage_host: bool,
 ) -> None:
-    """Test migration from 1.1 to 1.2 with a non-customized host."""
+    """Test migration from 1.1 to 1.2."""
     controller.get_system_info.return_value = system
     config_entry_v1.add_to_hass(hass)
+    hass.config_entries.async_update_entry(config_entry_v1, data={CONF_HOST: host})
     assert await hass.config_entries.async_setup(config_entry_v1.entry_id)
     assert config_entry_v1.minor_version == 2
-    assert config_entry_v1.data == {CONF_HOST: "127.0.0.1", CONF_MANAGE_HOST: True}
-
-
-async def test_async_migrate_entry_v1_1_to_v1_2_custom_host(
-    hass: HomeAssistant,
-    config_entry_v1: MockConfigEntry,
-    controller: MockHeos,
-    system: HeosSystem,
-) -> None:
-    """Test migration from 1.1 to 1.2 with custom host turns off auto-manage."""
-    controller.get_system_info.return_value = system
-    config_entry_v1.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        config_entry_v1, data={CONF_HOST: "custom-host"}
-    )
-    assert await hass.config_entries.async_setup(config_entry_v1.entry_id)
-    assert config_entry_v1.minor_version == 2
-    assert config_entry_v1.data == {CONF_HOST: "custom-host", CONF_MANAGE_HOST: False}
+    assert config_entry_v1.data == {
+        CONF_HOST: host,
+        CONF_MANAGE_HOST: expected_manage_host,
+    }
 
 
 async def test_async_migrate_entry_v1_1_to_v1_2_error(
