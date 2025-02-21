@@ -256,7 +256,7 @@ BINARY_SENSORS: dict[str, tuple[TuyaBinarySensorEntityDescription, ...]] = {
         TuyaBinarySensorEntityDescription(
             key=DPCode.WATERSENSOR_STATE,
             device_class=BinarySensorDeviceClass.MOISTURE,
-            on_value="alarm",
+            on_value={"1", "alarm"},
         ),
         TAMPER_BINARY_SENSOR,
     ),
