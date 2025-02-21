@@ -9,6 +9,7 @@ from typing import Any
 from elevenlabs import AsyncElevenLabs
 from elevenlabs.core import ApiError
 from elevenlabs.types import Model, Voice as ElevenLabsVoice, VoiceSettings
+from pydantic import TypeAdapter  # noqa: F401
 
 from homeassistant.components.tts import (
     ATTR_VOICE,
