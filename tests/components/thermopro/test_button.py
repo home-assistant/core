@@ -3,19 +3,19 @@
 from datetime import datetime, timedelta
 import time
 
+import pytest
 from thermopro_ble import ThermoProDevice
 
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
-from homeassistant.components.thermopro.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import TP357_SERVICE_INFO, TP358_SERVICE_INFO
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import async_fire_time_changed
 from tests.components.bluetooth import (
     inject_bluetooth_service_info,
     patch_all_discovered_devices,
@@ -23,17 +23,9 @@ from tests.components.bluetooth import (
 )
 
 
+@pytest.mark.usefixtures("setup_thermopro")
 async def test_buttons_tp357(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="aa:bb:cc:dd:ee:ff",
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP357_SERVICE_INFO)
@@ -41,17 +33,9 @@ async def test_buttons_tp357(hass: HomeAssistant) -> None:
     assert not hass.states.get("button.tp358_4221_set_date_time")
 
 
+@pytest.mark.usefixtures("setup_thermopro")
 async def test_buttons_tp358_discovery(hass: HomeAssistant) -> None:
     """Test discovery of device with button."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="aa:bb:cc:dd:ee:ff",
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
@@ -62,19 +46,10 @@ async def test_buttons_tp358_discovery(hass: HomeAssistant) -> None:
     assert button.state == "unknown"
 
 
+@pytest.mark.usefixtures("setup_thermopro")
 async def test_buttons_tp358_unavailable(hass: HomeAssistant) -> None:
     """Test tp358 set date&time button goes to unavailability."""
     start_monotonic = time.monotonic()
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="aa:bb:cc:dd:ee:ff",
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
@@ -100,19 +75,10 @@ async def test_buttons_tp358_unavailable(hass: HomeAssistant) -> None:
     assert button.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("setup_thermopro")
 async def test_buttons_tp358_reavailable(hass: HomeAssistant) -> None:
     """Test TP358/TP393 set date&time button goes to unavailablity and recovers."""
     start_monotonic = time.monotonic()
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="aa:bb:cc:dd:ee:ff",
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
@@ -145,19 +111,11 @@ async def test_buttons_tp358_reavailable(hass: HomeAssistant) -> None:
         assert button.state == "unknown"
 
 
+@pytest.mark.usefixtures("setup_thermopro")
 async def test_buttons_tp358_press(
     hass: HomeAssistant, mock_now: datetime, mock_thermoprodevice: ThermoProDevice
 ) -> None:
     """Test TP358/TP393 set date&time button press."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="aa:bb:cc:dd:ee:ff",
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
     assert len(hass.states.async_all()) == 0
     assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
