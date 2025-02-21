@@ -43,7 +43,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the demo button platform."""
+    """Set up the thermopro button platform."""
     address = entry.unique_id
     assert address is not None
     availability_signal = f"{SIGNAL_AVAILABILITY_UPDATED}_{entry.entry_id}"
