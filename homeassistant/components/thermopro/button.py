@@ -43,7 +43,8 @@ async def async_setup_entry(
     """Set up the demo button platform."""
     assert entry.unique_id is not None
 
-    set_datetime_entity = None
+    availability_topic = f"{SIGNAL_AVAILABILITY_UPDATED}_{entry.entry_id}"
+    entity_added = False
 
     @callback
     def _async_on_data_updated(
@@ -51,7 +52,7 @@ async def async_setup_entry(
         service_info: BluetoothServiceInfoBleak,
         update: SensorUpdate,
     ) -> None:
-        nonlocal set_datetime_entity
+        nonlocal entity_added
         _LOGGER.debug(
             "got update data=%s update=%s service_info=%s", data, update, service_info
         )
@@ -63,50 +64,34 @@ async def async_setup_entry(
         if update.devices[None].model not in ("TP358", "TP393"):
             return
 
-        if not set_datetime_entity:
+        if not entity_added:
             name = update.devices[None].name
             assert name is not None
-            set_datetime_entity = ThermoProDateTimeButtonEntity(
-                entry_id=entry.entry_id,
-                address=entry.unique_id,
-                device_name=name,
-                description=DATETIME_UPDATE,
-            )
+
+            entity_added = True
 
             async_add_entities(
                 [
-                    set_datetime_entity,
+                    ThermoProDateTimeButtonEntity(
+                        availability_topic=availability_topic,
+                        address=entry.unique_id,
+                        device_name=name,
+                        description=DATETIME_UPDATE,
+                    )
                 ]
             )
 
-        if service_info.connectable and not set_datetime_entity.available:
-            _LOGGER.debug("sending availability '%s' for %s", True, entry.entry_id)
+        if service_info.connectable:
+            _LOGGER.debug("sending availability '%s' for %s", True, availability_topic)
             async_dispatcher_send(
                 hass,
-                f"{SIGNAL_AVAILABILITY_UPDATED}_{entry.entry_id}_button_datetime",
+                availability_topic,
                 True,
             )
 
     entry.async_on_unload(
         async_dispatcher_connect(
             hass, f"{SIGNAL_DATA_UPDATED}_{entry.entry_id}", _async_on_data_updated
-        )
-    )
-
-    @callback
-    def _async_on_unavailable(service_info: BluetoothServiceInfoBleak) -> None:
-        _LOGGER.debug("service info unavailable %s", service_info)
-        if set_datetime_entity:
-            _LOGGER.debug("sending availability '%s' for %s", False, entry.entry_id)
-            async_dispatcher_send(
-                hass,
-                f"{SIGNAL_AVAILABILITY_UPDATED}_{entry.entry_id}_button_datetime",
-                False,
-            )
-
-    entry.async_on_unload(
-        async_track_unavailable(
-            hass, _async_on_unavailable, entry.unique_id, connectable=True
         )
     )
 
@@ -118,7 +103,7 @@ class ThermoProDateTimeButtonEntity(
 
     def __init__(
         self,
-        entry_id: str,
+        availability_topic: str,
         address: str,
         device_name: str,
         description: ButtonEntityDescription,
@@ -126,7 +111,7 @@ class ThermoProDateTimeButtonEntity(
         """Initialize the thermopro datetime button entity."""
         self.address = address
         self.entity_description = description
-        self.entry_id = entry_id
+        self.availability_topic = availability_topic
         self._attr_unique_id = f"{device_name}-{description.key}"
 
         self._attr_device_info = dr.DeviceInfo(
@@ -136,20 +121,35 @@ class ThermoProDateTimeButtonEntity(
 
     async def async_added_to_hass(self) -> None:
         """Connect availability dispatcher."""
-        _LOGGER.debug("registering for availability callback for %s", self.entry_id)
+        await super().async_added_to_hass()
+        _LOGGER.debug(
+            "registering for availability callback for %s", self.availability_topic
+        )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
-                "{SIGNAL_AVAILABILITY_UPDATED}_{self.entry_id}_button_datetime",
-                self._async_on_available_changed,
+                self.availability_topic,
+                self._async_on_availability_changed,
             )
         )
-        await super().async_added_to_hass()
+
+        self.async_on_remove(
+            async_track_unavailable(
+                self.hass, self._async_on_unavailable, self.address, connectable=True
+            )
+        )
 
     @callback
-    def _async_on_available_changed(self, available: bool) -> None:
+    def _async_on_unavailable(self, service_info: BluetoothServiceInfoBleak) -> None:
+        _LOGGER.debug("service info unavailable %s", service_info)
+        self._async_on_availability_changed(False)
+
+    @callback
+    def _async_on_availability_changed(self, available: bool) -> None:
         _LOGGER.debug(
-            "got availability callback with '%s' for %s", available, self.entry_id
+            "got availability callback with '%s' for %s",
+            available,
+            self.availability_topic,
         )
         self._attr_available = available
         self.async_write_ha_state()  # write state to state machine

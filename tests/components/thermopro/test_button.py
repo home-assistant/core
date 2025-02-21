@@ -119,8 +119,7 @@ async def test_buttons_tp358_unavailable(hass: HomeAssistant) -> None:
     # ---
 
     button = hass.states.get("button.thermopro_tp358_4221_datetime")
-    # Normal devices should go to unavailable
-    # TODO: can't get this to work, always "unknown"!
+
     assert button.state == STATE_UNAVAILABLE
 
 
@@ -158,18 +157,18 @@ async def test_buttons_tp358_reavailable(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    # ---
+        # ---
 
-    # Normal devices should go to unavailable
-    # TODO: can't get this to work, always "unknown"!
-    # assert button.state == STATE_UNAVAILABLE
+        button = hass.states.get("button.thermopro_tp358_4221_datetime")
 
-    inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
-    await hass.async_block_till_done()
+        assert button.state == STATE_UNAVAILABLE
 
-    button = hass.states.get("button.thermopro_tp358_4221_datetime")
+        inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
+        await hass.async_block_till_done()
 
-    assert button.state == "unknown"
+        button = hass.states.get("button.thermopro_tp358_4221_datetime")
+
+        assert button.state == "unknown"
 
 
 async def test_buttons_tp358_press(
