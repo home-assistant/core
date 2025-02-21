@@ -9,7 +9,6 @@
   "loggers": ["pyheos"],
   "quality_scale": "silver",
   "requirements": ["pyheos==1.0.2"],
-  "single_config_entry": true,
   "ssdp": [
     {
       "st": "urn:schemas-denon-com:device:ACT-Denon:1"
