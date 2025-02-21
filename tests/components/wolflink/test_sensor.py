@@ -4,7 +4,12 @@ from unittest.mock import MagicMock
 
 import pytest
 
-from homeassistant.components.wolflink.const import COORDINATOR, DEVICE_ID, DOMAIN
+from homeassistant.components.wolflink.const import (
+    COORDINATOR,
+    DEVICE_ID,
+    DOMAIN,
+    MANUFACTURER,
+)
 from homeassistant.components.wolflink.sensor import (
     WolfLinkEnergy,
     WolfLinkHours,
@@ -48,6 +53,14 @@ async def mock_config_entry(
         domain=DOMAIN, unique_id=CONFIG[DEVICE_ID], data=CONFIG
     )
     config_entry.add_to_hass(hass)
+
+    device_id = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, CONFIG[DEVICE_ID])},
+        configuration_url="https://www.wolf-smartset.com/",
+        manufacturer=MANUFACTURER,
+    ).id
+    assert device_registry.async_get(device_id).identifiers == {(DOMAIN, "1234")}
 
 
 def test_wolflink_sensor_initialization(mock_coordinator) -> None:
