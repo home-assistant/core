@@ -17,4 +17,5 @@ ZHA_HW_DISCOVERY_DATA = {
 }
 
 FIRMWARE = "firmware"
+FIRMWARE_VERSION = "firmware_version"
 ZHA_DOMAIN = "zha"

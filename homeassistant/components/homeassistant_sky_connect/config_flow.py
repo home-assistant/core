@@ -30,6 +30,7 @@ from .const import (
     DOCS_WEB_FLASHER_URL,
     DOMAIN,
     FIRMWARE,
+    FIRMWARE_VERSION,
     MANUFACTURER,
     PID,
     PRODUCT,
@@ -146,8 +147,8 @@ class HomeAssistantSkyConnectConfigFlow(
                 DESCRIPTION: self._usb_info.description,  # For backwards compatibility
                 PRODUCT: self._usb_info.description,
                 DEVICE: self._usb_info.device,
-                FIRMWARE: self._probed_firmware_type.value,
-                "firmware_version": None,
+                FIRMWARE: self._probed_firmware_info.firmware_type.value,
+                FIRMWARE_VERSION: self._probed_firmware_info.firmware_version,
             },
         )
 
@@ -197,6 +198,7 @@ class HomeAssistantSkyConnectMultiPanOptionsFlowHandler(
             data={
                 **self.config_entry.data,
                 FIRMWARE: ApplicationType.EZSP.value,
+                FIRMWARE_VERSION: None,
             },
             options=self.config_entry.options,
         )
@@ -222,8 +224,8 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
 
         self._probed_firmware_info = FirmwareInfo(
             device=self._device,
-            firmware_type=ApplicationType(self.config_entry.data["firmware"]),
-            firmware_version=None,
+            firmware_type=ApplicationType(self.config_entry.data[FIRMWARE]),
+            firmware_version=self.config_entry.data[FIRMWARE_VERSION],
             source="guess",
             owners=[],
         )
@@ -240,6 +242,7 @@ class HomeAssistantSkyConnectOptionsFlowHandler(
             data={
                 **self.config_entry.data,
                 FIRMWARE: self._probed_firmware_info.firmware_type.value,
+                FIRMWARE_VERSION: self._probed_firmware_info.firmware_version,
             },
             options=self.config_entry.options,
         )

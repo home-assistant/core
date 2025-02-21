@@ -8,7 +8,7 @@ from homeassistant.components.homeassistant_hardware.util import guess_firmware_
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
-from .const import DESCRIPTION, DEVICE, FIRMWARE, PRODUCT
+from .const import DESCRIPTION, DEVICE, FIRMWARE, FIRMWARE_VERSION, PRODUCT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -59,7 +59,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                 config_entry,
                 data={
                     **config_entry.data,
-                    "firmware_version": None,
+                    FIRMWARE_VERSION: None,
                 },
                 version=1,
                 minor_version=3,

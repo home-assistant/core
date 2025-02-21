@@ -8,6 +8,7 @@ DOMAIN = "homeassistant_sky_connect"
 DOCS_WEB_FLASHER_URL = "https://skyconnect.home-assistant.io/firmware-update/"
 
 FIRMWARE = "firmware"
+FIRMWARE_VERSION = "firmware_version"
 SERIAL_NUMBER = "serial_number"
 MANUFACTURER = "manufacturer"
 PRODUCT = "product"
