@@ -13,5 +13,5 @@
     "cloudapp/QBUSMQTTGW/+/state"
   ],
   "quality_scale": "bronze",
-  "requirements": ["qbusmqttapi==1.2.4"]
+  "requirements": ["qbusmqttapi==1.3.0"]
 }
