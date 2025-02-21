@@ -35,6 +35,7 @@ DATETIME_UPDATE = ButtonEntityDescription(
 )
 
 MODELS_THAT_SUPPORT_SETTING_DATETIME = {"TP358", "TP393"}
+BUTTON_ENTITIES = (DATETIME_UPDATE,)
 
 
 async def async_setup_entry(
@@ -66,12 +67,15 @@ async def async_setup_entry(
             name = sensor_device_info.name
             assert name is not None
             entity_added = True
-            entity = ThermoProDateTimeButtonEntity(
-                availability_signal=availability_signal,
-                address=address,
-                description=DATETIME_UPDATE,
+            async_add_entities(
+                ThermoProDateTimeButtonEntity(
+                    description=description,
+                    data=data,
+                    availability_signal=availability_signal,
+                    service_info=service_info,
+                )
+                for description in BUTTON_ENTITIES
             )
-            async_add_entities([entity])
 
         if service_info.connectable:
             _LOGGER.debug("sending availability '%s' for %s", True, availability_signal)
@@ -89,18 +93,23 @@ class ThermoProDateTimeButtonEntity(
 ):
     """Representation of a ThermoProDateTime button entity."""
 
+    _attr_has_entity_name = True
+
     def __init__(
         self,
-        availability_signal: str,
-        address: str,
         description: ButtonEntityDescription,
+        data: ThermoProBluetoothDeviceData,
+        availability_signal: str,
+        service_info: BluetoothServiceInfoBleak,
     ) -> None:
         """Initialize the thermopro datetime button entity."""
+        address = service_info.address
         self.address = address
         self.entity_description = description
         self._availability_signal = availability_signal
         self._attr_unique_id = f"{address}-{description.key}"
         self._attr_device_info = dr.DeviceInfo(
+            name=data.get_device_name(),
             identifiers={(DOMAIN, address)},
             connections={(dr.CONNECTION_BLUETOOTH, address)},
         )
