@@ -53,7 +53,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def generate_content(call: ServiceCall) -> ServiceResponse:
         """Generate content from text and optionally images."""
 
-        if CONF_IMAGE_FILENAME in call.data:
+        if call.data[CONF_IMAGE_FILENAME]:
             # Deprecated in 2025.3, to remove in 2025.9
             async_create_issue(
                 hass,
