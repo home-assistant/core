@@ -1023,14 +1023,14 @@ def try_connection(
     result: queue.Queue[bool] = queue.Queue(maxsize=1)
 
     def on_connect(
-        client_: mqtt.Client,
-        userdata: None,
-        flags: dict[str, Any],
-        result_code: int,
-        properties: mqtt.Properties | None = None,
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        _connect_flags: mqtt.ConnectFlags,
+        reason_code: mqtt.ReasonCode,
+        _properties: mqtt.Properties | None = None,
     ) -> None:
         """Handle connection result."""
-        result.put(result_code == mqtt.CONNACK_ACCEPTED)
+        result.put(not reason_code.is_failure)
 
     client.on_connect = on_connect
 

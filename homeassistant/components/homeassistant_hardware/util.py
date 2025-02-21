@@ -42,6 +42,7 @@ class ApplicationType(StrEnum):
     CPC = "cpc"
     EZSP = "ezsp"
     SPINEL = "spinel"
+    ROUTER = "router"
 
     @classmethod
     def from_flasher_application_type(
