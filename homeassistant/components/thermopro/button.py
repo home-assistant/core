@@ -76,9 +76,6 @@ async def async_setup_entry(
         update: SensorUpdate,
     ) -> None:
         nonlocal entity_added
-        _LOGGER.debug(
-            "update data=%s update=%s service_info=%s", data, update, service_info
-        )
         sensor_device_info = update.devices[data.primary_device_id]
         if sensor_device_info.model not in MODELS_THAT_SUPPORT_BUTTONS:
             return
@@ -98,7 +95,6 @@ async def async_setup_entry(
             )
 
         if service_info.connectable:
-            _LOGGER.debug("sending availability '%s' for %s", True, availability_signal)
             async_dispatcher_send(hass, availability_signal, True)
 
     entry.async_on_unload(
@@ -135,9 +131,6 @@ class ThermoProButtonEntity(ButtonEntity):
     async def async_added_to_hass(self) -> None:
         """Connect availability dispatcher."""
         await super().async_added_to_hass()
-        _LOGGER.debug(
-            "registering for availability callback for %s", self._availability_signal
-        )
         self.async_on_remove(
             async_dispatcher_connect(
                 self.hass,
@@ -153,16 +146,10 @@ class ThermoProButtonEntity(ButtonEntity):
 
     @callback
     def _async_on_unavailable(self, service_info: BluetoothServiceInfoBleak) -> None:
-        _LOGGER.debug("service info unavailable %s", service_info)
         self._async_on_availability_changed(False)
 
     @callback
     def _async_on_availability_changed(self, available: bool) -> None:
-        _LOGGER.debug(
-            "got availability callback with '%s' for %s",
-            available,
-            self._availability_signal,
-        )
         self._attr_available = available
         self.async_write_ha_state()
 
