@@ -144,7 +144,7 @@
         },
         "reload": {
           "name": "[%key:common::action::reload%]",
-          "description": "Reloads all records. If true the current records are cleared from memory (does not effect the device) and the records are reloaded. If false the existing records are left in place and only missing records are added. Default is false."
+          "description": "If enabled, all current records are cleared from memory (does not effect the device) and reloaded. Otherwise the existing records are left in place and only missing records are added."
         }
       }
     },
