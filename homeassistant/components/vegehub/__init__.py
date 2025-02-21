@@ -55,9 +55,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
     device_mac = entry.data[CONF_MAC]
     device_ip = entry.data[CONF_IP_ADDRESS]
 
-    assert entry.unique_id
-
-    if entry.data[CONF_DEVICE] is None:
+    if not entry.unique_id:
         raise ConfigEntryError("Error: unable to set up device")
 
     hub = VegeHub(device_ip, device_mac, entry.unique_id, info=entry.data[CONF_DEVICE])
