@@ -145,7 +145,7 @@ class ThermoProButtonEntity(ButtonEntity):
         )
 
     @callback
-    def _async_on_unavailable(self, service_info: BluetoothServiceInfoBleak) -> None:
+    def _async_on_unavailable(self, _: BluetoothServiceInfoBleak) -> None:
         self._async_on_availability_changed(False)
 
     @callback
