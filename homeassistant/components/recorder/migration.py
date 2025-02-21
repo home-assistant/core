@@ -2875,7 +2875,7 @@ class EventIDPostMigration(BaseRunTimeMigration):
     # version 34 because the schema was not bumped when the table
     # rebuild was added in
     # https://github.com/home-assistant/core/pull/120779 so its
-    # only safe to assume version 35 and later actually have the
+    # only safe to assume version 35 and later
     # do not need the table rebuild
     max_initial_schema_version = LEGACY_STATES_EVENT_FOREIGN_KEYS_FIXED_SCHEMA_VERSION
     task = MigrationTask
