@@ -68,6 +68,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
         self._entry = entry
         self._client = client
         self._model = entry.options.get(CONF_STT_MODEL, DEFAULT_STT_MODEL)
+        self._timeout = entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
     @property
     def supported_languages(self) -> list[str]:
@@ -125,13 +126,10 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
             async for audio_content in stream:
                 yield speech_v1.StreamingRecognizeRequest(audio_content=audio_content)
                 
-        timeout = options[CONF_TIMEOUT]
-        if not timeout:
-            timeout = DEFAULT_TIMEOUT
         try:
             responses = await self._client.streaming_recognize(
                 requests=request_generator(),
-                timeout=timeout,
+                timeout=self._timeout,
             )
 
             transcript = ""
