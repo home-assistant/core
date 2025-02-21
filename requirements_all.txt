@@ -1146,7 +1146,7 @@ hole==0.8.0
 holidays==0.66
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250214.0
+home-assistant-frontend==20250221.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.2.5
@@ -1972,7 +1972,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.15
+pyfritzhome==0.6.16
 
 # homeassistant.components.ifttt
 pyfttt==0.3
