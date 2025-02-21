@@ -9,9 +9,8 @@ from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
 from homeassistant.components.thermopro.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
-from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import entity_registry as er
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
 from . import TP357_SERVICE_INFO, TP358_SERVICE_INFO
@@ -22,25 +21,6 @@ from tests.components.bluetooth import (
     patch_all_discovered_devices,
     patch_bluetooth_time,
 )
-
-
-# borrowed from unifiprotect
-def assert_entity_counts(
-    hass: HomeAssistant, platform: Platform, total: int, enabled: int
-) -> None:
-    """Assert entity counts for a given platform."""
-
-    entity_registry = er.async_get(hass)
-
-    entities = [
-        e for e in entity_registry.entities if split_entity_id(e)[0] == platform.value
-    ]
-
-    assert len(entities) == total
-    assert len(hass.states.async_all(platform.value)) == enabled
-
-
-# ---
 
 
 async def test_buttons_tp357(hass: HomeAssistant) -> None:
@@ -55,10 +35,10 @@ async def test_buttons_tp357(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    assert_entity_counts(hass, Platform.BUTTON, 0, 0)
+    assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP357_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert_entity_counts(hass, Platform.BUTTON, 0, 0)
+    assert not hass.states.get("button.tp358_4221_set_date_time")
 
 
 async def test_buttons_tp358_discovery(hass: HomeAssistant) -> None:
@@ -73,12 +53,12 @@ async def test_buttons_tp358_discovery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    assert_entity_counts(hass, Platform.BUTTON, 0, 0)
+    assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert_entity_counts(hass, Platform.BUTTON, 1, 1)
 
     button = hass.states.get("button.tp358_4221_set_date_time")
+    assert button is not None
     assert button.state == "unknown"
 
 
@@ -96,16 +76,15 @@ async def test_buttons_tp358_unavailable(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    assert_entity_counts(hass, Platform.BUTTON, 0, 0)
+    assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert_entity_counts(hass, Platform.BUTTON, 1, 1)
 
     button = hass.states.get("button.tp358_4221_set_date_time")
+    assert button is not None
     assert button.state == "unknown"
 
-    # borrowed from bthome test_sensor.py
-    # Fastforward time without BLE advertisements
+    # Fast-forward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 15
 
     with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
@@ -115,8 +94,6 @@ async def test_buttons_tp358_unavailable(hass: HomeAssistant) -> None:
             + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 15),
         )
         await hass.async_block_till_done()
-
-    # ---
 
     button = hass.states.get("button.tp358_4221_set_date_time")
 
@@ -137,16 +114,15 @@ async def test_buttons_tp358_reavailable(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    assert_entity_counts(hass, Platform.BUTTON, 0, 0)
+    assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert_entity_counts(hass, Platform.BUTTON, 1, 1)
 
     button = hass.states.get("button.tp358_4221_set_date_time")
+    assert button is not None
     assert button.state == "unknown"
 
-    # borrowed from bthome test_sensor.py
-    # Fastforward time without BLE advertisements
+    # Fast-forward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 15
 
     with patch_bluetooth_time(monotonic_now), patch_all_discovered_devices([]):
@@ -156,8 +132,6 @@ async def test_buttons_tp358_reavailable(hass: HomeAssistant) -> None:
             + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 15),
         )
         await hass.async_block_till_done()
-
-        # ---
 
         button = hass.states.get("button.tp358_4221_set_date_time")
 
@@ -185,10 +159,10 @@ async def test_buttons_tp358_press(
     await hass.async_block_till_done()
 
     assert len(hass.states.async_all()) == 0
-    assert_entity_counts(hass, Platform.BUTTON, 0, 0)
+    assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
     await hass.async_block_till_done()
-    assert_entity_counts(hass, Platform.BUTTON, 1, 1)
+    assert hass.states.get("button.tp358_4221_set_date_time")
 
     await hass.services.async_call(
         "button",

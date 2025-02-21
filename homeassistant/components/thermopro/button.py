@@ -143,7 +143,7 @@ class ThermoProDateTimeButtonEntity(ButtonEntity):
             self._availability_signal,
         )
         self._attr_available = available
-        self.async_write_ha_state()  # write state to state machine
+        self.async_write_ha_state()
 
     async def async_press(self) -> None:
         """Set Date&Time for a given device."""
