@@ -39,7 +39,7 @@ from .helpers import (
     normalize_hue_transition,
 )
 
-EFFECT_NONE = "None"
+EFFECT_NONE = "none"
 FALLBACK_MIN_KELVIN = 6500
 FALLBACK_MAX_KELVIN = 2000
 FALLBACK_KELVIN = 5800  # halfway
@@ -75,7 +75,7 @@ class HueLight(HueBaseEntity, LightEntity):
 
     _fixed_color_mode: ColorMode | None = None
     entity_description = LightEntityDescription(
-        key="hue_light", has_entity_name=True, name=None
+        key="hue_light", translation_key="hue_light", has_entity_name=True, name=None
     )
 
     def __init__(

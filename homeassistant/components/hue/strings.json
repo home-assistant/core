@@ -102,6 +102,25 @@
         }
       }
     },
+    "light": {
+      "hue_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "none": "None",
+              "candle": "Candle",
+              "sparkle": "Sparkle",
+              "glisten": "Glisten",
+              "sunrise": "Sunrise",
+              "sunset": "Sunset",
+              "fire": "Fire",
+              "prism": "Prism",
+              "opal": "Opal"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "zigbee_connectivity": {
         "name": "Zigbee connectivity",
