@@ -2,7 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
 import logging
+from typing import Any
 
 from thermopro_ble import SensorUpdate, ThermoProBluetoothDeviceData, ThermoProDevice
 
@@ -27,11 +30,27 @@ from .const import DOMAIN, SIGNAL_AVAILABILITY_UPDATED, SIGNAL_DATA_UPDATED
 
 _LOGGER = logging.getLogger(__name__)
 
-DATETIME_UPDATE = ButtonEntityDescription(
+
+async def _async_set_datetime(hass: HomeAssistant, address: str) -> None:
+    """Set Date&Time for a given device."""
+    ble_device = async_ble_device_from_address(hass, address, connectable=True)
+    assert ble_device is not None
+    await ThermoProDevice(ble_device).set_datetime(now(), False)
+
+
+@dataclass(kw_only=True, frozen=True)
+class ThermoProButtonEntityDescription(ButtonEntityDescription):
+    """Describe a ThermoPro button entity."""
+
+    press_action_fn: Callable[[HomeAssistant, str], Coroutine[None, Any, Any]]
+
+
+DATETIME_UPDATE = ThermoProButtonEntityDescription(
     key="datetime",
     translation_key="set_datetime",
     icon="mdi:calendar-clock",
     entity_category=EntityCategory.CONFIG,
+    press_action_fn=_async_set_datetime,
 )
 
 MODELS_THAT_SUPPORT_SETTING_DATETIME = {"TP358", "TP393"}
@@ -68,7 +87,7 @@ async def async_setup_entry(
             assert name is not None
             entity_added = True
             async_add_entities(
-                ThermoProDateTimeButtonEntity(
+                ThermoProButtonEntity(
                     description=description,
                     data=data,
                     availability_signal=availability_signal,
@@ -88,19 +107,20 @@ async def async_setup_entry(
     )
 
 
-class ThermoProDateTimeButtonEntity(ButtonEntity):
-    """Representation of a ThermoProDateTime button entity."""
+class ThermoProButtonEntity(ButtonEntity):
+    """Representation of a ThermoPro button entity."""
 
     _attr_has_entity_name = True
+    entity_description: ThermoProButtonEntityDescription
 
     def __init__(
         self,
-        description: ButtonEntityDescription,
+        description: ThermoProButtonEntityDescription,
         data: ThermoProBluetoothDeviceData,
         availability_signal: str,
         address: str,
     ) -> None:
-        """Initialize the thermopro datetime button entity."""
+        """Initialize the thermopro button entity."""
         self.entity_description = description
         self._address = address
         self._availability_signal = availability_signal
@@ -146,9 +166,5 @@ class ThermoProDateTimeButtonEntity(ButtonEntity):
         self.async_write_ha_state()
 
     async def async_press(self) -> None:
-        """Set Date&Time for a given device."""
-        ble_device = async_ble_device_from_address(
-            self.hass, self._address, connectable=True
-        )
-        assert ble_device is not None
-        await ThermoProDevice(ble_device).set_datetime(now(), False)
+        """Execute the press action for the entity."""
+        await self.entity_description.press_action_fn(self.hass, self._address)
