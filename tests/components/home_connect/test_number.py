@@ -68,7 +68,6 @@ async def test_number(
     assert config_entry.state is ConfigEntryState.LOADED
 
 
-@pytest.mark.parametrize("appliance_ha_id", ["FridgeFreezer"], indirect=True)
 async def test_paired_depaired_devices_flow(
     appliance_ha_id: str,
     hass: HomeAssistant,
@@ -80,6 +79,17 @@ async def test_paired_depaired_devices_flow(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that removed devices are correctly removed from and added to hass on API events."""
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            ProgramKey.UNKNOWN,
+            options=[
+                ProgramDefinitionOption(
+                    OptionKey.BSH_COMMON_FINISH_IN_RELATIVE,
+                    "Integer",
+                )
+            ],
+        )
+    )
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED

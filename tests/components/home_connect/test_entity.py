@@ -80,7 +80,7 @@ def platforms() -> list[str]:
                 OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND: "switch.dishwasher_silence_on_demand",
                 OptionKey.DISHCARE_DISHWASHER_ECO_DRY: "switch.dishwasher_eco_dry",
             },
-            [(STATE_ON, True), (STATE_OFF, False), (STATE_UNAVAILABLE, None)],
+            [(STATE_ON, True), (STATE_OFF, False), (None, None)],
             [False, True, True],
             (
                 OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS,
@@ -162,7 +162,10 @@ async def test_program_options_retrieval(
     for entity_id, (state, _) in zip(
         option_entity_id.values(), options_state_stage_1, strict=True
     ):
-        assert hass.states.is_state(entity_id, state)
+        if state is not None:
+            assert hass.states.is_state(entity_id, state)
+        else:
+            assert not hass.states.get(entity_id)
 
     client.get_available_program = AsyncMock(
         return_value=ProgramDefinition(

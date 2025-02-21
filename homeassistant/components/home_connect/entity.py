@@ -2,8 +2,8 @@
 
 from abc import abstractmethod
 import contextlib
-from dataclasses import dataclass
 import logging
+from typing import cast
 
 from aiohomeconnect.model import EventKey, OptionKey
 from aiohomeconnect.model.error import ActiveProgramNotSetError, HomeConnectError
@@ -14,19 +14,11 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, ApplianceType
+from .const import DOMAIN
 from .coordinator import HomeConnectApplianceData, HomeConnectCoordinator
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True, kw_only=True)
-class HomeConnectOptionEntityDescription(EntityDescription):
-    """Entity description for entities that represents program options."""
-
-    key: OptionKey
-    appliance_types: set[ApplianceType]
 
 
 class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
@@ -78,8 +70,6 @@ class HomeConnectEntity(CoordinatorEntity[HomeConnectCoordinator]):
 class HomeConnectOptionEntity(HomeConnectEntity):
     """Class for entities that represents program options."""
 
-    entity_description: HomeConnectOptionEntityDescription
-
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
@@ -130,4 +120,4 @@ class HomeConnectOptionEntity(HomeConnectEntity):
     @property
     def bsh_key(self) -> OptionKey:
         """Return the BSH key."""
-        return self.entity_description.key
+        return cast(OptionKey, self.entity_description.key)

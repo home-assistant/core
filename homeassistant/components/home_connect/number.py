@@ -1,6 +1,5 @@
 """Provides number enties for Home Connect."""
 
-from dataclasses import dataclass
 import logging
 from typing import cast
 
@@ -24,14 +23,9 @@ from .const import (
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
-    ApplianceType,
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
-from .entity import (
-    HomeConnectEntity,
-    HomeConnectOptionEntity,
-    HomeConnectOptionEntityDescription,
-)
+from .entity import HomeConnectEntity, HomeConnectOptionEntity
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,14 +36,6 @@ UNIT_MAP = {
     "°C": UnitOfTemperature.CELSIUS,
     "°F": UnitOfTemperature.FAHRENHEIT,
 }
-
-
-@dataclass(frozen=True, kw_only=True)
-class HomeConnectNumberOptionEntityDescription(
-    HomeConnectOptionEntityDescription, NumberEntityDescription
-):
-    """Entity description for entities that represents numeric options."""
-
 
 NUMBERS = (
     NumberEntityDescription(
@@ -110,37 +96,28 @@ NUMBERS = (
 )
 
 NUMBER_OPTIONS = (
-    HomeConnectNumberOptionEntityDescription(
+    NumberEntityDescription(
         key=OptionKey.BSH_COMMON_DURATION,
         translation_key="duration",
-        appliance_types={ApplianceType.OVEN, ApplianceType.HOOD},
     ),
-    HomeConnectNumberOptionEntityDescription(
+    NumberEntityDescription(
         key=OptionKey.BSH_COMMON_FINISH_IN_RELATIVE,
         translation_key="finish_in_relative",
-        appliance_types={
-            ApplianceType.DRYER,
-            ApplianceType.WASHER,
-            ApplianceType.WASHER_DRYER,
-        },
     ),
-    HomeConnectNumberOptionEntityDescription(
+    NumberEntityDescription(
         key=OptionKey.BSH_COMMON_START_IN_RELATIVE,
         translation_key="start_in_relative",
-        appliance_types={ApplianceType.OVEN, ApplianceType.DISHWASHER},
     ),
-    HomeConnectNumberOptionEntityDescription(
+    NumberEntityDescription(
         key=OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY,
         translation_key="fill_quantity",
         device_class=NumberDeviceClass.VOLUME,
         native_step=1,
-        appliance_types={ApplianceType.COFFEE_MAKER},
     ),
-    HomeConnectNumberOptionEntityDescription(
+    NumberEntityDescription(
         key=OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
         translation_key="setpoint_temperature",
         device_class=NumberDeviceClass.TEMPERATURE,
-        appliance_types={ApplianceType.OVEN},
     ),
 )
 
@@ -151,16 +128,21 @@ def _get_entities_for_appliance(
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
-        *[
-            HomeConnectNumberEntity(entry.runtime_data, appliance, description)
-            for description in NUMBERS
-            if description.key in appliance.settings
-        ],
-        *[
-            HomeConnectOptionNumberEntity(entry.runtime_data, appliance, description)
-            for description in NUMBER_OPTIONS
-            if appliance.info.type in description.appliance_types
-        ],
+        HomeConnectNumberEntity(entry.runtime_data, appliance, description)
+        for description in NUMBERS
+        if description.key in appliance.settings
+    ]
+
+
+def _get_option_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectOptionEntity]:
+    """Get a list of currently available option entities."""
+    return [
+        HomeConnectOptionNumberEntity(entry.runtime_data, appliance, description)
+        for description in NUMBER_OPTIONS
+        if description.key in appliance.options
     ]
 
 
@@ -174,6 +156,7 @@ async def async_setup_entry(
         entry,
         _get_entities_for_appliance,
         async_add_entities,
+        _get_option_entities_for_appliance,
     )
 
 
@@ -251,8 +234,6 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
 
 class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
     """Number option class for Home Connect."""
-
-    entity_description: HomeConnectNumberOptionEntityDescription
 
     async def async_set_native_value(self, value: float) -> None:
         """Set the native value of the entity."""

@@ -1,6 +1,5 @@
 """Constants for the Home Connect integration."""
 
-from enum import StrEnum
 from typing import cast
 
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
@@ -8,24 +7,6 @@ from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, St
 from .utils import bsh_key_to_translation_key
 
 DOMAIN = "home_connect"
-
-
-class ApplianceType(StrEnum):
-    """Appliance type constants."""
-
-    CLEANING_ROBOT = "CleaningRobot"
-    COFFEE_MAKER = "CoffeeMaker"
-    COOKING = "Cooking"
-    DISHWASHER = "Dishwasher"
-    DRYER = "Dryer"
-    FRIDGE_FREEZER = "FridgeFreezer"
-    FREEZER = "Freezer"
-    HOOD = "Hood"
-    OVEN = "Oven"
-    REFRIGERATOR = "Refrigerator"
-    WARMMING_DRAWER = "WarmingDrawer"
-    WASHER = "Washer"
-    WASHER_DRYER = "WasherDryer"
 
 
 APPLIANCES_WITH_PROGRAMS = (

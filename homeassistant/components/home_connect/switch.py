@@ -1,6 +1,5 @@
 """Provides a switch for Home Connect."""
 
-from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
@@ -32,28 +31,16 @@ from .const import (
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
-    ApplianceType,
 )
 from .coordinator import (
     HomeConnectApplianceData,
     HomeConnectConfigEntry,
     HomeConnectCoordinator,
 )
-from .entity import (
-    HomeConnectEntity,
-    HomeConnectOptionEntity,
-    HomeConnectOptionEntityDescription,
-)
+from .entity import HomeConnectEntity, HomeConnectOptionEntity
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass(frozen=True, kw_only=True)
-class HomeConnectSwitchOptionEntityDescription(
-    HomeConnectOptionEntityDescription, SwitchEntityDescription
-):
-    """Entity description for entities that represents binary options."""
 
 
 SWITCHES = (
@@ -114,70 +101,57 @@ POWER_SWITCH_DESCRIPTION = SwitchEntityDescription(
 )
 
 SWITCH_OPTIONS = (
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES,
         translation_key="multiple_beverages",
-        appliance_types={ApplianceType.COFFEE_MAKER},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE,
         translation_key="intensiv_zone",
-        appliance_types={ApplianceType.DISHWASHER},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.DISHCARE_DISHWASHER_BRILLIANCE_DRY,
         translation_key="brilliance_dry",
-        appliance_types={ApplianceType.DISHWASHER},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.DISHCARE_DISHWASHER_VARIO_SPEED_PLUS,
         translation_key="vario_speed_plus",
-        appliance_types={ApplianceType.DISHWASHER},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.DISHCARE_DISHWASHER_SILENCE_ON_DEMAND,
         translation_key="silence_on_demand",
-        appliance_types={ApplianceType.DISHWASHER},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
         translation_key="half_load",
-        appliance_types={ApplianceType.DISHWASHER},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.DISHCARE_DISHWASHER_EXTRA_DRY,
         translation_key="extra_dry",
-        appliance_types={ApplianceType.DISHWASHER},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS,
         translation_key="hygiene_plus",
-        appliance_types={ApplianceType.DISHWASHER},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.DISHCARE_DISHWASHER_ECO_DRY,
         translation_key="eco_dry",
-        appliance_types={ApplianceType.DISHWASHER},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.DISHCARE_DISHWASHER_ZEOLITE_DRY,
         translation_key="zeolite_dry",
-        appliance_types={ApplianceType.DISHWASHER},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.COOKING_OVEN_FAST_PRE_HEAT,
         translation_key="fast_pre_heat",
-        appliance_types={ApplianceType.OVEN},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE,
         translation_key="i_dos1_active",
-        appliance_types={ApplianceType.WASHER, ApplianceType.WASHER_DRYER},
     ),
-    HomeConnectSwitchOptionEntityDescription(
+    SwitchEntityDescription(
         key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE,
         translation_key="i_dos2_active",
-        appliance_types={ApplianceType.WASHER, ApplianceType.WASHER_DRYER},
     ),
 )
 
@@ -204,13 +178,19 @@ def _get_entities_for_appliance(
         for description in SWITCHES
         if description.key in appliance.settings
     )
-    entities.extend(
+    return entities
+
+
+def _get_option_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectOptionEntity]:
+    """Get a list of currently available option entities."""
+    return [
         HomeConnectSwitchOptionEntity(entry.runtime_data, appliance, description)
         for description in SWITCH_OPTIONS
-        if appliance.info.type in description.appliance_types
-    )
-
-    return entities
+        if description.key in appliance.options
+    ]
 
 
 async def async_setup_entry(
@@ -223,6 +203,7 @@ async def async_setup_entry(
         entry,
         _get_entities_for_appliance,
         async_add_entities,
+        _get_option_entities_for_appliance,
     )
 
 
@@ -493,8 +474,6 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
 class HomeConnectSwitchOptionEntity(HomeConnectOptionEntity, SwitchEntity):
     """Switch option class for Home Connect."""
-
-    entity_description: HomeConnectSwitchOptionEntityDescription
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the option."""
