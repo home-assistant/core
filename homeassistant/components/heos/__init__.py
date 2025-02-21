@@ -4,13 +4,14 @@ from __future__ import annotations
 
 from datetime import timedelta
 
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from . import services
-from .const import DOMAIN
+from .config_flow import is_custom_host
+from .const import CONF_MANAGE_HOST, DOMAIN
 from .coordinator import HeosConfigEntry, HeosCoordinator
 
 PLATFORMS = [Platform.MEDIA_PLAYER]
@@ -69,6 +70,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
+    """Migrate old entry."""
+    if entry.version > 1:
+        return False
+    if entry.minor_version > 0:
+        return False
+    data = {**entry.data}
+    data[CONF_MANAGE_HOST] = not await is_custom_host(data[CONF_HOST])
+    hass.config_entries.async_update_entry(entry, data=data, version=1, minor_version=1)
+    return True
 
 
 async def async_remove_config_entry_device(

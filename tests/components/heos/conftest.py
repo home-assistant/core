@@ -24,7 +24,7 @@ from pyheos import (
 import pytest
 import pytest_asyncio
 
-from homeassistant.components.heos import DOMAIN
+from homeassistant.components.heos.const import CONF_MANAGE_HOST, DOMAIN, ENTRY_TITLE
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_DEVICE_TYPE,
@@ -47,9 +47,11 @@ def config_entry_fixture() -> MockConfigEntry:
     """Create a mock HEOS config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "127.0.0.1"},
-        title="HEOS System (via 127.0.0.1)",
+        data={CONF_HOST: "127.0.0.1", CONF_MANAGE_HOST: True},
+        title=ENTRY_TITLE,
         unique_id=DOMAIN,
+        version=1,
+        minor_version=1,
     )
 
 
@@ -58,10 +60,12 @@ def config_entry_options_fixture() -> MockConfigEntry:
     """Create a mock HEOS config entry with options."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "127.0.0.1"},
-        title="HEOS System (via 127.0.0.1)",
+        data={CONF_HOST: "127.0.0.1", CONF_MANAGE_HOST: True},
+        title=ENTRY_TITLE,
         options={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
         unique_id=DOMAIN,
+        version=1,
+        minor_version=1,
     )
 
 

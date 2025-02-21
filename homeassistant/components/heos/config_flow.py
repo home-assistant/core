@@ -20,7 +20,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 
-from .const import DOMAIN, ENTRY_TITLE
+from .const import CONF_MANAGE_HOST, DOMAIN, ENTRY_TITLE
 from .coordinator import HeosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,10 +114,26 @@ def _get_current_hosts(entry: HeosConfigEntry) -> set[str]:
     return hosts
 
 
+async def is_custom_host(host: str) -> bool:
+    """Determine if the host is a custom host name."""
+    heos = Heos(HeosOptions(host, events=False, heart_beat=False))
+    try:
+        await heos.connect()
+        system_info = await heos.get_system_info()
+    except HeosError:
+        _LOGGER.debug(
+            "Unable to determine if host '%s' is a custom", host, exc_info=True
+        )
+        return False
+    else:
+        return host in [host.ip_address for host in system_info.hosts]
+
+
 class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
     """Define a flow for HEOS."""
 
     VERSION = 1
+    MINOR_VERSION = 1
 
     def __init__(self) -> None:
         """Initialize the HEOS flow."""
@@ -141,8 +157,10 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         hostname = urlparse(discovery_info.ssdp_location).hostname
         assert hostname is not None
 
-        # Abort early when discovered host is part of the current system
-        if entry and hostname in _get_current_hosts(entry):
+        # Abort early when managing the host is disabled or discovered host is part of the current system
+        if entry and (
+            not entry.data[CONF_MANAGE_HOST] or hostname in _get_current_hosts(entry)
+        ):
             return self.async_abort(reason="single_instance_allowed")
 
         # Connect to discovered host and get system information
@@ -188,7 +206,8 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             assert self._discovered_host is not None
             return self.async_create_entry(
-                title=ENTRY_TITLE, data={CONF_HOST: self._discovered_host}
+                title=ENTRY_TITLE,
+                data={CONF_HOST: self._discovered_host, CONF_MANAGE_HOST: True},
             )
 
         self._set_confirm_only()
@@ -207,7 +226,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             if await _validate_host(host, errors):
                 return self.async_create_entry(
-                    title=ENTRY_TITLE, data={CONF_HOST: host}
+                    title=ENTRY_TITLE, data={CONF_HOST: host, CONF_MANAGE_HOST: False}
                 )
 
         # Return form
@@ -223,16 +242,24 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         """Allow reconfiguration of entry."""
         entry = self._get_reconfigure_entry()
         host = entry.data[CONF_HOST]  # Get current host value
+        manage_host: bool = entry.data[CONF_MANAGE_HOST]
         errors: dict[str, str] = {}
         if user_input is not None:
-            host = user_input[CONF_HOST]
-            if await _validate_host(host, errors):
+            manage_host = user_input[CONF_MANAGE_HOST]
+            if not manage_host:
+                host = user_input[CONF_HOST]
+            if host == entry.data[CONF_HOST] or await _validate_host(host, errors):
                 return self.async_update_reload_and_abort(
-                    entry, data_updates={CONF_HOST: host}
+                    entry, data_updates={CONF_HOST: host, CONF_MANAGE_HOST: manage_host}
                 )
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=vol.Schema({vol.Required(CONF_HOST, default=host): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_MANAGE_HOST, default=manage_host): bool,
+                    vol.Required(CONF_HOST, default=host): str,
+                }
+            ),
             errors=errors,
         )
 

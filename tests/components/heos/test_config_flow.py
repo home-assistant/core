@@ -12,8 +12,9 @@ from pyheos import (
     NetworkType,
 )
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.heos.const import DOMAIN
+from homeassistant.components.heos.const import CONF_MANAGE_HOST, DOMAIN
 from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -67,7 +68,7 @@ async def test_cannot_connect_shows_error_form(
 
 
 async def test_create_entry_when_host_valid(
-    hass: HomeAssistant, controller: MockHeos
+    hass: HomeAssistant, controller: MockHeos, snapshot: SnapshotAssertion
 ) -> None:
     """Test result type is create entry when host is valid."""
     data = {CONF_HOST: "127.0.0.1"}
@@ -75,10 +76,7 @@ async def test_create_entry_when_host_valid(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=data
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == DOMAIN
-    assert result["title"] == "HEOS System"
-    assert result["data"] == data
+    assert result == snapshot()
     assert controller.connect.call_count == 2  # Also called in async_setup_entry
     assert controller.disconnect.call_count == 1
 
@@ -89,6 +87,7 @@ async def test_discovery(
     discovery_data_bedroom: SsdpServiceInfo,
     controller: MockHeos,
     system: HeosSystem,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test discovery shows form to confirm, then creates entry."""
     # Single discovered, selects preferred host, shows confirm
@@ -113,10 +112,7 @@ async def test_discovery(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == DOMAIN
-    assert result["title"] == "HEOS System"
-    assert result["data"] == {CONF_HOST: "127.0.0.1"}
+    assert result == snapshot()
 
 
 async def test_discovery_flow_aborts_already_setup(
@@ -191,16 +187,16 @@ async def test_discovery_updates(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data[CONF_HOST] == "127.0.0.2"
+    assert config_entry.data == {CONF_HOST: "127.0.0.2", CONF_MANAGE_HOST: True}
 
 
 async def test_reconfigure_validates_and_updates_config(
     hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
 ) -> None:
-    """Test reconfigure validates host and successfully updates."""
+    """Test reconfigure validates host and successfully updates when automatically manage turned off."""
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
-    assert config_entry.data[CONF_HOST] == "127.0.0.1"
+    assert config_entry.data == {CONF_HOST: "127.0.0.1", CONF_MANAGE_HOST: True}
 
     # Test reconfigure initially shows form with current host value.
     schema = result["data_schema"]
@@ -214,11 +210,11 @@ async def test_reconfigure_validates_and_updates_config(
     # Test reconfigure successfully updates.
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "127.0.0.2"},
+        user_input={CONF_HOST: "127.0.0.2", CONF_MANAGE_HOST: False},
     )
     assert controller.connect.call_count == 2  # Also called when entry reloaded
     assert controller.disconnect.call_count == 1
-    assert config_entry.data == {CONF_HOST: "127.0.0.2"}
+    assert config_entry.data == {CONF_HOST: "127.0.0.2", CONF_MANAGE_HOST: False}
     assert config_entry.unique_id == DOMAIN
     assert result["reason"] == "reconfigure_successful"
     assert result["type"] is FlowResultType.ABORT
@@ -235,7 +231,7 @@ async def test_reconfigure_cannot_connect_recovers(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "127.0.0.2"},
+        user_input={CONF_HOST: "127.0.0.2", CONF_MANAGE_HOST: False},
     )
 
     assert controller.connect.call_count == 1
@@ -256,11 +252,11 @@ async def test_reconfigure_cannot_connect_recovers(
     controller.disconnect.reset_mock()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={CONF_HOST: "127.0.0.2"},
+        user_input={CONF_HOST: "127.0.0.2", CONF_MANAGE_HOST: False},
     )
     assert controller.connect.call_count == 2  # Also called when entry reloaded
     assert controller.disconnect.call_count == 1
-    assert config_entry.data == {CONF_HOST: "127.0.0.2"}
+    assert config_entry.data == {CONF_HOST: "127.0.0.2", CONF_MANAGE_HOST: False}
     assert config_entry.unique_id == DOMAIN
     assert result["reason"] == "reconfigure_successful"
     assert result["type"] is FlowResultType.ABORT

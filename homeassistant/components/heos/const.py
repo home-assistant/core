@@ -2,6 +2,7 @@
 
 ATTR_PASSWORD = "password"
 ATTR_USERNAME = "username"
+CONF_MANAGE_HOST = "manage_host"
 DOMAIN = "heos"
 ENTRY_TITLE = "HEOS System"
 SERVICE_GROUP_VOLUME_SET = "group_volume_set"

@@ -4,6 +4,7 @@
     'config_entry': dict({
       'data': dict({
         'host': '127.0.0.1',
+        'manage_host': True,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -17,7 +18,7 @@
       'source': 'user',
       'subentries': list([
       ]),
-      'title': 'HEOS System (via 127.0.0.1)',
+      'title': 'HEOS System',
       'unique_id': 'heos',
       'version': 1,
     }),
@@ -151,6 +152,7 @@
     'config_entry': dict({
       'data': dict({
         'host': '127.0.0.1',
+        'manage_host': True,
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -164,7 +166,7 @@
       'source': 'user',
       'subentries': list([
       ]),
-      'title': 'HEOS System (via 127.0.0.1)',
+      'title': 'HEOS System',
       'unique_id': 'heos',
       'version': 1,
     }),
