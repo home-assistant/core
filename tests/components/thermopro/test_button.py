@@ -26,7 +26,7 @@ from tests.components.bluetooth import (
 @pytest.mark.usefixtures("setup_thermopro")
 async def test_buttons_tp357(hass: HomeAssistant) -> None:
     """Test setting up creates the sensors."""
-    assert len(hass.states.async_all()) == 0
+    assert not hass.states.async_all()
     assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP357_SERVICE_INFO)
     await hass.async_block_till_done()
@@ -36,7 +36,7 @@ async def test_buttons_tp357(hass: HomeAssistant) -> None:
 @pytest.mark.usefixtures("setup_thermopro")
 async def test_buttons_tp358_discovery(hass: HomeAssistant) -> None:
     """Test discovery of device with button."""
-    assert len(hass.states.async_all()) == 0
+    assert not hass.states.async_all()
     assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
     await hass.async_block_till_done()
@@ -50,7 +50,7 @@ async def test_buttons_tp358_discovery(hass: HomeAssistant) -> None:
 async def test_buttons_tp358_unavailable(hass: HomeAssistant) -> None:
     """Test tp358 set date&time button goes to unavailability."""
     start_monotonic = time.monotonic()
-    assert len(hass.states.async_all()) == 0
+    assert not hass.states.async_all()
     assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
     await hass.async_block_till_done()
@@ -79,7 +79,7 @@ async def test_buttons_tp358_unavailable(hass: HomeAssistant) -> None:
 async def test_buttons_tp358_reavailable(hass: HomeAssistant) -> None:
     """Test TP358/TP393 set date&time button goes to unavailablity and recovers."""
     start_monotonic = time.monotonic()
-    assert len(hass.states.async_all()) == 0
+    assert not hass.states.async_all()
     assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
     await hass.async_block_till_done()
@@ -116,7 +116,7 @@ async def test_buttons_tp358_press(
     hass: HomeAssistant, mock_now: datetime, mock_thermoprodevice: ThermoProDevice
 ) -> None:
     """Test TP358/TP393 set date&time button press."""
-    assert len(hass.states.async_all()) == 0
+    assert not hass.states.async_all()
     assert not hass.states.get("button.tp358_4221_set_date_time")
     inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
     await hass.async_block_till_done()
