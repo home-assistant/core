@@ -78,7 +78,7 @@ async def test_buttons_tp358_discovery(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert_entity_counts(hass, Platform.BUTTON, 1, 1)
 
-    button = hass.states.get("button.thermopro_tp358_4221_datetime")
+    button = hass.states.get("button.tp358_4221_set_date_time")
     assert button.state == "unknown"
 
 
@@ -101,7 +101,7 @@ async def test_buttons_tp358_unavailable(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert_entity_counts(hass, Platform.BUTTON, 1, 1)
 
-    button = hass.states.get("button.thermopro_tp358_4221_datetime")
+    button = hass.states.get("button.tp358_4221_set_date_time")
     assert button.state == "unknown"
 
     # borrowed from bthome test_sensor.py
@@ -118,7 +118,7 @@ async def test_buttons_tp358_unavailable(hass: HomeAssistant) -> None:
 
     # ---
 
-    button = hass.states.get("button.thermopro_tp358_4221_datetime")
+    button = hass.states.get("button.tp358_4221_set_date_time")
 
     assert button.state == STATE_UNAVAILABLE
 
@@ -142,7 +142,7 @@ async def test_buttons_tp358_reavailable(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert_entity_counts(hass, Platform.BUTTON, 1, 1)
 
-    button = hass.states.get("button.thermopro_tp358_4221_datetime")
+    button = hass.states.get("button.tp358_4221_set_date_time")
     assert button.state == "unknown"
 
     # borrowed from bthome test_sensor.py
@@ -159,14 +159,14 @@ async def test_buttons_tp358_reavailable(hass: HomeAssistant) -> None:
 
         # ---
 
-        button = hass.states.get("button.thermopro_tp358_4221_datetime")
+        button = hass.states.get("button.tp358_4221_set_date_time")
 
         assert button.state == STATE_UNAVAILABLE
 
         inject_bluetooth_service_info(hass, TP358_SERVICE_INFO)
         await hass.async_block_till_done()
 
-        button = hass.states.get("button.thermopro_tp358_4221_datetime")
+        button = hass.states.get("button.tp358_4221_set_date_time")
 
         assert button.state == "unknown"
 
@@ -193,7 +193,7 @@ async def test_buttons_tp358_press(
     await hass.services.async_call(
         "button",
         "press",
-        {ATTR_ENTITY_ID: "button.thermopro_tp358_4221_datetime"},
+        {ATTR_ENTITY_ID: "button.tp358_4221_set_date_time"},
         blocking=True,
     )
 
