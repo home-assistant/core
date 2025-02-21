@@ -83,7 +83,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
 
     @tasks_order.setter
     @abstractmethod
-    def tasks_order(self, task_order: list[UUID]) -> None:
+    def tasks_order(self, tasks_order: list[UUID]) -> None:
         """Set the tasks order."""
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
@@ -269,9 +269,9 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
         return self.coordinator.data.user.tasksOrder.todos
 
     @tasks_order.setter
-    def tasks_order(self, task_order: list[UUID]) -> None:
+    def tasks_order(self, tasks_order: list[UUID]) -> None:
         """Set the tasks order."""
-        self.coordinator.data.user.tasksOrder.todos = task_order
+        self.coordinator.data.user.tasksOrder.todos = tasks_order
 
     @property
     def todo_items(self) -> list[TodoItem]:
@@ -354,9 +354,9 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
         return self.coordinator.data.user.tasksOrder.dailys
 
     @tasks_order.setter
-    def tasks_order(self, task_order: list[UUID]) -> None:
+    def tasks_order(self, tasks_order: list[UUID]) -> None:
         """Set the tasks order."""
-        self.coordinator.data.user.tasksOrder.dailys = task_order
+        self.coordinator.data.user.tasksOrder.dailys = tasks_order
 
     @property
     def todo_items(self) -> list[TodoItem]:
@@ -393,8 +393,7 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
             tasks,
             key=lambda task: (
                 float("inf")
-                if (uid := (UUID(task.uid)))
-                not in (tasks_order := self.coordinator.data.user.tasksOrder.dailys)
-                else tasks_order.index(uid)
+                if (uid := (UUID(task.uid))) not in self.tasks_order
+                else self.tasks_order.index(uid)
             ),
         )
