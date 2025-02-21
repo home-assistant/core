@@ -18,6 +18,7 @@ from homeassistant.components.button import ButtonEntity, ButtonEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -154,6 +155,8 @@ class ThermoProButtonEntity(ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the press action for the entity."""
+        if self._action_lock.locked():
+            raise HomeAssistantError(f"Connecting to {self.name} already in progress")
         async with self._action_lock:
             # Only one connection at a time
             await self.entity_description.press_action_fn(self.hass, self._address)
