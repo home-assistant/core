@@ -112,7 +112,7 @@ class ThermoProDateTimeButtonEntity(
         self.address = address
         self.entity_description = description
         self.availability_topic = availability_topic
-        self._attr_unique_id = f"{device_name}-{description.key}"
+        self._attr_unique_id = f"{address}-{description.key}"
 
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, address)},
@@ -157,9 +157,6 @@ class ThermoProDateTimeButtonEntity(
     async def async_press(self) -> None:
         """Set Date&Time for a given device."""
         address = self.address
-
-        assert address is not None
-
         ble = async_ble_device_from_address(self.hass, address, connectable=True)
 
         assert ble is not None
