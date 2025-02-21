@@ -10,6 +10,10 @@ from homeassistant.components.satel_integra.config_flow import (
     CONF_ACTION_NUMBER,
     CONF_ARM_HOME_MODE,
     CONF_DEVICE_PARTITIONS,
+    CONF_OUTPUTS,
+    CONF_SWITCHABLE_OUTPUTS,
+    CONF_ZONE_TYPE,
+    CONF_ZONES,
 )
 from homeassistant.components.satel_integra.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
@@ -82,17 +86,17 @@ async def test_options_partitions_flow(
     entry, result = await _init_options_flow(hass, "partitions")
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_ADD}
+        result["flow_id"], user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "partition_details"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_NAME: "2", CONF_ARM_HOME_MODE: 2}
+        result["flow_id"], user_input={CONF_NAME: "Partition 1", CONF_ARM_HOME_MODE: 2}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_DEVICE_PARTITIONS] == {
-        "2": {CONF_NAME: "2", CONF_ARM_HOME_MODE: 2}
+        "1": {CONF_NAME: "Partition 1", CONF_ARM_HOME_MODE: 2}
     }
 
     # Check partition can only be added once
@@ -102,7 +106,7 @@ async def test_options_partitions_flow(
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_ADD},
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "partitions"
@@ -111,7 +115,7 @@ async def test_options_partitions_flow(
     # Check only existing partitions can be edited
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_EDIT},
+        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_EDIT},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "partitions"
@@ -119,17 +123,18 @@ async def test_options_partitions_flow(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_EDIT},
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_EDIT},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "partition_details"
 
     result = await hass.config_entries.options.async_configure(
-        result["flow_id"], user_input={CONF_NAME: "Update 2", CONF_ARM_HOME_MODE: 3}
+        result["flow_id"],
+        user_input={CONF_NAME: "Partition 1 Update", CONF_ARM_HOME_MODE: 3},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_DEVICE_PARTITIONS] == {
-        "2": {CONF_NAME: "Update 2", CONF_ARM_HOME_MODE: 3}
+        "1": {CONF_NAME: "Partition 1 Update", CONF_ARM_HOME_MODE: 3}
     }
 
     # Check only existing partitions can be deleted
@@ -139,7 +144,7 @@ async def test_options_partitions_flow(
     )
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_DELETE},
+        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_DELETE},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "partitions"
@@ -147,10 +152,247 @@ async def test_options_partitions_flow(
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
-        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_DELETE},
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_DELETE},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert entry.options[CONF_DEVICE_PARTITIONS] == {}
+
+
+async def test_options_zones_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test zones options flow."""
+    entry, result = await _init_options_flow(hass, "zones")
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zone_details"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_NAME: "Zone 1", CONF_ZONE_TYPE: "motion"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_ZONES] == {
+        "1": {CONF_NAME: "Zone 1", CONF_ZONE_TYPE: "motion"}
+    }
+
+    # Check zones can only be added once
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "zones"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zones"
+    assert result["errors"] == {"base": "zone_exists"}
+
+    # Check only existing zones can be edited
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_EDIT},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zones"
+    assert result["errors"] == {"base": "unknown_zone"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_EDIT},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zone_details"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Zone 1 Update", CONF_ZONE_TYPE: "motion"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_ZONES] == {
+        "1": {CONF_NAME: "Zone 1 Update", CONF_ZONE_TYPE: "motion"}
+    }
+
+    # Check only existing zones can be deleted
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "zones"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_DELETE},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zones"
+    assert result["errors"] == {"base": "unknown_zone"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_DELETE},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_ZONES] == {}
+
+
+async def test_options_outputs_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test outputs options flow."""
+    entry, result = await _init_options_flow(hass, "outputs")
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "output_details"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_NAME: "Output 1", CONF_ZONE_TYPE: "motion"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_OUTPUTS] == {
+        "1": {CONF_NAME: "Output 1", CONF_ZONE_TYPE: "motion"}
+    }
+
+    # Check outputs can only be added once
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "outputs"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "outputs"
+    assert result["errors"] == {"base": "output_exists"}
+
+    # Check only existing outputs can be edited
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_EDIT},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "outputs"
+    assert result["errors"] == {"base": "unknown_output"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_EDIT},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "output_details"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Output 1 Update", CONF_ZONE_TYPE: "motion"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_OUTPUTS] == {
+        "1": {CONF_NAME: "Output 1 Update", CONF_ZONE_TYPE: "motion"}
+    }
+
+    # Check only existing outputs can be deleted
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "outputs"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_DELETE},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "outputs"
+    assert result["errors"] == {"base": "unknown_output"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_DELETE},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_OUTPUTS] == {}
+
+
+async def test_options_switchable_outputs_flow(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test switchable outputs options flow."""
+    entry, result = await _init_options_flow(hass, "switchable_outputs")
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "switchable_output_details"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], user_input={CONF_NAME: "Switchable output 1"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_SWITCHABLE_OUTPUTS] == {
+        "1": {CONF_NAME: "Switchable output 1"}
+    }
+
+    # Check switchable outputs can only be added once
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "switchable_outputs"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_ADD},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "switchable_outputs"
+    assert result["errors"] == {"base": "switchable_output_exists"}
+
+    # Check only existing switchable outputs can be edited
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_EDIT},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "switchable_outputs"
+    assert result["errors"] == {"base": "unknown_switchable_output"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_EDIT},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "switchable_output_details"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Switchable output 1 Update"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_SWITCHABLE_OUTPUTS] == {
+        "1": {CONF_NAME: "Switchable output 1 Update"}
+    }
+
+    # Check only existing switchable outputs can be deleted
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "switchable_outputs"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 2, CONF_ACTION: ACTION_DELETE},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "switchable_outputs"
+    assert result["errors"] == {"base": "unknown_switchable_output"}
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACTION_NUMBER: 1, CONF_ACTION: ACTION_DELETE},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_SWITCHABLE_OUTPUTS] == {}
 
 
 async def _init_options_flow(hass: HomeAssistant, menu_step: str):

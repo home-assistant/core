@@ -114,7 +114,7 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             valid = await self.test_connection(
-                user_input[CONF_HOST], user_input.get(CONF_PORT, DEFAULT_PORT)
+                user_input[CONF_HOST], user_input[CONF_PORT]
             )
 
             if valid:
@@ -141,6 +141,9 @@ class SatelConfigFlow(ConfigFlow, domain=DOMAIN):
         valid = await self.test_connection(
             import_config[CONF_HOST], import_config.get(CONF_PORT, DEFAULT_PORT)
         )
+
+        _LOGGER.info(import_config)
+        _LOGGER.info(valid)
 
         if valid:
             return self.async_create_entry(
