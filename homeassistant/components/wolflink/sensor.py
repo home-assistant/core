@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from wolf_comm.models import (
+    EnergyParameter,
     HoursParameter,
     ListItemParameter,
     Parameter,
     PercentageParameter,
+    PowerParameter,
     Pressure,
     SimpleParameter,
     Temperature,
@@ -14,7 +16,13 @@ from wolf_comm.models import (
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfPressure, UnitOfTemperature, UnitOfTime
+from homeassistant.const import (
+    UnitOfEnergy,
+    UnitOfPower,
+    UnitOfPressure,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -40,6 +48,10 @@ async def async_setup_entry(
             entities.append(WolfLinkTemperature(coordinator, parameter, device_id))
         if isinstance(parameter, Pressure):
             entities.append(WolfLinkPressure(coordinator, parameter, device_id))
+        if isinstance(parameter, EnergyParameter):
+            entities.append(WolfLinkEnergy(coordinator, parameter, device_id))
+        if isinstance(parameter, PowerParameter):
+            entities.append(WolfLinkPower(coordinator, parameter, device_id))
         if isinstance(parameter, PercentageParameter):
             entities.append(WolfLinkPercentage(coordinator, parameter, device_id))
         if isinstance(parameter, ListItemParameter):
@@ -106,6 +118,20 @@ class WolfLinkPressure(WolfLinkSensor):
 
     _attr_device_class = SensorDeviceClass.PRESSURE
     _attr_native_unit_of_measurement = UnitOfPressure.BAR
+
+
+class WolfLinkPower(WolfLinkSensor):
+    """Class for power based entities."""
+
+    _attr_device_class = SensorDeviceClass.POWER
+    _attr_native_unit_of_measurement = UnitOfPower.KILO_WATT
+
+
+class WolfLinkEnergy(WolfLinkSensor):
+    """Class for energy based entities."""
+
+    _attr_device_class = SensorDeviceClass.ENERGY
+    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
 
 
 class WolfLinkPercentage(WolfLinkSensor):
