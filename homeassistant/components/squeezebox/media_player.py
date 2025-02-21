@@ -14,6 +14,7 @@ import voluptuous as vol
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
     ATTR_MEDIA_ENQUEUE,
+    ATTR_MEDIA_EXTRA,
     BrowseError,
     BrowseMedia,
     MediaPlayerEnqueue,
@@ -52,6 +53,8 @@ from .browse_media import (
     media_source_content_filter,
 )
 from .const import (
+    ATTR_ANNOUNCE_TIMEOUT,
+    ATTR_ANNOUNCE_VOLUME,
     CONF_BROWSE_LIMIT,
     CONF_VOLUME_STEP,
     DEFAULT_BROWSE_LIMIT,
@@ -157,6 +160,26 @@ async def async_setup_entry(
     entry.async_on_unload(async_at_start(hass, start_server_discovery))
 
 
+def get_announce_volume(extra: dict) -> float | None:
+    """Get announce volume from extra service data."""
+    if ATTR_ANNOUNCE_VOLUME not in extra:
+        return None
+    announce_volume = float(extra[ATTR_ANNOUNCE_VOLUME])
+    if not (0 < announce_volume <= 1):
+        raise ValueError
+    return announce_volume * 100
+
+
+def get_announce_timeout(extra: dict) -> int | None:
+    """Get announce volume from extra service data."""
+    if ATTR_ANNOUNCE_TIMEOUT not in extra:
+        return None
+    announce_timeout = int(extra[ATTR_ANNOUNCE_TIMEOUT])
+    if announce_timeout < 1:
+        raise ValueError
+    return announce_timeout
+
+
 class SqueezeBoxMediaPlayerEntity(
     CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator], MediaPlayerEntity
 ):
@@ -184,6 +207,7 @@ class SqueezeBoxMediaPlayerEntity(
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.GROUPING
         | MediaPlayerEntityFeature.MEDIA_ENQUEUE
+        | MediaPlayerEntityFeature.MEDIA_ANNOUNCE
     )
     _attr_has_entity_name = True
     _attr_name = None
@@ -437,7 +461,11 @@ class SqueezeBoxMediaPlayerEntity(
         await self.coordinator.async_refresh()
 
     async def async_play_media(
-        self, media_type: MediaType | str, media_id: str, **kwargs: Any
+        self,
+        media_type: MediaType | str,
+        media_id: str,
+        announce: bool | None = None,
+        **kwargs: Any,
     ) -> None:
         """Send the play_media command to the media player."""
         index = None
@@ -459,6 +487,32 @@ class SqueezeBoxMediaPlayerEntity(
                 self.hass, media_id, self.entity_id
             )
             media_id = play_item.url
+
+        if announce:
+            if media_type not in MediaType.MUSIC:
+                raise ServiceValidationError(
+                    "Announcements must have media type of 'music'.  Playlists are not supported"
+                )
+
+            extra = kwargs.get(ATTR_MEDIA_EXTRA, {})
+            cmd = "announce"
+            try:
+                announce_volume = get_announce_volume(extra)
+            except ValueError:
+                raise ServiceValidationError(
+                    f"{ATTR_ANNOUNCE_VOLUME} must be a number greater than 0 and less than or equal to 1"
+                ) from None
+            else:
+                self._player.set_announce_volume(announce_volume)
+
+            try:
+                announce_timeout = get_announce_timeout(extra)
+            except ValueError:
+                raise ServiceValidationError(
+                    f"{ATTR_ANNOUNCE_TIMEOUT} must be a whole number greater than 0"
+                ) from None
+            else:
+                self._player.set_announce_timeout(announce_timeout)
 
         if media_type in MediaType.MUSIC:
             if not media_id.startswith(SQUEEZEBOX_SOURCE_STRINGS):
