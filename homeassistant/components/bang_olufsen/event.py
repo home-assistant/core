@@ -44,10 +44,8 @@ async def async_setup_entry(
 
     if config_entry.data[CONF_MODEL] in MODEL_SUPPORT_MAP[MODEL_SUPPORT_DEVICE_BUTTONS]:
         entities.extend(
-            [
-                BangOlufsenButtonEvent(config_entry, button_type)
-                for button_type in DEVICE_BUTTONS
-            ]
+            BangOlufsenButtonEvent(config_entry, button_type)
+            for button_type in DEVICE_BUTTONS
         )
 
     # Check for connected Beoremote One
