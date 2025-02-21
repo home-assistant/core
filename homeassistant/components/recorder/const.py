@@ -53,7 +53,8 @@ LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION = 28
 LEGACY_STATES_EVENT_FOREIGN_KEYS_FIXED_SCHEMA_VERSION = 34
 # https://github.com/home-assistant/core/pull/120779
 # fixed the foreign keys in the states table but it did
-# not bump the schema version
+# not bump the schema version which only databases created with
+# schema 35 and later do not need the rebuild.
 
 INTEGRATION_PLATFORM_COMPILE_STATISTICS = "compile_statistics"
 INTEGRATION_PLATFORM_LIST_STATISTIC_IDS = "list_statistic_ids"
