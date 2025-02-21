@@ -30,6 +30,8 @@ from .const import (
     DEFAULT_STT_MODEL,
     DOMAIN,
     STT_LANGUAGES,
+    CONF_TIMEOUT,
+    DEFAULT_TIMEOUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -122,7 +124,10 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
             # All subsequent requests must only contain audio_content
             async for audio_content in stream:
                 yield speech_v1.StreamingRecognizeRequest(audio_content=audio_content)
-
+                
+        timeout = options[CONF_TIMEOUT]
+        if not timeout:
+            timeout = DEFAULT_TIMEOUT
         try:
             responses = await self._client.streaming_recognize(
                 requests=request_generator(),
