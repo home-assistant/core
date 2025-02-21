@@ -16,7 +16,7 @@ from homeassistant.components.satel_integra.config_flow import (
     CONF_ZONES,
 )
 from homeassistant.components.satel_integra.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -47,6 +47,62 @@ async def test_setup_flow(
     assert result["title"] == CONST_HOST
     assert result["data"] == {CONF_HOST: CONST_HOST, CONF_PORT: CONST_PORT}
     assert result["options"] == {CONF_CODE: "1111"}
+
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_flow(
+    hass: HomeAssistant,
+    mock_satel: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the import flow."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: "192.168.0.2",
+            CONF_PORT: 7095,
+            CONF_CODE: "3333",
+            CONF_DEVICE_PARTITIONS: {
+                "1": {CONF_NAME: "Partition Import 1", CONF_ARM_HOME_MODE: 1}
+            },
+            CONF_ZONES: {
+                "1": {CONF_NAME: "Zone Import 1", CONF_ZONE_TYPE: "motion"},
+                "2": {CONF_NAME: "Zone Import 2", CONF_ZONE_TYPE: "door"},
+            },
+            CONF_OUTPUTS: {
+                "1": {CONF_NAME: "Output Import 1", CONF_ZONE_TYPE: "light"},
+                "2": {CONF_NAME: "Output Import 2", CONF_ZONE_TYPE: "safety"},
+            },
+            CONF_SWITCHABLE_OUTPUTS: {
+                "1": {CONF_NAME: "Switchable output Import 1"},
+                "2": {CONF_NAME: "Switchable output Import 2"},
+            },
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "192.168.0.2"
+    assert result["data"] == {CONF_HOST: "192.168.0.2", CONF_PORT: 7095}
+    assert result["options"] == {
+        CONF_CODE: "3333",
+        CONF_DEVICE_PARTITIONS: {
+            "1": {CONF_NAME: "Partition Import 1", CONF_ARM_HOME_MODE: 1}
+        },
+        CONF_ZONES: {
+            "1": {CONF_NAME: "Zone Import 1", CONF_ZONE_TYPE: "motion"},
+            "2": {CONF_NAME: "Zone Import 2", CONF_ZONE_TYPE: "door"},
+        },
+        CONF_OUTPUTS: {
+            "1": {CONF_NAME: "Output Import 1", CONF_ZONE_TYPE: "light"},
+            "2": {CONF_NAME: "Output Import 2", CONF_ZONE_TYPE: "safety"},
+        },
+        CONF_SWITCHABLE_OUTPUTS: {
+            "1": {CONF_NAME: "Switchable output Import 1"},
+            "2": {CONF_NAME: "Switchable output Import 2"},
+        },
+    }
 
     assert len(mock_setup_entry.mock_calls) == 1
 
