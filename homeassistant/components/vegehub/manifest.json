@@ -7,6 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/vegehub/",
   "iot_class": "local_push",
   "quality_scale": "bronze",
-  "requirements": ["vegehub==0.1.19"],
+  "requirements": ["vegehub==0.1.21"],
   "zeroconf": ["_vege._tcp.local."]
 }
