@@ -14,7 +14,9 @@ from .const import JSON_STRING, PROFILE, TOKEN
 def test_set_get_delete_token(hass: HomeAssistant) -> None:
     """Test set, get and delete token."""
     open_mock = mock_open()
-    with patch("homeassistant.components.remember_the_milk.Path.open", open_mock):
+    with patch(
+        "homeassistant.components.remember_the_milk.storage.Path.open", open_mock
+    ):
         config = rtm.RememberTheMilkConfiguration(hass)
         assert open_mock.return_value.write.call_count == 0
         assert config.get_token(PROFILE) is None
@@ -42,7 +44,7 @@ def test_config_load(hass: HomeAssistant) -> None:
     """Test loading from the file."""
     with (
         patch(
-            "homeassistant.components.remember_the_milk.Path.open",
+            "homeassistant.components.remember_the_milk.storage.Path.open",
             mock_open(read_data=JSON_STRING),
         ),
     ):
@@ -61,7 +63,7 @@ def test_config_load_file_error(hass: HomeAssistant, side_effect: Exception) -> 
     config = rtm.RememberTheMilkConfiguration(hass)
     with (
         patch(
-            "homeassistant.components.remember_the_milk.Path.open",
+            "homeassistant.components.remember_the_milk.storage.Path.open",
             side_effect=side_effect,
         ),
     ):
@@ -78,7 +80,7 @@ def test_config_load_invalid_data(hass: HomeAssistant) -> None:
     config = rtm.RememberTheMilkConfiguration(hass)
     with (
         patch(
-            "homeassistant.components.remember_the_milk.Path.open",
+            "homeassistant.components.remember_the_milk.storage.Path.open",
             mock_open(read_data="random characters"),
         ),
     ):
@@ -98,7 +100,9 @@ def test_config_set_delete_id(hass: HomeAssistant) -> None:
     rtm_id = "3"
     open_mock = mock_open()
     config = rtm.RememberTheMilkConfiguration(hass)
-    with patch("homeassistant.components.remember_the_milk.Path.open", open_mock):
+    with patch(
+        "homeassistant.components.remember_the_milk.storage.Path.open", open_mock
+    ):
         config = rtm.RememberTheMilkConfiguration(hass)
         assert open_mock.return_value.write.call_count == 0
         assert config.get_rtm_id(PROFILE, hass_id) is None
