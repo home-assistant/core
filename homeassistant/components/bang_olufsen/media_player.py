@@ -125,7 +125,8 @@ async def async_setup_entry(
     async_add_entities(
         new_entities=[
             BangOlufsenMediaPlayer(config_entry, config_entry.runtime_data.client)
-        ]
+        ],
+        update_before_add=True,
     )
 
     # Register actions.
@@ -266,33 +267,7 @@ class BangOlufsenMediaPlayer(BangOlufsenEntity, MediaPlayerEntity):
             self._software_status.software_version,
         )
 
-        # Get overall device state once. This is handled by WebSocket events the rest of the time.
-        product_state = await self._client.get_product_state()
-
-        # Get volume information.
-        if product_state.volume:
-            self._volume = product_state.volume
-
-        # Get all playback information.
-        # Ensure that the metadata is not None upon startup
-        if product_state.playback:
-            if product_state.playback.metadata:
-                self._playback_metadata = product_state.playback.metadata
-                self._remote_leader = product_state.playback.metadata.remote_leader
-            if product_state.playback.progress:
-                self._playback_progress = product_state.playback.progress
-            if product_state.playback.source:
-                self._source_change = product_state.playback.source
-            if product_state.playback.state:
-                self._playback_state = product_state.playback.state
-                # Set initial state
-                if self._playback_state.value:
-                    self._state = self._playback_state.value
-
         self._attr_media_position_updated_at = utcnow()
-
-        # Get the highest resolution available of the given images.
-        self._media_image = get_highest_resolution_artwork(self._playback_metadata)
 
         # If the device has been updated with new sources, then the API will fail here.
         await self._async_update_sources()
