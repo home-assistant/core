@@ -66,7 +66,11 @@ async def async_setup_entry(
 
     entry.runtime_data = container_client
 
-    _async_notify_backup_listeners(hass)
+    def _async_notify_backup_listeners() -> None:
+        for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
+            listener()
+
+    entry.async_on_unload(entry.async_on_state_change(_async_notify_backup_listeners))
 
     return True
 
@@ -75,10 +79,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: AzureStorageConfigEntry
 ) -> bool:
     """Unload an Azure Storage config entry."""
-    _async_notify_backup_listeners(hass)
     return True
-
-
-def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
-    for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
-        listener()
