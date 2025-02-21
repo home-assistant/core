@@ -3719,6 +3719,12 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "meross_scan": {
+      "name": "Meross",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
+    },
     "message_bird": {
       "name": "MessageBird",
       "integration_type": "hub",

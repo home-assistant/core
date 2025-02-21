@@ -1,0 +1,56 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Before setup, devices must be connected to the network.\n\nThis path can be configured for meross product models including R10,EM06,EM16, etc. \n\nFor more information, please refer to 'Help'.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the Meross device to connect to."
+        }
+      },
+      "reconfigure": {
+        "description": "Update configuration for {device_name}.\n\nBefore setup, devices must be connected to the network.",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "[%key:component::meross_scan::config::step::user::data_description::host%]"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "another_device": "Re-configuration was unsuccessful, the IP address/hostname of another Meross device was used."
+    },
+    "error": {
+      "no_devices_found": "No devices found on the network, Please check if the IP address is correct",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "firmware_not_fully_supported": "Device not fully supported. Please contact Meross support"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "power": {
+        "name": "{channel_name} Power"
+      },
+      "voltage": {
+        "name": "{channel_name} Voltage"
+      },
+      "current": {
+        "name": "{channel_name} Current"
+      },
+      "power_factor": {
+        "name": "{channel_name} Power Factor"
+      },
+      "this_month_energy": {
+        "name": "{channel_name} This Month Energy"
+      },
+      "this_month_energy_returned": {
+        "name": "{channel_name} This Month Energy Returned"
+      }
+    }
+  }
+}
