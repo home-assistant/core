@@ -1184,7 +1184,6 @@ class ConfigEntry[_DataT = Any]:
         if self._on_state_change is None:
             self._on_state_change = []
         self._on_state_change.append(func)
-        assert self._on_state_change is not None
         return lambda: cast(list, self._on_state_change).remove(func)
 
     def _async_process_on_state_change(self) -> None:
