@@ -640,7 +640,7 @@ dbus-fast==2.33.0
 debugpy==1.8.11
 
 # homeassistant.components.ecovacs
-deebot-client==12.1.0
+deebot-client==12.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
