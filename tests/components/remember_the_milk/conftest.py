@@ -30,7 +30,7 @@ def client_fixture() -> Generator[MagicMock]:
 
 @pytest.fixture
 async def storage(hass: HomeAssistant, client) -> AsyncGenerator[MagicMock]:
-    """Set up the integration."""
+    """Mock the config storage."""
     with patch(
         "homeassistant.components.remember_the_milk.RememberTheMilkConfiguration"
     ) as storage_class:
