@@ -4,6 +4,7 @@ from datetime import timedelta
 import logging
 
 from httpx import ConnectError, HTTPStatusError, UnsupportedProtocol
+from ical.calendar import Calendar
 from ical.calendar_stream import IcsCalendarStream
 from ical.exceptions import CalendarParseError
 
@@ -20,7 +21,7 @@ SCAN_INTERVAL = timedelta(days=1)
 type RemoteCalendarConfigEntry = ConfigEntry[RemoteCalendarDataUpdateCoordinator]
 
 
-class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[str]):
+class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
     """Class to manage fetching calendar data."""
 
     config_entry: RemoteCalendarConfigEntry
@@ -42,7 +43,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[str]):
         self._client = get_async_client(hass)
         self._url = config_entry.data["url"]
 
-    async def _async_update_data(self) -> str:
+    async def _async_update_data(self) -> Calendar:
         """Update data from the url."""
         headers: dict = {}
         try:
@@ -66,4 +67,6 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[str]):
                     translation_placeholders={"err": str(err)},
                 ) from err
             else:
-                return res.text
+                return await self.hass.async_add_executor_job(
+                    IcsCalendarStream.calendar_from_ics, res.text
+                )

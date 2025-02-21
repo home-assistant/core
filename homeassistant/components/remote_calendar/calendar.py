@@ -4,8 +4,6 @@ from datetime import date, datetime, timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from ical.calendar import Calendar
-from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -60,15 +58,10 @@ class RemoteCalendarEntity(
         self._attr_should_poll = True
 
     @property
-    def _calendar(self) -> Calendar:
-        """Get the calendar data."""
-        return IcsCalendarStream.calendar_from_ics(self.coordinator.data)
-
-    @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         now = dt_util.now()
-        events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
+        events = self.coordinator.data.timeline_tz(now.tzinfo).active_after(now)
         if event := next(events, None):
             self._event = _get_calendar_event(event)
         else:
@@ -79,7 +72,7 @@ class RemoteCalendarEntity(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        events = self._calendar.timeline_tz(start_date.tzinfo).overlapping(
+        events = self.coordinator.data.timeline_tz(start_date.tzinfo).overlapping(
             start_date,
             end_date,
         )
