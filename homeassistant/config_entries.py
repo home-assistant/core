@@ -402,7 +402,7 @@ class ConfigEntry[_DataT = Any]:
     update_listeners: list[UpdateListenerType]
     _async_cancel_retry_setup: Callable[[], Any] | None
     _on_unload: list[Callable[[], Coroutine[Any, Any, None] | None]] | None
-    _on_state_change: list[CALLBACK_TYPE] | None
+    _on_state_change: list[Callable[[], Any | None]] | None
     setup_lock: asyncio.Lock
     _reauth_lock: asyncio.Lock
     _tasks: set[asyncio.Future[Any]]
@@ -1179,11 +1179,13 @@ class ConfigEntry[_DataT = Any]:
             )
 
     @callback
-    def async_on_state_change(self, func: CALLBACK_TYPE) -> None:
+    def async_on_state_change(self, func: Callable[[], Any | None]) -> CALLBACK_TYPE:
         """Add a function to call when a config entry changes its state."""
         if self._on_state_change is None:
             self._on_state_change = []
         self._on_state_change.append(func)
+        assert self._on_state_change is not None
+        return lambda: cast(list, self._on_state_change).remove(func)
 
     def _async_process_on_state_change(self) -> None:
         """Process the on_state_change callbacks and wait for pending tasks."""
