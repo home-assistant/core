@@ -293,7 +293,7 @@ async def test_get_otbr_addon_firmware_info_failure_bad_options(
     [
         (
             FlasherApplicationType.EZSP,
-            "1.0.0",
+            FlasherVersion("1.0.0"),
             FirmwareInfo(
                 device="/dev/ttyUSB0",
                 firmware_type=ApplicationType.EZSP,
@@ -315,7 +315,7 @@ async def test_get_otbr_addon_firmware_info_failure_bad_options(
         ),
         (
             FlasherApplicationType.SPINEL,
-            "2.0.0",
+            FlasherVersion("2.0.0"),
             FirmwareInfo(
                 device="/dev/ttyUSB0",
                 firmware_type=ApplicationType.SPINEL,
@@ -329,18 +329,14 @@ async def test_get_otbr_addon_firmware_info_failure_bad_options(
 )
 async def test_probe_silabs_firmware_info(
     app_type: FlasherApplicationType | None,
-    firmware_version: str | None,
+    firmware_version: FlasherVersion | None,
     expected_fw_info: FirmwareInfo | None,
 ) -> None:
     """Test getting the firmware info."""
 
     def probe_app_type() -> None:
         mock_flasher.app_type = app_type
-
-        if firmware_version is not None:
-            mock_flasher.app_version = FlasherVersion(firmware_version)
-        else:
-            mock_flasher.app_version = None
+        mock_flasher.app_version = firmware_version
 
     mock_flasher = MagicMock()
     mock_flasher.app_type = None
