@@ -1,5 +1,6 @@
 """Test configuration for Shelly."""
 
+from copy import deepcopy
 from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from aioshelly.ble.const import (
@@ -592,8 +593,11 @@ def _mock_sleepy_not_initialized_rpc_device():
 
 def initialize_sleepy_rpc_device(device):
     """Initialize a sleepy RPC (Gen2+, Websocket) device."""
-    type(device).requires_auth = PropertyMock()
-    type(device).status = PropertyMock(return_value=MOCK_STATUS_RPC)
+    status = deepcopy(MOCK_STATUS_RPC)
+    status["sys"]["wakeup_period"] = 1000
+
+    type(device).requires_auth = PropertyMock(return_value=False)
+    type(device).status = PropertyMock(return_value=status)
     type(device).event = PropertyMock(return_value={})
     type(device).config = PropertyMock(return_value=MOCK_CONFIG)
     type(device).shelly = PropertyMock(return_value=MOCK_SHELLY_RPC)
@@ -601,14 +605,13 @@ def initialize_sleepy_rpc_device(device):
     type(device).firmware_version = PropertyMock(
         return_value="20240425-141520/1.3.0-ga3fdd3d"
     )
-    type(device).version = PropertyMock("1.3.0")
-    type(device).model = PropertyMock("SPSW-201PE16EU")
+    type(device).version = PropertyMock(return_value="1.3.0")
+    type(device).model = PropertyMock(return_value="SPSW-201PE16EU")
     type(device).xmod_info = PropertyMock(return_value={})
     type(device).hostname = PropertyMock(return_value="hostname")
     type(device).name = PropertyMock(return_value="Test Name")
     type(device).firmware_supported = PropertyMock(return_value=True)
 
-    device.status["sys"]["wakeup_period"] = 1000
     device.connected = True
     device.initialized = True
 
