@@ -31,13 +31,6 @@ from .const import DOMAIN, SIGNAL_AVAILABILITY_UPDATED, SIGNAL_DATA_UPDATED
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _async_set_datetime(hass: HomeAssistant, address: str) -> None:
-    """Set Date&Time for a given device."""
-    ble_device = async_ble_device_from_address(hass, address, connectable=True)
-    assert ble_device is not None
-    await ThermoProDevice(ble_device).set_datetime(now(), False)
-
-
 @dataclass(kw_only=True, frozen=True)
 class ThermoProButtonEntityDescription(ButtonEntityDescription):
     """Describe a ThermoPro button entity."""
@@ -45,16 +38,24 @@ class ThermoProButtonEntityDescription(ButtonEntityDescription):
     press_action_fn: Callable[[HomeAssistant, str], Coroutine[None, Any, Any]]
 
 
-DATETIME_UPDATE = ThermoProButtonEntityDescription(
-    key="datetime",
-    translation_key="set_datetime",
-    icon="mdi:calendar-clock",
-    entity_category=EntityCategory.CONFIG,
-    press_action_fn=_async_set_datetime,
+async def _async_set_datetime(hass: HomeAssistant, address: str) -> None:
+    """Set Date&Time for a given device."""
+    ble_device = async_ble_device_from_address(hass, address, connectable=True)
+    assert ble_device is not None
+    await ThermoProDevice(ble_device).set_datetime(now(), False)
+
+
+BUTTON_ENTITIES: tuple[ThermoProButtonEntityDescription, ...] = (
+    ThermoProButtonEntityDescription(
+        key="datetime",
+        translation_key="set_datetime",
+        icon="mdi:calendar-clock",
+        entity_category=EntityCategory.CONFIG,
+        press_action_fn=_async_set_datetime,
+    ),
 )
 
-MODELS_THAT_SUPPORT_SETTING_DATETIME = {"TP358", "TP393"}
-BUTTON_ENTITIES = (DATETIME_UPDATE,)
+MODELS_THAT_SUPPORT_BUTTONS = {"TP358", "TP393"}
 
 
 async def async_setup_entry(
@@ -79,7 +80,7 @@ async def async_setup_entry(
             "update data=%s update=%s service_info=%s", data, update, service_info
         )
         sensor_device_info = update.devices[data.primary_device_id]
-        if sensor_device_info.model not in MODELS_THAT_SUPPORT_SETTING_DATETIME:
+        if sensor_device_info.model not in MODELS_THAT_SUPPORT_BUTTONS:
             return
 
         if not entity_added:
