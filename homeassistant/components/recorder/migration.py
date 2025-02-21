@@ -2872,7 +2872,7 @@ class EventIDPostMigration(BaseRunTimeMigration):
     migration_id = "event_id_post_migration"
     # Note we don't subtract 1 from the max_initial_schema_version
     # in this case because we need to run this migration on databases
-    # version 43 because the schema was not bumped when the table
+    # version >= 43 because the schema was not bumped when the table
     # rebuild was added in
     # https://github.com/home-assistant/core/pull/120779
     # which means its only safe to assume version 44 and later
