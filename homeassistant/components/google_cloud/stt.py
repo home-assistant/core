@@ -125,7 +125,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
             # All subsequent requests must only contain audio_content
             async for audio_content in stream:
                 yield speech_v1.StreamingRecognizeRequest(audio_content=audio_content)
-                
+
         try:
             responses = await self._client.streaming_recognize(
                 requests=request_generator(),
