@@ -1,4 +1,4 @@
-"""Test the ThermoPro config flow."""
+"""Test the ThermoPro button platform."""
 
 from datetime import datetime, timedelta
 import time
