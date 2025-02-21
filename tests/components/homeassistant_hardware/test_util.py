@@ -3,6 +3,8 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from universal_silabs_flasher.common import Version as FlasherVersion
+from universal_silabs_flasher.const import ApplicationType as FlasherApplicationType
 
 from homeassistant.components.hassio import (
     AddonError,
@@ -20,6 +22,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     OwningIntegration,
     get_otbr_addon_firmware_info,
     guess_firmware_info,
+    probe_silabs_firmware_info,
     probe_silabs_firmware_type,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -286,6 +289,73 @@ async def test_get_otbr_addon_firmware_info_failure_bad_options(
 
 
 @pytest.mark.parametrize(
+    ("app_type", "firmware_version", "expected_fw_info"),
+    [
+        (
+            FlasherApplicationType.EZSP,
+            "1.0.0",
+            FirmwareInfo(
+                device="/dev/ttyUSB0",
+                firmware_type=ApplicationType.EZSP,
+                firmware_version="1.0.0",
+                source="probe",
+                owners=[],
+            ),
+        ),
+        (
+            FlasherApplicationType.EZSP,
+            None,
+            FirmwareInfo(
+                device="/dev/ttyUSB0",
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                source="probe",
+                owners=[],
+            ),
+        ),
+        (
+            FlasherApplicationType.SPINEL,
+            "2.0.0",
+            FirmwareInfo(
+                device="/dev/ttyUSB0",
+                firmware_type=ApplicationType.SPINEL,
+                firmware_version="2.0.0",
+                source="probe",
+                owners=[],
+            ),
+        ),
+        (None, None, None),
+    ],
+)
+async def test_probe_silabs_firmware_info(
+    app_type: FlasherApplicationType | None,
+    firmware_version: str | None,
+    expected_fw_info: FirmwareInfo | None,
+) -> None:
+    """Test getting the firmware info."""
+
+    def probe_app_type() -> None:
+        mock_flasher.app_type = app_type
+
+        if firmware_version is not None:
+            mock_flasher.app_version = FlasherVersion(firmware_version)
+        else:
+            mock_flasher.app_version = None
+
+    mock_flasher = MagicMock()
+    mock_flasher.app_type = None
+    mock_flasher.app_version = None
+    mock_flasher.probe_app_type = AsyncMock(side_effect=probe_app_type)
+
+    with patch(
+        "homeassistant.components.homeassistant_hardware.util.Flasher",
+        return_value=mock_flasher,
+    ):
+        result = await probe_silabs_firmware_info("/dev/ttyUSB0")
+        assert result == expected_fw_info
+
+
+@pytest.mark.parametrize(
     ("probe_result", "expected"),
     [
         (
@@ -301,7 +371,7 @@ async def test_get_otbr_addon_firmware_info_failure_bad_options(
         (None, None),
     ],
 )
-async def test_get_probe_silabs_firmware_type(
+async def test_probe_silabs_firmware_type(
     probe_result: FirmwareInfo | None, expected: ApplicationType | None
 ) -> None:
     """Test getting the firmware type from the probe result."""
