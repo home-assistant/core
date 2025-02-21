@@ -9,7 +9,7 @@ from thermopro_ble import ThermoProDevice
 from homeassistant.components.bluetooth import (
     FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
 )
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.util import dt as dt_util
 
@@ -43,7 +43,7 @@ async def test_buttons_tp358_discovery(hass: HomeAssistant) -> None:
 
     button = hass.states.get("button.tp358_4221_set_date_time")
     assert button is not None
-    assert button.state == "unknown"
+    assert button.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("setup_thermopro")
@@ -57,7 +57,7 @@ async def test_buttons_tp358_unavailable(hass: HomeAssistant) -> None:
 
     button = hass.states.get("button.tp358_4221_set_date_time")
     assert button is not None
-    assert button.state == "unknown"
+    assert button.state == STATE_UNKNOWN
 
     # Fast-forward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 15
@@ -86,7 +86,7 @@ async def test_buttons_tp358_reavailable(hass: HomeAssistant) -> None:
 
     button = hass.states.get("button.tp358_4221_set_date_time")
     assert button is not None
-    assert button.state == "unknown"
+    assert button.state == STATE_UNKNOWN
 
     # Fast-forward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 15
@@ -108,7 +108,7 @@ async def test_buttons_tp358_reavailable(hass: HomeAssistant) -> None:
 
         button = hass.states.get("button.tp358_4221_set_date_time")
 
-        assert button.state == "unknown"
+        assert button.state == STATE_UNKNOWN
 
 
 @pytest.mark.usefixtures("setup_thermopro")
@@ -130,3 +130,6 @@ async def test_buttons_tp358_press(
     )
 
     mock_thermoprodevice.set_datetime.assert_awaited_once_with(mock_now, False)
+
+    button_state = hass.states.get("button.tp358_4221_set_date_time")
+    assert button_state.state != STATE_UNKNOWN
