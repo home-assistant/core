@@ -124,16 +124,16 @@ async def is_custom_host(host: str) -> bool:
         _LOGGER.debug(
             "Unable to determine if host '%s' is a custom", host, exc_info=True
         )
-        return False
+        return True
     else:
-        return host in [host.ip_address for host in system_info.hosts]
+        return host not in [host.ip_address for host in system_info.hosts]
 
 
 class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
     """Define a flow for HEOS."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the HEOS flow."""

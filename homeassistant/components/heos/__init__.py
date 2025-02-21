@@ -74,13 +74,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> boo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> bool:
     """Migrate old entry."""
-    if entry.version > 1:
-        return False
-    if entry.minor_version > 0:
+    if entry.version > 1 or entry.minor_version > 1:
         return False
     data = {**entry.data}
     data[CONF_MANAGE_HOST] = not await is_custom_host(data[CONF_HOST])
-    hass.config_entries.async_update_entry(entry, data=data, version=1, minor_version=1)
+    hass.config_entries.async_update_entry(entry, data=data, version=1, minor_version=2)
     return True
 
 

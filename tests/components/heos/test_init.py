@@ -8,6 +8,7 @@ from pyheos import (
     HeosError,
     HeosOptions,
     HeosPlayer,
+    HeosSystem,
     PlayerUpdateResult,
     SignalHeosEvent,
     SignalType,
@@ -15,7 +16,7 @@ from pyheos import (
 )
 import pytest
 
-from homeassistant.components.heos.const import DOMAIN
+from homeassistant.components.heos.const import CONF_MANAGE_HOST, DOMAIN
 from homeassistant.components.media_player import DOMAIN as MEDIA_PLAYER_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -172,6 +173,64 @@ async def test_unload_entry(
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     assert controller.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize(("version", "minor_version"), [(2, 1), (1, 3)])
+async def test_async_migrate_entry_newer_fails(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    version: int,
+    minor_version: int,
+) -> None:
+    """Test that migration from newer versions fails."""
+    config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry, version=version, minor_version=minor_version
+    )
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+async def test_async_migrate_entry_v1_1_to_v1_2(
+    hass: HomeAssistant,
+    config_entry_v1: MockConfigEntry,
+    controller: MockHeos,
+    system: HeosSystem,
+) -> None:
+    """Test migration from 1.1 to 1.2 with a non-customized host."""
+    controller.get_system_info.return_value = system
+    config_entry_v1.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry_v1.entry_id)
+    assert config_entry_v1.minor_version == 2
+    assert config_entry_v1.data == {CONF_HOST: "127.0.0.1", CONF_MANAGE_HOST: True}
+
+
+async def test_async_migrate_entry_v1_1_to_v1_2_custom_host(
+    hass: HomeAssistant,
+    config_entry_v1: MockConfigEntry,
+    controller: MockHeos,
+    system: HeosSystem,
+) -> None:
+    """Test migration from 1.1 to 1.2 with custom host turns off auto-manage."""
+    controller.get_system_info.return_value = system
+    config_entry_v1.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        config_entry_v1, data={CONF_HOST: "custom-host"}
+    )
+    assert await hass.config_entries.async_setup(config_entry_v1.entry_id)
+    assert config_entry_v1.minor_version == 2
+    assert config_entry_v1.data == {CONF_HOST: "custom-host", CONF_MANAGE_HOST: False}
+
+
+async def test_async_migrate_entry_v1_1_to_v1_2_error(
+    hass: HomeAssistant, config_entry_v1: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test migration from 1.1 to 1.2 with error loading system info still migrates."""
+    controller.get_system_info.side_effect = HeosError()
+    config_entry_v1.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry_v1.entry_id)
+    assert config_entry_v1.minor_version == 2
+    assert config_entry_v1.data == {CONF_HOST: "127.0.0.1", CONF_MANAGE_HOST: False}
 
 
 async def test_device_info(

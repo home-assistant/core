@@ -44,20 +44,32 @@ from tests.common import MockConfigEntry
 
 @pytest.fixture(name="config_entry")
 def config_entry_fixture() -> MockConfigEntry:
-    """Create a mock HEOS config entry."""
+    """Create a mock HEOS config entry for the current version."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1", CONF_MANAGE_HOST: True},
         title=ENTRY_TITLE,
         unique_id=DOMAIN,
         version=1,
-        minor_version=1,
+        minor_version=2,
+    )
+
+
+@pytest.fixture(name="config_entry_v1")
+def config_entry_v1_fixture() -> MockConfigEntry:
+    """Create a mock HEOS config entry for version 1."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "127.0.0.1"},
+        title=ENTRY_TITLE,
+        unique_id=DOMAIN,
+        version=1,
     )
 
 
 @pytest.fixture(name="config_entry_options")
 def config_entry_options_fixture() -> MockConfigEntry:
-    """Create a mock HEOS config entry with options."""
+    """Create a mock HEOS config entry with options for the current version."""
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "127.0.0.1", CONF_MANAGE_HOST: True},
@@ -65,7 +77,7 @@ def config_entry_options_fixture() -> MockConfigEntry:
         options={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
         unique_id=DOMAIN,
         version=1,
-        minor_version=1,
+        minor_version=2,
     )
 
 

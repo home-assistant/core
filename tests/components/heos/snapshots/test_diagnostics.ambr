@@ -10,7 +10,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'heos',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -158,7 +158,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'heos',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
