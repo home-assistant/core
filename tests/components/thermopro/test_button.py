@@ -129,7 +129,7 @@ async def test_buttons_tp358_press(
         blocking=True,
     )
 
-    mock_thermoprodevice.set_datetime.assert_awaited_once_with(mock_now, False)
+    mock_thermoprodevice.set_datetime.assert_awaited_once_with(mock_now, am_pm=False)
 
     button_state = hass.states.get("button.tp358_4221_set_date_time")
     assert button_state.state != STATE_UNKNOWN
