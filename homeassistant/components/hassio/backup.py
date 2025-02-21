@@ -27,11 +27,13 @@ from homeassistant.components.backup import (
     AddonInfo,
     AgentBackup,
     BackupAgent,
+    BackupConfig,
     BackupManagerError,
     BackupNotFound,
     BackupReaderWriter,
     BackupReaderWriterError,
     CreateBackupEvent,
+    CreateBackupParametersDict,
     CreateBackupStage,
     CreateBackupState,
     Folder,
@@ -632,6 +634,27 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         except SupervisorError as err:
             _LOGGER.debug("Could not get restore job %s: %s", restore_job_id, err)
             unsub()
+
+    async def async_validate_config(self, *, config: BackupConfig) -> None:
+        """Validate backup config.
+
+        Replace the core backup agent with the hassio default agent.
+        """
+        core_agent_id = "backup.local"
+        create_backup = config.data.create_backup
+        if core_agent_id not in create_backup.agent_ids:
+            _LOGGER.debug("Backup settings don't need to be adjusted")
+            return
+
+        default_agent = await _default_agent(self._client)
+        _LOGGER.info("Adjusting backup settings to not include core backup location")
+        automatic_agents = [
+            agent_id if agent_id != core_agent_id else default_agent
+            for agent_id in create_backup.agent_ids
+        ]
+        config.update(
+            create_backup=CreateBackupParametersDict(agent_ids=automatic_agents)
+        )
 
     @callback
     def _async_listen_job_events(
