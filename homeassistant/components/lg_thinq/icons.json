@@ -80,6 +80,9 @@
       },
       "one_touch_filter": {
         "default": "mdi:air-filter"
+      },
+      "water_heater_operation_mode": {
+        "default": "mdi:power"
       }
     },
     "climate": {
@@ -407,6 +410,12 @@
       },
       "power_level_for_location": {
         "default": "mdi:radiator"
+      },
+      "cycle_count": {
+        "default": "mdi:counter"
+      },
+      "cycle_count_for_location": {
+        "default": "mdi:counter"
       }
     }
   }

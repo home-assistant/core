@@ -35,13 +35,17 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
+    CONF_BACKUP_PATH,
     CONF_DEVICE_TOKEN,
     DEFAULT_TIMEOUT,
+    DOMAIN,
     EXCEPTION_DETAILS,
     EXCEPTION_UNKNOWN,
+    ISSUE_MISSING_BACKUP_SETUP,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
 )
 
@@ -172,6 +176,19 @@ class SynoApi:
                 LOGGER.debug(
                     "File Station found, but disabled due to missing user"
                     " permissions or no writable shared folders available"
+                )
+
+            if shares and not self._entry.options.get(CONF_BACKUP_PATH):
+                ir.async_create_issue(
+                    self._hass,
+                    DOMAIN,
+                    f"{ISSUE_MISSING_BACKUP_SETUP}_{self._entry.unique_id}",
+                    data={"entry_id": self._entry.entry_id},
+                    is_fixable=True,
+                    is_persistent=False,
+                    severity=ir.IssueSeverity.WARNING,
+                    translation_key=ISSUE_MISSING_BACKUP_SETUP,
+                    translation_placeholders={"title": self._entry.title},
                 )
 
         LOGGER.debug(

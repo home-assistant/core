@@ -13,7 +13,7 @@ from pathlib import Path
 from queue import Empty, Queue
 from threading import Thread
 import time
-from typing import Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 import wave
 
 import hass_nabucasa
@@ -30,7 +30,7 @@ from homeassistant.components import (
 from homeassistant.components.tts import (
     generate_media_source_id as tts_generate_media_source_id,
 )
-from homeassistant.const import MATCH_ALL
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, MATCH_ALL
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, intent
@@ -81,6 +81,9 @@ from .error import (
 )
 from .vad import AudioBuffer, VoiceActivityTimeout, VoiceCommandSegmenter, chunk_samples
 
+if TYPE_CHECKING:
+    from hassil.recognize import RecognizeResult
+
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_KEY = f"{DOMAIN}.pipelines"
@@ -121,6 +124,12 @@ PIPELINE_FIELDS: VolDictType = {
 STORED_PIPELINE_RUNS = 10
 
 SAVE_DELAY = 10
+
+
+@callback
+def _async_local_fallback_intent_filter(result: RecognizeResult) -> bool:
+    """Filter out intents that are not local fallback."""
+    return result.intent.name in (intent.INTENT_GET_STATE, intent.INTENT_NEVERMIND)
 
 
 @callback
@@ -374,6 +383,7 @@ class PipelineEventType(StrEnum):
     STT_VAD_END = "stt-vad-end"
     STT_END = "stt-end"
     INTENT_START = "intent-start"
+    INTENT_PROGRESS = "intent-progress"
     INTENT_END = "intent-end"
     TTS_START = "tts-start"
     TTS_END = "tts-end"
@@ -1083,26 +1093,55 @@ class PipelineRun:
                     )
                     intent_response.async_set_speech(trigger_response_text)
 
+                intent_filter: Callable[[RecognizeResult], bool] | None = None
+                # If the LLM has API access, we filter out some sentences that are
+                # interfering with LLM operation.
+                if (
+                    intent_agent_state := self.hass.states.get(self.intent_agent)
+                ) and intent_agent_state.attributes.get(
+                    ATTR_SUPPORTED_FEATURES, 0
+                ) & conversation.ConversationEntityFeature.CONTROL:
+                    intent_filter = _async_local_fallback_intent_filter
+
                 # Try local intents first, if preferred.
                 elif self.pipeline.prefer_local_intents and (
                     intent_response := await conversation.async_handle_intents(
-                        self.hass, user_input
+                        self.hass,
+                        user_input,
+                        intent_filter=intent_filter,
                     )
                 ):
                     # Local intent matched
                     agent_id = conversation.HOME_ASSISTANT_AGENT
                     processed_locally = True
 
-            # It was already handled, create response and add to chat history
-            if intent_response is not None:
-                with (
-                    chat_session.async_get_chat_session(
-                        self.hass, user_input.conversation_id
-                    ) as session,
-                    conversation.async_get_chat_log(
-                        self.hass, session, user_input
-                    ) as chat_log,
-                ):
+            @callback
+            def chat_log_delta_listener(
+                chat_log: conversation.ChatLog, delta: dict
+            ) -> None:
+                """Handle chat log delta."""
+                self.process_event(
+                    PipelineEvent(
+                        PipelineEventType.INTENT_PROGRESS,
+                        {
+                            "chat_log_delta": delta,
+                        },
+                    )
+                )
+
+            with (
+                chat_session.async_get_chat_session(
+                    self.hass, user_input.conversation_id
+                ) as session,
+                conversation.async_get_chat_log(
+                    self.hass,
+                    session,
+                    user_input,
+                    chat_log_delta_listener=chat_log_delta_listener,
+                ) as chat_log,
+            ):
+                # It was already handled, create response and add to chat history
+                if intent_response is not None:
                     speech: str = intent_response.speech.get("plain", {}).get(
                         "speech", ""
                     )
@@ -1117,21 +1156,21 @@ class PipelineRun:
                         conversation_id=session.conversation_id,
                     )
 
-            else:
-                # Fall back to pipeline conversation agent
-                conversation_result = await conversation.async_converse(
-                    hass=self.hass,
-                    text=user_input.text,
-                    conversation_id=user_input.conversation_id,
-                    device_id=user_input.device_id,
-                    context=user_input.context,
-                    language=user_input.language,
-                    agent_id=user_input.agent_id,
-                    extra_system_prompt=user_input.extra_system_prompt,
-                )
-                speech = conversation_result.response.speech.get("plain", {}).get(
-                    "speech", ""
-                )
+                else:
+                    # Fall back to pipeline conversation agent
+                    conversation_result = await conversation.async_converse(
+                        hass=self.hass,
+                        text=user_input.text,
+                        conversation_id=user_input.conversation_id,
+                        device_id=user_input.device_id,
+                        context=user_input.context,
+                        language=user_input.language,
+                        agent_id=user_input.agent_id,
+                        extra_system_prompt=user_input.extra_system_prompt,
+                    )
+                    speech = conversation_result.response.speech.get("plain", {}).get(
+                        "speech", ""
+                    )
 
         except Exception as src_error:
             _LOGGER.exception("Unexpected error during intent recognition")
