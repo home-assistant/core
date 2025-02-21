@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, config as config_util, loader, runner
+from homeassistant import bootstrap, config as config_util, core, loader, runner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     BASE_PLATFORMS,
@@ -787,6 +787,9 @@ async def test_setup_hass_recovery_mode(
 ) -> None:
     """Test it works."""
     with (
+        patch(
+            "homeassistant.core.HomeAssistant", wraps=core.HomeAssistant
+        ) as mock_hass,
         patch("homeassistant.components.browser.setup") as browser_setup,
         patch(
             "homeassistant.config_entries.ConfigEntries.async_domains",
@@ -804,6 +807,8 @@ async def test_setup_hass_recovery_mode(
                 recovery_mode=True,
             ),
         )
+
+    mock_hass.assert_called_once()
 
     assert "recovery_mode" in hass.config.components
     assert len(mock_mount_local_lib_path.mock_calls) == 0
