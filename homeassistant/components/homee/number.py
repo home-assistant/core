@@ -70,7 +70,6 @@ NUMBER_DESCRIPTIONS = {
     ),
     AttributeType.TEMPERATURE_OFFSET: NumberEntityDescription(
         key="temperature_offset",
-        device_class=NumberDeviceClass.TEMPERATURE,
         entity_category=EntityCategory.CONFIG,
     ),
     AttributeType.UP_TIME: NumberEntityDescription(
