@@ -640,7 +640,7 @@ dbus-fast==2.33.0
 debugpy==1.8.11
 
 # homeassistant.components.ecovacs
-deebot-client==12.1.0
+deebot-client==12.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -2115,7 +2115,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.11.10
+reolink-aio==0.12.0
 
 # homeassistant.components.rflink
 rflink==0.0.66
