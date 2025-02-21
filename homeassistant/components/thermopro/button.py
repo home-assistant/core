@@ -72,7 +72,7 @@ async def async_setup_entry(
                     description=description,
                     data=data,
                     availability_signal=availability_signal,
-                    service_info=service_info,
+                    address=address,
                 )
                 for description in BUTTON_ENTITIES
             )
@@ -88,9 +88,7 @@ async def async_setup_entry(
     )
 
 
-class ThermoProDateTimeButtonEntity(
-    ButtonEntity,
-):
+class ThermoProDateTimeButtonEntity(ButtonEntity):
     """Representation of a ThermoProDateTime button entity."""
 
     _attr_has_entity_name = True
@@ -100,12 +98,11 @@ class ThermoProDateTimeButtonEntity(
         description: ButtonEntityDescription,
         data: ThermoProBluetoothDeviceData,
         availability_signal: str,
-        service_info: BluetoothServiceInfoBleak,
+        address: str,
     ) -> None:
         """Initialize the thermopro datetime button entity."""
-        address = service_info.address
-        self.address = address
         self.entity_description = description
+        self._address = address
         self._availability_signal = availability_signal
         self._attr_unique_id = f"{address}-{description.key}"
         self._attr_device_info = dr.DeviceInfo(
@@ -129,7 +126,7 @@ class ThermoProDateTimeButtonEntity(
         )
         self.async_on_remove(
             async_track_unavailable(
-                self.hass, self._async_on_unavailable, self.address, connectable=True
+                self.hass, self._async_on_unavailable, self._address, connectable=True
             )
         )
 
@@ -150,7 +147,8 @@ class ThermoProDateTimeButtonEntity(
 
     async def async_press(self) -> None:
         """Set Date&Time for a given device."""
-        address = self.address
-        ble_device = async_ble_device_from_address(self.hass, address, connectable=True)
+        ble_device = async_ble_device_from_address(
+            self.hass, self._address, connectable=True
+        )
         assert ble_device is not None
         await ThermoProDevice(ble_device).set_datetime(now(), False)
