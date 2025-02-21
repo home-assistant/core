@@ -39,7 +39,7 @@ async def _async_set_datetime(hass: HomeAssistant, address: str) -> None:
     """Set Date&Time for a given device."""
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
     assert ble_device is not None
-    await ThermoProDevice(ble_device).set_datetime(now(), False)
+    await ThermoProDevice(ble_device).set_datetime(now(), am_pm=False)
 
 
 BUTTON_ENTITIES: tuple[ThermoProButtonEntityDescription, ...] = (
