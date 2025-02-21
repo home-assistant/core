@@ -328,11 +328,9 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors:
             data_schema = data_schema.extend(
                 {
-                    vol.Optional(CONF_PORT): cv.positive_int,
+                    vol.Optional(CONF_PORT): cv.port,
                     vol.Required(CONF_USE_HTTPS, default=False): bool,
-                    vol.Required(
-                        CONF_BC_PORT, default=DEFAULT_BC_PORT
-                    ): cv.positive_int,
+                    vol.Required(CONF_BC_PORT, default=DEFAULT_BC_PORT): cv.port,
                 }
             )
 
