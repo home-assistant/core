@@ -51,18 +51,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: VegeHubConfigEntry) -> b
 
     # Register the device in the device registry
     device_registry = dr.async_get(hass)
-
     device_mac = entry.data[CONF_MAC]
-    device_ip = entry.data[CONF_IP_ADDRESS]
 
     if not entry.unique_id:
         raise ConfigEntryError("Error: unable to set up device")
 
-    hub = VegeHub(device_ip, device_mac, entry.unique_id, info=entry.data[CONF_DEVICE])
+    hub = VegeHub(
+        entry.data[CONF_IP_ADDRESS],
+        device_mac,
+        entry.unique_id,
+        info=entry.data[CONF_DEVICE],
+    )
 
     # Initialize runtime data
     entry.runtime_data = VegeHubData(
-        coordinator=VegeHubCoordinator(hass=hass, device_id=entry.unique_id),
+        coordinator=VegeHubCoordinator(hass=hass, config_entry=entry),
         hub=hub,
     )
 

@@ -31,11 +31,8 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for VegeHub integration."""
 
     _hub: VegeHub
-
-    def __init__(self) -> None:
-        """Initialize the VegeHub config flow."""
-        self._hostname: str = ""
-        self.webhook_id: str = ""
+    _hostname: str
+    webhook_id: str
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -46,7 +43,6 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if not is_ip_address(user_input[CONF_IP_ADDRESS]):
                 # User-supplied IP address is invalid.
-                _LOGGER.error("Invalid IP address")
                 errors["base"] = "invalid_ip"
 
             if not errors:
@@ -150,7 +146,7 @@ class VegeHubConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Timed out trying to connect to %s", self._hub.ip_address)
             errors["base"] = "timeout_connect"
 
-        if len(self._hub.mac_address) <= 0:
+        if not self._hub.mac_address:
             _LOGGER.error("Failed to get MAC address for %s", self._hub.ip_address)
             errors["base"] = "cannot_connect"
 

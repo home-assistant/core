@@ -19,23 +19,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up Vegetronix sensors from a config entry."""
     sensors: list[VegeHubSensor] = []
-    mac_address = config_entry.data[CONF_MAC]
-    num_sensors = config_entry.runtime_data.hub.num_sensors
-    num_actuators = config_entry.runtime_data.hub.num_actuators
+    hub = config_entry.runtime_data.hub
 
     # We add up the number of sensors, plus the number of actuators, then add one
     # for battery reading, and one because the array is 1 based instead of 0 based.
-    for i in range(num_sensors + num_actuators + 1):  # Add 1 for battery
+    for i in range(hub.num_sensors + hub.num_actuators + 1):  # Add 1 for battery
         sensor = VegeHubSensor(
-            mac_address=mac_address,
             index=i + 1,
-            dev_name=config_entry.data[CONF_HOST],
             coordinator=config_entry.runtime_data.coordinator,
         )
-
-        # Store the entity by ID in runtime_data hub
-        config_entry.runtime_data.hub.entities[sensor.unique_id] = sensor
-
         sensors.append(sensor)
 
     async_add_entities(sensors)
@@ -44,33 +36,37 @@ async def async_setup_entry(
 class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
     """Class for VegeHub Analog Sensors."""
 
+    _attr_has_entity_name = True
+    _attr_translation_key = "analog_sensor"
+    _unit_of_measurement = UnitOfElectricPotential.VOLT
+    _attr_device_class = SensorDeviceClass.VOLTAGE
+    _attr_suggested_unit_of_measurement = _unit_of_measurement
+    _attr_native_unit_of_measurement = _unit_of_measurement
+    _attr_suggested_display_precision = 2
+
     def __init__(
         self,
-        mac_address: str,
         index: int,
-        dev_name: str,
         coordinator: VegeHubCoordinator,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_has_entity_name = True
+
+        config_entry = coordinator.config_entry
+
+        # This is needed for mypy to understand that config_entry is not None
+        if config_entry is None:
+            raise ValueError("Config entry should never be None for VegeHubSensor")
+
         self._attr_translation_placeholders = {"index": str(index)}
-
-        self._unit_of_measurement = UnitOfElectricPotential.VOLT
-        self._attr_device_class = SensorDeviceClass.VOLTAGE
-        self._attr_translation_key = "analog_sensor"
         self._attr_available = False
-
-        self._attr_suggested_unit_of_measurement = self._unit_of_measurement
-        self._attr_native_unit_of_measurement = self._unit_of_measurement
-        self._mac_address = mac_address
+        self._mac_address = config_entry.data[CONF_MAC]
         self._attr_unique_id = (
-            f"{mac_address}_{index}".lower()
+            f"{self._mac_address}_{index}".lower()
         )  # Generate a unique_id using mac and slot
-        self._attr_suggested_display_precision = 2
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._mac_address)},
-            name=dev_name,
+            name=config_entry.data[CONF_HOST],
             manufacturer=MANUFACTURER,
             model=MODEL,
         )
