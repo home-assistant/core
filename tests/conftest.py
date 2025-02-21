@@ -1557,7 +1557,7 @@ async def _async_init_recorder_component(
             assert (recorder.DOMAIN in hass.config.components) == expected_setup_result
         else:
             # Wait for recorder to connect to the database
-            await recorder_helper.async_wait_recorder(hass)
+            await hass.data[recorder_helper.DATA_RECORDER].db_connected
     _LOGGER.info(
         "Test recorder successfully started, database location: %s",
         config[recorder.CONF_DB_URL],

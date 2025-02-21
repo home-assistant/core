@@ -60,20 +60,21 @@ class RememberTheMilkEntity(Entity):
             result = self._rtm_api.rtm.timelines.create()
             timeline = result.timeline.value
 
-            if hass_id is None or rtm_id is None:
+            if rtm_id is None:
                 result = self._rtm_api.rtm.tasks.add(
                     timeline=timeline, name=task_name, parse="1"
                 )
                 _LOGGER.debug(
                     "Created new task '%s' in account %s", task_name, self.name
                 )
-                self._rtm_config.set_rtm_id(
-                    self._name,
-                    hass_id,
-                    result.list.id,
-                    result.list.taskseries.id,
-                    result.list.taskseries.task.id,
-                )
+                if hass_id is not None:
+                    self._rtm_config.set_rtm_id(
+                        self._name,
+                        hass_id,
+                        result.list.id,
+                        result.list.taskseries.id,
+                        result.list.taskseries.task.id,
+                    )
             else:
                 self._rtm_api.rtm.tasks.setName(
                     name=task_name,

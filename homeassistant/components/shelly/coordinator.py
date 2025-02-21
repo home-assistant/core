@@ -68,11 +68,11 @@ from .utils import (
     async_create_issue_unsupported_firmware,
     get_block_device_sleep_period,
     get_device_entry_gen,
-    get_device_info_model,
     get_host,
     get_http_port,
     get_rpc_device_wakeup_period,
     get_rpc_ws_url,
+    get_shelly_model_name,
     update_device_fw_info,
 )
 
@@ -165,7 +165,7 @@ class ShellyCoordinatorBase[_DeviceT: BlockDevice | RpcDevice](
             connections={(CONNECTION_NETWORK_MAC, self.mac)},
             identifiers={(DOMAIN, self.mac)},
             manufacturer="Shelly",
-            model=get_device_info_model(self.device),
+            model=get_shelly_model_name(self.model, self.sleep_period, self.device),
             model_id=self.model,
             sw_version=self.sw_version,
             hw_version=f"gen{get_device_entry_gen(self.config_entry)}",
