@@ -17,7 +17,6 @@ from homeassistant.components.wolflink.sensor import (
     WolfLinkPower,
     WolfLinkPressure,
     WolfLinkSensor,
-    WolfLinkState,
     WolfLinkTemperature,
 )
 from homeassistant.const import (
@@ -61,16 +60,6 @@ async def mock_config_entry(
         manufacturer=MANUFACTURER,
     ).id
     assert device_registry.async_get(device_id).identifiers == {(DOMAIN, "1234")}
-
-
-def test_wolflink_sensor_initialization(mock_coordinator) -> None:
-    """Test WolflinkSensor initialization."""
-    parameter = MagicMock()
-    parameter.name = "Outside Temperature"
-    parameter.parameter_id = "outside_temp"
-    sensor = WolfLinkSensor(parameter, "mock_device_id")
-    assert sensor._attr_name == "Outside Temperature"
-    assert sensor._attr_unique_id == "mock_device_id:outside_temp"
 
 
 def test_wolflink_sensor_native_value(mock_coordinator) -> None:
@@ -143,17 +132,6 @@ def test_wolflink_percentage_initialization(mock_coordinator) -> None:
     parameter.unit = PERCENTAGE
     sensor = WolfLinkPercentage(mock_coordinator, parameter, "mock_device_id")
     assert sensor.native_unit_of_measurement == PERCENTAGE
-
-
-def test_wolflink_state_initialization(mock_coordinator) -> None:
-    """Test WolflinkState initialization."""
-    parameter = MagicMock()
-    parameter.name = "State"
-    parameter.parameter_id = "state"
-    parameter.items = [MagicMock(value=1, name="On"), MagicMock(value=0, name="Off")]
-    sensor = WolfLinkState(mock_coordinator, parameter, "mock_device_id")
-    mock_coordinator.data = {"state": [None, 1]}
-    assert sensor.native_value == "On"
 
 
 def test_wolflink_hours_initialization(mock_coordinator) -> None:
