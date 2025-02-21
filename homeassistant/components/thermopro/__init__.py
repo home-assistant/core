@@ -47,7 +47,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up ThermoPro BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
-
     data = ThermoProBluetoothDeviceData()
     coordinator = hass.data.setdefault(DOMAIN, {})[entry.entry_id] = (
         PassiveBluetoothProcessorCoordinator(
