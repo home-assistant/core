@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from functools import partial
 import logging
+import re
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from aioesphomeapi import (
@@ -16,6 +17,7 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
+    LogLevel,
     ReconnectLogic,
     RequiresEncryptionAPIError,
     UserService,
@@ -61,6 +63,7 @@ from .bluetooth import async_connect_scanner
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
+    CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
     DEFAULT_URL,
     DOMAIN,
@@ -74,7 +77,29 @@ from .domain_data import DomainData
 # Import config flow so that it's added to the registry
 from .entry_data import ESPHomeConfigEntry, RuntimeEntryData
 
+if TYPE_CHECKING:
+    from aioesphomeapi.api_pb2 import (  # type: ignore[attr-defined]
+        SubscribeLogsResponse,
+    )
+
+
 _LOGGER = logging.getLogger(__name__)
+
+LOG_LEVEL_TO_LOGGER = {
+    LogLevel.LOG_LEVEL_NONE: logging.NOTSET,
+    LogLevel.LOG_LEVEL_ERROR: logging.ERROR,
+    LogLevel.LOG_LEVEL_WARN: logging.WARNING,
+    LogLevel.LOG_LEVEL_INFO: logging.INFO,
+    LogLevel.LOG_LEVEL_CONFIG: logging.INFO,
+    LogLevel.LOG_LEVEL_DEBUG: logging.DEBUG,
+    LogLevel.LOG_LEVEL_VERBOSE: logging.DEBUG,
+    LogLevel.LOG_LEVEL_VERY_VERBOSE: logging.DEBUG,
+}
+# 7-bit and 8-bit C1 ANSI sequences
+# https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
+ANSI_ESCAPE_78BIT = re.compile(
+    rb"(?:\x1B[@-Z\\-_]|[\x80-\x9A\x9C-\x9F]|(?:\x1B\[|\x9B)[0-?]*[ -/]*[@-~])"
+)
 
 
 @callback
@@ -341,6 +366,18 @@ class ESPHomeManager:
             # Re-connection logic will trigger after this
             await self.cli.disconnect()
 
+    def _async_on_log(self, msg: SubscribeLogsResponse) -> None:
+        """Handle a log message from the API."""
+        logger_level = LOG_LEVEL_TO_LOGGER.get(msg.level, logging.DEBUG)
+        if _LOGGER.isEnabledFor(logger_level):
+            log: bytes = msg.message
+            _LOGGER.log(
+                logger_level,
+                "%s: %s",
+                self.entry.title,
+                ANSI_ESCAPE_78BIT.sub(b"", log).decode("utf-8", "backslashreplace"),
+            )
+
     async def _on_connnect(self) -> None:
         """Subscribe to states and list entities on successful API login."""
         entry = self.entry
@@ -351,7 +388,10 @@ class ESPHomeManager:
         hass = self.hass
         cli = self.cli
         stored_device_name = entry.data.get(CONF_DEVICE_NAME)
+        subscribe_logs = entry.options.get(CONF_SUBSCRIBE_LOGS)
         unique_id_is_mac_address = unique_id and ":" in unique_id
+        if subscribe_logs:
+            cli.subscribe_logs(self._async_on_log, LogLevel.LOG_LEVEL_VERY_VERBOSE)
         results = await asyncio.gather(
             create_eager_task(cli.device_info()),
             create_eager_task(cli.list_entities_services()),
