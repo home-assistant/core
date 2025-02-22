@@ -119,12 +119,13 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
             assert self.todo_items
 
         if previous_uid:
-            pos = (
-                self.todo_items.index(
-                    next(item for item in self.todo_items if item.uid == previous_uid)
-                )
-                + 1
+            pos = self.todo_items.index(
+                next(item for item in self.todo_items if item.uid == previous_uid)
             )
+            if pos < self.todo_items.index(
+                next(item for item in self.todo_items if item.uid == uid)
+            ):
+                pos += 1
         else:
             pos = 0
 
