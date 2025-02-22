@@ -11,6 +11,6 @@
     "homematicip"
   ],
   "requirements": [
-    "homematicip==1.1.6.post1.dev21"
+    "homematicip==1.1.7.post1.dev24"
   ]
 }

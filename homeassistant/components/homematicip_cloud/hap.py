@@ -38,7 +38,10 @@ class HomematicipAuth:
         """Connect to HomematicIP for registration."""
         try:
             self.auth = await self.get_auth(
-                self.hass, self.config.get(HMIPC_HAPID), self.config.get(HMIPC_PIN)
+                self.hass,
+                self.config.get(HMIPC_HAPID),
+                self.config.get(HMIPC_PIN),
+                self.config.get(HMIPC_NAME),
             )
         except HmipcConnectionError:
             return False
@@ -60,15 +63,23 @@ class HomematicipAuth:
             return False
         return authtoken
 
-    async def get_auth(self, hass: HomeAssistant, hapid, pin):
+    async def get_auth(self, hass: HomeAssistant, hapid, pin, name=None):
         """Create a HomematicIP access point object."""
         context = ConnectionContextBuilder.build_context(accesspoint_id=hapid)
-        connection = RestConnection(context, log_status_exceptions=False)
+        connection = RestConnection(
+            context,
+            log_status_exceptions=False,
+        )
         # hass.loop
-        auth = Auth(connection=connection, client_auth_token=context.client_auth_token)
+        auth = Auth(connection, context.client_auth_token, hapid)
+
         try:
+            if len(name) == 0:
+                name = "HomeAssistant"
+
             auth.set_pin(pin)
-            await auth.connection_request("HomeAssistant")
+            result = await auth.connection_request(hapid, name)
+            _LOGGER.debug("Connection request result: %s", result)
         except HmipConnectionError:
             return None
         return auth
