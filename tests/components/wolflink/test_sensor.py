@@ -3,12 +3,14 @@
 from unittest.mock import MagicMock
 
 import pytest
+from wolf_comm import EnergyParameter, PowerParameter
 
 from homeassistant.components.wolflink.const import (
     COORDINATOR,
     DEVICE_ID,
     DOMAIN,
     MANUFACTURER,
+    PARAMETERS,
 )
 from homeassistant.components.wolflink.sensor import (
     WolfLinkEnergy,
@@ -18,6 +20,7 @@ from homeassistant.components.wolflink.sensor import (
     WolfLinkPressure,
     WolfLinkSensor,
     WolfLinkTemperature,
+    async_setup_entry,
 )
 from homeassistant.const import (
     PERCENTAGE,
@@ -62,7 +65,7 @@ async def mock_config_entry(
     assert device_registry.async_get(device_id).identifiers == {(DOMAIN, "1234")}
 
 
-def test_wolflink_sensor_native_value(mock_coordinator) -> None:
+def test_wolflink_sensor_native_value(mock_coordinator: MagicMock) -> None:
     """Test WolflinkSensor native value."""
     parameter = MagicMock()
     parameter.parameter_id = "outside_temp"
@@ -71,7 +74,7 @@ def test_wolflink_sensor_native_value(mock_coordinator) -> None:
     assert sensor.native_value == 20
 
 
-def test_wolflink_sensor_extra_state_attributes(mock_coordinator) -> None:
+def test_wolflink_sensor_extra_state_attributes(mock_coordinator: MagicMock) -> None:
     """Test WolflinkSensor extra state attributes."""
     parameter = MagicMock()
     parameter.parameter_id = "outside_temp"
@@ -84,7 +87,7 @@ def test_wolflink_sensor_extra_state_attributes(mock_coordinator) -> None:
     assert attributes["parent"] == "parent"
 
 
-def test_wolflink_temperature_initialization(mock_coordinator) -> None:
+def test_wolflink_temperature_initialization(mock_coordinator: MagicMock) -> None:
     """Test WolflinkTemperature initialization."""
     parameter = MagicMock()
     parameter.name = "Outside Temperature"
@@ -94,7 +97,7 @@ def test_wolflink_temperature_initialization(mock_coordinator) -> None:
     assert sensor._attr_native_unit_of_measurement == UnitOfTemperature.CELSIUS
 
 
-def test_wolflink_pressure_initialization(mock_coordinator) -> None:
+def test_wolflink_pressure_initialization(mock_coordinator: MagicMock) -> None:
     """Test WolflinkPressure initialization."""
     parameter = MagicMock()
     parameter.name = "Pressure"
@@ -104,7 +107,7 @@ def test_wolflink_pressure_initialization(mock_coordinator) -> None:
     assert sensor._attr_native_unit_of_measurement == UnitOfPressure.BAR
 
 
-def test_wolflink_power_initialization(mock_coordinator) -> None:
+def test_wolflink_power_initialization(mock_coordinator: MagicMock) -> None:
     """Test WolflinkPower initialization."""
     parameter = MagicMock()
     parameter.name = "Power"
@@ -114,7 +117,7 @@ def test_wolflink_power_initialization(mock_coordinator) -> None:
     assert sensor._attr_native_unit_of_measurement == UnitOfPower.KILO_WATT
 
 
-def test_wolflink_energy_initialization(mock_coordinator) -> None:
+def test_wolflink_energy_initialization(mock_coordinator: MagicMock) -> None:
     """Test WolflinkEnergy initialization."""
     parameter = MagicMock()
     parameter.name = "Energy"
@@ -124,7 +127,7 @@ def test_wolflink_energy_initialization(mock_coordinator) -> None:
     assert sensor._attr_native_unit_of_measurement == UnitOfEnergy.KILO_WATT_HOUR
 
 
-def test_wolflink_percentage_initialization(mock_coordinator) -> None:
+def test_wolflink_percentage_initialization(mock_coordinator: MagicMock) -> None:
     """Test WolflinkPercentage initialization."""
     parameter = MagicMock()
     parameter.name = "Percentage"
@@ -134,7 +137,7 @@ def test_wolflink_percentage_initialization(mock_coordinator) -> None:
     assert sensor.native_unit_of_measurement == PERCENTAGE
 
 
-def test_wolflink_hours_initialization(mock_coordinator) -> None:
+def test_wolflink_hours_initialization(mock_coordinator: MagicMock) -> None:
     """Test WolflinkHours initialization."""
     parameter = MagicMock()
     parameter.name = "Hours"
@@ -142,3 +145,57 @@ def test_wolflink_hours_initialization(mock_coordinator) -> None:
     sensor = WolfLinkHours(mock_coordinator, parameter, "mock_device_id")
     assert sensor._attr_icon == "mdi:clock"
     assert sensor._attr_native_unit_of_measurement == UnitOfTime.HOURS
+
+
+async def test_async_setup_entry_wolflink_energy(
+    hass: HomeAssistant, mock_coordinator: MagicMock
+) -> None:
+    """Test async_setup_entry for WolfLinkEnergy."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=str(CONFIG[DEVICE_ID]), data=CONFIG
+    )
+    config_entry.add_to_hass(hass)
+
+    parameter = MagicMock(spec=EnergyParameter)
+    parameter.parameter_id = "energy_param"
+    parameter.name = "Energy"
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+        PARAMETERS: [parameter],
+        COORDINATOR: mock_coordinator,
+        DEVICE_ID: "mock_device_id",
+    }
+    async_add_entities = MagicMock()
+
+    await async_setup_entry(hass, config_entry, async_add_entities)
+
+    assert async_add_entities.call_count == 1
+    entities = async_add_entities.call_args[0][0]
+    assert len(entities) == 1
+    assert isinstance(entities[0], WolfLinkEnergy)
+
+
+async def test_async_setup_entry_wolflink_power(
+    hass: HomeAssistant, mock_coordinator: MagicMock
+) -> None:
+    """Test async_setup_entry for WolfLinkPower."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=str(CONFIG[DEVICE_ID]), data=CONFIG
+    )
+    config_entry.add_to_hass(hass)
+
+    parameter = MagicMock(spec=PowerParameter)
+    parameter.parameter_id = "power_param"
+    parameter.name = "Power"
+    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
+        PARAMETERS: [parameter],
+        COORDINATOR: mock_coordinator,
+        DEVICE_ID: "mock_device_id",
+    }
+    async_add_entities = MagicMock()
+
+    await async_setup_entry(hass, config_entry, async_add_entities)
+
+    assert async_add_entities.call_count == 1
+    entities = async_add_entities.call_args[0][0]
+    assert len(entities) == 1
+    assert isinstance(entities[0], WolfLinkPower)
