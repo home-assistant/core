@@ -99,11 +99,21 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         client = WazeRouteCalculator(
             region=service.data[CONF_REGION].upper(), client=httpx_client
         )
+
+        origin_coordinates = find_coordinates(hass, service.data[CONF_ORIGIN])
+        destination_coordinates = find_coordinates(hass, service.data[CONF_DESTINATION])
+
+        origin = origin_coordinates if origin_coordinates else service.data[CONF_ORIGIN]
+        destination = (
+            destination_coordinates
+            if destination_coordinates
+            else service.data[CONF_DESTINATION]
+        )
+
         response = await async_get_travel_times(
-            hass=hass,
             client=client,
-            origin=service.data[CONF_ORIGIN],
-            destination=service.data[CONF_DESTINATION],
+            origin=origin,
+            destination=destination,
             vehicle_type=service.data[CONF_VEHICLE_TYPE],
             avoid_toll_roads=service.data[CONF_AVOID_TOLL_ROADS],
             avoid_subscription_roads=service.data[CONF_AVOID_SUBSCRIPTION_ROADS],
@@ -123,7 +133,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 
 async def async_get_travel_times(
-    hass: HomeAssistant,
     client: WazeRouteCalculator,
     origin: str,
     destination: str,
@@ -149,8 +158,8 @@ async def async_get_travel_times(
     vehicle_type = "" if vehicle_type.upper() == "CAR" else vehicle_type.upper()
     try:
         routes = await client.calc_routes(
-            find_coordinates(hass, origin),
-            find_coordinates(hass, destination),
+            origin,
+            destination,
             vehicle_type=vehicle_type,
             avoid_toll_roads=avoid_toll_roads,
             avoid_subscription_roads=avoid_subscription_roads,
