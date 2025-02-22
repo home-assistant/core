@@ -16,6 +16,7 @@ from homeassistant.core import (
     SupportsResponse,
 )
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.helpers.location import find_coordinates
 from homeassistant.helpers.selector import (
     BooleanSelector,
     SelectSelector,
@@ -99,6 +100,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             region=service.data[CONF_REGION].upper(), client=httpx_client
         )
         response = await async_get_travel_times(
+            hass=hass,
             client=client,
             origin=service.data[CONF_ORIGIN],
             destination=service.data[CONF_DESTINATION],
@@ -121,6 +123,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 
 async def async_get_travel_times(
+    hass: HomeAssistant,
     client: WazeRouteCalculator,
     origin: str,
     destination: str,
@@ -146,8 +149,8 @@ async def async_get_travel_times(
     vehicle_type = "" if vehicle_type.upper() == "CAR" else vehicle_type.upper()
     try:
         routes = await client.calc_routes(
-            origin,
-            destination,
+            find_coordinates(hass, origin),
+            find_coordinates(hass, destination),
             vehicle_type=vehicle_type,
             avoid_toll_roads=avoid_toll_roads,
             avoid_subscription_roads=avoid_subscription_roads,
