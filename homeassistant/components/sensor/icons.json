@@ -132,6 +132,9 @@
     "temperature": {
       "default": "mdi:thermometer"
     },
+    "temperature_delta": {
+      "default": "mdi:thermometer"
+    },
     "timestamp": {
       "default": "mdi:clock"
     },
