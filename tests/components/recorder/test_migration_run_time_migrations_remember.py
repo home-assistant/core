@@ -297,10 +297,12 @@ async def test_data_migrator_logic(
     for migrator, mock in migrator_mocks.items():
         needs_migrate_calls, migrate_data_calls = expected_migrator_calls[migrator]
         assert len(mock["needs_migrate"].mock_calls) == needs_migrate_calls, (
-            f"Expected {migrator} needs_migrate to be called {needs_migrate_calls} times, got {len(mock['needs_migrate'].mock_calls)}"
+            f"Expected {migrator} needs_migrate to be called {needs_migrate_calls} times,"
+            f" got {len(mock['needs_migrate'].mock_calls)}"
         )
         assert len(mock["migrate_data"].mock_calls) == migrate_data_calls, (
-            f"Expected {migrator} migrate_data to be called {migrate_data_calls} times, got {len(mock['migrate_data'].mock_calls)}"
+            f"Expected {migrator} migrate_data to be called {migrate_data_calls} times, "
+            f"got {len(mock['migrate_data'].mock_calls)}"
         )
 
 
