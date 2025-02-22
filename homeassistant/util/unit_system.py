@@ -14,6 +14,7 @@ from homeassistant.const import (
     MASS,
     PRESSURE,
     TEMPERATURE,
+    TEMPERATURE_DELTA,
     UNIT_NOT_RECOGNIZED_TEMPLATE,
     VOLUME,
     WIND_SPEED,
@@ -24,6 +25,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTemperatureDelta,
     UnitOfVolume,
     UnitOfVolumetricFlux,
 )
@@ -34,6 +36,7 @@ from .unit_conversion import (
     PressureConverter,
     SpeedConverter,
     TemperatureConverter,
+    TemperatureDeltaConverter,
     VolumeConverter,
 )
 
@@ -63,11 +66,14 @@ WIND_SPEED_UNITS = SpeedConverter.VALID_UNITS
 
 TEMPERATURE_UNITS: set[str] = {UnitOfTemperature.FAHRENHEIT, UnitOfTemperature.CELSIUS}
 
+TEMPERATURE_DELTA_UNITS: = TemperatureDeltaConverter.VALID_UNITS
+
 _VALID_BY_TYPE: dict[str, set[str] | set[str | None]] = {
     LENGTH: LENGTH_UNITS,
     ACCUMULATED_PRECIPITATION: LENGTH_UNITS,
     WIND_SPEED: WIND_SPEED_UNITS,
     TEMPERATURE: TEMPERATURE_UNITS,
+    TEMPERATURE_DELTA: TEMPERATURE_DELTA_UNITS,
     MASS: MASS_UNITS,
     VOLUME: VOLUME_UNITS,
     PRESSURE: PRESSURE_UNITS,
@@ -96,6 +102,7 @@ class UnitSystem:
         mass: UnitOfMass,
         pressure: UnitOfPressure,
         temperature: UnitOfTemperature,
+        temperature_delta: UnitOfTemperatureDelta,
         volume: UnitOfVolume,
         wind_speed: UnitOfSpeed,
     ) -> None:
@@ -106,6 +113,7 @@ class UnitSystem:
                 (accumulated_precipitation, ACCUMULATED_PRECIPITATION),
                 (area, AREA),
                 (temperature, TEMPERATURE),
+                (temperature_delta, TEMPERATURE_DELTA),
                 (length, LENGTH),
                 (wind_speed, WIND_SPEED),
                 (volume, VOLUME),
@@ -125,6 +133,7 @@ class UnitSystem:
         self.mass_unit = mass
         self.pressure_unit = pressure
         self.temperature_unit = temperature
+        self.temperature_delta_unit = temperature_delta
         self.volume_unit = volume
         self.wind_speed_unit = wind_speed
         self._conversions = conversions
@@ -136,6 +145,15 @@ class UnitSystem:
 
         return TemperatureConverter.convert(
             temperature, from_unit, self.temperature_unit
+        )
+
+    def temperature_delta(self, temperature_delta: float, from_unit: str) -> float:
+        """Convert the given temperature delta to this unit system."""
+        if not isinstance(temperature_delta, Number):
+            raise TypeError(f"{temperature_delta!s} is not a numeric value.")
+
+        return TemperatureDeltaConverter.convert(
+            temperature_delta, from_unit, self.temperature_delta_unit
         )
 
     def length(self, length: float | None, from_unit: str) -> float:
@@ -207,6 +225,7 @@ class UnitSystem:
             MASS: self.mass_unit,
             PRESSURE: self.pressure_unit,
             TEMPERATURE: self.temperature_unit,
+            TEMPERATURE_DELTA: self.temperature_delta_unit,
             VOLUME: self.volume_unit,
             WIND_SPEED: self.wind_speed_unit,
         }
@@ -315,6 +334,7 @@ METRIC_SYSTEM = UnitSystem(
     mass=UnitOfMass.GRAMS,
     pressure=UnitOfPressure.PA,
     temperature=UnitOfTemperature.CELSIUS,
+    temperature_delta=UnitOfTemperatureDelta.CELSIUS,
     volume=UnitOfVolume.LITERS,
     wind_speed=UnitOfSpeed.METERS_PER_SECOND,
 )
@@ -393,6 +413,7 @@ US_CUSTOMARY_SYSTEM = UnitSystem(
     mass=UnitOfMass.POUNDS,
     pressure=UnitOfPressure.PSI,
     temperature=UnitOfTemperature.FAHRENHEIT,
+    temperature_delta=UnitOfTemperatureDelta.FAHRENHEIT,
     volume=UnitOfVolume.GALLONS,
     wind_speed=UnitOfSpeed.MILES_PER_HOUR,
 )
