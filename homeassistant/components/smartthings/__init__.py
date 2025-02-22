@@ -27,7 +27,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .const import CONF_INSTALLED_APP_ID, CONF_LOCATION_ID
+from .const import CONF_INSTALLED_APP_ID, CONF_LOCATION_ID, MAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -100,7 +100,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     }
 
     entry.runtime_data = SmartThingsData(
-        devices=device_status,
+        devices={
+            device_id: device
+            for device_id, device in device_status.items()
+            if MAIN in device.status
+        },
         client=client,
         scenes=scenes,
     )
