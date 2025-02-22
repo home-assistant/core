@@ -1010,6 +1010,9 @@ gitterpy==0.1.7
 # homeassistant.components.glances
 glances-api==0.8.0
 
+# homeassistant.components.victronvenus
+gmqtt==0.6.16
+
 # homeassistant.components.go2rtc
 go2rtc-client==0.1.2
 
@@ -2998,6 +3001,9 @@ velbus-aio==2025.1.1
 
 # homeassistant.components.venstar
 venstarcolortouch==0.19
+
+# homeassistant.components.victronvenus
+victronvenusclient==0.1.2
 
 # homeassistant.components.vilfo
 vilfo-api-client==0.5.0
