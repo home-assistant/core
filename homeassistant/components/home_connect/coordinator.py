@@ -11,6 +11,7 @@ from typing import Any, cast
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
+    CommandKey,
     Event,
     EventKey,
     EventMessage,
@@ -53,6 +54,7 @@ EVENT_STREAM_RECONNECT_DELAY = 30
 class HomeConnectApplianceData:
     """Class to hold Home Connect appliance data."""
 
+    commands: set[CommandKey]
     events: dict[EventKey, Event]
     info: HomeAppliance
     options: dict[OptionKey, ProgramDefinitionOption]
@@ -62,6 +64,7 @@ class HomeConnectApplianceData:
 
     def update(self, other: HomeConnectApplianceData) -> None:
         """Update data with data from other instance."""
+        self.commands.update(other.commands)
         self.events.update(other.events)
         self.info.connected = other.info.connected
         self.options.clear()
@@ -408,7 +411,18 @@ class HomeConnectCoordinator(
                             unit=option.unit,
                         )
 
+        try:
+            commands = {
+                command.key
+                for command in (
+                    await self.client.get_available_commands(appliance.ha_id)
+                ).commands
+            }
+        except HomeConnectError:
+            commands = set()
+
         appliance_data = HomeConnectApplianceData(
+            commands=commands,
             events=events,
             info=appliance,
             options=options,
