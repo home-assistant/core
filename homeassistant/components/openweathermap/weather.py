@@ -18,7 +18,7 @@ from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenweathermapConfigEntry
 from .const import (
@@ -53,7 +53,7 @@ SERVICE_GET_MINUTE_FORECAST = "get_minute_forecast"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OpenweathermapConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OpenWeatherMap weather entity based on a config entry."""
     domain_data = config_entry.runtime_data

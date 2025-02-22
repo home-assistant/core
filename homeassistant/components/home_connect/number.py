@@ -13,7 +13,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
 from .const import (
@@ -76,6 +76,16 @@ NUMBERS = (
         device_class=NumberDeviceClass.TEMPERATURE,
         translation_key="wine_compartment_3_setpoint_temperature",
     ),
+    NumberEntityDescription(
+        key=SettingKey.LAUNDRY_CARE_WASHER_I_DOS_1_BASE_LEVEL,
+        device_class=NumberDeviceClass.VOLUME,
+        translation_key="washer_i_dos_1_base_level",
+    ),
+    NumberEntityDescription(
+        key=SettingKey.LAUNDRY_CARE_WASHER_I_DOS_2_BASE_LEVEL,
+        device_class=NumberDeviceClass.VOLUME,
+        translation_key="washer_i_dos_2_base_level",
+    ),
 )
 
 
@@ -94,7 +104,7 @@ def _get_entities_for_appliance(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Home Connect number."""
     setup_home_connect_entry(

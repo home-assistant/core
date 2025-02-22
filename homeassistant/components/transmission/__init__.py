@@ -15,7 +15,7 @@ from transmission_rpc.error import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -54,7 +54,7 @@ from .const import (
     SERVICE_START_TORRENT,
     SERVICE_STOP_TORRENT,
 )
-from .coordinator import TransmissionDataUpdateCoordinator
+from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
 _LOGGER = logging.getLogger(__name__)
@@ -78,7 +78,9 @@ MIGRATION_NAME_TO_KEY = {
 
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(),
+        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
     }
 )
 
@@ -114,8 +116,6 @@ SERVICE_STOP_TORRENT_SCHEMA = vol.All(
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-type TransmissionConfigEntry = ConfigEntry[TransmissionDataUpdateCoordinator]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -165,12 +165,16 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
     """Unload Transmission Entry from config_entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
     """Migrate an old config entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",

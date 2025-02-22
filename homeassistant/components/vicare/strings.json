@@ -338,6 +338,18 @@
       "buffer_top_temperature": {
         "name": "Buffer top temperature"
       },
+      "buffer_mid_top_temperature": {
+        "name": "Buffer mid top temperature"
+      },
+      "buffer_middle_temperature": {
+        "name": "Buffer middle temperature"
+      },
+      "buffer_mid_bottom_temperature": {
+        "name": "Buffer mid bottom temperature"
+      },
+      "buffer_bottom_temperature": {
+        "name": "Buffer bottom temperature"
+      },
       "buffer_main_temperature": {
         "name": "Buffer main temperature"
       },
@@ -478,6 +490,9 @@
       },
       "spf_heating": {
         "name": "Seasonal performance factor - heating"
+      },
+      "fuel_need": {
+        "name": "Fuel need"
       }
     },
     "water_heater": {

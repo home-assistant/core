@@ -3155,6 +3155,79 @@ async def test_handle_intents_with_response_errors(
 
 
 @pytest.mark.usefixtures("init_components")
+async def test_handle_intents_filters_results(
+    hass: HomeAssistant,
+    init_components: None,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test that handle_intents can filter responses."""
+    assert await async_setup_component(hass, "climate", {})
+    area_registry.async_create("living room")
+
+    agent: default_agent.DefaultAgent = hass.data[DATA_DEFAULT_ENTITY]
+
+    user_input = ConversationInput(
+        text="What is the temperature in the living room?",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        language=hass.config.language,
+        agent_id=None,
+    )
+
+    mock_result = RecognizeResult(
+        intent=Intent("HassTurnOn"),
+        intent_data=IntentData([]),
+        entities={},
+        entities_list=[],
+    )
+    results = []
+
+    def _filter_intents(result):
+        results.append(result)
+        # We filter first, not 2nd.
+        return len(results) == 1
+
+    with (
+        patch(
+            "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize_intent",
+            return_value=mock_result,
+        ) as mock_recognize,
+        patch(
+            "homeassistant.components.conversation.default_agent.DefaultAgent._async_process_intent_result",
+        ) as mock_process,
+    ):
+        response = await agent.async_handle_intents(
+            user_input, intent_filter=_filter_intents
+        )
+
+        assert len(mock_recognize.mock_calls) == 1
+        assert len(mock_process.mock_calls) == 0
+
+        # It was ignored
+        assert response is None
+
+        # Check we filtered things
+        assert len(results) == 1
+        assert results[0] is mock_result
+
+        # Second time it is not filtered
+        response = await agent.async_handle_intents(
+            user_input, intent_filter=_filter_intents
+        )
+
+        assert len(mock_recognize.mock_calls) == 2
+        assert len(mock_process.mock_calls) == 2
+
+        # Check we filtered things
+        assert len(results) == 2
+        assert results[1] is mock_result
+
+        # It was ignored
+        assert response is not None
+
+
+@pytest.mark.usefixtures("init_components")
 async def test_state_names_are_not_translated(
     hass: HomeAssistant,
     init_components: None,
@@ -3178,3 +3251,39 @@ async def test_state_names_are_not_translated(
             mock_async_render.call_args.args[0]["state"].state
             == weather.ATTR_CONDITION_PARTLYCLOUDY
         )
+
+
+async def test_language_with_alternative_code(
+    hass: HomeAssistant, init_components
+) -> None:
+    """Test different codes for the same language."""
+    entity_ids: dict[str, str] = {}
+    for i, (lang_code, sentence, name) in enumerate(
+        (
+            ("no", "slå på lampen", "lampen"),  # nb
+            ("no-NO", "slå på lampen", "lampen"),  # nb
+            ("iw", "הדליקי את המנורה", "מנורה"),  # he
+        )
+    ):
+        if not (entity_id := entity_ids.get(name)):
+            # Reuse entity id for the same name
+            entity_id = f"light.test{i}"
+            entity_ids[name] = entity_id
+
+        hass.states.async_set(entity_id, "off", attributes={ATTR_FRIENDLY_NAME: name})
+        calls = async_mock_service(hass, LIGHT_DOMAIN, "turn_on")
+        await hass.services.async_call(
+            "conversation",
+            "process",
+            {
+                conversation.ATTR_TEXT: sentence,
+                conversation.ATTR_LANGUAGE: lang_code,
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert len(calls) == 1, f"Failed for {lang_code}, {sentence}"
+        call = calls[0]
+        assert call.domain == LIGHT_DOMAIN
+        assert call.service == "turn_on"
+        assert call.data == {"entity_id": [entity_id]}

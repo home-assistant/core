@@ -20,7 +20,7 @@
   "services": {
     "select_next": {
       "name": "Next",
-      "description": "Select the next option.",
+      "description": "Selects the next option.",
       "fields": {
         "cycle": {
           "name": "Cycle",

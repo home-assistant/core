@@ -119,6 +119,7 @@ homeassistant.components.bluetooth_tracker.*
 homeassistant.components.bmw_connected_drive.*
 homeassistant.components.bond.*
 homeassistant.components.braviatv.*
+homeassistant.components.bring.*
 homeassistant.components.brother.*
 homeassistant.components.browser.*
 homeassistant.components.bryant_evolution.*
@@ -233,6 +234,7 @@ homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
 homeassistant.components.history_stats.*
 homeassistant.components.holiday.*
+homeassistant.components.home_connect.*
 homeassistant.components.homeassistant.*
 homeassistant.components.homeassistant_alerts.*
 homeassistant.components.homeassistant_green.*
@@ -436,6 +438,7 @@ homeassistant.components.select.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
+homeassistant.components.sensorpush_cloud.*
 homeassistant.components.sensoterra.*
 homeassistant.components.senz.*
 homeassistant.components.sfr_box.*
