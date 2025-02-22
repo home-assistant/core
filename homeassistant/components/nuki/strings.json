@@ -63,7 +63,7 @@
       "fields": {
         "unlatch": {
           "name": "Unlatch",
-          "description": "Whether to also unlatch the lock when unlocking it."
+          "description": "Whether to also unlatch the door when unlocking it."
         }
       }
     },
