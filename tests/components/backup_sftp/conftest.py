@@ -20,6 +20,14 @@ from tests.common import MockConfigEntry
 
 CONFIG_ENTRY_TITLE = "SFTP Backup - testsshuser@127.0.0.1:22"
 TEST_AGENT_ID = "127.0.0.1.22.testsshuser.tmp.backup.location"
+USER_INPUT = {
+    CONF_HOST: "127.0.0.1",
+    CONF_PORT: 22,
+    CONF_USERNAME: "username",
+    CONF_PASSWORD: "password",
+    CONF_PRIVATE_KEY_FILE: "private_key",
+    CONF_BACKUP_LOCATION: "backup_location",
+}
 
 
 class AsyncFileIteratorMock:
