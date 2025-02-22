@@ -9,19 +9,13 @@ import dns.rdata
 import dns.rdataclass
 import dns.rdatatype
 
-from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .api import (
-    MinecraftServer,
-    MinecraftServerAddressError,
-    MinecraftServerConfigEntry,
-    MinecraftServerType,
-)
+from .api import MinecraftServer, MinecraftServerAddressError, MinecraftServerType
 from .const import DOMAIN, KEY_LATENCY, KEY_MOTD
-from .coordinator import MinecraftServerCoordinator
+from .coordinator import MinecraftServerConfigEntry, MinecraftServerCoordinator
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
@@ -43,29 +37,10 @@ async def async_setup_entry(
     # Workaround to avoid blocking imports from dnspython (https://github.com/rthalley/dnspython/issues/1083)
     await hass.async_add_executor_job(load_dnspython_rdata_classes)
 
-    # Create API instance.
-    api = MinecraftServer(
-        hass,
-        entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION),
-        entry.data[CONF_ADDRESS],
-    )
-
-    # Initialize API instance.
-    try:
-        await api.async_initialize()
-    except MinecraftServerAddressError as error:
-        raise ConfigEntryNotReady(f"Initialization failed: {error}") from error
-
-    # Store API instance.
-    entry.runtime_data = api
-
-    # Create coordinator instance.
+    # Create coordinator instance and store it.
     coordinator = MinecraftServerCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-
-    # Store coordinator instance.
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    domain_data[entry.entry_id] = coordinator
+    entry.runtime_data = coordinator
 
     # Set up platforms.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -77,16 +52,7 @@ async def async_unload_entry(
     hass: HomeAssistant, config_entry: MinecraftServerConfigEntry
 ) -> bool:
     """Unload Minecraft Server config entry."""
-
-    # Unload platforms.
-    unload_ok = await hass.config_entries.async_unload_platforms(
-        config_entry, PLATFORMS
-    )
-
-    # Clean up.
-    hass.data[DOMAIN].pop(config_entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
 async def async_migrate_entry(

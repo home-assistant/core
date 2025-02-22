@@ -8,7 +8,6 @@ from dns.resolver import LifetimeTimeout
 from mcstatus import BedrockServer, JavaServer
 from mcstatus.status_response import BedrockStatusResponse, JavaStatusResponse
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -16,8 +15,6 @@ _LOGGER = logging.getLogger(__name__)
 LOOKUP_TIMEOUT: float = 10
 DATA_UPDATE_TIMEOUT: float = 10
 DATA_UPDATE_RETRIES: int = 3
-
-type MinecraftServerConfigEntry = ConfigEntry[MinecraftServer]
 
 
 @dataclass

@@ -5,16 +5,22 @@ from __future__ import annotations
 from datetime import timedelta
 import logging
 
-from homeassistant.const import CONF_NAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .api import (
-    MinecraftServerConfigEntry,
+    MinecraftServer,
+    MinecraftServerAddressError,
     MinecraftServerConnectionError,
     MinecraftServerData,
     MinecraftServerNotInitializedError,
+    MinecraftServerType,
 )
+
+type MinecraftServerConfigEntry = ConfigEntry[MinecraftServerCoordinator]
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
@@ -32,7 +38,7 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
         config_entry: MinecraftServerConfigEntry,
     ) -> None:
         """Initialize coordinator instance."""
-        self._api = config_entry.runtime_data
+        self._api: MinecraftServer
 
         super().__init__(
             hass=hass,
@@ -41,6 +47,22 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
             logger=_LOGGER,
             update_interval=SCAN_INTERVAL,
         )
+
+    async def _async_setup(self) -> None:
+        """Set up the Minecraft Server data coordinator."""
+
+        # Create API instance.
+        self._api = MinecraftServer(
+            self.hass,
+            self.config_entry.data.get(CONF_TYPE, MinecraftServerType.JAVA_EDITION),
+            self.config_entry.data[CONF_ADDRESS],
+        )
+
+        # Initialize API instance.
+        try:
+            await self._api.async_initialize()
+        except MinecraftServerAddressError as error:
+            raise ConfigEntryNotReady(f"Initialization failed: {error}") from error
 
     async def _async_update_data(self) -> MinecraftServerData:
         """Get updated data from the server."""

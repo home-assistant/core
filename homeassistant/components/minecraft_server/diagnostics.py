@@ -8,8 +8,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_ADDRESS, CONF_NAME
 from homeassistant.core import HomeAssistant
 
-from .api import MinecraftServerConfigEntry
-from .const import DOMAIN
+from .coordinator import MinecraftServerConfigEntry
 
 TO_REDACT: Iterable[Any] = {CONF_ADDRESS, CONF_NAME, "players_list"}
 
@@ -18,7 +17,7 @@ async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, config_entry: MinecraftServerConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     return {
         "config_entry": {
