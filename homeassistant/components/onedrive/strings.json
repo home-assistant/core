@@ -122,7 +122,7 @@
         },
         "destination_folder": {
           "name": "Destination folder",
-          "description": "Folder inside the Home Assistant App Folder (`Apps/Home Assistant`) you want to upload the file to. Will be created if it does not exist.",
+          "description": "Folder inside the Home Assistant App Folder (Apps/Home Assistant) you want to upload the file to. Will be created if it does not exist.",
           "example": "photos/snapshots"
         }
       }

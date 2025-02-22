@@ -37,7 +37,9 @@ UPLOAD_SERVICE_SCHEMA = vol.Schema(
 CONTENT_SIZE_LIMIT = 250 * 1024 * 1024
 
 
-def _read_file_contents(hass: HomeAssistant, filenames: list[str]) -> list[bytes]:
+def _read_file_contents(
+    hass: HomeAssistant, filenames: list[str]
+) -> list[tuple[str, bytes]]:
     """Return the mime types and file contents for each file."""
     results = []
     for filename in filenames:
@@ -64,7 +66,7 @@ def _read_file_contents(hass: HomeAssistant, filenames: list[str]) -> list[bytes
                     "limit": str(CONTENT_SIZE_LIMIT),
                 },
             )
-        results.append(filename_path.read_bytes())
+        results.append((filename_path.name, filename_path.read_bytes()))
     return results
 
 
@@ -103,10 +105,8 @@ def async_register_services(hass: HomeAssistant) -> None:
             ) from err
 
         upload_tasks = [
-            client.upload_file(
-                folder_id, cast(str, call.data[CONF_FILENAME]).split("/")[-1], content
-            )
-            for content in file_results
+            client.upload_file(folder_id, file_name, content)
+            for file_name, content in file_results
         ]
         try:
             upload_results = await asyncio.gather(*upload_tasks)
