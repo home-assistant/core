@@ -68,7 +68,7 @@ async def async_reconnect_client(hass: HomeAssistant, data: Mapping[str, Any]) -
 
     for config_entry in hass.config_entries.async_loaded_entries(UNIFI_DOMAIN):
         if (
-            ((hub := config_entry.runtime_data) and not hub.available)
+            (not (hub := config_entry.runtime_data).available)
             or (client := hub.api.clients.get(mac)) is None
             or client.is_wired
         ):
@@ -85,7 +85,7 @@ async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> 
     - Neither IP, hostname nor name is configured.
     """
     for config_entry in hass.config_entries.async_loaded_entries(UNIFI_DOMAIN):
-        if (hub := config_entry.runtime_data) and not hub.available:
+        if (not (hub := config_entry.runtime_data).available):
             continue
 
         clients_to_remove = []
