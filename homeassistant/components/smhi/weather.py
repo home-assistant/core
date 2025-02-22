@@ -9,7 +9,7 @@ import logging
 from typing import Any, Final
 
 import aiohttp
-from pysmhi import SMHIForecast, SmhiForecastException, SMHIPointForecast
+from pysmhi import SMHIForecast, SmhiForecastException
 
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
@@ -55,12 +55,12 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client, sun
-from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 from homeassistant.util import Throttle
 
-from .const import ATTR_SMHI_THUNDER_PROBABILITY, DOMAIN, ENTITY_ID_SENSOR_FORMAT
+from .const import ATTR_SMHI_THUNDER_PROBABILITY, ENTITY_ID_SENSOR_FORMAT
+from .entity import SmhiWeatherBaseEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -114,18 +114,14 @@ async def async_setup_entry(
     async_add_entities([entity], True)
 
 
-class SmhiWeather(WeatherEntity):
+class SmhiWeather(SmhiWeatherBaseEntity, WeatherEntity):
     """Representation of a weather entity."""
 
-    _attr_attribution = "Swedish weather institute (SMHI)"
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_visibility_unit = UnitOfLength.KILOMETERS
     _attr_native_precipitation_unit = UnitOfPrecipitationDepth.MILLIMETERS
     _attr_native_wind_speed_unit = UnitOfSpeed.METERS_PER_SECOND
     _attr_native_pressure_unit = UnitOfPressure.HPA
-
-    _attr_has_entity_name = True
-    _attr_name = None
     _attr_supported_features = (
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
@@ -137,18 +133,10 @@ class SmhiWeather(WeatherEntity):
         session: aiohttp.ClientSession,
     ) -> None:
         """Initialize the SMHI weather entity."""
-        self._attr_unique_id = f"{latitude}, {longitude}"
+        super().__init__(latitude, longitude, session)
         self._forecast_daily: list[SMHIForecast] | None = None
         self._forecast_hourly: list[SMHIForecast] | None = None
         self._fail_count = 0
-        self._smhi_api = SMHIPointForecast(longitude, latitude, session=session)
-        self._attr_device_info = DeviceInfo(
-            entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{latitude}, {longitude}")},
-            manufacturer="SMHI",
-            model="v2",
-            configuration_url="http://opendata.smhi.se/apidocs/metfcst/parameters.html",
-        )
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
