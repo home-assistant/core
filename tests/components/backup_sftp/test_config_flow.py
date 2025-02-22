@@ -1,5 +1,6 @@
 """Tests config_flow."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from asyncssh.misc import PermissionDenied
@@ -7,11 +8,9 @@ from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 import pytest
 
 from homeassistant.components.backup_sftp.const import (
-    CONF_BACKUP_LOCATION,
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_PRIVATE_KEY_FILE,
     CONF_USERNAME,
     DOMAIN,
 )
@@ -20,18 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import ConfigEntryError
 
-from .conftest import TEST_AGENT_ID
+from .conftest import TEST_AGENT_ID, USER_INPUT
 
 from tests.common import MockConfigEntry
 
-USER_INPUT = {
-    CONF_HOST: "127.0.0.1",
-    CONF_PORT: 22,
-    CONF_USERNAME: "username",
-    CONF_PASSWORD: "password",
-    CONF_PRIVATE_KEY_FILE: "private_key",
-    CONF_BACKUP_LOCATION: "backup_location",
-}
+type ComponentSetup = Callable[[], Awaitable[None]]
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -139,3 +131,53 @@ async def test_config_flow_exceptions(
     result = await add()
     assert result["type"] == FlowResultType.FORM
     assert result["errors"] and result["errors"]["base"] == error_base
+
+
+@pytest.mark.parametrize(
+    ("new_password", "new_host", "reauth_reason"),
+    [
+        ("new1234new", USER_INPUT[CONF_HOST], "reauth_successful"),
+        (USER_INPUT[CONF_PASSWORD], "newhost", "reauth_key_changes"),
+    ],
+    ids=["successful_change", "key_change_made"],
+)
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth(
+    new_password: str,
+    new_host: str,
+    reauth_reason: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the reauthentication flow."""
+
+    config_entry.add_to_hass(hass)
+    result = await config_entry.start_reauth_flow(hass)
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    # Prepare a fake BackupAgentClient to simulate a successful connection.
+    fake_client = AsyncMock()
+    fake_client.__aenter__.return_value = fake_client
+    fake_client.list_backup_location.return_value = []  # Simulate a successful directory check.
+    fake_client.get_identifier = MagicMock(
+        return_value=f"{new_host}.22.testsshuser.tmp.backup.location"
+    )
+
+    # Patch the BackupAgentClient so that when the flow creates it, our fake is used.
+    with patch(
+        "homeassistant.components.backup_sftp.config_flow.BackupAgentClient",
+        return_value=fake_client,
+    ):
+        user_input = USER_INPUT.copy()
+        user_input["host"] = new_host
+        user_input["password"] = new_password
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input
+        )
+        await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == reauth_reason
+    assert result.get("description_placeholders") is None
