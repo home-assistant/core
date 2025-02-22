@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -31,18 +32,33 @@ from .const import (
 
 
 class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a SFTP Backup Storage config flow."""
+    """Handle an SFTP Backup Storage config flow."""
 
     VERSION = 1
 
-    async def async_step_user(
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauth dialog."""
+        return await self.async_step_user(user_input, "reauth_confirm")
+
+    async def async_step_user(
+        self,
+        user_input: dict[str, Any] | None = None,
+        step_id="user",
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
         placeholders = {}
 
         if user_input is not None:
+            LOGGER.debug("Source: ", self.source)
             # Create a session using your credentials
             user_config = SFTPConfigEntryData(
                 host=user_input.get(CONF_HOST),
@@ -89,6 +105,16 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(identifier)
+
+                if self.source == SOURCE_REAUTH:
+                    reauth_entry = self._get_reauth_entry()
+                    self._abort_if_unique_id_mismatch(
+                        reason="reauth_key_changes",
+                    )
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, data=user_input
+                    )
+
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
@@ -99,7 +125,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
             user_input = {}
 
         return self.async_show_form(
-            step_id="user",
+            step_id=step_id,
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_HOST): str,
