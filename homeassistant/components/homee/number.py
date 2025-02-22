@@ -17,9 +17,6 @@ from .const import HOMEE_UNIT_TO_HA_UNIT
 from .entity import HomeeEntity
 
 NUMBER_DESCRIPTIONS = {
-    AttributeType.CURRENT_VALVE_POSITION: NumberEntityDescription(
-        key="current_valve_position",
-    ),
     AttributeType.DOWN_POSITION: NumberEntityDescription(
         key="down_position",
         entity_category=EntityCategory.CONFIG,

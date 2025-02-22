@@ -1,9 +1,9 @@
 """Test homee sensors."""
 
-from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homee.const import (
@@ -18,7 +18,12 @@ from homeassistant.helpers import entity_registry as er
 
 from . import async_update_attribute_value, build_mock_node, setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture(autouse=True)
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
+    """Make sure all entities are enabled."""
 
 
 async def test_up_down_values(
@@ -118,12 +123,5 @@ async def test_sensor_snapshot(
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     with patch("homeassistant.components.homee.PLATFORMS", [Platform.SENSOR]):
         await setup_integration(hass, mock_config_entry)
-        entity_registry.async_update_entity(
-            "sensor.test_multisensor_node_state", disabled_by=None
-        )
-        await hass.async_block_till_done()
-        freezer.tick(timedelta(seconds=30))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

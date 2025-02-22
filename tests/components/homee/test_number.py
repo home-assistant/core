@@ -34,8 +34,8 @@ async def test_set_value(
         {ATTR_ENTITY_ID: "number.test_number_down_position", ATTR_VALUE: 90},
         blocking=True,
     )
-
-    mock_homee.set_value.assert_called_once_with(1, 2, 90)
+    number = mock_homee.nodes[0].attributes[0]
+    mock_homee.set_value.assert_called_once_with(number.node_id, number.id, 90)
 
 
 async def test_set_value_not_editable(

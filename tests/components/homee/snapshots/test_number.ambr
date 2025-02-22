@@ -599,7 +599,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Temperature offset',
     'platform': 'homee',
@@ -613,7 +613,6 @@
 # name: test_number_snapshot[number.test_number_temperature_offset-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
       'friendly_name': 'Test Number Temperature offset',
       'max': 128,
       'min': -5,
@@ -685,63 +684,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '57',
-  })
-# ---
-# name: test_number_snapshot[number.test_number_valve_position-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'number',
-    'entity_category': None,
-    'entity_id': 'number.test_number_valve_position',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Valve position',
-    'platform': 'homee',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'current_valve_position',
-    'unique_id': '00055511EECC-1-1',
-    'unit_of_measurement': '%',
-  })
-# ---
-# name: test_number_snapshot[number.test_number_valve_position-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Number Valve position',
-      'max': 100,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
-      'unit_of_measurement': '%',
-    }),
-    'context': <ANY>,
-    'entity_id': 'number.test_number_valve_position',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unavailable',
   })
 # ---
 # name: test_number_snapshot[number.test_number_wake_up_interval-entry]
