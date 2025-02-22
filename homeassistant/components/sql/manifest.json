@@ -1,6 +1,7 @@
 {
   "domain": "sql",
   "name": "SQL",
+  "after_dependencies": ["recorder"],
   "codeowners": ["@gjohansson-ST", "@dougiteixeira"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/sql",
