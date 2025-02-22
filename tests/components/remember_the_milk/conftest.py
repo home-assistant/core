@@ -32,7 +32,8 @@ def client_fixture() -> Generator[MagicMock]:
 async def storage(hass: HomeAssistant, client) -> AsyncGenerator[MagicMock]:
     """Mock the config storage."""
     with patch(
-        "homeassistant.components.remember_the_milk.RememberTheMilkConfiguration"
+        "homeassistant.components.remember_the_milk.RememberTheMilkConfiguration",
+        autospec=True,
     ) as storage_class:
         storage = storage_class.return_value
         storage.get_token.return_value = TOKEN

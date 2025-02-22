@@ -5,19 +5,17 @@ import voluptuous as vol
 
 from homeassistant.components import configurator
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
-from .const import LOGGER
+from .const import DOMAIN, LOGGER
 from .entity import RememberTheMilkEntity
 from .storage import RememberTheMilkConfiguration
 
 # httplib2 is a transitive dependency from RtmAPI. If this dependency is not
 # set explicitly, the library does not work.
-
-DOMAIN = "remember_the_milk"
 
 CONF_SHARED_SECRET = "shared_secret"
 
@@ -43,11 +41,12 @@ SERVICE_SCHEMA_CREATE_TASK = vol.Schema(
 SERVICE_SCHEMA_COMPLETE_TASK = vol.Schema({vol.Required(CONF_ID): cv.string})
 
 
-def setup(hass: HomeAssistant, config: ConfigType) -> bool:
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Remember the milk component."""
     component = EntityComponent[RememberTheMilkEntity](LOGGER, DOMAIN, hass)
 
     stored_rtm_config = RememberTheMilkConfiguration(hass)
+    await stored_rtm_config.setup()
     for rtm_config in config[DOMAIN]:
         account_name = rtm_config[CONF_NAME]
         LOGGER.debug("Adding Remember the milk account %s", account_name)
@@ -56,7 +55,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         token = stored_rtm_config.get_token(account_name)
         if token:
             LOGGER.debug("found token for account %s", account_name)
-            _create_instance(
+            await _create_instance(
                 hass,
                 account_name,
                 api_key,
@@ -66,7 +65,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 component,
             )
         else:
-            _register_new_account(
+            await _register_new_account(
                 hass, account_name, api_key, shared_secret, stored_rtm_config, component
             )
 
@@ -74,20 +73,28 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-def _create_instance(
-    hass, account_name, api_key, shared_secret, token, stored_rtm_config, component
-):
+async def _create_instance(
+    hass: HomeAssistant,
+    account_name: str,
+    api_key: str,
+    shared_secret: str,
+    token: str,
+    stored_rtm_config: RememberTheMilkConfiguration,
+    component: EntityComponent[RememberTheMilkEntity],
+) -> None:
     entity = RememberTheMilkEntity(
         account_name, api_key, shared_secret, token, stored_rtm_config
     )
-    component.add_entities([entity])
-    hass.services.register(
+    LOGGER.debug("Instance created for account %s", entity.name)
+    await entity.check_token(hass)
+    await component.async_add_entities([entity])
+    hass.services.async_register(
         DOMAIN,
         f"{account_name}_create_task",
         entity.create_task,
         schema=SERVICE_SCHEMA_CREATE_TASK,
     )
-    hass.services.register(
+    hass.services.async_register(
         DOMAIN,
         f"{account_name}_complete_task",
         entity.complete_task,
@@ -95,21 +102,32 @@ def _create_instance(
     )
 
 
-def _register_new_account(
-    hass, account_name, api_key, shared_secret, stored_rtm_config, component
-):
-    request_id = None
+async def _register_new_account(
+    hass: HomeAssistant,
+    account_name: str,
+    api_key: str,
+    shared_secret: str,
+    stored_rtm_config: RememberTheMilkConfiguration,
+    component: EntityComponent[RememberTheMilkEntity],
+) -> None:
+    """Register a new account."""
     api = Rtm(api_key, shared_secret, "write", None)
-    url, frob = api.authenticate_desktop()
+    url, frob = await hass.async_add_executor_job(api.authenticate_desktop)
     LOGGER.debug("Sent authentication request to server")
 
+    @callback
     def register_account_callback(fields: list[dict[str, str]]) -> None:
         """Call for register the configurator."""
-        api.retrieve_token(frob)
-        token = api.token
-        if api.token is None:
+        hass.async_create_task(handle_token(api, frob))
+
+    async def handle_token(api: Rtm, frob: str) -> None:
+        """Handle token."""
+        await hass.async_add_executor_job(api.retrieve_token, frob)
+
+        token: str | None = api.token
+        if token is None:
             LOGGER.error("Failed to register, please try again")
-            configurator.notify_errors(
+            configurator.async_notify_errors(
                 hass, request_id, "Failed to register, please try again."
             )
             return
@@ -117,7 +135,7 @@ def _register_new_account(
         stored_rtm_config.set_token(account_name, token)
         LOGGER.debug("Retrieved new token from server")
 
-        _create_instance(
+        await _create_instance(
             hass,
             account_name,
             api_key,
@@ -127,9 +145,9 @@ def _register_new_account(
             component,
         )
 
-        configurator.request_done(hass, request_id)
+        configurator.async_request_done(hass, request_id)
 
-    request_id = configurator.request_config(
+    request_id = configurator.async_request_config(
         hass,
         f"{DOMAIN} - {account_name}",
         callback=register_account_callback,
