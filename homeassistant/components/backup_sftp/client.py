@@ -101,7 +101,7 @@ class BackupAgentClient:
         self.cfg: SFTPConfigEntryData = config
         self._ssh: SSHClientConnection | None = None
         self.sftp: SFTPClient | None = None
-        LOGGER.info("Initialized with config: %s", self.cfg)
+        LOGGER.debug("Initialized with config: %s", self.cfg)
 
     async def __aenter__(self) -> "BackupAgentClient":
         """Async context manager entrypoint."""
