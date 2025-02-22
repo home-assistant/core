@@ -53,8 +53,10 @@ rules:
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
+  docs-supported-devices:
+    status: exempt
+    comment: The integration is a web service, there are no devices.
+  docs-supported-functions: done
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices:
