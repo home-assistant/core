@@ -1,4 +1,4 @@
-"""Tests for Google Drive."""
+"""Tests for SFTP Backup Location."""
 
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any
