@@ -136,6 +136,16 @@ TEMPERATURE_SENSOR_F_ATTRIBUTES = {
     "state_class": "measurement",
     "unit_of_measurement": "°F",
 }
+TEMPERATURE_DELTA_SENSOR_C_ATTRIBUTES = {
+    "device_class": "temperature_delta",
+    "state_class": "measurement",
+    "unit_of_measurement": "°C",
+}
+TEMPERATURE_DELTA_SENSOR_F_ATTRIBUTES = {
+    "device_class": "temperature_delta",
+    "state_class": "measurement",
+    "unit_of_measurement": "°F",
+}
 VOLUME_SENSOR_FT3_ATTRIBUTES = {
     "device_class": "volume",
     "state_class": "measurement",
@@ -1279,6 +1289,9 @@ async def test_statistic_during_period_calendar(
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "°C"}, 10),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "°F"}, 50),
         (TEMPERATURE_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature": "K"}, 283.15),
+        (TEMPERATURE_DELTA_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature_delta": "°C"}, 10),
+        (TEMPERATURE_DELTA_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature_delta": "°F"}, 18),
+        (TEMPERATURE_DELTA_SENSOR_C_ATTRIBUTES, 10, 10, {"temperature_delta": "K"}, 10),
         (VOLUME_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "m³"}, 10),
         (VOLUME_SENSOR_M3_ATTRIBUTES, 10, 10, {"volume": "ft³"}, 353.14666),
     ],
@@ -1457,6 +1470,7 @@ async def test_sum_statistics_during_period_unit_conversion(
         {"power": "Pa"},
         {"pressure": "K"},
         {"temperature": "m³"},
+        {"temperature_delta": "mm"},
         {"volume": "kWh"},
     ],
 )
@@ -1741,6 +1755,34 @@ async def test_statistics_during_period_empty_statistic_ids(
             "temperature",
         ),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°F", "°F", "temperature"),
+        (
+            US_CUSTOMARY_SYSTEM,
+            TEMPERATURE_DELTA_SENSOR_C_ATTRIBUTES,
+            "°C",
+            "°C",
+            "temperature_delta",
+        ),
+        (
+            METRIC_SYSTEM,
+            TEMPERATURE_DELTA_SENSOR_C_ATTRIBUTES,
+            "°C",
+            "°C",
+            "temperature_delta",
+        ),
+        (
+            US_CUSTOMARY_SYSTEM,
+            TEMPERATURE_DELTA_SENSOR_F_ATTRIBUTES,
+            "°F",
+            "°F",
+            "temperature_delta",
+        ),
+        (
+            METRIC_SYSTEM,
+            TEMPERATURE_DELTA_SENSOR_F_ATTRIBUTES,
+            "°F",
+            "°F",
+            "temperature_delta",
+        ),
         (US_CUSTOMARY_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
         (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "ft³", "ft³", "volume"),
         (
@@ -1916,6 +1958,13 @@ async def test_list_statistic_ids(
             "°F",
             "°C",
             "temperature",
+        ),
+        (
+            TEMPERATURE_DELTA_SENSOR_C_ATTRIBUTES,
+            TEMPERATURE_DELTA_SENSOR_F_ATTRIBUTES,
+            "°F",
+            "°C",
+            "temperature_delta",
         ),
         (
             VOLUME_SENSOR_FT3_ATTRIBUTES,
@@ -2711,6 +2760,8 @@ async def test_backup_start_no_recorder(
         (METRIC_SYSTEM, SPEED_SENSOR_MPH_ATTRIBUTES, "m/s", "speed"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_C_ATTRIBUTES, "°C", "temperature"),
         (METRIC_SYSTEM, TEMPERATURE_SENSOR_F_ATTRIBUTES, "°C", "temperature"),
+        (METRIC_SYSTEM, TEMPERATURE_DELTA_SENSOR_C_ATTRIBUTES, "°C", "temperature_delta"),
+        (METRIC_SYSTEM, TEMPERATURE_DELTA_SENSOR_F_ATTRIBUTES, "°C", "temperature_delta"),
         (METRIC_SYSTEM, VOLUME_SENSOR_FT3_ATTRIBUTES, "m³", "volume"),
         (METRIC_SYSTEM, VOLUME_SENSOR_M3_ATTRIBUTES, "m³", "volume"),
     ],
