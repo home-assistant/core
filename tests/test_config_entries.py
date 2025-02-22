@@ -6542,6 +6542,93 @@ async def test_update_subentry_and_abort(
         assert result["reason"] == "reconfigure_successful"
 
 
+@pytest.mark.parametrize(
+    ("source", "reason"),
+    [
+        (config_entries.SOURCE_REAUTH, "reauth_successful"),
+        (config_entries.SOURCE_RECONFIGURE, "reconfigure_successful"),
+    ],
+)
+async def test_update_entry_and_reload_not_reload_if_update_listener(
+    hass: HomeAssistant,
+    source: str,
+    reason: str,
+) -> None:
+    """Test updating an entry and not reloading if update listener."""
+    entry = MockConfigEntry(
+        domain="comp",
+        unique_id="1234",
+        title="Test",
+        data={"vendor": "data"},
+        options={"vendor": "options"},
+    )
+    entry.add_to_hass(hass)
+
+    called_setup = []
+    called_update_listener = []
+
+    async def update_listener(hass: HomeAssistant, entry: ConfigEntry):
+        """Mock update listener."""
+        called_update_listener.append(1)
+
+    async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+        """Mock setting up entry."""
+        called_setup.append(1)
+        entry.async_on_unload(entry.add_update_listener(update_listener))
+        return True
+
+    comp = MockModule(
+        "comp",
+        async_setup_entry=async_setup_entry,
+        async_unload_entry=AsyncMock(return_value=True),
+    )
+    mock_integration(hass, comp)
+    mock_platform(hass, "comp.config_flow", None)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+
+    kwargs = {
+        "unique_id": "5678",
+        "title": "Updated title",
+        "data": {"vendor": "data2"},
+        "options": {"vendor": "options2"},
+    }
+
+    class MockFlowHandler(config_entries.ConfigFlow):
+        """Define a mock flow handler."""
+
+        VERSION = 1
+
+        async def async_step_reauth(self, data):
+            """Mock Reauth."""
+            return self.async_update_reload_and_abort(entry, **kwargs)
+
+        async def async_step_reconfigure(self, data):
+            """Mock Reconfigure."""
+            return self.async_update_reload_and_abort(entry, **kwargs)
+
+    with mock_config_flow("comp", MockFlowHandler):
+        if source == config_entries.SOURCE_REAUTH:
+            result = await entry.start_reauth_flow(hass)
+        elif source == config_entries.SOURCE_RECONFIGURE:
+            result = await entry.start_reconfigure_flow(hass)
+
+    await hass.async_block_till_done()
+
+    assert entry.title == "Updated title"
+    assert entry.unique_id == "5678"
+    assert entry.data == {"vendor": "data2"}
+    assert entry.options == {"vendor": "options2"}
+    assert entry.state == config_entries.ConfigEntryState.LOADED
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == reason
+
+    # Assert entry was reloaded
+    assert len(called_setup) == 2
+    assert len(called_update_listener) == 0
+    assert len(comp.async_unload_entry.mock_calls) == 1
+
+
 async def test_reconfigure_subentry_create_subentry(hass: HomeAssistant) -> None:
     """Test it's not allowed to create a subentry from a subentry reconfigure flow."""
     subentry_id = "blabla"
