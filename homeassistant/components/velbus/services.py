@@ -12,7 +12,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.storage import STORAGE_DIR
@@ -77,22 +77,12 @@ def setup_services(hass: HomeAssistant) -> None:
     async def scan(call: ServiceCall) -> None:
         """Handle a scan service call."""
         entry = await get_config_entry(call)
-        try:
-            await entry.runtime_data.controller.scan()
-        except OSError as exc:
-            raise HomeAssistantError(
-                f"Could not execute scan service for {entry.title}"
-            ) from exc
+        await entry.runtime_data.controller.scan()
 
     async def syn_clock(call: ServiceCall) -> None:
         """Handle a sync clock service call."""
         entry = await get_config_entry(call)
-        try:
-            await entry.runtime_data.controller.sync_clock()
-        except OSError as exc:
-            raise HomeAssistantError(
-                f"Could not execute scan service for {entry.title}"
-            ) from exc
+        await entry.runtime_data.controller.sync_clock()
 
     async def set_memo_text(call: ServiceCall) -> None:
         """Handle Memo Text service call."""
@@ -101,12 +91,7 @@ def setup_services(hass: HomeAssistant) -> None:
         module = entry.runtime_data.controller.get_module(call.data[CONF_ADDRESS])
         if not module:
             raise ServiceValidationError("Module not found")
-        try:
-            await module.set_memo_text(memo_text.async_render())
-        except OSError as exc:
-            raise HomeAssistantError(
-                f"Could not execute scan service for {entry.title}"
-            ) from exc
+        await module.set_memo_text(memo_text.async_render())
 
     async def clear_cache(call: ServiceCall) -> None:
         """Handle a clear cache service call."""
