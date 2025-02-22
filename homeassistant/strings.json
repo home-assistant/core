@@ -71,7 +71,9 @@
       "standby": "Standby",
       "paused": "Paused",
       "home": "Home",
-      "not_home": "Away"
+      "not_home": "Away",
+      "charging": "Charging",
+      "discharging": "Discharging"
     },
     "config_flow": {
       "title": {
