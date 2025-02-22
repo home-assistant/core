@@ -35,9 +35,9 @@ _MSG_USR = (
     "special characters accepted via the vendor's website are not valid here."
 )
 
-LOG_HINT_429_CREDS = ("evohome.credentials", logging.ERROR, _MSG_429)
-LOG_HINT_OTH_CREDS = ("evohome.credentials", logging.ERROR, _MSG_OTH)
-LOG_HINT_USR_CREDS = ("evohome.credentials", logging.ERROR, _MSG_USR)
+LOG_HINT_429_CREDS = ("homeassistant.components.evohome", logging.ERROR, _MSG_429)
+LOG_HINT_OTH_CREDS = ("homeassistant.components.evohome", logging.ERROR, _MSG_OTH)
+LOG_HINT_USR_CREDS = ("homeassistant.components.evohome", logging.ERROR, _MSG_USR)
 
 LOG_HINT_429_AUTH = ("evohome.auth", logging.ERROR, _MSG_429)
 LOG_HINT_OTH_AUTH = ("evohome.auth", logging.ERROR, _MSG_OTH)
@@ -90,12 +90,6 @@ LOG_FGET_TOO_MANY = (
 )
 
 
-LOG_SETUP_FAILED = (
-    "homeassistant.setup",
-    logging.ERROR,
-    "Setup failed for 'evohome': Integration failed to initialize.",
-)
-
 EXC_BAD_CONNECTION = aiohttp.ClientConnectionError(
     "Connection error",
 )
@@ -114,21 +108,21 @@ EXC_BAD_GATEWAY = aiohttp.ClientResponseError(
 )
 
 AUTHENTICATION_TESTS: dict[Exception, list] = {
-    EXC_BAD_CONNECTION: [LOG_HINT_OTH_CREDS, LOG_FAIL_CONNECTION, LOG_SETUP_FAILED],
-    EXC_BAD_CREDENTIALS: [LOG_HINT_USR_CREDS, LOG_FAIL_CREDENTIALS, LOG_SETUP_FAILED],
-    EXC_BAD_GATEWAY: [LOG_HINT_OTH_CREDS, LOG_FAIL_GATEWAY, LOG_SETUP_FAILED],
-    EXC_TOO_MANY_REQUESTS: [LOG_HINT_429_CREDS, LOG_FAIL_TOO_MANY, LOG_SETUP_FAILED],
+    EXC_BAD_CONNECTION: [LOG_HINT_OTH_CREDS, LOG_FAIL_CONNECTION],
+    EXC_BAD_CREDENTIALS: [LOG_HINT_USR_CREDS, LOG_FAIL_CREDENTIALS],
+    EXC_BAD_GATEWAY: [LOG_HINT_OTH_CREDS, LOG_FAIL_GATEWAY],
+    EXC_TOO_MANY_REQUESTS: [LOG_HINT_429_CREDS, LOG_FAIL_TOO_MANY],
 }
 
 CLIENT_REQUEST_TESTS: dict[Exception, list] = {
-    EXC_BAD_CONNECTION: [LOG_HINT_OTH_AUTH, LOG_FGET_CONNECTION, LOG_SETUP_FAILED],
-    EXC_BAD_GATEWAY: [LOG_HINT_OTH_AUTH, LOG_FGET_GATEWAY, LOG_SETUP_FAILED],
-    EXC_TOO_MANY_REQUESTS: [LOG_HINT_429_AUTH, LOG_FGET_TOO_MANY, LOG_SETUP_FAILED],
+    EXC_BAD_CONNECTION: [LOG_HINT_OTH_AUTH, LOG_FGET_CONNECTION],
+    EXC_BAD_GATEWAY: [LOG_HINT_OTH_AUTH, LOG_FGET_GATEWAY],
+    EXC_TOO_MANY_REQUESTS: [LOG_HINT_429_AUTH, LOG_FGET_TOO_MANY],
 }
 
 
 @pytest.mark.parametrize("exception", AUTHENTICATION_TESTS)
-async def test_authentication_failure_v2(
+async def test_authentication_failure_import(
     hass: HomeAssistant,
     config: dict[str, str],
     exception: Exception,
@@ -152,8 +146,36 @@ async def test_authentication_failure_v2(
     assert caplog.record_tuples == AUTHENTICATION_TESTS[exception]
 
 
+@pytest.mark.parametrize("exception", AUTHENTICATION_TESTS)
+async def test_authentication_failure_config(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    exception: Exception,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test failure to setup an evohome-compatible system.
+
+    In this instance, the failure occurs in the v2 API.
+    """
+
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "evohome.credentials.CredentialsManagerBase._request", side_effect=exception
+        ),
+        caplog.at_level(logging.WARNING),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+
+    assert caplog.record_tuples == AUTHENTICATION_TESTS[exception]
+
+
 @pytest.mark.parametrize("exception", CLIENT_REQUEST_TESTS)
-async def test_client_request_failure_v2(
+async def test_client_request_failure_import(
     hass: HomeAssistant,
     config: dict[str, str],
     exception: Exception,
@@ -175,6 +197,36 @@ async def test_client_request_failure_v2(
         result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
 
     assert result is False
+
+    assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
+
+
+@pytest.mark.parametrize("exception", CLIENT_REQUEST_TESTS)
+async def test_client_request_failure_config(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    exception: Exception,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test failure to setup an evohome-compatible system.
+
+    In this instance, the failure occurs in the v2 API.
+    """
+
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request("default"),
+        ),
+        patch("evohome.auth.AbstractAuth._request", side_effect=exception),
+        caplog.at_level(logging.WARNING),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.SETUP_ERROR
 
     assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
 

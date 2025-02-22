@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, Final
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
@@ -19,6 +19,7 @@ from evohomeasync2.schemas.const import (
     ZoneModelType as EvoZoneModelType,
     ZoneType as EvoZoneType,
 )
+import voluptuous as vol
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -30,10 +31,16 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import ATTR_ENTITY_ID, PRECISION_TENTHS, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -67,6 +74,47 @@ EVO_PRESET_TO_HA = {
     EvoZoneMode.PERMANENT_OVERRIDE: "permanent",
 }
 HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
+
+
+RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
+    {vol.Required(ATTR_ENTITY_ID): cv.entity_id}
+)
+SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_ZONE_TEMP): vol.All(
+            vol.Coerce(float), vol.Range(min=4.0, max=35.0)
+        ),
+        vol.Optional(ATTR_DURATION_UNTIL): vol.All(
+            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
+        ),
+    }
+)
+
+
+async def async_setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
+    """Set up services for Evohome's Climate entities."""
+    if discovery_info is None:
+        return
+
+    platform = async_get_current_platform()
+
+    platform.async_register_entity_service(
+        EvoService.RESET_ZONE_OVERRIDE,
+        RESET_ZONE_OVERRIDE_SCHEMA,
+        "async_zone_svc_request",
+    )
+
+    platform.async_register_entity_service(
+        EvoService.SET_ZONE_OVERRIDE,
+        SET_ZONE_OVERRIDE_SCHEMA,
+        "async_zone_svc_request",
+    )
 
 
 async def async_setup_entry(

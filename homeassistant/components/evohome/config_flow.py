@@ -20,15 +20,20 @@ from homeassistant.core import callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers.storage import Store
 
 from .const import (
     CONF_HIGH_PRECISION,
     CONF_LOCATION_IDX,
     DEFAULT_HIGH_PRECISION,
+    DEFAULT_HIGH_PRECISION_LEGACY,
     DEFAULT_LOCATION_IDX,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MINIMUM_SCAN_INTERVAL,
+    MINIMUM_SCAN_INTERVAL_LEGACY,
+    STORAGE_KEY,
+    STORAGE_VER,
 )
 from .storage import TokenDataT, TokenManager
 
@@ -45,25 +50,10 @@ STEP_LOCATION_SCHEMA = vol.Schema(
     }
 )
 
-STEP_INTERVAL_SCHEMA = vol.Schema(  # scan_interval here is an int
-    {
-        vol.Optional(CONF_SCAN_INTERVAL, default=DEFAULT_SCAN_INTERVAL): vol.All(
-            cv.positive_int, vol.Range(min=MINIMUM_SCAN_INTERVAL)
-        )
-    }
-)
-
-STEP_PRECISION_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_HIGH_PRECISION, default=DEFAULT_HIGH_PRECISION): bool,
-    }
-)
-
 DEFAULT_OPTIONS: Final = {
-    **STEP_INTERVAL_SCHEMA({CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL}),
-    **STEP_PRECISION_SCHEMA({CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION}),
+    CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION,
+    CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
 }
-
 
 SZ_TOKEN_DATA: Final = "token_data"
 
@@ -88,11 +78,17 @@ class EvoRuntimeDataT(TypedDict):
     token_manager: NotRequired[int]
 
 
+class _TokenStoreT(TypedDict):
+    username: str
+    refresh_token: str
+    access_token: str
+    access_token_expires: str  # dt.isoformat()  # TZ-aware
+    session_id: NotRequired[str]
+    session_id_expires: NotRequired[str]  # dt.isoformat()  # TZ-aware
+
+
 class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for Evohome."""
-
-    # VERSION = 1
-    # MINOR_VERSION = 1
 
     _token_manager: TokenManager
     _client: ec2.EvohomeClient
@@ -104,28 +100,31 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         self._option: dict[str, Any] = DEFAULT_OPTIONS
 
     async def async_step_import(self, config: EvoConfigFileDictT) -> ConfigFlowResult:
-        """Handle a flow initiated by configuration file."""
+        """Handle a flow initiated by import from a configuration file.
 
-        # before testing the credentials (i.e. for load/save callbacks)
-        self._config.update(
-            {k: v for k, v in config.items() if k != CONF_SCAN_INTERVAL}
-        )
+        Will abort if the unique_id (username) is already configured.
+        """
 
-        # first, check credentials, which will _abort_if_unique_id_configured()
-        self._token_manager = await self._test_credentials(
-            config[CONF_USERNAME], config[CONF_PASSWORD]
-        )
+        # for import, do not validate the user credentials/location index here
+        await self.async_set_unique_id(config[CONF_USERNAME].lower())
+        self._abort_if_unique_id_configured()  # is this required?
 
-        self._client = await self._test_location_idx(
-            self._token_manager,
-            config[CONF_LOCATION_IDX],
-        )
+        self._config = {k: v for k, v in config.items() if k != CONF_SCAN_INTERVAL}
+
+        # leverage any cached tokens by moving them to the config entry
+        store: Store[_TokenStoreT] = Store(self.hass, STORAGE_VER, STORAGE_KEY)
+        cache: _TokenStoreT | None = await store.async_load()
+
+        await store.async_remove()
+
+        if cache is not None and cache.get(CONF_USERNAME) == config[CONF_USERNAME]:
+            self._config[SZ_TOKEN_DATA] = cache
 
         # a timedelta is not serializable, so convert to seconds
         self._option[CONF_SCAN_INTERVAL] = config[CONF_SCAN_INTERVAL].seconds
 
-        # previously, high_precision were implicitly enabled, so enable for imports
-        self._option[CONF_HIGH_PRECISION] = True
+        # before config flow, high_precision was implicitly enabled
+        self._option[CONF_HIGH_PRECISION] = DEFAULT_HIGH_PRECISION_LEGACY
 
         return self.async_create_entry(
             title="Evohome", data=self._config, options=self._option
@@ -168,10 +167,10 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
 
-            except ec2.BadUserCredentialsError:
+            except ConfigEntryAuthFailed:  # ec2.BadUserCredentialsError
                 errors["base"] = "invalid_auth"
 
-            except ec2.ApiRequestFailedError:
+            except ConfigEntryNotReady:  # ec2.ApiRequestFailedError:
                 errors["base"] = "cannot_connect"
 
             else:
@@ -233,7 +232,7 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             raise ConfigEntryNotReady(str(err)) from err
 
         await self.async_set_unique_id(username.lower())
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured()  # is this required?
 
         return token_manager
 
@@ -284,48 +283,47 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
 class EvoOptionsFlowHandler(OptionsFlow):
     """Handle options flow for Evohome."""
 
-    # VERSION = 1
-    # MINOR_VERSION = 1
-
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize an options flow handler for Evohome."""
 
-        self._option: dict[str, Any] = {}
+        self._options: dict[str, Any] = {}
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the first step of options flow."""
-        return await self.async_step_scan_interval(user_input)
+        """Handle the first step of options flow.
 
-    async def async_step_scan_interval(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the scan_interval option."""
+        Provides responsible default values for high_precision and scan_interval.
+        """
 
         errors: dict[str, str] = {}
 
-        if user_input is not None:
-            self._option.update(user_input)
-            return await self.async_step_high_precision()
+        self._options = dict(self.config_entry.options)
 
-        return self.async_show_form(
-            step_id="scan_interval", data_schema=STEP_INTERVAL_SCHEMA, errors=errors
+        if user_input is not None:
+            self._options.update(user_input)
+            # Finished collecting all settings
+            return self.async_create_entry(title="Evohome", data=self._options)
+
+        # suggest False, rather than previous value: self._options[CONF_HIGH_PRECISION]
+        default_high_precision = DEFAULT_HIGH_PRECISION
+
+        # suggest 180 (not 60) seconds, unless previously set to a higher value
+        default_scan_interval = max(
+            (MINIMUM_SCAN_INTERVAL, self._options[CONF_SCAN_INTERVAL])
         )
 
-    async def async_step_high_precision(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Second page."""
-
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            self._option.update(user_input)
-            # Finished collecting all settings
-            return self.async_create_entry(title="Evohome", data=self._option)
+        data_schema = vol.Schema(
+            {
+                vol.Optional(CONF_HIGH_PRECISION, default=default_high_precision): bool,
+                vol.Optional(
+                    CONF_SCAN_INTERVAL, default=default_scan_interval
+                ): vol.All(
+                    cv.positive_int, vol.Range(min=MINIMUM_SCAN_INTERVAL_LEGACY)
+                ),
+            }
+        )
 
         return self.async_show_form(
-            step_id="high_precision", data_schema=STEP_PRECISION_SCHEMA, errors=errors
+            step_id="init", data_schema=data_schema, errors=errors
         )
