@@ -4,9 +4,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from asyncssh.misc import PermissionDenied
+from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 
 from .client import BackupAgentClient
 from .const import (
@@ -17,6 +20,7 @@ from .const import (
     CONF_PRIVATE_KEY_FILE,
     CONF_USERNAME,
     DATA_BACKUP_AGENT_LISTENERS,
+    LOGGER,
 )
 
 type SFTPConfigEntry = ConfigEntry["SFTPConfigEntryData"]
@@ -33,6 +37,15 @@ class SFTPConfigEntryData:
     private_key_file: str = ""
     backup_location: str = ""
 
+    def __str__(self):
+        """Override string implementation of Config Entry to hide password."""
+        str_repr = super().__str__()
+        if bool(self.password):
+            return str_repr.replace(
+                f"password='{self.password}'", "password='<hidden>'"
+            )
+        return str_repr
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
     """Set up SFTP client from a config entry."""
@@ -48,11 +61,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
     entry.runtime_data = cfg
 
     # Check if we can list directory items during setup.
-    # This will raise exception if where is something either wrong
+    # This will raise exception if there is something either wrong
     # with SSH server or config.
     try:
         async with BackupAgentClient(cfg) as client:
             assert isinstance(await client.list_backup_location(), list)
+    except (OSError, PermissionDenied, SFTPNoSuchFile, SFTPPermissionDenied) as e:
+        LOGGER.error(
+            "Failure occurred during integration setup. Reauth is needed. %s", str(e)
+        )
+        entry.async_start_reauth(hass)
+        raise HomeAssistantError(e) from e
     except Exception as e:
         raise ConfigEntryNotReady from e
 
