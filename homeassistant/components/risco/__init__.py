@@ -2,10 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass, field
 import logging
-from typing import Any
 
 from pyrisco import CannotConnectError, RiscoCloud, RiscoLocal, UnauthorizedError
 from pyrisco.common import Partition, System, Zone
@@ -22,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -35,6 +33,9 @@ from .const import (
     TYPE_LOCAL,
 )
 from .coordinator import RiscoDataUpdateCoordinator, RiscoEventsDataUpdateCoordinator
+from .models import LocalData
+
+CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
@@ -43,14 +44,6 @@ PLATFORMS = [
     Platform.SWITCH,
 ]
 _LOGGER = logging.getLogger(__name__)
-
-
-@dataclass
-class LocalData:
-    """A data class for local data passed to the platforms."""
-
-    system: RiscoLocal
-    partition_updates: dict[int, Callable[[], Any]] = field(default_factory=dict)
 
 
 def is_local(entry: ConfigEntry) -> bool:
@@ -75,7 +68,10 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
     data = entry.data
     concurrency = entry.options.get(CONF_CONCURRENCY, DEFAULT_CONCURRENCY)
     risco = RiscoLocal(
-        data[CONF_HOST], data[CONF_PORT], data[CONF_PIN], concurrency=concurrency
+        data[CONF_HOST],
+        data[CONF_PORT],
+        data[CONF_PIN],
+        concurrency=concurrency,
     )
 
     try:
