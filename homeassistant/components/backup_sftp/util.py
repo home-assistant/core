@@ -1,90 +1,106 @@
 """Utilities for the Backblaze B2 integration."""
 
 import asyncio
-from collections.abc import AsyncIterator
-from concurrent.futures import Future
 import io
+import json
+import tarfile
 
-from .const import LOGGER
+from collections.abc import AsyncIterator
+from typing import cast
+
+from asyncssh.sftp import SFTPClientFile
+from homeassistant.components.backup.models import AddonInfo, AgentBackup, Folder
+from homeassistant.components.backup.manager import BackupAgentError
+
+from .const import BUF_SIZE, LOGGER
 
 
-class BufferedAsyncIteratorToSyncStream(io.RawIOBase):
-    """An wrapper to make an AsyncIterator[bytes] a buffered synchronous readable stream."""
+class AsyncSSHFileWrapper(io.RawIOBase):
+    """
+    A synchronous file-like adapter that wraps an asyncssh SFTP file.
+    Used when non-async functions need to access file-like object.
+    """
+    def __init__(self, async_file: SFTPClientFile, loop: asyncio.AbstractEventLoop):
+        self.async_file = async_file
+        self.loop = loop
 
-    _done: bool = False
-    _read_future: Future[bytes] | None = None
+    def read(self, size=-1) -> bytes:
+        future = asyncio.run_coroutine_threadsafe(
+            self.async_file.read(size), self.loop
+        )
+        return future.result()
 
-    def __init__(self, iterator: AsyncIterator[bytes], buffer_size: int = 1024) -> None:
-        """Initialize the stream."""
-        self._buffer = bytearray()
-        self._buffer_size = buffer_size
-        self._iterator = iterator
-        self._loop = asyncio.get_running_loop()
+    def seek(self, offset: int, whence: int = io.SEEK_SET) -> int:
+        future = asyncio.run_coroutine_threadsafe(
+            self.async_file.seek(offset, whence), self.loop
+        )
+        return future.result()
 
-    def readable(self) -> bool:
-        """Mark the stream as readable."""
-        return True
+    def tell(self) -> int:
+        future = asyncio.run_coroutine_threadsafe(
+            self.async_file.tell(), self.loop
+        )
+        return future.result()
 
-    def _load_next_chunk(self) -> None:
-        """Load the next chunk into the buffer."""
-        if self._done:
-            return
 
-        if not self._read_future:
-            # Fetch a larger chunk asynchronously
-            self._read_future = asyncio.run_coroutine_threadsafe(
-                self._fetch_next_chunk(), self._loop
+def get_backup_metadata(cfg: dict) -> dict:
+    """
+    Return dict ready for AgentBackup model from backup.json metadata.
+    `size` attribute to be specified by main call.
+    """
+
+    assert isinstance(cfg, dict) and "homeassistant" in cfg, (
+        "Provided object is not dict or not a valid backup metadata."
+    )
+
+    if cfg["homeassistant"]:
+        database_included = not cfg["homeassistant"]["exclude_database"]
+        homeassistant_included = True
+        homeassistant_version = cfg["homeassistant"]["version"]
+    else:
+        database_included = False
+        homeassistant_included = False
+        homeassistant_version = None
+
+    stub = {
+        "backup_id": cfg["slug"],
+        "database_included": database_included,
+        "date": cfg["date"],
+        "extra_metadata": cfg["extra"],
+        "homeassistant_included": homeassistant_included,
+        "homeassistant_version": homeassistant_version,
+        "name": cfg["name"],
+        "protected": cfg["protected"],
+        "addons": [
+            AddonInfo(
+                name=addon["name"], slug=addon["slug"], version=addon["version"]
             )
+            for addon in cfg["addons"]
+        ],
+        "folders": [Folder(f) for f in cfg["folders"]],
+    }
 
-        if self._read_future.done():
-            try:
-                data = self._read_future.result()
-                if data:
-                    self._buffer.extend(data)
-                else:
-                    self._done = True
-            except StopAsyncIteration:
-                self._done = True
-            except Exception as err:  # noqa: BLE001
-                raise io.BlockingIOError(f"Failed to load chunk: {err}") from err
-            finally:
-                self._read_future = None
+    return stub
 
-    async def _fetch_next_chunk(self) -> bytes:
-        """Fetch multiple chunks until buffer size is filled."""
-        chunks = []
-        total_size = 0
+
+def process_tar_from_adapter(adapter: AsyncSSHFileWrapper, file: str) -> dict:
+    """
+    Opens ./backup.json from backup file, KeyError is raised if
+    file does not exist in archive (not a valid backup)
+    and same exception is raised if any values from config files are missing
+    ...again, indicating that the mentioned .tar file may not be home assistant backup.
+    """
+    with tarfile.open(mode="r", fileobj=adapter) as t:
+        # Force the IDE to treat 't' as a TarFile:
+        tar = cast(tarfile.TarFile, t)
 
         try:
-            # Fill the buffer up to the specified size
-            while total_size < self._buffer_size:
-                chunk = await anext(self._iterator)
-                chunks.append(chunk)
-                total_size += len(chunk)
-        except StopAsyncIteration:
-            pass  # The end, return what we have
+            fileobj = tar.getmember("./backup.json")
+        except KeyError:
+            return None
 
-        return b"".join(chunks)
-
-    def read(self, size: int = -1) -> bytes:
-        """Read bytes."""
-        LOGGER.info("Reading %s bytes", size)
-        if size == -1:
-            # Read all remaining data
-            while not self._done:
-                self._load_next_chunk()
-            size = len(self._buffer)
-
-        # Ensure enough data in the buffer
-        while len(self._buffer) < size and not self._done:
-            self._load_next_chunk()
-
-        # Return requested data
-        data = self._buffer[:size]
-        self._buffer = self._buffer[size:]
-        return bytes(data)
-
-    def close(self) -> None:
-        """Close the stream."""
-        self._done = True
-        super().close()
+        try:
+            cfg = json.load(tar.extractfile(fileobj))
+        except Exception as e:
+            raise AssertionError(f"Provided file ({file}) cannot be loaded as json.")
+    return get_backup_metadata(cfg)

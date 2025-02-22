@@ -3,18 +3,19 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from contextlib import contextmanager
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .client import SSHClient
+from .client import BackupAgentClient
 from .const import (
     CONF_HOST,
     CONF_PORT,
     CONF_USERNAME,
     CONF_PASSWORD,
     CONF_PRIVATE_KEY_FILE,
+    CONF_BACKUP_LOCATION,
     DATA_BACKUP_AGENT_LISTENERS,
 )
 
@@ -32,17 +33,6 @@ class SFTPConfigEntryData:
     private_key_file: str = ""
     backup_location: str = ""
 
-    def client(self):
-        """Return SSHClient when called."""
-
-        return SSHClient(
-            host=self.host,
-            port=self.port,
-            username=self.username,
-            password=self.password,
-            private_key_file=self.private_key_file,
-        )
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
     """Set up SFTP client from a config entry."""
@@ -53,21 +43,36 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
         username=entry.data[CONF_USERNAME],
         password=entry.data.get(CONF_PASSWORD),
         private_key_file=entry.data.get(CONF_PRIVATE_KEY_FILE),
+        backup_location=entry.data.get(CONF_BACKUP_LOCATION),
     )
     entry.runtime_data = cfg
 
+    # Check if we can list directory items during setup.
+    # This will raise exception if where is something either wrong
+    # with SSH server or config.
+    try:
+        async with BackupAgentClient(cfg) as client:
+            assert isinstance(await client.list_backup_location(), list)
+    except Exception as e:
+        raise ConfigEntryNotReady from e
+
     # Notify backup listeners
-    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+    _async_notify_backup_listeners_soon(hass)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool:
     """Unload SFTP config entry."""
-    hass.async_create_task(_notify_backup_listeners(hass), eager_start=False)
+    _async_notify_backup_listeners_soon(hass)
     return True
 
 
-async def _notify_backup_listeners(hass: HomeAssistant) -> None:
+def _async_notify_backup_listeners(hass: HomeAssistant) -> None:
     for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
         listener()
+
+
+@callback
+def _async_notify_backup_listeners_soon(hass: HomeAssistant) -> None:
+    hass.loop.call_soon(_async_notify_backup_listeners, hass)

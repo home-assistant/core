@@ -6,6 +6,12 @@ from typing import Any
 
 import voluptuous as vol
 
+from asyncssh.misc import PermissionDenied
+from asyncssh.sftp import (
+    SFTPNoSuchFile,
+    SFTPPermissionDenied
+)
+
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.selector import (
@@ -14,7 +20,9 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .client import SSHClient
+
+from . import SFTPConfigEntryData
+from .client import BackupAgentClient
 from .const import (
     CONF_HOST,
     CONF_PORT,
@@ -27,12 +35,6 @@ from .const import (
 )
 
 
-def check_remote_path(client: SSHClient, path: str) -> None:
-    """Changes directory to given path. Raises exception if the requested path doesn't exist on the server"""
-    sftp = client.open_sftp()
-    sftp.chdir(path)
-
-
 class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a SFTP Backup Storage config flow."""
 
@@ -43,51 +45,57 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
+        placeholders = {}
 
         if user_input is not None:
             # Create a session using your credentials
-            host: str = user_input.get(CONF_HOST)
-            port: int = user_input.get(CONF_PORT)
-            user: str = user_input.get(CONF_USERNAME)
-            private_key_file: str = user_input.get(CONF_PRIVATE_KEY_FILE)
-            backup_location: str = user_input.get(CONF_BACKUP_LOCATION)
+            user_config = SFTPConfigEntryData(
+                host=user_input.get(CONF_HOST),
+                port=user_input.get(CONF_PORT),
+                username=user_input.get(CONF_USERNAME),
+                password=user_input.get(CONF_PASSWORD),
+                private_key_file=user_input.get(CONF_PRIVATE_KEY_FILE),
+                backup_location=user_input.get(CONF_BACKUP_LOCATION)
+            )
 
-            # If full path is not provided to private_key_file,
-            # default to look at /config directory
-            if private_key_file and not private_key_file.startswith("/"):
-                private_key_file = f"/config/{private_key_file}"
+            placeholders["backup_location"] = user_config.backup_location
 
             try:
-                client = SSHClient(
-                    host=host,
-                    port=port,
-                    username=user,
-                    password=user_input.get(CONF_PASSWORD),
-                    private_key_file=private_key_file,
-                    backup_location=backup_location,
-                )
+                # Raises:
+                # - OSError, if host or port are not correct.
+                # - asyncssh.misc.PermissionDenied, if credentials are not correct.
+                # - asyncssh.sftp.SFTPNoSuchFile, if directory does not exist.
+                # - asyncssh.sftp.SFTPPermissionDenied, if we don't have access to said directory
+                async with BackupAgentClient(user_config) as client:
+                    await client.list_backup_location()
+                    identifier = client.get_identifier()
+                    LOGGER.debug("Will register SFTP Backup Location agent with identifier %s", identifier)
 
-                await self.hass.async_add_executor_job(
-                    check_remote_path, client, backup_location
-                )
-            except FileNotFoundError as e:
-                errors["base"] = (
-                    f"Remote path not found. Please check if path: '{backup_location}' exists remotely."
-                )
+            except OSError as e:
+                placeholders["error_message"] = str(e)
+                errors["base"] = "os_error"
+            except PermissionDenied as e:
+                placeholders["error_message"] = str(e)
+                errors["base"] = "permission_denied"
+            except SFTPNoSuchFile as e:
+                errors["base"] = "sftp_no_such_file"
+            except SFTPPermissionDenied:
+                errors["base"] = "sftp_permission_denied"
             except ConfigEntryError as e:
-                errors["base"] = str(e)
+                placeholders["error_message"] = str(e)
+                errors["base"] = "config_entry_error"
             except Exception as e:
                 LOGGER.exception(e)
-                errors["base"] = (
-                    f"Unexpected exception ({type(e).__name__}) occurred during config flow. {e}"
-                )
+                placeholders["error_message"] = str(e)
+                placeholders["exception"] = type(e).__name__
+                errors["base"] = "unknown"
             else:
-                identifier = client.get_identifier()
                 await self.async_set_unique_id(identifier)
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=f"SFTP Backup - {user}@{host}:{port}", data=user_input
+                    title=f"SFTP Backup - {user_config.username}@{user_config.host}:{user_config.port}",
+                    data=user_input
                 )
         else:
             user_input = {}
@@ -106,5 +114,6 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(CONF_BACKUP_LOCATION): str,
                 }
             ),
+            description_placeholders=placeholders,
             errors=errors,
         )

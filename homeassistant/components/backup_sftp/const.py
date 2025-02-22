@@ -19,6 +19,8 @@ CONF_PASSWORD: Final = "password"
 CONF_PRIVATE_KEY_FILE: Final = "private_key_file"
 CONF_BACKUP_LOCATION: Final = "backup_location"
 
+BUF_SIZE = 2**20 * 4  # 4MB
+
 DATA_BACKUP_AGENT_LISTENERS: HassKey[list[Callable[[], None]]] = HassKey(
     f"{DOMAIN}.backup_agent_listeners"
 )
