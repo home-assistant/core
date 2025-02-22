@@ -1,9 +1,12 @@
 {
   "domain": "backup_sftp",
   "name": "SFTP Backup Storage",
+  "after_dependencies": ["backup"],
   "codeowners": ["@maretodoric"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/backup_sftp",
+  "integration_type": "service",
   "iot_class": "local_polling",
-  "requirements": ["paramiko==3.5.0"]
+  "quality_scale": "bronze",
+  "requirements": ["asyncssh==2.19.0"]
 }
