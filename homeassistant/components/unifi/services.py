@@ -85,7 +85,7 @@ async def async_remove_clients(hass: HomeAssistant, data: Mapping[str, Any]) -> 
     - Neither IP, hostname nor name is configured.
     """
     for config_entry in hass.config_entries.async_loaded_entries(UNIFI_DOMAIN):
-        if (not (hub := config_entry.runtime_data).available):
+        if not (hub := config_entry.runtime_data).available:
             continue
 
         clients_to_remove = []
