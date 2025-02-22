@@ -71,7 +71,7 @@ dependencies    = [
     "standard-aifc==3.13.0",
     "standard-telnetlib==3.13.0",
     "typing-extensions>=4.12.2,<5.0",
-    "ulid-transform==1.2.0",
+    "ulid-transform==1.2.1",
     # Constrain urllib3 to ensure we deal with CVE-2020-26137 and CVE-2021-33503
     # Temporary setting an upper bound, to prevent compat issues with urllib3>=2
     # https://github.com/home-assistant/core/issues/97248
