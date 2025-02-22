@@ -171,7 +171,7 @@ def _create_engine_test(
                 # table rebuild was implemented so we need
                 # run event_id_post_migration up until
                 # schema 44 since its the first one we can
-                # be sure has the foreign key constraint removed
+                # be sure has the foreign key constraint was removed
                 # via https://github.com/home-assistant/core/pull/120779
                 "event_id_post_migration": (1, 1),
                 "entity_id_post_migration": (0, 0),
