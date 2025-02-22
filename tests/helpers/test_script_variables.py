@@ -5,7 +5,7 @@ import pytest
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.script_variables import ScriptVariables
+from homeassistant.helpers.script_variables import ScriptRunVariables, ScriptVariables
 
 
 async def test_static_vars() -> None:
@@ -108,3 +108,109 @@ async def test_template_vars_error(hass: HomeAssistant) -> None:
     var = cv.SCRIPT_VARIABLES_SCHEMA({"hello": "{{ canont.work }}"})
     with pytest.raises(TemplateError):
         var.async_render(hass, None)
+
+
+async def test_script_vars_exit_top_level() -> None:
+    """Test exiting top level script run variables."""
+    script_vars = ScriptRunVariables.create_top_level()
+    with pytest.raises(ValueError):
+        script_vars.exit_scope()
+
+
+async def test_script_vars_delete_var() -> None:
+    """Test deleting from script run variables."""
+    script_vars = ScriptRunVariables.create_top_level({"x": 1, "y": 2})
+    with pytest.raises(TypeError):
+        del script_vars["x"]
+    with pytest.raises(TypeError):
+        script_vars.pop("y")
+    assert script_vars.full_scope == {"x": 1, "y": 2}
+
+
+async def test_script_vars_scopes() -> None:
+    """Test script run variables scopes."""
+    script_vars = ScriptRunVariables.create_top_level()
+    script_vars["x"] = 1
+    script_vars["y"] = 1
+    assert script_vars["x"] == 1
+    assert script_vars["y"] == 1
+
+    script_vars_2 = script_vars.enter_scope()
+    script_vars_2.define_single("x", 2)
+    assert script_vars_2["x"] == 2
+    assert script_vars_2["y"] == 1
+
+    script_vars_3 = script_vars_2.enter_scope()
+    script_vars_3["x"] = 3
+    script_vars_3["y"] = 3
+    assert script_vars_3["x"] == 3
+    assert script_vars_3["y"] == 3
+
+    script_vars_4 = script_vars_3.enter_scope()
+    assert script_vars_4["x"] == 3
+    assert script_vars_4["y"] == 3
+
+    assert script_vars_4.exit_scope() is script_vars_3
+
+    assert script_vars_3.full_scope == {"x": 3, "y": 3}
+    assert script_vars_3.local_scope == {}
+
+    assert script_vars_3.exit_scope() is script_vars_2
+
+    assert script_vars_2.full_scope == {"x": 3, "y": 3}
+    assert script_vars_2.local_scope == {"x": 3}
+
+    assert script_vars_2.exit_scope() is script_vars
+
+    assert script_vars.full_scope == {"x": 1, "y": 3}
+    assert script_vars.local_scope == {"x": 1, "y": 3}
+
+
+async def test_script_vars_render(hass: HomeAssistant) -> None:
+    """Test script run variables render."""
+    script_vars = ScriptRunVariables.create_top_level()
+    script_vars_2 = script_vars.enter_scope()
+
+    script_vars_2["x"] = 1
+    script_vars_2.assign(cv.SCRIPT_VARIABLES_SCHEMA({"y": "{{ x }}", "z": 2}))
+    assert script_vars_2["y"] == 1
+    assert script_vars_2["z"] == 2
+
+    script_vars_2.define(cv.SCRIPT_VARIABLES_SCHEMA({"w": "{{ z }}", "y": "{{ w }}"}))
+    assert script_vars_2["w"] == 2
+    assert script_vars_2["y"] == 2
+    assert script_vars_2.full_scope == {"x": 1, "y": 2, "z": 2, "w": 2}
+
+    assert script_vars_2.exit_scope() is script_vars
+    assert script_vars.full_scope == {"x": 1, "y": 1, "z": 2}
+
+
+async def test_script_vars_parallel() -> None:
+    """Test script run variables parallel support."""
+    script_vars = ScriptRunVariables.create_top_level({"x": 1, "y": 1, "z": 1})
+
+    script_vars_2a = script_vars.enter_scope(parallel=True)
+    script_vars_3a = script_vars_2a.enter_scope()
+
+    script_vars_2b = script_vars.enter_scope(parallel=True)
+    script_vars_3b = script_vars_2b.enter_scope()
+
+    script_vars_3a["x"] = "a"
+    script_vars_3a.assign_single("y", "a", parallel_special=True)
+
+    script_vars_3b["x"] = "b"
+    script_vars_3b.assign_single("y", "b", parallel_special=True)
+
+    assert script_vars_3a.full_scope == {"x": "b", "y": "a", "z": 1}
+    assert script_vars_3a.non_parallel_scope == {"x": "a", "y": "a"}
+
+    assert script_vars_3b.full_scope == {"x": "b", "y": "b", "z": 1}
+    assert script_vars_3b.non_parallel_scope == {"x": "b", "y": "b"}
+
+    assert script_vars_3a.exit_scope() is script_vars_2a
+    assert script_vars_2a.exit_scope() is script_vars
+    assert script_vars_3b.exit_scope() is script_vars_2b
+    assert script_vars_2b.exit_scope() is script_vars
+
+    assert script_vars.full_scope == {"x": "b", "y": "b", "z": 1}
+    assert script_vars.local_scope == {"x": "b", "y": "b", "z": 1}

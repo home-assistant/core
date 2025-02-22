@@ -631,7 +631,9 @@ class _ScriptRun:
         """Execute a script."""
         result = await self._async_run_long_action(
             self._hass.async_create_task_internal(
-                script.async_run(self._variables.enter_scope(parallel), self._context),
+                script.async_run(
+                    self._variables.enter_scope(parallel=parallel), self._context
+                ),
                 eager_start=True,
             )
         )
@@ -1196,7 +1198,7 @@ class _ScriptRun:
                 "completed": False,
                 "trigger": None,
             },
-            parallel_copy=True,
+            parallel_special=True,
         )
         trace_set_result(wait=self._variables["wait"])
 
@@ -1244,7 +1246,7 @@ class _ScriptRun:
         self._step_log("wait template", timeout)
 
         self._variables.assign_single(
-            "wait", {"remaining": timeout, "completed": False}, parallel_copy=True
+            "wait", {"remaining": timeout, "completed": False}, parallel_special=True
         )
         trace_set_result(wait=self._variables["wait"])
 

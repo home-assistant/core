@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections import ChainMap, UserDict
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, cast
 
 from homeassistant.core import HomeAssistant, callback
@@ -82,6 +82,19 @@ class ScriptVariables:
         return self.variables
 
 
+@dataclass
+class _ParallelStore:
+    """Store used in each parallel sequence."""
+
+    # `special` is for variables that need special treatment in parallel sequences.
+    # Currently the only such variable is `wait`.
+    special: dict[str, Any] = field(default_factory=dict)
+    # `outer_scope_writes` is for variables that are written to the outer scope from
+    # a parallel sequence. This is used for generating correct traces of changed variables
+    # for each of the parallel sequences, isolating them from one another.
+    outer_scope_writes: dict[str, Any] = field(default_factory=dict)
+
+
 @dataclass(kw_only=True)
 class ScriptRunVariables(UserDict[str, Any]):
     """Class to hold script run variables."""
@@ -90,7 +103,7 @@ class ScriptRunVariables(UserDict[str, Any]):
     _parent: ScriptRunVariables | None = None
 
     _local_store: dict[str, Any] | None = None
-    _parallel_store: tuple[dict[str, Any], dict[str, Any]] | None = None
+    _parallel_store: _ParallelStore | None = None
 
     _non_parallel_scope: ChainMap[str, Any]
     _full_scope: ChainMap[str, Any]
@@ -100,20 +113,23 @@ class ScriptRunVariables(UserDict[str, Any]):
         cls,
         initial_data: Mapping[str, Any] | None = None,
     ) -> ScriptRunVariables:
-        """Create a new ScriptRunVariables."""
+        """Create a new top-level ScriptRunVariables."""
         local_store: dict[str, Any] = {}
         non_parallel_scope = full_scope = ChainMap(local_store)
-        variables = cls(
+        self = cls(
             _local_store=local_store,
             _non_parallel_scope=non_parallel_scope,
             _full_scope=full_scope,
         )
         if initial_data is not None:
-            variables.update(initial_data)
-        return variables
+            self.update(initial_data)
+        return self
 
-    def enter_scope(self, parallel: bool = False) -> ScriptRunVariables:
-        """Enter a new scope."""
+    def enter_scope(self, *, parallel: bool = False) -> ScriptRunVariables:
+        """Enter a new child scope.
+
+        :param parallel: Whether the new scope belongs to a parallel sequence.
+        """
         if self._local_store is not None or self._parallel_store is not None:
             parent = self
         else:
@@ -121,14 +137,15 @@ class ScriptRunVariables(UserDict[str, Any]):
                 ScriptRunVariables, self._parent
             )
 
+        parallel_store: _ParallelStore | None
         if not parallel:
-            parallel_store: tuple[dict[str, Any], dict[str, Any]] | None = None
+            parallel_store = None
             non_parallel_scope = self._non_parallel_scope
             full_scope = self._full_scope
         else:
-            parallel_store = ({}, {})
-            non_parallel_scope = ChainMap(parallel_store[1])
-            full_scope = self._full_scope.new_child(parallel_store[0])
+            parallel_store = _ParallelStore()
+            non_parallel_scope = ChainMap(parallel_store.outer_scope_writes)
+            full_scope = self._full_scope.new_child(parallel_store.special)
 
         return ScriptRunVariables(
             _previous=self,
@@ -153,7 +170,7 @@ class ScriptRunVariables(UserDict[str, Any]):
         raise TypeError("Deleting items is not allowed in ScriptRunVariables.")
 
     def assign_single(
-        self, key: str, value: Any, *, parallel_copy: bool = False
+        self, key: str, value: Any, *, parallel_special: bool = False
     ) -> None:
         """Assign a value to a variable."""
         if self._local_store is not None and key in self._local_store:
@@ -166,13 +183,13 @@ class ScriptRunVariables(UserDict[str, Any]):
             return
 
         if self._parallel_store is not None:
-            self._parallel_store[1][key] = value
-            if parallel_copy:
-                self._parallel_store[0][key] = value
+            self._parallel_store.outer_scope_writes[key] = value
+            if parallel_special:
+                self._parallel_store.special[key] = value
             else:
-                self._parallel_store[0].pop(key, None)
+                self._parallel_store.special.pop(key, None)
 
-        self._parent.assign_single(key, value, parallel_copy=parallel_copy)
+        self._parent.assign_single(key, value, parallel_special=parallel_special)
 
     def assign(self, new_vars: ScriptVariables) -> None:
         """Assign values to variables."""
@@ -206,6 +223,11 @@ class ScriptRunVariables(UserDict[str, Any]):
 
         Defined here for UserDict compatibility.
         """
+        return self._full_scope
+
+    @property
+    def full_scope(self) -> Mapping[str, Any]:
+        """Return variables in full scope."""
         return self._full_scope
 
     @property
