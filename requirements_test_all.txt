@@ -1834,7 +1834,7 @@ pyrail==0.0.3
 pyrainbird==6.0.1
 
 # homeassistant.components.risco
-pyrisco==0.6.5
+pyrisco==0.6.7
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
