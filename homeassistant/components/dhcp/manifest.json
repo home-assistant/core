@@ -16,6 +16,6 @@
   "requirements": [
     "aiodhcpwatcher==1.1.0",
     "aiodiscover==2.6.0",
-    "cached-ipaddress==0.8.0"
+    "cached-ipaddress==0.8.1"
   ]
 }
