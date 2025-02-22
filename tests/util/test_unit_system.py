@@ -12,6 +12,7 @@ from homeassistant.const import (
     MASS,
     PRESSURE,
     TEMPERATURE,
+    TEMPERATURE_DELTA,
     VOLUME,
     WIND_SPEED,
     UnitOfArea,
@@ -21,6 +22,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitofTemperatureDelta,
     UnitOfVolume,
     UnitOfVolumetricFlux,
 )
@@ -54,6 +56,7 @@ def test_invalid_units() -> None:
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
             temperature=INVALID_UNIT,
+            temperature_delta=UnitOfTemperatureDelta.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
@@ -68,6 +71,7 @@ def test_invalid_units() -> None:
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
             temperature=UnitOfTemperature.CELSIUS,
+            temperature_delta=UnitOfTemperatureDelta.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
@@ -82,6 +86,7 @@ def test_invalid_units() -> None:
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
             temperature=UnitOfTemperature.CELSIUS,
+            temperature_delta=UnitOfTemperatureDelta.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=INVALID_UNIT,
         )
@@ -96,6 +101,7 @@ def test_invalid_units() -> None:
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
             temperature=UnitOfTemperature.CELSIUS,
+            temperature_delta=UnitOfTemperatureDelta.CELSIUS,
             volume=INVALID_UNIT,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
@@ -110,6 +116,7 @@ def test_invalid_units() -> None:
             mass=INVALID_UNIT,
             pressure=UnitOfPressure.PA,
             temperature=UnitOfTemperature.CELSIUS,
+            temperature_delta=UnitOfTemperatureDelta.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
@@ -124,6 +131,7 @@ def test_invalid_units() -> None:
             mass=UnitOfMass.GRAMS,
             pressure=INVALID_UNIT,
             temperature=UnitOfTemperature.CELSIUS,
+            temperature_delta=UnitOfTemperatureDelta.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
@@ -138,6 +146,7 @@ def test_invalid_units() -> None:
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
             temperature=UnitOfTemperature.CELSIUS,
+            temperature_delta=UnitOfTemperatureDelta.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
@@ -152,10 +161,25 @@ def test_invalid_units() -> None:
             mass=UnitOfMass.GRAMS,
             pressure=UnitOfPressure.PA,
             temperature=UnitOfTemperature.CELSIUS,
+            temperature_delta=UnitOfTemperatureDelta.CELSIUS,
             volume=UnitOfVolume.LITERS,
             wind_speed=UnitOfSpeed.METERS_PER_SECOND,
         )
 
+    with pytest.raises(ValueError):
+        UnitSystem(
+            SYSTEM_NAME,
+            accumulated_precipitation=UnitOfPrecipitationDepth.MILLIMETERS,
+            area=UnitOfArea.SQUARE_METERS,
+            conversions={},
+            length=UnitOfLength.METERS,
+            mass=UnitOfMass.GRAMS,
+            pressure=UnitOfPressure.PA,
+            temperature=UnitOfTemperature.CELSIUS,
+            temperature_delta=INVALID_UNIT,
+            volume=UnitOfVolume.LITERS,
+            wind_speed=UnitOfSpeed.METERS_PER_SECOND,
+        )
 
 def test_invalid_value() -> None:
     """Test no conversion happens if value is non-numeric."""
@@ -163,6 +187,8 @@ def test_invalid_value() -> None:
         METRIC_SYSTEM.length("25a", UnitOfLength.KILOMETERS)
     with pytest.raises(TypeError):
         METRIC_SYSTEM.temperature("50K", UnitOfTemperature.CELSIUS)
+    with pytest.raises(TypeError):
+        METRIC_SYSTEM.temperature_delta("50K", UnitOfTemperatureDelta.CELSIUS)
     with pytest.raises(TypeError):
         METRIC_SYSTEM.wind_speed("50km/h", UnitOfSpeed.METERS_PER_SECOND)
     with pytest.raises(TypeError):
@@ -181,6 +207,7 @@ def test_as_dict() -> None:
         LENGTH: UnitOfLength.KILOMETERS,
         WIND_SPEED: UnitOfSpeed.METERS_PER_SECOND,
         TEMPERATURE: UnitOfTemperature.CELSIUS,
+        TEMPERATURE_DELTA: UnitOfTemperatureDelta.CELSIUS,
         VOLUME: UnitOfVolume.LITERS,
         MASS: UnitOfMass.GRAMS,
         PRESSURE: UnitOfPressure.PA,
@@ -189,11 +216,6 @@ def test_as_dict() -> None:
     }
 
     assert expected == METRIC_SYSTEM.as_dict()
-
-
-def test_temperature_same_unit() -> None:
-    """Test no conversion happens if to unit is same as from unit."""
-    assert METRIC_SYSTEM.temperature(5, METRIC_SYSTEM.temperature_unit) == 5
 
 
 def test_temperature_unknown_unit() -> None:
@@ -216,6 +238,31 @@ def test_temperature_to_imperial() -> None:
     assert IMPERIAL_SYSTEM.temperature(77, IMPERIAL_SYSTEM.temperature_unit) == 77
     assert IMPERIAL_SYSTEM.temperature(25, METRIC_SYSTEM.temperature_unit) == 77
 
+
+def test_temperature_delta_unknown_unit() -> None:
+    """Test no conversion happens if unknown unit."""
+    with pytest.raises(HomeAssistantError, match="is not a recognized .* unit"):
+        METRIC_SYSTEM.temperature_delta(5, "abc")
+
+
+def test_temperature_delta_to_metric() -> None:
+    """Test temperature delta conversion to metric system."""
+    assert (METRIC_SYSTEM.temperature_delta(25, METRIC_SYSTEM.temperature__delta_unit)
+        == 25
+    )
+    assert (METRIC_SYSTEM.temperature_delta(72, IMPERIAL_SYSTEM.temperature_delta_unit) 
+        == 40
+    )
+
+
+def test_temperature_delta_to_imperial() -> None:
+    """Test temperature delta conversion to imperial system."""
+    assert (IMPERIAL_SYSTEM.temperature_delta(77, IMPERIAL_SYSTEM.temperature_delta_unit)
+        == 77
+    )
+    assert (IMPERIAL_SYSTEM.temperature_delta(40, METRIC_SYSTEM.temperature_delta_unit)
+        == 72
+    )
 
 def test_length_unknown_unit() -> None:
     """Test length conversion with unknown from unit."""
@@ -359,6 +406,7 @@ def test_properties() -> None:
     assert METRIC_SYSTEM.length_unit == UnitOfLength.KILOMETERS
     assert METRIC_SYSTEM.wind_speed_unit == UnitOfSpeed.METERS_PER_SECOND
     assert METRIC_SYSTEM.temperature_unit == UnitOfTemperature.CELSIUS
+    assert METRIC_SYSTEM.temperature_delta_unit == UnitOfTemperatureDelta.CELSIUS
     assert METRIC_SYSTEM.mass_unit == UnitOfMass.GRAMS
     assert METRIC_SYSTEM.volume_unit == UnitOfVolume.LITERS
     assert METRIC_SYSTEM.pressure_unit == UnitOfPressure.PA
