@@ -678,6 +678,15 @@ class UnitOfTemperature(StrEnum):
     KELVIN = "K"
 
 
+# Temperature delta units
+class UnitOfTemperatureDelta(StrEnum):
+    """Temperature delta units."""
+
+    CELSIUS = "°C"
+    FAHRENHEIT = "°F"
+    KELVIN = "K"
+
+
 # Time units
 class UnitOfTime(StrEnum):
     """Time units."""
@@ -1073,6 +1082,7 @@ MASS: Final = "mass"
 PRESSURE: Final = "pressure"
 VOLUME: Final = "volume"
 TEMPERATURE: Final = "temperature"
+TEMPERATURE_DELTA: Final = "temperature_delta"
 SPEED: Final = "speed"
 WIND_SPEED: Final = "wind_speed"
 ILLUMINANCE: Final = "illuminance"
