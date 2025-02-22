@@ -31,6 +31,7 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
     """Minecraft Server data update coordinator."""
 
     config_entry: MinecraftServerConfigEntry
+    _api: MinecraftServer
 
     def __init__(
         self,
@@ -38,7 +39,6 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
         config_entry: MinecraftServerConfigEntry,
     ) -> None:
         """Initialize coordinator instance."""
-        self._api: MinecraftServer
 
         super().__init__(
             hass=hass,
