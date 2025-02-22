@@ -13,7 +13,6 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, LOGGER
@@ -58,7 +57,6 @@ async def async_migrate_entry(
 
     if entry.version == 1:
         latitude, longitude = await Stookwijzer.async_transform_coordinates(
-            async_get_clientsession(hass),
             entry.data[CONF_LOCATION][CONF_LATITUDE],
             entry.data[CONF_LOCATION][CONF_LONGITUDE],
         )
