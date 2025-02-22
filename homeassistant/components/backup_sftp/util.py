@@ -95,5 +95,7 @@ def process_tar_from_adapter(adapter: AsyncSSHFileWrapper, file: str) -> dict:
         try:
             cfg = json.load(tar.extractfile(fileobj))
         except Exception as e:
-            raise AssertionError(f"Provided file ({file}) cannot be loaded as json.") from e
+            raise AssertionError(
+                f"Provided file ({file}) cannot be loaded as json."
+            ) from e
     return get_backup_metadata(cfg)
