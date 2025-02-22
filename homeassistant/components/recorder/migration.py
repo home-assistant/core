@@ -52,6 +52,7 @@ from .auto_repairs.statistics.schema import (
 from .const import (
     CONTEXT_ID_AS_BINARY_SCHEMA_VERSION,
     EVENT_TYPE_IDS_SCHEMA_VERSION,
+    LEGACY_STATES_EVENT_FOREIGN_KEYS_FIXED_SCHEMA_VERSION,
     LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION,
     STATES_META_SCHEMA_VERSION,
     SupportedDialect,
@@ -2490,9 +2491,10 @@ class BaseMigration(ABC):
         if self.initial_schema_version > self.max_initial_schema_version:
             _LOGGER.debug(
                 "Data migration '%s' not needed, database created with version %s "
-                "after migrator was added",
+                "after migrator was added in version %s",
                 self.migration_id,
                 self.initial_schema_version,
+                self.max_initial_schema_version,
             )
             return False
         if self.start_schema_version < self.required_schema_version:
@@ -2868,7 +2870,14 @@ class EventIDPostMigration(BaseRunTimeMigration):
     """Migration to remove old event_id index from states."""
 
     migration_id = "event_id_post_migration"
-    max_initial_schema_version = LEGACY_STATES_EVENT_ID_INDEX_SCHEMA_VERSION - 1
+    # Note we don't subtract 1 from the max_initial_schema_version
+    # in this case because we need to run this migration on databases
+    # version >= 43 because the schema was not bumped when the table
+    # rebuild was added in
+    # https://github.com/home-assistant/core/pull/120779
+    # which means its only safe to assume version 44 and later
+    # do not need the table rebuild
+    max_initial_schema_version = LEGACY_STATES_EVENT_FOREIGN_KEYS_FIXED_SCHEMA_VERSION
     task = MigrationTask
     migration_version = 2
 
