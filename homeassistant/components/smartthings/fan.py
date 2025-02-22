@@ -5,8 +5,7 @@ from __future__ import annotations
 import math
 from typing import Any
 
-from pysmartthings import SmartThings
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant

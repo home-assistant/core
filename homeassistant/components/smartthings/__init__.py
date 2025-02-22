@@ -7,8 +7,15 @@ import logging
 from typing import TYPE_CHECKING
 
 from aiohttp import ClientError
-from pysmartthings import Attribute, Capability, Device, Scene, SmartThings, Status
-from pysmartthings.exceptions import SmartThingsAuthenticationFailedError
+from pysmartthings import (
+    Attribute,
+    Capability,
+    Device,
+    Scene,
+    SmartThings,
+    SmartThingsAuthenticationFailedError,
+    Status,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform

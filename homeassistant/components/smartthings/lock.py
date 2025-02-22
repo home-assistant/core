@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings import Attribute, Capability, Command
 
 from homeassistant.components.lock import LockEntity
 from homeassistant.core import HomeAssistant

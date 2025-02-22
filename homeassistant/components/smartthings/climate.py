@@ -6,8 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
-from pysmartthings import SmartThings
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,

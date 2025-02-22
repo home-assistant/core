@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pysmartthings import SmartThings
-from pysmartthings.models import Attribute, Capability, Command, DeviceEvent
+from pysmartthings import Attribute, Capability, Command, DeviceEvent, SmartThings
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity

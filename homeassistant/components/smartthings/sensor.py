@@ -7,8 +7,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
-from pysmartthings import SmartThings
-from pysmartthings.models import Attribute, Capability
+from pysmartthings import Attribute, Capability, SmartThings
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,

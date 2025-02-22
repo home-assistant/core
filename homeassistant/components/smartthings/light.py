@@ -5,8 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from pysmartthings import SmartThings
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,

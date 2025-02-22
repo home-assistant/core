@@ -4,8 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from pysmartthings import SmartThings
-from pysmartthings.models import Attribute, Capability
+from pysmartthings import Attribute, Capability, SmartThings
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
