@@ -58,6 +58,7 @@ from homeassistant.helpers.service_info.hassio import (
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
+from homeassistant.setup import async_when_setup_or_start
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.dt import now
 
@@ -559,7 +560,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = coordinator
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    async def async_setup_platforms(*_: Any) -> None:
+        """Start the server."""
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Defer forwarding of platforms until the recorder is ready
+    # to ensure we don't load the sensor platform before the recorder
+    # See https://github.com/home-assistant/core/issues/138314
+    # https://github.com/home-assistant/core/issues/138196
+    async_when_setup_or_start(hass, "recorder", async_setup_platforms)
 
     return True
 
