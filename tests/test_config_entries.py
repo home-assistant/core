@@ -462,7 +462,15 @@ async def test_remove_entry(
         assert result
         return result
 
-    mock_remove_entry = AsyncMock(return_value=None)
+    remove_entry_calls = []
+
+    async def mock_remove_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> None:
+        """Mock removing an entry."""
+        # Check that the entry is no longer in the config entries
+        assert not hass.config_entries.async_get_entry(entry.entry_id)
+        remove_entry_calls.append(None)
 
     entity = MockEntity(unique_id="1234", name="Test Entity")
 
@@ -522,7 +530,7 @@ async def test_remove_entry(
     assert result == {"require_restart": False}
 
     # Check the remove callback was invoked.
-    assert mock_remove_entry.call_count == 1
+    assert len(remove_entry_calls) == 1
 
     # Check that config entry was removed.
     assert manager.async_entry_ids() == ["test1", "test3"]
@@ -2611,29 +2619,49 @@ async def test_entry_setup_invalid_state(
     assert entry.state is state
 
 
-async def test_entry_unload_succeed(
-    hass: HomeAssistant, manager: config_entries.ConfigEntries
+@pytest.mark.parametrize(
+    ("unload_result", "expected_result", "expected_state", "has_runtime_data"),
+    [
+        (True, True, config_entries.ConfigEntryState.NOT_LOADED, False),
+        (False, False, config_entries.ConfigEntryState.FAILED_UNLOAD, True),
+    ],
+)
+async def test_entry_unload(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    unload_result: bool,
+    expected_result: bool,
+    expected_state: config_entries.ConfigEntryState,
+    has_runtime_data: bool,
 ) -> None:
     """Test that we can unload an entry."""
-    unloads_called = []
+    unload_entry_calls = []
 
-    async def verify_runtime_data(*args):
+    @callback
+    def verify_runtime_data() -> None:
         """Verify runtime data."""
         assert entry.runtime_data == 2
-        unloads_called.append(args)
-        return True
+
+    async def async_unload_entry(
+        hass: HomeAssistant, entry: config_entries.ConfigEntry
+    ) -> bool:
+        """Mock unload entry."""
+        unload_entry_calls.append(None)
+        verify_runtime_data()
+        assert entry.state is config_entries.ConfigEntryState.UNLOAD_IN_PROGRESS
+        return unload_result
 
     entry = MockConfigEntry(domain="comp", state=config_entries.ConfigEntryState.LOADED)
     entry.add_to_hass(hass)
     entry.async_on_unload(verify_runtime_data)
     entry.runtime_data = 2
 
-    mock_integration(hass, MockModule("comp", async_unload_entry=verify_runtime_data))
+    mock_integration(hass, MockModule("comp", async_unload_entry=async_unload_entry))
 
-    assert await manager.async_unload(entry.entry_id)
-    assert len(unloads_called) == 2
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
-    assert not hasattr(entry, "runtime_data")
+    assert await manager.async_unload(entry.entry_id) == expected_result
+    assert len(unload_entry_calls) == 1
+    assert entry.state is expected_state
+    assert hasattr(entry, "runtime_data") == has_runtime_data
 
 
 @pytest.mark.parametrize(
@@ -4766,6 +4794,136 @@ async def test_entry_reload_calls_on_unload_listeners(
     # have only been called once
     assert len(mock_unload_callback.mock_calls) == 1
     assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    ("source_state", "target_state", "transition_method_name", "call_count"),
+    [
+        (
+            config_entries.ConfigEntryState.NOT_LOADED,
+            config_entries.ConfigEntryState.LOADED,
+            "async_setup",
+            2,
+        ),
+        (
+            config_entries.ConfigEntryState.LOADED,
+            config_entries.ConfigEntryState.NOT_LOADED,
+            "async_unload",
+            2,
+        ),
+        (
+            config_entries.ConfigEntryState.LOADED,
+            config_entries.ConfigEntryState.LOADED,
+            "async_reload",
+            4,
+        ),
+    ],
+)
+async def test_entry_state_change_calls_listener(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    source_state: config_entries.ConfigEntryState,
+    target_state: config_entries.ConfigEntryState,
+    transition_method_name: str,
+    call_count: int,
+) -> None:
+    """Test listeners get called on entry state changes."""
+    entry = MockConfigEntry(domain="comp", state=source_state)
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    mock_state_change_callback = Mock()
+    entry.async_on_state_change(mock_state_change_callback)
+
+    transition_method = getattr(manager, transition_method_name)
+    await transition_method(entry.entry_id)
+
+    assert len(mock_state_change_callback.mock_calls) == call_count
+    assert entry.state is target_state
+
+
+async def test_entry_state_change_listener_removed(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+) -> None:
+    """Test state_change listener can be removed."""
+    entry = MockConfigEntry(
+        domain="comp", state=config_entries.ConfigEntryState.NOT_LOADED
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    mock_state_change_callback = Mock()
+    remove = entry.async_on_state_change(mock_state_change_callback)
+
+    await manager.async_setup(entry.entry_id)
+
+    assert len(mock_state_change_callback.mock_calls) == 2
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+    remove()
+
+    await manager.async_unload(entry.entry_id)
+
+    # the listener should no longer be called
+    assert len(mock_state_change_callback.mock_calls) == 2
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+
+async def test_entry_state_change_error_does_not_block_transition(
+    hass: HomeAssistant,
+    manager: config_entries.ConfigEntries,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test we transition states normally even if the callback throws in on_state_change."""
+    entry = MockConfigEntry(
+        title="test", domain="comp", state=config_entries.ConfigEntryState.NOT_LOADED
+    )
+    entry.add_to_hass(hass)
+
+    mock_integration(
+        hass,
+        MockModule(
+            "comp",
+            async_setup=AsyncMock(return_value=True),
+            async_setup_entry=AsyncMock(return_value=True),
+            async_unload_entry=AsyncMock(return_value=True),
+        ),
+    )
+    mock_platform(hass, "comp.config_flow", None)
+    hass.config.components.add("comp")
+
+    mock_state_change_callback = Mock(side_effect=Exception())
+
+    entry.async_on_state_change(mock_state_change_callback)
+
+    await manager.async_setup(entry.entry_id)
+
+    assert len(mock_state_change_callback.mock_calls) == 2
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert "Error calling on_state_change callback for test (comp)" in caplog.text
 
 
 async def test_setup_raise_entry_error(
