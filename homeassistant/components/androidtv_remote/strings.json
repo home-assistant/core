@@ -54,5 +54,17 @@
         }
       }
     }
+  },
+  "services": {
+    "send_text": {
+      "name": "Send text",
+      "description": "Sends text to an Android device.",
+      "fields": {
+        "text": {
+          "name": "Text",
+          "description": "Text to 'type'"
+        }
+      }
+    }
   }
 }
