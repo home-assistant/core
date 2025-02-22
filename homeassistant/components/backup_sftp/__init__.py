@@ -10,12 +10,12 @@ from homeassistant.exceptions import ConfigEntryNotReady
 
 from .client import BackupAgentClient
 from .const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_PRIVATE_KEY_FILE,
     CONF_BACKUP_LOCATION,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PRIVATE_KEY_FILE,
+    CONF_USERNAME,
     DATA_BACKUP_AGENT_LISTENERS,
 )
 

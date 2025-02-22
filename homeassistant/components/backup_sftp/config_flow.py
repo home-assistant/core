@@ -4,13 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-import voluptuous as vol
-
 from asyncssh.misc import PermissionDenied
-from asyncssh.sftp import (
-    SFTPNoSuchFile,
-    SFTPPermissionDenied
-)
+from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import ConfigEntryError
@@ -20,16 +16,15 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-
 from . import SFTPConfigEntryData
 from .client import BackupAgentClient
 from .const import (
-    CONF_HOST,
-    CONF_PORT,
-    CONF_USERNAME,
-    CONF_PASSWORD,
-    CONF_PRIVATE_KEY_FILE,
     CONF_BACKUP_LOCATION,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_PRIVATE_KEY_FILE,
+    CONF_USERNAME,
     DOMAIN,
     LOGGER,
 )
@@ -55,7 +50,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 username=user_input.get(CONF_USERNAME),
                 password=user_input.get(CONF_PASSWORD),
                 private_key_file=user_input.get(CONF_PRIVATE_KEY_FILE),
-                backup_location=user_input.get(CONF_BACKUP_LOCATION)
+                backup_location=user_input.get(CONF_BACKUP_LOCATION),
             )
 
             placeholders["backup_location"] = user_config.backup_location
@@ -69,7 +64,10 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 async with BackupAgentClient(user_config) as client:
                     await client.list_backup_location()
                     identifier = client.get_identifier()
-                    LOGGER.debug("Will register SFTP Backup Location agent with identifier %s", identifier)
+                    LOGGER.debug(
+                        "Will register SFTP Backup Location agent with identifier %s",
+                        identifier,
+                    )
 
             except OSError as e:
                 placeholders["error_message"] = str(e)
@@ -77,14 +75,14 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
             except PermissionDenied as e:
                 placeholders["error_message"] = str(e)
                 errors["base"] = "permission_denied"
-            except SFTPNoSuchFile as e:
+            except SFTPNoSuchFile:
                 errors["base"] = "sftp_no_such_file"
             except SFTPPermissionDenied:
                 errors["base"] = "sftp_permission_denied"
             except ConfigEntryError as e:
                 placeholders["error_message"] = str(e)
                 errors["base"] = "config_entry_error"
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001
                 LOGGER.exception(e)
                 placeholders["error_message"] = str(e)
                 placeholders["exception"] = type(e).__name__
@@ -95,7 +93,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 return self.async_create_entry(
                     title=f"SFTP Backup - {user_config.username}@{user_config.host}:{user_config.port}",
-                    data=user_input
+                    data=user_input,
                 )
         else:
             user_input = {}

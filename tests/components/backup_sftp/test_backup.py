@@ -1,7 +1,6 @@
 """Test the Google Drive backup platform."""
 
 from io import StringIO
-import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -20,7 +19,6 @@ from homeassistant.setup import async_setup_component
 from .conftest import CONFIG_ENTRY_TITLE, TEST_AGENT_ID, AsyncFileIteratorMock
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import mock_stream
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 TEST_AGENT_BACKUP = AgentBackup(
@@ -93,9 +91,11 @@ async def test_agents_info(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] == {
-        "agents": [{"agent_id": "backup.local", "name": "local"}]
-    } or config_entry.state == ConfigEntryState.NOT_LOADED
+    assert (
+        response["result"]
+        == {"agents": [{"agent_id": "backup.local", "name": "local"}]}
+        or config_entry.state == ConfigEntryState.NOT_LOADED
+    )
 
 
 @patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
@@ -139,6 +139,7 @@ async def test_agents_list_backups_fail(
         f"{DOMAIN}.{TEST_AGENT_ID}": "Failed to list backups: Error message"
     }
 
+
 @pytest.mark.parametrize(
     ("backup_id", "expected_result"),
     [
@@ -178,7 +179,7 @@ async def test_agents_download(
 ) -> None:
     """Test agent download backup."""
     backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.iter_file.return_value=AsyncFileIteratorMock(b"backup data")
+    async_cm_mock.iter_file.return_value = AsyncFileIteratorMock(b"backup data")
     async_cm_mock.async_list_backups.return_value = [TEST_AGENT_BACKUP]
 
     client = await hass_client()
@@ -264,7 +265,9 @@ async def test_agents_upload(
 
     assert resp.status == 201
     assert f"Uploading backup: {TEST_AGENT_BACKUP.backup_id}" in caplog.text
-    assert f"Successfully uploaded backup id: {TEST_AGENT_BACKUP.backup_id}" in caplog.text
+    assert (
+        f"Successfully uploaded backup id: {TEST_AGENT_BACKUP.backup_id}" in caplog.text
+    )
 
     async_cm_mock.async_upload_backup.assert_called_once()
 
@@ -279,7 +282,9 @@ async def test_agents_upload_fail(
 ) -> None:
     """Test agent upload backup fails."""
     backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.async_upload_backup = AsyncMock(side_effect=RuntimeError("Error message"))
+    async_cm_mock.async_upload_backup = AsyncMock(
+        side_effect=RuntimeError("Error message")
+    )
 
     client = await hass_client()
 
@@ -302,7 +307,10 @@ async def test_agents_upload_fail(
         await hass.async_block_till_done()
 
     assert resp.status == 201
-    assert "Failed to upload backup to remote SFTP location. Error: Error message" in caplog.text
+    assert (
+        "Failed to upload backup to remote SFTP location. Error: Error message"
+        in caplog.text
+    )
 
 
 @patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
@@ -353,7 +361,9 @@ async def test_agents_delete_fail(
 
     assert response["success"]
     assert response["result"] == {
-        "agent_errors": {f"{DOMAIN}.{TEST_AGENT_ID}": "Failed to delete backup id: test-backup: Does not exist."}
+        "agent_errors": {
+            f"{DOMAIN}.{TEST_AGENT_ID}": "Failed to delete backup id: test-backup: Does not exist."
+        }
     }
 
 

@@ -5,20 +5,12 @@ from __future__ import annotations
 from collections.abc import AsyncIterator, Callable, Coroutine
 from typing import Any
 
-from homeassistant.components.backup import (
-    AgentBackup,
-    BackupAgent,
-    BackupAgentError,
-)
+from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
 from homeassistant.core import HomeAssistant, callback
 
 from . import SFTPConfigEntry
 from .client import BackupAgentClient
-from .const import (
-    DATA_BACKUP_AGENT_LISTENERS,
-    DOMAIN,
-    LOGGER,
-)
+from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN, LOGGER
 
 
 async def async_get_backup_agents(
@@ -74,9 +66,7 @@ class SFTPBackupAgent(BackupAgent):
         except Exception as e:
             LOGGER.exception(e)
             LOGGER.error(
-                "Failed to download backup id: %s. Error: %s",
-                backup_id,
-                str(e)
+                "Failed to download backup id: %s. Error: %s", backup_id, str(e)
             )
             raise BackupAgentError(
                 f"Failed to download backup id: {backup_id}. Error: {e}"
@@ -93,14 +83,18 @@ class SFTPBackupAgent(BackupAgent):
         LOGGER.debug("Received request to upload backup: %s", backup)
         iterator = await open_stream()
 
-        LOGGER.debug("Establishing SFTP connection to remote host in order to upload backup ...")
+        LOGGER.debug(
+            "Establishing SFTP connection to remote host in order to upload backup ..."
+        )
         try:
             async with BackupAgentClient(self._entry.runtime_data) as client:
                 LOGGER.debug("Uploading backup: %s ...", backup.backup_id)
                 await client.async_upload_backup(iterator, backup)
         except Exception as e:
             LOGGER.exception(e)
-            LOGGER.error("Failed to upload backup to remote SFTP location. Error: %s", str(e))
+            LOGGER.error(
+                "Failed to upload backup to remote SFTP location. Error: %s", str(e)
+            )
             raise BackupAgentError(
                 f"Failed to upload backup to remote SFTP location. Error: {e}"
             ) from e
@@ -125,10 +119,7 @@ class SFTPBackupAgent(BackupAgent):
                 f"Failed to delete backup id: {backup_id}: {err}"
             ) from err
 
-        LOGGER.debug(
-            "Successfully removed backup id: %s",
-            backup_id
-        )
+        LOGGER.debug("Successfully removed backup id: %s", backup_id)
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups stored on SFTP Backup Storage."""
@@ -137,7 +128,9 @@ class SFTPBackupAgent(BackupAgent):
                 return await client.async_list_backups()
         except Exception as e:
             LOGGER.exception(e)
-            LOGGER.error("Listing backups failed. Please review previous exception traceback.")
+            LOGGER.error(
+                "Listing backups failed. Please review previous exception traceback."
+            )
             raise BackupAgentError(f"Failed to list backups: {e}") from e
 
     async def async_get_backup(
