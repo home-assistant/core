@@ -16,7 +16,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import is_humidifier
 from .const import (
@@ -50,7 +50,7 @@ VS_TO_HA_MODE_MAP = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the VeSync humidifier platform."""
 
@@ -71,7 +71,7 @@ async def async_setup_entry(
 @callback
 def _setup_entities(
     devices: list[VeSyncBaseDevice],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     coordinator: VeSyncDataCoordinator,
 ):
     """Add humidifier entities."""
@@ -121,6 +121,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
                 self._available_modes.append(ha_mode)
                 self._ha_to_vs_mode_map[ha_mode] = vs_mode
 
+        self._available_modes.sort()
+
     def _get_vs_mode(self, ha_mode: str) -> str | None:
         return self._ha_to_vs_mode_map.get(ha_mode)
 
@@ -155,10 +157,14 @@ class VeSyncHumidifierHA(VeSyncBaseEntity, HumidifierEntity):
         """Set the mode of the device."""
         if mode not in self.available_modes:
             raise HomeAssistantError(
-                "{mode} is not one of the valid available modes: {self.available_modes}"
+                f"{mode} is not one of the valid available modes: {self.available_modes}"
             )
         if not self.device.set_humidity_mode(self._get_vs_mode(mode)):
             raise HomeAssistantError(f"An error occurred while setting mode {mode}.")
+
+        if mode == MODE_SLEEP:
+            # We successfully changed the mode. Consider it a success even if display operation fails.
+            self.device.set_display(False)
 
         # Changing mode while humidifier is off actually turns it on, as per the app. But
         # the library does not seem to update the device_status. It is also possible that

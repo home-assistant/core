@@ -6,7 +6,7 @@ import asyncio
 import logging
 from typing import Any
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -108,8 +108,7 @@ class ESPHomeDashboardManager:
 
         reloads = [
             hass.config_entries.async_reload(entry.entry_id)
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.state is ConfigEntryState.LOADED
+            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
         ]
         # Re-auth flows will check the dashboard for encryption key when the form is requested
         # but we only trigger reauth if the dashboard is available.

@@ -12,18 +12,19 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTime, UnitOfVolume
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
 
+from .common import setup_home_connect_entry
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
 )
-from .coordinator import HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
 EVENT_OPTIONS = ["confirmed", "off", "present"]
@@ -98,16 +99,19 @@ SENSORS = (
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_COFFEE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="coffee_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_POWDER_COFFEE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="powder_coffee_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_HOT_WATER,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -115,31 +119,37 @@ SENSORS = (
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_HOT_WATER_CUPS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="hot_water_cups_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_HOT_MILK,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="hot_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_FROTHY_MILK,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="frothy_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_MILK,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_COFFEE_AND_MILK,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="coffee_and_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_RISTRETTO_ESPRESSO,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="ristretto_espresso_counter",
     ),
@@ -243,37 +253,42 @@ EVENT_SENSORS = (
 )
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
+def _get_entities_for_appliance(
     entry: HomeConnectConfigEntry,
-    async_add_entities: AddEntitiesCallback,
-) -> None:
-    """Set up the Home Connect sensor."""
-
-    entities: list[SensorEntity] = []
-    for appliance in entry.runtime_data.data.values():
-        entities.extend(
-            HomeConnectEventSensor(
-                entry.runtime_data,
-                appliance,
-                description,
-            )
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    return [
+        *[
+            HomeConnectEventSensor(entry.runtime_data, appliance, description)
             for description in EVENT_SENSORS
             if description.appliance_types
             and appliance.info.type in description.appliance_types
-        )
-        entities.extend(
+        ],
+        *[
             HomeConnectProgramSensor(entry.runtime_data, appliance, desc)
             for desc in BSH_PROGRAM_SENSORS
             if desc.appliance_types and appliance.info.type in desc.appliance_types
-        )
-        entities.extend(
+        ],
+        *[
             HomeConnectSensor(entry.runtime_data, appliance, description)
             for description in SENSORS
             if description.key in appliance.status
-        )
+        ],
+    ]
 
-    async_add_entities(entities)
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: HomeConnectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Home Connect sensor."""
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
+    )
 
 
 class HomeConnectSensor(HomeConnectEntity, SensorEntity):

@@ -25,6 +25,7 @@ class ReolinkEntityDescription(EntityDescription):
 
     cmd_key: str | None = None
     cmd_id: int | None = None
+    always_available: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -92,6 +93,9 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
+        if self.entity_description.always_available:
+            return True
+
         return (
             self._host.api.session_active
             and not self._host.api.baichuan.privacy_mode()
@@ -103,10 +107,10 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         """Handle incoming TCP push event."""
         self.async_write_ha_state()
 
-    def register_callback(self, unique_id: str, cmd_id: int) -> None:
+    def register_callback(self, callback_id: str, cmd_id: int) -> None:
         """Register callback for TCP push events."""
         self._host.api.baichuan.register_callback(  # pragma: no cover
-            unique_id, self._push_callback, cmd_id
+            callback_id, self._push_callback, cmd_id
         )
 
     async def async_added_to_hass(self) -> None:
@@ -114,23 +118,25 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         await super().async_added_to_hass()
         cmd_key = self.entity_description.cmd_key
         cmd_id = self.entity_description.cmd_id
+        callback_id = f"{self.platform.domain}_{self._attr_unique_id}"
         if cmd_key is not None:
             self._host.async_register_update_cmd(cmd_key)
         if cmd_id is not None:
-            self.register_callback(self._attr_unique_id, cmd_id)
+            self.register_callback(callback_id, cmd_id)
         # Privacy mode
-        self.register_callback(f"{self._attr_unique_id}_623", 623)
+        self.register_callback(f"{callback_id}_623", 623)
 
     async def async_will_remove_from_hass(self) -> None:
         """Entity removed."""
         cmd_key = self.entity_description.cmd_key
         cmd_id = self.entity_description.cmd_id
+        callback_id = f"{self.platform.domain}_{self._attr_unique_id}"
         if cmd_key is not None:
             self._host.async_unregister_update_cmd(cmd_key)
         if cmd_id is not None:
-            self._host.api.baichuan.unregister_callback(self._attr_unique_id)
+            self._host.api.baichuan.unregister_callback(callback_id)
         # Privacy mode
-        self._host.api.baichuan.unregister_callback(f"{self._attr_unique_id}_623")
+        self._host.api.baichuan.unregister_callback(f"{callback_id}_623")
 
         await super().async_will_remove_from_hass()
 
@@ -189,10 +195,10 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
         """Return True if entity is available."""
         return super().available and self._host.api.camera_online(self._channel)
 
-    def register_callback(self, unique_id: str, cmd_id: int) -> None:
+    def register_callback(self, callback_id: str, cmd_id: int) -> None:
         """Register callback for TCP push events."""
         self._host.api.baichuan.register_callback(
-            unique_id, self._push_callback, cmd_id, self._channel
+            callback_id, self._push_callback, cmd_id, self._channel
         )
 
     async def async_added_to_hass(self) -> None:

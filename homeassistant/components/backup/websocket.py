@@ -15,7 +15,7 @@ from .manager import (
     IncorrectPasswordError,
     ManagerStateEvent,
 )
-from .models import Folder
+from .models import BackupNotFound, Folder
 
 
 @callback
@@ -57,7 +57,7 @@ async def handle_info(
             "agent_errors": {
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
-            "backups": [backup.as_frontend_json() for backup in backups.values()],
+            "backups": list(backups.values()),
             "last_attempted_automatic_backup": manager.config.data.last_attempted_automatic_backup,
             "last_completed_automatic_backup": manager.config.data.last_completed_automatic_backup,
             "last_non_idle_event": manager.last_non_idle_event,
@@ -91,7 +91,7 @@ async def handle_details(
             "agent_errors": {
                 agent_id: str(err) for agent_id, err in agent_errors.items()
             },
-            "backup": backup.as_frontend_json() if backup else None,
+            "backup": backup,
         },
     )
 
@@ -151,6 +151,8 @@ async def handle_restore(
             restore_folders=msg.get("restore_folders"),
             restore_homeassistant=msg["restore_homeassistant"],
         )
+    except BackupNotFound:
+        connection.send_error(msg["id"], "backup_not_found", "Backup not found")
     except IncorrectPasswordError:
         connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
     else:
@@ -179,6 +181,8 @@ async def handle_can_decrypt_on_download(
             agent_id=msg["agent_id"],
             password=msg.get("password"),
         )
+    except BackupNotFound:
+        connection.send_error(msg["id"], "backup_not_found", "Backup not found")
     except IncorrectPasswordError:
         connection.send_error(msg["id"], "password_incorrect", "Incorrect password")
     except DecryptOnDowloadNotSupported:
@@ -199,7 +203,7 @@ async def handle_can_decrypt_on_download(
         vol.Optional("include_database", default=True): bool,
         vol.Optional("include_folders"): [vol.Coerce(Folder)],
         vol.Optional("include_homeassistant", default=True): bool,
-        vol.Optional("name"): str,
+        vol.Optional("name"): vol.Any(str, None),
         vol.Optional("password"): vol.Any(str, None),
     }
 )
@@ -342,6 +346,7 @@ async def handle_config_info(
     )
 
 
+@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -364,8 +369,10 @@ async def handle_config_info(
         ),
         vol.Optional("retention"): vol.Schema(
             {
-                vol.Optional("copies"): vol.Any(int, None),
-                vol.Optional("days"): vol.Any(int, None),
+                # Note: We can't use cv.positive_int because it allows 0 even
+                # though 0 is not positive.
+                vol.Optional("copies"): vol.Any(vol.All(int, vol.Range(min=1)), None),
+                vol.Optional("days"): vol.Any(vol.All(int, vol.Range(min=1)), None),
             },
         ),
         vol.Optional("schedule"): vol.Schema(
@@ -381,8 +388,7 @@ async def handle_config_info(
         ),
     }
 )
-@websocket_api.async_response
-async def handle_config_update(
+def handle_config_update(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -392,7 +398,7 @@ async def handle_config_update(
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    await manager.config.update(**changes)
+    manager.config.update(**changes)
     connection.send_result(msg["id"])
 
 

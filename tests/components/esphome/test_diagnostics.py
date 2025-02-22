@@ -49,6 +49,8 @@ async def test_diagnostics_with_bluetooth(
             "connections_limit": 0,
             "scanner": {
                 "connectable": True,
+                "current_mode": None,
+                "requested_mode": None,
                 "discovered_device_timestamps": {},
                 "discovered_devices_and_advertisement_data": [],
                 "last_detection": ANY,
@@ -79,6 +81,7 @@ async def test_diagnostics_with_bluetooth(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
+            "subentries": [],
             "title": "Mock Title",
             "unique_id": "11:22:33:44:55:aa",
             "version": 1,

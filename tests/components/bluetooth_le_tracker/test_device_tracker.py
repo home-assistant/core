@@ -215,7 +215,7 @@ async def test_see_device_if_time_updated(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_bluetooth", "mock_device_tracker_conf")
 async def test_preserve_new_tracked_device_name(hass: HomeAssistant) -> None:
-    """Test preserving tracked device name across new seens."""
+    """Test preserving tracked device name across new seens."""  # codespell:ignore seens
 
     address = "DE:AD:BE:EF:13:37"
     name = "Mock device name"

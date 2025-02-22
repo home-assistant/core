@@ -28,7 +28,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.trigger import PluggableAction
 from homeassistant.helpers.typing import VolDictType
@@ -102,7 +102,7 @@ SERVICES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: WebOsTvConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the LG webOS TV platform."""
     platform = entity_platform.async_get_current_platform()
@@ -125,7 +125,7 @@ def cmd[_R, **_P](
         self: LgWebOSMediaPlayerEntity, *args: _P.args, **kwargs: _P.kwargs
     ) -> _R:
         """Wrap all command methods."""
-        if self.state is MediaPlayerState.OFF:
+        if self.state is MediaPlayerState.OFF and func.__name__ != "async_turn_off":
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_off",
@@ -283,6 +283,9 @@ class LgWebOSMediaPlayerEntity(RestoreEntity, MediaPlayerEntity):
 
             if model := self._client.system_info.get("modelName"):
                 self._attr_device_info["model"] = model
+
+            if serial_number := self._client.system_info.get("serialNumber"):
+                self._attr_device_info["serial_number"] = serial_number
 
         self._attr_extra_state_attributes = {}
         if self._client.sound_output is not None or self.state != MediaPlayerState.OFF:

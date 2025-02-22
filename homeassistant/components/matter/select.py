@@ -14,7 +14,7 @@ from homeassistant.components.select import SelectEntity, SelectEntityDescriptio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import get_matter
@@ -47,7 +47,7 @@ type SelectCluster = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter ModeSelect from Config Entry."""
     matter = get_matter(hass)
@@ -308,7 +308,7 @@ DISCOVERY_SCHEMAS = [
         platform=Platform.SELECT,
         entity_description=MatterSelectEntityDescription(
             key="MatterDeviceEnergyManagementMode",
-            translation_key="mode",
+            translation_key="device_energy_management_mode",
         ),
         entity_class=MatterModeSelectEntity,
         required_attributes=(
