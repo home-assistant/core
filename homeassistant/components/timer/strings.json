@@ -64,6 +64,26 @@
         }
       }
     },
+    "atleast": {
+      "name": "Atleast",
+      "description": "Increases the remaining time if it's less than the given duration.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Minimum duration for the running timer."
+        }
+      }
+    },
+    "atmost": {
+      "name": "Atmost",
+      "description": "Decreases the remaining time if it's more than the given duration.",
+      "fields": {
+        "duration": {
+          "name": "Duration",
+          "description": "Maximum duration for the running timer."
+        }
+      }
+    },
     "reload": {
       "name": "[%key:common::action::reload%]",
       "description": "Reloads timers from the YAML-configuration."
