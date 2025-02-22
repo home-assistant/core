@@ -31,6 +31,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfSpeed,
     UnitOfTemperature,
+    UnitOfTemperatureDelta,
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
@@ -68,6 +69,7 @@ def _set_up_units(hass: HomeAssistant) -> None:
         mass=UnitOfMass.GRAMS,
         pressure=UnitOfPressure.PA,
         temperature=UnitOfTemperature.CELSIUS,
+        temperature_delta=UnitOfTemperatureDelta.CELSIUS,
         volume=UnitOfVolume.LITERS,
         wind_speed=UnitOfSpeed.KILOMETERS_PER_HOUR,
     )
