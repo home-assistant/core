@@ -49,7 +49,7 @@ def _handle_paired_or_connected_appliance(
         list[HomeConnectOptionEntity],
     ]
     | None,
-    chaged_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]],
+    changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Handle a new paired appliance or an appliance that has been connected.
@@ -72,7 +72,7 @@ def _handle_paired_or_connected_appliance(
                 for entity in get_option_entities_for_appliance(entry, appliance)
                 if entity.unique_id not in known_entity_unique_ids
             )
-            chaged_options_listener_remove_callback = (
+            changed_options_listener_remove_callback = (
                 entry.runtime_data.async_add_listener(
                     partial(
                         _create_option_entities,
@@ -84,9 +84,9 @@ def _handle_paired_or_connected_appliance(
                     ),
                 )
             )
-            entry.async_on_unload(chaged_options_listener_remove_callback)
-            chaged_options_listener_remove_callbacks[appliance.info.ha_id].append(
-                chaged_options_listener_remove_callback
+            entry.async_on_unload(changed_options_listener_remove_callback)
+            changed_options_listener_remove_callbacks[appliance.info.ha_id].append(
+                changed_options_listener_remove_callback
             )
         known_entity_unique_ids.update(
             {
@@ -101,14 +101,14 @@ def _handle_paired_or_connected_appliance(
 def _handle_depaired_appliance(
     entry: HomeConnectConfigEntry,
     known_entity_unique_ids: dict[str, str],
-    chaged_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]],
+    changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]],
 ) -> None:
     """Handle a removed appliance."""
     for entity_unique_id, appliance_id in known_entity_unique_ids.copy().items():
         if appliance_id not in entry.runtime_data.data:
             known_entity_unique_ids.pop(entity_unique_id, None)
-            if appliance_id in chaged_options_listener_remove_callbacks:
-                for listener in chaged_options_listener_remove_callbacks.pop(
+            if appliance_id in changed_options_listener_remove_callbacks:
+                for listener in changed_options_listener_remove_callbacks.pop(
                     appliance_id
                 ):
                     listener()
@@ -128,7 +128,7 @@ def setup_home_connect_entry(
 ) -> None:
     """Set up the callbacks for paired and depaired appliances."""
     known_entity_unique_ids: dict[str, str] = {}
-    chaged_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]] = (
+    changed_options_listener_remove_callbacks: dict[str, list[Callable[[], None]]] = (
         defaultdict(list)
     )
 
@@ -141,7 +141,7 @@ def setup_home_connect_entry(
                 EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
                 EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
             ):
-                chaged_options_listener_remove_callback = (
+                changed_options_listener_remove_callback = (
                     entry.runtime_data.async_add_listener(
                         partial(
                             _create_option_entities,
@@ -154,9 +154,9 @@ def setup_home_connect_entry(
                         (appliance.info.ha_id, event_key),
                     )
                 )
-                entry.async_on_unload(chaged_options_listener_remove_callback)
-                chaged_options_listener_remove_callbacks[appliance.info.ha_id].append(
-                    chaged_options_listener_remove_callback
+                entry.async_on_unload(changed_options_listener_remove_callback)
+                changed_options_listener_remove_callbacks[appliance.info.ha_id].append(
+                    changed_options_listener_remove_callback
                 )
         known_entity_unique_ids.update(
             {
@@ -175,7 +175,7 @@ def setup_home_connect_entry(
                 known_entity_unique_ids,
                 get_entities_for_appliance,
                 get_option_entities_for_appliance,
-                chaged_options_listener_remove_callbacks,
+                changed_options_listener_remove_callbacks,
                 async_add_entities,
             ),
             (
@@ -190,7 +190,7 @@ def setup_home_connect_entry(
                 _handle_depaired_appliance,
                 entry,
                 known_entity_unique_ids,
-                chaged_options_listener_remove_callbacks,
+                changed_options_listener_remove_callbacks,
             ),
             (EventKey.BSH_COMMON_APPLIANCE_DEPAIRED,),
         )
