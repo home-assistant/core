@@ -102,6 +102,18 @@ async def _validate_auth(
         return True
 
 
+def _get_current_hosts(entry: HeosConfigEntry) -> set[str]:
+    """Get a set of current hosts from the entry."""
+    hosts = set(entry.data[CONF_HOST])
+    if hasattr(entry, "runtime_data"):
+        hosts.update(
+            player.ip_address
+            for player in entry.runtime_data.heos.players.values()
+            if player.ip_address is not None
+        )
+    return hosts
+
+
 class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
     """Define a flow for HEOS."""
 
@@ -125,10 +137,15 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert discovery_info.ssdp_location
 
-        await self.async_set_unique_id(DOMAIN)
-        # Connect to discovered host and get system information
+        entry: HeosConfigEntry | None = await self.async_set_unique_id(DOMAIN)
         hostname = urlparse(discovery_info.ssdp_location).hostname
         assert hostname is not None
+
+        # Abort early when discovered host is part of the current system
+        if entry and hostname in _get_current_hosts(entry):
+            return self.async_abort(reason="single_instance_allowed")
+
+        # Connect to discovered host and get system information
         heos = Heos(HeosOptions(hostname, events=False, heart_beat=False))
         try:
             await heos.connect()
@@ -146,8 +163,23 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         # Select the preferred host, if available
         if system_info.preferred_hosts:
             hostname = system_info.preferred_hosts[0].ip_address
-        self._discovered_host = hostname
-        return await self.async_step_confirm_discovery()
+
+        # Move to confirmation when not configured
+        if entry is None:
+            self._discovered_host = hostname
+            return await self.async_step_confirm_discovery()
+
+        # Only update if the configured host isn't part of the discovered hosts to ensure new players that come online don't trigger a reload
+        if entry.data[CONF_HOST] not in [host.ip_address for host in system_info.hosts]:
+            _LOGGER.debug(
+                "Updated host %s to discovered host %s", entry.data[CONF_HOST], hostname
+            )
+            return self.async_update_reload_and_abort(
+                entry,
+                data_updates={CONF_HOST: hostname},
+                reason="reconfigure_successful",
+            )
+        return self.async_abort(reason="single_instance_allowed")
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
@@ -167,6 +199,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Obtain host and validate connection."""
         await self.async_set_unique_id(DOMAIN)
+        self._abort_if_unique_id_configured(error="single_instance_allowed")
         # Try connecting to host if provided
         errors: dict[str, str] = {}
         host = None
