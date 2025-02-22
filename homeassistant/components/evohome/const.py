@@ -7,6 +7,7 @@ from typing import Final
 
 DOMAIN: Final = "evohome"
 
+# storage is to be deprecated
 STORAGE_VER: Final = 1
 STORAGE_KEY: Final = DOMAIN
 
@@ -15,10 +16,12 @@ DEFAULT_LOCATION_IDX: Final = 0
 
 CONF_HIGH_PRECISION: Final = "high_precision"
 DEFAULT_HIGH_PRECISION: Final = False
+DEFAULT_HIGH_PRECISION_LEGACY: Final = True  # to be deprecated
 
-DEFAULT_SCAN_INTERVAL: Final = 60 * 5  # seconds
+DEFAULT_SCAN_INTERVAL: Final = 60 * 5
 MAXIMUM_SCAN_INTERVAL: Final = 60 * 15
-MINIMUM_SCAN_INTERVAL: Final = 60
+MINIMUM_SCAN_INTERVAL: Final = 180
+MINIMUM_SCAN_INTERVAL_LEGACY: Final = 60  # to be deprecated
 
 USER_DATA: Final = "user_data"
 

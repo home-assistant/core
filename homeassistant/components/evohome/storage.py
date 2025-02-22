@@ -19,8 +19,6 @@ from evohomeasync2.schemas.typedefs import EvoAuthTokensDictT as AccessTokenEntr
 
 SZ_CLIENT_ID: Final = "client_id"
 
-DATETIME_MIN_STR: Final = datetime.min.replace(tzinfo=UTC).isoformat()
-
 
 class TokenDataT(AccessTokenEntryT):
     """The token data as stored in the cache."""
@@ -34,7 +32,7 @@ _SESSION_ID_KEYS = SessionIdEntryT.__annotations__.keys()
 
 _NULL_TOKEN_DATA: Final[TokenDataT] = {
     SZ_ACCESS_TOKEN: "",
-    SZ_ACCESS_TOKEN_EXPIRES: DATETIME_MIN_STR,
+    SZ_ACCESS_TOKEN_EXPIRES: datetime.min.replace(tzinfo=UTC).isoformat(),
     SZ_REFRESH_TOKEN: "",
 }
 
@@ -72,7 +70,7 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
         """
 
         if not self._store_initialized:
-            await self._load_cache_from_store()
+            await self._load_cache_from_entry()
 
         return await super().get_access_token()
 
@@ -95,7 +93,7 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
         """
 
         if not self._store_initialized:
-            await self._load_cache_from_store()
+            await self._load_cache_from_entry()
 
         return await super().get_session_id()
 
@@ -108,8 +106,8 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
 
         return await super().fetch_session_id()
 
-    async def _load_cache_from_store(self) -> None:
-        """Load the access token (and session id, if any) from the store."""
+    async def _load_cache_from_entry(self) -> None:
+        """Load the access token (and session id, if any) from the config entry."""
 
         self._store_initialized = True  # only load the cache once
 
@@ -131,14 +129,14 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
 
     async def save_access_token(self) -> None:  # an abstractmethod
         """Save the access token (and expiry dtm, refresh token) to the cache."""
-        await self._save_cache_to_store()
+        await self._save_cache_to_entry()
 
     async def save_session_id(self) -> None:  # an abstractmethod
         """Save the session id (and expiry dtm) to the cache."""
-        await self._save_cache_to_store()
+        await self._save_cache_to_entry()
 
-    async def _save_cache_to_store(self) -> None:
-        """Save the access token (and session id, if any) to the store."""
+    async def _save_cache_to_entry(self) -> None:
+        """Save the access token (and session id, if any) to the config entry."""
 
         token_data: TokenDataT = self._export_access_token()  # type: ignore[assignment]
 
