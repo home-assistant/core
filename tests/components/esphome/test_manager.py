@@ -1279,6 +1279,7 @@ async def test_esphome_device_subscribe_logs(
         states=[],
     )
     await hass.async_block_till_done()
+    caplog.set_level(logging.DEBUG)
     device.mock_on_log_message(
         Mock(level=LogLevel.LOG_LEVEL_INFO, message=b"test_log_message")
     )
