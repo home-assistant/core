@@ -69,7 +69,7 @@ async def async_setup_entry(
     entry: HomeConnectConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Home Connect select entities."""
+    """Set up the Home Connect button entities."""
     setup_home_connect_entry(
         entry,
         _get_entities_for_appliance,
