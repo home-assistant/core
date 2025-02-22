@@ -388,9 +388,8 @@ class ESPHomeManager:
         hass = self.hass
         cli = self.cli
         stored_device_name = entry.data.get(CONF_DEVICE_NAME)
-        subscribe_logs = entry.options.get(CONF_SUBSCRIBE_LOGS)
         unique_id_is_mac_address = unique_id and ":" in unique_id
-        if subscribe_logs:
+        if entry.options.get(CONF_SUBSCRIBE_LOGS):
             cli.subscribe_logs(self._async_on_log, LogLevel.LOG_LEVEL_VERY_VERBOSE)
         results = await asyncio.gather(
             create_eager_task(cli.device_info()),
