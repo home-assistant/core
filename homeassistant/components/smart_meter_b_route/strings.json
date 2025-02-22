@@ -2,6 +2,11 @@
   "config": {
     "step": {
       "user": {
+        "data_description": {
+          "device": "[%key:common::config_flow::data::device%]",
+          "id": "B Route ID",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
         "data": {
           "device": "[%key:common::config_flow::data::device%]",
           "id": "B Route ID",
