@@ -272,6 +272,7 @@
       'settings': dict({
         'BSH.Common.Setting.ChildLock': False,
         'BSH.Common.Setting.PowerState': 'BSH.Common.EnumType.PowerState.On',
+        'LaundryCare.Washer.Setting.IDos2BaseLevel': 0,
       }),
       'status': dict({
         'BSH.Common.Status.DoorState': 'BSH.Common.EnumType.DoorState.Closed',

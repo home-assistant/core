@@ -131,6 +131,11 @@
           "key": "BSH.Common.Setting.ChildLock",
           "value": false,
           "type": "Boolean"
+        },
+        {
+          "key": "LaundryCare.Washer.Setting.IDos2BaseLevel",
+          "value": 0,
+          "type": "Integer"
         }
       ]
     }
