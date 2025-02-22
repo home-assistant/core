@@ -86,7 +86,7 @@ if TYPE_CHECKING:
 _LOGGER = logging.getLogger(__name__)
 
 LOG_LEVEL_TO_LOGGER = {
-    LogLevel.LOG_LEVEL_NONE: logging.NOTSET,
+    LogLevel.LOG_LEVEL_NONE: logging.DEBUG,
     LogLevel.LOG_LEVEL_ERROR: logging.ERROR,
     LogLevel.LOG_LEVEL_WARN: logging.WARNING,
     LogLevel.LOG_LEVEL_INFO: logging.INFO,
