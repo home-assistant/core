@@ -1556,11 +1556,13 @@ async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> 
             integration.all_dependencies
         )
         assert not domain_with_base_platforms_deps, (
-            f"{integration.domain} has base platforms in dependencies: {domain_with_base_platforms_deps}"
+            f"{integration.domain} has base platforms in dependencies: "
+            f"{domain_with_base_platforms_deps}"
         )
         integration_top_level_files = base_platform_py_files.intersection(
             integration._top_level_files
         )
         assert not integration_top_level_files, (
-            f"{integration.domain} has base platform files in top level files: {integration_top_level_files}"
+            f"{integration.domain} has base platform files in top level files: "
+            f"{integration_top_level_files}"
         )
