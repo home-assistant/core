@@ -13,7 +13,6 @@
   "entity": {
     "light": {
       "govee_light": {
-        "name": "Govee light",
         "state_attributes": {
           "effect": {
             "state": {

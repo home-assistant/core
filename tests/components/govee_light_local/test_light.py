@@ -10,7 +10,7 @@ from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import DEFAULT_CAPABILITIES
+from .conftest import DEFAULT_CAPABILITIES, SCENE_CAPABILITIES
 
 from tests.common import MockConfigEntry
 
@@ -80,7 +80,7 @@ async def test_light_unknown_device(
 
 
 async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> None:
-    """Test adding a known device."""
+    """Test remove device."""
 
     mock_govee_api.devices = [
         GoveeDevice(
@@ -108,7 +108,7 @@ async def test_light_remove(hass: HomeAssistant, mock_govee_api: AsyncMock) -> N
 async def test_light_setup_retry(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
-    """Test adding an unknown device."""
+    """Test setup retry."""
 
     mock_govee_api.devices = []
 
@@ -126,7 +126,7 @@ async def test_light_setup_retry(
 async def test_light_setup_retry_eaddrinuse(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
-    """Test adding an unknown device."""
+    """Test retry on address already in use."""
 
     mock_govee_api.start.side_effect = OSError()
     mock_govee_api.start.side_effect.errno = EADDRINUSE
@@ -150,7 +150,7 @@ async def test_light_setup_retry_eaddrinuse(
 async def test_light_setup_error(
     hass: HomeAssistant, mock_govee_api: AsyncMock
 ) -> None:
-    """Test adding an unknown device."""
+    """Test setup error."""
 
     mock_govee_api.start.side_effect = OSError()
     mock_govee_api.start.side_effect.errno = ENETDOWN
@@ -172,7 +172,7 @@ async def test_light_setup_error(
 
 
 async def test_light_on_off(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:
-    """Test adding a known device."""
+    """Test light on and then off."""
 
     mock_govee_api.devices = [
         GoveeDevice(
@@ -350,3 +350,265 @@ async def test_light_color(hass: HomeAssistant, mock_govee_api: MagicMock) -> No
     mock_govee_api.set_color.assert_awaited_with(
         mock_govee_api.devices[0], rgb=None, temperature=4400
     )
+
+
+async def test_scene_on(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:
+    """Test turning on scene."""
+
+    mock_govee_api.devices = [
+        GoveeDevice(
+            controller=mock_govee_api,
+            ip="192.168.1.100",
+            fingerprint="asdawdqwdqwd",
+            sku="H615A",
+            capabilities=SCENE_CAPABILITIES,
+        )
+    ]
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "off"
+
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": light.entity_id, "effect": "sunrise"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "on"
+    assert light.attributes["effect"] == "sunrise"
+    mock_govee_api.turn_on_off.assert_awaited_with(mock_govee_api.devices[0], True)
+
+
+async def test_scene_restore_rgb(
+    hass: HomeAssistant, mock_govee_api: MagicMock
+) -> None:
+    """Test restore rgb color."""
+
+    mock_govee_api.devices = [
+        GoveeDevice(
+            controller=mock_govee_api,
+            ip="192.168.1.100",
+            fingerprint="asdawdqwdqwd",
+            sku="H615A",
+            capabilities=SCENE_CAPABILITIES,
+        )
+    ]
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    initial_color = (12, 34, 56)
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "off"
+
+    # Set initial color
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": light.entity_id, "rgb_color": initial_color},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": light.entity_id, "brightness": 255},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "on"
+    assert light.attributes["rgb_color"] == initial_color
+    assert light.attributes["brightness"] == 255
+    mock_govee_api.turn_on_off.assert_awaited_with(mock_govee_api.devices[0], True)
+
+    # Activate scene
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": light.entity_id, "effect": "sunrise"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "on"
+    assert light.attributes["effect"] == "sunrise"
+    mock_govee_api.turn_on_off.assert_awaited_with(mock_govee_api.devices[0], True)
+
+    # Deactivate scene
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": light.entity_id, "effect": "none"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "on"
+    assert light.attributes["effect"] is None
+    assert light.attributes["rgb_color"] == initial_color
+    assert light.attributes["brightness"] == 255
+
+
+async def test_scene_restore_temperature(
+    hass: HomeAssistant, mock_govee_api: MagicMock
+) -> None:
+    """Test restore color temperature."""
+
+    mock_govee_api.devices = [
+        GoveeDevice(
+            controller=mock_govee_api,
+            ip="192.168.1.100",
+            fingerprint="asdawdqwdqwd",
+            sku="H615A",
+            capabilities=SCENE_CAPABILITIES,
+        )
+    ]
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    initial_color = 3456
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "off"
+
+    # Set initial color
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": light.entity_id, "color_temp_kelvin": initial_color},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "on"
+    assert light.attributes["color_temp_kelvin"] == initial_color
+    mock_govee_api.turn_on_off.assert_awaited_with(mock_govee_api.devices[0], True)
+
+    # Activate scene
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": light.entity_id, "effect": "sunrise"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "on"
+    assert light.attributes["effect"] == "sunrise"
+    mock_govee_api.set_scene.assert_awaited_with(mock_govee_api.devices[0], "sunrise")
+
+    # Deactivate scene
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": light.entity_id, "effect": "none"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "on"
+    assert light.attributes["effect"] is None
+    assert light.attributes["color_temp_kelvin"] == initial_color
+
+
+async def test_scene_none(hass: HomeAssistant, mock_govee_api: MagicMock) -> None:
+    """Test turn on 'none' scene."""
+
+    mock_govee_api.devices = [
+        GoveeDevice(
+            controller=mock_govee_api,
+            ip="192.168.1.100",
+            fingerprint="asdawdqwdqwd",
+            sku="H615A",
+            capabilities=SCENE_CAPABILITIES,
+        )
+    ]
+
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all()) == 1
+
+    initial_color = (12, 34, 56)
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "off"
+
+    # Set initial color
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": light.entity_id, "rgb_color": initial_color},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": light.entity_id, "brightness": 255},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "on"
+    assert light.attributes["rgb_color"] == initial_color
+    assert light.attributes["brightness"] == 255
+    mock_govee_api.turn_on_off.assert_awaited_with(mock_govee_api.devices[0], True)
+
+    # Activate scene
+    await hass.services.async_call(
+        "light",
+        "turn_on",
+        {"entity_id": light.entity_id, "effect": "none"},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    light = hass.states.get("light.H615A")
+    assert light is not None
+    assert light.state == "on"
+    assert light.attributes["effect"] is None
+    mock_govee_api.set_scene.assert_not_called()
