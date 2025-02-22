@@ -105,7 +105,7 @@ SELECT_ENTITY_DESCRIPTIONS = (
     HomeConnectSelectEntityDescription(
         key=SettingKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_CURRENT_MAP,
         translation_key="current_map",
-        options=list(AVAILABLE_MAPS_ENUM.keys()),
+        options=list(AVAILABLE_MAPS_ENUM),
         translation_key_values=AVAILABLE_MAPS_ENUM,
         values_translation_key={
             value: translation_key
@@ -115,7 +115,7 @@ SELECT_ENTITY_DESCRIPTIONS = (
     HomeConnectSelectEntityDescription(
         key=SettingKey.COOKING_HOOD_COLOR_TEMPERATURE,
         translation_key="functional_light_color_temperature",
-        options=list(FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM.keys()),
+        options=list(FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM),
         translation_key_values=FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM,
         values_translation_key={
             value: translation_key
@@ -125,7 +125,7 @@ SELECT_ENTITY_DESCRIPTIONS = (
     HomeConnectSelectEntityDescription(
         key=SettingKey.BSH_COMMON_AMBIENT_LIGHT_COLOR,
         translation_key="ambient_light_color",
-        options=list(AMBIENT_LIGHT_COLOR_TEMPERATURE_ENUM.keys()),
+        options=list(AMBIENT_LIGHT_COLOR_TEMPERATURE_ENUM),
         translation_key_values=AMBIENT_LIGHT_COLOR_TEMPERATURE_ENUM,
         values_translation_key={
             value: translation_key
@@ -238,6 +238,11 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
         desc: HomeConnectSelectEntityDescription,
     ) -> None:
         """Initialize the entity."""
+        super().__init__(
+            coordinator,
+            appliance,
+            desc,
+        )
         setting = appliance.settings.get(cast(SettingKey, desc.key))
         if setting and setting.constraints and setting.constraints.allowed_values:
             self._attr_options = [
@@ -245,11 +250,6 @@ class HomeConnectSelectEntity(HomeConnectEntity, SelectEntity):
                 for option in setting.constraints.allowed_values
                 if option in desc.values_translation_key
             ]
-        super().__init__(
-            coordinator,
-            appliance,
-            desc,
-        )
 
     async def async_select_option(self, option: str) -> None:
         """Select new option."""
