@@ -35,7 +35,7 @@ from .const import (
 from .coordinator import RiscoDataUpdateCoordinator, RiscoEventsDataUpdateCoordinator
 from .models import LocalData
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
@@ -72,6 +72,7 @@ async def _async_setup_local_entry(hass: HomeAssistant, entry: ConfigEntry) -> b
         data[CONF_PORT],
         data[CONF_PIN],
         concurrency=concurrency,
+        communication_delay=1,
     )
 
     try:
