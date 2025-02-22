@@ -185,21 +185,6 @@ class IntentCache:
         self.cache.clear()
 
 
-def _get_language_variations(language: str) -> Iterable[str]:
-    """Generate language codes with and without region."""
-    yield language
-
-    parts = re.split(r"([-_])", language)
-    if len(parts) == 3:
-        lang, sep, region = parts
-        if sep == "_":
-            # en_US -> en-US
-            yield f"{lang}-{region}"
-
-        # en-US -> en
-        yield lang
-
-
 async def async_setup_default_agent(
     hass: core.HomeAssistant,
     entity_component: EntityComponent[ConversationEntity],
@@ -1324,6 +1309,8 @@ class DefaultAgent(ConversationEntity):
     async def async_handle_intents(
         self,
         user_input: ConversationInput,
+        *,
+        intent_filter: Callable[[RecognizeResult], bool] | None = None,
     ) -> intent.IntentResponse | None:
         """Try to match sentence against registered intents and return response.
 
@@ -1331,7 +1318,9 @@ class DefaultAgent(ConversationEntity):
         Returns None if no match or a matching error occurred.
         """
         result = await self.async_recognize_intent(user_input, strict_intents_only=True)
-        if not isinstance(result, RecognizeResult):
+        if not isinstance(result, RecognizeResult) or (
+            intent_filter is not None and intent_filter(result)
+        ):
             # No error message on failed match
             return None
 

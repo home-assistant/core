@@ -58,7 +58,6 @@ async def async_migrate_entry(
 
     if entry.version == 1:
         latitude, longitude = await Stookwijzer.async_transform_coordinates(
-            async_get_clientsession(hass),
             entry.data[CONF_LOCATION][CONF_LATITUDE],
             entry.data[CONF_LOCATION][CONF_LONGITUDE],
         )

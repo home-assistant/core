@@ -29,7 +29,7 @@ rules:
     status: done
     comment: Using confid entry ID as the dependency mcstatus doesn't provide a unique information.
   has-entity-name: done
-  runtime-data: todo
+  runtime-data: done
   test-before-configure: done
   test-before-setup:
     status: done
