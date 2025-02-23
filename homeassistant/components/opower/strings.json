@@ -31,5 +31,15 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
+  },
+  "issues": {
+    "negative_consumption_statistics": {
+      "title": "Historical negative energy consumption statistics found",
+      "description": "Historical statistics for the following meters contain negative consumption values that should be moved to return statistics: {statistic_ids}"
+    },
+    "negative_cost_statistics": {
+      "title": "Historical negative energy cost statistics found",
+      "description": "Historical statistics for the following meters contain negative cost values that should be moved to compensation statistics: {statistic_ids}"
+    }
   }
 }
