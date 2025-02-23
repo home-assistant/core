@@ -11,8 +11,10 @@ from homeassistant.components.generic_thermostat.const import (
     CONF_COLD_TOLERANCE,
     CONF_HEATER,
     CONF_HOT_TOLERANCE,
+    CONF_PRECISION,
     CONF_PRESETS,
     CONF_SENSOR,
+    CONF_TEMP_STEP,
     DOMAIN,
 )
 from homeassistant.components.sensor import SensorDeviceClass
@@ -85,6 +87,8 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
             CONF_AC_MODE: False,
             CONF_COLD_TOLERANCE: 0.3,
             CONF_HOT_TOLERANCE: 0.3,
+            CONF_PRECISION: 0.5,
+            CONF_TEMP_STEP: 1.0,
             CONF_PRESETS[PRESET_AWAY]: 20,
         },
         title="My dehumidifier",
@@ -93,7 +97,7 @@ async def test_options(hass: HomeAssistant, snapshot: SnapshotAssertion) -> None
 
     hass.states.async_set(
         "sensor.temperature",
-        "15",
+        "15.6",
         {
             ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS,
             ATTR_DEVICE_CLASS: SensorDeviceClass.TEMPERATURE,

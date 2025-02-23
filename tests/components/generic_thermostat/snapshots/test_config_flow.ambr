@@ -56,23 +56,23 @@
 # name: test_options[with_away]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 15.0,
+      'current_temperature': 15.5,
       'friendly_name': 'My thermostat',
       'hvac_action': <HVACAction.OFF: 'off'>,
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
       ]),
-      'max_temp': 35,
-      'min_temp': 7,
+      'max_temp': 35.0,
+      'min_temp': 7.0,
       'preset_mode': 'none',
       'preset_modes': list([
         'none',
         'away',
       ]),
       'supported_features': <ClimateEntityFeature: 401>,
-      'target_temp_step': 0.1,
-      'temperature': 7,
+      'target_temp_step': 1.0,
+      'temperature': 7.0,
     }),
     'context': <ANY>,
     'entity_id': 'climate.my_thermostat',
@@ -85,7 +85,7 @@
 # name: test_options[without_away]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 15.0,
+      'current_temperature': 15.6,
       'friendly_name': 'My thermostat',
       'hvac_action': <HVACAction.OFF: 'off'>,
       'hvac_modes': list([
