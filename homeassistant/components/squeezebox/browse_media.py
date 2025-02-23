@@ -124,7 +124,6 @@ class BrowseData:
         self.content_type_to_child_type.update(CONTENT_TYPE_TO_CHILD_TYPE)
         self.squeezebox_id_by_type.update(SQUEEZEBOX_ID_BY_TYPE)
         self.media_type_to_squeezebox.update(MEDIA_TYPE_TO_SQUEEZEBOX)
-        self.known_apps_radios = set()
 
 
 @dataclass
@@ -141,17 +140,13 @@ def _add_new_command_to_browse_data(
     browse_data: BrowseData, cmd: str | MediaType, type: str
 ) -> None:
     """Add items to maps for new apps or radios."""
-    browse_data.media_type_to_squeezebox.update({cmd: cmd})
-    browse_data.squeezebox_id_by_type.update({cmd: type})
-    browse_data.content_type_media_class.update(
-        {
-            cmd: {
-                "item": MediaClass.DIRECTORY,
-                "children": MediaClass.TRACK,
-            }
-        }
-    )
-    browse_data.content_type_to_child_type.update({cmd: MediaType.TRACK})
+    browse_data.media_type_to_squeezebox[cmd] = cmd
+    browse_data.squeezebox_id_by_type[cmd] = type
+    browse_data.content_type_media_class[cmd] = {
+        "item": MediaClass.DIRECTORY,
+        "children": MediaClass.TRACK,
+    }
+    browse_data.content_type_to_child_type[cmd] = MediaType.TRACK
 
 
 def _build_response_apps_radios_category(
@@ -250,15 +245,15 @@ async def build_item_response(
                 if item["title"] == "Search" or item.get("type") in UNPLAYABLE_TYPES:
                     # Skip searches in apps as they'd need UI or if the link isn't to audio
                     continue
-                _cmd = "app-" + item["cmd"]
+                app_cmd = "app-" + item["cmd"]
 
-                if _cmd not in browse_data.known_apps_radios:
-                    browse_data.known_apps_radios.add(_cmd)
+                if app_cmd not in browse_data.known_apps_radios:
+                    browse_data.known_apps_radios.add(app_cmd)
 
-                _add_new_command_to_browse_data(browse_data, _cmd, "item_id")
+                _add_new_command_to_browse_data(browse_data, app_cmd, "item_id")
 
                 browse_item_response = _build_response_apps_radios_category(
-                    browse_data, _cmd
+                    browse_data, app_cmd
                 )
 
                 # Temporary variables until remainder of browse calls are restructured
@@ -335,7 +330,7 @@ async def build_item_response(
 async def library_payload(
     hass: HomeAssistant,
     player: Player,
-    squeezebox_maps: BrowseData,
+    browse_media: BrowseData,
 ) -> BrowseMedia:
     """Create response payload to describe contents of library."""
     library_info: dict[str, Any] = {
@@ -349,10 +344,10 @@ async def library_payload(
     }
 
     for item in LIBRARY:
-        media_class = squeezebox_maps.content_type_media_class[item]
+        media_class = browse_media.content_type_media_class[item]
 
         result = await player.async_browse(
-            squeezebox_maps.media_type_to_squeezebox[item],
+            browse_media.media_type_to_squeezebox[item],
             limit=1,
         )
         if result is not None and result.get("items") is not None:
@@ -390,17 +385,17 @@ async def generate_playlist(
     player: Player,
     payload: dict[str, str],
     browse_limit: int,
-    squeezebox_maps: BrowseData,
+    browse_media: BrowseData,
 ) -> list | None:
     """Generate playlist from browsing payload."""
     media_type = payload["search_type"]
     media_id = payload["search_id"]
 
-    if media_type not in squeezebox_maps.squeezebox_id_by_type:
+    if media_type not in browse_media.squeezebox_id_by_type:
         raise BrowseError(f"Media type not supported: {media_type}")
 
-    browse_id = (squeezebox_maps.squeezebox_id_by_type[media_type], media_id)
-    if media_type[:4] == "app-":
+    browse_id = (browse_media.squeezebox_id_by_type[media_type], media_id)
+    if media_type.startswith("app-"):
         category = media_type
     else:
         category = "titles"
