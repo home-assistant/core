@@ -59,7 +59,7 @@ class SmartTubBuiltinSensorBase(SmartTubEntity):
 class SmartTubExternalSensorBase(SmartTubEntity):
     """Class for additional BLE wireless sensors sold separately."""
 
-    def __init__(self, coordinator, spa, sensor: smarttub.SpaSensor):
+    def __init__(self, coordinator, spa, sensor: smarttub.SpaSensor) -> None:
         """Initialize the external sensor entity."""
         self.sensor_address = sensor.address
         self._attr_unique_id = f"{spa.id}-externalsensor-{sensor.address}"
