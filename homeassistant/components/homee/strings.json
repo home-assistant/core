@@ -67,9 +67,6 @@
       }
     },
     "number": {
-      "current_valve_position": {
-        "name": "Valve position"
-      },
       "down_position": {
         "name": "Down position"
       },
