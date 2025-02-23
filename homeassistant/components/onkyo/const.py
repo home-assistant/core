@@ -8,6 +8,8 @@ import pyeiscp
 
 DOMAIN = "onkyo"
 
+INTEGRATION_URL = "/config/integrations/integration/onkyo"
+
 DEVICE_INTERVIEW_TIMEOUT = 5
 DEVICE_DISCOVERY_TIMEOUT = 5
 
@@ -230,10 +232,6 @@ class ListeningMode(EnumWithMeaning):
     @staticmethod
     def _get_meanings() -> dict[str, str]:
         return _LISTENING_MODE_MEANINGS
-
-
-OPTION_INPUT_SOURCES_DEFAULT: dict[str, str] = {}
-OPTION_LISTENING_MODES_DEFAULT: dict[str, str] = {}
 
 
 ZONES = {"main": "Main", "zone2": "Zone 2", "zone3": "Zone 3", "zone4": "Zone 4"}

@@ -1,5 +1,6 @@
 """Config flow for Onkyo."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -33,9 +34,7 @@ from .const import (
     CONF_SOURCES,
     DOMAIN,
     OPTION_INPUT_SOURCES,
-    OPTION_INPUT_SOURCES_DEFAULT,
     OPTION_LISTENING_MODES,
-    OPTION_LISTENING_MODES_DEFAULT,
     OPTION_MAX_VOLUME,
     OPTION_MAX_VOLUME_DEFAULT,
     OPTION_VOLUME_RESOLUTION,
@@ -50,6 +49,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_DEVICE = "device"
 
+INPUT_SOURCES_DEFAULT: dict[str, str] = {}
+LISTENING_MODES_DEFAULT: dict[str, str] = {}
 INPUT_SOURCES_ALL_MEANINGS = {
     input_source.value_meaning: input_source for input_source in InputSource
 }
@@ -84,8 +85,6 @@ STEP_CONFIGURE_SCHEMA = STEP_RECONFIGURE_SCHEMA.extend(
 
 class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
     """Onkyo config flow."""
-
-    MINOR_VERSION = 2
 
     _receiver_info: ReceiverInfo
     _discovered_infos: dict[str, ReceiverInfo]
@@ -306,8 +305,8 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
             if reconfigure_entry is None:
                 suggested_values = {
                     OPTION_VOLUME_RESOLUTION: OPTION_VOLUME_RESOLUTION_DEFAULT,
-                    OPTION_INPUT_SOURCES: OPTION_INPUT_SOURCES_DEFAULT,
-                    OPTION_LISTENING_MODES: OPTION_LISTENING_MODES_DEFAULT,
+                    OPTION_INPUT_SOURCES: INPUT_SOURCES_DEFAULT,
+                    OPTION_LISTENING_MODES: LISTENING_MODES_DEFAULT,
                 }
             else:
                 entry_options = reconfigure_entry.options
@@ -381,7 +380,7 @@ class OnkyoConfigFlow(ConfigFlow, domain=DOMAIN):
                 OPTION_VOLUME_RESOLUTION: volume_resolution,
                 OPTION_MAX_VOLUME: max_volume,
                 OPTION_INPUT_SOURCES: sources_store,
-                OPTION_LISTENING_MODES: OPTION_LISTENING_MODES_DEFAULT,
+                OPTION_LISTENING_MODES: LISTENING_MODES_DEFAULT,
             },
         )
 
@@ -428,7 +427,11 @@ class OnkyoOptionsFlowHandler(OptionsFlow):
         """Manage the options."""
         errors = {}
 
-        entry_options = self.config_entry.options
+        entry_options: Mapping[str, Any] = self.config_entry.options
+        entry_options = {
+            OPTION_LISTENING_MODES: LISTENING_MODES_DEFAULT,
+            **entry_options,
+        }
 
         if user_input is not None:
             input_source_meanings: list[str] = user_input[OPTION_INPUT_SOURCES]

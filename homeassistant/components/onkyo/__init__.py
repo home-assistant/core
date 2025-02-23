@@ -7,14 +7,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
+    INTEGRATION_URL,
     OPTION_INPUT_SOURCES,
     OPTION_LISTENING_MODES,
-    OPTION_LISTENING_MODES_DEFAULT,
     InputSource,
     ListeningMode,
 )
@@ -61,7 +61,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
     sources_store: dict[str, str] = entry.options[OPTION_INPUT_SOURCES]
     sources = {InputSource(k): v for k, v in sources_store.items()}
 
-    sound_modes_store: dict[str, str] = entry.options[OPTION_LISTENING_MODES]
+    sound_modes_store: dict[str, str] = entry.options.get(OPTION_LISTENING_MODES, {})
+    handle_sound_mode_migration(hass, entry, sound_modes_store)
     sound_modes = {ListeningMode(k): v for k, v in sound_modes_store.items()}
 
     entry.runtime_data = OnkyoData(receiver, sources, sound_modes)
@@ -90,23 +91,22 @@ async def update_listener(hass: HomeAssistant, entry: OnkyoConfigEntry) -> None:
     await hass.config_entries.async_reload(entry.entry_id)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bool:
-    """Migrate entry."""
-    _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
-
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
-    if entry.version == 1:
-        new_options = {**entry.options}
-        if entry.minor_version < 2:
-            new_options[OPTION_LISTENING_MODES] = OPTION_LISTENING_MODES_DEFAULT
-
-        hass.config_entries.async_update_entry(
-            entry, options=new_options, version=1, minor_version=2
+def handle_sound_mode_migration(
+    hass: HomeAssistant, entry: OnkyoConfigEntry, sound_modes: dict[str, str]
+) -> None:
+    """Handle sound mode migration."""
+    if not sound_modes:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"sound_mode_not_configured_{entry.entry_id}",
+            breaks_in_ha_version="2025.9.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="sound_mode_not_configured",
+            translation_placeholders={"receiver": entry.title, "url": INTEGRATION_URL},
         )
-
-    _LOGGER.debug("Migrated to version %s.%s", entry.version, entry.minor_version)
-
-    return True
+    else:
+        ir.async_delete_issue(
+            hass, DOMAIN, f"sound_mode_not_configured_{entry.entry_id}"
+        )
