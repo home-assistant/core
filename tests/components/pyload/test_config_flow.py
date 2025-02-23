@@ -10,7 +10,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import NEW_INPUT, REAUTH_INPUT, USER_INPUT
+from .conftest import NEW_INPUT, REAUTH_INPUT, USER_INPUT, USER_INPUT_RESULT
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +34,7 @@ async def test_form(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
-    assert result["data"] == USER_INPUT
+    assert result["data"] == USER_INPUT_RESULT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -76,7 +76,7 @@ async def test_form_errors(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == DEFAULT_NAME
-    assert result["data"] == USER_INPUT
+    assert result["data"] == USER_INPUT_RESULT
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -196,7 +196,7 @@ async def test_reconfiguration(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == USER_INPUT
+    assert config_entry.data == USER_INPUT_RESULT
     assert len(hass.config_entries.async_entries()) == 1
 
 
@@ -243,5 +243,5 @@ async def test_reconfigure_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == USER_INPUT
+    assert config_entry.data == USER_INPUT_RESULT
     assert len(hass.config_entries.async_entries()) == 1
