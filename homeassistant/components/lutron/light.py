@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from pylutron import Output
+from pylutron import Lutron, LutronEntity, Output
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -38,7 +38,7 @@ async def async_setup_entry(
 
     async_add_entities(
         (
-            LutronLight(area_name, device, entry_data.client)
+            LutronLight(area_name, device, entry_data.client, config_entry)
             for area_name, device in entry_data.lights
         ),
         True,
@@ -65,6 +65,17 @@ class LutronLight(LutronDevice, LightEntity):
     _prev_brightness: int | None = None
     _attr_name = None
 
+    def __init__(
+        self,
+        area_name: str,
+        lutron_device: LutronEntity,
+        controller: Lutron,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(area_name, lutron_device, controller)
+        self._config_entry = config_entry
+
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if flash := kwargs.get(ATTR_FLASH):
@@ -73,7 +84,7 @@ class LutronLight(LutronDevice, LightEntity):
             if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
                 brightness = kwargs[ATTR_BRIGHTNESS]
             elif self._prev_brightness == 0:
-                brightness = self.platform.config_entry.options.get(
+                brightness = self._config_entry.options.get(
                     CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
                 )
             else:
