@@ -1,6 +1,7 @@
 """Platform for binary sensor integration."""
 
 from __future__ import annotations
+
 import logging
 
 from smarttub import SpaError, SpaReminder
@@ -24,8 +25,8 @@ from .const import (
     SMARTTUB_CONTROLLER,
 )
 from .entity import (
-    SmartTubEntity,
     SmartTubBuiltinSensorBase,
+    SmartTubEntity,
     SmartTubExternalSensorBase,
 )
 

@@ -105,6 +105,7 @@ async def test_reset_reminder(spa, setup_entry, hass: HomeAssistant) -> None:
 
     reminder.reset.assert_called_with(days)
 
+
 async def test_cover_sensor(spa, setup_entry, hass: HomeAssistant) -> None:
     """Test cover sensor."""
 
@@ -113,4 +114,4 @@ async def test_cover_sensor(spa, setup_entry, hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state is not None
 
-    assert state.state == STATE_OFF # closed
+    assert state.state == STATE_OFF  # closed

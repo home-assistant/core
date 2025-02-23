@@ -83,11 +83,11 @@ def mock_spa(spa_state):
 
     mock_cover_sensor = create_autospec(smarttub.SpaSensor, instance=True)
     mock_cover_sensor.spa = mock_spa
-    mock_cover_sensor.address = 'address1'
-    mock_cover_sensor.name = '{cover-sensor-1}'
-    mock_cover_sensor.type = 'ibs0x'
-    mock_cover_sensor.subType = 'magnet'
-    mock_cover_sensor.magnet = True # closed
+    mock_cover_sensor.address = "address1"
+    mock_cover_sensor.name = "{cover-sensor-1}"
+    mock_cover_sensor.type = "ibs0x"
+    mock_cover_sensor.subType = "magnet"
+    mock_cover_sensor.magnet = True  # closed
 
     spa_state.sensors = [mock_cover_sensor]
 
