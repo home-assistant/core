@@ -1,6 +1,7 @@
 """Fixtures for OneDrive tests."""
 
 from collections.abc import AsyncIterator, Generator
+from html import escape
 from json import dumps
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -10,7 +11,9 @@ from onedrive_personal_sdk.models.items import (
     AppRoot,
     Drive,
     DriveQuota,
+    File,
     Folder,
+    Hashes,
     IdentitySet,
     ItemParentReference,
     User,
@@ -30,15 +33,7 @@ from homeassistant.components.onedrive.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from .const import (
-    BACKUP_METADATA,
-    CLIENT_ID,
-    CLIENT_SECRET,
-    IDENTITY_SET,
-    INSTANCE_ID,
-    MOCK_BACKUP_FILE,
-    MOCK_METADATA_FILE,
-)
+from .const import BACKUP_METADATA, CLIENT_ID, CLIENT_SECRET, IDENTITY_SET, INSTANCE_ID
 
 from tests.common import MockConfigEntry
 
@@ -165,20 +160,67 @@ def mock_folder() -> Folder:
     )
 
 
+@pytest.fixture
+def mock_backup_file() -> File:
+    """Return a mocked backup file."""
+    return File(
+        id="id",
+        name="23e64aec.tar",
+        size=34519040,
+        parent_reference=ItemParentReference(
+            drive_id="mock_drive_id", id="id", path="path"
+        ),
+        hashes=Hashes(
+            quick_xor_hash="hash",
+        ),
+        mime_type="application/x-tar",
+        created_by=IDENTITY_SET,
+    )
+
+
+@pytest.fixture
+def mock_metadata_file() -> File:
+    """Return a mocked metadata file."""
+    return File(
+        id="id",
+        name="23e64aec.tar",
+        size=34519040,
+        parent_reference=ItemParentReference(
+            drive_id="mock_drive_id", id="id", path="path"
+        ),
+        hashes=Hashes(
+            quick_xor_hash="hash",
+        ),
+        mime_type="application/x-tar",
+        description=escape(
+            dumps(
+                {
+                    "metadata_version": 2,
+                    "backup_id": "23e64aec",
+                    "backup_file_id": "id",
+                }
+            )
+        ),
+        created_by=IDENTITY_SET,
+    )
+
+
 @pytest.fixture(autouse=True)
 def mock_onedrive_client(
     mock_onedrive_client_init: MagicMock,
     mock_approot: AppRoot,
     mock_drive: Drive,
     mock_folder: Folder,
+    mock_backup_file: File,
+    mock_metadata_file: File,
 ) -> Generator[MagicMock]:
     """Return a mocked GraphServiceClient."""
     client = mock_onedrive_client_init.return_value
     client.get_approot.return_value = mock_approot
     client.create_folder.return_value = mock_folder
-    client.list_drive_items.return_value = [MOCK_BACKUP_FILE, MOCK_METADATA_FILE]
+    client.list_drive_items.return_value = [mock_backup_file, mock_metadata_file]
     client.get_drive_item.return_value = mock_folder
-    client.upload_file.return_value = MOCK_METADATA_FILE
+    client.upload_file.return_value = mock_metadata_file
 
     class MockStreamReader:
         async def iter_chunked(self, chunk_size: int) -> AsyncIterator[bytes]:
@@ -193,12 +235,12 @@ def mock_onedrive_client(
 
 
 @pytest.fixture
-def mock_large_file_upload_client() -> Generator[AsyncMock]:
+def mock_large_file_upload_client(mock_backup_file: File) -> Generator[AsyncMock]:
     """Return a mocked LargeFileUploadClient upload."""
     with patch(
         "homeassistant.components.onedrive.backup.LargeFileUploadClient.upload"
     ) as mock_upload:
-        mock_upload.return_value = MOCK_BACKUP_FILE
+        mock_upload.return_value = mock_backup_file
         yield mock_upload
 
 
