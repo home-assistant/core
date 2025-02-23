@@ -16,8 +16,18 @@ from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from .const import ATTR_ERRORS, ATTR_REMINDERS, ATTR_SENSORS, DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubEntity, SmartTubBuiltinSensorBase, SmartTubExternalSensorBase
+from .const import (
+    ATTR_ERRORS,
+    ATTR_REMINDERS,
+    ATTR_SENSORS,
+    DOMAIN,
+    SMARTTUB_CONTROLLER,
+)
+from .entity import (
+    SmartTubEntity,
+    SmartTubBuiltinSensorBase,
+    SmartTubExternalSensorBase,
+)
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
@@ -44,6 +54,7 @@ SNOOZE_REMINDER_SCHEMA: VolDictType = {
 
 _LOGGER = logging.getLogger(__name__)
 
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -62,7 +73,9 @@ async def async_setup_entry(
         for sensor in controller.coordinator.data[spa.id][ATTR_SENSORS].values():
             name = sensor.name.strip("{}")
             if name.startswith("cover-"):
-                entities.append(SmartTubCoverSensor(controller.coordinator, spa, sensor))
+                entities.append(
+                    SmartTubCoverSensor(controller.coordinator, spa, sensor)
+                )
             else:
                 _LOGGER.warn(f"Skipping unsupported sensor {sensor}")
 
@@ -186,6 +199,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
             ATTR_CREATED_AT: error.created_at.isoformat(),
             ATTR_UPDATED_AT: error.updated_at.isoformat(),
         }
+
 
 class SmartTubCoverSensor(SmartTubExternalSensorBase, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.OPENING

@@ -64,10 +64,11 @@ class SmartTubExternalSensorBase(SmartTubEntity):
         self._attr_unique_id = f"{spa.id}-externalsensor-{sensor.address}"
         super().__init__(coordinator, spa, self._human_readable_name(sensor))
 
-    
     @staticmethod
     def _human_readable_name(sensor):
-        return ' '.join(word.capitalize() for word in sensor.name.strip('{}').split('-'))
+        return " ".join(
+            word.capitalize() for word in sensor.name.strip("{}").split("-")
+        )
 
     @property
     def sensor(self):
