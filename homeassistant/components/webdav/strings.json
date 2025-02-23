@@ -25,5 +25,16 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
+  },
+  "exceptions": {
+    "invalid_username_password": {
+      "message": "Invalid username or password"
+    },
+    "cannot_connect": {
+      "message": "Cannot connect to WebDAV server"
+    },
+    "cannot_access_or_create_backup_path": {
+      "message": "Cannot access or create backup path. Please check the path and permissions."
+    }
   }
 }

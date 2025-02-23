@@ -12,7 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VER
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS
+from .const import CONF_BACKUP_PATH, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .helpers import async_create_client, async_ensure_path_exists
 
 type WebDavConfigEntry = ConfigEntry[Client]
@@ -33,18 +33,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebDavConfigEntry) -> bo
     try:
         result = await client.check()
     except UnauthorizedError as err:
-        raise ConfigEntryError("Invalid username or password") from err
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_username_password",
+        ) from err
 
     # Check if we can connect to the WebDAV server
     # and access the root directory
     if not result:
-        raise ConfigEntryNotReady("Failed to connect to WebDAV server")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        )
 
     # Ensure the backup directory exists
     if not await async_ensure_path_exists(
         client, entry.data.get(CONF_BACKUP_PATH, "/")
     ):
-        raise ConfigEntryNotReady("Failed to create backup directory")
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_access_or_create_backup_path",
+        )
 
     entry.runtime_data = client
 
