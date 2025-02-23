@@ -54,6 +54,18 @@ def mock_no_own_systems(
     )
 
 
+@pytest.fixture(name="no_response")
+def mock_no_response(
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Fixture to setup fake requests made to Fitbit API during config flow."""
+    aioclient_mock.request(
+        "GET",
+        "https://api.bionyx.io/3rd-party/api/systems",
+        status=HTTPStatus.INTERNAL_SERVER_ERROR,
+    )
+
+
 @pytest.fixture(name="no_availible_webhooks")
 def mock_no_availible_webhooks(
     aioclient_mock: AiohttpClientMocker,

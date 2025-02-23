@@ -4,6 +4,7 @@ from collections.abc import Sequence
 import logging
 from typing import Any, NotRequired, TypedDict
 
+import aiohttp
 import ekey_bionyxpy
 import voluptuous as vol
 
@@ -57,7 +58,11 @@ class OAuth2FlowHandler(
             async_get_clientsession(self.hass), data[CONF_TOKEN]
         )
         ap = ekey_bionyxpy.BionyxAPI(client)
-        system = [s for s in await ap.get_systems() if s.own_system]
+        try:
+            system_res = await ap.get_systems()
+        except aiohttp.ClientResponseError:
+            return self.async_abort(reason="cannot_connect")
+        system = [s for s in system_res if s.own_system]
         if len(system) == 0:
             return self.async_abort(reason="no_own_systems")
         self._data["systems"] = system
