@@ -29,6 +29,10 @@ VS_HUMIDIFIER_MODE_HUMIDITY = "humidity"
 VS_HUMIDIFIER_MODE_MANUAL = "manual"
 VS_HUMIDIFIER_MODE_SLEEP = "sleep"
 
+NIGHT_LIGHT_LEVEL_BRIGHT = "bright"
+NIGHT_LIGHT_LEVEL_DIM = "dim"
+NIGHT_LIGHT_LEVEL_OFF = "off"
+
 VeSyncHumidifierDevice = VeSyncHumid200300S | VeSyncSuperior6000S
 """Humidifier device types"""
 

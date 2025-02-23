@@ -6,12 +6,15 @@ from unittest.mock import MagicMock
 
 from onedrive_personal_sdk.exceptions import AuthenticationError, OneDriveException
 import pytest
+from syrupy import SnapshotAssertion
 
+from homeassistant.components.onedrive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
-from .const import BACKUP_METADATA, MOCK_BACKUP_FILE
+from .const import BACKUP_METADATA, MOCK_BACKUP_FILE, MOCK_DRIVE
 
 from tests.common import MockConfigEntry
 
@@ -101,3 +104,30 @@ async def test_migrate_metadata_files_errors(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_auth_error_during_update(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test auth error during update."""
+    mock_onedrive_client.get_drive.side_effect = AuthenticationError(403, "Auth failed")
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device({(DOMAIN, MOCK_DRIVE.id)})
+    assert device
+    assert device == snapshot

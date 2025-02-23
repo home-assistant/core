@@ -1090,7 +1090,7 @@ async def test_tasks_logged_that_block_stage_1(
         patch.object(bootstrap, "STAGE_1_TIMEOUT", 0),
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
         patch.object(
-            bootstrap, "STAGE_1_INTEGRATIONS", [*original_stage_1, "normal_integration"]
+            bootstrap, "STAGE_1_INTEGRATIONS", {*original_stage_1, "normal_integration"}
         ),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
@@ -1373,11 +1373,11 @@ async def test_pre_import_no_requirements(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.timeout(20)
-async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
-    """Test that the bootstrap does not preload stage 1 integrations.
+async def test_bootstrap_does_not_preimport_stage_1_integrations() -> None:
+    """Test that the bootstrap does not preimport stage 1 integrations.
 
     If this test fails it means that stage1 integrations are being
-    loaded too soon and will not get their requirements updated
+    imported too soon and will not get their requirements updated
     before they are loaded at runtime.
     """
 
@@ -1391,13 +1391,9 @@ async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
     assert process.returncode == 0
     decoded_stdout = stdout.decode()
 
-    disallowed_integrations = bootstrap.STAGE_1_INTEGRATIONS.copy()
-    # zeroconf is a top level dep now
-    disallowed_integrations.remove("zeroconf")
-
     # Ensure no stage1 integrations have been imported
     # as a side effect of importing the pre-imports
-    for integration in disallowed_integrations:
+    for integration in bootstrap.STAGE_1_INTEGRATIONS:
         assert f"homeassistant.components.{integration}" not in decoded_stdout
 
 
