@@ -34,7 +34,6 @@ from .const import (
 class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an SFTP Backup Storage config flow."""
 
-    VERSION = 1
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
