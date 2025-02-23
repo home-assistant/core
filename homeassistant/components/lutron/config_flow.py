@@ -17,6 +17,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
 from .const import CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL, DOMAIN
 
@@ -101,7 +106,9 @@ class OptionsFlowHandler(OptionsFlow):
                     default=self.config_entry.options.get(
                         CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
                     ),
-                ): vol.All(vol.Coerce(int), vol.Range(min=1, max=255)),
+                ): NumberSelector(
+                    NumberSelectorConfig(min=1, max=255, mode=NumberSelectorMode.SLIDER)
+                )
             }
         )
         return self.async_show_form(step_id="init", data_schema=data_schema)
