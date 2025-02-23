@@ -22,7 +22,7 @@ rules:
   runtime-data:
     status: exempt
     comment: This integration does not connect to any device or service.
-  test-before-configure: todo
+  test-before-configure: done
   test-before-setup:
     status: exempt
     comment: This integration does not connect to any device or service.
