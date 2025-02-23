@@ -4,11 +4,10 @@
     'config_entry': dict({
       'entry_id': '01234567890123456789012345678901',
       'unique_id': None,
-      'version': 3,
+      'version': 4,
     }),
     'config_entry_data': dict({
       'address': '**REDACTED**',
-      'name': '**REDACTED**',
       'type': 'Bedrock Edition',
     }),
     'config_entry_options': dict({
@@ -32,11 +31,10 @@
     'config_entry': dict({
       'entry_id': '01234567890123456789012345678901',
       'unique_id': None,
-      'version': 3,
+      'version': 4,
     }),
     'config_entry_data': dict({
       'address': '**REDACTED**',
-      'name': '**REDACTED**',
       'type': 'Java Edition',
     }),
     'config_entry_options': dict({

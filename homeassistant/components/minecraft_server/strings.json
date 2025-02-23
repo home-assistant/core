@@ -5,7 +5,6 @@
         "title": "Link your Minecraft Server",
         "description": "Set up your Minecraft Server instance to allow monitoring.",
         "data": {
-          "name": "[%key:common::config_flow::data::name%]",
           "address": "Server address"
         }
       }
