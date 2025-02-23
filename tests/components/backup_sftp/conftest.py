@@ -2,6 +2,7 @@
 
 from collections.abc import AsyncIterator, Generator
 from io import BytesIO
+import tarfile
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -50,6 +51,19 @@ class AsyncFileIteratorMock:
             finally:
                 raise StopAsyncIteration
         return chunk
+
+
+def create_tar_bytes(files: dict) -> bytes:
+    """Create an in-memory tar archive."""
+    buf = BytesIO()
+    with tarfile.open(mode="w", fileobj=buf) as tar:
+        for name, content in files.items():
+            if isinstance(content, str):
+                content = content.encode("utf-8")
+            info = tarfile.TarInfo(name=name)
+            info.size = len(content)
+            tar.addfile(tarinfo=info, fileobj=BytesIO(content))
+    return buf.getvalue()
 
 
 @pytest.fixture

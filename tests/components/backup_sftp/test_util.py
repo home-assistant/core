@@ -1,10 +1,9 @@
-"""Tests helpers for SFTP Backup Location component."""
+"""Test helpers for SFTP Backup Location component."""
 
 from asyncio import AbstractEventLoop, new_event_loop
 from collections.abc import Generator
 from io import SEEK_SET, BytesIO
 import json
-import tarfile
 from threading import Thread
 
 import pytest
@@ -13,6 +12,8 @@ from homeassistant.components.backup_sftp.util import (
     AsyncSSHFileWrapper,
     process_tar_from_adapter,
 )
+
+from .conftest import create_tar_bytes
 
 BACKUP_DATA = {
     "slug": "9e346a5c",
@@ -65,22 +66,6 @@ class DummyAsyncFile:
     async def tell(self) -> int:
         """Implement `tell()` method."""
         return self._file.tell()
-
-
-def create_tar_bytes(files: dict) -> bytes:
-    """Create an in-memory tar archive.
-
-    `files` maps file names to their content.
-    """
-    buf = BytesIO()
-    with tarfile.open(mode="w", fileobj=buf) as tar:
-        for name, content in files.items():
-            if isinstance(content, str):
-                content = content.encode("utf-8")
-            info = tarfile.TarInfo(name=name)
-            info.size = len(content)
-            tar.addfile(tarinfo=info, fileobj=BytesIO(content))
-    return buf.getvalue()
 
 
 @pytest.fixture
