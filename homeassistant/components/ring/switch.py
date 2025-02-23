@@ -11,7 +11,7 @@ from ring_doorbell.const import DOORBELL_EXISTING_TYPE
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import RingConfigEntry
@@ -86,7 +86,7 @@ SWITCHES: Sequence[RingSwitchEntityDescription[Any]] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: RingConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the switches for the Ring devices."""
     ring_data = entry.runtime_data

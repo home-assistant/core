@@ -153,6 +153,9 @@
       }
     },
     "switch": {
+      "charge": {
+        "name": "Charge"
+      },
       "force_single_phase": {
         "name": "Force single phase"
       }

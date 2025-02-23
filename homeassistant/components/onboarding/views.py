@@ -33,7 +33,6 @@ from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
-from homeassistant.util.async_ import create_eager_task
 
 if TYPE_CHECKING:
     from . import OnboardingData, OnboardingStorage, OnboardingStoreData
@@ -235,22 +234,21 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             ):
                 onboard_integrations.append("rpi_power")
 
-            coros: list[Coroutine[Any, Any, Any]] = [
-                hass.config_entries.flow.async_init(
-                    domain, context={"source": "onboarding"}
+            for domain in onboard_integrations:
+                # Create tasks so onboarding isn't affected
+                # by errors in these integrations.
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        domain, context={"source": "onboarding"}
+                    ),
+                    f"onboarding_setup_{domain}",
                 )
-                for domain in onboard_integrations
-            ]
 
             if "analytics" not in hass.config.components:
                 # If by some chance that analytics has not finished
                 # setting up, wait for it here so its ready for the
                 # next step.
-                coros.append(async_setup_component(hass, "analytics", {}))
-
-            # Set up integrations after onboarding and ensure
-            # analytics is ready for the next step.
-            await asyncio.gather(*(create_eager_task(coro) for coro in coros))
+                await async_setup_component(hass, "analytics", {})
 
             return self.json({})
 
@@ -357,7 +355,7 @@ def with_backup_manager[_ViewT: BackupOnboardingView, **_P](
             manager = async_get_backup_manager(request.app[KEY_HASS])
         except HomeAssistantError:
             return self.json(
-                {"error": "backup_disabled"},
+                {"code": "backup_disabled"},
                 status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
             )
 
@@ -420,7 +418,12 @@ class RestoreBackupView(BackupOnboardingView):
             )
         except IncorrectPasswordError:
             return self.json(
-                {"message": "incorrect_password"}, status_code=HTTPStatus.BAD_REQUEST
+                {"code": "incorrect_password"}, status_code=HTTPStatus.BAD_REQUEST
+            )
+        except HomeAssistantError as err:
+            return self.json(
+                {"code": "restore_failed", "message": str(err)},
+                status_code=HTTPStatus.BAD_REQUEST,
             )
         return web.Response(status=HTTPStatus.OK)
 

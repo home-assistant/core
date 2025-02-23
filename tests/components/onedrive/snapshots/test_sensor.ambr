@@ -1,0 +1,227 @@
+# serializer version: 1
+# name: test_sensors[sensor.my_drive_drive_state-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'nearing',
+        'critical',
+        'exceeded',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_drive_drive_state',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Drive state',
+    'platform': 'onedrive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'drive_state',
+    'unique_id': 'mock_drive_id_drive_state',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensors[sensor.my_drive_drive_state-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'My Drive Drive state',
+      'options': list([
+        'normal',
+        'nearing',
+        'critical',
+        'exceeded',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_drive_drive_state',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'nearing',
+  })
+# ---
+# name: test_sensors[sensor.my_drive_remaining_storage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_drive_remaining_storage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Remaining storage',
+    'platform': 'onedrive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'remaining_size',
+    'unique_id': 'mock_drive_id_remaining_size',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensors[sensor.my_drive_remaining_storage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'My Drive Remaining storage',
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_drive_remaining_storage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.75',
+  })
+# ---
+# name: test_sensors[sensor.my_drive_total_available_storage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_drive_total_available_storage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Total available storage',
+    'platform': 'onedrive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'total_size',
+    'unique_id': 'mock_drive_id_total_size',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensors[sensor.my_drive_total_available_storage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'My Drive Total available storage',
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_drive_total_available_storage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.0',
+  })
+# ---
+# name: test_sensors[sensor.my_drive_used_storage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_drive_used_storage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Used storage',
+    'platform': 'onedrive',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'used_size',
+    'unique_id': 'mock_drive_id_used_size',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_sensors[sensor.my_drive_used_storage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'My Drive Used storage',
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_drive_used_storage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3.95812094211578',
+  })
+# ---

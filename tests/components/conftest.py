@@ -529,6 +529,7 @@ def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> As
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
     mounts_info_mock = AsyncMock(spec_set=["default_backup_mount", "mounts"])
+    mounts_info_mock.default_backup_mount = None
     mounts_info_mock.mounts = []
     supervisor_client = AsyncMock()
     supervisor_client.addons = AsyncMock()

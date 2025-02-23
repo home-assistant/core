@@ -154,7 +154,8 @@ class BackupConfig:
         self.data.retention.apply(self._manager)
         self.data.schedule.apply(self._manager)
 
-    async def update(
+    @callback
+    def update(
         self,
         *,
         agents: dict[str, AgentParametersDict] | UndefinedType = UNDEFINED,

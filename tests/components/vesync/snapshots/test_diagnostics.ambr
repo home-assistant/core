@@ -171,6 +171,7 @@
       'models': list([
         'LV-PUR131S',
         'LV-RH131S',
+        'LV-RH131S-WM',
       ]),
       'modes': list([
         'manual',
