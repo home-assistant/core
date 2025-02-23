@@ -25,11 +25,9 @@ MINIMUM_SCAN_INTERVAL_LEGACY: Final = 60  # to be deprecated
 
 USER_DATA: Final = "user_data"
 
-ATTR_PERIOD: Final = "period"
 ATTR_DURATION: Final = "duration"
-
+ATTR_PERIOD: Final = "period"
 ATTR_SETPOINT: Final = "setpoint"
-ATTR_DURATION_UNTIL: Final = "duration"
 
 
 @unique
