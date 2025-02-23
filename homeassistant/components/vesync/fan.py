@@ -200,6 +200,7 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
                 )
             )
         )
+        self.schedule_update_ha_state()
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of device."""
