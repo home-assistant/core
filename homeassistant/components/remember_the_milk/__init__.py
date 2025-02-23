@@ -1,12 +1,13 @@
 """Support to interact with Remember The Milk."""
 
-from rtmapi import Rtm
+from aiortm import AioRTMClient, Auth, AuthError
 import voluptuous as vol
 
 from homeassistant.components import configurator
 from homeassistant.const import CONF_API_KEY, CONF_ID, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
@@ -82,11 +83,18 @@ async def _create_instance(
     stored_rtm_config: RememberTheMilkConfiguration,
     component: EntityComponent[RememberTheMilkEntity],
 ) -> None:
-    entity = RememberTheMilkEntity(
-        account_name, api_key, shared_secret, token, stored_rtm_config
+    client = AioRTMClient(
+        Auth(
+            async_get_clientsession(hass),
+            api_key,
+            shared_secret,
+            token,
+            permission="delete",
+        )
     )
+    entity = RememberTheMilkEntity(account_name, client, stored_rtm_config)
     LOGGER.debug("Instance created for account %s", entity.name)
-    await entity.check_token(hass)
+    await entity.check_token()
     await component.async_add_entities([entity])
     hass.services.async_register(
         DOMAIN,
@@ -111,27 +119,29 @@ async def _register_new_account(
     component: EntityComponent[RememberTheMilkEntity],
 ) -> None:
     """Register a new account."""
-    api = Rtm(api_key, shared_secret, "write", None)
-    url, frob = await hass.async_add_executor_job(api.authenticate_desktop)
+    auth = Auth(
+        async_get_clientsession(hass), api_key, shared_secret, permission="write"
+    )
+    url, frob = await auth.authenticate_desktop()
     LOGGER.debug("Sent authentication request to server")
 
     @callback
     def register_account_callback(fields: list[dict[str, str]]) -> None:
         """Call for register the configurator."""
-        hass.async_create_task(handle_token(api, frob))
+        hass.async_create_task(handle_token(auth, frob))
 
-    async def handle_token(api: Rtm, frob: str) -> None:
+    async def handle_token(auth: Auth, frob: str) -> None:
         """Handle token."""
-        await hass.async_add_executor_job(api.retrieve_token, frob)
-
-        token: str | None = api.token
-        if token is None:
+        try:
+            auth_data = await auth.get_token(frob)
+        except AuthError:
             LOGGER.error("Failed to register, please try again")
             configurator.async_notify_errors(
                 hass, request_id, "Failed to register, please try again."
             )
             return
 
+        token: str = auth_data["token"]
         stored_rtm_config.set_token(account_name, token)
         LOGGER.debug("Retrieved new token from server")
 

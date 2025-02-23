@@ -1,7 +1,7 @@
 """Provide common pytest fixtures."""
 
 from collections.abc import AsyncGenerator, Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -10,20 +10,48 @@ from homeassistant.core import HomeAssistant
 from .const import TOKEN
 
 
+@pytest.fixture(name="auth", autouse=True)
+def auth_fixture() -> Generator[MagicMock]:
+    """Create a mock auth."""
+    with patch(
+        "homeassistant.components.remember_the_milk.Auth", autospec=True
+    ) as auth_class:
+        auth = auth_class.return_value
+        yield auth
+
+
 @pytest.fixture(name="client")
 def client_fixture() -> Generator[MagicMock]:
     """Create a mock client."""
-    with patch("homeassistant.components.remember_the_milk.entity.Rtm") as client_class:
+    with patch(
+        "homeassistant.components.remember_the_milk.AioRTMClient"
+    ) as client_class:
         client = client_class.return_value
-        client.token_valid.return_value = True
+        client.rtm.api.check_token = AsyncMock(
+            return_value={
+                "token": "test-token",
+                "perms": "delete",
+                "user": {
+                    "id": "1234567",
+                    "username": "johnsmith",
+                    "fullname": "John Smith",
+                },
+            }
+        )
         timelines = MagicMock()
-        timelines.timeline.value = "1234"
-        client.rtm.timelines.create.return_value = timelines
-        add_response = MagicMock()
-        add_response.list.id = "1"
-        add_response.list.taskseries.id = "2"
-        add_response.list.taskseries.task.id = "3"
-        client.rtm.tasks.add.return_value = add_response
+        timelines.timeline = 1234
+        client.rtm.timelines.create = AsyncMock(return_value=timelines)
+        response = MagicMock()
+        response.task_list.id = 1
+        task_series = MagicMock()
+        task_series.id = 2
+        task = MagicMock()
+        task.id = 3
+        task_series.task = [task]
+        response.task_list.taskseries = [task_series]
+        client.rtm.tasks.add = AsyncMock(return_value=response)
+        client.rtm.tasks.complete = AsyncMock(return_value=response)
+        client.rtm.tasks.set_name = AsyncMock(return_value=response)
 
         yield client
 

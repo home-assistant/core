@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from typing import Any
-
-from rtmapi import Rtm, RtmRequestFailedException
+from aiortm import AioRTMClient, AioRTMError, AuthError
 
 from homeassistant.const import CONF_ID, CONF_NAME, STATE_OK
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import ServiceCall
 from homeassistant.helpers.entity import Entity
 
 from .const import LOGGER
@@ -20,35 +18,43 @@ class RememberTheMilkEntity(Entity):
     def __init__(
         self,
         name: str,
-        api_key: str,
-        shared_secret: str,
-        token: str,
+        client: AioRTMClient,
         rtm_config: RememberTheMilkConfiguration,
     ) -> None:
         """Create new instance of Remember The Milk component."""
         self._name = name
-        self._api_key = api_key
-        self._shared_secret = shared_secret
-        self._token = token
         self._rtm_config = rtm_config
-        self._rtm_api = Rtm(api_key, shared_secret, "delete", token)
+        self._client = client
         self._token_valid = False
 
-    async def check_token(self, hass: HomeAssistant) -> None:
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        await self.check_token()
+
+    async def check_token(self) -> None:
         """Check if the API token is still valid.
 
         If it is not valid any more, delete it from the configuration. This
         will trigger a new authentication process.
         """
-        valid = await hass.async_add_executor_job(self._rtm_api.token_valid)
-        if valid:
+        try:
+            await self._client.rtm.api.check_token()
+        except AuthError as err:
+            LOGGER.error(
+                "Token for account %s is invalid. You need to register again: %s",
+                self.name,
+                err,
+            )
+        except AioRTMError as err:
+            LOGGER.error(
+                "Error checking token for account %s. You need to register again: %s",
+                self.name,
+                err,
+            )
+        else:
             self._token_valid = True
             return
 
-        LOGGER.error(
-            "Token for account %s is invalid. You need to register again!",
-            self.name,
-        )
         self._rtm_config.delete_token(self._name)
         self._token_valid = False
 
@@ -67,10 +73,7 @@ class RememberTheMilkEntity(Entity):
                 rtm_id = self._rtm_config.get_rtm_id(self._name, hass_id)
 
             if rtm_id is None:
-                result = await self.hass.async_add_executor_job(
-                    self._add_task,
-                    task_name,
-                )
+                rtm_id = await self._add_task(task_name)
                 LOGGER.debug(
                     "Created new task '%s' in account %s", task_name, self.name
                 )
@@ -78,48 +81,51 @@ class RememberTheMilkEntity(Entity):
                     self._rtm_config.set_rtm_id(
                         self._name,
                         hass_id,
-                        result.list.id,
-                        result.list.taskseries.id,
-                        result.list.taskseries.task.id,
+                        rtm_id[0],
+                        rtm_id[1],
+                        rtm_id[2],
                     )
             else:
-                await self.hass.async_add_executor_job(
-                    self._rename_task,
-                    rtm_id,
-                    task_name,
-                )
+                await self._rename_task(rtm_id, task_name)
                 LOGGER.debug(
                     "Updated task with id '%s' in account %s to name %s",
                     hass_id,
                     self.name,
                     task_name,
                 )
-        except RtmRequestFailedException as rtm_exception:
+        except AioRTMError as err:
             LOGGER.error(
                 "Error creating new Remember The Milk task for account %s: %s",
                 self._name,
-                rtm_exception,
+                err,
             )
 
-    def _add_task(self, task_name: str) -> Any:
+    async def _add_task(self, task_name: str) -> tuple[str, str, str]:
         """Add a task."""
-        result = self._rtm_api.rtm.timelines.create()
-        timeline = result.timeline.value
-        return self._rtm_api.rtm.tasks.add(
+        timeline_response = await self._client.rtm.timelines.create()
+        timeline = timeline_response.timeline
+        task_response = await self._client.rtm.tasks.add(
             timeline=timeline,
             name=task_name,
-            parse="1",
+            parse=True,
         )
+        task_list = task_response.task_list
+        task_list_id = task_list.id
+        task_series = task_list.taskseries[0]
+        task_series_id = task_series.id
+        task = task_series.task[0]
+        task_id = task.id
+        return (str(task_list_id), str(task_series_id), str(task_id))
 
-    def _rename_task(self, rtm_id: tuple[str, str, str], task_name: str) -> None:
+    async def _rename_task(self, rtm_id: tuple[str, str, str], task_name: str) -> None:
         """Rename a task."""
-        result = self._rtm_api.rtm.timelines.create()
-        timeline = result.timeline.value
-        self._rtm_api.rtm.tasks.setName(
+        result = await self._client.rtm.timelines.create()
+        timeline = result.timeline
+        await self._client.rtm.tasks.set_name(
             name=task_name,
-            list_id=rtm_id[0],
-            taskseries_id=rtm_id[1],
-            task_id=rtm_id[2],
+            list_id=int(rtm_id[0]),
+            taskseries_id=int(rtm_id[1]),
+            task_id=int(rtm_id[2]),
             timeline=timeline,
         )
 
@@ -138,26 +144,26 @@ class RememberTheMilkEntity(Entity):
             )
             return
         try:
-            await self.hass.async_add_executor_job(self._complete_task, rtm_id)
-        except RtmRequestFailedException as rtm_exception:
+            await self._complete_task(rtm_id)
+        except AioRTMError as err:
             LOGGER.error(
                 "Error creating new Remember The Milk task for account %s: %s",
                 self._name,
-                rtm_exception,
+                err,
             )
             return
 
         self._rtm_config.delete_rtm_id(self._name, hass_id)
         LOGGER.debug("Completed task with id %s in account %s", hass_id, self._name)
 
-    def _complete_task(self, rtm_id: tuple[str, str, str]) -> None:
+    async def _complete_task(self, rtm_id: tuple[str, str, str]) -> None:
         """Complete a task."""
-        result = self._rtm_api.rtm.timelines.create()
-        timeline = result.timeline.value
-        self._rtm_api.rtm.tasks.complete(
-            list_id=rtm_id[0],
-            taskseries_id=rtm_id[1],
-            task_id=rtm_id[2],
+        result = await self._client.rtm.timelines.create()
+        timeline = result.timeline
+        await self._client.rtm.tasks.complete(
+            list_id=int(rtm_id[0]),
+            taskseries_id=int(rtm_id[1]),
+            task_id=int(rtm_id[2]),
             timeline=timeline,
         )
 

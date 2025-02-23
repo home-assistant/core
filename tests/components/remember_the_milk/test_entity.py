@@ -3,8 +3,8 @@
 from typing import Any
 from unittest.mock import MagicMock, call
 
+from aiortm import AioRTMError, AuthError
 import pytest
-from rtmapi import RtmRequestFailedException
 
 from homeassistant.components.remember_the_milk import DOMAIN
 from homeassistant.core import HomeAssistant
@@ -19,18 +19,23 @@ CONFIG = {
 }
 
 
+@pytest.mark.usefixtures("storage")
 @pytest.mark.parametrize(
-    ("valid_token", "entity_state"), [(True, "ok"), (False, "API token invalid")]
+    ("check_token_side_effect", "entity_state"),
+    [
+        (None, "ok"),
+        (AuthError("Boom!"), "API token invalid"),
+        (AioRTMError("Boom!"), "API token invalid"),
+    ],
 )
 async def test_entity_state(
     hass: HomeAssistant,
     client: MagicMock,
-    storage: MagicMock,
-    valid_token: bool,
+    check_token_side_effect: Exception | None,
     entity_state: str,
 ) -> None:
     """Test the entity state."""
-    client.token_valid.return_value = valid_token
+    client.rtm.api.check_token.side_effect = check_token_side_effect
     assert await async_setup_component(hass, DOMAIN, {DOMAIN: CONFIG})
     entity_id = f"{DOMAIN}.{PROFILE}"
     state = hass.states.get(entity_id)
@@ -65,9 +70,9 @@ async def test_entity_state(
             "rtm.tasks.add",
             1,
             call(
-                timeline="1234",
+                timeline=1234,
                 name="Test 1",
-                parse="1",
+                parse=True,
             ),
             "set_rtm_id",
             0,
@@ -83,9 +88,9 @@ async def test_entity_state(
             "rtm.tasks.add",
             1,
             call(
-                timeline="1234",
+                timeline=1234,
                 name="Test 1",
-                parse="1",
+                parse=True,
             ),
             "set_rtm_id",
             1,
@@ -98,14 +103,14 @@ async def test_entity_state(
             1,
             call(PROFILE, "test_1"),
             1,
-            "rtm.tasks.setName",
+            "rtm.tasks.set_name",
             1,
             call(
                 name="Test 1",
-                list_id="1",
-                taskseries_id="2",
-                task_id="3",
-                timeline="1234",
+                list_id=1,
+                taskseries_id=2,
+                task_id=3,
+                timeline=1234,
             ),
             "set_rtm_id",
             0,
@@ -121,10 +126,10 @@ async def test_entity_state(
             "rtm.tasks.complete",
             1,
             call(
-                list_id="1",
-                taskseries_id="2",
-                task_id="3",
-                timeline="1234",
+                list_id=1,
+                taskseries_id=2,
+                task_id=3,
+                timeline=1234,
             ),
             "delete_rtm_id",
             1,
@@ -183,48 +188,48 @@ async def test_services(
             f"{PROFILE}_create_task",
             {"name": "Test 1"},
             "rtm.timelines.create",
-            RtmRequestFailedException("rtm.timelines.create", "400", "Bad request"),
-            "Request rtm.timelines.create failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Boom!",
         ),
         (
             ("1", "2", "3"),
             f"{PROFILE}_create_task",
             {"name": "Test 1"},
             "rtm.tasks.add",
-            RtmRequestFailedException("rtm.tasks.add", "400", "Bad request"),
-            "Request rtm.tasks.add failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Boom!",
         ),
         (
             None,
             f"{PROFILE}_create_task",
             {"name": "Test 1", "id": "test_1"},
             "rtm.timelines.create",
-            RtmRequestFailedException("rtm.timelines.create", "400", "Bad request"),
-            "Request rtm.timelines.create failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Boom!",
         ),
         (
             None,
             f"{PROFILE}_create_task",
             {"name": "Test 1", "id": "test_1"},
             "rtm.tasks.add",
-            RtmRequestFailedException("rtm.tasks.add", "400", "Bad request"),
-            "Request rtm.tasks.add failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Boom!",
         ),
         (
             ("1", "2", "3"),
             f"{PROFILE}_create_task",
             {"name": "Test 1", "id": "test_1"},
             "rtm.timelines.create",
-            RtmRequestFailedException("rtm.timelines.create", "400", "Bad request"),
-            "Request rtm.timelines.create failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Boom!",
         ),
         (
             ("1", "2", "3"),
             f"{PROFILE}_create_task",
             {"name": "Test 1", "id": "test_1"},
-            "rtm.tasks.setName",
-            RtmRequestFailedException("rtm.tasks.setName", "400", "Bad request"),
-            "Request rtm.tasks.setName failed. Status: 400, reason: Bad request.",
+            "rtm.tasks.set_name",
+            AioRTMError("Boom!"),
+            "Boom!",
         ),
         (
             None,
@@ -242,16 +247,16 @@ async def test_services(
             f"{PROFILE}_complete_task",
             {"id": "test_1"},
             "rtm.timelines.create",
-            RtmRequestFailedException("rtm.timelines.create", "400", "Bad request"),
-            "Request rtm.timelines.create failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Boom!",
         ),
         (
             ("1", "2", "3"),
             f"{PROFILE}_complete_task",
             {"id": "test_1"},
             "rtm.tasks.complete",
-            RtmRequestFailedException("rtm.tasks.complete", "400", "Bad request"),
-            "Request rtm.tasks.complete failed. Status: 400, reason: Bad request.",
+            AioRTMError("Boom!"),
+            "Boom!",
         ),
     ],
 )
