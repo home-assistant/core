@@ -110,7 +110,7 @@
     },
     "deprecated_command_actions": {
       "title": "The command related actions are deprecated in favor of the new buttons",
-      "description": "`pause_program` and `resume_program` actions have been deprecated in favor of new buttons entities, if the command is available for your appliance."
+      "description": "`pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please, update your automations, scripts and panels that use this action, use the button entities and press on submit to fix the issue."
     },
     "deprecated_program_switch": {
       "title": "Deprecated program switch detected in some automations or scripts",
