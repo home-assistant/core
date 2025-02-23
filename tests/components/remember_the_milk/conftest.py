@@ -13,8 +13,16 @@ from .const import TOKEN
 @pytest.fixture(name="client")
 def client_fixture() -> Generator[MagicMock]:
     """Create a mock client."""
-    with patch("homeassistant.components.remember_the_milk.entity.Rtm") as client_class:
-        client = client_class.return_value
+    client = MagicMock()
+    with (
+        patch(
+            "homeassistant.components.remember_the_milk.entity.Rtm"
+        ) as entity_client_class,
+        patch("homeassistant.components.remember_the_milk.Rtm") as client_class,
+    ):
+        entity_client_class.return_value = client
+        client_class.return_value = client
+        client.token = TOKEN
         client.token_valid.return_value = True
         timelines = MagicMock()
         timelines.timeline.value = "1234"
