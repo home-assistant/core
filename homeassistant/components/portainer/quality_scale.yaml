@@ -4,9 +4,7 @@ rules:
     status: exempt
     comment: no actions/services are implemented
   appropriate-polling: done
-  brands:
-    status: todo
-    comment: waiting for PR to get merged
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done

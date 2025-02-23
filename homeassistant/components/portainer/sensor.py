@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import PortainerConfigEntry
 from .coordinator import PortainerDataUpdateCoordinator
@@ -44,7 +44,7 @@ CONTAINER_SENSOR_TYPES: tuple[ContainerSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PortainerConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up sensor platform."""
     coordinator = entry.runtime_data
