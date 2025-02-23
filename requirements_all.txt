@@ -2884,7 +2884,7 @@ tessie-api==0.1.1
 # tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.7.0
+thermobeacon-ble==0.7.1
 
 # homeassistant.components.thermopro
 thermopro-ble==0.11.0
