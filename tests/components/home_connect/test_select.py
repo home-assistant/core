@@ -509,6 +509,63 @@ async def test_select_functionality(
     assert hass.states.is_state(entity_id, value_to_set)
 
 
+@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "test_setting_key",
+        "allowed_values",
+        "expected_options",
+    ),
+    [
+        (
+            "select.hood_ambient_light_color",
+            SettingKey.BSH_COMMON_AMBIENT_LIGHT_COLOR,
+            [f"BSH.Common.EnumType.AmbientLightColor.Color{i}" for i in range(50)],
+            {str(i) for i in range(1, 50)},
+        ),
+    ],
+)
+async def test_fetch_allowed_values(
+    appliance_ha_id: str,
+    entity_id: str,
+    test_setting_key: SettingKey,
+    allowed_values: list[str | None],
+    expected_options: set[str],
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test fetch allowed values."""
+    original_get_setting_side_effect = client.get_setting
+
+    async def get_setting_side_effect(
+        ha_id: str, setting_key: SettingKey
+    ) -> GetSetting:
+        if ha_id != appliance_ha_id or setting_key != test_setting_key:
+            return await original_get_setting_side_effect(ha_id, setting_key)
+        return GetSetting(
+            key=test_setting_key,
+            raw_key=test_setting_key.value,
+            value="",  # Not important
+            constraints=SettingConstraints(
+                allowed_values=allowed_values,
+            ),
+        )
+
+    client.get_setting = AsyncMock(side_effect=get_setting_side_effect)
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert set(entity_state.attributes[ATTR_OPTIONS]) == expected_options
+
+
 @pytest.mark.parametrize(
     ("entity_id", "setting_key", "allowed_value", "value_to_set", "mock_attr"),
     [
