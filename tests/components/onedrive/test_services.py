@@ -1,4 +1,4 @@
-"""Tests for Google Photos."""
+"""Tests for OneDrive services."""
 
 from collections.abc import Generator
 from dataclasses import dataclass
