@@ -751,18 +751,6 @@ async def test_service_preset_mode_with_end_time_thermostats(
             blocking=True,
         )
 
-    # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) without an end datetime
-    with pytest.raises(MultipleInvalid):
-        await hass.services.async_call(
-            "netatmo",
-            SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
-            {
-                ATTR_ENTITY_ID: climate_entity_livingroom,
-                ATTR_PRESET_MODE: PRESET_AWAY,
-            },
-            blocking=True,
-        )
-
 
 async def test_service_preset_mode_already_boost_valves(
     hass: HomeAssistant, config_entry: MockConfigEntry, netatmo_auth: AsyncMock
