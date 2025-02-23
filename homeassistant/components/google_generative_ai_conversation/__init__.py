@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-import mimetypes
 from pathlib import Path
 
 from google import genai  # type: ignore[attr-defined]
 from google.genai.errors import APIError, ClientError
-from PIL import Image
 from requests.exceptions import Timeout
 import voluptuous as vol
 
@@ -67,7 +65,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         prompt_parts = [call.data[CONF_PROMPT]]
 
-        def append_images_to_prompt():
+        config_entry: GoogleGenerativeAIConfigEntry = hass.config_entries.async_entries(
+            DOMAIN
+        )[0]
+
+        client = config_entry.runtime_data
+
+        def append_files_to_prompt():
             image_filenames = call.data[CONF_IMAGE_FILENAME]
             filenames = call.data[CONF_FILENAMES]
             for filename in image_filenames + filenames:
@@ -79,22 +83,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                     )
                 if not Path(filename).exists():
                     raise HomeAssistantError(f"`{filename}` does not exist")
-                mime_type, _ = mimetypes.guess_type(filename)
-                if mime_type is None:
-                    raise HomeAssistantError(f"Cannot infer MIME type for `{filename}`")
-                if mime_type.startswith("image"):
-                    prompt_parts.append(Image.open(filename))
-                else:
-                    prompt_parts.append(
-                        {"mime_type": mime_type, "data": Path(filename).read_bytes()}
-                    )
+                prompt_parts.append(client.files.upload(file=filename))
 
-        await hass.async_add_executor_job(append_images_to_prompt)
-
-        config_entry: GoogleGenerativeAIConfigEntry = hass.config_entries.async_entries(
-            DOMAIN
-        )[0]
-        client = config_entry.runtime_data
+        await hass.async_add_executor_job(append_files_to_prompt)
 
         try:
             response = await client.aio.models.generate_content(

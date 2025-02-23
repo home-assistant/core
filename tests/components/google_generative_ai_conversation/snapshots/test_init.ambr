@@ -8,11 +8,8 @@
       dict({
         'contents': list([
           'Describe this image from my doorbell camera',
-          b'image bytes',
-          dict({
-            'data': b'context bytes',
-            'mime_type': 'text/plain',
-          }),
+          b'some file',
+          b'some file',
         ]),
         'model': 'models/gemini-2.0-flash',
       }),

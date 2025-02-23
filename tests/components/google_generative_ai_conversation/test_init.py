@@ -66,12 +66,8 @@ async def test_generate_content_service_with_image(
             ),
         ) as mock_generate,
         patch(
-            "homeassistant.components.google_generative_ai_conversation.Path.read_bytes",
-            return_value=b"context bytes",
-        ),
-        patch(
-            "homeassistant.components.google_generative_ai_conversation.Image.open",
-            return_value=b"image bytes",
+            "google.genai.files.Files.upload",
+            return_value=b"some file",
         ),
         patch("pathlib.Path.exists", return_value=True),
         patch.object(hass.config, "is_allowed_path", return_value=True),
