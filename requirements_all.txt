@@ -216,10 +216,10 @@ aiobotocore==2.13.1
 aiocomelit==0.10.1
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==1.1.0
+aiodhcpwatcher==1.1.1
 
 # homeassistant.components.dhcp
-aiodiscover==2.6.0
+aiodiscover==2.6.1
 
 # homeassistant.components.dnsip
 aiodns==3.2.0
@@ -273,7 +273,7 @@ aiohomekit==3.2.7
 aiohttp_sse==2.2.0
 
 # homeassistant.components.hue
-aiohue==4.7.3
+aiohue==4.7.4
 
 # homeassistant.components.imap
 aioimaplib==2.0.1
@@ -404,7 +404,7 @@ aiotedee==0.2.20
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==81
+aiounifi==82
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.1
@@ -680,7 +680,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==0.8.0
+cached-ipaddress==0.8.1
 
 # homeassistant.components.caldav
 caldav==1.3.9
@@ -750,7 +750,7 @@ debugpy==1.8.11
 # decora==0.6
 
 # homeassistant.components.ecovacs
-deebot-client==12.1.0
+deebot-client==12.2.0
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -940,7 +940,7 @@ flux-led==1.1.3
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==1.2.2
+fnv-hash-fast==1.2.3
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -1033,7 +1033,7 @@ google-cloud-speech==2.27.0
 google-cloud-texttospeech==2.17.2
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.8.2
+google-genai==1.1.0
 
 # homeassistant.components.nest
 google-nest-sdm==7.1.3
@@ -1103,7 +1103,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.22.1
+habluetooth==3.24.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.92.0
@@ -1143,10 +1143,10 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.66
+holidays==0.67
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250214.0
+home-assistant-frontend==20250221.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.2.5
@@ -1749,7 +1749,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.6.3
+py-synologydsm-api==2.7.0
 
 # homeassistant.components.atome
 pyAtome==0.1.1
@@ -1972,7 +1972,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.15
+pyfritzhome==0.6.17
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -2223,7 +2223,7 @@ pypoint==3.0.0
 pyprof2calltree==1.4.5
 
 # homeassistant.components.prosegur
-pyprosegur==0.0.13
+pyprosegur==0.0.14
 
 # homeassistant.components.prusalink
 pyprusalink==2.1.1
@@ -2250,7 +2250,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.6.5
+pyrisco==0.6.7
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -2573,7 +2573,7 @@ pyzerproc==0.4.8
 qbittorrent-api==2024.2.59
 
 # homeassistant.components.qbus
-qbusmqttapi==1.2.4
+qbusmqttapi==1.3.0
 
 # homeassistant.components.qingping
 qingping-ble==0.10.0
@@ -2612,7 +2612,7 @@ renault-api==0.2.9
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.11.10
+reolink-aio==0.12.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -2802,7 +2802,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.5.4
+stookwijzer==1.5.7
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
@@ -3070,7 +3070,7 @@ wirelesstagpy==0.8.1
 wled==0.21.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.15
+wolf-comm==0.0.19
 
 # homeassistant.components.wyoming
 wyoming==1.5.4
