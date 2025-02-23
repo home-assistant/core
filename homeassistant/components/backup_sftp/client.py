@@ -44,7 +44,7 @@ class AsyncFileIterator:
         self._client: BackupAgentClient | None = None
         self._fileobj: SFTPClientFile | None = None
         self._initialized: bool = False
-        LOGGER.warning("Opening file: %s in Async File Iterator ...", file_path)
+        LOGGER.debug("Opening file: %s in Async File Iterator ...", file_path)
 
     async def _initialize(self) -> None:
         """Load file object."""
