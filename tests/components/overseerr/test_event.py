@@ -45,6 +45,11 @@ async def test_entities(
         load_json_object_fixture("webhook_request_automatically_approved.json", DOMAIN),
         client,
     )
+    await call_webhook(
+        hass,
+        load_json_object_fixture("webhook_request_new_issue.json", DOMAIN),
+        client,
+    )
     await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

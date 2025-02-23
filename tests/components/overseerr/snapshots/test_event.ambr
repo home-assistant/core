@@ -42,7 +42,8 @@
 # name: test_entities[event.overseerr_last_issue_event-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
+      'entity_picture': 'https://image.tmdb.org/t/p/w600_and_h900_bestv2/something.jpg',
+      'event_type': 'reported',
       'event_types': list([
         'reported',
         'comment',
@@ -50,13 +51,34 @@
         'reopened',
       ]),
       'friendly_name': 'Overseerr Last issue event',
+      'issue': dict({
+        'issue_id': 12,
+        'issue_status': 'OPEN',
+        'issue_type': 'VIDEO',
+        'reported_by_avatar': 'https://plex.tv/users/abc/avatar?c=123',
+        'reported_by_email': 'someguy@example.com',
+        'reported_by_settings_discord_id': '123',
+        'reported_by_settings_telegram_chat_id': '',
+        'reported_by_username': 'Some Guy',
+      }),
+      'media': dict({
+        'media_type': 'movie',
+        'status': 'pending',
+        'status4k': 'unknown',
+        'tmdb_id': 123,
+        'tvdb_id': None,
+      }),
+      'message': 'MD5 mismatch after download.',
+      'notification_type': 'ISSUE_REPORTED',
+      'request': None,
+      'subject': 'Something (2024)',
     }),
     'context': <ANY>,
     'entity_id': 'event.overseerr_last_issue_event',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2023-10-21T00:00:00.000+00:00',
   })
 # ---
 # name: test_entities[event.overseerr_last_media_event-entry]
