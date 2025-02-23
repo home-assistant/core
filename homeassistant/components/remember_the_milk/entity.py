@@ -7,12 +7,20 @@ from homeassistant.core import ServiceCall
 from homeassistant.helpers.entity import Entity
 
 from .const import LOGGER
+from .storage import RememberTheMilkConfiguration
 
 
 class RememberTheMilkEntity(Entity):
     """Representation of an interface to Remember The Milk."""
 
-    def __init__(self, name, api_key, shared_secret, token, rtm_config):
+    def __init__(
+        self,
+        name: str,
+        api_key: str,
+        shared_secret: str,
+        token: str,
+        rtm_config: RememberTheMilkConfiguration,
+    ) -> None:
         """Create new instance of Remember The Milk component."""
         self._name = name
         self._api_key = api_key
@@ -20,11 +28,11 @@ class RememberTheMilkEntity(Entity):
         self._token = token
         self._rtm_config = rtm_config
         self._rtm_api = Rtm(api_key, shared_secret, "delete", token)
-        self._token_valid = None
+        self._token_valid = False
         self._check_token()
         LOGGER.debug("Instance created for account %s", self._name)
 
-    def _check_token(self):
+    def _check_token(self) -> bool:
         """Check if the API token is still valid.
 
         If it is not valid any more, delete it from the configuration. This
@@ -127,12 +135,12 @@ class RememberTheMilkEntity(Entity):
             )
 
     @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the device."""
         return self._name
 
     @property
-    def state(self):
+    def state(self) -> str:
         """Return the state of the device."""
         if not self._token_valid:
             return "API token invalid"
