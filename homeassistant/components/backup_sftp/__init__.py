@@ -23,7 +23,7 @@ from .const import (
     LOGGER,
 )
 
-type SFTPConfigEntry = ConfigEntry["SFTPConfigEntryData"]
+type SFTPConfigEntry = ConfigEntry[SFTPConfigEntryData]
 
 
 @dataclass(kw_only=True)
