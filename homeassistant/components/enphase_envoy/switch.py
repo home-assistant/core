@@ -14,7 +14,7 @@ from pyenphase.models.tariff import EnvoyStorageSettings
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import EnphaseConfigEntry, EnphaseUpdateCoordinator
@@ -78,7 +78,7 @@ CHARGE_FROM_GRID_SWITCH = EnvoyStorageSettingsSwitchEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EnphaseConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Enphase Envoy switch platform."""
     coordinator = config_entry.runtime_data

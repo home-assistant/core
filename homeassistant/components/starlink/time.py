@@ -8,24 +8,23 @@ from datetime import UTC, datetime, time, tzinfo
 import math
 
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import StarlinkData, StarlinkUpdateCoordinator
+from .coordinator import StarlinkConfigEntry, StarlinkData, StarlinkUpdateCoordinator
 from .entity import StarlinkEntity
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    config_entry: StarlinkConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all time entities for this entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
-
     async_add_entities(
-        StarlinkTimeEntity(coordinator, description) for description in TIMES
+        StarlinkTimeEntity(config_entry.runtime_data, description)
+        for description in TIMES
     )
 
 

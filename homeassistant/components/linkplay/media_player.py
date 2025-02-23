@@ -30,7 +30,7 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry, LinkPlayData
@@ -129,7 +129,7 @@ SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LinkPlayConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a media player from a config entry."""
 

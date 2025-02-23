@@ -712,7 +712,7 @@
       "name": "Navigate to coordinates"
     },
     "set_scheduled_charging": {
-      "description": "Sets a time at which charging should be completed.",
+      "description": "Sets a time at which charging should be started.",
       "fields": {
         "device_id": {
           "description": "Vehicle to schedule.",

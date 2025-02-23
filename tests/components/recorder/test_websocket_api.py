@@ -32,6 +32,7 @@ from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import (
     async_recorder_block_till_done,
+    async_wait_recorder,
     async_wait_recording_done,
     create_engine_test,
     do_adhoc_statistics,
@@ -2650,7 +2651,7 @@ async def test_recorder_info_migration_queue_exhausted(
                 instrument_migration.migration_started.wait
             )
             assert recorder.util.async_migration_in_progress(hass) is True
-            await recorder_helper.async_wait_recorder(hass)
+            await async_wait_recorder(hass)
             hass.states.async_set("my.entity", "on", {})
             await hass.async_block_till_done()
 
