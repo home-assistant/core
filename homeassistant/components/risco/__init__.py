@@ -37,7 +37,7 @@ from .coordinator import RiscoDataUpdateCoordinator, RiscoEventsDataUpdateCoordi
 from .models import LocalData
 from .services import async_setup_services
 
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
