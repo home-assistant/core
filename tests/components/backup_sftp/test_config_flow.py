@@ -10,7 +10,6 @@ import pytest
 from homeassistant.components.backup_sftp.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_PORT,
     CONF_USERNAME,
     DOMAIN,
 )
