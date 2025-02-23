@@ -51,9 +51,9 @@ rules:
   integration-owner: done
   docs-installation-parameters: done
   docs-configuration-parameters:
-      status: exempt
-      comment: |
-          This integration has no options flow
+    status: exempt
+    comment: |
+      This integration has no options flow
 
   # Gold
   entity-translations: todo
@@ -85,9 +85,9 @@ rules:
   docs-use-cases: todo
   docs-supported-devices: done
   docs-supported-functions: todo
+  docs-troubleshooting: done
   docs-data-update: done
   docs-known-limitations: done
-  docs-troubleshooting: todo
   docs-examples: todo
 
   # Platinum
