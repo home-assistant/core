@@ -9,11 +9,11 @@ from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubBuiltinSensorBase, SmartTubExternalSensor
+from .entity import SmartTubBuiltinSensorBase
 
 # the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
@@ -43,9 +43,7 @@ SET_SECONDARY_FILTRATION_SCHEMA: VolDictType = {
 
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up sensor entities for the sensors in the tub."""
 

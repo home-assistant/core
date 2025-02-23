@@ -8,7 +8,7 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import DOMAIN
+from .const import ATTR_SENSORS, DOMAIN
 from .helpers import get_spa_name
 
 
@@ -54,3 +54,21 @@ class SmartTubBuiltinSensorBase(SmartTubEntity):
     def _state(self):
         """Retrieve the underlying state from the spa."""
         return getattr(self.spa_status, self._state_key)
+
+
+class SmartTubExternalSensorBase(SmartTubEntity):
+    """Class for additional BLE wireless sensors sold separately."""
+
+    def __init__(self, coordinator, spa, sensor: smarttub.SpaSensor):
+        self.sensor_address = sensor.address
+        self._attr_unique_id = f"{spa.id}-externalsensor-{sensor.address}"
+        super().__init__(coordinator, spa, self._human_readable_name(sensor))
+
+    
+    @staticmethod
+    def _human_readable_name(sensor):
+        return ' '.join(word.capitalize() for word in sensor.name.strip('{}').split('-'))
+
+    @property
+    def sensor(self):
+        return self.coordinator.data[self.spa.id][ATTR_SENSORS][self.sensor_address]

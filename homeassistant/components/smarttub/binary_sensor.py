@@ -1,8 +1,9 @@
 """Platform for binary sensor integration."""
 
 from __future__ import annotations
+import logging
 
-from smarttub import SpaError, SpaReminder, SpaSensor
+from smarttub import SpaError, SpaReminder
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -12,11 +13,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from .const import ATTR_ERRORS, ATTR_REMINDERS, DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubEntity, SmartTubBuiltinSensorBase
+from .const import ATTR_ERRORS, ATTR_REMINDERS, ATTR_SENSORS, DOMAIN, SMARTTUB_CONTROLLER
+from .entity import SmartTubEntity, SmartTubBuiltinSensorBase, SmartTubExternalSensorBase
 
 # whether the reminder has been snoozed (bool)
 ATTR_REMINDER_SNOOZED = "snoozed"
@@ -41,11 +42,10 @@ SNOOZE_REMINDER_SCHEMA: VolDictType = {
     )
 }
 
+_LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
-    hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up binary sensor entities for the binary sensors in the tub."""
 
@@ -59,14 +59,12 @@ async def async_setup_entry(
             SmartTubReminder(controller.coordinator, spa, reminder)
             for reminder in controller.coordinator.data[spa.id][ATTR_REMINDERS].values()
         )
-        for sensor in controller.coordinator.data[spa.id][ATTR_STATUS].sensors:
+        for sensor in controller.coordinator.data[spa.id][ATTR_SENSORS].values():
             name = sensor.name.strip("{}")
             if name.startswith("cover-"):
                 entities.append(SmartTubCoverSensor(controller.coordinator, spa, sensor))
             else:
-                # use generic sensor class for any unrecognized sensors
-                entities.append(SmartTubExternalSensor(controller.coordinator, spa, sensor))
-
+                _LOGGER.warn(f"Skipping unsupported sensor {sensor}")
 
     async_add_entities(entities)
 
@@ -189,25 +187,9 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
             ATTR_UPDATED_AT: error.updated_at.isoformat(),
         }
 
-
-
-class SmartTubExternalSensor(SmartTubEntity):
-    """Class for additional BLE wireless sensors sold separately."""
-
-    def __init__(self, coordinator, spa, sensor: SpaSensor):
-        super().__init__(coordinator, spa, self._human_readable_name(sensor))
-    
-    @staticmethod
-    def _human_readable_name(sensor):
-        return ' '.join(word.capitalize() for word in sensor.name.strip('{}').split('-'))
-    
-
-class SmartTubCoverSensor(SmartTubExternalSensor):
+class SmartTubCoverSensor(SmartTubExternalSensorBase, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.OPENING
 
-    def __init__(self, coordinator, spa, sensor: SpaSensor):
-        super().__init__(coordinator, spa, sensor)
-    
     @property
     def is_on(self) -> bool:
         """Return False if the cover is closed, True if open."""
