@@ -10,6 +10,7 @@ from aiostreammagic import (
     ShuffleMode,
     StreamMagicClient,
     TransportControl,
+    ControlBusMode
 )
 
 from homeassistant.components.media_player import (
@@ -91,6 +92,8 @@ class CambridgeAudioDevice(CambridgeAudioEntity, MediaPlayerEntity):
         features = BASE_FEATURES
         if self.client.state.pre_amp_mode:
             features |= PREAMP_FEATURES
+        if self.client.state.control_bus_mode == ControlBusMode.AMPLIFIER:
+            features |= MediaPlayerEntityFeature.VOLUME_STEP
         if TransportControl.PLAY_PAUSE in controls:
             features |= MediaPlayerEntityFeature.PLAY | MediaPlayerEntityFeature.PAUSE
         for control in controls:
