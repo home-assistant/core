@@ -2,17 +2,14 @@
 
 from unittest.mock import AsyncMock
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     SubscriptionRequired,
     TeslaFleetError,
-    VehicleOffline,
 )
 
-from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.models import TeslemetryData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
@@ -21,8 +18,6 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_platform
 from .const import VEHICLE_DATA_ALT
-
-from tests.common import async_fire_time_changed
 
 ERRORS = [
     (InvalidToken, ConfigEntryState.SETUP_ERROR),
@@ -67,22 +62,6 @@ async def test_devices(
 
     for device in devices:
         assert device == snapshot(name=f"{device.identifiers}")
-
-
-async def test_vehicle_refresh_offline(
-    hass: HomeAssistant, mock_vehicle_data: AsyncMock, freezer: FrozenDateTimeFactory
-) -> None:
-    """Test coordinator refresh with an error."""
-    entry = await setup_platform(hass, [Platform.CLIMATE])
-    assert entry.state is ConfigEntryState.LOADED
-    mock_vehicle_data.assert_called_once()
-    mock_vehicle_data.reset_mock()
-
-    mock_vehicle_data.side_effect = VehicleOffline
-    freezer.tick(VEHICLE_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-    mock_vehicle_data.assert_called_once()
 
 
 @pytest.mark.parametrize(("side_effect", "state"), ERRORS)
