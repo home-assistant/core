@@ -216,10 +216,10 @@ aiobotocore==2.13.1
 aiocomelit==0.10.1
 
 # homeassistant.components.dhcp
-aiodhcpwatcher==1.1.0
+aiodhcpwatcher==1.1.1
 
 # homeassistant.components.dhcp
-aiodiscover==2.6.0
+aiodiscover==2.6.1
 
 # homeassistant.components.dnsip
 aiodns==3.2.0
@@ -683,7 +683,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==0.8.0
+cached-ipaddress==0.8.1
 
 # homeassistant.components.caldav
 caldav==1.3.9
@@ -943,7 +943,7 @@ flux-led==1.1.3
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==1.2.2
+fnv-hash-fast==1.2.3
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -1036,7 +1036,7 @@ google-cloud-speech==2.27.0
 google-cloud-texttospeech==2.17.2
 
 # homeassistant.components.google_generative_ai_conversation
-google-generativeai==0.8.2
+google-genai==1.1.0
 
 # homeassistant.components.nest
 google-nest-sdm==7.1.3
@@ -1106,7 +1106,7 @@ ha-philipsjs==3.2.2
 habiticalib==0.3.7
 
 # homeassistant.components.bluetooth
-habluetooth==3.22.1
+habluetooth==3.24.0
 
 # homeassistant.components.cloud
 hass-nabucasa==0.92.0
@@ -1146,7 +1146,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.66
+holidays==0.67
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250221.0
@@ -1752,7 +1752,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.6.3
+py-synologydsm-api==2.7.0
 
 # homeassistant.components.atome
 pyAtome==0.1.1
@@ -1975,7 +1975,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.16
+pyfritzhome==0.6.17
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -2253,7 +2253,7 @@ pyrecswitch==1.0.2
 pyrepetierng==0.1.0
 
 # homeassistant.components.risco
-pyrisco==0.6.5
+pyrisco==0.6.7
 
 # homeassistant.components.rituals_perfume_genie
 pyrituals==0.0.6
@@ -2805,7 +2805,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.5.4
+stookwijzer==1.5.7
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
