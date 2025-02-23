@@ -53,19 +53,19 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
         step_id="user",
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
-        errors = {}
-        placeholders = {}
+        errors: dict[str, str] = {}
+        placeholders: dict[str, str] = {}
 
         if user_input is not None:
             LOGGER.debug("Source: ", self.source)
             # Create a session using your credentials
             user_config = SFTPConfigEntryData(
-                host=user_input.get(CONF_HOST),
-                port=user_input.get(CONF_PORT),
-                username=user_input.get(CONF_USERNAME),
+                host=user_input[CONF_HOST],
+                port=user_input.get(CONF_PORT, 22),
+                username=user_input[CONF_USERNAME],
                 password=user_input.get(CONF_PASSWORD),
                 private_key_file=user_input.get(CONF_PRIVATE_KEY_FILE),
-                backup_location=user_input.get(CONF_BACKUP_LOCATION),
+                backup_location=user_input[CONF_BACKUP_LOCATION],
             )
 
             placeholders["backup_location"] = user_config.backup_location
@@ -117,11 +117,9 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
-                    title=f"SFTP Backup - {user_config.username}@{user_config.host}:{user_config.port}",
+                    title=f"{user_config.username}@{user_config.host}",
                     data=user_input,
                 )
-        else:
-            user_input = {}
 
         return self.async_show_form(
             step_id=step_id,
