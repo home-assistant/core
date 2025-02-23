@@ -99,6 +99,15 @@ async def test_full_flow(
             },
         )
     assert len(hass.config_entries.async_entries(EKEYBIONYX_DOMAIN)) == 1
+    assert hass.config_entries.async_entries(EKEYBIONYX_DOMAIN)[0].data == {
+        "webhooks": [
+            {
+                "webhook_id": "1234567890",
+                "name": "Test",
+                "ekey_id": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
+            }
+        ]
+    }
 
     assert flow3.get("type") is FlowResultType.CREATE_ENTRY
 
@@ -151,3 +160,107 @@ async def test_no_own_system(
     assert len(hass.config_entries.async_entries(EKEYBIONYX_DOMAIN)) == 0
 
     assert flow.get("type") is FlowResultType.ABORT
+    assert flow.get("reason") == "no_own_systems"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_no_availible_webhooks(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+    no_availible_webhooks: None,
+) -> None:
+    """Check no own System flow."""
+    result = await hass.config_entries.flow.async_init(
+        EKEYBIONYX_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        f"&scope={SCOPE}"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+    flow = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert len(hass.config_entries.async_entries(EKEYBIONYX_DOMAIN)) == 0
+
+    assert flow.get("type") is FlowResultType.ABORT
+    assert flow.get("reason") == "no_availible_webhooks"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_cleanup(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    setup_credentials: None,
+    already_set_up: None,
+    webhooks: None,
+    webhook_deletion: None,
+) -> None:
+    """Check no own System flow."""
+    result = await hass.config_entries.flow.async_init(
+        EKEYBIONYX_DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    assert result["url"] == (
+        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
+        "&redirect_uri=https://example.com/auth/external/callback"
+        f"&state={state}"
+        f"&scope={SCOPE}"
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+    assert resp.headers["content-type"] == "text/html; charset=utf-8"
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "mock-access-token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+    flow = await hass.config_entries.flow.async_configure(result["flow_id"])
+    assert flow.get("step_id") == "delete_webhooks"
+
+    flow2 = await hass.config_entries.flow.async_configure(flow["flow_id"], {})
+
+    assert len(hass.config_entries.async_entries(EKEYBIONYX_DOMAIN)) == 0
+
+    assert flow2.get("type") is FlowResultType.ABORT
+    assert flow2.get("reason") == "webhook_deletion_requested"
