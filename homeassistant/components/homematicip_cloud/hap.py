@@ -14,14 +14,31 @@ from homematicip.base.enums import EventType
 from homematicip.connection.connection_context import ConnectionContextBuilder
 from homematicip.connection.rest_connection import RestConnection
 
+import homeassistant
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.httpx_client import create_async_httpx_client
 
 from .const import HMIPC_AUTHTOKEN, HMIPC_HAPID, HMIPC_NAME, HMIPC_PIN, PLATFORMS
 from .errors import HmipcConnectionError
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def build_context_async(
+    hass: HomeAssistant, hapid: str | None, authtoken: str | None
+):
+    """Create a HomematicIP context object."""
+    ssl_ctx = homeassistant.util.ssl.get_default_context()
+    client_session = create_async_httpx_client(hass)
+
+    return await ConnectionContextBuilder.build_context_async(
+        accesspoint_id=hapid,
+        auth_token=authtoken,
+        ssl_ctx=ssl_ctx,
+        httpx_client_session=client_session,
+    )
 
 
 class HomematicipAuth:
@@ -38,10 +55,7 @@ class HomematicipAuth:
         """Connect to HomematicIP for registration."""
         try:
             self.auth = await self.get_auth(
-                self.hass,
-                self.config.get(HMIPC_HAPID),
-                self.config.get(HMIPC_PIN),
-                self.config.get(HMIPC_NAME),
+                self.hass, self.config.get(HMIPC_HAPID), self.config.get(HMIPC_PIN)
             )
         except HmipcConnectionError:
             return False
@@ -63,22 +77,20 @@ class HomematicipAuth:
             return False
         return authtoken
 
-    async def get_auth(self, hass: HomeAssistant, hapid, pin, name=None):
+    async def get_auth(self, hass: HomeAssistant, hapid, pin):
         """Create a HomematicIP access point object."""
-        context = ConnectionContextBuilder.build_context(accesspoint_id=hapid)
+        context = await build_context_async(hass, hapid, None)
         connection = RestConnection(
             context,
             log_status_exceptions=False,
+            httpx_client_session=create_async_httpx_client(hass),
         )
         # hass.loop
         auth = Auth(connection, context.client_auth_token, hapid)
 
         try:
-            if len(name) == 0:
-                name = "HomeAssistant"
-
             auth.set_pin(pin)
-            result = await auth.connection_request(hapid, name)
+            result = await auth.connection_request(hapid)
             _LOGGER.debug("Connection request result: %s", result)
         except HmipConnectionError:
             return None
@@ -267,7 +279,8 @@ class HomematicipHAP:
         home.modelType = "HomematicIP Cloud Home"
 
         try:
-            await home.init(hapid, authtoken)
+            context = await build_context_async(hass, hapid, authtoken)
+            home.init_with_context(context, True, create_async_httpx_client(hass))
             await home.get_current_state_async()
         except HmipConnectionError as err:
             raise HmipcConnectionError from err
