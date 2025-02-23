@@ -206,7 +206,7 @@ class SmartTubError(SmartTubEntity, BinarySensorEntity):
 
 class SmartTubCoverSensor(SmartTubExternalSensorBase, BinarySensorEntity):
     """Wireless magnetic cover sensor."""
-    
+
     _attr_device_class = BinarySensorDeviceClass.OPENING
 
     @property
