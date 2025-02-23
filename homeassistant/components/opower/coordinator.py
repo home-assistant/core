@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any, cast
+from typing import Any
 
 from opower import (
     Account,
