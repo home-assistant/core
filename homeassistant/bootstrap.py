@@ -875,31 +875,31 @@ async def _async_set_up_integrations(
             (name, domain_group, timeout)
             for name, domain_group, timeout in STAGE_0_INTEGRATIONS
         ),
-        ("stage 1", STAGE_1_INTEGRATIONS, STAGE_1_TIMEOUT),
-        ("stage 2", domains, STAGE_2_TIMEOUT),
+        ("1", STAGE_1_INTEGRATIONS, STAGE_1_TIMEOUT),
+        ("2", domains, STAGE_2_TIMEOUT),
     ]
-
-    remaining_domains = all_domains.copy()
 
     _LOGGER.info("Setting up stage 0")
     for name, domain_group, timeout in stages:
-        stage_pre_domains = domain_group & all_domains
-        if not stage_pre_domains:
-            _LOGGER.info("Nothing to set up in %s", name)
+        stage_domains_unfiltered = domain_group & all_domains
+        if not stage_domains_unfiltered:
+            _LOGGER.info("Nothing to set up in stage %s: %s", name, domain_group)
             continue
 
-        stage_domains = domain_group & remaining_domains
+        stage_domains = stage_domains_unfiltered - hass.config.components
         if not stage_domains:
-            _LOGGER.info("Already set up %s: %s", name, stage_pre_domains)
+            _LOGGER.info("Already set up stage %s: %s", name, stage_domains_unfiltered)
             continue
 
-        stage_all_domains = stage_domains.copy()
-        stage_all_domains.update(
+        stage_dep_domains_unfiltered = {
             dep
             for domain in stage_domains
             for dep in all_integrations[domain].all_dependencies
-        )
+            if dep not in stage_domains
+        }
+        stage_dep_domains = stage_dep_domains_unfiltered - hass.config.components
 
+        stage_all_domains = stage_domains | stage_dep_domains
         stage_all_integrations = {
             domain: all_integrations[domain] for domain in stage_all_domains
         }
@@ -910,13 +910,16 @@ async def _async_set_up_integrations(
             )
         )
         stage_all_domains = set(stage_integrations_after_dependencies)
-        stage_domains = stage_domains & stage_all_domains
+        stage_domains &= stage_all_domains
+        stage_dep_domains &= stage_all_domains
 
         _LOGGER.info(
-            "Setting up %s: %s | %s",
+            "Setting up stage %s: %s | %s\nDependencies: %s | %s",
             name,
             stage_domains,
-            stage_all_domains - stage_domains,
+            stage_domains_unfiltered - stage_domains,
+            stage_dep_domains,
+            stage_dep_domains_unfiltered - stage_dep_domains,
         )
 
         async_set_domains_to_be_loaded(hass, stage_all_domains)
@@ -929,12 +932,10 @@ async def _async_set_up_integrations(
                     await _async_setup_multi_components(hass, stage_all_domains, config)
             except TimeoutError:
                 _LOGGER.warning(
-                    "Setup timed out for %s waiting on %s - moving forward",
+                    "Setup timed out for stage %s waiting on %s - moving forward",
                     name,
                     hass._active_tasks,  # noqa: SLF001
                 )
-
-        remaining_domains -= hass.config.components
 
     # Wrap up startup
     _LOGGER.debug("Waiting for startup to wrap up")
