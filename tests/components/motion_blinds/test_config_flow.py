@@ -6,12 +6,12 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.motion_blinds import const
 from homeassistant.components.motion_blinds.config_flow import DEFAULT_GATEWAY_NAME
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -346,7 +346,7 @@ async def test_config_flow_invalid_interface(hass: HomeAssistant) -> None:
 
 async def test_dhcp_flow(hass: HomeAssistant) -> None:
     """Successful flow from DHCP discovery."""
-    dhcp_data = dhcp.DhcpServiceInfo(
+    dhcp_data = DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="MOTION_abcdef",
         macaddress=DHCP_FORMATTED_MAC,
@@ -380,7 +380,7 @@ async def test_dhcp_flow(hass: HomeAssistant) -> None:
 
 async def test_dhcp_flow_abort(hass: HomeAssistant) -> None:
     """Test that DHCP discovery aborts if not Motionblinds."""
-    dhcp_data = dhcp.DhcpServiceInfo(
+    dhcp_data = DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="MOTION_abcdef",
         macaddress=DHCP_FORMATTED_MAC,
@@ -400,7 +400,7 @@ async def test_dhcp_flow_abort(hass: HomeAssistant) -> None:
 
 async def test_dhcp_flow_abort_invalid_response(hass: HomeAssistant) -> None:
     """Test that DHCP discovery aborts if device responded with invalid data."""
-    dhcp_data = dhcp.DhcpServiceInfo(
+    dhcp_data = DhcpServiceInfo(
         ip=TEST_HOST,
         hostname="MOTION_abcdef",
         macaddress=DHCP_FORMATTED_MAC,

@@ -44,7 +44,7 @@ from homeassistant.const import (
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -1762,6 +1762,23 @@ async def test_self_reset_hourly_dst2(hass: HomeAssistant) -> None:
 
     next_reset = dt_util.parse_datetime("2024-10-28T00:00:00.000000+01:00").isoformat()
     assert state.attributes.get("next_reset") == next_reset
+
+
+async def test_tz_changes(hass: HomeAssistant) -> None:
+    """Test that a timezone change changes the scheduler."""
+
+    await hass.config.async_update(time_zone="Europe/Prague")
+
+    await _test_self_reset(
+        hass, gen_config("daily"), "2024-10-26T23:59:00.000000+02:00"
+    )
+    state = hass.states.get("sensor.energy_bill")
+    assert state.attributes.get("next_reset") == "2024-10-28T00:00:00+01:00"
+
+    await hass.config.async_update(time_zone="Pacific/Fiji")
+
+    state = hass.states.get("sensor.energy_bill")
+    assert state.attributes.get("next_reset") != "2024-10-28T00:00:00+01:00"
 
 
 async def test_self_reset_daily(hass: HomeAssistant) -> None:

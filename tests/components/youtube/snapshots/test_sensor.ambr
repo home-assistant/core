@@ -4,7 +4,7 @@
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://i.ytimg.com/vi/wysukDrMdqU/maxresdefault.jpg',
       'friendly_name': 'Google for Developers Latest upload',
-      'published_at': datetime.datetime(2023, 5, 11, 0, 20, 46, tzinfo=datetime.timezone.utc),
+      'published_at': datetime.datetime(2023, 5, 11, 0, 20, 46, tzinfo=TzInfo(UTC)),
       'video_id': 'wysukDrMdqU',
     }),
     'context': <ANY>,

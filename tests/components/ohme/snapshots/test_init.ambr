@@ -1,0 +1,34 @@
+# serializer version: 1
+# name: test_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'ohme',
+        'chargerid',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': 'Ohme',
+    'model': 'Home Pro',
+    'model_id': None,
+    'name': 'Ohme Home Pro',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': 'chargerid',
+    'suggested_area': None,
+    'sw_version': 'v2.65',
+    'via_device_id': None,
+  })
+# ---

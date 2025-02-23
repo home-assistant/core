@@ -1,7 +1,7 @@
 """Tests for tedee lock."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
 
 from aiotedee import TedeeLock, TedeeLockState
@@ -22,42 +22,44 @@ from homeassistant.components.lock import (
     LockState,
 )
 from homeassistant.components.webhook import async_generate_url
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.setup import async_setup_component
 
+from . import setup_integration
 from .conftest import WEBHOOK_ID
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 from tests.typing import ClientSessionGenerator
 
-pytestmark = pytest.mark.usefixtures("init_integration")
 
-
-async def test_lock(
+async def test_locks(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
-    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
+    """Test tedee locks."""
+    with patch("homeassistant.components.tedee.PLATFORMS", [Platform.LOCK]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_lock_service_calls(
+    hass: HomeAssistant,
+    mock_tedee: MagicMock,
+) -> None:
     """Test the tedee lock."""
-    mock_tedee.lock.return_value = None
-    mock_tedee.unlock.return_value = None
-    mock_tedee.open.return_value = None
-
-    state = hass.states.get("lock.lock_1a2b")
-    assert state
-    assert state == snapshot
-
-    entry = entity_registry.async_get(state.entity_id)
-    assert entry
-    assert entry == snapshot
-    assert entry.device_id
-
-    device = device_registry.async_get(entry.device_id)
-    assert device == snapshot
 
     await hass.services.async_call(
         LOCK_DOMAIN,
@@ -105,6 +107,7 @@ async def test_lock(
     assert state.state == LockState.UNLOCKING
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_lock_without_pullspring(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
@@ -113,9 +116,8 @@ async def test_lock_without_pullspring(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the tedee lock without pullspring."""
-    mock_tedee.lock.return_value = None
-    mock_tedee.unlock.return_value = None
-    mock_tedee.open.return_value = None
+    # Fetch translations
+    await async_setup_component(hass, "homeassistant", {})
 
     state = hass.states.get("lock.lock_2c3d")
     assert state
@@ -131,8 +133,8 @@ async def test_lock_without_pullspring(
     assert device == snapshot
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Entity lock.lock_2c3d does not support this service.",
+        ServiceNotSupported,
+        match=f"Entity lock.lock_2c3d does not support action {LOCK_DOMAIN}.{SERVICE_OPEN}",
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,
@@ -146,6 +148,7 @@ async def test_lock_without_pullspring(
     assert len(mock_tedee.open.mock_calls) == 0
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_lock_errors(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
@@ -188,6 +191,7 @@ async def test_lock_errors(
     assert exc_info.value.translation_key == "open_failed"
 
 
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     "side_effect",
     [
@@ -214,6 +218,7 @@ async def test_update_failed(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_cleanup_removed_locks(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
@@ -244,6 +249,7 @@ async def test_cleanup_removed_locks(
     assert "Lock-1A2B" not in locks
 
 
+@pytest.mark.usefixtures("init_integration")
 async def test_new_lock(
     hass: HomeAssistant,
     mock_tedee: MagicMock,
@@ -272,6 +278,7 @@ async def test_new_lock(
     assert state
 
 
+@pytest.mark.usefixtures("init_integration")
 @pytest.mark.parametrize(
     ("lib_state", "expected_state"),
     [

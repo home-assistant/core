@@ -39,19 +39,18 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: done
 
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: todo
+  discovery-update-info: done
+  discovery:
+    status: done
     comment: |
-      The integration doesn't update the device info based on DHCP discovery
-      of known existing devices.
-  discovery: done
+      DHCP IP address updates are not supported for the v2 API.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -69,11 +68,8 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
-  repair-issues:
-    status: exempt
-    comment: |
-      This integration does not raise any repairable issues.
+  reconfiguration-flow: done
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |

@@ -4,41 +4,6 @@
       "spotify": {
         "default": "mdi:spotify"
       }
-    },
-    "sensor": {
-      "song_tempo": {
-        "default": "mdi:metronome"
-      },
-      "danceability": {
-        "default": "mdi:dance-ballroom"
-      },
-      "energy": {
-        "default": "mdi:lightning-bolt"
-      },
-      "mode": {
-        "default": "mdi:music"
-      },
-      "speechiness": {
-        "default": "mdi:speaker-message"
-      },
-      "acousticness": {
-        "default": "mdi:guitar-acoustic"
-      },
-      "instrumentalness": {
-        "default": "mdi:guitar-electric"
-      },
-      "valence": {
-        "default": "mdi:emoticon-happy"
-      },
-      "liveness": {
-        "default": "mdi:music-note"
-      },
-      "time_signature": {
-        "default": "mdi:music-clef-treble"
-      },
-      "key": {
-        "default": "mdi:music-clef-treble"
-      }
     }
   }
 }

@@ -27,7 +27,7 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
@@ -44,7 +44,7 @@ from .coordinator import CoilCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
@@ -74,7 +74,6 @@ class NibeClimateEntity(CoordinatorEntity[CoilCoordinator], ClimateEntity):
     _attr_target_temperature_step = 0.5
     _attr_max_temp = 35.0
     _attr_min_temp = 5.0
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

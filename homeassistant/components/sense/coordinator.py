@@ -1,7 +1,10 @@
 """Sense Coordinators."""
 
+from __future__ import annotations
+
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from sense_energy import (
     ASyncSenseable,
@@ -12,6 +15,9 @@ from sense_energy import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from . import SenseConfigEntry
 
 from .const import (
     ACTIVE_UPDATE_RATE,
@@ -27,13 +33,21 @@ _LOGGER = logging.getLogger(__name__)
 class SenseCoordinator(DataUpdateCoordinator[None]):
     """Sense Trend Coordinator."""
 
+    config_entry: SenseConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, gateway: ASyncSenseable, name: str, update: int
+        self,
+        hass: HomeAssistant,
+        config_entry: SenseConfigEntry,
+        gateway: ASyncSenseable,
+        name: str,
+        update: int,
     ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             logger=_LOGGER,
+            config_entry=config_entry,
             name=f"Sense {name} {gateway.sense_monitor_id}",
             update_interval=timedelta(seconds=update),
         )
@@ -44,9 +58,14 @@ class SenseCoordinator(DataUpdateCoordinator[None]):
 class SenseTrendCoordinator(SenseCoordinator):
     """Sense Trend Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, gateway: ASyncSenseable) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SenseConfigEntry,
+        gateway: ASyncSenseable,
+    ) -> None:
         """Initialize."""
-        super().__init__(hass, gateway, "Trends", TREND_UPDATE_RATE)
+        super().__init__(hass, config_entry, gateway, "Trends", TREND_UPDATE_RATE)
 
     async def _async_update_data(self) -> None:
         """Update the trend data."""
@@ -62,9 +81,14 @@ class SenseTrendCoordinator(SenseCoordinator):
 class SenseRealtimeCoordinator(SenseCoordinator):
     """Sense Realtime Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, gateway: ASyncSenseable) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SenseConfigEntry,
+        gateway: ASyncSenseable,
+    ) -> None:
         """Initialize."""
-        super().__init__(hass, gateway, "Realtime", ACTIVE_UPDATE_RATE)
+        super().__init__(hass, config_entry, gateway, "Realtime", ACTIVE_UPDATE_RATE)
 
     async def _async_update_data(self) -> None:
         """Retrieve latest state."""

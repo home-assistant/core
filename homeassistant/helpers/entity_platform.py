@@ -80,6 +80,22 @@ class AddEntitiesCallback(Protocol):
         """Define add_entities type."""
 
 
+class AddConfigEntryEntitiesCallback(Protocol):
+    """Protocol type for EntityPlatform.add_entities callback."""
+
+    def __call__(
+        self,
+        new_entities: Iterable[Entity],
+        update_before_add: bool = False,
+        *,
+        config_subentry_id: str | None = None,
+    ) -> None:
+        """Define add_entities type.
+
+        :param config_subentry_id: subentry which the entities should be added to
+        """
+
+
 class EntityPlatformModule(Protocol):
     """Protocol type for entity platform modules."""
 
@@ -105,7 +121,7 @@ class EntityPlatformModule(Protocol):
         self,
         hass: HomeAssistant,
         entry: config_entries.ConfigEntry,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up an integration platform from a config entry."""
 
@@ -145,6 +161,7 @@ class EntityPlatform:
         self.platform_translations: dict[str, str] = {}
         self.object_id_component_translations: dict[str, str] = {}
         self.object_id_platform_translations: dict[str, str] = {}
+        self.default_language_platform_translations: dict[str, str] = {}
         self._tasks: list[asyncio.Task[None]] = []
         # Stop tracking tasks after setup is completed
         self._setup_complete = False
@@ -425,11 +442,12 @@ class EntityPlatform:
                 type(exc).__name__,
             )
             return False
-        except Exception:
+        except Exception as exc:
             logger.exception(
-                "Error while setting up %s platform for %s",
+                "Error while setting up %s platform for %s: %s",
                 self.platform_name,
                 self.domain,
+                exc,  # noqa: TRY401
             )
             return False
         else:
@@ -480,6 +498,14 @@ class EntityPlatform:
             self.object_id_platform_translations = await self._async_get_translations(
                 object_id_language, "entity", self.platform_name
             )
+        if config_language == languages.DEFAULT_LANGUAGE:
+            self.default_language_platform_translations = self.platform_translations
+        else:
+            self.default_language_platform_translations = (
+                await self._async_get_translations(
+                    languages.DEFAULT_LANGUAGE, "entity", self.platform_name
+                )
+            )
 
     def _schedule_add_entities(
         self, new_entities: Iterable[Entity], update_before_add: bool = False
@@ -507,13 +533,21 @@ class EntityPlatform:
 
     @callback
     def _async_schedule_add_entities_for_entry(
-        self, new_entities: Iterable[Entity], update_before_add: bool = False
+        self,
+        new_entities: Iterable[Entity],
+        update_before_add: bool = False,
+        *,
+        config_subentry_id: str | None = None,
     ) -> None:
         """Schedule adding entities for a single platform async and track the task."""
         assert self.config_entry
         task = self.config_entry.async_create_task(
             self.hass,
-            self.async_add_entities(new_entities, update_before_add=update_before_add),
+            self.async_add_entities(
+                new_entities,
+                update_before_add=update_before_add,
+                config_subentry_id=config_subentry_id,
+            ),
             f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
             eager_start=True,
         )
@@ -615,12 +649,27 @@ class EntityPlatform:
             )
 
     async def async_add_entities(
-        self, new_entities: Iterable[Entity], update_before_add: bool = False
+        self,
+        new_entities: Iterable[Entity],
+        update_before_add: bool = False,
+        *,
+        config_subentry_id: str | None = None,
     ) -> None:
         """Add entities for a single platform async.
 
         This method must be run in the event loop.
+
+        :param config_subentry_id: subentry which the entities should be added to
         """
+        if config_subentry_id and (
+            not self.config_entry
+            or config_subentry_id not in self.config_entry.subentries
+        ):
+            raise HomeAssistantError(
+                f"Can't add entities to unknown subentry {config_subentry_id} of config "
+                f"entry {self.config_entry.entry_id if self.config_entry else None}"
+            )
+
         # handle empty list from component/platform
         if not new_entities:  # type: ignore[truthy-iterable]
             return
@@ -631,7 +680,9 @@ class EntityPlatform:
         entities: list[Entity] = []
         for entity in new_entities:
             coros.append(
-                self._async_add_entity(entity, update_before_add, entity_registry)
+                self._async_add_entity(
+                    entity, update_before_add, entity_registry, config_subentry_id
+                )
             )
             entities.append(entity)
 
@@ -710,6 +761,7 @@ class EntityPlatform:
         entity: Entity,
         update_before_add: bool,
         entity_registry: EntityRegistry,
+        config_subentry_id: str | None,
     ) -> None:
         """Add an entity to the platform."""
         if entity is None:
@@ -769,6 +821,7 @@ class EntityPlatform:
                 try:
                     device = dev_reg.async_get(self.hass).async_get_or_create(
                         config_entry_id=self.config_entry.entry_id,
+                        config_subentry_id=config_subentry_id,
                         **device_info,
                     )
                 except dev_reg.DeviceInfoError as exc:
@@ -815,6 +868,7 @@ class EntityPlatform:
                 entity.unique_id,
                 capabilities=entity.capability_attributes,
                 config_entry=self.config_entry,
+                config_subentry_id=config_subentry_id,
                 device_id=device.id if device else None,
                 disabled_by=disabled_by,
                 entity_category=entity.entity_category,

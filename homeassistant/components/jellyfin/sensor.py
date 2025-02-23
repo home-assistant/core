@@ -8,10 +8,10 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
+from .coordinator import JellyfinConfigEntry, JellyfinDataUpdateCoordinator
 from .entity import JellyfinServerEntity
 
 
@@ -36,7 +36,6 @@ SENSOR_TYPES: tuple[JellyfinSensorEntityDescription, ...] = (
         key="watching",
         translation_key="watching",
         value_fn=_count_now_playing,
-        native_unit_of_measurement="clients",
     ),
 )
 
@@ -44,7 +43,7 @@ SENSOR_TYPES: tuple[JellyfinSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: JellyfinConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Jellyfin sensor based on a config entry."""
     coordinator = entry.runtime_data

@@ -9,12 +9,7 @@ from typing import Any
 from aioimaplib import AioImapException
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -35,6 +30,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util.ssl import SSLCipherList
 
+from . import ImapConfigEntry
 from .const import (
     CONF_CHARSET,
     CONF_CUSTOM_EVENT_DATA_TEMPLATE,
@@ -212,7 +208,7 @@ class IMAPConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: ImapConfigEntry,
     ) -> ImapOptionsFlow:
         """Get the options flow for this handler."""
         return ImapOptionsFlow()

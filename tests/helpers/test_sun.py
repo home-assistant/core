@@ -10,7 +10,7 @@ import pytest
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import sun
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 
 def test_next_events(hass: HomeAssistant) -> None:

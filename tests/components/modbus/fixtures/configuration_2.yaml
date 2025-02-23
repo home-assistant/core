@@ -1,0 +1,12 @@
+modbus:
+  type: "tcp"
+  host: "testHost"
+  port: 5001
+  name: "testModbus"
+  sensors:
+    - name: "dummy"
+      address: 117
+      slave: 0
+    - name: "dummy_2"
+      address: 118
+      slave: 1

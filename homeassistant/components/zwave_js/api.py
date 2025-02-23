@@ -70,9 +70,8 @@ from homeassistant.components.websocket_api import (
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .config_validation import BITMASK_SCHEMA
@@ -395,6 +394,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_node_metadata)
     websocket_api.async_register_command(hass, websocket_node_alerts)
     websocket_api.async_register_command(hass, websocket_add_node)
+    websocket_api.async_register_command(hass, websocket_cancel_secure_bootstrap_s2)
+    websocket_api.async_register_command(hass, websocket_subscribe_s2_inclusion)
     websocket_api.async_register_command(hass, websocket_grant_security_classes)
     websocket_api.async_register_command(hass, websocket_validate_dsk_and_enter_pin)
     websocket_api.async_register_command(hass, websocket_provision_smart_start_node)
@@ -804,7 +805,7 @@ async def websocket_add_node(
     ]
     msg[DATA_UNSUBSCRIBE] = unsubs
 
-    if controller.inclusion_state == InclusionState.INCLUDING:
+    if controller.inclusion_state in (InclusionState.INCLUDING, InclusionState.BUSY):
         connection.send_result(
             msg[ID],
             True,  # Inclusion is already in progress
@@ -837,6 +838,77 @@ async def websocket_add_node(
             msg[ID],
             result,
         )
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/cancel_secure_bootstrap_s2",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_cancel_secure_bootstrap_s2(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Cancel secure bootstrap S2."""
+    await driver.controller.async_cancel_secure_bootstrap_s2()
+    connection.send_result(msg[ID])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        vol.Required(TYPE): "zwave_js/subscribe_s2_inclusion",
+        vol.Required(ENTRY_ID): str,
+    }
+)
+@websocket_api.async_response
+@async_handle_failed_command
+@async_get_entry
+async def websocket_subscribe_s2_inclusion(
+    hass: HomeAssistant,
+    connection: ActiveConnection,
+    msg: dict[str, Any],
+    entry: ConfigEntry,
+    client: Client,
+    driver: Driver,
+) -> None:
+    """Subscribe to S2 inclusion initiated by the controller."""
+
+    @callback
+    def async_cleanup() -> None:
+        for unsub in unsubs:
+            unsub()
+
+    @callback
+    def forward_dsk(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID], {"event": event["event"], "dsk": event["dsk"]}
+            )
+        )
+
+    @callback
+    def handle_requested_grant(event: dict) -> None:
+        """Accept the requested security classes without user interaction."""
+        hass.async_create_task(
+            driver.controller.async_grant_security_classes(event["requested_grant"])
+        )
+
+    connection.subscriptions[msg["id"]] = async_cleanup
+    msg[DATA_UNSUBSCRIBE] = unsubs = [
+        driver.controller.on("grant security classes", handle_requested_grant),
+        driver.controller.on("validate dsk and enter pin", forward_dsk),
+    ]
+    connection.send_result(msg[ID])
 
 
 @websocket_api.require_admin

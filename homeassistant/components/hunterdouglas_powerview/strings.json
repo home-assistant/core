@@ -5,7 +5,7 @@
         "title": "Connect to the PowerView Hub",
         "data": {
           "host": "[%key:common::config_flow::data::ip%]",
-          "api_version": "Hub Generation"
+          "api_version": "Hub generation"
         },
         "data_description": {
           "api_version": "API version is detectable, but you can override and force a specific version"
@@ -19,7 +19,7 @@
     "flow_title": "{name} ({host})",
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unsupported_device": "Only the primary powerview hub can be added",
+      "unsupported_device": "Only the primary PowerView Hub can be added",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {

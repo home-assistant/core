@@ -15,7 +15,7 @@
   )
 # ---
 # name: test_create_todo_list_item[due].1
-  '{"title": "Soda", "status": "needsAction", "due": "2023-11-18T00:00:00-08:00", "notes": null}'
+  '{"title": "Soda", "status": "needsAction", "due": "2023-11-18T00:00:00+00:00", "notes": null}'
 # ---
 # name: test_create_todo_list_item[summary]
   tuple(
@@ -137,7 +137,7 @@
   )
 # ---
 # name: test_partial_update[due_date].1
-  '{"title": "Water", "status": "needsAction", "due": "2023-11-18T00:00:00-08:00", "notes": null}'
+  '{"title": "Water", "status": "needsAction", "due": "2023-11-18T00:00:00+00:00", "notes": null}'
 # ---
 # name: test_partial_update[empty_description]
   tuple(
@@ -165,6 +165,33 @@
 # ---
 # name: test_partial_update_status[api_responses0].1
   '{"title": "Water", "status": "needsAction", "due": null, "notes": null}'
+# ---
+# name: test_update_due_date[api_responses0-America/Regina]
+  tuple(
+    'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks/some-task-id?alt=json',
+    'PATCH',
+  )
+# ---
+# name: test_update_due_date[api_responses0-America/Regina].1
+  '{"title": "Water", "status": "needsAction", "due": "2024-12-05T00:00:00+00:00", "notes": null}'
+# ---
+# name: test_update_due_date[api_responses0-Asia/Tokyo]
+  tuple(
+    'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks/some-task-id?alt=json',
+    'PATCH',
+  )
+# ---
+# name: test_update_due_date[api_responses0-Asia/Tokyo].1
+  '{"title": "Water", "status": "needsAction", "due": "2024-12-05T00:00:00+00:00", "notes": null}'
+# ---
+# name: test_update_due_date[api_responses0-UTC]
+  tuple(
+    'https://tasks.googleapis.com/tasks/v1/lists/task-list-id-1/tasks/some-task-id?alt=json',
+    'PATCH',
+  )
+# ---
+# name: test_update_due_date[api_responses0-UTC].1
+  '{"title": "Water", "status": "needsAction", "due": "2024-12-05T00:00:00+00:00", "notes": null}'
 # ---
 # name: test_update_todo_list_item[api_responses0]
   tuple(

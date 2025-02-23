@@ -15,10 +15,11 @@ from opendata_transport.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import CONNECTIONS_COUNT, DEFAULT_UPDATE_TIME, DOMAIN
+from .helper import offset_opendata
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,15 +58,23 @@ class SwissPublicTransportDataUpdateCoordinator(
 
     config_entry: SwissPublicTransportConfigEntry
 
-    def __init__(self, hass: HomeAssistant, opendata: OpendataTransport) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SwissPublicTransportConfigEntry,
+        opendata: OpendataTransport,
+        time_offset: dict[str, int] | None,
+    ) -> None:
         """Initialize the SwissPublicTransport data coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=DEFAULT_UPDATE_TIME),
         )
         self._opendata = opendata
+        self._time_offset = time_offset
 
     def remaining_time(self, departure) -> timedelta | None:
         """Calculate the remaining time for the departure."""
@@ -81,6 +90,9 @@ class SwissPublicTransportDataUpdateCoordinator(
     async def fetch_connections(self, limit: int) -> list[DataConnection]:
         """Fetch connections using the opendata api."""
         self._opendata.limit = limit
+        if self._time_offset:
+            offset_opendata(self._opendata, self._time_offset)
+
         try:
             await self._opendata.async_get_data()
         except OpendataTransportConnectionError as e:
@@ -103,7 +115,7 @@ class SwissPublicTransportDataUpdateCoordinator(
                 destination=self._opendata.to_name,
                 remaining_time=str(self.remaining_time(connections[i]["departure"])),
                 delay=connections[i]["delay"],
-                line=connections[i]["line"],
+                line=connections[i].get("line"),
             )
             for i in range(limit)
             if len(connections) > i and connections[i] is not None
@@ -124,7 +136,7 @@ class SwissPublicTransportDataUpdateCoordinator(
                 "train_number": connection["train_number"],
                 "transfers": connection["transfers"],
                 "delay": connection["delay"],
-                "line": connection["line"],
+                "line": connection.get("line"),
             }
             for connection in await self.fetch_connections(limit)
         ]
