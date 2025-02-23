@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import cast
 
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
@@ -51,7 +52,7 @@ class RememberTheMilkConfiguration:
     def get_token(self, profile_name: str) -> str | None:
         """Get the server token for a profile."""
         if profile_name in self._config:
-            return self._config[profile_name][CONF_TOKEN]
+            return cast(str, self._config[profile_name][CONF_TOKEN])
         return None
 
     def set_token(self, profile_name: str, token: str) -> None:
