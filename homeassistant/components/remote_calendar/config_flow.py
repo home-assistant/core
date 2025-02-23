@@ -44,7 +44,9 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             headers: dict = {}
             try:
-                res = await client.get(user_input[CONF_URL], headers=headers)
+                res = await client.get(
+                    user_input[CONF_URL], headers=headers, follow_redirects=True
+                )
             except UnsupportedProtocol as err:
                 errors["base"] = "unsupported_protocol"
                 _LOGGER.debug("Unsupported Protokol: %s", err)

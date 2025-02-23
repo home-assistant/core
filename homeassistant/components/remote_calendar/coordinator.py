@@ -47,7 +47,9 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         """Update data from the url."""
         headers: dict = {}
         try:
-            res = await self._client.get(self._url, headers=headers)
+            res = await self._client.get(
+                self._url, headers=headers, follow_redirects=True
+            )
             res.raise_for_status()
         except (UnsupportedProtocol, ConnectError, HTTPStatusError, ValueError) as err:
             raise UpdateFailed(
