@@ -8,6 +8,9 @@
         "data": {
           "system": "System"
         },
+        "data_description": {
+          "system": "System the webhooks should be set up for"
+        },
         "description": "Please select a system in which you want to set up the webhooks"
       },
       "webhooks": {
