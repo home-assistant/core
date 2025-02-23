@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime, UnitOfVolume
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
@@ -55,12 +55,6 @@ BSH_PROGRAM_SENSORS = (
             "Washer",
             "WasherDryer",
         ),
-    ),
-    HomeConnectSensorEntityDescription(
-        key=EventKey.BSH_COMMON_OPTION_DURATION,
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        appliance_types=("Oven",),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,

@@ -110,7 +110,7 @@ async def test_properties_no_data(hass: HomeAssistant) -> None:
     entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.smhi.weather.SMHIPointForecast.async_get_daily_forecast",
+        "homeassistant.components.smhi.entity.SMHIPointForecast.async_get_daily_forecast",
         side_effect=SmhiForecastException("boom"),
     ):
         await hass.config_entries.async_setup(entry.entry_id)
@@ -215,11 +215,11 @@ async def test_properties_unknown_symbol(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.smhi.weather.SMHIPointForecast.async_get_daily_forecast",
+            "homeassistant.components.smhi.entity.SMHIPointForecast.async_get_daily_forecast",
             return_value=testdata,
         ),
         patch(
-            "homeassistant.components.smhi.weather.SMHIPointForecast.async_get_hourly_forecast",
+            "homeassistant.components.smhi.entity.SMHIPointForecast.async_get_hourly_forecast",
             return_value=None,
         ),
     ):
@@ -254,7 +254,7 @@ async def test_refresh_weather_forecast_retry(
     now = dt_util.utcnow()
 
     with patch(
-        "homeassistant.components.smhi.weather.SMHIPointForecast.async_get_daily_forecast",
+        "homeassistant.components.smhi.entity.SMHIPointForecast.async_get_daily_forecast",
         side_effect=error,
     ) as mock_get_forecast:
         await hass.config_entries.async_setup(entry.entry_id)
