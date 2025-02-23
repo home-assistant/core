@@ -23,6 +23,32 @@ def mock_systems(
                 "systemId": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
                 "ownSystem": True,
                 "functionWebhookQuotas": {"free": 1, "used": 0},
+            },
+            {
+                "systemName": "A simple string containing 0 to 128 word, space and punctuation characters.",
+                "systemId": "946DA01F-9ABD-4D9D-80C7-02AF85C822A9",
+                "ownSystem": True,
+                "functionWebhookQuotas": {"free": 1, "used": 0},
+            },
+        ],
+    )
+
+
+@pytest.fixture(name="no_own_system")
+def mock_no_own_systems(
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Fixture to setup fake requests made to Fitbit API during config flow."""
+    aioclient_mock.request(
+        "GET",
+        "https://api.bionyx.io/3rd-party/api/systems",
+        status=HTTPStatus.OK,
+        json=[
+            {
+                "systemName": "A simple string containing 0 to 128 word, space and punctuation characters.",
+                "systemId": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
+                "ownSystem": False,
+                "functionWebhookQuotas": {"free": 1, "used": 0},
             }
         ],
     )
@@ -41,7 +67,7 @@ def mock_add_webhook(
             "functionWebhookId": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
             "integrationName": "Home Assistant",
             "locationName": "Home Assistant",
-            "functionName": "ATest",
+            "functionName": "Test",
             "expiresAt": "2022-05-16T04:11:28.0000000+00:00",
             "modificationState": None,
         },
