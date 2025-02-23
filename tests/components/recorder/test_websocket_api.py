@@ -27,11 +27,12 @@ from homeassistant.components.sensor import UNIT_CONVERTERS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import recorder as recorder_helper
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import (
     async_recorder_block_till_done,
+    async_wait_recorder,
     async_wait_recording_done,
     create_engine_test,
     do_adhoc_statistics,
@@ -41,7 +42,11 @@ from .common import (
 from .conftest import InstrumentedMigration
 
 from tests.common import async_fire_time_changed
-from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
+from tests.typing import (
+    RecorderInstanceContextManager,
+    RecorderInstanceGenerator,
+    WebSocketGenerator,
+)
 
 
 @pytest.fixture
@@ -2623,7 +2628,7 @@ async def test_recorder_info_no_instance(
 async def test_recorder_info_migration_queue_exhausted(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
     instrument_migration: InstrumentedMigration,
 ) -> None:
     """Test getting recorder status when recorder queue is exhausted."""
@@ -2646,7 +2651,7 @@ async def test_recorder_info_migration_queue_exhausted(
                 instrument_migration.migration_started.wait
             )
             assert recorder.util.async_migration_in_progress(hass) is True
-            await recorder_helper.async_wait_recorder(hass)
+            await async_wait_recorder(hass)
             hass.states.async_set("my.entity", "on", {})
             await hass.async_block_till_done()
 

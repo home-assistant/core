@@ -3,6 +3,7 @@
     "todos": "To-Do's",
     "dailies": "Dailies",
     "config_entry_name": "Select character",
+    "task_name": "Task name",
     "unit_tasks": "tasks",
     "unit_health_points": "HP",
     "unit_mana_points": "MP",
@@ -10,19 +11,23 @@
   },
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "unique_id_mismatch": "Hmm, those login details are correct, but they're not for this adventurer. Got another account to try?",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "invalid_credentials": "Input is incomplete. You must provide either your login details or an API token"
     },
     "step": {
       "user": {
         "title": "Habitica - Gamify your life",
         "menu_options": {
-          "login": "Login to Habitica",
-          "advanced": "Login to other instances"
+          "login": "Log in to Habitica",
+          "advanced": "Log in to other instances"
         },
         "description": "![Habiticans]({habiticans}) Connect your Habitica account to keep track of your adventurer's stats, progress, and manage your to-dos and daily tasks.\n\n[Don't have a Habitica account? Sign up here.]({signup})"
       },
@@ -49,9 +54,62 @@
         "data_description": {
           "url": "URL of the Habitica installation to connect to. Defaults to `{default_url}`",
           "api_user": "User ID of your Habitica account",
-          "api_key": "API Token of the Habitica account"
+          "api_key": "API Token of the Habitica account",
+          "verify_ssl": "Enable SSL certificate verification for secure connections. Disable only if connecting to a Habitica instance using a self-signed certificate"
         },
         "description": "You can retrieve your `User ID` and `API Token` from [**Settings -> Site Data**]({site_data}) on Habitica or the instance you want to connect to"
+      },
+      "reauth_confirm": {
+        "title": "Re-authorize {name} with Habitica",
+        "description": "![Habiticans]({habiticans}) It seems your API token for **{name}** has been reset. To re-authorize the integration, you can either log in with your username or email, and password, or directly provide your new API token.",
+        "sections": {
+          "reauth_login": {
+            "name": "Re-authorize via login",
+            "description": "Enter your login details below to re-authorize the Home Assistant integration with Habitica",
+            "data": {
+              "username": "[%key:component::habitica::config::step::login::data::username%]",
+              "password": "[%key:common::config_flow::data::password%]"
+            },
+            "data_description": {
+              "username": "[%key:component::habitica::config::step::login::data_description::username%]",
+              "password": "[%key:component::habitica::config::step::login::data_description::password%]"
+            }
+          },
+          "reauth_api_key": {
+            "description": "Enter your new API token below. You can find it in Habitica under 'Settings -> Site Data'",
+            "name": "Re-authorize via API Token",
+            "data": {
+              "api_key": "[%key:component::habitica::config::step::advanced::data::api_key%]"
+            },
+            "data_description": {
+              "api_key": "[%key:component::habitica::config::step::advanced::data_description::api_key%]"
+            }
+          }
+        }
+      },
+      "reconfigure": {
+        "title": "Update Habitica configuration",
+        "description": "![Habiticans]({habiticans})\n\nEnter your new API token below. You can find it in Habitica under [**Settings -> Site Data**]({site_data})",
+        "data": {
+          "api_key": "[%key:component::habitica::config::step::advanced::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "[%key:component::habitica::config::step::advanced::data_description::api_key%]"
+        },
+        "sections": {
+          "danger_zone": {
+            "name": "Critical configuration options",
+            "description": "These settings impact core functionality. Modifications are unnecessary if connected to the official Habitica instance and may disrupt the integration. Proceed with caution.",
+            "data": {
+              "url": "[%key:common::config_flow::data::url%]",
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "data_description": {
+              "url": "URL of the Habitica instance",
+              "verify_ssl": "[%key:component::habitica::config::step::advanced::data_description::verify_ssl%]"
+            }
+          }
+        }
       }
     }
   },
@@ -134,9 +192,28 @@
         "name": "Daily reminders"
       }
     },
+    "image": {
+      "avatar": {
+        "name": "Avatar"
+      }
+    },
     "sensor": {
       "display_name": {
-        "name": "Display name"
+        "name": "Display name",
+        "state_attributes": {
+          "blurb": {
+            "name": "About"
+          },
+          "joined": {
+            "name": "Joined"
+          },
+          "last_login": {
+            "name": "Last login"
+          },
+          "total_logins": {
+            "name": "Total logins"
+          }
+        }
       },
       "health": {
         "name": "Health",
@@ -184,14 +261,6 @@
           "wizard": "Mage",
           "rogue": "Rogue"
         }
-      },
-      "todos": {
-        "name": "[%key:component::habitica::common::todos%]",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
-      },
-      "dailys": {
-        "name": "[%key:component::habitica::common::dailies%]",
-        "unit_of_measurement": "[%key:component::habitica::common::unit_tasks%]"
       },
       "habits": {
         "name": "Habits",
@@ -280,6 +349,26 @@
             "name": "[%key:component::habitica::entity::sensor::strength::state_attributes::buffs::name%]"
           }
         }
+      },
+      "eggs_total": {
+        "name": "Eggs",
+        "unit_of_measurement": "eggs"
+      },
+      "hatching_potions_total": {
+        "name": "Hatching potions",
+        "unit_of_measurement": "potions"
+      },
+      "food_total": {
+        "name": "Pet food",
+        "unit_of_measurement": "foods"
+      },
+      "saddle": {
+        "name": "Saddles",
+        "unit_of_measurement": "saddles"
+      },
+      "quest_scrolls": {
+        "name": "Quest scrolls",
+        "unit_of_measurement": "scrolls"
       }
     },
     "switch": {
@@ -325,13 +414,13 @@
       "message": "Unable to create new to-do `{name}` for Habitica, please try again"
     },
     "setup_rate_limit_exception": {
-      "message": "Rate limit exceeded, try again later"
+      "message": "Rate limit exceeded, try again in {retry_after} seconds"
     },
     "service_call_unallowed": {
       "message": "Unable to complete action, the required conditions are not met"
     },
     "service_call_exception": {
-      "message": "Unable to connect to Habitica, try again later"
+      "message": "Unable to connect to Habitica: {reason}"
     },
     "not_enough_mana": {
       "message": "Unable to cast skill, not enough mana. Your character has {mana}, but the skill costs {cost}."
@@ -365,12 +454,15 @@
     },
     "item_not_found": {
       "message": "Unable to use {item}, you don't own this item."
+    },
+    "authentication_failed": {
+      "message": "Authentication failed. It looks like your API token has been reset. Please re-authenticate using your new token"
     }
   },
   "issues": {
-    "deprecated_task_entity": {
-      "title": "The Habitica {task_name} sensor is deprecated",
-      "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts to replace the sensor entity with the newly added todo entity.\nWhen you are done migrating you can disable `{entity}`."
+    "deprecated_entity": {
+      "title": "The Habitica {name} entity is deprecated",
+      "description": "The Habitica entity `{entity}` is deprecated and will be removed in a future release.\nPlease update your automations and scripts, disable `{entity}` and reload the integration/restart Home Assistant to fix this issue."
     },
     "deprecated_api_call": {
       "title": "The Habitica action habitica.api_call is deprecated",
@@ -398,7 +490,7 @@
     },
     "cast_skill": {
       "name": "Cast a skill",
-      "description": "Use a skill or spell from your Habitica character on a specific task to affect its progress or status.",
+      "description": "Uses a skill or spell from your Habitica character on a specific task to affect its progress or status.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -409,14 +501,14 @@
           "description": "Select the skill or spell you want to cast on the task. Only skills corresponding to your character's class can be used."
         },
         "task": {
-          "name": "Task name",
+          "name": "[%key:component::habitica::common::task_name%]",
           "description": "The name (or task ID) of the task you want to target with the skill or spell."
         }
       }
     },
     "accept_quest": {
       "name": "Accept a quest invitation",
-      "description": "Accept a pending invitation to a quest.",
+      "description": "Accepts a pending invitation to a quest.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -426,7 +518,7 @@
     },
     "reject_quest": {
       "name": "Reject a quest invitation",
-      "description": "Reject a pending invitation to a quest.",
+      "description": "Rejects a pending invitation to a quest.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -436,7 +528,7 @@
     },
     "leave_quest": {
       "name": "Leave a quest",
-      "description": "Leave the current quest you are participating in.",
+      "description": "Leaves the current quest you are participating in.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -446,7 +538,7 @@
     },
     "abort_quest": {
       "name": "Abort an active quest",
-      "description": "Terminate your party's ongoing quest. All progress will be lost and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
+      "description": "Terminates your party's ongoing quest. All progress will be lost and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -456,7 +548,7 @@
     },
     "cancel_quest": {
       "name": "Cancel a pending quest",
-      "description": "Cancel a quest that has not yet startet. All accepted and pending invitations will be canceled and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
+      "description": "Cancels a quest that has not yet started. All accepted and pending invitations will be canceled and the quest roll returned to the owner's inventory. Only quest leader or group leader can perform this action.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -466,7 +558,7 @@
     },
     "start_quest": {
       "name": "Force-start a pending quest",
-      "description": "Begin the quest immediately, bypassing any pending invitations that haven't been accepted or rejected. Only quest leader or group leader can perform this action.",
+      "description": "Begins the quest immediately, bypassing any pending invitations that haven't been accepted or rejected. Only quest leader or group leader can perform this action.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -476,7 +568,7 @@
     },
     "score_habit": {
       "name": "Track a habit",
-      "description": "Increase the positive or negative streak of a habit to track its progress.",
+      "description": "Increases the positive or negative streak of a habit to track its progress.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -494,7 +586,7 @@
     },
     "score_reward": {
       "name": "Buy a reward",
-      "description": "Reward yourself and buy one of your custom rewards with gold earned by fulfilling tasks.",
+      "description": "Buys one of your custom rewards with gold earned by fulfilling tasks.",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
@@ -508,7 +600,7 @@
     },
     "transformation": {
       "name": "Use a transformation item",
-      "description": "Use a transformation item from your Habitica character's inventory on a member of your party or yourself.",
+      "description": "Uses a transformation item from your Habitica character's inventory on a member of your party or yourself.",
       "fields": {
         "config_entry": {
           "name": "Select character",
@@ -521,6 +613,42 @@
         "target": {
           "name": "Target character",
           "description": "The name of the character you want to use the transformation item on. You can also specify the players username or user ID."
+        }
+      }
+    },
+    "get_tasks": {
+      "name": "Get tasks",
+      "description": "Retrieves tasks from your Habitica character.",
+      "fields": {
+        "config_entry": {
+          "name": "[%key:component::habitica::common::config_entry_name%]",
+          "description": "Choose the Habitica character to retrieve tasks from."
+        },
+        "type": {
+          "name": "Task type",
+          "description": "Filter tasks by type."
+        },
+        "priority": {
+          "name": "Difficulty",
+          "description": "Filter tasks by difficulty."
+        },
+        "task": {
+          "name": "[%key:component::habitica::common::task_name%]",
+          "description": "Select tasks by matching their name (or task ID)."
+        },
+        "tag": {
+          "name": "Tag",
+          "description": "Filter tasks that have one or more of the selected tags."
+        },
+        "keyword": {
+          "name": "Keyword",
+          "description": "Filter tasks by keyword, searching across titles, notes, and checklists."
+        }
+      },
+      "sections": {
+        "filter": {
+          "name": "Filter options",
+          "description": "Use the optional filters to narrow the returned tasks."
         }
       }
     }
@@ -540,6 +668,22 @@
         "spooky_sparkles": "Spooky sparkles",
         "seafoam": "Seafoam",
         "shiny_seed": "Shiny seed"
+      }
+    },
+    "type": {
+      "options": {
+        "daily": "Daily",
+        "habit": "Habit",
+        "todo": "To-do",
+        "reward": "Reward"
+      }
+    },
+    "priority": {
+      "options": {
+        "trivial": "Trivial",
+        "easy": "Easy",
+        "medium": "Medium",
+        "hard": "Hard"
       }
     }
   }

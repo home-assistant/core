@@ -6,6 +6,7 @@ from music_assistant_models.enums import MediaType, QueueOption
 from music_assistant_models.media_items import Track
 import pytest
 from syrupy import SnapshotAssertion
+from syrupy.filters import paths
 
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
@@ -32,6 +33,7 @@ from homeassistant.components.music_assistant.media_player import (
     ATTR_SOURCE_PLAYER,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
+    SERVICE_GET_QUEUE,
     SERVICE_PLAY_ANNOUNCEMENT,
     SERVICE_PLAY_MEDIA_ADVANCED,
     SERVICE_TRANSFER_QUEUE,
@@ -583,3 +585,25 @@ async def test_media_player_transfer_queue_action(
         auto_play=None,
         require_schema=25,
     )
+
+
+async def test_media_player_get_queue_action(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test media_player get_queue action."""
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_group_player_1"
+    response = await hass.services.async_call(
+        MASS_DOMAIN,
+        SERVICE_GET_QUEUE,
+        {
+            ATTR_ENTITY_ID: entity_id,
+        },
+        blocking=True,
+        return_response=True,
+    )
+    # no call is made, this info comes from the cached queue data
+    assert music_assistant_client.send_command.call_count == 0
+    assert response == snapshot(exclude=paths(f"{entity_id}.elapsed_time"))

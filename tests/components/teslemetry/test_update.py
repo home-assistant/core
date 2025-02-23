@@ -5,12 +5,11 @@ from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from syrupy.assertion import SnapshotAssertion
-from tesla_fleet_api.exceptions import VehicleOffline
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.components.teslemetry.update import INSTALLING
 from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN, SERVICE_INSTALL
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -42,18 +41,6 @@ async def test_update_alt(
     mock_vehicle_data.return_value = VEHICLE_DATA_ALT
     entry = await setup_platform(hass, [Platform.UPDATE])
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
-
-
-async def test_update_offline(
-    hass: HomeAssistant,
-    mock_vehicle_data: AsyncMock,
-) -> None:
-    """Tests that the update entities are correct when offline."""
-
-    mock_vehicle_data.side_effect = VehicleOffline
-    await setup_platform(hass, [Platform.UPDATE])
-    state = hass.states.get("update.test_update")
-    assert state.state == STATE_UNKNOWN
 
 
 async def test_update_services(

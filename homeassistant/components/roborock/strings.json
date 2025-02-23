@@ -23,12 +23,12 @@
       "invalid_email": "There is no account associated with the email you entered, please try again.",
       "invalid_email_format": "There is an issue with the formatting of your email - please try again.",
       "too_frequent_code_requests": "You have attempted to request too many codes. Try again later.",
-      "unknown_roborock": "There was an unknown roborock exception - please check your logs.",
-      "unknown_url": "There was an issue determining the correct url for your roborock account - please check your logs.",
+      "unknown_roborock": "There was an unknown Roborock exception - please check your logs.",
+      "unknown_url": "There was an issue determining the correct URL for your Roborock account - please check your logs.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_configured_account": "[%key:common::config_flow::abort::already_configured_account%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
@@ -228,6 +228,9 @@
       "total_cleaning_area": {
         "name": "Total cleaning area"
       },
+      "total_cleaning_count": {
+        "name": "Total cleaning count"
+      },
       "vacuum_error": {
         "name": "Vacuum error",
         "state": {
@@ -422,12 +425,36 @@
     },
     "update_options_failed": {
       "message": "Failed to update Roborock options"
+    },
+    "invalid_user_agreement": {
+      "message": "User agreement must be accepted again. Open your Roborock app and accept the agreement."
+    },
+    "no_user_agreement": {
+      "message": "You have not valid user agreement. Open your Roborock app and accept the agreement."
     }
   },
   "services": {
     "get_maps": {
       "name": "Get maps",
-      "description": "Get the map and room information of your device."
+      "description": "Retrieves the map and room information of your device."
+    },
+    "set_vacuum_goto_position": {
+      "name": "Go to position",
+      "description": "Sends the vacuum to a specific position.",
+      "fields": {
+        "x": {
+          "name": "X-coordinate",
+          "description": "Coordinates are relative to the dock. x=25500,y=25500 is the dock position."
+        },
+        "y": {
+          "name": "Y-coordinate",
+          "description": "[%key:component::roborock::services::set_vacuum_goto_position::fields::x::description%]"
+        }
+      }
+    },
+    "get_vacuum_current_position": {
+      "name": "Get current position",
+      "description": "Retrieves the current position of the vacuum."
     }
   }
 }

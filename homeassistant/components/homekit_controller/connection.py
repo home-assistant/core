@@ -323,8 +323,7 @@ class HKDevice:
                     self.hass,
                     self.async_update_available_state,
                     timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
-                    name=f"HomeKit Device {self.unique_id} BLE availability "
-                    "check poll",
+                    name=f"HomeKit Device {self.unique_id} BLE availability check poll",
                 )
             )
             # BLE devices always get an RSSI sensor as well

@@ -28,8 +28,9 @@ from homeassistant.util import slugify
 
 from .const import CONF_IMPORT_PLUGINS, DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
+type FibaroConfigEntry = ConfigEntry[FibaroController]
 
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -381,7 +382,7 @@ def init_controller(data: Mapping[str, Any]) -> FibaroController:
     return controller
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bool:
     """Set up the Fibaro Component.
 
     The unique id of the config entry is the serial number of the home center.
@@ -395,7 +396,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except FibaroAuthFailed as auth_ex:
         raise ConfigEntryAuthFailed from auth_ex
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = controller
+    entry.runtime_data = controller
 
     # register the hub device info separately as the hub has sometimes no entities
     device_registry = dr.async_get(hass)
@@ -417,25 +418,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bool:
     """Unload a config entry."""
     _LOGGER.debug("Shutting down Fibaro connection")
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    hass.data[DOMAIN][entry.entry_id].disable_state_handler()
-    hass.data[DOMAIN].pop(entry.entry_id)
+    entry.runtime_data.disable_state_handler()
 
     return unload_ok
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: FibaroConfigEntry, device_entry: DeviceEntry
 ) -> bool:
     """Remove a device entry from fibaro integration.
 
     Only removing devices which are not present anymore are eligible to be removed.
     """
-    controller: FibaroController = hass.data[DOMAIN][config_entry.entry_id]
+    controller = config_entry.runtime_data
     for identifiers in controller.get_all_device_identifiers():
         if device_entry.identifiers == identifiers:
             # Fibaro device is still served by the controller,

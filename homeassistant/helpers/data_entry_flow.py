@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from http import HTTPStatus
-from typing import Any, Generic
+from typing import Any, Generic, TypeVar
 
 from aiohttp import web
-from typing_extensions import TypeVar
 import voluptuous as vol
 import voluptuous_serialize
 
@@ -18,7 +17,7 @@ from . import config_validation as cv
 
 _FlowManagerT = TypeVar(
     "_FlowManagerT",
-    bound=data_entry_flow.FlowManager[Any, Any],
+    bound=data_entry_flow.FlowManager[Any, Any, Any],
     default=data_entry_flow.FlowManager,
 )
 
@@ -71,7 +70,7 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Initialize a POST request.
 
-        Override `_post_impl` in subclasses which need
+        Override `post` and call `_post_impl` in subclasses which need
         to implement their own `RequestDataValidator`
         """
         return await self._post_impl(request, data)

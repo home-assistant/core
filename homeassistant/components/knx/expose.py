@@ -88,7 +88,7 @@ class KNXExposeSensor:
         self._remove_listener: Callable[[], None] | None = None
         self.device: ExposeSensor = ExposeSensor(
             xknx=self.xknx,
-            name=f"{self.entity_id}__{self.expose_attribute or "state"}",
+            name=f"{self.entity_id}__{self.expose_attribute or 'state'}",
             group_address=config[KNX_ADDRESS],
             respond_to_read=config[CONF_RESPOND_TO_READ],
             value_type=self.expose_type,

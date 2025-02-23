@@ -1,13 +1,15 @@
 """Test Voice Assistant init."""
 
 import asyncio
+from collections.abc import Generator
 from dataclasses import asdict
 import itertools as it
 from pathlib import Path
 import tempfile
-from unittest.mock import ANY, patch
+from unittest.mock import ANY, Mock, patch
 import wave
 
+import hass_nabucasa
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -23,6 +25,7 @@ from homeassistant.components.assist_pipeline.const import (
     CONF_DEBUG_RECORDING_DIR,
     DOMAIN,
 )
+from homeassistant.const import MATCH_ALL
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
@@ -37,6 +40,14 @@ from .conftest import (
 )
 
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
+
+@pytest.fixture(autouse=True)
+def mock_ulid() -> Generator[Mock]:
+    """Mock the ulid of chat sessions."""
+    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
+        mock_ulid_now.return_value = "mock-ulid"
+        yield mock_ulid_now
 
 
 def process_events(events: list[assist_pipeline.PipelineEvent]) -> list[dict]:
@@ -682,7 +693,7 @@ async def test_wake_word_detection_aborted(
     pipeline = assist_pipeline.pipeline.async_get_pipeline(hass, pipeline_id)
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
-        conversation_id=None,
+        conversation_id="mock-conversation-id",
         device_id=None,
         stt_metadata=stt.SpeechMetadata(
             language="",
@@ -769,7 +780,7 @@ async def test_tts_audio_output(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         tts_input="This is a test.",
-        conversation_id=None,
+        conversation_id="mock-conversation-id",
         device_id=None,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
@@ -826,7 +837,7 @@ async def test_tts_wav_preferred_format(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         tts_input="This is a test.",
-        conversation_id=None,
+        conversation_id="mock-conversation-id",
         device_id=None,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
@@ -894,7 +905,7 @@ async def test_tts_dict_preferred_format(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         tts_input="This is a test.",
-        conversation_id=None,
+        conversation_id="mock-conversation-id",
         device_id=None,
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
@@ -980,6 +991,7 @@ async def test_sentence_trigger_overrides_conversation_agent(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="test trigger sentence",
+        conversation_id="mock-conversation-id",
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
@@ -1057,6 +1069,7 @@ async def test_prefer_local_intents(
 
     pipeline_input = assist_pipeline.pipeline.PipelineInput(
         intent_input="I'd like to order a stout please",
+        conversation_id="mock-conversation-id",
         run=assist_pipeline.pipeline.PipelineRun(
             hass,
             context=Context(),
@@ -1098,3 +1111,268 @@ async def test_prefer_local_intents(
             ]
             == "Order confirmed"
         )
+
+
+async def test_stt_language_used_instead_of_conversation_language(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the STT language is used first when the conversation language is '*' (all languages)."""
+    client = await hass_ws_client(hass)
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "homeassistant",
+            "conversation_language": MATCH_ALL,
+            "language": "en",
+            "name": "test_name",
+            "stt_engine": "test",
+            "stt_language": "en-US",
+            "tts_engine": "test",
+            "tts_language": "en-US",
+            "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": None,
+            "wake_word_id": None,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    pipeline_id = msg["result"]["id"]
+    pipeline = assist_pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        intent_input="test input",
+        conversation_id="mock-conversation-id",
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.INTENT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=events.append,
+        ),
+    )
+    await pipeline_input.validate()
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+        return_value=conversation.ConversationResult(
+            intent.IntentResponse(pipeline.language)
+        ),
+    ) as mock_async_converse:
+        await pipeline_input.execute()
+
+        # Check intent start event
+        assert process_events(events) == snapshot
+        intent_start: assist_pipeline.PipelineEvent | None = None
+        for event in events:
+            if event.type == assist_pipeline.PipelineEventType.INTENT_START:
+                intent_start = event
+                break
+
+        assert intent_start is not None
+
+        # STT language (en-US) should be used instead of '*'
+        assert intent_start.data.get("language") == pipeline.stt_language
+
+        # Check input to async_converse
+        mock_async_converse.assert_called_once()
+        assert (
+            mock_async_converse.call_args_list[0].kwargs.get("language")
+            == pipeline.stt_language
+        )
+
+
+async def test_tts_language_used_instead_of_conversation_language(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the TTS language is used after STT when the conversation language is '*' (all languages)."""
+    client = await hass_ws_client(hass)
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "homeassistant",
+            "conversation_language": MATCH_ALL,
+            "language": "en",
+            "name": "test_name",
+            "stt_engine": None,
+            "stt_language": None,
+            "tts_engine": None,
+            "tts_language": "en-us",
+            "tts_voice": "Arnold Schwarzenegger",
+            "wake_word_entity": None,
+            "wake_word_id": None,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    pipeline_id = msg["result"]["id"]
+    pipeline = assist_pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        intent_input="test input",
+        conversation_id="mock-conversation-id",
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.INTENT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=events.append,
+        ),
+    )
+    await pipeline_input.validate()
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+        return_value=conversation.ConversationResult(
+            intent.IntentResponse(pipeline.language)
+        ),
+    ) as mock_async_converse:
+        await pipeline_input.execute()
+
+        # Check intent start event
+        assert process_events(events) == snapshot
+        intent_start: assist_pipeline.PipelineEvent | None = None
+        for event in events:
+            if event.type == assist_pipeline.PipelineEventType.INTENT_START:
+                intent_start = event
+                break
+
+        assert intent_start is not None
+
+        # STT language (en-US) should be used instead of '*'
+        assert intent_start.data.get("language") == pipeline.tts_language
+
+        # Check input to async_converse
+        mock_async_converse.assert_called_once()
+        assert (
+            mock_async_converse.call_args_list[0].kwargs.get("language")
+            == pipeline.tts_language
+        )
+
+
+async def test_pipeline_language_used_instead_of_conversation_language(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the pipeline language is used last when the conversation language is '*' (all languages)."""
+    client = await hass_ws_client(hass)
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    await client.send_json_auto_id(
+        {
+            "type": "assist_pipeline/pipeline/create",
+            "conversation_engine": "homeassistant",
+            "conversation_language": MATCH_ALL,
+            "language": "en",
+            "name": "test_name",
+            "stt_engine": None,
+            "stt_language": None,
+            "tts_engine": None,
+            "tts_language": None,
+            "tts_voice": None,
+            "wake_word_entity": None,
+            "wake_word_id": None,
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    pipeline_id = msg["result"]["id"]
+    pipeline = assist_pipeline.async_get_pipeline(hass, pipeline_id)
+
+    pipeline_input = assist_pipeline.pipeline.PipelineInput(
+        intent_input="test input",
+        conversation_id="mock-conversation-id",
+        run=assist_pipeline.pipeline.PipelineRun(
+            hass,
+            context=Context(),
+            pipeline=pipeline,
+            start_stage=assist_pipeline.PipelineStage.INTENT,
+            end_stage=assist_pipeline.PipelineStage.INTENT,
+            event_callback=events.append,
+        ),
+    )
+    await pipeline_input.validate()
+
+    with patch(
+        "homeassistant.components.assist_pipeline.pipeline.conversation.async_converse",
+        return_value=conversation.ConversationResult(
+            intent.IntentResponse(pipeline.language)
+        ),
+    ) as mock_async_converse:
+        await pipeline_input.execute()
+
+        # Check intent start event
+        assert process_events(events) == snapshot
+        intent_start: assist_pipeline.PipelineEvent | None = None
+        for event in events:
+            if event.type == assist_pipeline.PipelineEventType.INTENT_START:
+                intent_start = event
+                break
+
+        assert intent_start is not None
+
+        # STT language (en-US) should be used instead of '*'
+        assert intent_start.data.get("language") == pipeline.language
+
+        # Check input to async_converse
+        mock_async_converse.assert_called_once()
+        assert (
+            mock_async_converse.call_args_list[0].kwargs.get("language")
+            == pipeline.language
+        )
+
+
+async def test_pipeline_from_audio_stream_with_cloud_auth_fail(
+    hass: HomeAssistant,
+    mock_stt_provider_entity: MockSTTProviderEntity,
+    init_components,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test creating a pipeline from an audio stream but the cloud authentication fails."""
+
+    events: list[assist_pipeline.PipelineEvent] = []
+
+    async def audio_data():
+        yield b"audio"
+
+    with patch.object(
+        mock_stt_provider_entity,
+        "async_process_audio_stream",
+        side_effect=hass_nabucasa.auth.Unauthenticated,
+    ):
+        await assist_pipeline.async_pipeline_from_audio_stream(
+            hass,
+            context=Context(),
+            event_callback=events.append,
+            stt_metadata=stt.SpeechMetadata(
+                language="",
+                format=stt.AudioFormats.WAV,
+                codec=stt.AudioCodecs.PCM,
+                bit_rate=stt.AudioBitRates.BITRATE_16,
+                sample_rate=stt.AudioSampleRates.SAMPLERATE_16000,
+                channel=stt.AudioChannels.CHANNEL_MONO,
+            ),
+            stt_stream=audio_data(),
+            audio_settings=assist_pipeline.AudioSettings(is_vad_enabled=False),
+        )
+
+    assert process_events(events) == snapshot
+    assert len(events) == 4  # run start, stt start, error, run end
+    assert events[2].type == assist_pipeline.PipelineEventType.ERROR
+    assert events[2].data["code"] == "cloud-auth-failed"

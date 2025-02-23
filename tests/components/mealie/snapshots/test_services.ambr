@@ -758,6 +758,32 @@
     }),
   })
 # ---
+# name: test_service_set_mealplan[payload2-kwargs2]
+  dict({
+    'mealplan': dict({
+      'description': None,
+      'entry_type': <MealplanEntryType.DINNER: 'dinner'>,
+      'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+      'household_id': None,
+      'mealplan_date': datetime.date(2024, 1, 22),
+      'mealplan_id': 230,
+      'recipe': dict({
+        'description': "Een traybake is eigenlijk altijd een goed idee. Deze zoete aardappel curry traybake dus ook. Waarom? Omdat je alleen maar wat groenten - en in dit geval kip - op een bakplaat (traybake dus) legt, hier wat kruiden aan toevoegt en deze in de oven schuift. Ideaal dus als je geen zin hebt om lang in de keuken te staan. Maar gewoon lekker op de bank wil ploffen om te wachten tot de oven klaar is. Joe! That\\'s what we like. Deze zoete aardappel curry traybake bevat behalve zoete aardappel en curry ook kikkererwten, kippendijfilet en bloemkoolroosjes. Je gebruikt yoghurt en limoen als een soort dressing. En je serveert deze heerlijke traybake met naanbrood. Je kunt natuurljk ook voor deze traybake met chipolataworstjes gaan. Wil je graag meer ovengerechten? Dan moet je eigenlijk even kijken naar onze Ovenbijbel. Onmisbaar in je keuken! We willen je deze zoete aardappelstamppot met prei ook niet onthouden. Megalekker bordje comfortfood als je \\'t ons vraagt.",
+        'group_id': '0bf60b2e-ca89-42a9-94d4-8f67ca72b157',
+        'household_id': None,
+        'image': 'AiIo',
+        'name': 'Zoete aardappel curry traybake',
+        'original_url': 'https://chickslovefood.com/recept/zoete-aardappel-curry-traybake/',
+        'recipe_id': 'c5f00a93-71a2-4e48-900f-d9ad0bb9de93',
+        'recipe_yield': '2 servings',
+        'slug': 'zoete-aardappel-curry-traybake',
+        'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+      }),
+      'title': None,
+      'user_id': '1ce8b5fe-04e8-4b80-aab1-d92c94685c6d',
+    }),
+  })
+# ---
 # name: test_service_set_random_mealplan
   dict({
     'mealplan': dict({

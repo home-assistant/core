@@ -17,7 +17,7 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SenseConfigEntry
 from .const import (
@@ -66,7 +66,7 @@ TREND_SENSOR_VARIANTS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: SenseConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sense sensor."""
     data = config_entry.runtime_data.data

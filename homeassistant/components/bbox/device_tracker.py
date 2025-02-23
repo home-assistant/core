@@ -16,10 +16,9 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import Throttle
-import homeassistant.util.dt as dt_util
+from homeassistant.util import Throttle, dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 

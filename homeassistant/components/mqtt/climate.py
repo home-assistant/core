@@ -44,8 +44,8 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.service_info.mqtt import ReceivePayloadType
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.typing import ConfigType, VolSchemaType
@@ -350,7 +350,7 @@ DISCOVERY_SCHEMA = vol.All(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MQTT climate through YAML and through MQTT discovery."""
     async_setup_entity_entry_helper(
@@ -521,7 +521,6 @@ class MqttClimate(MqttTemperatureControlEntity, ClimateEntity):
     _attributes_extra_blocked = MQTT_CLIMATE_ATTRIBUTES_BLOCKED
     _attr_target_temperature_low: float | None = None
     _attr_target_temperature_high: float | None = None
-    _enable_turn_on_off_backwards_compatibility = False
 
     @staticmethod
     def config_schema() -> VolSchemaType:

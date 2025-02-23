@@ -190,7 +190,17 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": False,
         "domain": "govee_ble",
+        "local_name": "GV5179*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
         "local_name": "GVH5127*",
+    },
+    {
+        "connectable": False,
+        "domain": "govee_ble",
+        "local_name": "GVH5130*",
     },
     {
         "connectable": False,
@@ -431,7 +441,7 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "led_ble",
-        "local_name": "MELK-*",
+        "local_name": "LD-0003",
     },
     {
         "domain": "medcom_ble",

@@ -10,12 +10,15 @@ from homeassistant.components.sensor import (
 from homeassistant.const import CONF_USERNAME, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import ImapConfigEntry
 from .const import DOMAIN
 from .coordinator import ImapDataUpdateCoordinator
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 IMAP_MAIL_COUNT_DESCRIPTION = SensorEntityDescription(
     key="imap_mail_count",
@@ -27,7 +30,9 @@ IMAP_MAIL_COUNT_DESCRIPTION = SensorEntityDescription(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ImapConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ImapConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Imap sensor."""
 

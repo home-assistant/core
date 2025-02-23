@@ -19,7 +19,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_WHOLE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AdvantageAirDataConfigEntry
 from .const import (
@@ -76,7 +76,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AdvantageAirDataConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AdvantageAir climate platform."""
 
@@ -102,7 +102,6 @@ class AdvantageAirAC(AdvantageAirAcEntity, ClimateEntity):
     _attr_max_temp = 32
     _attr_min_temp = 16
     _attr_name = None
-    _enable_turn_on_off_backwards_compatibility = False
     _support_preset = ClimateEntityFeature(0)
 
     def __init__(self, instance: AdvantageAirData, ac_key: str) -> None:
@@ -261,7 +260,6 @@ class AdvantageAirZone(AdvantageAirZoneEntity, ClimateEntity):
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_max_temp = 32
     _attr_min_temp = 16
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, instance: AdvantageAirData, ac_key: str, zone_key: str) -> None:
         """Initialize an AdvantageAir Zone control."""

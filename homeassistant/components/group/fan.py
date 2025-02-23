@@ -37,7 +37,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from .entity import GroupEntity
@@ -82,7 +85,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Fan Group config entry."""
     registry = er.async_get(hass)
@@ -109,7 +112,6 @@ class FanGroup(GroupEntity, FanEntity):
     """Representation of a FanGroup."""
 
     _attr_available: bool = False
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
         """Initialize a FanGroup entity."""

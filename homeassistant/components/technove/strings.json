@@ -90,11 +90,5 @@
     "set_charging_enabled_on_auto_charge": {
       "message": "Cannot enable or disable charging when auto-charge is enabled. Try disabling auto-charge first."
     }
-  },
-  "issues": {
-    "deprecated_entity_is_session_active": {
-      "title": "The TechnoVE {sensor_name} binary sensor is deprecated",
-      "description": "`{entity}` is deprecated.\nPlease update your automations and scripts to replace the binary sensor entity with the newly added switch entity.\nWhen you are done migrating you can disable `{entity}`."
-    }
   }
 }

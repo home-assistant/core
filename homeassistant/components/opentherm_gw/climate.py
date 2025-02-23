@@ -22,7 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenThermGatewayHub
 from .const import (
@@ -50,7 +50,7 @@ class OpenThermClimateEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an OpenTherm Gateway climate entity."""
     ents = []
@@ -85,7 +85,7 @@ class OpenThermClimate(OpenThermStatusEntity, ClimateEntity):
     _away_mode_b: int | None = None
     _away_state_a = False
     _away_state_b = False
-    _enable_turn_on_off_backwards_compatibility = False
+
     _target_temperature: float | None = None
     _new_target_temperature: float | None = None
     entity_description: OpenThermClimateEntityDescription
