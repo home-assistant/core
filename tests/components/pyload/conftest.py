@@ -10,8 +10,10 @@ from homeassistant.components.pyload.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
+    CONF_PATH,
     CONF_PORT,
     CONF_SSL,
+    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
@@ -19,9 +21,16 @@ from homeassistant.const import (
 from tests.common import MockConfigEntry
 
 USER_INPUT = {
+    CONF_URL: "https://pyload.local:8000/prefix",
+    CONF_PASSWORD: "test-password",
+    CONF_USERNAME: "test-username",
+    CONF_VERIFY_SSL: False,
+}
+USER_INPUT_RESULT = {
     CONF_HOST: "pyload.local",
     CONF_PASSWORD: "test-password",
     CONF_PORT: 8000,
+    CONF_PATH: "/prefix",
     CONF_SSL: True,
     CONF_USERNAME: "test-username",
     CONF_VERIFY_SSL: False,
@@ -36,6 +45,7 @@ NEW_INPUT = {
     CONF_HOST: "pyload.local",
     CONF_PASSWORD: "new-password",
     CONF_PORT: 8000,
+    CONF_PATH: "/prefix",
     CONF_SSL: True,
     CONF_USERNAME: "new-username",
     CONF_VERIFY_SSL: False,
@@ -97,5 +107,28 @@ def mock_pyloadapi() -> Generator[MagicMock]:
 def mock_config_entry() -> MockConfigEntry:
     """Mock pyLoad configuration entry."""
     return MockConfigEntry(
-        domain=DOMAIN, title=DEFAULT_NAME, data=USER_INPUT, entry_id="XXXXXXXXXXXXXX"
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data=USER_INPUT_RESULT,
+        entry_id="XXXXXXXXXXXXXX",
+    )
+
+
+@pytest.fixture(name="config_entry_migrate")
+def mock_config_entry_migrate() -> MockConfigEntry:
+    """Mock pyLoad configuration entry for migration."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=DEFAULT_NAME,
+        data={
+            CONF_HOST: "pyload.local",
+            CONF_PASSWORD: "test-password",
+            CONF_PORT: 8000,
+            CONF_SSL: True,
+            CONF_USERNAME: "test-username",
+            CONF_VERIFY_SSL: False,
+        },
+        version=1,
+        minor_version=0,
+        entry_id="XXXXXXXXXXXXXX",
     )
