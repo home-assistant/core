@@ -1,4 +1,5 @@
 rules:
+  # Bronze
   action-setup:
     status: exempt
     comment: No actions.
@@ -29,3 +30,23 @@ rules:
   test-before-configure: done
   test-before-setup: done
   unique-config-entry: done
+
+  # Silver
+  action-exceptions: done
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: No configuration options.
+  docs-installation-parameters: done
+  entity-unavailable:
+    status: exempt
+    comment: No entities.
+  integration-owner: done
+  log-when-unavailable:
+    status: exempt
+    comment: No entities.
+  parallel-updates:
+    status: exempt
+    comment: No actions and no entities.
+  reauthentication-flow: done
+  test-coverage: done
