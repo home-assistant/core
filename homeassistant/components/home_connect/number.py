@@ -84,6 +84,11 @@ NUMBERS = (
         translation_key="wine_compartment_3_setpoint_temperature",
     ),
     NumberEntityDescription(
+        key=SettingKey.COOKING_HOOD_COLOR_TEMPERATURE_PERCENT,
+        translation_key="color_temperature_percent",
+        native_unit_of_measurement="%",
+    ),
+    NumberEntityDescription(
         key=SettingKey.LAUNDRY_CARE_WASHER_I_DOS_1_BASE_LEVEL,
         device_class=NumberDeviceClass.VOLUME,
         translation_key="washer_i_dos_1_base_level",

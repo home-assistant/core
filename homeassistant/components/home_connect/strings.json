@@ -874,6 +874,9 @@
       "wine_compartment_3_setpoint_temperature": {
         "name": "Wine compartment 3 temperature"
       },
+      "color_temperature_percent": {
+        "name": "Functional light color temperature percent"
+      },
       "washer_i_dos_1_base_level": {
         "name": "i-Dos 1 base level"
       },
