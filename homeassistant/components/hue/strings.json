@@ -115,7 +115,11 @@
               "sunset": "Sunset",
               "fire": "Fire",
               "prism": "Prism",
-              "opal": "Opal"
+              "opal": "Opal",
+              "underwater": "Underwater",
+              "cosmos": "Cosmos",
+              "sunbeam": "Sunbeam",
+              "enchant": "Enchant"
             }
           }
         }
