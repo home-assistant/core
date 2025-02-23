@@ -19,7 +19,7 @@ from homeassistant.components.backup_sftp.const import (
 
 from tests.common import MockConfigEntry
 
-CONFIG_ENTRY_TITLE = "SFTP Backup - testsshuser@127.0.0.1:22"
+CONFIG_ENTRY_TITLE = "testsshuser@127.0.0.1"
 TEST_AGENT_ID = "127.0.0.1.22.testsshuser.tmp.backup.location"
 USER_INPUT = {
     CONF_HOST: "127.0.0.1",

@@ -59,7 +59,7 @@ async def test_backup_sftp_full_flow(
 
     # Verify that a new config entry is created.
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    expected_title = f"SFTP Backup - {USER_INPUT[CONF_USERNAME]}@{USER_INPUT[CONF_HOST]}:{USER_INPUT[CONF_PORT]}"
+    expected_title = f"{USER_INPUT[CONF_USERNAME]}@{USER_INPUT[CONF_HOST]}"
     assert result["title"] == expected_title
     assert result["data"] == USER_INPUT
 
