@@ -94,10 +94,3 @@ class CertexpiryConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=self._errors,
         )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a config entry.
-
-        Only host was required in the yaml file all other fields are optional
-        """
-        return await self.async_step_user(import_data)

@@ -9,8 +9,7 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from . import PyLoadConfigEntry
-from .coordinator import PyLoadData
+from .coordinator import PyLoadConfigEntry, PyLoadData
 
 TO_REDACT = {CONF_USERNAME, CONF_PASSWORD, CONF_HOST}
 

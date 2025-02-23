@@ -7,8 +7,8 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TwenteMilieuConfigEntry, TwenteMilieuDataUpdateCoordinator
 from .const import DOMAIN
+from .coordinator import TwenteMilieuConfigEntry, TwenteMilieuDataUpdateCoordinator
 
 
 class TwenteMilieuEntity(CoordinatorEntity[TwenteMilieuDataUpdateCoordinator], Entity):

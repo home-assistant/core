@@ -152,7 +152,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             paried_device_id := device_pairing_mapping.get(device.device_id)
         ) is not None:
             paried_device = yolink_home.get_device(paried_device_id)
-        device_coordinator = YoLinkCoordinator(hass, device, paried_device)
+        device_coordinator = YoLinkCoordinator(hass, entry, device, paried_device)
         try:
             await device_coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:

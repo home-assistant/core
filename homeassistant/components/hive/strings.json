@@ -35,7 +35,7 @@
     },
     "error": {
       "invalid_username": "Failed to sign into Hive. Your email address is not recognised.",
-      "invalid_password": "Failed to sign into Hive. Incorrect password please try again.",
+      "invalid_password": "Failed to sign into Hive. Incorrect password, please try again.",
       "invalid_code": "Failed to sign into Hive. Your two-factor authentication code was incorrect.",
       "no_internet_available": "An internet connection is required to connect to Hive.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
@@ -52,7 +52,7 @@
         "title": "Options for Hive",
         "description": "Update the scan interval to poll for data more often.",
         "data": {
-          "scan_interval": "Scan Interval (seconds)"
+          "scan_interval": "Scan interval (seconds)"
         }
       }
     }
@@ -60,15 +60,15 @@
   "services": {
     "boost_heating_on": {
       "name": "Boost heating on",
-      "description": "Sets the boost mode ON defining the period of time and the desired target temperature for the boost.",
+      "description": "Sets the boost mode ON, defining the period of time and the desired target temperature for the boost.",
       "fields": {
         "time_period": {
-          "name": "Time Period",
-          "description": "Set the time period for the boost."
+          "name": "[%key:component::hive::services::boost_hot_water::fields::time_period::name%]",
+          "description": "[%key:component::hive::services::boost_hot_water::fields::time_period::description%]"
         },
         "temperature": {
           "name": "Temperature",
-          "description": "Set the target temperature for the boost period."
+          "description": "The target temperature for the boost period."
         }
       }
     },
@@ -78,21 +78,21 @@
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Select entity_id to turn boost off."
+          "description": "The entity ID to turn boost off."
         }
       }
     },
     "boost_hot_water": {
       "name": "Boost hotwater",
-      "description": "Sets the boost mode ON or OFF defining the period of time for the boost.",
+      "description": "Sets the boost mode ON or OFF, defining the period of time for the boost.",
       "fields": {
         "entity_id": {
           "name": "Entity ID",
-          "description": "Select entity_id to boost."
+          "description": "The entity ID to boost."
         },
         "time_period": {
           "name": "Time period",
-          "description": "Set the time period for the boost."
+          "description": "The time period for the boost."
         },
         "on_off": {
           "name": "[%key:common::config_flow::data::mode%]",

@@ -50,7 +50,7 @@ from homeassistant.helpers.entity_platform import EntityPlatform
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.read_only_dict import ReadOnlyDict
 from homeassistant.util.unit_system import UnitSystem
 
@@ -1970,7 +1970,7 @@ def test_is_state(hass: HomeAssistant) -> None:
 
 def test_is_state_attr(hass: HomeAssistant) -> None:
     """Test is_state_attr method."""
-    hass.states.async_set("test.object", "available", {"mode": "on"})
+    hass.states.async_set("test.object", "available", {"mode": "on", "exists": None})
     tpl = template.Template(
         """
 {% if is_state_attr("test.object", "mode", "on") %}yes{% else %}no{% endif %}
@@ -2002,6 +2002,22 @@ def test_is_state_attr(hass: HomeAssistant) -> None:
         hass,
     )
     assert tpl.async_render() == "test.object"
+
+    tpl = template.Template(
+        """
+{% if is_state_attr("test.object", "exists", None) %}yes{% else %}no{% endif %}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == "yes"
+
+    tpl = template.Template(
+        """
+{% if is_state_attr("test.object", "noexist", None) %}yes{% else %}no{% endif %}
+            """,
+        hass,
+    )
+    assert tpl.async_render() == "no"
 
 
 def test_state_attr(hass: HomeAssistant) -> None:
@@ -2110,6 +2126,7 @@ async def test_state_translated(
     hass.states.async_set("domain.is_unknown", "unknown", attributes={})
 
     config_entry = MockConfigEntry(domain="light")
+    config_entry.add_to_hass(hass)
     entity_registry.async_get_or_create(
         "light",
         "hue",

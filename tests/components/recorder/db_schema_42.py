@@ -66,7 +66,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, Event, EventOrigin, State
 from homeassistant.helpers.json import JSON_DUMP, json_bytes, json_bytes_strip_null
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import (
     JSON_DECODE_EXCEPTIONS,
     json_loads,

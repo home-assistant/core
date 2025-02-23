@@ -8,7 +8,6 @@ from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import LaMarzoccoDeviceInfo
 import pytest
 
-from homeassistant.components.dhcp import DhcpServiceInfo
 from homeassistant.components.lamarzocco.config_flow import CONF_MACHINE
 from homeassistant.components.lamarzocco.const import CONF_USE_BLUETOOTH, DOMAIN
 from homeassistant.config_entries import (
@@ -28,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from . import USER_INPUT, async_init_integration, get_bluetooth_service_info
 

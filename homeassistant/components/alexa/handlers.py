@@ -359,7 +359,7 @@ async def async_api_set_color_temperature(
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_KELVIN: kelvin},
+        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: kelvin},
         blocking=False,
         context=context,
     )
@@ -376,14 +376,14 @@ async def async_api_decrease_color_temp(
 ) -> AlexaResponse:
     """Process a decrease color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes[light.ATTR_COLOR_TEMP])
-    max_mireds = int(entity.attributes[light.ATTR_MAX_MIREDS])
+    current = int(entity.attributes[light.ATTR_COLOR_TEMP_KELVIN])
+    min_kelvin = int(entity.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN])
 
-    value = min(max_mireds, current + 50)
+    value = max(min_kelvin, current - 500)
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP: value},
+        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: value},
         blocking=False,
         context=context,
     )
@@ -400,14 +400,14 @@ async def async_api_increase_color_temp(
 ) -> AlexaResponse:
     """Process an increase color temperature request."""
     entity = directive.entity
-    current = int(entity.attributes[light.ATTR_COLOR_TEMP])
-    min_mireds = int(entity.attributes[light.ATTR_MIN_MIREDS])
+    current = int(entity.attributes[light.ATTR_COLOR_TEMP_KELVIN])
+    max_kelvin = int(entity.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN])
 
-    value = max(min_mireds, current - 50)
+    value = min(max_kelvin, current + 500)
     await hass.services.async_call(
         entity.domain,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP: value},
+        {ATTR_ENTITY_ID: entity.entity_id, light.ATTR_COLOR_TEMP_KELVIN: value},
         blocking=False,
         context=context,
     )
@@ -527,6 +527,7 @@ async def async_api_unlock(
         "hi-IN",
         "it-IT",
         "ja-JP",
+        "nl-NL",
         "pt-BR",
     }:
         msg = (
@@ -1530,7 +1531,7 @@ async def async_api_adjust_range(
     data: dict[str, Any] = {ATTR_ENTITY_ID: entity.entity_id}
     range_delta = directive.payload["rangeValueDelta"]
     range_delta_default = bool(directive.payload["rangeValueDeltaDefault"])
-    response_value: int | None = 0
+    response_value: float | None = 0
 
     # Cover Position
     if instance == f"{cover.DOMAIN}.{cover.ATTR_POSITION}":

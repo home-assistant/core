@@ -3,12 +3,13 @@
 import asyncio
 from collections.abc import Collection
 import logging
+from typing import Literal
 
 from pywaze.route_calculator import CalcRoutesResponse, WazeRouteCalculator, WRCError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_REGION, Platform
+from homeassistant.const import CONF_REGION, Platform, UnitOfLength
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -22,7 +23,10 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
     TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
+from homeassistant.util.unit_conversion import DistanceConverter
 
 from .const import (
     CONF_AVOID_FERRIES,
@@ -38,6 +42,7 @@ from .const import (
     DEFAULT_FILTER,
     DEFAULT_VEHICLE_TYPE,
     DOMAIN,
+    IMPERIAL_UNITS,
     METRIC_UNITS,
     REGIONS,
     SEMAPHORE,
@@ -80,6 +85,18 @@ SERVICE_GET_TRAVEL_TIMES_SCHEMA = vol.Schema(
         vol.Optional(CONF_AVOID_TOLL_ROADS, default=False): BooleanSelector(),
         vol.Optional(CONF_AVOID_SUBSCRIPTION_ROADS, default=False): BooleanSelector(),
         vol.Optional(CONF_AVOID_FERRIES, default=False): BooleanSelector(),
+        vol.Optional(CONF_INCL_FILTER): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            ),
+        ),
+        vol.Optional(CONF_EXCL_FILTER): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                multiple=True,
+            ),
+        ),
     }
 )
 
@@ -107,6 +124,9 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
             avoid_subscription_roads=service.data[CONF_AVOID_SUBSCRIPTION_ROADS],
             avoid_ferries=service.data[CONF_AVOID_FERRIES],
             realtime=service.data[CONF_REALTIME],
+            units=service.data[CONF_UNITS],
+            incl_filters=service.data.get(CONF_INCL_FILTER, DEFAULT_FILTER),
+            excl_filters=service.data.get(CONF_EXCL_FILTER, DEFAULT_FILTER),
         )
         return {"routes": [vars(route) for route in response]} if response else None
 
@@ -129,6 +149,7 @@ async def async_get_travel_times(
     avoid_subscription_roads: bool,
     avoid_ferries: bool,
     realtime: bool,
+    units: Literal["metric", "imperial"] = "metric",
     incl_filters: Collection[str] | None = None,
     excl_filters: Collection[str] | None = None,
 ) -> list[CalcRoutesResponse] | None:
@@ -193,6 +214,20 @@ async def async_get_travel_times(
         filtered_routes = [
             route for route in incl_routes if not should_exclude_route(route)
         ]
+
+        if units == IMPERIAL_UNITS:
+            filtered_routes = [
+                CalcRoutesResponse(
+                    name=route.name,
+                    distance=DistanceConverter.convert(
+                        route.distance, UnitOfLength.KILOMETERS, UnitOfLength.MILES
+                    ),
+                    duration=route.duration,
+                    street_names=route.street_names,
+                )
+                for route in filtered_routes
+                if route.distance is not None
+            ]
 
         if len(filtered_routes) < 1:
             _LOGGER.warning("No routes found")

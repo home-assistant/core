@@ -13,11 +13,11 @@ from boschshcpy.information import SHCInformation
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.bosch_shc.config_flow import write_tls_asset
 from homeassistant.components.bosch_shc.const import CONF_SHC_CERT, CONF_SHC_KEY, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -25,7 +25,7 @@ MOCK_SETTINGS = {
     "name": "Test name",
     "device": {"mac": "test-mac", "hostname": "test-host"},
 }
-DISCOVERY_INFO = zeroconf.ZeroconfServiceInfo(
+DISCOVERY_INFO = ZeroconfServiceInfo(
     ip_address=ip_address("1.1.1.1"),
     ip_addresses=[ip_address("1.1.1.1")],
     hostname="shc012345.local.",
@@ -615,7 +615,7 @@ async def test_zeroconf_not_bosch_shc(hass: HomeAssistant) -> None:
     """Test we filter out non-bosch_shc devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.1.1.1"),
             ip_addresses=[ip_address("1.1.1.1")],
             hostname="mock_hostname",

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup madVR Envy",
+        "title": "Set up madVR Envy",
         "description": "Your device needs to be on in order to add the integation.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
@@ -21,8 +21,8 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "host": "The hostname or IP address of your madVR Envy device.",
-          "port": "The port your madVR Envy is listening on. In 99% of cases, leave this as the default."
+          "host": "[%key:component::madvr::config::step::user::data_description::host%]",
+          "port": "[%key:component::madvr::config::step::user::data_description::port%]"
         }
       }
     },
@@ -33,7 +33,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "no_mac": "A MAC address was not found. It required to identify the device. Please ensure your device is connectable."
+      "no_mac": "A MAC address was not found. It is required to identify the device. Please ensure your device is connectable."
     }
   },
   "entity": {

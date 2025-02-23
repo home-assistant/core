@@ -7,7 +7,6 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
-from universal_silabs_flasher.const import ApplicationType
 
 from homeassistant.components.hassio import AddonInfo, AddonState
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
@@ -17,12 +16,14 @@ from homeassistant.components.homeassistant_hardware.firmware_config_flow import
     BaseFirmwareOptionsFlow,
 )
 from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
     get_otbr_addon_manager,
     get_zigbee_flasher_addon_manager,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.setup import async_setup_component
 
 from tests.common import (
     MockConfigEntry,
@@ -106,7 +107,7 @@ class FakeFirmwareOptionsFlowHandler(BaseFirmwareOptionsFlow):
 
 
 @pytest.fixture(autouse=True)
-def mock_test_firmware_platform(
+async def mock_test_firmware_platform(
     hass: HomeAssistant,
 ) -> Generator[None]:
     """Fixture for a test config flow."""
@@ -115,6 +116,8 @@ def mock_test_firmware_platform(
     )
     mock_integration(hass, mock_module)
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow")
+
+    await async_setup_component(hass, "homeassistant_hardware", {})
 
     with mock_config_flow(TEST_DOMAIN, FakeFirmwareConfigFlow):
         yield
@@ -190,11 +193,19 @@ def mock_addon_info(
             return_value=mock_otbr_manager,
         ),
         patch(
+            "homeassistant.components.homeassistant_hardware.util.get_otbr_addon_manager",
+            return_value=mock_otbr_manager,
+        ),
+        patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.get_zigbee_flasher_addon_manager",
             return_value=mock_flasher_manager,
         ),
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.is_hassio",
+            return_value=is_hassio,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util.is_hassio",
             return_value=is_hassio,
         ),
         patch(

@@ -204,9 +204,9 @@ async def test_browse_media_root_multiple_consoles(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    bootstrap2 = bootstrap.copy()
+    bootstrap2 = bootstrap.model_copy()
     bootstrap2._has_media = True
-    bootstrap2.nvr = bootstrap.nvr.copy()
+    bootstrap2.nvr = bootstrap.nvr.model_copy()
     bootstrap2.nvr.id = "test_id2"
     bootstrap2.nvr.mac = "A2E00C826924"
     bootstrap2.nvr.name = "UnifiProtect2"
@@ -270,9 +270,9 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    bootstrap2 = bootstrap.copy()
+    bootstrap2 = bootstrap.model_copy()
     bootstrap2._has_media = False
-    bootstrap2.nvr = bootstrap.nvr.copy()
+    bootstrap2.nvr = bootstrap.nvr.model_copy()
     bootstrap2.nvr.id = "test_id2"
     bootstrap2.nvr.mac = "A2E00C826924"
     bootstrap2.nvr.name = "UnifiProtect2"

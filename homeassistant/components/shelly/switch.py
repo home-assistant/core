@@ -15,7 +15,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -77,7 +77,7 @@ RPC_SCRIPT_SWITCH = RpcSwitchDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -90,7 +90,7 @@ async def async_setup_entry(
 def async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for block device."""
     coordinator = config_entry.runtime_data.block
@@ -120,9 +120,8 @@ def async_setup_block_entry(
     relay_blocks = []
     assert coordinator.device.blocks
     for block in coordinator.device.blocks:
-        if (
-            block.type != "relay"
-            or block.channel is not None
+        if block.type != "relay" or (
+            block.channel is not None
             and is_block_channel_type_light(
                 coordinator.device.settings, int(block.channel)
             )
@@ -143,7 +142,7 @@ def async_setup_block_entry(
 def async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
     coordinator = config_entry.runtime_data.rpc

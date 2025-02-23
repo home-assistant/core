@@ -137,7 +137,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "extra_state_attributes",
     "force_update",
     "icon",
-    "name",
+    "friendly_name",
     "should_poll",
     "state",
     "supported_features",

@@ -13,16 +13,15 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import OpowerCoordinator
+from .coordinator import OpowerConfigEntry, OpowerCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -97,7 +96,7 @@ ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.start_date,
+        value_fn=lambda data: str(data.start_date),
     ),
     OpowerEntityDescription(
         key="elec_end_date",
@@ -105,7 +104,7 @@ ELEC_SENSORS: tuple[OpowerEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.end_date,
+        value_fn=lambda data: str(data.end_date),
     ),
 )
 GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
@@ -169,7 +168,7 @@ GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.start_date,
+        value_fn=lambda data: str(data.start_date),
     ),
     OpowerEntityDescription(
         key="gas_end_date",
@@ -177,17 +176,19 @@ GAS_SENSORS: tuple[OpowerEntityDescription, ...] = (
         device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        value_fn=lambda data: data.end_date,
+        value_fn=lambda data: str(data.end_date),
     ),
 )
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: OpowerConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Opower sensor."""
 
-    coordinator: OpowerCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities: list[OpowerSensor] = []
     forecasts = coordinator.data.values()
     for forecast in forecasts:

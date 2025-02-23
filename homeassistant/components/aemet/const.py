@@ -51,8 +51,9 @@ from homeassistant.components.weather import (
 from homeassistant.const import Platform
 
 ATTRIBUTION = "Powered by AEMET OpenData"
+CONF_RADAR_UPDATES = "radar_updates"
 CONF_STATION_UPDATES = "station_updates"
-PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
+PLATFORMS = [Platform.IMAGE, Platform.SENSOR, Platform.WEATHER]
 DEFAULT_NAME = "AEMET"
 DOMAIN = "aemet"
 

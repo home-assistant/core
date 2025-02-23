@@ -4,14 +4,9 @@ The only mocking required is of the underlying SmartThings API object so
 real HTTP calls are not initiated during testing.
 """
 
-from pysmartthings import ATTRIBUTES, CAPABILITIES, Attribute, Capability
+from pysmartthings import Attribute, Capability
 
-from homeassistant.components.sensor import (
-    DEVICE_CLASSES,
-    DOMAIN as SENSOR_DOMAIN,
-    STATE_CLASSES,
-)
-from homeassistant.components.smartthings import sensor
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -27,20 +22,6 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .conftest import setup_platform
-
-
-async def test_mapping_integrity() -> None:
-    """Test ensures the map dicts have proper integrity."""
-    for capability, maps in sensor.CAPABILITY_TO_SENSORS.items():
-        assert capability in CAPABILITIES, capability
-        for sensor_map in maps:
-            assert sensor_map.attribute in ATTRIBUTES, sensor_map.attribute
-            if sensor_map.device_class:
-                assert (
-                    sensor_map.device_class in DEVICE_CLASSES
-                ), sensor_map.device_class
-            if sensor_map.state_class:
-                assert sensor_map.state_class in STATE_CLASSES, sensor_map.state_class
 
 
 async def test_entity_state(hass: HomeAssistant, device_factory) -> None:
@@ -75,7 +56,9 @@ async def test_entity_three_axis_invalid_state(
 ) -> None:
     """Tests the state attributes properly match the three axis types."""
     device = device_factory(
-        "Three Axis", [Capability.three_axis], {Attribute.three_axis: []}
+        "Three Axis",
+        [Capability.three_axis],
+        {Attribute.three_axis: [None, None, None]},
     )
     await setup_platform(hass, SENSOR_DOMAIN, devices=[device])
     state = hass.states.get("sensor.three_axis_x_coordinate")
