@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, Mock, patch
 
 from homematicip.base.base_connection import HmipConnectionError
+from homematicip.connection.connection_context import ConnectionContext
 
 from homeassistant.components.homematicip_cloud.const import (
     CONF_ACCESSPOINT,
@@ -105,9 +106,15 @@ async def test_load_entry_fails_due_to_connection_error(
     """Test load entry fails due to connection error."""
     hmip_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
-        side_effect=HmipConnectionError,
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.get_current_state_async",
+            side_effect=HmipConnectionError,
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+            return_value=ConnectionContext(),
+        ),
     ):
         assert await async_setup_component(hass, HMIPC_DOMAIN, {})
 

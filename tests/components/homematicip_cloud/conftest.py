@@ -129,7 +129,7 @@ def simple_mock_home_fixture():
         dutyCycle=88,
         connected=True,
         currentAPVersion="2.0.36",
-        init=AsyncMock(),
+        init_async=AsyncMock(),
         get_current_state_async=AsyncMock(),
     )
 
@@ -147,7 +147,7 @@ def mock_connection_init_fixture():
 
     with (
         patch(
-            "homeassistant.components.homematicip_cloud.hap.AsyncHome.init",
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome.init_async",
             return_value=None,
             new_callable=AsyncMock,
         ),

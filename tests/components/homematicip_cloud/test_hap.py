@@ -129,10 +129,10 @@ async def test_hap_reset_unloads_entry_if_setup(
     assert hass.data[HMIPC_DOMAIN] == {}
 
 
-# @patch(
-#     "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context",
-#     return_value=ConnectionContext(),
-# )
+@patch(
+    "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+    return_value=ConnectionContext(),
+)
 async def test_hap_create(
     hass: HomeAssistant, hmip_config_entry: MockConfigEntry, simple_mock_home
 ) -> None:
@@ -145,6 +145,10 @@ async def test_hap_create(
             assert await hap.async_setup()
 
 
+@patch(
+    "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+    return_value=ConnectionContext(),
+)
 async def test_hap_create_exception(
     hass: HomeAssistant, hmip_config_entry: MockConfigEntry, mock_connection_init
 ) -> None:
@@ -182,7 +186,7 @@ async def test_auth_create(hass: HomeAssistant, simple_mock_auth) -> None:
             return_value=simple_mock_auth,
         ),
         patch(
-            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context",
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
             return_value=ConnectionContext(),
         ),
     ):
@@ -203,7 +207,7 @@ async def test_auth_create_exception(hass: HomeAssistant, simple_mock_auth) -> N
             return_value=simple_mock_auth,
         ),
         patch(
-            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context",
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
             return_value=ConnectionContext(),
         ),
     ):
@@ -215,7 +219,7 @@ async def test_auth_create_exception(hass: HomeAssistant, simple_mock_auth) -> N
             return_value=simple_mock_auth,
         ),
         patch(
-            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context",
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
             return_value=ConnectionContext(),
         ),
     ):
