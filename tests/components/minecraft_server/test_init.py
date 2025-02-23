@@ -208,7 +208,7 @@ async def test_entry_migration(
     entity_registry: er.EntityRegistry,
     v1_mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test entry migration from version 1 to 4, where host and port is required for the connection to the server."""
+    """Test entry migration from version 1 to 3, where host and port is required for the connection to the server."""
     v1_mock_config_entry.add_to_hass(hass)
 
     device_entry_id = create_v1_mock_device_entry(hass, v1_mock_config_entry.entry_id)
@@ -242,9 +242,10 @@ async def test_entry_migration(
     # Test migrated config entry.
     assert migrated_config_entry.unique_id is None
     assert migrated_config_entry.data == {
+        CONF_NAME: DEFAULT_NAME,
         CONF_ADDRESS: TEST_ADDRESS,
     }
-    assert migrated_config_entry.version == 4
+    assert migrated_config_entry.version == 3
     assert migrated_config_entry.state is ConfigEntryState.LOADED
 
     # Test migrated device entry.
@@ -272,7 +273,7 @@ async def test_entry_migration(
 async def test_entry_migration_host_only(
     hass: HomeAssistant, v1_mock_config_entry: MockConfigEntry
 ) -> None:
-    """Test entry migration from version 1 to 4, where host alone is sufficient for the connection to the server."""
+    """Test entry migration from version 1 to 3, where host alone is sufficient for the connection to the server."""
     v1_mock_config_entry.add_to_hass(hass)
 
     device_entry_id = create_v1_mock_device_entry(hass, v1_mock_config_entry.entry_id)
@@ -300,9 +301,10 @@ async def test_entry_migration_host_only(
     # Test migrated config entry.
     assert v1_mock_config_entry.unique_id is None
     assert v1_mock_config_entry.data == {
+        CONF_NAME: DEFAULT_NAME,
         CONF_ADDRESS: TEST_HOST,
     }
-    assert v1_mock_config_entry.version == 4
+    assert v1_mock_config_entry.version == 3
     assert v1_mock_config_entry.state is ConfigEntryState.LOADED
 
 

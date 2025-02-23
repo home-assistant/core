@@ -22,7 +22,7 @@ def java_mock_config_entry() -> MockConfigEntry:
             CONF_ADDRESS: TEST_ADDRESS,
             CONF_TYPE: MinecraftServerType.JAVA_EDITION,
         },
-        version=4,
+        version=3,
     )
 
 
@@ -37,5 +37,5 @@ def bedrock_mock_config_entry() -> MockConfigEntry:
             CONF_ADDRESS: TEST_ADDRESS,
             CONF_TYPE: MinecraftServerType.BEDROCK_EDITION,
         },
-        version=4,
+        version=3,
     )

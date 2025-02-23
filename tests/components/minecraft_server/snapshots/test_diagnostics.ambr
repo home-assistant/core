@@ -4,7 +4,7 @@
     'config_entry': dict({
       'entry_id': '01234567890123456789012345678901',
       'unique_id': None,
-      'version': 4,
+      'version': 3,
     }),
     'config_entry_data': dict({
       'address': '**REDACTED**',
@@ -31,7 +31,7 @@
     'config_entry': dict({
       'entry_id': '01234567890123456789012345678901',
       'unique_id': None,
-      'version': 4,
+      'version': 3,
     }),
     'config_entry_data': dict({
       'address': '**REDACTED**',

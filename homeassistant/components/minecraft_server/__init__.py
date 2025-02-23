@@ -9,7 +9,7 @@ import dns.rdata
 import dns.rdataclass
 import dns.rdatatype
 
-from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_NAME, CONF_PORT, Platform
+from homeassistant.const import CONF_ADDRESS, CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -126,23 +126,6 @@ async def async_migrate_entry(
         hass.config_entries.async_update_entry(config_entry, data=new_data, version=3)
 
         _LOGGER.debug("Migration to version 3 successful")
-
-    # 3 --> 4: Remove name in config entry.
-    if config_entry.version == 3:
-        _LOGGER.debug("Migrating from version 3")
-
-        config_data = config_entry.data
-
-        # Migrate config entry.
-        _LOGGER.debug(
-            "Migrating config entry, removing name '%s'", config_data.get("name", "")
-        )
-
-        new_data = config_data.copy()
-        del new_data[CONF_NAME]
-        hass.config_entries.async_update_entry(config_entry, data=new_data, version=4)
-
-        _LOGGER.debug("Migration to version 4 successful")
 
     return True
 
