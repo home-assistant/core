@@ -59,6 +59,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR,
     CONF_FOR_EACH,
+    CONF_FORCE_CONTINUE_ON_ERROR,
     CONF_ID,
     CONF_IF,
     CONF_MATCH,
@@ -1418,6 +1419,7 @@ SCRIPT_ACTION_BASE_SCHEMA: VolDictType = {
     vol.Optional(CONF_ALIAS): string,
     vol.Optional(CONF_CONTINUE_ON_ERROR): boolean,
     vol.Optional(CONF_ENABLED): vol.Any(boolean, template),
+    vol.Optional(CONF_FORCE_CONTINUE_ON_ERROR): boolean,
 }
 
 EVENT_SCHEMA = vol.Schema(

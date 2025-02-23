@@ -5980,6 +5980,54 @@ async def test_continue_on_error_unknown_error(hass: HomeAssistant) -> None:
     )
 
 
+async def test_force_continue_on_non_ha_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test force continue on error ignores unknown errors from e.g., libraries."""
+    await async_setup_component(hass, "homeassistant", {})
+
+    class MyLibraryError(Exception):
+        """My custom library error."""
+
+    @callback
+    def some_service(service: ServiceCall) -> None:
+        """Break this service with an error."""
+        raise MyLibraryError("It is not working!")
+
+    hass.services.async_register("some", "service", some_service)
+
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "force_continue_on_error": True,
+                "action": "some.service",
+            },
+        ]
+    )
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    await script_obj.async_run(context=Context())
+
+    assert_action_trace(
+        {
+            "0": [
+                {
+                    "result": {
+                        "params": {
+                            "domain": "some",
+                            "service": "service",
+                            "service_data": {},
+                            "target": {},
+                        },
+                        "running_script": False,
+                    }
+                }
+            ]
+        },
+        expected_script_execution="finished",
+    )
+
+
 @pytest.mark.parametrize("enabled_value", [False, "{{ 1 == 9 }}"])
 async def test_disabled_actions(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture, enabled_value: bool | str

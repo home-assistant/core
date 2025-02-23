@@ -47,6 +47,7 @@ from homeassistant.const import (
     CONF_EVENT_DATA,
     CONF_EVENT_DATA_TEMPLATE,
     CONF_FOR_EACH,
+    CONF_FORCE_CONTINUE_ON_ERROR,
     CONF_IF,
     CONF_MODE,
     CONF_PARALLEL,
@@ -489,6 +490,7 @@ class _ScriptRun:
 
     async def _async_step(self, log_exceptions: bool) -> None:
         continue_on_error = self._action.get(CONF_CONTINUE_ON_ERROR, False)
+        force_continue_on_error = self._action.get(CONF_FORCE_CONTINUE_ON_ERROR, False)
 
         with trace_path(str(self._step)):
             async with trace_action(
@@ -508,6 +510,7 @@ class _ScriptRun:
                             self._handle_exception(
                                 ex,
                                 continue_on_error,
+                                force_continue_on_error,
                                 self._log_exceptions or log_exceptions,
                             )
                     if not enabled:
@@ -523,7 +526,10 @@ class _ScriptRun:
                     await getattr(self, handler)()
                 except Exception as ex:  # noqa: BLE001
                     self._handle_exception(
-                        ex, continue_on_error, self._log_exceptions or log_exceptions
+                        ex,
+                        continue_on_error,
+                        force_continue_on_error,
+                        self._log_exceptions or log_exceptions,
                     )
                 finally:
                     trace_element.update_variables(self._variables)
@@ -546,13 +552,14 @@ class _ScriptRun:
             await self._stopped.wait()
 
     def _handle_exception(
-        self, exception: Exception, continue_on_error: bool, log_exceptions: bool
+        self,
+        exception: Exception,
+        continue_on_error: bool,
+        force_continue_on_error: bool,
+        log_exceptions: bool,
     ) -> None:
         if not isinstance(exception, _HaltScript) and log_exceptions:
             self._log_exception(exception)
-
-        if not continue_on_error:
-            raise exception
 
         # An explicit request to stop the script has been raised.
         if isinstance(exception, _StopScript):
@@ -573,7 +580,16 @@ class _ScriptRun:
         ):
             raise exception
 
-        # Only Home Assistant errors can be ignored.
+        # Ignore all errors (including non-Home Assistant errors) and exit early.
+        # No exception will be raised if force_continue_on_error is enabled.
+        if force_continue_on_error:
+            return
+
+        # continue_on_error only applies if force_continue_on_error is False.
+        if not continue_on_error:
+            raise exception
+
+        # With continue_on_error enabled, only Home Assistant errors can be ignored.
         if not isinstance(exception, exceptions.HomeAssistantError):
             raise exception
 
