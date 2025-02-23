@@ -19,7 +19,8 @@ blueprint:
       selector:
         target:
           entity:
-            domain: light
+            filter:
+              - domain: light
     no_motion_wait:
       name: Wait time
       description: Time to leave the light on after last motion is detected.
