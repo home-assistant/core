@@ -37,7 +37,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DURATION,
-    ATTR_DURATION_UNTIL,
     ATTR_PERIOD,
     ATTR_SETPOINT,
     CONF_LOCATION_IDX,
@@ -81,7 +80,7 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
         vol.Required(ATTR_SETPOINT): vol.All(
             vol.Coerce(float), vol.Range(min=4.0, max=35.0)
         ),
-        vol.Optional(ATTR_DURATION_UNTIL): vol.All(
+        vol.Optional(ATTR_DURATION): vol.All(
             cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
         ),
     }
