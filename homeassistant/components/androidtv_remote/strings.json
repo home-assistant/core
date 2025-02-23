@@ -58,11 +58,11 @@
   "services": {
     "send_text": {
       "name": "Send text",
-      "description": "Sends text to an Android device.",
+      "description": "Sends text to an Android TV device.",
       "fields": {
         "text": {
           "name": "Text",
-          "description": "Text to 'type'"
+          "description": "Text to send as input to device."
         }
       }
     }
