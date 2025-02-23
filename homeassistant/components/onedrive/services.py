@@ -1,4 +1,4 @@
-"""Google Photos services."""
+"""OneDrive services."""
 
 from __future__ import annotations
 
