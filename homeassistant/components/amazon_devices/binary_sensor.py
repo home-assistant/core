@@ -14,7 +14,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
 from .entity import AmazonEntity
@@ -45,7 +45,7 @@ BINARY_SENSORS: Final = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AmazonConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Amazon Devices binary sensors based on a config entry."""
 
