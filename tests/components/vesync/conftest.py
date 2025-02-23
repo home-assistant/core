@@ -202,6 +202,7 @@ async def light_config_entry(
 
     return entry
 
+
 @pytest.fixture
 async def install_humidifier_device(
     hass: HomeAssistant,
