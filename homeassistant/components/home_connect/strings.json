@@ -108,6 +108,10 @@
       "title": "Deprecated binary door sensor detected in some automations or scripts",
       "description": "The binary door sensor `{entity}`, which is deprecated, is used in the following automations or scripts:\n{items}\n\nA sensor entity with additional possible states is available and should be used going forward; Please use it on the above automations or scripts to fix this issue."
     },
+    "deprecated_command_actions": {
+      "title": "The command related actions are deprecated in favor of the new buttons",
+      "description": "The `pause_program` and `resume_program` actions have been deprecated in favor of new button entities, if the command is available for your appliance. Please update your automations, scripts and panels that use this action to use the button entities instead, and press on submit to fix the issue."
+    },
     "deprecated_program_switch": {
       "title": "Deprecated program switch detected in some automations or scripts",
       "description": "Program switches are deprecated and {entity_id} is used in the following automations or scripts:\n{items}\n\nYou can use the active program select entity to run the program without any additional options and get the current running program on the above automations or scripts to fix this issue."
