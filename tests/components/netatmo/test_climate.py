@@ -736,6 +736,33 @@ async def test_service_preset_mode_with_end_time_thermostats(
         hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
     )
 
+    # Test setting a valid preset mode (that allow an end datetime in Netatmo == THERM_MODES) without any end datetime
+    await hass.services.async_call(
+        "netatmo",
+        SERVICE_SET_PRESET_MODE_WITH_END_DATETIME,
+        {
+            ATTR_ENTITY_ID: climate_entity_livingroom,
+            ATTR_PRESET_MODE: PRESET_AWAY,
+        },
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    # Fake webhook thermostat mode change to "Away"
+    response = {
+        "event_type": "therm_mode",
+        "home": {"id": "91763b24c43d3e344f424e8b", "therm_mode": "away"},
+        "mode": "away",
+        "previous_mode": "schedule",
+        "push_type": "home_event_changed",
+    }
+    await simulate_webhook(hass, webhook_id, response)
+
+    assert hass.states.get(climate_entity_livingroom).state == "auto"
+    assert (
+        hass.states.get(climate_entity_livingroom).attributes["preset_mode"] == "away"
+    )
+
     # Test setting an invalid preset mode (not in THERM_MODES) and a valid end datetime
     with pytest.raises(MultipleInvalid):
         await hass.services.async_call(
