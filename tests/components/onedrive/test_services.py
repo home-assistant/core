@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from dataclasses import dataclass
 import re
+from typing import Any, cast
 from unittest.mock import MagicMock, Mock, patch
 
 from onedrive_personal_sdk.exceptions import OneDriveException
@@ -90,7 +91,9 @@ async def test_upload_service(
         return_response=True,
     )
 
-    assert response == {}
+    assert response
+    assert response["files"]
+    assert cast(list[dict[str, Any]], response["files"])[0]["id"] == "id"
 
 
 async def test_upload_service_no_response(
