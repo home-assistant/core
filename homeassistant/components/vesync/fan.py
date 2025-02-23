@@ -193,14 +193,13 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
             self.smartfan.turn_on()
 
         self.smartfan.manual_mode()
-        if self.smartfan.change_fan_speed(
+        self.smartfan.change_fan_speed(
             math.ceil(
                 percentage_to_ranged_value(
                     SPEED_RANGE[SKU_TO_BASE_DEVICE[self.device.device_type]], percentage
                 )
             )
-        ):
-            self.schedule_update_ha_state()
+        )
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of device."""
@@ -244,5 +243,4 @@ class VeSyncFanHA(VeSyncBaseEntity, FanEntity):
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self.device.turn_off():
-            self.schedule_update_ha_state()
+        self.device.turn_off()

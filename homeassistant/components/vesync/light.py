@@ -13,6 +13,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import color as color_util
@@ -137,13 +138,15 @@ class VeSyncBaseLightHA(VeSyncBaseEntity, LightEntity):
         if attribute_adjustment_only:
             return
         # send turn_on command to pyvesync api
-        if self.device.turn_on():
-            self.schedule_update_ha_state()
+        if not self.device.turn_on():
+            raise HomeAssistantError("An error occurred while turning on.")
+        self.schedule_update_ha_state()
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
-        if self.device.turn_off():
-            self.schedule_update_ha_state()
+        if not self.device.turn_off():
+            raise HomeAssistantError("An error occurred while turning off.")
+        self.schedule_update_ha_state()
 
 
 class VeSyncDimmableLightHA(VeSyncBaseLightHA, LightEntity):

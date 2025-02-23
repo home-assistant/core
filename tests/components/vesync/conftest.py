@@ -155,6 +155,26 @@ async def humidifier_config_entry(
     return entry
 
 
+@pytest.fixture(name="light_config_entry")
+async def light_config_entry(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
+) -> MockConfigEntry:
+    """Create a mock VeSync config entry for `Dimmable Light`."""
+    entry = MockConfigEntry(
+        title="VeSync",
+        domain=DOMAIN,
+        data=config[DOMAIN],
+    )
+    entry.add_to_hass(hass)
+
+    device_name = "Dimmer Switch"
+    mock_multiple_device_responses(requests_mock, [device_name])
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    return entry
+
+
 @pytest.fixture(name="switch_old_id_config_entry")
 async def switch_old_id_config_entry(
     hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
