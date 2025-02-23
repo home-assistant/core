@@ -101,6 +101,32 @@ async def test_invalid_api_key(
     mock_setup_entry.assert_called_once()
 
 
+async def test_unique_config_entry(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_async_client: AsyncMock,
+    mock_entry: MockConfigEntry,
+) -> None:
+    """Test user step create entry result."""
+    mock_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: mock_entry.data[CONF_API_KEY],
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+
+
 async def test_options_flow_init(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,

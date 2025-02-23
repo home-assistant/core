@@ -8,7 +8,7 @@ from elevenlabs.types import GetVoicesResponse
 from httpx import ConnectError
 import pytest
 
-from homeassistant.components.elevenlabs.const import CONF_MODEL, CONF_VOICE
+from homeassistant.components.elevenlabs.const import CONF_MODEL, CONF_VOICE, DOMAIN
 from homeassistant.const import CONF_API_KEY
 
 from .const import MOCK_MODELS, MOCK_VOICES
@@ -91,11 +91,12 @@ def mock_async_client_connect_error() -> Generator[AsyncMock]:
 def mock_entry() -> MockConfigEntry:
     """Mock a config entry."""
     entry = MockConfigEntry(
-        domain="elevenlabs",
+        domain=DOMAIN,
         data={
             CONF_API_KEY: "api_key",
         },
         options={CONF_MODEL: "model1", CONF_VOICE: "voice1"},
+        unique_id="api_key",
     )
     entry.models = {
         "model1": "model1",
