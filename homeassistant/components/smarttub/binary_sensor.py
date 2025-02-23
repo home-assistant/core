@@ -80,7 +80,7 @@ async def async_setup_entry(
                     SmartTubCoverSensor(controller.coordinator, spa, sensor)
                 )
             else:
-                _LOGGER.warning(f"Skipping unsupported sensor {sensor}")
+                _LOGGER.warning("Skipping unsupported sensor %s", sensor)
 
     async_add_entities(entities)
 
