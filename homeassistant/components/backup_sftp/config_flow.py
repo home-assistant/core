@@ -39,7 +39,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
-        """Perform reauth upon an API authentication error."""
+        """Perform reauth upon connection failure."""
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
