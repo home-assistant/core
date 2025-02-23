@@ -65,5 +65,21 @@
     "write_access_failed": {
       "message": "Write access to {filename} failed: {exc}."
     }
+  },
+  "services": {
+    "read_file": {
+      "name": "Read File",
+      "description": "Reads a file and return the contents.",
+      "fields": {
+        "file_name": {
+          "name": "File Name",
+          "description": "Name of the file to read."
+        },
+        "file_encoding": {
+          "name": "File Encoding",
+          "description": "Encoding of the file (json, yaml.)"
+        }
+      }
+    }
   }
 }
