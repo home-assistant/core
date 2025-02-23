@@ -119,7 +119,7 @@ async def test_pdu_devices_with_unique_ids(
         hass,
         entity_registry,
         model,
-        unique_id=unique_id_base + "input.voltage",
+        unique_id=f"{unique_id_base}input.voltage",
         device_id="sensor.ups1_input_voltage",
         state_value="122.91",
         expected_attributes={
@@ -134,7 +134,7 @@ async def test_pdu_devices_with_unique_ids(
         hass,
         entity_registry,
         model,
-        unique_id=unique_id_base + "ambient.humidity.status",
+        unique_id=f"{unique_id_base}ambient.humidity.status",
         device_id="sensor.ups1_ambient_humidity_status",
         state_value="good",
         expected_attributes={
@@ -147,7 +147,7 @@ async def test_pdu_devices_with_unique_ids(
         hass,
         entity_registry,
         model,
-        unique_id=unique_id_base + "ambient.temperature.status",
+        unique_id=f"{unique_id_base}ambient.temperature.status",
         device_id="sensor.ups1_ambient_temperature_status",
         state_value="good",
         expected_attributes={
