@@ -1,13 +1,17 @@
 """Tests for init platform of Remote Calendar."""
 
 from unittest.mock import AsyncMock
+
 from httpx import ConnectError, HTTPStatusError, UnsupportedProtocol
+import pytest
+
+from homeassistant.components.remote_calendar.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-import pytest
+
 from . import setup_integration
 from .conftest import TEST_ENTITY
-from homeassistant.components.remote_calendar.const import DOMAIN
+
 from tests.common import MockConfigEntry
 
 
