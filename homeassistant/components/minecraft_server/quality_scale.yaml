@@ -6,9 +6,7 @@ rules:
   appropriate-polling: done
   brands: done
   common-modules: done
-  config-flow:
-    status: todo
-    comment: Check removal and replacement of name in config flow with the title (server address).
+  config-flow: done
   config-flow-test-coverage:
     status: todo
     comment: |
