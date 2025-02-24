@@ -67,13 +67,13 @@ def handle_backup_errors[_R, **P](
         try:
             return await func(self, *args, **kwargs)
         except HttpResponseError as err:
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Error during backup in %s: Status %s, message %s",
                 func.__name__,
                 err.status_code,
                 err.message,
+                exc_info=True
             )
-            _LOGGER.debug("Full error: %s", err, exc_info=True)
             raise BackupAgentError("Error during backup operation") from err
 
     return wrapper
