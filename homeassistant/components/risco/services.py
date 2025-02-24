@@ -7,9 +7,10 @@ import voluptuous as vol
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_CONFIG_ENTRY_ID, DOMAIN, SERVICE_SET_TIME
+from .const import DOMAIN, SERVICE_SET_TIME
 from .models import LocalData
 
+ATTR_CONF_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_TIME = "time"
 
 
@@ -17,7 +18,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
     """Create the Risco Services/Actions."""
 
     async def _set_time(service_call: ServiceCall) -> None:
-        config_entry_id = service_call.data.get(CONF_CONFIG_ENTRY_ID, None)
+        config_entry_id = service_call.data.get(ATTR_CONF_CONFIG_ENTRY_ID, None)
         time = service_call.data.get(ATTR_TIME, None)
 
         time_to_send = time
@@ -33,7 +34,7 @@ async def async_setup_services(hass: HomeAssistant) -> None:
         service=SERVICE_SET_TIME,
         schema=vol.Schema(
             {
-                vol.Required(CONF_CONFIG_ENTRY_ID): cv.string,
+                vol.Required(ATTR_CONF_CONFIG_ENTRY_ID): cv.string,
                 vol.Optional(ATTR_TIME): cv.datetime,
             }
         ),
