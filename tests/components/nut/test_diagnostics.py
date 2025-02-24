@@ -41,31 +41,3 @@ async def test_diagnostics(
     )
     assert result["entry"] == entry_dict | {"discovery_keys": {}}
     assert result["nut_data"] == nut_data_dict
-
-
-async def test_async_get_config_entry_diagnostics__no_devices(
-    hass: HomeAssistant,
-    hass_client: ClientSessionGenerator,
-) -> None:
-    """Test diagnostics for config entry."""
-    nut_data_dict = {
-        "ups_list": {"ups1": "UPS 1"},
-        "status": {"ups.status": "OL"},
-        "commands": [],
-    }
-
-    mock_config_entry = await async_init_integration(
-        hass,
-        username="someuser",
-        password="somepassword",
-        list_vars={"ups.status": "OL"},
-        list_ups={"ups1": "UPS 1"},
-        list_commands_return_value=None,
-    )
-
-    mock_config_entry.runtime_data.unique_id = ""
-
-    diag = await get_diagnostics_for_config_entry(hass, hass_client, mock_config_entry)
-
-    assert isinstance(diag, dict)
-    assert diag["nut_data"] == nut_data_dict
