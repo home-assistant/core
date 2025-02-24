@@ -145,7 +145,6 @@ async def test_entry_already_configured(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # with patch("bosch_alarm_mode2.panel.Panel.connect", connect):
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: "0.0.0.0"},
