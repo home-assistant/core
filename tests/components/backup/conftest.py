@@ -18,6 +18,16 @@ from .common import TEST_BACKUP_PATH_ABC123, TEST_BACKUP_PATH_DEF456
 from tests.common import get_fixture_path
 
 
+@pytest.fixture(name="instance_id", autouse=True)
+def instance_id_fixture(hass: HomeAssistant) -> Generator[None]:
+    """Mock instance ID."""
+    with patch(
+        "homeassistant.components.backup.manager.instance_id.async_get",
+        return_value="our_uuid",
+    ):
+        yield
+
+
 @pytest.fixture(name="mocked_json_bytes")
 def mocked_json_bytes_fixture() -> Generator[Mock]:
     """Mock json_bytes."""

@@ -30,10 +30,13 @@
         "name": "Auto mode"
       },
       "express_mode": {
-        "name": "Ice plus"
+        "name": "Express mode"
+      },
+      "express_fridge": {
+        "name": "Express cool"
       },
       "hot_water_mode": {
-        "name": "Hot water"
+        "name": "Heating water"
       },
       "humidity_warm_mode": {
         "name": "Warm mist"
@@ -64,6 +67,9 @@
       },
       "warm_mode": {
         "name": "Heating"
+      },
+      "display_light": {
+        "name": "Lighting"
       }
     },
     "binary_sensor": {
@@ -99,6 +105,12 @@
       },
       "one_touch_filter": {
         "name": "Fresh air filter"
+      },
+      "water_heater_operation_mode": {
+        "name": "[%key:component::binary_sensor::entity_component::power::name%]",
+        "state": {
+          "off": "[%key:common::state::standby%]"
+        }
       }
     },
     "climate": {
@@ -209,9 +221,9 @@
               "error_during_washing": "An error has occurred in the washing machine",
               "error_has_occurred": "An error has occurred",
               "frozen_is_complete": "Ice plus is done",
-              "homeguard_is_stopped": "Home guard has stopped",
+              "homeguard_is_stopped": "Home Guard has stopped",
               "lack_of_water": "There is no water in the water tank",
-              "motion_is_detected": "Photograph is sent as movement is detected during home guard",
+              "motion_is_detected": "Photograph is sent as movement is detected during Home Guard",
               "need_to_check_location": "Location check is required",
               "pollution_is_high": "Air status is rapidly becoming bad",
               "preheating_is_complete": "Preheating is done",
@@ -258,10 +270,10 @@
         "name": "{location} schedule turn-on"
       },
       "relative_hour_to_start_wm": {
-        "name": "Delay starts in"
+        "name": "Delayed start"
       },
       "relative_hour_to_start_wm_for_location": {
-        "name": "{location} delay starts in"
+        "name": "{location} delayed start"
       },
       "relative_hour_to_stop": {
         "name": "Schedule turn-off"
@@ -270,10 +282,10 @@
         "name": "{location} schedule turn-off"
       },
       "relative_hour_to_stop_wm": {
-        "name": "Delay ends in"
+        "name": "Delayed end"
       },
       "relative_hour_to_stop_wm_for_location": {
-        "name": "{location} delay ends in"
+        "name": "{location} delayed end"
       },
       "sleep_timer_relative_hour_to_stop": {
         "name": "Sleep timer"
@@ -298,6 +310,15 @@
       },
       "current_temperature": {
         "name": "Current temperature"
+      },
+      "room_air_current_temperature": {
+        "name": "Indoor temperature"
+      },
+      "room_in_water_current_temperature": {
+        "name": "Inlet temperature"
+      },
+      "room_out_water_current_temperature": {
+        "name": "Outlet temperature"
       },
       "temperature": {
         "name": "Temperature"
@@ -426,9 +447,9 @@
           "lock": "Control lock",
           "macrosector": "Remote is in use",
           "melting": "Wort dissolving",
-          "monitoring_detecting": "HomeGuard is active",
+          "monitoring_detecting": "Home Guard is active",
           "monitoring_moving": "Going to the starting point",
-          "monitoring_positioning": "Setting homeguard start point",
+          "monitoring_positioning": "Setting Home Guard start point",
           "night_dry": "Night dry",
           "oven_setting": "Cooktop connected",
           "pause": "[%key:common::state::paused%]",
@@ -842,6 +863,12 @@
       },
       "power_level_for_location": {
         "name": "{location} power level"
+      },
+      "cycle_count": {
+        "name": "Cycles"
+      },
+      "cycle_count_for_location": {
+        "name": "{location} cycles"
       }
     },
     "select": {
@@ -906,6 +933,7 @@
         "state": {
           "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
           "power_off": "Power off",
+          "power_on": "Power on",
           "preheating": "Preheating",
           "start": "[%key:common::action::start%]",
           "stop": "[%key:common::action::stop%]",
@@ -917,6 +945,7 @@
         "state": {
           "cancel": "[%key:component::lg_thinq::entity::sensor::current_state::state::cancel%]",
           "power_off": "[%key:component::lg_thinq::entity::select::operation_mode::state::power_off%]",
+          "power_on": "[%key:component::lg_thinq::entity::select::operation_mode::state::power_on%]",
           "preheating": "[%key:component::lg_thinq::entity::select::operation_mode::state::preheating%]",
           "start": "[%key:common::action::start%]",
           "stop": "[%key:common::action::stop%]",

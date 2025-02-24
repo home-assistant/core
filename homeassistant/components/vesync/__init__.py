@@ -5,9 +5,15 @@ import logging
 from pyvesync import VeSync
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.const import (
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_LOGGING_CHANGED,
+    Platform,
+)
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -18,6 +24,7 @@ from .const import (
     VS_COORDINATOR,
     VS_DEVICES,
     VS_DISCOVERY,
+    VS_LISTENERS,
     VS_MANAGER,
 )
 from .coordinator import VeSyncDataCoordinator
@@ -28,6 +35,7 @@ PLATFORMS = [
     Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
 ]
@@ -42,7 +50,13 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
     time_zone = str(hass.config.time_zone)
 
-    manager = VeSync(username, password, time_zone)
+    manager = VeSync(
+        username=username,
+        password=password,
+        time_zone=time_zone,
+        debug=logging.getLogger("pyvesync.vesync").level == logging.DEBUG,
+        redact=True,
+    )
 
     login = await hass.async_add_executor_job(manager.login)
 
@@ -52,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN] = {}
     hass.data[DOMAIN][VS_MANAGER] = manager
 
-    coordinator = VeSyncDataCoordinator(hass, manager)
+    coordinator = VeSyncDataCoordinator(hass, config_entry, manager)
 
     # Store coordinator at domain level since only single integration instance is permitted.
     hass.data[DOMAIN][VS_COORDINATOR] = coordinator
@@ -60,6 +74,17 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DOMAIN][VS_DEVICES] = await async_generate_device_list(hass, manager)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    @callback
+    def _async_handle_logging_changed(_event: Event) -> None:
+        """Handle when the logging level changes."""
+        manager.debug = logging.getLogger("pyvesync.vesync").level == logging.DEBUG
+
+    cleanup = hass.bus.async_listen(
+        EVENT_LOGGING_CHANGED, _async_handle_logging_changed
+    )
+
+    hass.data[DOMAIN][VS_LISTENERS] = cleanup
 
     async def async_new_device_discovery(service: ServiceCall) -> None:
         """Discover if new devices should be added."""
@@ -86,7 +111,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-
+    hass.data[DOMAIN][VS_LISTENERS]()
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
         hass.data.pop(DOMAIN)

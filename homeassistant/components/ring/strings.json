@@ -141,6 +141,20 @@
       }
     }
   },
+  "exceptions": {
+    "api_authentication": {
+      "message": "Authentication error communicating with Ring API"
+    },
+    "api_timeout": {
+      "message": "Timeout communicating with Ring API"
+    },
+    "api_error": {
+      "message": "Error communicating with Ring API"
+    },
+    "sdp_m_line_index_required": {
+      "message": "Error negotiating stream for {device}"
+    }
+  },
   "issues": {
     "deprecated_entity": {
       "title": "Detected deprecated {platform} entity usage",

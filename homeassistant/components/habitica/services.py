@@ -62,7 +62,7 @@ from .const import (
     SERVICE_START_QUEST,
     SERVICE_TRANSFORMATION,
 )
-from .types import HabiticaConfigEntry
+from .coordinator import HabiticaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -77,7 +77,7 @@ SERVICE_API_CALL_SCHEMA = vol.Schema(
 
 SERVICE_CAST_SKILL_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Required(ATTR_SKILL): cv.string,
         vol.Optional(ATTR_TASK): cv.string,
     }
@@ -85,12 +85,12 @@ SERVICE_CAST_SKILL_SCHEMA = vol.Schema(
 
 SERVICE_MANAGE_QUEST_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
     }
 )
 SERVICE_SCORE_TASK_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Required(ATTR_TASK): cv.string,
         vol.Optional(ATTR_DIRECTION): cv.string,
     }
@@ -98,7 +98,7 @@ SERVICE_SCORE_TASK_SCHEMA = vol.Schema(
 
 SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Required(ATTR_ITEM): cv.string,
         vol.Required(ATTR_TARGET): cv.string,
     }
@@ -106,7 +106,7 @@ SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
 
 SERVICE_GET_TASKS_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Optional(ATTR_TYPE): vol.All(
             cv.ensure_list, [vol.All(vol.Upper, vol.In({x.name for x in TaskType}))]
         ),
@@ -510,7 +510,10 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 or (task.notes and keyword in task.notes.lower())
                 or any(keyword in item.text.lower() for item in task.checklist)
             ]
-        result: dict[str, Any] = {"tasks": response}
+        result: dict[str, Any] = {
+            "tasks": [task.to_dict(omit_none=False) for task in response]
+        }
+
         return result
 
     hass.services.async_register(
