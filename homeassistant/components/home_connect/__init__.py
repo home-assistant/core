@@ -213,7 +213,11 @@ async def _get_client_and_ha_id(
             break
     if entry is None:
         raise ServiceValidationError(
-            "Home Connect config entry not found for that device id"
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
         )
 
     ha_id = next(
