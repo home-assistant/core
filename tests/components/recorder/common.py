@@ -186,14 +186,16 @@ def statistics_during_period(
     statistic_ids: set[str] | None = None,
     period: Literal["5minute", "day", "hour", "week", "month"] = "hour",
     units: dict[str, str] | None = None,
-    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]]
+    types: set[
+        Literal["last_reset", "max", "mean", "min", "state", "sum", "circular_mean"]
+    ]
     | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     """Call statistics_during_period with defaults for simpler tests."""
     if statistic_ids is not None and not isinstance(statistic_ids, set):
         statistic_ids = set(statistic_ids)
     if types is None:
-        types = {"last_reset", "max", "mean", "min", "state", "sum"}
+        types = {"last_reset", "max", "mean", "min", "state", "sum", "circular_mean"}
     return statistics.statistics_during_period(
         hass, start_time, end_time, statistic_ids, period, units, types
     )

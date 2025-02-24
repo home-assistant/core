@@ -168,10 +168,12 @@ def _time_weighted_circular_mean(
             # Adjust start time, if there was no last known state
             start = start_time
         else:
-            duration = start_time - old_start_time
-            # Append same value for each second between state changes
-            assert old_fstate is not None
-            values.append((old_fstate, duration.total_seconds()))
+            duration = (start_time - old_start_time).total_seconds()
+            if duration != 0:
+                # No need to add if duration is 0 as it won't affect the result
+                # Append same value for each second between state changes
+                assert old_fstate is not None
+                values.append((old_fstate, duration))
 
         old_fstate = fstate
         old_start_time = start_time
@@ -179,8 +181,9 @@ def _time_weighted_circular_mean(
     if old_fstate is not None:
         # Accumulate the value, weighted by duration until end of the period
         assert old_start_time is not None
-        duration = end - old_start_time
-        values.append((old_fstate, duration.total_seconds()))
+        duration = (end - old_start_time).total_seconds()
+        if duration != 0:
+            values.append((old_fstate, duration))
 
     sin_sum = sum(
         math.sin(x * statistics.DEG_TO_RAD) * duration for x, duration in values
