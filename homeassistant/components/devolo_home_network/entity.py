@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ipaddress import ip_address
+
 from devolo_plc_api.device_api import (
     ConnectedStationInfo,
     NeighborAPInfo,
@@ -43,7 +45,9 @@ class DevoloEntity(Entity):
         self.entry = entry
 
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{self.device.ip}",
+            configuration_url=f"http://{self.device.ip}"
+            if ip_address(self.device.ip).version == 4
+            else f"http://[{self.device.ip}]",
             identifiers={(DOMAIN, str(self.device.serial_number))},
             manufacturer="devolo",
             model=self.device.product,
