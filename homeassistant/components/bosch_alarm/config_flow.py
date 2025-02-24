@@ -86,11 +86,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             try:
                 # Use load_selector = 0 to fetch the panel model without authentication.
-                (model, serial) = await try_connect(user_input, 0)
+                (model, _) = await try_connect(user_input, 0)
             except (
                 OSError,
                 ConnectionRefusedError,
