@@ -25,7 +25,7 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from . import generated
@@ -1765,8 +1765,7 @@ def async_suggest_report_issue(
         if not integration_domain:
             return "report it to the custom integration author"
         return (
-            f"report it to the author of the '{integration_domain}' "
-            "custom integration"
+            f"report it to the author of the '{integration_domain}' custom integration"
         )
 
     return f"create a bug report at {issue_tracker}"

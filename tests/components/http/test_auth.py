@@ -192,16 +192,16 @@ async def test_cannot_access_with_trusted_ip(
     for remote_addr in UNTRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert (
-            resp.status == HTTPStatus.UNAUTHORIZED
-        ), f"{remote_addr} shouldn't be trusted"
+        assert resp.status == HTTPStatus.UNAUTHORIZED, (
+            f"{remote_addr} shouldn't be trusted"
+        )
 
     for remote_addr in TRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert (
-            resp.status == HTTPStatus.UNAUTHORIZED
-        ), f"{remote_addr} shouldn't be trusted"
+        assert resp.status == HTTPStatus.UNAUTHORIZED, (
+            f"{remote_addr} shouldn't be trusted"
+        )
 
 
 async def test_auth_active_access_with_access_token_in_header(
@@ -256,16 +256,16 @@ async def test_auth_active_access_with_trusted_ip(
     for remote_addr in UNTRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert (
-            resp.status == HTTPStatus.UNAUTHORIZED
-        ), f"{remote_addr} shouldn't be trusted"
+        assert resp.status == HTTPStatus.UNAUTHORIZED, (
+            f"{remote_addr} shouldn't be trusted"
+        )
 
     for remote_addr in TRUSTED_ADDRESSES:
         set_mock_ip(remote_addr)
         resp = await client.get("/")
-        assert (
-            resp.status == HTTPStatus.UNAUTHORIZED
-        ), f"{remote_addr} shouldn't be trusted"
+        assert resp.status == HTTPStatus.UNAUTHORIZED, (
+            f"{remote_addr} shouldn't be trusted"
+        )
 
 
 async def test_auth_legacy_support_api_password_cannot_access(

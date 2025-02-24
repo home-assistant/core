@@ -2,9 +2,11 @@
 
 from unittest.mock import Mock
 
+from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.const import MODEL_I3
 import pytest
 from pytest_unordered import unordered
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
@@ -62,6 +64,99 @@ async def test_rpc_button(
 
     state = hass.states.get(entity_id)
     assert state.attributes.get(ATTR_EVENT_TYPE) == "single_push"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_script_1_event(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test script event."""
+    await init_integration(hass, 2)
+    entity_id = "event.test_name_test_script_js"
+
+    state = hass.states.get(entity_id)
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "script:1",
+                    "id": 1,
+                    "event": "script_start",
+                    "ts": 1668522399.2,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_EVENT_TYPE) == "script_start"
+
+    inject_rpc_device_event(
+        monkeypatch,
+        mock_rpc_device,
+        {
+            "events": [
+                {
+                    "component": "script:1",
+                    "id": 1,
+                    "event": "unknown_event",
+                    "ts": 1668522399.2,
+                }
+            ],
+            "ts": 1668522399.2,
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_EVENT_TYPE) != "unknown_event"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_script_2_event(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that scripts without any emitEvent will not get an event entity."""
+    await init_integration(hass, 2)
+    entity_id = "event.test_name_test_script_2_js"
+
+    state = hass.states.get(entity_id)
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry == snapshot(name=f"{entity_id}-entry")
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_script_ble_event(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that the ble script will not get an event entity."""
+    await init_integration(hass, 2)
+    entity_id = f"event.test_name_{BLE_SCRIPT_NAME}"
+
+    state = hass.states.get(entity_id)
+    assert state == snapshot(name=f"{entity_id}-state")
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry == snapshot(name=f"{entity_id}-entry")
 
 
 async def test_rpc_event_removal(

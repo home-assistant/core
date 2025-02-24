@@ -12,6 +12,9 @@
       }
     },
     "number": {
+      "external_temperature": {
+        "default": "mdi:thermometer-check"
+      },
       "valve_position": {
         "default": "mdi:pipe-valve"
       }
@@ -28,6 +31,9 @@
       },
       "tilt": {
         "default": "mdi:angle-acute"
+      },
+      "valve_position": {
+        "default": "mdi:pipe-valve"
       },
       "valve_status": {
         "default": "mdi:valve"

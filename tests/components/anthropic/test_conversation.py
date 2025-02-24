@@ -1,24 +1,113 @@
 """Tests for the Anthropic integration."""
 
+from collections.abc import AsyncGenerator
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from anthropic import RateLimitError
-from anthropic.types import Message, TextBlock, ToolUseBlock, Usage
+from anthropic.types import (
+    InputJSONDelta,
+    Message,
+    RawContentBlockDeltaEvent,
+    RawContentBlockStartEvent,
+    RawContentBlockStopEvent,
+    RawMessageStartEvent,
+    RawMessageStopEvent,
+    RawMessageStreamEvent,
+    TextBlock,
+    TextDelta,
+    ToolUseBlock,
+    Usage,
+)
 from freezegun import freeze_time
 from httpx import URL, Request, Response
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import trace
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import intent, llm
 from homeassistant.setup import async_setup_component
-from homeassistant.util import ulid
+from homeassistant.util import ulid as ulid_util
 
 from tests.common import MockConfigEntry
+
+
+async def stream_generator(
+    responses: list[RawMessageStreamEvent],
+) -> AsyncGenerator[RawMessageStreamEvent]:
+    """Generate a response from the assistant."""
+    for msg in responses:
+        yield msg
+
+
+def create_messages(
+    content_blocks: list[RawMessageStreamEvent],
+) -> list[RawMessageStreamEvent]:
+    """Create a stream of messages with the specified content blocks."""
+    return [
+        RawMessageStartEvent(
+            message=Message(
+                type="message",
+                id="msg_1234567890ABCDEFGHIJKLMN",
+                content=[],
+                role="assistant",
+                model="claude-3-5-sonnet-20240620",
+                usage=Usage(input_tokens=0, output_tokens=0),
+            ),
+            type="message_start",
+        ),
+        *content_blocks,
+        RawMessageStopEvent(type="message_stop"),
+    ]
+
+
+def create_content_block(
+    index: int, text_parts: list[str]
+) -> list[RawMessageStreamEvent]:
+    """Create a text content block with the specified deltas."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=TextBlock(text="", type="text"),
+            index=index,
+        ),
+        *[
+            RawContentBlockDeltaEvent(
+                delta=TextDelta(text=text_part, type="text_delta"),
+                index=index,
+                type="content_block_delta",
+            )
+            for text_part in text_parts
+        ],
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_tool_use_block(
+    index: int, tool_id: str, tool_name: str, json_parts: list[str]
+) -> list[RawMessageStreamEvent]:
+    """Create a tool use content block with the specified deltas."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=ToolUseBlock(
+                id=tool_id, name=tool_name, input={}, type="tool_use"
+            ),
+            index=index,
+        ),
+        *[
+            RawContentBlockDeltaEvent(
+                delta=InputJSONDelta(partial_json=json_part, type="input_json_delta"),
+                index=index,
+                type="content_block_delta",
+            )
+            for json_part in json_parts
+        ],
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
 
 
 async def test_entity(
@@ -121,15 +210,26 @@ async def test_template_variables(
         ) as mock_create,
         patch("homeassistant.auth.AuthManager.async_get_user", return_value=mock_user),
     ):
+        mock_create.return_value = stream_generator(
+            create_messages(
+                create_content_block(
+                    0, ["Okay, let", " me take care of that for you", "."]
+                )
+            )
+        )
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
         result = await conversation.async_converse(
             hass, "hello", None, context, agent_id="conversation.claude"
         )
 
+    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        result
+    )
     assert (
-        result.response.response_type == intent.IntentResponseType.ACTION_DONE
-    ), result
+        result.response.speech["plain"]["speech"]
+        == "Okay, let me take care of that for you."
+    )
     assert "The user name is Test User." in mock_create.mock_calls[1][2]["system"]
     assert "The user id is 12345." in mock_create.mock_calls[1][2]["system"]
 
@@ -169,39 +269,26 @@ async def test_function_call(
         for message in messages:
             for content in message["content"]:
                 if not isinstance(content, str) and content["type"] == "tool_use":
-                    return Message(
-                        type="message",
-                        id="msg_1234567890ABCDEFGHIJKLMN",
-                        content=[
-                            TextBlock(
-                                type="text",
-                                text="I have successfully called the function",
-                            )
-                        ],
-                        model="claude-3-5-sonnet-20240620",
-                        role="assistant",
-                        stop_reason="end_turn",
-                        stop_sequence=None,
-                        usage=Usage(input_tokens=8, output_tokens=12),
+                    return stream_generator(
+                        create_messages(
+                            create_content_block(
+                                0, ["I have ", "successfully called ", "the function"]
+                            ),
+                        )
                     )
 
-        return Message(
-            type="message",
-            id="msg_1234567890ABCDEFGHIJKLMN",
-            content=[
-                TextBlock(type="text", text="Certainly, calling it now!"),
-                ToolUseBlock(
-                    type="tool_use",
-                    id="toolu_0123456789AbCdEfGhIjKlM",
-                    name="test_tool",
-                    input={"param1": "test_value"},
-                ),
-            ],
-            model="claude-3-5-sonnet-20240620",
-            role="assistant",
-            stop_reason="tool_use",
-            stop_sequence=None,
-            usage=Usage(input_tokens=8, output_tokens=12),
+        return stream_generator(
+            create_messages(
+                [
+                    *create_content_block(0, ["Certainly, calling it now!"]),
+                    *create_tool_use_block(
+                        1,
+                        "toolu_0123456789AbCdEfGhIjKlM",
+                        "test_tool",
+                        ['{"para', 'm1": "test_valu', 'e"}'],
+                    ),
+                ]
+            )
         )
 
     with (
@@ -223,6 +310,10 @@ async def test_function_call(
     assert "Today's date is 2024-06-03." in mock_create.mock_calls[1][2]["system"]
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "I have successfully called the function"
+    )
     assert mock_create.mock_calls[1][2]["messages"][2] == {
         "role": "user",
         "content": [
@@ -236,6 +327,7 @@ async def test_function_call(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="toolu_0123456789AbCdEfGhIjKlM",
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
         ),
@@ -248,42 +340,6 @@ async def test_function_call(
             device_id=None,
         ),
     )
-
-    # Test Conversation tracing
-    traces = trace.async_get_traces()
-    assert traces
-    last_trace = traces[-1].as_dict()
-    trace_events = last_trace.get("events", [])
-    assert [event["event_type"] for event in trace_events] == [
-        trace.ConversationTraceEventType.ASYNC_PROCESS,
-        trace.ConversationTraceEventType.AGENT_DETAIL,
-        trace.ConversationTraceEventType.TOOL_CALL,
-    ]
-    # AGENT_DETAIL event contains the raw prompt passed to the model
-    detail_event = trace_events[1]
-    assert "Answer in plain text" in detail_event["data"]["system"]
-    assert "Today's date is 2024-06-03." in trace_events[1]["data"]["system"]
-
-    # Call it again, make sure we have updated prompt
-    with (
-        patch(
-            "anthropic.resources.messages.AsyncMessages.create",
-            new_callable=AsyncMock,
-            side_effect=completion_result,
-        ) as mock_create,
-        freeze_time("2024-06-04 23:00:00"),
-    ):
-        result = await conversation.async_converse(
-            hass,
-            "Please call the test function",
-            None,
-            context,
-            agent_id=agent_id,
-        )
-
-    assert "Today's date is 2024-06-04." in mock_create.mock_calls[1][2]["system"]
-    # Test old assert message not updated
-    assert "Today's date is 2024-06-03." in trace_events[1]["data"]["system"]
 
 
 @patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")
@@ -311,39 +367,27 @@ async def test_function_exception(
         for message in messages:
             for content in message["content"]:
                 if not isinstance(content, str) and content["type"] == "tool_use":
-                    return Message(
-                        type="message",
-                        id="msg_1234567890ABCDEFGHIJKLMN",
-                        content=[
-                            TextBlock(
-                                type="text",
-                                text="There was an error calling the function",
+                    return stream_generator(
+                        create_messages(
+                            create_content_block(
+                                0,
+                                ["There was an error calling the function"],
                             )
-                        ],
-                        model="claude-3-5-sonnet-20240620",
-                        role="assistant",
-                        stop_reason="end_turn",
-                        stop_sequence=None,
-                        usage=Usage(input_tokens=8, output_tokens=12),
+                        )
                     )
 
-        return Message(
-            type="message",
-            id="msg_1234567890ABCDEFGHIJKLMN",
-            content=[
-                TextBlock(type="text", text="Certainly, calling it now!"),
-                ToolUseBlock(
-                    type="tool_use",
-                    id="toolu_0123456789AbCdEfGhIjKlM",
-                    name="test_tool",
-                    input={"param1": "test_value"},
-                ),
-            ],
-            model="claude-3-5-sonnet-20240620",
-            role="assistant",
-            stop_reason="tool_use",
-            stop_sequence=None,
-            usage=Usage(input_tokens=8, output_tokens=12),
+        return stream_generator(
+            create_messages(
+                [
+                    *create_content_block(0, "Certainly, calling it now!"),
+                    *create_tool_use_block(
+                        1,
+                        "toolu_0123456789AbCdEfGhIjKlM",
+                        "test_tool",
+                        ['{"param1": "test_value"}'],
+                    ),
+                ]
+            )
         )
 
     with patch(
@@ -360,6 +404,10 @@ async def test_function_exception(
         )
 
     assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.speech["plain"]["speech"]
+        == "There was an error calling the function"
+    )
     assert mock_create.mock_calls[1][2]["messages"][2] == {
         "role": "user",
         "content": [
@@ -373,6 +421,7 @@ async def test_function_exception(
     mock_tool.async_call.assert_awaited_once_with(
         hass,
         llm.ToolInput(
+            id="toolu_0123456789AbCdEfGhIjKlM",
             tool_name="test_tool",
             tool_args={"param1": "test_value"},
         ),
@@ -411,15 +460,10 @@ async def test_assist_api_tools_conversion(
     with patch(
         "anthropic.resources.messages.AsyncMessages.create",
         new_callable=AsyncMock,
-        return_value=Message(
-            type="message",
-            id="msg_1234567890ABCDEFGHIJKLMN",
-            content=[TextBlock(type="text", text="Hello, how can I help you?")],
-            model="claude-3-5-sonnet-20240620",
-            role="assistant",
-            stop_reason="end_turn",
-            stop_sequence=None,
-            usage=Usage(input_tokens=8, output_tokens=12),
+        return_value=stream_generator(
+            create_messages(
+                create_content_block(0, "Hello, how can I help you?"),
+            ),
         ),
     ) as mock_create:
         await conversation.async_converse(
@@ -446,7 +490,7 @@ async def test_unknown_hass_api(
     )
 
     result = await conversation.async_converse(
-        hass, "hello", None, Context(), agent_id="conversation.claude"
+        hass, "hello", "1234", Context(), agent_id="conversation.claude"
     )
 
     assert result == snapshot
@@ -460,28 +504,45 @@ async def test_conversation_id(
     mock_init_component,
 ) -> None:
     """Test conversation ID is honored."""
-    result = await conversation.async_converse(
-        hass, "hello", None, None, agent_id="conversation.claude"
-    )
 
-    conversation_id = result.conversation_id
+    def create_stream_generator(*args, **kwargs) -> Any:
+        return stream_generator(
+            create_messages(
+                create_content_block(0, "Hello, how can I help you?"),
+            ),
+        )
 
-    result = await conversation.async_converse(
-        hass, "hello", conversation_id, None, agent_id="conversation.claude"
-    )
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        side_effect=create_stream_generator,
+    ):
+        result = await conversation.async_converse(
+            hass, "hello", "1234", Context(), agent_id="conversation.claude"
+        )
 
-    assert result.conversation_id == conversation_id
+        result = await conversation.async_converse(
+            hass, "hello", None, None, agent_id="conversation.claude"
+        )
 
-    unknown_id = ulid.ulid()
+        conversation_id = result.conversation_id
 
-    result = await conversation.async_converse(
-        hass, "hello", unknown_id, None, agent_id="conversation.claude"
-    )
+        result = await conversation.async_converse(
+            hass, "hello", conversation_id, None, agent_id="conversation.claude"
+        )
 
-    assert result.conversation_id != unknown_id
+        assert result.conversation_id == conversation_id
 
-    result = await conversation.async_converse(
-        hass, "hello", "koala", None, agent_id="conversation.claude"
-    )
+        unknown_id = ulid_util.ulid()
 
-    assert result.conversation_id == "koala"
+        result = await conversation.async_converse(
+            hass, "hello", unknown_id, None, agent_id="conversation.claude"
+        )
+
+        assert result.conversation_id != unknown_id
+
+        result = await conversation.async_converse(
+            hass, "hello", "koala", None, agent_id="conversation.claude"
+        )
+
+        assert result.conversation_id == "koala"

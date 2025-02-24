@@ -8,7 +8,7 @@ from unittest.mock import Mock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import sonos, zeroconf
+from homeassistant.components import sonos
 from homeassistant.components.sonos import SonosDiscoveryManager
 from homeassistant.components.sonos.const import (
     DATA_SONOS_DISCOVERY_MANAGER,
@@ -19,8 +19,9 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import MockSoCo, SoCoMockFactory
 
@@ -28,7 +29,7 @@ from tests.common import async_fire_time_changed
 
 
 async def test_creating_entry_sets_up_media_player(
-    hass: HomeAssistant, zeroconf_payload: zeroconf.ZeroconfServiceInfo
+    hass: HomeAssistant, zeroconf_payload: ZeroconfServiceInfo
 ) -> None:
     """Test setting up Sonos loads the media player."""
 

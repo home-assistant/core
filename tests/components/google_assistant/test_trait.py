@@ -2208,7 +2208,7 @@ async def test_fan_speed_ordered(
             "ordered": True,
             "speeds": [
                 {
-                    "speed_name": f"{idx+1}/{len(speeds)}",
+                    "speed_name": f"{idx + 1}/{len(speeds)}",
                     "speed_values": [{"lang": "en", "speed_synonym": x}],
                 }
                 for idx, x in enumerate(speeds)

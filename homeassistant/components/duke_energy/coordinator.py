@@ -2,7 +2,6 @@
 
 from datetime import datetime, timedelta
 import logging
-from types import MappingProxyType
 from typing import Any, cast
 
 from aiodukeenergy import DukeEnergy
@@ -37,22 +36,21 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
     config_entry: DukeEnergyConfigEntry
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        entry_data: MappingProxyType[str, Any],
+        self, hass: HomeAssistant, config_entry: DukeEnergyConfigEntry
     ) -> None:
         """Initialize the data handler."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Duke Energy",
             # Data is updated daily on Duke Energy.
             # Refresh every 12h to be at most 12h behind.
             update_interval=timedelta(hours=12),
         )
         self.api = DukeEnergy(
-            entry_data[CONF_USERNAME],
-            entry_data[CONF_PASSWORD],
+            config_entry.data[CONF_USERNAME],
+            config_entry.data[CONF_PASSWORD],
             async_get_clientsession(hass),
         )
         self._statistic_ids: set = set()
@@ -85,7 +83,7 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
                 )
                 continue
 
-            id_prefix = f"{meter["serviceType"].lower()}_{serial_number}"
+            id_prefix = f"{meter['serviceType'].lower()}_{serial_number}"
             consumption_statistic_id = f"{DOMAIN}:{id_prefix}_energy_consumption"
             self._statistic_ids.add(consumption_statistic_id)
             _LOGGER.debug(
@@ -136,7 +134,7 @@ class DukeEnergyCoordinator(DataUpdateCoordinator[None]):
                 )
 
             name_prefix = (
-                f"Duke Energy " f"{meter["serviceType"].capitalize()} {serial_number}"
+                f"Duke Energy {meter['serviceType'].capitalize()} {serial_number}"
             )
             consumption_metadata = StatisticMetaData(
                 has_mean=False,

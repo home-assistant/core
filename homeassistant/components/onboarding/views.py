@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Coroutine
+from collections.abc import Callable, Coroutine
+from functools import wraps
 from http import HTTPStatus
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 from aiohttp import web
 from aiohttp.web_exceptions import HTTPUnauthorized
@@ -15,16 +16,23 @@ from homeassistant.auth.const import GROUP_ID_ADMIN
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import person
 from homeassistant.components.auth import indieauth
+from homeassistant.components.backup import (
+    BackupManager,
+    Folder,
+    IncorrectPasswordError,
+    async_get_manager as async_get_backup_manager,
+    http as backup_http,
+)
 from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
-from homeassistant.util.async_ import create_eager_task
 
 if TYPE_CHECKING:
     from . import OnboardingData, OnboardingStorage, OnboardingStoreData
@@ -50,6 +58,9 @@ async def async_setup(
     hass.http.register_view(CoreConfigOnboardingView(data, store))
     hass.http.register_view(IntegrationOnboardingView(data, store))
     hass.http.register_view(AnalyticsOnboardingView(data, store))
+    hass.http.register_view(BackupInfoView(data))
+    hass.http.register_view(RestoreBackupView(data))
+    hass.http.register_view(UploadBackupView(data))
 
 
 class OnboardingView(HomeAssistantView):
@@ -223,22 +234,21 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
             ):
                 onboard_integrations.append("rpi_power")
 
-            coros: list[Coroutine[Any, Any, Any]] = [
-                hass.config_entries.flow.async_init(
-                    domain, context={"source": "onboarding"}
+            for domain in onboard_integrations:
+                # Create tasks so onboarding isn't affected
+                # by errors in these integrations.
+                hass.async_create_task(
+                    hass.config_entries.flow.async_init(
+                        domain, context={"source": "onboarding"}
+                    ),
+                    f"onboarding_setup_{domain}",
                 )
-                for domain in onboard_integrations
-            ]
 
             if "analytics" not in hass.config.components:
                 # If by some chance that analytics has not finished
                 # setting up, wait for it here so its ready for the
                 # next step.
-                coros.append(async_setup_component(hass, "analytics", {}))
-
-            # Set up integrations after onboarding and ensure
-            # analytics is ready for the next step.
-            await asyncio.gather(*(create_eager_task(coro) for coro in coros))
+                await async_setup_component(hass, "analytics", {})
 
             return self.json({})
 
@@ -310,6 +320,124 @@ class AnalyticsOnboardingView(_BaseOnboardingView):
             await self._async_mark_done(hass)
 
             return self.json({})
+
+
+class BackupOnboardingView(HomeAssistantView):
+    """Backup onboarding view."""
+
+    requires_auth = False
+
+    def __init__(self, data: OnboardingStoreData) -> None:
+        """Initialize the view."""
+        self._data = data
+
+
+def with_backup_manager[_ViewT: BackupOnboardingView, **_P](
+    func: Callable[
+        Concatenate[_ViewT, BackupManager, web.Request, _P],
+        Coroutine[Any, Any, web.Response],
+    ],
+) -> Callable[Concatenate[_ViewT, web.Request, _P], Coroutine[Any, Any, web.Response]]:
+    """Home Assistant API decorator to check onboarding and inject manager."""
+
+    @wraps(func)
+    async def with_backup(
+        self: _ViewT,
+        request: web.Request,
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> web.Response:
+        """Check admin and call function."""
+        if self._data["done"]:
+            raise HTTPUnauthorized
+
+        try:
+            manager = async_get_backup_manager(request.app[KEY_HASS])
+        except HomeAssistantError:
+            return self.json(
+                {"code": "backup_disabled"},
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
+        return await func(self, manager, request, *args, **kwargs)
+
+    return with_backup
+
+
+class BackupInfoView(BackupOnboardingView):
+    """Get backup info view."""
+
+    url = "/api/onboarding/backup/info"
+    name = "api:onboarding:backup:info"
+
+    @with_backup_manager
+    async def get(self, manager: BackupManager, request: web.Request) -> web.Response:
+        """Return backup info."""
+        backups, _ = await manager.async_get_backups()
+        return self.json(
+            {
+                "backups": list(backups.values()),
+                "state": manager.state,
+                "last_non_idle_event": manager.last_non_idle_event,
+            }
+        )
+
+
+class RestoreBackupView(BackupOnboardingView):
+    """Restore backup view."""
+
+    url = "/api/onboarding/backup/restore"
+    name = "api:onboarding:backup:restore"
+
+    @RequestDataValidator(
+        vol.Schema(
+            {
+                vol.Required("backup_id"): str,
+                vol.Required("agent_id"): str,
+                vol.Optional("password"): str,
+                vol.Optional("restore_addons"): [str],
+                vol.Optional("restore_database", default=True): bool,
+                vol.Optional("restore_folders"): [vol.Coerce(Folder)],
+            }
+        )
+    )
+    @with_backup_manager
+    async def post(
+        self, manager: BackupManager, request: web.Request, data: dict[str, Any]
+    ) -> web.Response:
+        """Restore a backup."""
+        try:
+            await manager.async_restore_backup(
+                data["backup_id"],
+                agent_id=data["agent_id"],
+                password=data.get("password"),
+                restore_addons=data.get("restore_addons"),
+                restore_database=data["restore_database"],
+                restore_folders=data.get("restore_folders"),
+                restore_homeassistant=True,
+            )
+        except IncorrectPasswordError:
+            return self.json(
+                {"code": "incorrect_password"}, status_code=HTTPStatus.BAD_REQUEST
+            )
+        except HomeAssistantError as err:
+            return self.json(
+                {"code": "restore_failed", "message": str(err)},
+                status_code=HTTPStatus.BAD_REQUEST,
+            )
+        return web.Response(status=HTTPStatus.OK)
+
+
+class UploadBackupView(BackupOnboardingView, backup_http.UploadBackupView):
+    """Upload backup view."""
+
+    url = "/api/onboarding/backup/upload"
+    name = "api:onboarding:backup:upload"
+
+    @with_backup_manager
+    async def post(self, manager: BackupManager, request: web.Request) -> web.Response:
+        """Upload a backup file."""
+        return await self._post(request)
 
 
 @callback
