@@ -15,7 +15,7 @@ from homeassistant.components.sensor import (
     StateType,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import SnooConfigEntry
 from .entity import SnooDescriptionEntity
@@ -49,7 +49,7 @@ SENSOR_DESCRIPTIONS: list[SnooSensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SnooConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Snoo device."""
     coordinators = entry.runtime_data
