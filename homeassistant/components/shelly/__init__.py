@@ -55,7 +55,6 @@ from .utils import (
     get_device_entry_gen,
     get_http_port,
     get_ws_context,
-    rpc_device_has_script_support,
 )
 
 PLATFORMS: Final = [
@@ -262,6 +261,12 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         runtime_data.platforms = PLATFORMS
         try:
             await device.initialize()
+
+            # Update entry data with script support info
+            data = {**entry.data}
+            data[CONF_SCRIPT] = await device.supports_scripts()
+            hass.config_entries.async_update_entry(entry, data=data)
+
             if not device.firmware_supported:
                 async_create_issue_unsupported_firmware(hass, entry)
                 await device.shutdown()
@@ -342,24 +347,3 @@ async def async_remove_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> N
         mac_address := entry.unique_id
     ):
         async_remove_scanner(hass, mac_address)
-
-
-async def async_migrate_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
-    """Migrate old entry."""
-
-    LOGGER.debug("Migrating from version %s", entry.version)
-
-    if entry.minor_version == 2:
-        script_supported = rpc_device_has_script_support(entry)
-
-        hass.config_entries.async_update_entry(
-            entry,
-            data={
-                **entry.data,
-                CONF_SCRIPT: script_supported,
-            },
-            minor_version=3,
-        )
-
-    LOGGER.debug("Migration successful")
-    return True
