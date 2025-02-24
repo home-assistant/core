@@ -4,11 +4,12 @@ from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.data.model.device_limits import DeviceLimits
 from pymammotion.mammotion.devices.mammotion import Mammotion
 
-from . import (
+from .coordinator import (
     MammotionDeviceVersionUpdateCoordinator,
     MammotionMaintenanceUpdateCoordinator,
+    MammotionMapUpdateCoordinator,
+    MammotionReportUpdateCoordinator,
 )
-from .coordinator import MammotionReportUpdateCoordinator
 
 
 @dataclass
@@ -20,6 +21,7 @@ class MammotionMowerData:
     maintenance_coordinator: MammotionMaintenanceUpdateCoordinator
     reporting_coordinator: MammotionReportUpdateCoordinator
     version_coordinator: MammotionDeviceVersionUpdateCoordinator
+    map_coordinator: MammotionMapUpdateCoordinator
     device_limits: DeviceLimits
     device: Device
 
