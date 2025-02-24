@@ -2,57 +2,42 @@ rules:
   # Bronze
   action-setup: done
   appropriate-polling:
-    status: todo
+    status: done
     comment: |
-      The integration polls the Home Connect API every minute. This frequency can be lowered
-      because we receive push updates from the API so we don't need to poll that often.
+      Polling is performed only once at the configuration entry setup.
   brands: done
-  common-modules:
-    status: todo
-    comment: |
-      Coordinator is not present in this integration but should be.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
-  entity-event-setup:
-    status: exempt
-    comment: |
-      Entities of this integration does not explicitly subscribe to events.
+  docs-removal-instructions: done
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
   test-before-configure: done
-  test-before-setup: todo
+  test-before-setup: done
   unique-config-entry:
     status: exempt
     comment: |
       The Home Connect API does not allow to identify a user, so there is no
       way to know if multiple config entries are using the same account.
+      Therefore, the integration does only allow one config entry.
 
   # Silver
-  action-exceptions:
-    status: todo
-    comment: |
-      The integration does not raise exceptions when an action fails.
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
-  entity-unavailable:
-    status: todo
-    comment: |
-      Some entities are not marked as unavailable in cases it should be.
+  entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: todo
-  parallel-updates: done
-  reauthentication-flow: todo
-  test-coverage:
-    status: todo
-    comment: |
-      entity, light, and number tests coverage is under 95%.
+  log-when-unavailable: done
+  parallel-updates: todo
+  reauthentication-flow: done
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done
@@ -67,27 +52,30 @@ rules:
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: done
+  docs-supported-devices:
+    status: exempt
+    comment: |
+      There is not information about supported or unsupported devices.
+  docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
-  dynamic-devices: todo
-  entity-category:
-    status: todo
-    comment: |
-      Some entities that can be config or diagnostic are not marked as such.
+  dynamic-devices: done
+  entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: todo
+  entity-disabled-by-default:
+    status: exempt
+    comment: |
+      There aren't noisy entities in this integration.
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow: todo
-  repair-issues:
+  reconfiguration-flow:
     status: exempt
     comment: |
-      This integration does not raise any repairable issues.
-  stale-devices: todo
+      This integration doesn't have settings in its configuration flow.
+  repair-issues: done
+  stale-devices: done
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: done
   strict-typing: done
