@@ -17,7 +17,7 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from .const import _LOGGER
 from .coordinator import MerossDataUpdateCoordinator
 
-PLATFORMS: Final = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS: Final = [Platform.SENSOR]
 
 MerossConfigEntry = ConfigEntry[MerossDataUpdateCoordinator]
 
