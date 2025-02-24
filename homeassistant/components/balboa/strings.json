@@ -57,6 +57,11 @@
         }
       }
     },
+    "event": {
+      "fault": {
+        "name": "Fault"
+      }
+    },
     "fan": {
       "pump": {
         "name": "Pump {index}"
@@ -77,11 +82,6 @@
           "low": "Low",
           "high": "High"
         }
-      }
-    },
-    "sensor": {
-      "fault": {
-        "name": "Fault"
       }
     },
     "switch": {
