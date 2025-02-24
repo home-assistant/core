@@ -919,6 +919,7 @@ build.json @home-assistant/supervisor
 /homeassistant/components/melnor/ @vanstinator
 /tests/components/melnor/ @vanstinator
 /homeassistant/components/meross_scan/ @ashionky
+/tests/components/meross_scan/ @ashionky
 /homeassistant/components/met/ @danielhiversen
 /tests/components/met/ @danielhiversen
 /homeassistant/components/met_eireann/ @DylanGore
