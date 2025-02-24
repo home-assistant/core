@@ -73,6 +73,9 @@
     },
     "file_decoding": {
       "message": "Cannot read file {filename} as {encoding}."
+    },
+    "file_not_found": {
+      "message": "File {filename} not found."
     }
   },
   "services": {

@@ -13,16 +13,6 @@ from homeassistant.components.file.services import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.setup import async_setup_component
-
-
-async def _setup_hass(hass: HomeAssistant):
-    await async_setup_component(
-        hass,
-        FILE_DOMAIN,
-        {FILE_DOMAIN: {}},
-    )
-    await hass.async_block_till_done()
 
 
 @pytest.mark.parametrize(
@@ -36,13 +26,12 @@ async def _setup_hass(hass: HomeAssistant):
 async def test_read_file(
     hass: HomeAssistant,
     mock_is_allowed_path: MagicMock,
+    setup_ha_file_integration,
     file_name: str,
     file_encoding: str,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the notify file output."""
-    await _setup_hass(hass)
-
     result = await hass.services.async_call(
         FILE_DOMAIN,
         SERVICE_READ_FILE,
@@ -58,10 +47,9 @@ async def test_read_file(
 
 async def test_read_file_disallowed_path(
     hass: HomeAssistant,
+    setup_ha_file_integration,
 ) -> None:
     """Test the notify file output."""
-    await _setup_hass(hass)
-
     file_name = "tests/components/file/fixtures/file_read.json"
 
     with pytest.raises(HomeAssistantError) as hae:
@@ -81,10 +69,9 @@ async def test_read_file_disallowed_path(
 async def test_read_file_bad_encoding(
     hass: HomeAssistant,
     mock_is_allowed_path: MagicMock,
+    setup_ha_file_integration,
 ) -> None:
     """Test the notify file output."""
-    await _setup_hass(hass)
-
     file_name = "tests/components/file/fixtures/file_read.json"
 
     with pytest.raises(ServiceValidationError) as sve:
@@ -112,12 +99,11 @@ async def test_read_file_bad_encoding(
 async def test_read_file_decoding_error(
     hass: HomeAssistant,
     mock_is_allowed_path: MagicMock,
+    setup_ha_file_integration,
     file_name: str,
     file_encoding: str,
 ) -> None:
     """Test the notify file output."""
-    await _setup_hass(hass)
-
     with pytest.raises(HomeAssistantError) as hae:
         _ = await hass.services.async_call(
             FILE_DOMAIN,
@@ -131,3 +117,25 @@ async def test_read_file_decoding_error(
         )
     assert file_name in str(hae.value)
     assert file_encoding in str(hae.value)
+
+
+async def test_read_file_dne(
+    hass: HomeAssistant,
+    mock_is_allowed_path: MagicMock,
+    setup_ha_file_integration,
+) -> None:
+    """Test the notify file output."""
+    file_name = "tests/components/file/fixtures/file_dne.yaml"
+
+    with pytest.raises(HomeAssistantError) as hae:
+        _ = await hass.services.async_call(
+            FILE_DOMAIN,
+            SERVICE_READ_FILE,
+            {
+                ATTR_FILE_NAME: file_name,
+                ATTR_FILE_ENCODING: "yaml",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert file_name in str(hae.value)

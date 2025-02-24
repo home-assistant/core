@@ -65,6 +65,12 @@ async def read_file(call: ServiceCall, skip_reload=True) -> dict:
             raise HomeAssistantError(
                 f"Unsupported YAML content type: {type(yaml_content)}"
             )
+    except FileNotFoundError as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="file_not_found",
+            translation_placeholders={"filename": file_name},
+        ) from err
     except (json.JSONDecodeError, yaml.parser.ParserError) as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
