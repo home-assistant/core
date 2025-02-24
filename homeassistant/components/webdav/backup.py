@@ -75,6 +75,7 @@ def handle_backup_errors[_R, **P](
         except UnauthorizedError as err:
             raise BackupAgentError("Authentication error") from err
         except WebDavError as err:
+            _LOGGER.debug("Full error: %s", err, exc_info=True)
             raise BackupAgentError(
                 f"Backup operation failed: {err}",
             ) from err
@@ -86,6 +87,12 @@ def handle_backup_errors[_R, **P](
             raise BackupAgentError("Backup operation timed out") from err
 
     return wrapper
+
+
+def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
+    """Return the suggested filenames for the backup and metadata."""
+    base_name = suggested_filename(backup).rsplit(".", 1)[0]
+    return f"{base_name}.tar", f"{base_name}.metadata.json"
 
 
 class WebDavBackupAgent(BackupAgent):
@@ -140,26 +147,26 @@ class WebDavBackupAgent(BackupAgent):
         :param open_stream: A function returning an async iterator that yields bytes.
         :param backup: Metadata about the backup that should be uploaded.
         """
-        filename = suggested_filename(backup)
+        (filename_tar, filename_meta) = suggested_filenames(backup)
+
         await self._client.upload_iter(
             await open_stream(),
-            f"{self._backup_path}/{filename}",
+            f"{self._backup_path}/{filename_tar}",
             timeout=BACKUP_TIMEOUT,
         )
 
         _LOGGER.debug(
             "Uploaded backup to %s",
-            f"{self._backup_path}/{filename}",
+            f"{self._backup_path}/{filename_tar}",
         )
 
-        metadata_filename = f"{filename.rsplit('.', 1)[0]}.metadata.json"
         await self._client.upload_iter(
             json_dumps(backup.as_dict()),
-            f"{self._backup_path}/{metadata_filename}",
+            f"{self._backup_path}/{filename_meta}",
         )
 
         await self._client.set_property_batch(
-            f"{self._backup_path}/{metadata_filename}",
+            f"{self._backup_path}/{filename_meta}",
             [
                 Property(
                     namespace="homeassistant",
@@ -176,7 +183,7 @@ class WebDavBackupAgent(BackupAgent):
 
         _LOGGER.debug(
             "Uploaded metadata file for %s",
-            f"{self._backup_path}/{filename}",
+            f"{self._backup_path}/{filename_meta}",
         )
 
     @handle_backup_errors
@@ -193,12 +200,11 @@ class WebDavBackupAgent(BackupAgent):
         if backup is None:
             return
 
-        filename = suggested_filename(backup)
-        backup_path = f"{self._backup_path}/{filename}"
+        (filename_tar, filename_meta) = suggested_filenames(backup)
+        backup_path = f"{self._backup_path}/{filename_tar}"
 
         await self._client.clean(backup_path)
-        metadata_filename = f"{filename.rsplit('.', 1)[0]}.metadata.json"
-        await self._client.clean(f"{self._backup_path}/{metadata_filename}")
+        await self._client.clean(f"{self._backup_path}/{filename_meta}")
 
         _LOGGER.debug(
             "Deleted backup at %s",
