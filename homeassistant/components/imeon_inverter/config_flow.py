@@ -56,7 +56,7 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         errors["base"] = "unknown"
 
                 else:
-                    if connection is True:
+                    if connection:
                         try:
                             # Check if entry already exists
                             serial = await client.get_serial()

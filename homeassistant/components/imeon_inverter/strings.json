@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Add Imeon Inverter",
+        "title": "Add Imeon inverter",
         "data": {
           "address": "[%key:common::config_flow::data::url%]",
           "username": "[%key:common::config_flow::data::username%]",
