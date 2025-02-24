@@ -19,8 +19,7 @@ from homeassistant.const import (
     EVENT_STATE_CHANGED,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import state
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, state
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)

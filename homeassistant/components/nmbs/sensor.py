@@ -22,11 +22,14 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (  # noqa: F401
     CONF_EXCLUDE_VIAS,
@@ -151,7 +154,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up NMBS sensor entities based on a config entry."""
     api_client = iRail()
@@ -170,8 +173,10 @@ async def async_setup_entry(
             NMBSSensor(
                 api_client, name, show_on_map, station_from, station_to, excl_vias
             ),
-            NMBSLiveBoard(api_client, station_from, station_from, station_to),
-            NMBSLiveBoard(api_client, station_to, station_from, station_to),
+            NMBSLiveBoard(
+                api_client, station_from, station_from, station_to, excl_vias
+            ),
+            NMBSLiveBoard(api_client, station_to, station_from, station_to, excl_vias),
         ]
     )
 
@@ -187,12 +192,15 @@ class NMBSLiveBoard(SensorEntity):
         live_station: dict[str, Any],
         station_from: dict[str, Any],
         station_to: dict[str, Any],
+        excl_vias: bool,
     ) -> None:
         """Initialize the sensor for getting liveboard data."""
         self._station = live_station
         self._api_client = api_client
         self._station_from = station_from
         self._station_to = station_to
+
+        self._excl_vias = excl_vias
         self._attrs: dict[str, Any] | None = {}
         self._state: str | None = None
 
@@ -210,7 +218,8 @@ class NMBSLiveBoard(SensorEntity):
         unique_id = (
             f"{self._station['id']}_{self._station_from['id']}_{self._station_to['id']}"
         )
-        return f"nmbs_live_{unique_id}"
+        vias = "_excl_vias" if self._excl_vias else ""
+        return f"nmbs_live_{unique_id}{vias}"
 
     @property
     def icon(self) -> str:
@@ -303,7 +312,8 @@ class NMBSSensor(SensorEntity):
         """Return the unique ID."""
         unique_id = f"{self._station_from['id']}_{self._station_to['id']}"
 
-        return f"nmbs_connection_{unique_id}"
+        vias = "_excl_vias" if self._excl_vias else ""
+        return f"nmbs_connection_{unique_id}{vias}"
 
     @property
     def name(self) -> str:

@@ -37,7 +37,8 @@ from homeassistant.components.recorder.db_schema import (
 from homeassistant.components.recorder.tasks import RecorderTask, StatisticsTask
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, State
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers import recorder as recorder_helper
+from homeassistant.util import dt as dt_util
 
 from . import db_schema_0
 
@@ -77,6 +78,11 @@ async def async_block_recorder(hass: HomeAssistant, seconds: float) -> None:
     event = asyncio.Event()
     get_instance(hass).queue_task(BlockRecorderTask(event, seconds))
     await event.wait()
+
+
+async def async_wait_recorder(hass: HomeAssistant) -> bool:
+    """Wait for recorder to initialize and return connection status."""
+    return await hass.data[recorder_helper.DATA_RECORDER].db_connected
 
 
 def get_start_time(start: datetime) -> datetime:

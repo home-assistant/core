@@ -141,7 +141,7 @@ uuid==1000000000.0.0
 # requirements so we can directly link HA versions to these library versions.
 anyio==4.8.0
 h11==0.14.0
-httpcore==1.0.5
+httpcore==1.0.7
 
 # Ensure we have a hyperframe version that works in Python 3.10
 # 5.2.0 fixed a collections abc deprecation
@@ -159,7 +159,7 @@ multidict>=6.0.2
 backoff>=2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.10.4
+pydantic==2.10.6
 
 # Required for Python 3.12.4 compatibility (#119223).
 mashumaro>=3.13.1
@@ -198,6 +198,10 @@ pysnmplib==1000000000.0.0
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
 get-mac==1000000000.0.0
+
+# Poetry is a build dependency. Installing it as a runtime dependency almost
+# always indicates an issue with library requirements.
+poetry==1000000000.0.0
 
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.

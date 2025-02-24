@@ -8,7 +8,7 @@ from music_assistant_models.enums import MediaType
 import voluptuous as vol
 
 from homeassistant.const import ATTR_NAME
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from .const import (
     ATTR_ACTIVE,

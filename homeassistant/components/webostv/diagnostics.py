@@ -1,4 +1,4 @@
-"""Diagnostics support for LG webOS Smart TV."""
+"""Diagnostics support for LG webOS TV."""
 
 from __future__ import annotations
 
@@ -32,15 +32,15 @@ async def async_get_config_entry_diagnostics(
     client_data = {
         "is_registered": client.is_registered(),
         "is_connected": client.is_connected(),
-        "current_app_id": client.current_app_id,
-        "current_channel": client.current_channel,
-        "apps": client.apps,
-        "inputs": client.inputs,
-        "system_info": client.system_info,
-        "software_info": client.software_info,
-        "hello_info": client.hello_info,
-        "sound_output": client.sound_output,
-        "is_on": client.is_on,
+        "current_app_id": client.tv_state.current_app_id,
+        "current_channel": client.tv_state.current_channel,
+        "apps": client.tv_state.apps,
+        "inputs": client.tv_state.inputs,
+        "system_info": client.tv_info.system,
+        "software_info": client.tv_info.software,
+        "hello_info": client.tv_info.hello,
+        "sound_output": client.tv_state.sound_output,
+        "is_on": client.tv_state.is_on,
     }
 
     return async_redact_data(

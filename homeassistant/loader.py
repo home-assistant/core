@@ -25,7 +25,7 @@ from awesomeversion import (
     AwesomeVersionException,
     AwesomeVersionStrategy,
 )
-from propcache import cached_property
+from propcache.api import cached_property
 import voluptuous as vol
 
 from . import generated

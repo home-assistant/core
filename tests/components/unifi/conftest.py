@@ -26,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -172,6 +172,7 @@ def fixture_request(
     device_payload: list[dict[str, Any]],
     dpi_app_payload: list[dict[str, Any]],
     dpi_group_payload: list[dict[str, Any]],
+    firewall_policy_payload: list[dict[str, Any]],
     port_forward_payload: list[dict[str, Any]],
     traffic_rule_payload: list[dict[str, Any]],
     traffic_route_payload: list[dict[str, Any]],
@@ -211,6 +212,9 @@ def fixture_request(
         mock_get_request(f"/api/s/{site_id}/stat/device", device_payload)
         mock_get_request(f"/api/s/{site_id}/rest/dpiapp", dpi_app_payload)
         mock_get_request(f"/api/s/{site_id}/rest/dpigroup", dpi_group_payload)
+        mock_get_request(
+            f"/v2/api/site/{site_id}/firewall-policies", firewall_policy_payload
+        )
         mock_get_request(f"/api/s/{site_id}/rest/portforward", port_forward_payload)
         mock_get_request(f"/api/s/{site_id}/stat/sysinfo", system_information_payload)
         mock_get_request(f"/api/s/{site_id}/rest/wlanconf", wlan_payload)
@@ -250,6 +254,12 @@ def fixture_dpi_app_data() -> list[dict[str, Any]]:
 @pytest.fixture(name="dpi_group_payload")
 def fixture_dpi_group_data() -> list[dict[str, Any]]:
     """DPI group data."""
+    return []
+
+
+@pytest.fixture(name="firewall_policy_payload")
+def firewall_policy_payload_data() -> list[dict[str, Any]]:
+    """Firewall policy data."""
     return []
 
 

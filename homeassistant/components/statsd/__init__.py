@@ -7,8 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_PREFIX, EVENT_STATE_CHANGED
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import state as state_helper
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, state as state_helper
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)

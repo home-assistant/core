@@ -10,12 +10,12 @@ from unittest.mock import MagicMock, Mock, patch
 from aiohttp import ClientConnectionError, ClientResponseError
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.bond.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .common import (
     patch_bond_bridge,
@@ -219,7 +219,7 @@ async def test_zeroconf_form(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("127.0.0.1"),
                 ip_addresses=[ip_address("127.0.0.1")],
                 hostname="mock_hostname",
@@ -260,7 +260,7 @@ async def test_zeroconf_form_token_unavailable(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("127.0.0.1"),
                 ip_addresses=[ip_address("127.0.0.1")],
                 hostname="mock_hostname",
@@ -302,7 +302,7 @@ async def test_zeroconf_form_token_times_out(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("127.0.0.1"),
                 ip_addresses=[ip_address("127.0.0.1")],
                 hostname="mock_hostname",
@@ -349,7 +349,7 @@ async def test_zeroconf_form_with_token_available(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("127.0.0.1"),
                 ip_addresses=[ip_address("127.0.0.1")],
                 hostname="mock_hostname",
@@ -393,7 +393,7 @@ async def test_zeroconf_form_with_token_available_name_unavailable(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("127.0.0.1"),
                 ip_addresses=[ip_address("127.0.0.1")],
                 hostname="mock_hostname",
@@ -437,7 +437,7 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("127.0.0.2"),
                 ip_addresses=[ip_address("127.0.0.2")],
                 hostname="mock_hostname",
@@ -475,7 +475,7 @@ async def test_zeroconf_in_setup_retry_state(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("127.0.0.2"),
                 ip_addresses=[ip_address("127.0.0.2")],
                 hostname="mock_hostname",
@@ -522,7 +522,7 @@ async def test_zeroconf_already_configured_refresh_token(hass: HomeAssistant) ->
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("127.0.0.2"),
                 ip_addresses=[ip_address("127.0.0.2")],
                 hostname="mock_hostname",
@@ -561,7 +561,7 @@ async def test_zeroconf_already_configured_no_reload_same_host(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("127.0.0.3"),
                 ip_addresses=[ip_address("127.0.0.3")],
                 hostname="mock_hostname",
@@ -583,7 +583,7 @@ async def test_zeroconf_form_unexpected_error(hass: HomeAssistant) -> None:
     await _help_test_form_unexpected_error(
         hass,
         source=config_entries.SOURCE_ZEROCONF,
-        initial_input=zeroconf.ZeroconfServiceInfo(
+        initial_input=ZeroconfServiceInfo(
             ip_address=ip_address("127.0.0.1"),
             ip_addresses=[ip_address("127.0.0.1")],
             hostname="mock_hostname",

@@ -3,8 +3,8 @@
     "flow_title": "{name} ({ip_address})",
     "step": {
       "user": {
-        "title": "UniFi Protect Setup",
-        "description": "You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
+        "title": "UniFi Protect setup",
+        "description": "You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
@@ -17,17 +17,17 @@
         }
       },
       "reauth_confirm": {
-        "title": "UniFi Protect Reauth",
+        "title": "UniFi Protect reauth",
         "data": {
-          "host": "IP/Host of UniFi Protect Server",
+          "host": "IP/Host of UniFi Protect server",
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
       "discovery_confirm": {
-        "title": "UniFi Protect Discovered",
-        "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud Users will not work. For more information: {local_user_documentation_url}",
+        "title": "UniFi Protect discovered",
+        "description": "Do you want to set up {name} ({ip_address})? You will need a local user created in your UniFi OS Console to log in with. Ubiquiti Cloud users will not work. For more information: {local_user_documentation_url}",
         "data": {
           "username": "[%key:common::config_flow::data::username%]",
           "password": "[%key:common::config_flow::data::password%]"
@@ -38,7 +38,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "protect_version": "Minimum required version is v1.20.0. Please upgrade UniFi Protect and then retry.",
-      "cloud_user": "Ubiquiti Cloud users are not Supported. Please use a Local only user."
+      "cloud_user": "Ubiquiti Cloud users are not supported. Please use a local user instead."
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -49,12 +49,12 @@
   "options": {
     "step": {
       "init": {
-        "title": "UniFi Protect Options",
+        "title": "UniFi Protect options",
         "description": "Realtime metrics option should only be enabled if you have enabled the diagnostics sensors and want them updated in realtime. If not enabled, they will only update once every 15 minutes.",
         "data": {
           "disable_rtsp": "Disable the RTSP stream",
           "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
-          "override_connection_host": "Override Connection Host",
+          "override_connection_host": "Override connection host",
           "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
           "allow_ea_channel": "Allow Early Access versions of Protect (WARNING: Will mark your integration as unsupported)"
         }
@@ -68,7 +68,7 @@
         "step": {
           "start": {
             "title": "UniFi Protect Early Access enabled",
-            "description": "You are either running an Early Access version of UniFi Protect (v{version}) or opt-ed into a release channel that is not the Official Release Channel.\n\nAs these Early Access releases may not be tested yet, using it may cause the UniFi Protect integration to behave unexpectedly. [Read more about Early Access and Home Assistant]({learn_more}).\n\nSubmit to dismiss this message."
+            "description": "You are either running an Early Access version of UniFi Protect (v{version}) or opt-ed into a release channel that is not the official release channel.\n\nAs these Early Access releases may not be tested yet, using it may cause the UniFi Protect integration to behave unexpectedly. [Read more about Early Access and Home Assistant]({learn_more}).\n\nSubmit to dismiss this message."
           },
           "confirm": {
             "title": "[%key:component::unifiprotect::issues::ea_channel_warning::fix_flow::step::start::title%]",
@@ -123,8 +123,8 @@
       }
     },
     "deprecate_hdr_switch": {
-      "title": "HDR Mode Switch Deprecated",
-      "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode Switch has been replaced with an HDR Mode Select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
+      "title": "HDR Mode switch deprecated",
+      "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode switch has been replaced with an HDR Mode select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly."
     }
   },
   "entity": {
@@ -171,22 +171,22 @@
   },
   "services": {
     "add_doorbell_text": {
-      "name": "Add custom doorbell text",
+      "name": "Add doorbell text",
       "description": "Adds a new custom message for doorbells.",
       "fields": {
         "device_id": {
           "name": "UniFi Protect NVR",
-          "description": "Any device from the UniFi Protect instance you want to change. In case you have multiple Protect Instances."
+          "description": "Any device from the UniFi Protect instance you want to change. In case you have multiple Protect instances."
         },
         "message": {
           "name": "Custom message",
-          "description": "New custom message to add for doorbells. Must be less than 30 characters."
+          "description": "New custom message to add. Must be less than 30 characters."
         }
       }
     },
     "remove_doorbell_text": {
-      "name": "Remove custom doorbell text",
-      "description": "Removes an existing message for doorbells.",
+      "name": "Remove doorbell text",
+      "description": "Removes an existing custom message for doorbells.",
       "fields": {
         "device_id": {
           "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::device_id::name%]",
@@ -194,13 +194,13 @@
         },
         "message": {
           "name": "[%key:component::unifiprotect::services::add_doorbell_text::fields::message::name%]",
-          "description": "Existing custom message to remove for doorbells."
+          "description": "Existing custom message to remove."
         }
       }
     },
     "set_chime_paired_doorbells": {
       "name": "Set chime paired doorbells",
-      "description": "Use to set the paired doorbell(s) with a smart chime.",
+      "description": "Pairs doorbell(s) with a smart chime.",
       "fields": {
         "device_id": {
           "name": "Chime",
@@ -213,22 +213,22 @@
       }
     },
     "remove_privacy_zone": {
-      "name": "Remove camera privacy zone",
-      "description": "Use to remove a privacy zone from a camera.",
+      "name": "Remove privacy zone",
+      "description": "Removes a privacy zone from a camera.",
       "fields": {
         "device_id": {
           "name": "Camera",
-          "description": "Camera you want to remove privacy zone from."
+          "description": "Camera you want to remove the privacy zone from."
         },
         "name": {
-          "name": "Privacy Zone Name",
+          "name": "Privacy zone",
           "description": "The name of the zone to remove."
         }
       }
     },
     "get_user_keyring_info": {
-      "name": "Retrieve Keyring Details for Users",
-      "description": "Fetch a detailed list of users with NFC and fingerprint associations for automations.",
+      "name": "Get user keyring info",
+      "description": "Fetches a detailed list of users with NFC and fingerprint associations for automations.",
       "fields": {
         "device_id": {
           "name": "UniFi Protect NVR",

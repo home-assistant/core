@@ -5,6 +5,19 @@
         "default": "mdi:check-decagram"
       }
     },
+    "number": {
+      "preconditioning_duration": {
+        "default": "mdi:fan-clock"
+      },
+      "target_percentage": {
+        "default": "mdi:battery-heart"
+      }
+    },
+    "select": {
+      "charge_mode": {
+        "default": "mdi:play-box"
+      }
+    },
     "sensor": {
       "status": {
         "default": "mdi:car",
@@ -35,6 +48,11 @@
         "state": {
           "off": "mdi:sleep-off"
         }
+      }
+    },
+    "time": {
+      "target_time": {
+        "default": "mdi:clock-end"
       }
     }
   },
