@@ -8,6 +8,7 @@ import logging
 import anyio
 import voluptuous as vol
 import yaml
+import yaml.parser
 
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -41,7 +42,10 @@ async def read_file(call: ServiceCall, skip_reload=True) -> dict:
     # Get parameters
     file_name = call.data[ATTR_FILE_NAME]
     file_encoding = call.data[ATTR_FILE_ENCODING].lower()
-    if not call.hass.config.is_allowed_path(file_name):
+
+    if not await call.hass.async_add_executor_job(
+        call.hass.config.is_allowed_path, file_name
+    ):
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="no_access_to_path",
@@ -61,7 +65,14 @@ async def read_file(call: ServiceCall, skip_reload=True) -> dict:
             raise HomeAssistantError(
                 f"Unsupported YAML content type: {type(yaml_content)}"
             )
-
-    except json.JSONDecodeError as err:
-        raise HomeAssistantError(f"Error reading JSON file: {err}") from err
-    raise ServiceValidationError(f"Unsupported file encoding: {file_encoding}")
+    except (json.JSONDecodeError, yaml.parser.ParserError) as err:
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="file_decoding",
+            translation_placeholders={"filename": file_name, "encoding": file_encoding},
+        ) from err
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="unsupported_file_encoding",
+        translation_placeholders={"filename": file_name, "encoding": file_encoding},
+    )

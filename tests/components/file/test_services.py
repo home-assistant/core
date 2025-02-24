@@ -12,6 +12,7 @@ from homeassistant.components.file.services import (
     SERVICE_READ_FILE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 
@@ -53,3 +54,80 @@ async def test_read_file(
         return_response=True,
     )
     assert result == snapshot
+
+
+async def test_read_file_disallowed_path(
+    hass: HomeAssistant,
+) -> None:
+    """Test the notify file output."""
+    await _setup_hass(hass)
+
+    file_name = "tests/components/file/fixtures/file_read.json"
+
+    with pytest.raises(HomeAssistantError) as hae:
+        _ = await hass.services.async_call(
+            FILE_DOMAIN,
+            SERVICE_READ_FILE,
+            {
+                ATTR_FILE_NAME: file_name,
+                ATTR_FILE_ENCODING: "json",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert file_name in str(hae.value)
+
+
+async def test_read_file_bad_encoding(
+    hass: HomeAssistant,
+    mock_is_allowed_path: MagicMock,
+) -> None:
+    """Test the notify file output."""
+    await _setup_hass(hass)
+
+    file_name = "tests/components/file/fixtures/file_read.json"
+
+    with pytest.raises(ServiceValidationError) as sve:
+        _ = await hass.services.async_call(
+            FILE_DOMAIN,
+            SERVICE_READ_FILE,
+            {
+                ATTR_FILE_NAME: file_name,
+                ATTR_FILE_ENCODING: "invalid",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert file_name in str(sve.value)
+    assert "invalid" in str(sve.value)
+
+
+@pytest.mark.parametrize(
+    ("file_name", "file_encoding"),
+    [
+        ("tests/components/file/fixtures/file_read.yaml", "json"),
+        ("tests/components/file/fixtures/file_read.not_yaml", "yaml"),
+    ],
+)
+async def test_read_file_decoding_error(
+    hass: HomeAssistant,
+    mock_is_allowed_path: MagicMock,
+    file_name: str,
+    file_encoding: str,
+) -> None:
+    """Test the notify file output."""
+    await _setup_hass(hass)
+
+    with pytest.raises(HomeAssistantError) as hae:
+        _ = await hass.services.async_call(
+            FILE_DOMAIN,
+            SERVICE_READ_FILE,
+            {
+                ATTR_FILE_NAME: file_name,
+                ATTR_FILE_ENCODING: file_encoding,
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert file_name in str(hae.value)
+    assert file_encoding in str(hae.value)
