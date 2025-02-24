@@ -44,6 +44,7 @@ REFOSS_SENSORS: Final = {
         sub_key="apower",
         name="Power",
         native_unit_of_measurement=UnitOfPower.WATT,
+        value=lambda status, _: None if status is None else float(status) / 1000.0,
         suggested_display_precision=2,
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
