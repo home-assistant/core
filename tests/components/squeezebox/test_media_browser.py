@@ -101,6 +101,11 @@ async def test_async_browse_media_with_subitems(
             category_level = response["result"]
             assert category_level["title"] == MEDIA_TYPE_TO_SQUEEZEBOX[category]
             assert category_level["children"][0]["title"] == "Fake Item 1"
+            assert (
+                len(category_level["children"]) == 3
+                if category in ["Apps", "Radios"]
+                else 4
+            )
 
             # Look up a subitem
             search_type = category_level["children"][0]["media_content_type"]
@@ -144,7 +149,7 @@ async def test_async_browse_tracks(
         assert response["success"]
         tracks = response["result"]
         assert tracks["title"] == "titles"
-        assert len(tracks["children"]) == 3
+        assert len(tracks["children"]) == 4
 
 
 async def test_async_browse_error(

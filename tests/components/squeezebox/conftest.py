@@ -179,6 +179,17 @@ async def mock_async_browse(
             "cmd": "fakecommand",
             "icon": "plugins/Qobuz/html/images/qobuz.png",
         },
+        {
+            "title": "Fake Invalid Item 1",
+            "id": FAKE_VALID_ITEM_ID + "invalid_3",
+            "hasitems": media_type == "favorites",
+            "isaudio": True,
+            "album_id": FAKE_VALID_ITEM_ID if media_type == "favorites" else None,
+            "url": "file:///var/lib/squeezeboxserver/music/track_3.mp3",
+            "cmd": "fakecommand",
+            "icon": "plugins/Qobuz/html/images/qobuz.png",
+            "type": "text",
+        },
     ]
 
     if browse_id:
