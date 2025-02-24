@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import recorder as recorder_helper
 
 from .util import get_instance
 
@@ -28,9 +29,6 @@ async def ws_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Return status of the recorder."""
-    # pylint: disable-next=import-outside-toplevel
-    from homeassistant.helpers import recorder as recorder_helper
-
     # Wait for db_connected to ensure the recorder instance is created and the
     # migration flags are set.
     await hass.data[recorder_helper.DATA_RECORDER].db_connected
