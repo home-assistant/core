@@ -74,7 +74,9 @@ def handle_backup_errors[_R, **P](
                 err.message,
                 exc_info=True
             )
-            raise BackupAgentError("Error during backup operation") from err
+            raise BackupAgentError(
+                f"Error during backup operation in {func.__name__}: Status {err.status_code}, message: {err.mesage}"
+            ) from err
 
     return wrapper
 
