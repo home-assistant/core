@@ -284,7 +284,7 @@ class AtaDeviceClimate(MelCloudClimate):
 
     @property
     def swing_horizontal_mode(self) -> str | None:
-        """Return vertical vane position or mode."""
+        """Return horizontal vane position or mode."""
         return self._device.vane_horizontal
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
@@ -292,7 +292,7 @@ class AtaDeviceClimate(MelCloudClimate):
         await self.async_set_vane_vertical(swing_mode)
 
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
-        """Set vertical vane position or mode."""
+        """Set horizontal vane position or mode."""
         await self.async_set_vane_horizontal(swing_horizontal_mode)
 
     @property
@@ -302,7 +302,7 @@ class AtaDeviceClimate(MelCloudClimate):
 
     @property
     def swing_horizontal_modes(self) -> list[str] | None:
-        """Return a list of available vertical vane positions and modes."""
+        """Return a list of available horizontal vane positions and modes."""
         return self._device.vane_horizontal_positions
 
     async def async_turn_on(self) -> None:
