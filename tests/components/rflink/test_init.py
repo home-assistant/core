@@ -72,6 +72,7 @@ async def mock_rflink(
     )
 
     await async_setup_component(hass, "rflink", config)
+    await hass.async_block_till_done()
     await async_setup_component(hass, domain, config)
     await hass.async_block_till_done()
 
