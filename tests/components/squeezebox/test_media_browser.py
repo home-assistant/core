@@ -19,6 +19,8 @@ from homeassistant.components.squeezebox.browse_media import (
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 
+from .conftest import FAKE_VALID_ITEM_ID
+
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
@@ -124,6 +126,85 @@ async def test_async_browse_media_with_subitems(
         assert response["success"]
         search = response["result"]
         assert search["title"] == "Fake Item 1"
+
+
+async def test_async_browse_media_for_apps(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test browsing for app category."""
+    with patch(
+        "homeassistant.components.squeezebox.browse_media.is_internal_request",
+        return_value=False,
+    ):
+        category = "Apps"
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.test_player",
+                "media_content_id": "",
+                "media_content_type": category,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+
+        # Look up a subitem
+        await client.send_json(
+            {
+                "id": 2,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.test_player",
+                "media_content_id": "",
+                "media_content_type": "app-fakecommand",
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        search = response["result"]
+        assert search["children"][0]["title"] == "Fake Item 1"
+        assert "Fake Invalid Item 1" not in search
+
+
+async def test_generate_playlist_for_app(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the generate_playlist for app-fakecommand media type."""
+    with patch(
+        "homeassistant.components.squeezebox.browse_media.is_internal_request",
+        return_value=False,
+    ):
+        category = "Apps"
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.test_player",
+                "media_content_id": "",
+                "media_content_type": category,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+
+        try:
+            await hass.services.async_call(
+                MEDIA_PLAYER_DOMAIN,
+                SERVICE_PLAY_MEDIA,
+                {
+                    ATTR_ENTITY_ID: "media_player.test_player",
+                    ATTR_MEDIA_CONTENT_TYPE: "app-fakecommand",
+                    ATTR_MEDIA_CONTENT_ID: FAKE_VALID_ITEM_ID,
+                },
+                blocking=True,
+            )
+        except BrowseError:
+            pytest.fail("generate_playlist fails for app")
 
 
 async def test_async_browse_tracks(

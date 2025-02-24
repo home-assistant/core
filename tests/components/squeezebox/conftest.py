@@ -218,7 +218,10 @@ async def mock_async_browse(
                 "items": fake_items,
             }
         return None
-    if media_type in MEDIA_TYPE_TO_SQUEEZEBOX.values():
+    if (
+        media_type in MEDIA_TYPE_TO_SQUEEZEBOX.values()
+        or media_type == "app-fakecommand"
+    ):
         return {
             "title": media_type,
             "items": fake_items,
