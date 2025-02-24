@@ -47,10 +47,10 @@ class FirmwareUpdateEntityDescription(UpdateEntityDescription):
     """Describes Home Assistant Hardware firmware update entity."""
 
     version_parser: Callable[[str], str]
-    fw_type: str
-    version_key: str
-    expected_firmware_type: ApplicationType
-    firmware_name: str
+    fw_type: str | None
+    version_key: str | None
+    expected_firmware_type: ApplicationType | None
+    firmware_name: str | None
 
 
 @dataclass
@@ -105,10 +105,12 @@ class BaseFirmwareUpdateEntity(
         device: str,
         config_entry: ConfigEntry,
         update_coordinator: FirmwareUpdateCoordinator,
+        entity_description: FirmwareUpdateEntityDescription,
     ) -> None:
         """Initialize the Hardware firmware update entity."""
         super().__init__(update_coordinator)
 
+        self.entity_description = entity_description
         self._current_device = device
         self._config_entry = config_entry
         self._current_firmware_info: FirmwareInfo | None = None
@@ -129,7 +131,7 @@ class BaseFirmwareUpdateEntity(
         This helps to differentiate between the device or entity name
         versus the title of the software installed.
         """
-        return self.entity_description.firmware_name
+        return self.entity_description.firmware_name or "unknown"
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -186,6 +188,12 @@ class BaseFirmwareUpdateEntity(
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
         raise NotImplementedError
 
+    def _firmware_type_changed(
+        self, old_type: ApplicationType | None, new_type: ApplicationType | None
+    ) -> None:
+        """Handle a firmware type change."""
+        raise NotImplementedError
+
     def _maybe_recompute_state(self) -> None:
         """Recompute the state of the entity."""
 
@@ -194,15 +202,21 @@ class BaseFirmwareUpdateEntity(
         else:
             firmware_type = self._current_firmware_info.firmware_type
 
-        if firmware_type not in self.firmware_entity_descriptions:
-            _LOGGER.warning(
-                "Unexpected firmware type %r, assuming Zigbee firmware instead",
-                firmware_type,
+        if (
+            self.hass is not None
+            and firmware_type != self.entity_description.expected_firmware_type
+        ):
+            self._firmware_type_changed(
+                old_type=self.entity_description.expected_firmware_type,
+                new_type=firmware_type,
             )
-            firmware_type = ApplicationType.EZSP
+            return
 
-        self.entity_description = self.firmware_entity_descriptions[firmware_type]
-        if self._latest_manifest is None:
+        if (
+            self._latest_manifest is None
+            or self.entity_description.fw_type is None
+            or self.entity_description.version_key is None
+        ):
             return
 
         self._latest_firmware = next(
@@ -279,6 +293,7 @@ class BaseFirmwareUpdateEntity(
     ) -> None:
         """Install an update."""
         assert self._latest_firmware is not None
+        assert self.entity_description.expected_firmware_type is not None
 
         # Start off by setting the progress bar to an indeterminate state
         self._attr_in_progress = True
