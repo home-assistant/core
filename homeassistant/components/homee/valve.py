@@ -52,6 +52,12 @@ class HomeeValve(HomeeEntity, ValveEntity):
         self.entity_description = description
         self._attr_translation_key = description.key
         self._attr_reports_position = True
+        self._attr_supported_features = (
+            ValveEntityFeature.SET_POSITION
+            if attribute.editable
+            else ValveEntityFeature(0)
+        )
+        self._attr_is_closed = bool(self._attribute.current_value == 0)
 
     @property
     def supported_features(self) -> ValveEntityFeature:
@@ -64,11 +70,6 @@ class HomeeValve(HomeeEntity, ValveEntity):
     def current_valve_position(self) -> int | None:
         """Return the current valve position."""
         return int(self._attribute.current_value)
-
-    @property
-    def is_closed(self) -> bool:
-        """Return if the valve is closed."""
-        return bool(self._attribute.current_value == 0)
 
     @property
     def is_closing(self) -> bool:
