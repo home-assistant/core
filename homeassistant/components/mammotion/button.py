@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from . import MammotionConfigEntry
-from .coordinator import MammotionBaseUpdateCoordinator, MammotionDataUpdateCoordinator
+from .coordinator import MammotionBaseUpdateCoordinator
 from .entity import MammotionBaseEntity
 
 
@@ -16,7 +16,7 @@ from .entity import MammotionBaseEntity
 class MammotionButtonSensorEntityDescription(ButtonEntityDescription):
     """Describes Mammotion button sensor entity."""
 
-    press_fn: Callable[[MammotionDataUpdateCoordinator], Awaitable[None]]
+    press_fn: Callable[[MammotionBaseUpdateCoordinator], Awaitable[None]]
 
 
 BUTTON_SENSORS: tuple[MammotionButtonSensorEntityDescription, ...] = (

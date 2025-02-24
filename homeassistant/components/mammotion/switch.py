@@ -112,7 +112,7 @@ async def async_setup_entry(
 
     for mower in mammotion_devices:
         added_areas: set[str] = set()
-
+        # TODO create maps coordinator
         coordinator = mower.reporting_coordinator
 
         @callback
