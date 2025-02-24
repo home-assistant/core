@@ -31,7 +31,7 @@ async def test_read_file(
     file_encoding: str,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the notify file output."""
+    """Test reading files in supported formats."""
     result = await hass.services.async_call(
         FILE_DOMAIN,
         SERVICE_READ_FILE,
@@ -49,7 +49,7 @@ async def test_read_file_disallowed_path(
     hass: HomeAssistant,
     setup_ha_file_integration,
 ) -> None:
-    """Test the notify file output."""
+    """Test reading in a disallowed path generates error."""
     file_name = "tests/components/file/fixtures/file_read.json"
 
     with pytest.raises(HomeAssistantError) as hae:
@@ -66,12 +66,12 @@ async def test_read_file_disallowed_path(
     assert file_name in str(hae.value)
 
 
-async def test_read_file_bad_encoding(
+async def test_read_file_bad_encoding_option(
     hass: HomeAssistant,
     mock_is_allowed_path: MagicMock,
     setup_ha_file_integration,
 ) -> None:
-    """Test the notify file output."""
+    """Test handling error if an invalid encoding is specified."""
     file_name = "tests/components/file/fixtures/file_read.json"
 
     with pytest.raises(ServiceValidationError) as sve:
@@ -103,7 +103,7 @@ async def test_read_file_decoding_error(
     file_name: str,
     file_encoding: str,
 ) -> None:
-    """Test the notify file output."""
+    """Test decoding errors are handled correctly."""
     with pytest.raises(HomeAssistantError) as hae:
         _ = await hass.services.async_call(
             FILE_DOMAIN,
@@ -124,7 +124,7 @@ async def test_read_file_dne(
     mock_is_allowed_path: MagicMock,
     setup_ha_file_integration,
 ) -> None:
-    """Test the notify file output."""
+    """Test handling error if file does not exist."""
     file_name = "tests/components/file/fixtures/file_dne.yaml"
 
     with pytest.raises(HomeAssistantError) as hae:
