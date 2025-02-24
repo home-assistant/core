@@ -47,6 +47,7 @@ class RemoteCalendarEntity(
         """Initialize RemoteCalendarEntity."""
         super().__init__(coordinator)
         self._attr_name = name
+        self._attr_unique_id = name
 
     @property
     def event(self) -> CalendarEvent | None:
