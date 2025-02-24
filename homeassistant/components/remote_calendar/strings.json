@@ -21,7 +21,7 @@
       "unsupported_protocol": "Request URL is missing an 'http://' or 'https://' protocol",
       "url_not_reachable": "URL is not reachable",
       "not_authorized": "You are not authorized to access this URL",
-      "no_calendar_found": "No calendar found at the provided URL",
+      "invalid_ics_file": "[%key:component::local_calendar::config::error::invalid_ics_file%]",
       "unknown_url_type": "Unknown URL type"
     }
   },
