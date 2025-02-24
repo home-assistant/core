@@ -1,6 +1,7 @@
 {
   "domain": "climate",
   "name": "Climate",
+  "after_dependencies": ["sensor"],
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/climate",
   "integration_type": "entity",

@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Collection
+
 import voluptuous as vol
 
+from homeassistant.components import sensor
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv, intent
+from homeassistant.helpers import area_registry as ar, config_validation as cv, intent
 
 from . import (
     ATTR_TEMPERATURE,
