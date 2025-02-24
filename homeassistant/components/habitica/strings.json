@@ -676,7 +676,7 @@
     },
     "update_reward": {
       "name": "Update a reward",
-      "description": "Update a specific reward for a selected Habitica character",
+      "description": "Updates a specific reward for the selected Habitica character",
       "fields": {
         "config_entry": {
           "name": "[%key:component::habitica::common::config_entry_name%]",
