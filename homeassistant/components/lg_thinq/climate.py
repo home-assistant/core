@@ -122,7 +122,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         self._attr_hvac_mode = HVACMode.OFF
         self._attr_preset_modes = []
         self._attr_temperature_unit = (
-            self.coordinator.hass.config.units.temperature_unit
+            self._get_unit_of_measurement(self.data.unit) or UnitOfTemperature.CELSIUS
         )
         self._requested_hvac_mode: str | None = None
 
