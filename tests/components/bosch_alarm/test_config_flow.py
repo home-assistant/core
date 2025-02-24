@@ -11,13 +11,7 @@ from homeassistant.components.bosch_alarm.const import (
     CONF_USER_CODE,
     DOMAIN,
 )
-from homeassistant.const import (
-    CONF_CODE,
-    CONF_HOST,
-    CONF_MODEL,
-    CONF_PASSWORD,
-    CONF_PORT,
-)
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -122,43 +116,3 @@ async def test_entry_already_configured(hass: HomeAssistant) -> None:
 
         assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "already_configured"
-
-
-async def test_options_flow(hass: HomeAssistant) -> None:
-    """Test the options flow for bosch_alarm."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "1.1.1.1",
-            CONF_PORT: 7700,
-            CONF_INSTALLER_CODE: "1234",
-            CONF_PASSWORD: "1234567890",
-            CONF_MODEL: "AMAX 3000",
-        },
-        version=1,
-        minor_version=2,
-    )
-    config_entry.add_to_hass(hass)
-
-    with (
-        patch("bosch_alarm_mode2.panel.Panel.connect", None),
-        patch(
-            "homeassistant.components.bosch_alarm.async_setup_entry",
-            return_value=True,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-
-    result = await hass.config_entries.options.async_init(config_entry.entry_id)
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "init"
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_CODE: "1234"},
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"] is True
-
-    assert config_entry.options == {CONF_CODE: "1234"}
