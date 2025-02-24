@@ -31,6 +31,8 @@ async def ws_info(
     # pylint: disable-next=import-outside-toplevel
     from homeassistant.helpers import recorder as recorder_helper
 
+    # Wait for db_connected to ensure the recorder instance is created and the
+    # migration flags are set.
     await hass.data[recorder_helper.DATA_RECORDER].db_connected
     instance = get_instance(hass)
     backlog = instance.backlog
