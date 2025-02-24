@@ -422,7 +422,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webostv
-aiowebostv==0.6.2
+aiowebostv==0.7.0
 
 # homeassistant.components.withings
 aiowithings==3.1.5
@@ -461,7 +461,7 @@ amcrest==1.9.8
 androidtv[async]==0.0.75
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.1.2
+androidtvremote2==0.2.0
 
 # homeassistant.components.anel_pwrctrl
 anel-pwrctrl-homeassistant==0.0.1.dev2
@@ -2754,7 +2754,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.8
+soco==0.30.9
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
@@ -2884,7 +2884,7 @@ tessie-api==0.1.1
 # tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.7.0
+thermobeacon-ble==0.8.0
 
 # homeassistant.components.thermopro
 thermopro-ble==0.11.0
