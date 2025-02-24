@@ -197,6 +197,8 @@ STAGE_1_INTEGRATIONS = {
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
+    # Ensure supervisor is available
+    "hassio",
 }
 
 DEFAULT_INTEGRATIONS = {
