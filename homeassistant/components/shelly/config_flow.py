@@ -457,7 +457,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def async_supports_options_flow(cls, config_entry: ConfigEntry) -> bool:
         """Return options flow support for this handler."""
-        return cast(bool, config_entry.data[CONF_SCRIPT])
+        return cast(bool, config_entry.data.get(CONF_SCRIPT, False))
 
 
 class OptionsFlowHandler(OptionsFlow):
