@@ -37,10 +37,6 @@ from .typing import VolSchemaType
 
 _LOGGER = logging.getLogger(__name__)
 type _SlotsType = dict[str, Any]
-# The key may be a single string or up to a three field tuple with these ordered fields:
-# - The name of the slot
-# - The name of the service data input to map to this slot
-# - A description of the slot
 type _IntentSlotsType = dict[
     str | tuple[str, str], IntentSlotInfo | VolSchemaType | Callable[[Any], Any]
 ]
