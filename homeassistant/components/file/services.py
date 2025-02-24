@@ -60,7 +60,7 @@ async def read_file(call: ServiceCall) -> dict:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="unsupported_yaml_content_type",
-                translation_placeholders={"content_type": type(yaml_content)},
+                translation_placeholders={"content_type": type(yaml_content).__name__},
             )
         raise ServiceValidationError(
             translation_domain=DOMAIN,
