@@ -61,15 +61,8 @@ async def async_setup_entry(
         filter_cloud_devices = coordinator.filter_light_list()
         device_registry: DeviceRegistry = dr.async_get(hass)
         cloud_device_ids = [device[CONF_ID] for device in filter_cloud_devices]
-        # ha_exist_device_ids = [
-        #     unique_id
-        #     for device_entry in device_registry.devices.values()
-        #     for identifier in device_entry.identifiers
-        #     if identifier[0] == DOMAIN and entry.entry_id in device_entry.config_entries
-        #     for _, unique_id in tuple(identifier)
-        # ]
         ha_exist_device_ids = [
-            identifier[1]  # 假设identifier是一个长度为2的序列，如(DOMAIN, unique_id)
+            identifier[1]
             for device_entry in device_registry.devices.values()
             for identifier in device_entry.identifiers
             if identifier[0] == DOMAIN and entry.entry_id in device_entry.config_entries
