@@ -2,10 +2,6 @@
 
 from collections.abc import Callable
 
-from homeassistant.helpers.device_registry import DeviceInfo
-
-from .const import DOMAIN
-
 
 class PanelConnection:
     """Collate information about a given alarm panel."""
@@ -24,16 +20,6 @@ class PanelConnection:
         for on_connect_handler in self.on_connect:
             on_connect_handler()
         self.on_connect.clear()
-
-    def device_info(self):
-        """Format the alarm panel information as a DeviceInfo."""
-        return DeviceInfo(
-            identifiers={(DOMAIN, self.unique_id)},
-            name=f"Bosch {self.model}",
-            manufacturer="Bosch Security Systems",
-            model=self.model,
-            sw_version=self.panel.firmware_version,
-        )
 
     async def disconnect(self):
         """Stop observing connection status changes."""

@@ -21,10 +21,12 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from .const import CONF_INSTALLER_CODE, CONF_USER_CODE
 from .device import PanelConnection
 
+type BoschAlarmConfigEntry = ConfigEntry[PanelConnection]
+
 PLATFORMS: list[Platform] = [Platform.ALARM_CONTROL_PANEL]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: BoschAlarmConfigEntry) -> bool:
     """Set up Bosch Alarm from a config entry."""
     panel = bosch_alarm_mode2.Panel(
         host=entry.data[CONF_HOST],
@@ -42,7 +44,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     panel_conn = PanelConnection(panel, unique_id, entry.data[CONF_MODEL])
     entry.runtime_data = panel_conn
 
-
     try:
         await panel.connect()
     except (PermissionError, ValueError) as err:
@@ -57,10 +58,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await panel.disconnect()
         raise ConfigEntryNotReady("Connection failed") from err
 
-    await async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
-
-
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

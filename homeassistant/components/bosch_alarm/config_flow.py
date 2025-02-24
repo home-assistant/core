@@ -77,7 +77,10 @@ async def try_connect(data: dict[str, Any], load_selector: int = 0):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch Alarm."""
 
-    data: dict[str, Any] = {}
+    def __init__(self) -> None:
+        """Init config flow."""
+
+        self._data: dict[str, Any] = {}
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -85,10 +88,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors = {}
         if user_input is not None:
-            self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
             try:
                 # Use load_selector = 0 to fetch the panel model without authentication.
-                (model, _) = await try_connect(user_input, 0)
+                (model, serial) = await try_connect(user_input, 0)
             except (
                 OSError,
                 ConnectionRefusedError,
@@ -101,8 +103,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                self.data = user_input
-                self.data[CONF_MODEL] = model
+                self._data = user_input
+                self._data[CONF_MODEL] = model
                 return await self.async_step_auth()
         return self.async_show_form(
             step_id="user",
@@ -116,21 +118,21 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the auth step."""
-        errors = {}
+        errors: dict[str, str] = {}
 
         # Each model variant requires a different authentication flow
-        if "Solution" in self.data[CONF_MODEL]:
+        if "Solution" in self._data[CONF_MODEL]:
             schema = STEP_AUTH_DATA_SCHEMA_SOLUTION
-        elif "AMAX" in self.data[CONF_MODEL]:
+        elif "AMAX" in self._data[CONF_MODEL]:
             schema = STEP_AUTH_DATA_SCHEMA_AMAX
         else:
             schema = STEP_AUTH_DATA_SCHEMA_BG
 
         if user_input is not None:
-            self.data.update(user_input)
+            self._data.update(user_input)
             try:
                 (model, serial_number) = await try_connect(
-                    self.data, Panel.LOAD_EXTENDED_INFO
+                    self._data, Panel.LOAD_EXTENDED_INFO
                 )
             except (PermissionError, ValueError):
                 errors["base"] = "invalid_auth"
@@ -147,9 +149,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                await self.async_set_unique_id(str(serial_number))
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(title=f"Bosch {model}", data=self.data)
+                if serial_number:
+                    await self.async_set_unique_id(str(serial_number))
+                    self._abort_if_unique_id_configured()
+                else:
+                    self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+                return self.async_create_entry(title=f"Bosch {model}", data=self._data)
 
         return self.async_show_form(
             step_id="auth",
