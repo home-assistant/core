@@ -6,7 +6,7 @@ read_file:
       selector:
         text:
     file_encoding:
-      example: "Energize"
+      example: "json"
       selector:
         select:
           options:
