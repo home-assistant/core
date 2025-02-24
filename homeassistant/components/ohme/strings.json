@@ -87,7 +87,7 @@
         "name": "Vehicle battery"
       },
       "slot_list": {
-        "name": "Charge slot list"
+        "name": "Charge slots"
       }
     },
     "switch": {
