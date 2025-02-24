@@ -328,10 +328,10 @@ async def async_setup_hass(
 
     block_async_io.enable()
 
-    config_dict = None
-    basic_setup_success = False
-
     if not (recovery_mode := runtime_config.recovery_mode):
+        config_dict = None
+        basic_setup_success = False
+
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
 
         try:
@@ -349,39 +349,43 @@ async def async_setup_hass(
                 await async_from_config_dict(config_dict, hass) is not None
             )
 
-    if config_dict is None:
-        recovery_mode = True
-        await stop_hass(hass)
-        hass = await create_hass()
+        if config_dict is None:
+            recovery_mode = True
+            await stop_hass(hass)
+            hass = await create_hass()
 
-    elif not basic_setup_success:
-        _LOGGER.warning("Unable to set up core integrations. Activating recovery mode")
-        recovery_mode = True
-        await stop_hass(hass)
-        hass = await create_hass()
+        elif not basic_setup_success:
+            _LOGGER.warning(
+                "Unable to set up core integrations. Activating recovery mode"
+            )
+            recovery_mode = True
+            await stop_hass(hass)
+            hass = await create_hass()
 
-    elif any(domain not in hass.config.components for domain in CRITICAL_INTEGRATIONS):
-        _LOGGER.warning(
-            "Detected that %s did not load. Activating recovery mode",
-            ",".join(CRITICAL_INTEGRATIONS),
-        )
+        elif any(
+            domain not in hass.config.components for domain in CRITICAL_INTEGRATIONS
+        ):
+            _LOGGER.warning(
+                "Detected that %s did not load. Activating recovery mode",
+                ",".join(CRITICAL_INTEGRATIONS),
+            )
 
-        old_config = hass.config
-        old_logging = hass.data.get(DATA_LOGGING)
+            old_config = hass.config
+            old_logging = hass.data.get(DATA_LOGGING)
 
-        recovery_mode = True
-        await stop_hass(hass)
-        hass = await create_hass()
+            recovery_mode = True
+            await stop_hass(hass)
+            hass = await create_hass()
 
-        if old_logging:
-            hass.data[DATA_LOGGING] = old_logging
-        hass.config.debug = old_config.debug
-        hass.config.skip_pip = old_config.skip_pip
-        hass.config.skip_pip_packages = old_config.skip_pip_packages
-        hass.config.internal_url = old_config.internal_url
-        hass.config.external_url = old_config.external_url
-        # Setup loader cache after the config dir has been set
-        loader.async_setup(hass)
+            if old_logging:
+                hass.data[DATA_LOGGING] = old_logging
+            hass.config.debug = old_config.debug
+            hass.config.skip_pip = old_config.skip_pip
+            hass.config.skip_pip_packages = old_config.skip_pip_packages
+            hass.config.internal_url = old_config.internal_url
+            hass.config.external_url = old_config.external_url
+            # Setup loader cache after the config dir has been set
+            loader.async_setup(hass)
 
     if recovery_mode:
         _LOGGER.info("Starting in recovery mode")
