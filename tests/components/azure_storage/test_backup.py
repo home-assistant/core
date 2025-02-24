@@ -296,7 +296,10 @@ async def test_error_during_delete(
     assert response["success"]
     assert response["result"] == {
         "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.entry_id}": "Error during backup operation in async_delete_backup: Status None, message: Failed to delete backup"
+            f"{DOMAIN}.{mock_config_entry.entry_id}": (
+                "Error during backup operation in async_delete_backup: "
+                "Status None, message: Failed to delete backup"
+            )
         }
     }
 
