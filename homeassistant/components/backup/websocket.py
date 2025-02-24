@@ -346,6 +346,7 @@ async def handle_config_info(
     )
 
 
+@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
@@ -388,8 +389,7 @@ async def handle_config_info(
         ),
     }
 )
-@websocket_api.async_response
-async def handle_config_update(
+def handle_config_update(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -399,7 +399,7 @@ async def handle_config_update(
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    await manager.config.update(**changes)
+    manager.config.update(**changes)
     connection.send_result(msg["id"])
 
 
