@@ -2,22 +2,14 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
 import logging
-from typing import Any
 
-from aidot.const import (
-    CONF_DEVICE_LIST,
-    CONF_ID,
-    CONF_LOGIN_RESPONSE,
-    CONF_PRODUCT_LIST,
-)
-from aidot.discover import Discover
+from aidot.exceptions import AidotUserOrPassIncorrect
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 
 from .coordinator import AidotConfigEntry, AidotCoordinator
@@ -30,25 +22,14 @@ PLATFORMS: list[Platform] = [Platform.LIGHT]
 async def async_setup_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> bool:
     """Set up aidot from a config entry."""
 
-    coordinator = AidotCoordinator(
-        hass,
-        entry,
-        entry.data[CONF_DEVICE_LIST],
-        entry.data[CONF_LOGIN_RESPONSE],
-        entry.data[CONF_PRODUCT_LIST],
-    )
-    entry.runtime_data = coordinator
-
-    def discover(dev_id, event: Mapping[str, Any]):
-        hass.bus.async_fire(dev_id, event)
-
+    coordinator = AidotCoordinator(hass, entry)
     try:
-        await Discover().broadcast_message(
-            discover, coordinator.login_response[CONF_ID]
-        )
-    except OSError as err:
-        raise ConfigEntryError from err
+        await coordinator.async_auto_login()
+    except AidotUserOrPassIncorrect as error:
+        raise ConfigEntryAuthFailed from error
 
+    await coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

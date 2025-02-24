@@ -16,7 +16,6 @@ from aidot.const import (
     CONF_MODEL_ID,
     CONF_NAME,
     CONF_PRODUCT,
-    CONF_PRODUCT_ID,
     CONF_PROPERTIES,
     CONF_SERVICE_MODULES,
     CONF_TYPE,
@@ -34,11 +33,13 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
+    DeviceRegistry,
     format_mac,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -54,20 +55,53 @@ async def async_setup_entry(
 ) -> None:
     """Set up Light."""
     coordinator: AidotCoordinator = entry.runtime_data
-    device_list = coordinator.device_list
-    user_info = coordinator.login_response
-    products = coordinator.product_list
-    for product in products:
-        for device in device_list:
-            if device[CONF_PRODUCT_ID] == product[CONF_ID]:
-                device[CONF_PRODUCT] = product
 
+    @callback
+    def _async_check_devices():
+        filter_cloud_devices = coordinator.filter_light_list()
+        device_registry: DeviceRegistry = dr.async_get(hass)
+        cloud_device_ids = [device[CONF_ID] for device in filter_cloud_devices]
+        # ha_exist_device_ids = [
+        #     unique_id
+        #     for device_entry in device_registry.devices.values()
+        #     for identifier in device_entry.identifiers
+        #     if identifier[0] == DOMAIN and entry.entry_id in device_entry.config_entries
+        #     for _, unique_id in tuple(identifier)
+        # ]
+        ha_exist_device_ids = [
+            identifier[1]  # 假设identifier是一个长度为2的序列，如(DOMAIN, unique_id)
+            for device_entry in device_registry.devices.values()
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN and entry.entry_id in device_entry.config_entries
+        ]
+
+        # add new device
+        new_devices = [
+            device
+            for device in filter_cloud_devices
+            if device[CONF_ID] not in ha_exist_device_ids
+        ]
+        if new_devices:
+            async_add_entities(
+                AidotLight(hass, device_info, coordinator.client.login_info)
+                for device_info in new_devices
+                if device_info[CONF_TYPE] == Platform.LIGHT
+                and CONF_AES_KEY in device_info
+                and device_info[CONF_AES_KEY][0] is not None
+            )
+
+        # remove device
+        removed_device_ids = set(ha_exist_device_ids) - set(cloud_device_ids)
+        for removed_device_id in removed_device_ids or []:
+            if device := device_registry.async_get_device(
+                identifiers={(DOMAIN, removed_device_id)}
+            ):
+                device_registry.async_remove_device(device.id)
+
+    coordinator.async_add_listener(_async_check_devices)
     async_add_entities(
-        AidotLight(hass, device_info, user_info)
-        for device_info in device_list
-        if device_info[CONF_TYPE] == Platform.LIGHT
-        and CONF_AES_KEY in device_info
-        and device_info[CONF_AES_KEY][0] is not None
+        AidotLight(hass, device_info, coordinator.client.login_info)
+        for device_info in coordinator.filter_light_list()
     )
 
 

@@ -3,9 +3,11 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from aidot.const import CONF_LOGIN_INFO
 import pytest
 
 from homeassistant.components.aidot.const import DOMAIN
+from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -16,7 +18,7 @@ TEST_PASSWORD = "123456"
 
 
 @pytest.fixture
-def mock_setup_entry() -> Generator[AsyncMock, None, None]:
+def mock_setup_entry() -> Generator[AsyncMock]:
     """Override async_setup_entry."""
     with patch(
         "homeassistant.components.aidot.async_setup_entry", return_value=True
@@ -34,3 +36,21 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     )
     config_entry.add_to_hass(hass)
     return config_entry
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_EMAIL,
+        title=TEST_EMAIL,
+        data={
+            CONF_LOGIN_INFO: {
+                CONF_USERNAME: TEST_EMAIL,
+                CONF_PASSWORD: TEST_PASSWORD,
+                "region": "us",
+                CONF_COUNTRY: TEST_COUNTRY,
+            }
+        },
+    )

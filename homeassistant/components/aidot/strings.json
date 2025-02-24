@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "aidot_cloud_account_missing": "aidot_cloud_account_missing"
+    },
+    "error": {
+      "login_failed": "login_failed",
+      "account_pwd_incorrect": "The password or email address is incorrect."
+    },
+    "step": {
+      "user": {
+        "description": "Setup your Aidot device for local data",
+        "data": {
+          "country": "Country",
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "country": "login_country",
+          "username": "login_username",
+          "password": "login_password"
+        }
+      },
+      "reauth_confirm": {
+        "description": "Setup your Aidot device for local data",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password you will login"
+        }
+      }
+    }
+  }
+}

@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, call, patch
 
+from aidot.const import CONF_ACCESS_TOKEN, CONF_COUNTRY, CONF_LOGIN_INFO, CONF_REGION
 import pytest
 
 from homeassistant.components.aidot.__init__ import (
@@ -11,13 +12,22 @@ from homeassistant.components.aidot.__init__ import (
 )
 from homeassistant.components.aidot.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 
 from tests.common import Mock
 
-TEST_DEFAULT = {"device_list": [], "login_response": "", "product_list": []}
+TEST_DEFAULT = {
+    CONF_LOGIN_INFO: {
+        CONF_USERNAME: "test",
+        CONF_PASSWORD: "password",
+        CONF_REGION: "us",
+        CONF_COUNTRY: "United States",
+        CONF_ACCESS_TOKEN: "token",
+    }
+}
 
 
 @pytest.fixture(name="aidot_init", autouse=True)
@@ -25,7 +35,11 @@ def aidot_init_fixture():
     """Aidot and entry setup."""
     with (
         patch(
-            "homeassistant.components.aidot.__init__.Discover.broadcast_message",
+            "homeassistant.components.aidot.coordinator.Discover.broadcast_message",
+            new=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.aidot.__init__.AidotCoordinator.async_config_entry_first_refresh",
             new=AsyncMock(),
         ),
     ):
@@ -41,6 +55,7 @@ async def test_async_setup_entry_calls_async_forward_entry_setups(
     mock_entry = Mock(spec=ConfigEntry)
     mock_entry.domain = DOMAIN
     mock_entry.data = TEST_DEFAULT
+    mock_entry.entry_id = "test"
 
     # 设置一个 mock 对象来接收属性赋值
     mock_data = {}
@@ -63,6 +78,7 @@ async def test_async_setup_entry_returns_true(hass: HomeAssistant) -> None:
     mock_entry = Mock(spec=ConfigEntry)
     mock_entry.domain = DOMAIN
     mock_entry.data = TEST_DEFAULT
+    mock_entry.entry_id = "test"
 
     mock_data = {}
     hass.data = MagicMock()
@@ -83,16 +99,10 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
     mock_entry = MagicMock(spec=ConfigEntry)
     mock_entry.domain = DOMAIN
     mock_entry.data = TEST_DEFAULT
+    mock_entry.entry_id = "test"
 
     # 初始化 hass.data 以包含一些示例数据
-    mock_data = {}
     hass.data = MagicMock()
-    hass.data.setdefault = MagicMock(side_effect=mock_data.setdefault)
-    hass.data.setdefault(DOMAIN, {})["device_list"] = mock_entry.data["device_list"]
-    hass.data.setdefault(DOMAIN, {})["login_response"] = mock_entry.data[
-        "login_response"
-    ]
-    hass.data.setdefault(DOMAIN, {})["products"] = mock_entry.data["product_list"]
 
     # 确保 async_unload_platforms 是异步模拟
     with patch.object(
@@ -100,7 +110,6 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
     ) as mock_unload:
         await async_unload_entry(hass, mock_entry)
         mock_unload.assert_called_once_with(mock_entry, ["light"])
-        assert DOMAIN not in hass.data
 
 
 async def test_async_unload_entry_fails(hass: HomeAssistant) -> None:
@@ -110,16 +119,12 @@ async def test_async_unload_entry_fails(hass: HomeAssistant) -> None:
     mock_entry = MagicMock(spec=ConfigEntry)
     mock_entry.domain = DOMAIN
     mock_entry.data = TEST_DEFAULT
+    mock_entry.entry_id = "test"
 
     # 初始化 hass.data 以包含一些示例数据
     mock_data = {}
     hass.data = MagicMock()
     hass.data.setdefault = MagicMock(side_effect=mock_data.setdefault)
-    hass.data.setdefault(DOMAIN, {})["device_list"] = mock_entry.data["device_list"]
-    hass.data.setdefault(DOMAIN, {})["login_response"] = mock_entry.data[
-        "login_response"
-    ]
-    hass.data.setdefault(DOMAIN, {})["products"] = mock_entry.data["product_list"]
 
     # 确保 async_unload_platforms 是异步模拟，并返回 False 表示卸载失败
     with patch.object(
