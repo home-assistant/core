@@ -5284,6 +5284,20 @@ async def test_subscribe_s2_inclusion(
     assert msg["success"]
     assert msg["result"] is None
 
+    # Test receiving requested grant event
+    event = Event(
+        type="grant security classes",
+        data={
+            "source": "controller",
+            "event": "grant security classes",
+            "requested": {
+                "securityClasses": [SecurityClass.S2_UNAUTHENTICATED],
+                "clientSideAuth": False,
+            },
+        },
+    )
+    client.driver.receive_event(event)
+
     # Test receiving DSK request event
     event = Event(
         type="validate dsk and enter pin",

@@ -3,6 +3,11 @@
 import json
 
 PROFILE = "myprofile"
+CONFIG = {
+    "name": f"{PROFILE}",
+    "api_key": "test-api-key",
+    "shared_secret": "test-shared-secret",
+}
 TOKEN = "mytoken"
 JSON_STRING = json.dumps(
     {

@@ -31,7 +31,7 @@ from homeassistant.components.backup import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from .const import CONF_DELETE_PERMANENTLY, DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from .coordinator import OneDriveConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -74,7 +74,7 @@ def async_register_backup_agents_listener(
 def handle_backup_errors[_R, **P](
     func: Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]],
 ) -> Callable[Concatenate[OneDriveBackupAgent, P], Coroutine[Any, Any, _R]]:
-    """Handle backup errors with a specific translation key."""
+    """Handle backup errors."""
 
     @wraps(func)
     async def wrapper(
@@ -205,8 +205,12 @@ class OneDriveBackupAgent(BackupAgent):
 
         backup = backups[backup_id]
 
-        await self._client.delete_drive_item(backup.backup_file_id)
-        await self._client.delete_drive_item(backup.metadata_file_id)
+        delete_permanently = self._entry.options.get(CONF_DELETE_PERMANENTLY, False)
+
+        await self._client.delete_drive_item(backup.backup_file_id, delete_permanently)
+        await self._client.delete_drive_item(
+            backup.metadata_file_id, delete_permanently
+        )
         self._cache_expiration = time()
 
     @handle_backup_errors

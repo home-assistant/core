@@ -22,7 +22,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
-from homeassistant.components.heos.const import DOMAIN
+from homeassistant.components.heos.const import (
+    DOMAIN,
+    SERVICE_GROUP_VOLUME_DOWN,
+    SERVICE_GROUP_VOLUME_SET,
+    SERVICE_GROUP_VOLUME_UP,
+)
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -722,6 +727,120 @@ async def test_volume_set_error(
             blocking=True,
         )
     controller.player_set_volume.assert_called_once_with(1, 100)
+
+
+async def test_group_volume_set(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the group volume set service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GROUP_VOLUME_SET,
+        {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
+        blocking=True,
+    )
+    controller.set_group_volume.assert_called_once_with(999, 100)
+
+
+async def test_group_volume_set_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the group volume set service errors."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    controller.set_group_volume.side_effect = CommandFailedError("", "Failure", 1)
+    with pytest.raises(
+        HomeAssistantError,
+        match=re.escape("Unable to set group volume level: Failure (1)"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GROUP_VOLUME_SET,
+            {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
+            blocking=True,
+        )
+    controller.set_group_volume.assert_called_once_with(999, 100)
+
+
+async def test_group_volume_set_not_grouped_error(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the group volume set service when not grouped raises error."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    player = controller.players[1]
+    player.group_id = None
+    with pytest.raises(
+        ServiceValidationError,
+        match=re.escape("Entity media_player.test_player is not joined to a group"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GROUP_VOLUME_SET,
+            {ATTR_ENTITY_ID: "media_player.test_player", ATTR_MEDIA_VOLUME_LEVEL: 1},
+            blocking=True,
+        )
+    controller.set_group_volume.assert_not_called()
+
+
+async def test_group_volume_down(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the group volume down service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GROUP_VOLUME_DOWN,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    controller.group_volume_down.assert_called_with(999)
+
+
+async def test_group_volume_up(
+    hass: HomeAssistant, config_entry: MockConfigEntry, controller: MockHeos
+) -> None:
+    """Test the group volume up service."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GROUP_VOLUME_UP,
+        {ATTR_ENTITY_ID: "media_player.test_player"},
+        blocking=True,
+    )
+    controller.group_volume_up.assert_called_with(999)
+
+
+@pytest.mark.parametrize(
+    "service", [SERVICE_GROUP_VOLUME_DOWN, SERVICE_GROUP_VOLUME_UP]
+)
+async def test_group_volume_down_up_ungrouped_raises(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+    service: str,
+) -> None:
+    """Test the group volume down and up service raise if player ungrouped."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    player = controller.players[1]
+    player.group_id = None
+    with pytest.raises(
+        ServiceValidationError,
+        match=re.escape("Entity media_player.test_player is not joined to a group"),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "media_player.test_player"},
+            blocking=True,
+        )
+    controller.group_volume_down.assert_not_called()
+    controller.group_volume_up.assert_not_called()
 
 
 async def test_select_favorite(

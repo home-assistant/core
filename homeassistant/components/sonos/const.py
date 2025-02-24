@@ -170,6 +170,7 @@ MODELS_TV_ONLY = (
     "BEAM",
     "PLAYBAR",
     "PLAYBASE",
+    "ULTRA",
 )
 MODELS_LINEIN_AND_TV = ("AMP",)
 

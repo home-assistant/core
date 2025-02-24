@@ -42,6 +42,7 @@ class ApplicationType(StrEnum):
     CPC = "cpc"
     EZSP = "ezsp"
     SPINEL = "spinel"
+    ROUTER = "router"
 
     @classmethod
     def from_flasher_application_type(
@@ -248,10 +249,10 @@ async def guess_firmware_info(hass: HomeAssistant, device_path: str) -> Firmware
     return guesses[-1][0]
 
 
-async def probe_silabs_firmware_type(
+async def probe_silabs_firmware_info(
     device: str, *, probe_methods: Iterable[ApplicationType] | None = None
-) -> ApplicationType | None:
-    """Probe the running firmware on a Silabs device."""
+) -> FirmwareInfo | None:
+    """Probe the running firmware on a SiLabs device."""
     flasher = Flasher(
         device=device,
         **(
@@ -269,4 +270,26 @@ async def probe_silabs_firmware_type(
     if flasher.app_type is None:
         return None
 
-    return ApplicationType.from_flasher_application_type(flasher.app_type)
+    return FirmwareInfo(
+        device=device,
+        firmware_type=ApplicationType.from_flasher_application_type(flasher.app_type),
+        firmware_version=(
+            flasher.app_version.orig_version
+            if flasher.app_version is not None
+            else None
+        ),
+        source="probe",
+        owners=[],
+    )
+
+
+async def probe_silabs_firmware_type(
+    device: str, *, probe_methods: Iterable[ApplicationType] | None = None
+) -> ApplicationType | None:
+    """Probe the running firmware type on a SiLabs device."""
+
+    fw_info = await probe_silabs_firmware_info(device, probe_methods=probe_methods)
+    if fw_info is None:
+        return None
+
+    return fw_info.firmware_type

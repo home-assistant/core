@@ -9,7 +9,6 @@ from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -178,9 +177,8 @@ def setup_services(hass: HomeAssistant) -> None:
 
         loaded_entries: list[RenaultConfigEntry] = [
             entry
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.state == ConfigEntryState.LOADED
-            and entry.entry_id in device_entry.config_entries
+            for entry in hass.config_entries.async_loaded_entries(DOMAIN)
+            if entry.entry_id in device_entry.config_entries
         ]
         for entry in loaded_entries:
             for vin, vehicle in entry.runtime_data.vehicles.items():

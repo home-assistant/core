@@ -29,7 +29,6 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
-from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
@@ -223,16 +222,6 @@ class CoreConfigOnboardingView(_BaseOnboardingView):
                 "radio_browser",
                 "shopping_list",
             ]
-
-            # pylint: disable-next=import-outside-toplevel
-            from homeassistant.components import hassio
-
-            if (
-                is_hassio(hass)
-                and (core_info := hassio.get_core_info(hass))
-                and "raspberrypi" in core_info["machine"]
-            ):
-                onboard_integrations.append("rpi_power")
 
             for domain in onboard_integrations:
                 # Create tasks so onboarding isn't affected

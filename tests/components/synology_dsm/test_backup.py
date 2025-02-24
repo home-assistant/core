@@ -31,7 +31,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util.aiohttp import MockStreamReader
 
-from .consts import HOST, MACS, PASSWORD, PORT, SERIAL, USE_SSL, USERNAME
+from .common import mock_dsm_information
+from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -99,7 +100,7 @@ def mock_dsm_with_filestation():
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
+        dsm.information = mock_dsm_information()
         dsm.file = AsyncMock(
             get_shared_folders=AsyncMock(
                 return_value=[
@@ -147,12 +148,12 @@ def mock_dsm_without_filestation():
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
         dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.information = mock_dsm_information()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
             update=AsyncMock(return_value=True),
         )
-        dsm.information = Mock(serial=SERIAL)
         dsm.file = None
 
         yield dsm

@@ -338,11 +338,27 @@ async def test_key_value_services(
 
 
 @pytest.mark.parametrize(
-    "service_call",
-    DEPRECATED_SERVICE_KV_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+    ("service_call", "issue_id"),
+    [
+        *zip(
+            DEPRECATED_SERVICE_KV_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+            ["deprecated_set_program_and_option_actions"]
+            * (
+                len(DEPRECATED_SERVICE_KV_CALL_PARAMS)
+                + len(SERVICE_PROGRAM_CALL_PARAMS)
+            ),
+            strict=True,
+        ),
+        *zip(
+            SERVICE_COMMAND_CALL_PARAMS,
+            ["deprecated_command_actions"] * len(SERVICE_COMMAND_CALL_PARAMS),
+            strict=True,
+        ),
+    ],
 )
 async def test_programs_and_options_actions_deprecation(
     service_call: dict[str, Any],
+    issue_id: str,
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
@@ -354,7 +370,6 @@ async def test_programs_and_options_actions_deprecation(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test deprecated service keys."""
-    issue_id = "deprecated_set_program_and_option_actions"
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
@@ -574,9 +589,7 @@ async def test_services_appliance_not_found(
     )
     service_call["service_data"]["device_id"] = device_entry.id
 
-    with pytest.raises(
-        ServiceValidationError, match=r"Home Connect config entry.*not found"
-    ):
+    with pytest.raises(ServiceValidationError, match=r"Config entry.*not found"):
         await hass.services.async_call(**service_call)
 
     device_entry = device_registry.async_get_or_create(

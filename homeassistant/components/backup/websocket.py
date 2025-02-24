@@ -346,11 +346,13 @@ async def handle_config_info(
     )
 
 
+@callback
 @websocket_api.require_admin
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "backup/config/update",
         vol.Optional("agents"): vol.Schema({str: {"protected": bool}}),
+        vol.Optional("automatic_backups_configured"): bool,
         vol.Optional("create_backup"): vol.Schema(
             {
                 vol.Optional("agent_ids"): vol.All([str], vol.Unique()),
@@ -368,8 +370,10 @@ async def handle_config_info(
         ),
         vol.Optional("retention"): vol.Schema(
             {
-                vol.Optional("copies"): vol.Any(int, None),
-                vol.Optional("days"): vol.Any(int, None),
+                # Note: We can't use cv.positive_int because it allows 0 even
+                # though 0 is not positive.
+                vol.Optional("copies"): vol.Any(vol.All(int, vol.Range(min=1)), None),
+                vol.Optional("days"): vol.Any(vol.All(int, vol.Range(min=1)), None),
             },
         ),
         vol.Optional("schedule"): vol.Schema(
@@ -385,8 +389,7 @@ async def handle_config_info(
         ),
     }
 )
-@websocket_api.async_response
-async def handle_config_update(
+def handle_config_update(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -396,7 +399,7 @@ async def handle_config_update(
     changes = dict(msg)
     changes.pop("id")
     changes.pop("type")
-    await manager.config.update(**changes)
+    manager.config.update(**changes)
     connection.send_result(msg["id"])
 
 

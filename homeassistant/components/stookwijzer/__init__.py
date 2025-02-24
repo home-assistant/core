@@ -9,7 +9,6 @@ from stookwijzer import Stookwijzer
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 from .coordinator import StookwijzerConfigEntry, StookwijzerCoordinator
@@ -44,7 +43,6 @@ async def async_migrate_entry(
 
     if entry.version == 1:
         latitude, longitude = await Stookwijzer.async_transform_coordinates(
-            async_get_clientsession(hass),
             entry.data[CONF_LOCATION][CONF_LATITUDE],
             entry.data[CONF_LOCATION][CONF_LONGITUDE],
         )

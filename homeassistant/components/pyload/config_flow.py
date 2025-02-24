@@ -7,8 +7,7 @@ import logging
 from typing import Any
 
 from aiohttp import CookieJar
-from pyloadapi.api import PyLoadAPI
-from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
+from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult

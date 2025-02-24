@@ -20,9 +20,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN, LOGGER
 
-type AsyncSetupDeviceEntitiesCallback = Callable[
-    [str | dict[str, EheimDigitalDevice]], None
-]
+type AsyncSetupDeviceEntitiesCallback = Callable[[dict[str, EheimDigitalDevice]], None]
 
 type EheimDigitalConfigEntry = ConfigEntry[EheimDigitalUpdateCoordinator]
 
@@ -74,7 +72,7 @@ class EheimDigitalUpdateCoordinator(
 
         if device_address not in self.known_devices:
             for platform_callback in self.platform_callbacks:
-                platform_callback(device_address)
+                platform_callback({device_address: self.hub.devices[device_address]})
 
     async def _async_receive_callback(self) -> None:
         self.async_set_updated_data(self.hub.devices)

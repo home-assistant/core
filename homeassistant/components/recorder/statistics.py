@@ -24,6 +24,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 from homeassistant.util import dt as dt_util
@@ -561,7 +562,9 @@ def _compile_statistics(
     platform_stats: list[StatisticResult] = []
     current_metadata: dict[str, tuple[int, StatisticMetaData]] = {}
     # Collect statistics from all platforms implementing support
-    for domain, platform in instance.hass.data[DOMAIN].recorder_platforms.items():
+    for domain, platform in instance.hass.data[
+        DATA_RECORDER
+    ].recorder_platforms.items():
         if not (
             platform_compile_statistics := getattr(
                 platform, INTEGRATION_PLATFORM_COMPILE_STATISTICS, None
@@ -599,7 +602,7 @@ def _compile_statistics(
 
     if start.minute == 50:
         # Once every hour, update issues
-        for platform in instance.hass.data[DOMAIN].recorder_platforms.values():
+        for platform in instance.hass.data[DATA_RECORDER].recorder_platforms.values():
             if not (
                 platform_update_issues := getattr(
                     platform, INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES, None
@@ -882,7 +885,7 @@ def list_statistic_ids(
         # the integrations for the missing ones.
         #
         # Query all integrations with a registered recorder platform
-        for platform in hass.data[DOMAIN].recorder_platforms.values():
+        for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
             if not (
                 platform_list_statistic_ids := getattr(
                     platform, INTEGRATION_PLATFORM_LIST_STATISTIC_IDS, None
@@ -2232,7 +2235,7 @@ def _sorted_statistics_to_dict(
 def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]:
     """Validate statistics."""
     platform_validation: dict[str, list[ValidationIssue]] = {}
-    for platform in hass.data[DOMAIN].recorder_platforms.values():
+    for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
         if platform_validate_statistics := getattr(
             platform, INTEGRATION_PLATFORM_VALIDATE_STATISTICS, None
         ):
@@ -2243,7 +2246,7 @@ def validate_statistics(hass: HomeAssistant) -> dict[str, list[ValidationIssue]]
 def update_statistics_issues(hass: HomeAssistant) -> None:
     """Update statistics issues."""
     with session_scope(hass=hass, read_only=True) as session:
-        for platform in hass.data[DOMAIN].recorder_platforms.values():
+        for platform in hass.data[DATA_RECORDER].recorder_platforms.values():
             if platform_update_statistics_issues := getattr(
                 platform, INTEGRATION_PLATFORM_UPDATE_STATISTICS_ISSUES, None
             ):

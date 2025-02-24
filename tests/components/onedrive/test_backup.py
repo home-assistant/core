@@ -11,6 +11,7 @@ from onedrive_personal_sdk.exceptions import (
     HashMismatchError,
     OneDriveException,
 )
+from onedrive_personal_sdk.models.items import File
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
@@ -23,7 +24,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .const import BACKUP_METADATA, MOCK_BACKUP_FILE, MOCK_METADATA_FILE
+from .const import BACKUP_METADATA
 
 from tests.common import AsyncMock, MockConfigEntry
 from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
@@ -248,12 +249,14 @@ async def test_error_on_agents_download(
     hass_client: ClientSessionGenerator,
     mock_onedrive_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_backup_file: File,
+    mock_metadata_file: File,
 ) -> None:
     """Test we get not found on an not existing backup on download."""
     client = await hass_client()
     backup_id = BACKUP_METADATA["backup_id"]
     mock_onedrive_client.list_drive_items.side_effect = [
-        [MOCK_BACKUP_FILE, MOCK_METADATA_FILE],
+        [mock_backup_file, mock_metadata_file],
         [],
     ]
 

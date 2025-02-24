@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import LocationSelector
 
 from .const import DOMAIN
@@ -27,7 +26,6 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             latitude, longitude = await Stookwijzer.async_transform_coordinates(
-                async_get_clientsession(self.hass),
                 user_input[CONF_LOCATION][CONF_LATITUDE],
                 user_input[CONF_LOCATION][CONF_LONGITUDE],
             )

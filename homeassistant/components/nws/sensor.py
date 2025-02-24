@@ -114,6 +114,7 @@ SENSOR_TYPES: tuple[NWSSensorEntityDescription, ...] = (
         icon="mdi:compass-rose",
         native_unit_of_measurement=DEGREE,
         unit_convert=DEGREE,
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     NWSSensorEntityDescription(
         key="barometricPressure",

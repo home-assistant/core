@@ -694,6 +694,15 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_data_start": [
             0,
         ],
+        "manufacturer_id": 20,
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": False,
+        "domain": "thermobeacon",
+        "manufacturer_data_start": [
+            0,
+        ],
         "manufacturer_id": 21,
         "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
     },

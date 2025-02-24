@@ -348,8 +348,8 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         only once during the first refresh.
         """
         if self.setup_method is None:
-            return None
-        return await self.setup_method()
+            return
+        await self.setup_method()
 
     async def async_refresh(self) -> None:
         """Refresh data and log errors."""

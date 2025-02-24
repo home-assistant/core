@@ -25,6 +25,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_MODE,
     CONF_PASSWORD,
     CONF_SCAN_INTERVAL,
     CONF_USERNAME,
@@ -40,11 +41,10 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (
-    ATTR_DURATION_DAYS,
-    ATTR_DURATION_HOURS,
+    ATTR_DURATION,
     ATTR_DURATION_UNTIL,
-    ATTR_SYSTEM_MODE,
-    ATTR_ZONE_TEMP,
+    ATTR_PERIOD,
+    ATTR_SETPOINT,
     CONF_LOCATION_IDX,
     DOMAIN,
     SCAN_INTERVAL_DEFAULT,
@@ -81,7 +81,7 @@ RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
 SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
     {
         vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_ZONE_TEMP): vol.All(
+        vol.Required(ATTR_SETPOINT): vol.All(
             vol.Coerce(float), vol.Range(min=4.0, max=35.0)
         ),
         vol.Optional(ATTR_DURATION_UNTIL): vol.All(
@@ -222,7 +222,7 @@ def setup_service_functions(
     # Permanent-only modes will use this schema
     perm_modes = [m[SZ_SYSTEM_MODE] for m in modes if not m[SZ_CAN_BE_TEMPORARY]]
     if perm_modes:  # any of: "Auto", "HeatingOff": permanent only
-        schema = vol.Schema({vol.Required(ATTR_SYSTEM_MODE): vol.In(perm_modes)})
+        schema = vol.Schema({vol.Required(ATTR_MODE): vol.In(perm_modes)})
         system_mode_schemas.append(schema)
 
     modes = [m for m in modes if m[SZ_CAN_BE_TEMPORARY]]
@@ -232,8 +232,8 @@ def setup_service_functions(
     if temp_modes:  # any of: "AutoWithEco", permanent or for 0-24 hours
         schema = vol.Schema(
             {
-                vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
-                vol.Optional(ATTR_DURATION_HOURS): vol.All(
+                vol.Required(ATTR_MODE): vol.In(temp_modes),
+                vol.Optional(ATTR_DURATION): vol.All(
                     cv.time_period,
                     vol.Range(min=timedelta(hours=0), max=timedelta(hours=24)),
                 ),
@@ -246,8 +246,8 @@ def setup_service_functions(
     if temp_modes:  # any of: "Away", "Custom", "DayOff", permanent or for 1-99 days
         schema = vol.Schema(
             {
-                vol.Required(ATTR_SYSTEM_MODE): vol.In(temp_modes),
-                vol.Optional(ATTR_DURATION_DAYS): vol.All(
+                vol.Required(ATTR_MODE): vol.In(temp_modes),
+                vol.Optional(ATTR_PERIOD): vol.All(
                     cv.time_period,
                     vol.Range(min=timedelta(days=1), max=timedelta(days=99)),
                 ),

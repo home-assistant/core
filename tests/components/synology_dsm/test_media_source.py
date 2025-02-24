@@ -33,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util.aiohttp import MockRequest
 
+from .common import mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
@@ -44,6 +45,7 @@ def dsm_with_photos() -> MagicMock:
     dsm = MagicMock()
     dsm.login = AsyncMock(return_value=True)
     dsm.update = AsyncMock(return_value=True)
+    dsm.information = mock_dsm_information()
     dsm.network.update = AsyncMock(return_value=True)
     dsm.surveillance_station.update = AsyncMock(return_value=True)
     dsm.upgrade.update = AsyncMock(return_value=True)

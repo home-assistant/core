@@ -5,9 +5,9 @@ from unittest.mock import patch
 from mcstatus import BedrockServer, JavaServer
 
 from homeassistant.components.minecraft_server.api import MinecraftServerType
-from homeassistant.components.minecraft_server.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.minecraft_server.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_ADDRESS, CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_ADDRESS, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -22,7 +22,6 @@ from .const import (
 from tests.common import MockConfigEntry
 
 USER_INPUT = {
-    CONF_NAME: DEFAULT_NAME,
     CONF_ADDRESS: TEST_ADDRESS,
 }
 
@@ -146,7 +145,6 @@ async def test_java_connection(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == USER_INPUT[CONF_ADDRESS]
-        assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
         assert result["data"][CONF_ADDRESS] == TEST_ADDRESS
         assert result["data"][CONF_TYPE] == MinecraftServerType.JAVA_EDITION
 
@@ -169,7 +167,6 @@ async def test_bedrock_connection(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["title"] == USER_INPUT[CONF_ADDRESS]
-        assert result["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
         assert result["data"][CONF_ADDRESS] == TEST_ADDRESS
         assert result["data"][CONF_TYPE] == MinecraftServerType.BEDROCK_EDITION
 
@@ -207,6 +204,5 @@ async def test_recovery(hass: HomeAssistant) -> None:
         )
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == USER_INPUT[CONF_ADDRESS]
-        assert result2["data"][CONF_NAME] == USER_INPUT[CONF_NAME]
         assert result2["data"][CONF_ADDRESS] == TEST_ADDRESS
         assert result2["data"][CONF_TYPE] == MinecraftServerType.BEDROCK_EDITION

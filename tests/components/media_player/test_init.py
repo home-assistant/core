@@ -283,7 +283,7 @@ async def test_media_browse(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
+        "homeassistant.components.demo.media_player.DemoBrowsePlayer.async_browse_media",
         return_value=BrowseMedia(
             media_class=MediaClass.DIRECTORY,
             media_content_id="mock-id",
@@ -323,7 +323,7 @@ async def test_media_browse(
     assert mock_browse_media.mock_calls[0][1] == ("album", "abcd")
 
     with patch(
-        "homeassistant.components.media_player.MediaPlayerEntity.async_browse_media",
+        "homeassistant.components.demo.media_player.DemoBrowsePlayer.async_browse_media",
         return_value={"bla": "yo"},
     ):
         await client.send_json(

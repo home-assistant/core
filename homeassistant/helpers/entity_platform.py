@@ -659,7 +659,7 @@ class EntityPlatform:
 
         This method must be run in the event loop.
 
-        :param subentry_id: subentry which the entities should be added to
+        :param config_subentry_id: subentry which the entities should be added to
         """
         if config_subentry_id and (
             not self.config_entry

@@ -46,6 +46,7 @@ class UnifiEntityLoader:
             hub.api.port_forwarding.update,
             hub.api.sites.update,
             hub.api.system_information.update,
+            hub.api.firewall_policies.update,
             hub.api.traffic_rules.update,
             hub.api.traffic_routes.update,
             hub.api.wlans.update,

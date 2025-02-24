@@ -580,13 +580,19 @@ def alarm_clock_fixture_extended():
     return alarm_clock
 
 
+@pytest.fixture(name="speaker_model")
+def speaker_model_fixture(request: pytest.FixtureRequest):
+    """Create fixture for the speaker model."""
+    return getattr(request, "param", "Model Name")
+
+
 @pytest.fixture(name="speaker_info")
-def speaker_info_fixture():
+def speaker_info_fixture(speaker_model):
     """Create speaker_info fixture."""
     return {
         "zone_name": "Zone A",
         "uid": "RINCON_test",
-        "model_name": "Model Name",
+        "model_name": speaker_model,
         "model_number": "S12",
         "hardware_version": "1.20.1.6-1.1",
         "software_version": "49.2-64250",

@@ -22,35 +22,35 @@ from .const import (
 from tests.common import async_fire_time_changed
 
 JAVA_SENSOR_ENTITIES: list[str] = [
-    "sensor.minecraft_server_latency",
-    "sensor.minecraft_server_players_online",
-    "sensor.minecraft_server_players_max",
-    "sensor.minecraft_server_world_message",
-    "sensor.minecraft_server_version",
-    "sensor.minecraft_server_protocol_version",
+    "sensor.mc_dummyserver_com_25566_latency",
+    "sensor.mc_dummyserver_com_25566_players_online",
+    "sensor.mc_dummyserver_com_25566_players_max",
+    "sensor.mc_dummyserver_com_25566_world_message",
+    "sensor.mc_dummyserver_com_25566_version",
+    "sensor.mc_dummyserver_com_25566_protocol_version",
 ]
 
 JAVA_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
-    "sensor.minecraft_server_players_max",
-    "sensor.minecraft_server_protocol_version",
+    "sensor.mc_dummyserver_com_25566_players_max",
+    "sensor.mc_dummyserver_com_25566_protocol_version",
 ]
 
 BEDROCK_SENSOR_ENTITIES: list[str] = [
-    "sensor.minecraft_server_latency",
-    "sensor.minecraft_server_players_online",
-    "sensor.minecraft_server_players_max",
-    "sensor.minecraft_server_world_message",
-    "sensor.minecraft_server_version",
-    "sensor.minecraft_server_protocol_version",
-    "sensor.minecraft_server_map_name",
-    "sensor.minecraft_server_game_mode",
-    "sensor.minecraft_server_edition",
+    "sensor.mc_dummyserver_com_25566_latency",
+    "sensor.mc_dummyserver_com_25566_players_online",
+    "sensor.mc_dummyserver_com_25566_players_max",
+    "sensor.mc_dummyserver_com_25566_world_message",
+    "sensor.mc_dummyserver_com_25566_version",
+    "sensor.mc_dummyserver_com_25566_protocol_version",
+    "sensor.mc_dummyserver_com_25566_map_name",
+    "sensor.mc_dummyserver_com_25566_game_mode",
+    "sensor.mc_dummyserver_com_25566_edition",
 ]
 
 BEDROCK_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
-    "sensor.minecraft_server_players_max",
-    "sensor.minecraft_server_protocol_version",
-    "sensor.minecraft_server_edition",
+    "sensor.mc_dummyserver_com_25566_players_max",
+    "sensor.mc_dummyserver_com_25566_protocol_version",
+    "sensor.mc_dummyserver_com_25566_edition",
 ]
 
 
