@@ -325,10 +325,12 @@ async def test_migration(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_old_config_entry.state is ConfigEntryState.LOADED
+    assert len(hass.config_entries.flow.async_progress()) == 0
     mock_old_config_entry.data[CONF_TOKEN].pop("expires_at")
     assert mock_old_config_entry.data == {
         "auth_implementation": DOMAIN,
@@ -352,6 +354,7 @@ async def test_migration(
             "access_tier": 0,
             "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
         },
+        CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
     }
     assert mock_old_config_entry.unique_id == "397678e5-9995-4a39-9d9f-ae6ba310236c"
     assert mock_old_config_entry.version == 3
@@ -409,10 +412,11 @@ async def test_migration_wrong_location(
     )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_location_mismatch"
-    assert mock_old_config_entry.state is ConfigEntryState.LOADED
+    assert mock_old_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_old_config_entry.data == {
         CONF_ACCESS_TOKEN: "mock-access-token",
         CONF_REFRESH_TOKEN: "mock-refresh-token",
@@ -425,5 +429,5 @@ async def test_migration_wrong_location(
         mock_old_config_entry.unique_id
         == "appid123-2be1-4e40-b257-e4ef59083324_397678e5-9995-4a39-9d9f-ae6ba310236c"
     )
-    assert mock_old_config_entry.version == 2
+    assert mock_old_config_entry.version == 3
     assert mock_old_config_entry.minor_version == 1
