@@ -1146,7 +1146,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             ):
                 entity_registry.async_remove(entity_id)
 
-        self.hass.config_entries.async_schedule_reload(entry.entry_id)
         return self.async_update_and_abort(
             entry,
             subentry,
