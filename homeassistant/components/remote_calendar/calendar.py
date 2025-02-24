@@ -2,7 +2,6 @@
 
 from datetime import date, datetime, timedelta
 import logging
-from typing import TYPE_CHECKING
 
 from ical.event import Event
 
@@ -29,9 +28,7 @@ async def async_setup_entry(
     """Set up the remote calendar platform."""
     coordinator = entry.runtime_data
     name = entry.data[CONF_CALENDAR_NAME]
-    if TYPE_CHECKING:
-        assert entry.unique_id is not None
-    entity = RemoteCalendarEntity(coordinator, name, unique_id=entry.unique_id)
+    entity = RemoteCalendarEntity(coordinator, name)
     async_add_entities([entity])
 
 
@@ -46,12 +43,10 @@ class RemoteCalendarEntity(
         self,
         coordinator: RemoteCalendarDataUpdateCoordinator,
         name: str,
-        unique_id: str,
     ) -> None:
         """Initialize RemoteCalendarEntity."""
         super().__init__(coordinator)
         self._attr_name = name
-        self._attr_unique_id = unique_id
 
     @property
     def event(self) -> CalendarEvent | None:

@@ -11,7 +11,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
 from homeassistant.helpers.httpx_client import get_async_client
-from homeassistant.util import slugify
 
 from .const import CONF_CALENDAR_NAME, DOMAIN
 
@@ -37,8 +36,6 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         errors: dict = {}
         _LOGGER.debug("User input: %s", user_input)
-        await self.async_set_unique_id(slugify(user_input[CONF_URL]))
-        self._abort_if_unique_id_configured()
         client = get_async_client(self.hass)
         try:
             res = await client.get(user_input[CONF_URL], follow_redirects=True)
