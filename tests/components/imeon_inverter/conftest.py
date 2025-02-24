@@ -118,6 +118,28 @@ def mock_imeon_inverter() -> Generator[MagicMock]:
 
 
 @pytest.fixture
+def mock_login() -> Generator[AsyncMock]:
+    """Fixture for mocking login."""
+    with (
+        patch(
+            "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
+        ) as mock,
+    ):
+        yield mock
+
+
+@pytest.fixture
+def mock_serial() -> Generator[AsyncMock]:
+    """Fixture for mocking serial."""
+    with (
+        patch(
+            "homeassistant.components.imeon_inverter.config_flow.Inverter.get_serial",
+        ) as mock,
+    ):
+        yield mock
+
+
+@pytest.fixture
 def mock_login_async_setup_entry() -> Generator[AsyncMock]:
     """Fixture for mocking login and async_setup_entry."""
     with (
