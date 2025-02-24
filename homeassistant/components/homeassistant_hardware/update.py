@@ -8,7 +8,10 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
+from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
+from universal_silabs_flasher.firmware import parse_firmware_image
 from universal_silabs_flasher.flasher import Flasher
+from yarl import URL
 
 from homeassistant.components.update import (
     UpdateEntity,
@@ -29,7 +32,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import FirmwareUpdateCoordinator
 from .helpers import async_register_firmware_info_callback
-from .models import FirmwareManifest, FirmwareMetadata
 from .util import (
     ApplicationType,
     FirmwareInfo,
@@ -73,7 +75,14 @@ class FirmwareUpdateExtraStoredData(ExtraStoredData):
         if data["firmware_manifest"] is None:
             return cls()
 
-        return cls(FirmwareManifest.from_json(data["firmware_manifest"]))
+        return cls(
+            FirmwareManifest.from_json(
+                data["firmware_manifest"],
+                # This data is not technically part of the manifest and is loaded externally
+                url=URL(data["firmware_manifest"]["url"]),
+                html_url=URL(data["firmware_manifest"]["html_url"]),
+            )
+        )
 
 
 class BaseFirmwareUpdateEntity(
@@ -281,12 +290,12 @@ class BaseFirmwareUpdateEntity(
         ) as fw_rsp:
             fw_data = await fw_rsp.read()
 
-        # At this point, we will have a valid firmware image that can be flasher
-        fw_image = await self.hass.async_add_executor_job(
-            self._latest_firmware.parse_firmware, fw_data
+        # At this point, we will have a valid firmware image that can be flashed
+        await self.hass.async_add_executor_job(
+            self._latest_firmware.validate_firmware, fw_data
         )
+        fw_image = await self.hass.async_add_executor_job(parse_firmware_image, fw_data)
 
-        assert fw_image is not None
         device = self._current_device
 
         flasher = Flasher(

@@ -19,3 +19,7 @@ ZHA_HW_DISCOVERY_DATA = {
 FIRMWARE = "firmware"
 FIRMWARE_VERSION = "firmware_version"
 ZHA_DOMAIN = "zha"
+
+NABU_CASA_FIRMWARE_RELEASES_URL = (
+    "https://api.github.com/repos/NabuCasa/silabs-firmware-builder/releases/latest"
+)

@@ -23,7 +23,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, FIRMWARE, RADIO_DEVICE, RADIO_MANUFACTURER, RADIO_MODEL
+from .const import (
+    DOMAIN,
+    FIRMWARE,
+    NABU_CASA_FIRMWARE_RELEASES_URL,
+    RADIO_DEVICE,
+    RADIO_MANUFACTURER,
+    RADIO_MODEL,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +49,9 @@ async def async_setup_entry(
             FirmwareUpdateEntity(
                 device=RADIO_DEVICE,
                 config_entry=config_entry,
-                update_coordinator=FirmwareUpdateCoordinator(hass, session),
+                update_coordinator=FirmwareUpdateCoordinator(
+                    hass, session, NABU_CASA_FIRMWARE_RELEASES_URL
+                ),
             )
         ]
     )
