@@ -12,6 +12,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, CONF_VER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form(hass: HomeAssistant, webdav_client: AsyncMock) -> None:
@@ -80,9 +82,21 @@ async def test_form_fail(hass: HomeAssistant, webdav_client: AsyncMock) -> None:
     assert "errors" not in result
 
 
-async def test_form_unauthorized(hass: HomeAssistant, webdav_client: AsyncMock) -> None:
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (UnauthorizedError("https://webdav.demo"), "invalid_auth"),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+)
+async def test_form_unauthorized(
+    hass: HomeAssistant,
+    webdav_client: AsyncMock,
+    exception: Exception,
+    expected_error: str,
+) -> None:
     """Test to handle unauthorized."""
-    webdav_client.check.side_effect = UnauthorizedError("https://webdav.demo")
+    webdav_client.check.side_effect = exception
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
@@ -95,7 +109,7 @@ async def test_form_unauthorized(hass: HomeAssistant, webdav_client: AsyncMock) 
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "invalid_auth"}
+    assert result["errors"] == {"base": expected_error}
 
     # reset and test for success
     webdav_client.check.side_effect = None
@@ -111,3 +125,25 @@ async def test_form_unauthorized(hass: HomeAssistant, webdav_client: AsyncMock) 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "user@webdav.demo"
     assert "errors" not in result
+
+
+async def test_duplicate_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, webdav_client: AsyncMock
+) -> None:
+    """Test we get the form and create a entry on success."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={
+            CONF_URL: "https://webdav.demo",
+            CONF_USERNAME: "user",
+            CONF_PASSWORD: "supersecretpassword",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"

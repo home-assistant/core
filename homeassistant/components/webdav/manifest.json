@@ -4,6 +4,7 @@
   "codeowners": ["@jpbede"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/webdav",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["aiowebdav2"],
   "quality_scale": "bronze",

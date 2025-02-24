@@ -30,7 +30,7 @@ async def setup_backup_integration(
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
     ):
-        assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
+        assert await async_setup_component(hass, BACKUP_DOMAIN, {})
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -220,8 +220,8 @@ async def test_error_on_agents_download(
     ("side_effect", "error"),
     [
         (
-            WebDavError(),
-            "Backup operation failed",
+            WebDavError("Unknown path"),
+            "Backup operation failed: Unknown path",
         ),
         (TimeoutError(), "Backup operation timed out"),
     ],

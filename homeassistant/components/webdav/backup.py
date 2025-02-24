@@ -75,13 +75,9 @@ def handle_backup_errors[_R, **P](
         except UnauthorizedError as err:
             raise BackupAgentError("Authentication error") from err
         except WebDavError as err:
-            _LOGGER.error(
-                "Error during backup in %s:, message %s",
-                func.__name__,
-                err,
-            )
-            _LOGGER.debug("Full error: %s", err, exc_info=True)
-            raise BackupAgentError("Backup operation failed") from err
+            raise BackupAgentError(
+                f"Backup operation failed: {err}",
+            ) from err
         except TimeoutError as err:
             _LOGGER.error(
                 "Error during backup in %s: Timeout",
@@ -156,7 +152,7 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{filename}",
         )
 
-        metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
+        metadata_filename = f"{filename.rsplit('.', 1)[0]}.metadata.json"
         await self._client.upload_iter(
             json_dumps(backup.as_dict()),
             f"{self._backup_path}/{metadata_filename}",
@@ -198,13 +194,15 @@ class WebDavBackupAgent(BackupAgent):
             return
 
         filename = suggested_filename(backup)
-        await self._client.clean(f"{self._backup_path}/{filename}")
-        metadata_filename = filename.rsplit(".", 1)[0] + ".metadata.json"
+        backup_path = f"{self._backup_path}/{filename}"
+
+        await self._client.clean(backup_path)
+        metadata_filename = f"{filename.rsplit('.', 1)[0]}.metadata.json"
         await self._client.clean(f"{self._backup_path}/{metadata_filename}")
 
         _LOGGER.debug(
             "Deleted backup at %s",
-            f"{self._backup_path}/{suggested_filename(backup)}",
+            backup_path,
         )
 
     @handle_backup_errors
