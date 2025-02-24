@@ -38,7 +38,7 @@ async def setup_backup_integration(
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),
     ):
-        assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
+        assert await async_setup_component(hass, BACKUP_DOMAIN, {})
         await setup_integration(hass, mock_config_entry)
 
         await hass.async_block_till_done()
