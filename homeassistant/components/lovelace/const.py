@@ -13,7 +13,6 @@ from homeassistant.const import (
     CONF_URL,
     EVENT_LOVELACE_UPDATED,  # noqa: F401
 )
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.util.hass_dict import HassKey
@@ -88,7 +87,3 @@ STORAGE_DASHBOARD_CREATE_FIELDS: VolDictType = {
 }
 
 STORAGE_DASHBOARD_UPDATE_FIELDS = DASHBOARD_BASE_UPDATE_FIELDS
-
-
-class ConfigNotFound(HomeAssistantError):
-    """When no config available."""
