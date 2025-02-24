@@ -15,9 +15,15 @@ from tests.common import MockConfigEntry
 
 
 async def test_form(
-    hass: HomeAssistant, mock_login_async_setup_entry: Generator[AsyncMock]
+    hass: HomeAssistant,
+    mock_login_async_setup_entry: Generator[AsyncMock],
+    mock_login: Generator[AsyncMock],
+    mock_serial: Generator[AsyncMock],
 ) -> None:
     """Test we get the form."""
+    mock_login.return_value = True
+    mock_serial.return_value = TEST_SERIAL
+
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

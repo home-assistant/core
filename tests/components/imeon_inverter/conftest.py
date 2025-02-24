@@ -27,7 +27,7 @@ def mock_imeon_inverter() -> Generator[MagicMock]:
         patch(
             "homeassistant.components.imeon_inverter.coordinator.InverterCoordinator",
             autospec=True,
-        ) as scale_mock,
+        ) as inverter_mock,
         patch(
             "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
             return_value=True,
@@ -41,80 +41,80 @@ def mock_imeon_inverter() -> Generator[MagicMock]:
             return_value=None,
         ),
     ):
-        scale = scale_mock.return_value
+        inverter = inverter_mock.return_value
 
         # Battery
-        scale.battery_autonomy = 4.5
-        scale.battery_charge_time = 120
-        scale.battery_power = 2500.0
-        scale.battery_soc = 78.0
-        scale.battery_stored = 10.2
+        inverter.battery_autonomy = 4.5
+        inverter.battery_charge_time = 120
+        inverter.battery_power = 2500.0
+        inverter.battery_soc = 78.0
+        inverter.battery_stored = 10.2
 
         # Grid
-        scale.grid_current_l1 = 12.5
-        scale.grid_current_l2 = 10.8
-        scale.grid_current_l3 = 11.2
-        scale.grid_frequency = 50.0
-        scale.grid_voltage_l1 = 230.0
-        scale.grid_voltage_l2 = 229.5
-        scale.grid_voltage_l3 = 230.1
+        inverter.grid_current_l1 = 12.5
+        inverter.grid_current_l2 = 10.8
+        inverter.grid_current_l3 = 11.2
+        inverter.grid_frequency = 50.0
+        inverter.grid_voltage_l1 = 230.0
+        inverter.grid_voltage_l2 = 229.5
+        inverter.grid_voltage_l3 = 230.1
 
         # AC Input
-        scale.input_power_l1 = 1000.0
-        scale.input_power_l2 = 950.0
-        scale.input_power_l3 = 980.0
-        scale.input_power_total = 2930.0
+        inverter.input_power_l1 = 1000.0
+        inverter.input_power_l2 = 950.0
+        inverter.input_power_l3 = 980.0
+        inverter.input_power_total = 2930.0
 
         # Inverter settings
-        scale.inverter_charging_current_limit = 50
-        scale.inverter_injection_power_limit = 5000.0
+        inverter.inverter_charging_current_limit = 50
+        inverter.inverter_injection_power_limit = 5000.0
 
         # Meter
-        scale.meter_power = 2000.0
-        scale.meter_power_protocol = 2018.0
+        inverter.meter_power = 2000.0
+        inverter.meter_power_protocol = 2018.0
 
         # AC Output
-        scale.output_current_l1 = 15.0
-        scale.output_current_l2 = 14.5
-        scale.output_current_l3 = 15.2
-        scale.output_frequency = 49.9
-        scale.output_power_l1 = 1100.0
-        scale.output_power_l2 = 1080.0
-        scale.output_power_l3 = 1120.0
-        scale.output_power_total = 3300.0
-        scale.output_voltage_l1 = 231.0
-        scale.output_voltage_l2 = 229.8
-        scale.output_voltage_l3 = 230.2
+        inverter.output_current_l1 = 15.0
+        inverter.output_current_l2 = 14.5
+        inverter.output_current_l3 = 15.2
+        inverter.output_frequency = 49.9
+        inverter.output_power_l1 = 1100.0
+        inverter.output_power_l2 = 1080.0
+        inverter.output_power_l3 = 1120.0
+        inverter.output_power_total = 3300.0
+        inverter.output_voltage_l1 = 231.0
+        inverter.output_voltage_l2 = 229.8
+        inverter.output_voltage_l3 = 230.2
 
         # Solar Panel
-        scale.pv_consumed = 1500.0
-        scale.pv_injected = 800.0
-        scale.pv_power_1 = 1200.0
-        scale.pv_power_2 = 1300.0
-        scale.pv_power_total = 2500.0
+        inverter.pv_consumed = 1500.0
+        inverter.pv_injected = 800.0
+        inverter.pv_power_1 = 1200.0
+        inverter.pv_power_2 = 1300.0
+        inverter.pv_power_total = 2500.0
 
         # Temperature
-        scale.temp_air_temperature = 25.0
-        scale.temp_component_temperature = 45.5
+        inverter.temp_air_temperature = 25.0
+        inverter.temp_component_temperature = 45.5
 
         # Monitoring (data over the last 24 hours)
-        scale.monitoring_building_consumption = 3000.0
-        scale.monitoring_economy_factor = 0.8
-        scale.monitoring_grid_consumption = 500.0
-        scale.monitoring_grid_injection = 700.0
-        scale.monitoring_grid_power_flow = -200.0
-        scale.monitoring_self_consumption = 85.0
-        scale.monitoring_self_sufficiency = 90.0
-        scale.monitoring_solar_production = 2600.0
+        inverter.monitoring_building_consumption = 3000.0
+        inverter.monitoring_economy_factor = 0.8
+        inverter.monitoring_grid_consumption = 500.0
+        inverter.monitoring_grid_injection = 700.0
+        inverter.monitoring_grid_power_flow = -200.0
+        inverter.monitoring_self_consumption = 85.0
+        inverter.monitoring_self_sufficiency = 90.0
+        inverter.monitoring_solar_production = 2600.0
 
         # Monitoring (instant minute data)
-        scale.monitoring_minute_building_consumption = 50.0
-        scale.monitoring_minute_grid_consumption = 8.3
-        scale.monitoring_minute_grid_injection = 11.7
-        scale.monitoring_minute_grid_power_flow = -3.4
-        scale.monitoring_minute_solar_production = 43.3
+        inverter.monitoring_minute_building_consumption = 50.0
+        inverter.monitoring_minute_grid_consumption = 8.3
+        inverter.monitoring_minute_grid_injection = 11.7
+        inverter.monitoring_minute_grid_power_flow = -3.4
+        inverter.monitoring_minute_solar_production = 43.3
 
-        yield scale
+        yield inverter
 
 
 @pytest.fixture
@@ -143,14 +143,6 @@ def mock_serial() -> Generator[AsyncMock]:
 def mock_login_async_setup_entry() -> Generator[AsyncMock]:
     """Fixture for mocking login and async_setup_entry."""
     with (
-        patch(
-            "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.imeon_inverter.config_flow.Inverter.get_serial",
-            return_value=TEST_SERIAL,
-        ),
         patch(
             "homeassistant.components.imeon_inverter.async_setup_entry",
             return_value=True,
