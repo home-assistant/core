@@ -2,14 +2,14 @@
 
 import logging
 
+from aiotainer.auth import Auth
 from aiotainer.client import PortainerClient
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_VERIFY_SSL, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 
-from . import api
 from .coordinator import PortainerDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,8 +27,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     client_session = aiohttp_client.async_get_clientsession(
         hass, entry.data[CONF_VERIFY_SSL]
     )
-    api_auth = api.AsyncConfigEntryAuth(client_session, entry.data)
-    portainer_api = PortainerClient(api_auth)
+    auth = Auth(client_session, entry.data[CONF_URL], entry.data[CONF_ACCESS_TOKEN])
+    portainer_api = PortainerClient(auth)
     coordinator = PortainerDataUpdateCoordinator(hass, portainer_api)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

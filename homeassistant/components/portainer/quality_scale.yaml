@@ -68,7 +68,7 @@ rules:
   entity-translations:
     status: exempt
     comment: Entities just have the name of the container which is not translatable
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues:

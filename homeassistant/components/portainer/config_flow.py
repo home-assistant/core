@@ -3,6 +3,7 @@
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectionError
+from aiotainer.auth import Auth
 from aiotainer.client import PortainerClient
 import voluptuous as vol
 
@@ -11,7 +12,6 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .api import AsyncConfigEntryAuth
 from .const import DOMAIN
 
 DATA_SCHEMA = vol.Schema(
@@ -35,7 +35,8 @@ class PortainerFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             websession = async_get_clientsession(self.hass, user_input[CONF_VERIFY_SSL])
-            api = PortainerClient(AsyncConfigEntryAuth(websession, user_input))
+            auth = Auth(websession, user_input[CONF_URL], user_input[CONF_ACCESS_TOKEN])
+            api = PortainerClient(auth)
             try:
                 await api.get_status()
             except (TimeoutError, ClientConnectionError):
