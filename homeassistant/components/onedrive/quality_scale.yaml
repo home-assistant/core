@@ -30,10 +30,7 @@ rules:
   # Silver
   action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: |
-      No Options flow.
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
@@ -76,10 +73,7 @@ rules:
   entity-translations: done
   exception-translations: done
   icon-translations: done
-  reconfiguration-flow:
-    status: exempt
-    comment: |
-      Nothing to reconfigure.
+  reconfiguration-flow: done
   repair-issues: done
   stale-devices:
     status: exempt
