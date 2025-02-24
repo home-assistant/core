@@ -25,3 +25,27 @@ async def test_set_time_service(
         )
 
         mock.assert_called_once_with(time)
+
+
+async def test_set_time_service_with_no_time(
+    hass: HomeAssistant, setup_risco_local, local_config_entry
+) -> None:
+    """Test the set_time service when no time is provided."""
+    fixed_time = datetime(2025, 2, 21, 12, 0, 0)
+
+    with patch("homeassistant.components.risco.services.datetime") as mock_datetime:
+        mock_datetime.now.return_value = fixed_time
+        mock_datetime.fromisoformat = datetime.fromisoformat
+
+        with patch(
+            "homeassistant.components.risco.RiscoLocal.set_time"
+        ) as mock_set_time:
+            data = {
+                "config_entry_id": local_config_entry.entry_id,
+            }
+
+            await hass.services.async_call(
+                DOMAIN, SERVICE_SET_TIME, service_data=data, blocking=True
+            )
+
+            mock_set_time.assert_called_once_with(fixed_time)
