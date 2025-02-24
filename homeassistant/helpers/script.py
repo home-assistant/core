@@ -772,8 +772,6 @@ class _ScriptRun:
         description = self._action.get(CONF_ALIAS, "sequence")
         repeat = self._action[CONF_REPEAT]
 
-        self._variables = self._variables.enter_scope()
-
         def set_repeat_var(
             iteration: int, count: int | None = None, item: Any = None
         ) -> None:
@@ -792,148 +790,155 @@ class _ScriptRun:
             with trace_path("sequence"):
                 await self._async_run_script(script)
 
-        if CONF_COUNT in repeat:
-            count = repeat[CONF_COUNT]
-            if isinstance(count, template.Template):
+        self._variables = self._variables.enter_scope()
+        try:  # pylint: disable=too-many-nested-blocks
+            if CONF_COUNT in repeat:
+                count = repeat[CONF_COUNT]
+                if isinstance(count, template.Template):
+                    try:
+                        count = int(count.async_render(self._variables))
+                    except (exceptions.TemplateError, ValueError) as ex:
+                        self._log(
+                            "Error rendering %s repeat count template: %s",
+                            self._script.name,
+                            ex,
+                            level=logging.ERROR,
+                        )
+                        raise _AbortScript from ex
+                extra_msg = f" of {count}"
+                for iteration in range(1, count + 1):
+                    set_repeat_var(iteration, count)
+                    await async_run_sequence(iteration, extra_msg)
+                    if self._stop.done():
+                        break
+
+            elif CONF_FOR_EACH in repeat:
                 try:
-                    count = int(count.async_render(self._variables))
+                    items = template.render_complex(
+                        repeat[CONF_FOR_EACH], self._variables
+                    )
                 except (exceptions.TemplateError, ValueError) as ex:
                     self._log(
-                        "Error rendering %s repeat count template: %s",
+                        "Error rendering %s repeat for each items template: %s",
                         self._script.name,
                         ex,
                         level=logging.ERROR,
                     )
                     raise _AbortScript from ex
-            extra_msg = f" of {count}"
-            for iteration in range(1, count + 1):
-                set_repeat_var(iteration, count)
-                await async_run_sequence(iteration, extra_msg)
-                if self._stop.done():
-                    break
 
-        elif CONF_FOR_EACH in repeat:
-            try:
-                items = template.render_complex(repeat[CONF_FOR_EACH], self._variables)
-            except (exceptions.TemplateError, ValueError) as ex:
-                self._log(
-                    "Error rendering %s repeat for each items template: %s",
-                    self._script.name,
-                    ex,
-                    level=logging.ERROR,
-                )
-                raise _AbortScript from ex
+                if not isinstance(items, list):
+                    self._log(
+                        "Repeat 'for_each' must be a list of items in %s, got: %s",
+                        self._script.name,
+                        items,
+                        level=logging.ERROR,
+                    )
+                    raise _AbortScript("Repeat 'for_each' must be a list of items")
 
-            if not isinstance(items, list):
-                self._log(
-                    "Repeat 'for_each' must be a list of items in %s, got: %s",
-                    self._script.name,
-                    items,
-                    level=logging.ERROR,
-                )
-                raise _AbortScript("Repeat 'for_each' must be a list of items")
-
-            count = len(items)
-            for iteration, item in enumerate(items, 1):
-                set_repeat_var(iteration, count, item)
-                extra_msg = f" of {count} with item: {item!r}"
-                if self._stop.done():
-                    break
-                await async_run_sequence(iteration, extra_msg)
-
-        elif CONF_WHILE in repeat:
-            conditions = [
-                await self._async_get_condition(config) for config in repeat[CONF_WHILE]
-            ]
-            for iteration in itertools.count(1):
-                set_repeat_var(iteration)
-                try:
+                count = len(items)
+                for iteration, item in enumerate(items, 1):
+                    set_repeat_var(iteration, count, item)
+                    extra_msg = f" of {count} with item: {item!r}"
                     if self._stop.done():
                         break
-                    if not self._test_conditions(conditions, "while"):
-                        break
-                except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'while' evaluation:\n%s", ex)
-                    break
+                    await async_run_sequence(iteration, extra_msg)
 
-                if iteration > 1:
-                    if iteration > REPEAT_WARN_ITERATIONS:
+            elif CONF_WHILE in repeat:
+                conditions = [
+                    await self._async_get_condition(config)
+                    for config in repeat[CONF_WHILE]
+                ]
+                for iteration in itertools.count(1):
+                    set_repeat_var(iteration)
+                    try:
+                        if self._stop.done():
+                            break
+                        if not self._test_conditions(conditions, "while"):
+                            break
+                    except exceptions.ConditionError as ex:
+                        _LOGGER.warning("Error in 'while' evaluation:\n%s", ex)
+                        break
+
+                    if iteration > 1:
+                        if iteration > REPEAT_WARN_ITERATIONS:
+                            if not warned_too_many_loops:
+                                warned_too_many_loops = True
+                                _LOGGER.warning(
+                                    "While condition %s in script `%s` looped %s times",
+                                    repeat[CONF_WHILE],
+                                    self._script.name,
+                                    REPEAT_WARN_ITERATIONS,
+                                )
+
+                            if iteration > REPEAT_TERMINATE_ITERATIONS:
+                                _LOGGER.critical(
+                                    "While condition %s in script `%s` "
+                                    "terminated because it looped %s times",
+                                    repeat[CONF_WHILE],
+                                    self._script.name,
+                                    REPEAT_TERMINATE_ITERATIONS,
+                                )
+                                raise _AbortScript(
+                                    f"While condition {repeat[CONF_WHILE]} "
+                                    "terminated because it looped "
+                                    f" {REPEAT_TERMINATE_ITERATIONS} times"
+                                )
+
+                        # If the user creates a script with a tight loop,
+                        # yield to the event loop so the system stays
+                        # responsive while all the cpu time is consumed.
+                        await asyncio.sleep(0)
+
+                    await async_run_sequence(iteration)
+
+            elif CONF_UNTIL in repeat:
+                conditions = [
+                    await self._async_get_condition(config)
+                    for config in repeat[CONF_UNTIL]
+                ]
+                for iteration in itertools.count(1):
+                    set_repeat_var(iteration)
+                    await async_run_sequence(iteration)
+                    try:
+                        if self._stop.done():
+                            break
+                        if self._test_conditions(conditions, "until") in [True, None]:
+                            break
+                    except exceptions.ConditionError as ex:
+                        _LOGGER.warning("Error in 'until' evaluation:\n%s", ex)
+                        break
+
+                    if iteration >= REPEAT_WARN_ITERATIONS:
                         if not warned_too_many_loops:
                             warned_too_many_loops = True
                             _LOGGER.warning(
-                                "While condition %s in script `%s` looped %s times",
-                                repeat[CONF_WHILE],
+                                "Until condition %s in script `%s` looped %s times",
+                                repeat[CONF_UNTIL],
                                 self._script.name,
                                 REPEAT_WARN_ITERATIONS,
                             )
 
-                        if iteration > REPEAT_TERMINATE_ITERATIONS:
+                        if iteration >= REPEAT_TERMINATE_ITERATIONS:
                             _LOGGER.critical(
-                                "While condition %s in script `%s` "
+                                "Until condition %s in script `%s` "
                                 "terminated because it looped %s times",
-                                repeat[CONF_WHILE],
+                                repeat[CONF_UNTIL],
                                 self._script.name,
                                 REPEAT_TERMINATE_ITERATIONS,
                             )
                             raise _AbortScript(
-                                f"While condition {repeat[CONF_WHILE]} "
+                                f"Until condition {repeat[CONF_UNTIL]} "
                                 "terminated because it looped "
-                                f" {REPEAT_TERMINATE_ITERATIONS} times"
+                                f"{REPEAT_TERMINATE_ITERATIONS} times"
                             )
 
                     # If the user creates a script with a tight loop,
-                    # yield to the event loop so the system stays
-                    # responsive while all the cpu time is consumed.
+                    # yield to the event loop so the system stays responsive
+                    # while all the cpu time is consumed.
                     await asyncio.sleep(0)
 
-                await async_run_sequence(iteration)
-
-        elif CONF_UNTIL in repeat:
-            conditions = [
-                await self._async_get_condition(config) for config in repeat[CONF_UNTIL]
-            ]
-            for iteration in itertools.count(1):
-                set_repeat_var(iteration)
-                await async_run_sequence(iteration)
-                try:
-                    if self._stop.done():
-                        break
-                    if self._test_conditions(conditions, "until") in [True, None]:
-                        break
-                except exceptions.ConditionError as ex:
-                    _LOGGER.warning("Error in 'until' evaluation:\n%s", ex)
-                    break
-
-                if iteration >= REPEAT_WARN_ITERATIONS:
-                    if not warned_too_many_loops:
-                        warned_too_many_loops = True
-                        _LOGGER.warning(
-                            "Until condition %s in script `%s` looped %s times",
-                            repeat[CONF_UNTIL],
-                            self._script.name,
-                            REPEAT_WARN_ITERATIONS,
-                        )
-
-                    if iteration >= REPEAT_TERMINATE_ITERATIONS:
-                        _LOGGER.critical(
-                            "Until condition %s in script `%s` "
-                            "terminated because it looped %s times",
-                            repeat[CONF_UNTIL],
-                            self._script.name,
-                            REPEAT_TERMINATE_ITERATIONS,
-                        )
-                        raise _AbortScript(
-                            f"Until condition {repeat[CONF_UNTIL]} "
-                            "terminated because it looped "
-                            f"{REPEAT_TERMINATE_ITERATIONS} times"
-                        )
-
-                # If the user creates a script with a tight loop,
-                # yield to the event loop so the system stays responsive
-                # while all the cpu time is consumed.
-                await asyncio.sleep(0)
-
-        self._variables = self._variables.exit_scope()
+        finally:
+            self._variables = self._variables.exit_scope()
 
     ### Stop actions ###
 
