@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from pysmartthings.models import Attribute, Capability, Command
+from pysmartthings import Attribute, Capability, Command
 import pytest
 from syrupy import SnapshotAssertion
 

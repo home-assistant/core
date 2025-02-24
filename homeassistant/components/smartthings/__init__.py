@@ -66,6 +66,8 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) -> bool:
     """Initialize config entry which represents an installed SmartApp."""
+    if CONF_TOKEN not in entry.data:
+        raise ConfigEntryAuthFailed("Config entry missing token")
     implementation = await async_get_config_entry_implementation(hass, entry)
     session = OAuth2Session(hass, entry, implementation)
 
@@ -131,7 +133,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle config entry migration."""
 
     if entry.version < 3:
-        entry.async_start_reauth(hass)
-        return False
+        hass.config_entries.async_update_entry(entry, version=3)
+        return True
 
     return True

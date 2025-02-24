@@ -5,9 +5,19 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.smartthings.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_TOKEN
+from homeassistant.components.smartthings.const import (
+    CONF_INSTALLED_APP_ID,
+    CONF_LOCATION_ID,
+    CONF_REFRESH_TOKEN,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CLIENT_ID,
+    CONF_CLIENT_SECRET,
+    CONF_TOKEN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -46,7 +56,7 @@ async def test_full_flow(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+r:installedapps+w:installedapps"
+        "x:scenes:*+r:rules:*+w:rules:*+r:installedapps+w:installedapps+sse"
     )
 
     client = await hass_client_no_auth()
@@ -65,7 +75,7 @@ async def test_full_flow(
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
             "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps",
+            "r:installedapps w:installedapps sse",
             "access_tier": 0,
             "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
         },
@@ -83,11 +93,11 @@ async def test_full_flow(
         "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
         "r:locations:* w:locations:* x:locations:* "
         "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-        "r:installedapps w:installedapps",
+        "r:installedapps w:installedapps sse",
         "access_tier": 0,
         "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
     }
-    assert result["result"].unique_id == "5aaaa925-2be1-4e40-b257-e4ef59083324"
+    assert result["result"].unique_id == "397678e5-9995-4a39-9d9f-ae6ba310236c"
 
 
 @pytest.mark.usefixtures("current_request_with_host")
@@ -121,7 +131,7 @@ async def test_duplicate_entry(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+r:installedapps+w:installedapps"
+        "x:scenes:*+r:rules:*+w:rules:*+r:installedapps+w:installedapps+sse"
     )
 
     client = await hass_client_no_auth()
@@ -140,7 +150,7 @@ async def test_duplicate_entry(
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
             "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps",
+            "r:installedapps w:installedapps sse",
             "access_tier": 0,
             "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
         },
@@ -191,7 +201,7 @@ async def test_reauthentication(
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
             "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps",
+            "r:installedapps w:installedapps sse",
             "access_tier": 0,
             "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
         },
@@ -210,7 +220,7 @@ async def test_reauthentication(
         "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
         "r:locations:* w:locations:* x:locations:* "
         "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-        "r:installedapps w:installedapps",
+        "r:installedapps w:installedapps sse",
         "access_tier": 0,
         "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
     }
@@ -227,6 +237,10 @@ async def test_reauth_account_mismatch(
 ) -> None:
     """Test SmartThings reauthentication with different account."""
     mock_config_entry.add_to_hass(hass)
+
+    mock_smartthings.get_locations.return_value[
+        0
+    ].location_id = "123123123-2be1-4e40-b257-e4ef59083324"
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
@@ -252,7 +266,7 @@ async def test_reauth_account_mismatch(
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
             "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps",
+            "r:installedapps w:installedapps sse",
             "access_tier": 0,
             "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
         },
@@ -262,3 +276,154 @@ async def test_reauth_account_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_account_mismatch"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_migration(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_old_config_entry: MockConfigEntry,
+) -> None:
+    """Test SmartThings reauthentication with different account."""
+    mock_old_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_old_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_old_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    result = hass.config_entries.flow.async_progress()[0]
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
+            "r:installedapps w:installedapps sse",
+            "access_tier": 0,
+            "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_old_config_entry.state is ConfigEntryState.LOADED
+    mock_old_config_entry.data[CONF_TOKEN].pop("expires_at")
+    assert mock_old_config_entry.data == {
+        "auth_implementation": DOMAIN,
+        "old_data": {
+            CONF_ACCESS_TOKEN: "mock-access-token",
+            CONF_REFRESH_TOKEN: "mock-refresh-token",
+            CONF_CLIENT_ID: "CLIENT_ID",
+            CONF_CLIENT_SECRET: "CLIENT_SECRET",
+            CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+            CONF_INSTALLED_APP_ID: "123aa123-2be1-4e40-b257-e4ef59083324",
+        },
+        CONF_TOKEN: {
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
+            "r:installedapps w:installedapps sse",
+            "access_tier": 0,
+            "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
+        },
+    }
+    assert mock_old_config_entry.unique_id == "397678e5-9995-4a39-9d9f-ae6ba310236c"
+    assert mock_old_config_entry.version == 3
+    assert mock_old_config_entry.minor_version == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_migration_wrong_location(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_old_config_entry: MockConfigEntry,
+) -> None:
+    """Test SmartThings reauthentication with wrong location."""
+    mock_old_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_old_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_old_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    mock_smartthings.get_locations.return_value[
+        0
+    ].location_id = "123123123-2be1-4e40-b257-e4ef59083324"
+
+    result = hass.config_entries.flow.async_progress()[0]
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        "https://auth-global.api.smartthings.com/oauth/token",
+        json={
+            "refresh_token": "new-refresh-token",
+            "access_token": "new-access-token",
+            "token_type": "Bearer",
+            "expires_in": 82806,
+            "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
+            "r:locations:* w:locations:* x:locations:* "
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
+            "r:installedapps w:installedapps sse",
+            "access_tier": 0,
+            "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_location_mismatch"
+    assert mock_old_config_entry.state is ConfigEntryState.LOADED
+    assert mock_old_config_entry.data == {
+        CONF_ACCESS_TOKEN: "mock-access-token",
+        CONF_REFRESH_TOKEN: "mock-refresh-token",
+        CONF_CLIENT_ID: "CLIENT_ID",
+        CONF_CLIENT_SECRET: "CLIENT_SECRET",
+        CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+        CONF_INSTALLED_APP_ID: "123aa123-2be1-4e40-b257-e4ef59083324",
+    }
+    assert (
+        mock_old_config_entry.unique_id
+        == "appid123-2be1-4e40-b257-e4ef59083324_397678e5-9995-4a39-9d9f-ae6ba310236c"
+    )
+    assert mock_old_config_entry.version == 2
+    assert mock_old_config_entry.minor_version == 1

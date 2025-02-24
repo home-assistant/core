@@ -3,7 +3,7 @@
 from typing import Any
 from unittest.mock import AsyncMock, call
 
-from pysmartthings.models import Attribute, Capability, Command, Status
+from pysmartthings import Attribute, Capability, Command, Status
 import pytest
 from syrupy import SnapshotAssertion
 

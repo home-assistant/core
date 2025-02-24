@@ -16,7 +16,7 @@ SCOPES = [
     "w:rules:*",
     "r:installedapps",
     "w:installedapps",
-    "sse"
+    "sse",
 ]
 
 CONF_APP_ID = "app_id"

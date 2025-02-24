@@ -17,7 +17,12 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.smartthings import CONF_INSTALLED_APP_ID
-from homeassistant.components.smartthings.const import CONF_LOCATION_ID, DOMAIN, SCOPES, CONF_REFRESH_TOKEN
+from homeassistant.components.smartthings.const import (
+    CONF_LOCATION_ID,
+    CONF_REFRESH_TOKEN,
+    DOMAIN,
+    SCOPES,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
@@ -135,7 +140,7 @@ def mock_config_entry(expires_at: int) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="My home",
-        unique_id="5aaaa925-2be1-4e40-b257-e4ef59083324",
+        unique_id="397678e5-9995-4a39-9d9f-ae6ba310236c",
         data={
             "auth_implementation": DOMAIN,
             "token": {
@@ -159,7 +164,7 @@ def mock_old_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="My home",
-        unique_id="123aa123-2be1-4e40-b257-e4ef59083324",
+        unique_id="appid123-2be1-4e40-b257-e4ef59083324_397678e5-9995-4a39-9d9f-ae6ba310236c",
         data={
             CONF_ACCESS_TOKEN: "mock-access-token",
             CONF_REFRESH_TOKEN: "mock-refresh-token",
@@ -168,5 +173,5 @@ def mock_old_config_entry() -> MockConfigEntry:
             CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
             CONF_INSTALLED_APP_ID: "123aa123-2be1-4e40-b257-e4ef59083324",
         },
-        version=3,
+        version=2,
     )
