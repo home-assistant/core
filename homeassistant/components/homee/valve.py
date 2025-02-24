@@ -41,6 +41,8 @@ async def async_setup_entry(
 class HomeeValve(HomeeEntity, ValveEntity):
     """Representation of a Homee valve."""
 
+    _attr_reports_position = True
+
     def __init__(
         self,
         attribute: HomeeAttribute,
@@ -51,13 +53,6 @@ class HomeeValve(HomeeEntity, ValveEntity):
         super().__init__(attribute, entry)
         self.entity_description = description
         self._attr_translation_key = description.key
-        self._attr_reports_position = True
-        self._attr_supported_features = (
-            ValveEntityFeature.SET_POSITION
-            if attribute.editable
-            else ValveEntityFeature(0)
-        )
-        self._attr_is_closed = bool(self._attribute.current_value == 0)
 
     @property
     def supported_features(self) -> ValveEntityFeature:
