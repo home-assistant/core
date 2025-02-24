@@ -1,6 +1,6 @@
 """Tests for the Vegetronix VegeHub integration."""
 
-from homeassistant.components.vegehub import VegeHubConfigEntry
+from homeassistant.components.vegehub.coordinator import VegeHubConfigEntry
 from homeassistant.core import HomeAssistant
 
 

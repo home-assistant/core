@@ -24,9 +24,6 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
@@ -35,7 +32,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'analog_sensor',
-    'unique_id': 'a1b2c3d4e5f6_1',
+    'unique_id': 'a1b2c3d4e5f6_1_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -79,9 +76,6 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
@@ -90,7 +84,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'analog_sensor',
-    'unique_id': 'a1b2c3d4e5f6_2',
+    'unique_id': 'a1b2c3d4e5f6_2_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -134,9 +128,6 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
@@ -145,7 +136,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'analog_sensor',
-    'unique_id': 'a1b2c3d4e5f6_3',
+    'unique_id': 'a1b2c3d4e5f6_3_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -189,9 +180,6 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
@@ -200,7 +188,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'analog_sensor',
-    'unique_id': 'a1b2c3d4e5f6_4',
+    'unique_id': 'a1b2c3d4e5f6_4_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -244,9 +232,6 @@
       'sensor': dict({
         'suggested_display_precision': 2,
       }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
-      }),
     }),
     'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
     'original_icon': None,
@@ -255,7 +240,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'analog_sensor',
-    'unique_id': 'a1b2c3d4e5f6_5',
+    'unique_id': 'a1b2c3d4e5f6_5_voltage',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
