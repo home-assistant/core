@@ -141,7 +141,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
     VERSION = 1
-    MINOR_VERSION = 3
+    MINOR_VERSION = 2
 
     host: str = ""
     port: int = DEFAULT_HTTP_PORT
