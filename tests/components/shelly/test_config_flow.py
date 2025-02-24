@@ -1161,12 +1161,7 @@ async def test_zeroconf_sleeping_device_attempts_configure(
     entry = MockConfigEntry(
         domain="shelly",
         unique_id="AABBCCDDEEFF",
-        data={
-            "host": "1.1.1.1",
-            "gen": 2,
-            "sleep_period": 1000,
-            "model": MODEL_1,
-        },
+        data={"host": "1.1.1.1", "gen": 2, "sleep_period": 1000, "model": MODEL_1},
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
