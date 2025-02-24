@@ -3183,6 +3183,7 @@ async def test_adjust_sum_statistics_energy(
                 "last_reset": None,
                 "state": pytest.approx(0.0),
                 "sum": pytest.approx(2.0),
+                "circular_mean": None,
             },
             {
                 "start": period2.timestamp(),
@@ -3193,6 +3194,7 @@ async def test_adjust_sum_statistics_energy(
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
+                "circular_mean": None,
             },
         ]
     }
@@ -3252,6 +3254,7 @@ async def test_adjust_sum_statistics_energy(
                 "last_reset": None,
                 "state": pytest.approx(0.0),
                 "sum": pytest.approx(2.0),
+                "circular_mean": None,
             },
             {
                 "start": period2.timestamp(),
@@ -3262,6 +3265,7 @@ async def test_adjust_sum_statistics_energy(
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(1003.0),
+                "circular_mean": None,
             },
         ]
     }
@@ -3292,6 +3296,7 @@ async def test_adjust_sum_statistics_energy(
                 "last_reset": None,
                 "state": pytest.approx(0.0),
                 "sum": pytest.approx(2.0),
+                "circular_mean": None,
             },
             {
                 "start": period2.timestamp(),
@@ -3302,6 +3307,7 @@ async def test_adjust_sum_statistics_energy(
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3003.0),
+                "circular_mean": None,
             },
         ]
     }
@@ -3378,6 +3384,7 @@ async def test_adjust_sum_statistics_gas(
                 "last_reset": None,
                 "state": pytest.approx(0.0),
                 "sum": pytest.approx(2.0),
+                "circular_mean": None,
             },
             {
                 "start": period2.timestamp(),
@@ -3388,6 +3395,7 @@ async def test_adjust_sum_statistics_gas(
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(3.0),
+                "circular_mean": None,
             },
         ]
     }
@@ -3447,6 +3455,7 @@ async def test_adjust_sum_statistics_gas(
                 "last_reset": None,
                 "state": pytest.approx(0.0),
                 "sum": pytest.approx(2.0),
+                "circular_mean": None,
             },
             {
                 "start": period2.timestamp(),
@@ -3457,6 +3466,7 @@ async def test_adjust_sum_statistics_gas(
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(1003.0),
+                "circular_mean": None,
             },
         ]
     }
@@ -3487,6 +3497,7 @@ async def test_adjust_sum_statistics_gas(
                 "last_reset": None,
                 "state": pytest.approx(0.0),
                 "sum": pytest.approx(2.0),
+                "circular_mean": None,
             },
             {
                 "start": period2.timestamp(),
@@ -3497,6 +3508,7 @@ async def test_adjust_sum_statistics_gas(
                 "last_reset": None,
                 "state": pytest.approx(1.0),
                 "sum": pytest.approx(1004),
+                "circular_mean": None,
             },
         ]
     }
@@ -3590,6 +3602,7 @@ async def test_adjust_sum_statistics_errors(
                 "last_reset": None,
                 "state": pytest.approx(0.0 * factor),
                 "sum": pytest.approx(2.0 * factor),
+                "circular_mean": None,
             },
             {
                 "start": period2.timestamp(),
@@ -3600,6 +3613,7 @@ async def test_adjust_sum_statistics_errors(
                 "last_reset": None,
                 "state": pytest.approx(1.0 * factor),
                 "sum": pytest.approx(3.0 * factor),
+                "circular_mean": None,
             },
         ]
     }

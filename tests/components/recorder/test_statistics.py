@@ -372,6 +372,7 @@ async def test_compile_periodic_statistics_exception(
         "last_reset": None,
         "state": None,
         "sum": None,
+        "circular_mean": None,
     }
     expected_2 = {
         "start": process_timestamp(now + timedelta(minutes=5)).timestamp(),
@@ -382,6 +383,7 @@ async def test_compile_periodic_statistics_exception(
         "last_reset": None,
         "state": None,
         "sum": None,
+        "circular_mean": None,
     }
     expected_stats1 = [expected_1, expected_2]
     expected_stats2 = [expected_2]
@@ -437,6 +439,7 @@ async def test_rename_entity(
         "last_reset": None,
         "state": None,
         "sum": None,
+        "circular_mean": None,
     }
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
@@ -522,6 +525,7 @@ async def test_rename_entity_collision(
         "last_reset": None,
         "state": None,
         "sum": None,
+        "circular_mean": None,
     }
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
@@ -609,6 +613,7 @@ async def test_rename_entity_collision_states_meta_check_disabled(
         "last_reset": None,
         "state": None,
         "sum": None,
+        "circular_mean": None,
     }
     expected_stats1 = [expected_1]
     expected_stats2 = [expected_1]
