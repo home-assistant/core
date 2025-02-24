@@ -32,7 +32,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -288,17 +287,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.async_create_task(connect(), eager_start=False)
     async_dispatcher_connect(hass, SIGNAL_EVENT, event_callback)
 
-    async def handle_logging_changed(_: Event | HomeAssistant) -> None:
+    async def handle_logging_changed(_: Event | None = None) -> None:
         """Handle logging changed event."""
         if LIB_LOGGER.isEnabledFor(logging.DEBUG):
             await RflinkCommand.send_command("rfdebug", "on")
             _LOGGER.info("RFDEBUG enabled")
-        else:
+        elif _:
             await RflinkCommand.send_command("rfdebug", "off")
             _LOGGER.info("RFDEBUG disabled")
+        else:
+            _LOGGER.info("DEBUG not enabled on startUp --> does nothing")
 
     # Set up RFDEBUG logging on setup if needed
-    async_at_started(hass, handle_logging_changed)
+    hass.async_create_task(handle_logging_changed(), eager_start=False)
 
     hass.bus.async_listen(EVENT_LOGGING_CHANGED, handle_logging_changed)
 
