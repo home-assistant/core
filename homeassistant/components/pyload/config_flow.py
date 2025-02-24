@@ -9,7 +9,6 @@ from typing import Any
 from aiohttp import CookieJar
 from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
 import voluptuous as vol
-from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
@@ -82,10 +81,9 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Non
         cookie_jar=CookieJar(unsafe=True),
     )
 
-    url = URL.build(
-        scheme="https" if user_input[CONF_SSL] else "http",
-        host=user_input[CONF_HOST],
-        port=user_input[CONF_PORT],
+    url = (
+        f"{'https' if user_input[CONF_SSL] else 'http'}://"
+        f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/"
     )
     pyload = PyLoadAPI(
         session,

@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from aiohttp import CookieJar
 from pyloadapi import PyLoadAPI
-from yarl import URL
 
 from homeassistant.const import (
     CONF_HOST,
@@ -26,11 +25,11 @@ PLATFORMS: list[Platform] = [Platform.BUTTON, Platform.SENSOR, Platform.SWITCH]
 async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bool:
     """Set up pyLoad from a config entry."""
 
-    url = URL.build(
-        scheme="https" if entry.data[CONF_SSL] else "http",
-        host=entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
+    url = (
+        f"{'https' if entry.data[CONF_SSL] else 'http'}://"
+        f"{entry.data[CONF_HOST]}:{entry.data[CONF_PORT]}/"
     )
+
     session = async_create_clientsession(
         hass,
         verify_ssl=entry.data[CONF_VERIFY_SSL],
