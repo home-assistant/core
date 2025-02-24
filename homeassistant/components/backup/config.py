@@ -52,7 +52,7 @@ class BackupConfigData:
     """Represent loaded backup config data."""
 
     agents: dict[str, AgentConfig]
-    automatic_backups_configured: bool
+    automatic_backups_configured: bool  # only used by frontend
     create_backup: CreateBackupConfig
     last_attempted_automatic_backup: datetime | None = None
     last_completed_automatic_backup: datetime | None = None
