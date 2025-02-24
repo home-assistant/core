@@ -30,8 +30,10 @@ class ScriptVariables:
     ) -> dict[str, Any]:
         """Render script variables.
 
-        The run variables are used to compute the static variables.
+        The run variables are included in the result.
+        The run variables are used to compute the rendered variable values.
         The run variables will not be overridden.
+        The rendering happens one at a time, with previous results influencing the next.
         """
         if self._has_template is None:
             self._has_template = template.is_complex(self.variables)
@@ -60,7 +62,12 @@ class ScriptVariables:
 
     @callback
     def async_simple_render(self, run_variables: Mapping[str, Any]) -> dict[str, Any]:
-        """Render script variables."""
+        """Render script variables.
+
+        Simply renders the variables, the run variables are not included in the result.
+        The run variables are used to compute the rendered variable values.
+        The rendering happens one at a time, with previous results influencing the next.
+        """
         if self._has_template is None:
             self._has_template = template.is_complex(self.variables)
 
@@ -97,15 +104,25 @@ class _ParallelStore:
 
 @dataclass(kw_only=True)
 class ScriptRunVariables(UserDict[str, Any]):
-    """Class to hold script run variables."""
+    """Class to hold script run variables.
 
+    It is a subclass of UserDict, so it has all the usual additional methods available.
+    Operations using those methods are equivalent to assigning values to variables.
+    """
+
+    # _previous is the previous ScriptRunVariables in the chain
     _previous: ScriptRunVariables | None = None
+    # _parent is the previous non-empty ScriptRunVariables in the chain
     _parent: ScriptRunVariables | None = None
 
+    # _local_store is the store for local variables
     _local_store: dict[str, Any] | None = None
+    # _parallel store is used for each parallel sequence
     _parallel_store: _ParallelStore | None = None
 
+    # _non_parallel_scope includes all scopes all the way to the most recent parallel split
     _non_parallel_scope: ChainMap[str, Any]
+    # _full_scope includes all scopes (all the way to the top-level)
     _full_scope: ChainMap[str, Any]
 
     @classmethod
@@ -126,9 +143,9 @@ class ScriptRunVariables(UserDict[str, Any]):
         return self
 
     def enter_scope(self, *, parallel: bool = False) -> ScriptRunVariables:
-        """Enter a new child scope.
+        """Return a new child scope.
 
-        :param parallel: Whether the new scope belongs to a parallel sequence.
+        :param parallel: Whether the new scope starts a parallel sequence.
         """
         if self._local_store is not None or self._parallel_store is not None:
             parent = self
@@ -156,23 +173,32 @@ class ScriptRunVariables(UserDict[str, Any]):
         )
 
     def exit_scope(self) -> ScriptRunVariables:
-        """Exit the current scope."""
+        """Exit the current scope.
+
+        Does no clean-up, but simply returns the previous scope.
+        """
         if self._previous is None:
             raise ValueError("Cannot exit root scope")
         return self._previous
 
     def __setitem__(self, key: str, value: Any) -> None:
-        """Assign value to a variable."""
+        """Assign value to a variable. Equivalent to `assign_single`."""
         self.assign_single(key, value)
 
     def __delitem__(self, key: str) -> None:
-        """Delete a variable."""
+        """Delete a variable (disallowed)."""
         raise TypeError("Deleting items is not allowed in ScriptRunVariables.")
 
     def assign_single(
         self, key: str, value: Any, *, parallel_special: bool = False
     ) -> None:
-        """Assign a value to a variable."""
+        """Assign value to a variable.
+
+        Value is always assigned to the variable in the nearest scope, in which it is defined.
+        If the variable is not defined at all, it is created in the top-level scope.
+
+        :param parallel_special: Whether variable is to be treated specially in parallel sequences.
+        """
         if self._local_store is not None and key in self._local_store:
             self._local_store[key] = value
             return
@@ -192,18 +218,26 @@ class ScriptRunVariables(UserDict[str, Any]):
         self._parent.assign_single(key, value, parallel_special=parallel_special)
 
     def assign(self, new_vars: ScriptVariables) -> None:
-        """Assign values to variables."""
+        """Assign rendered values to variables.
+
+        First renders the variable values in order and then assigns each of them.
+        Value is always assigned to the variable in the nearest scope, in which it is defined.
+        If the variable is not defined at all, it is created in the top-level scope.
+        """
         for key, value in new_vars.async_simple_render(self).items():
             self.assign_single(key, value)
 
     def define_single(self, key: str, value: Any) -> None:
-        """Define a local variable."""
+        """Define a local variable and assign value to it."""
         self._ensure_local()
         assert self._local_store is not None
         self._local_store[key] = value
 
     def define(self, new_vars: ScriptVariables) -> None:
-        """Define local variables."""
+        """Define local variables and assign rendered values to them.
+
+        First renders the variable values in order and then assigns each of them.
+        """
         self._ensure_local()
         assert self._local_store is not None
         for key, value in new_vars.async_simple_render(self).items():
@@ -231,11 +265,11 @@ class ScriptRunVariables(UserDict[str, Any]):
         return self._full_scope
 
     @property
-    def local_scope(self) -> Mapping[str, Any]:
-        """Return variables in local scope."""
-        return self._local_store if self._local_store is not None else {}
-
-    @property
     def non_parallel_scope(self) -> Mapping[str, Any]:
         """Return variables in non-parallel scope."""
         return self._non_parallel_scope
+
+    @property
+    def local_scope(self) -> Mapping[str, Any]:
+        """Return variables in local scope."""
+        return self._local_store if self._local_store is not None else {}
