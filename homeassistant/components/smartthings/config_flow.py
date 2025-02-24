@@ -34,18 +34,25 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for SmartThings."""
-        await self.async_set_unique_id(data[CONF_TOKEN][CONF_INSTALLED_APP_ID])
+        client = SmartThings(session=async_get_clientsession(self.hass))
+        client.authenticate(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
+        locations = await client.get_locations()
+        location = locations[0]
+        # We pick to use the location id as unique id rather than the installed app id
+        # as the installed app id could change with the right settings in the SmartApp
+        # or the app used to sign in changed for any reason.
+        await self.async_set_unique_id(location.location_id)
         if self.source != SOURCE_REAUTH:
-            client = SmartThings(session=async_get_clientsession(self.hass))
-            client.authenticate(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
-            locations = await client.get_locations()
-            location = locations[0]
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
                 title=location.name,
                 data={**data, CONF_LOCATION_ID: location.location_id},
             )
+
+        if (entry := self._get_reauth_entry()) and entry.version < 3 and entry.data[CONF_LOCATION_ID] != location.location_id:
+            return self.async_abort(reason="reauth_location_mismatch")
+
 
         self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
         return self.async_update_reload_and_abort(
