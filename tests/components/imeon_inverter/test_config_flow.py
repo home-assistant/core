@@ -157,3 +157,27 @@ async def test_manual_setup_already_exists(
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_get_serial_timeout(hass: HomeAssistant) -> None:
+    """Test we handle timeout exception for getting serial."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.imeon_inverter.config_flow.Inverter.get_serial",
+            side_effect=TimeoutError,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], TEST_USER_INPUT
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
