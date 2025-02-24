@@ -2,19 +2,16 @@
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import RemoteCalendarDataUpdateCoordinator
+from .coordinator import RemoteCalendarConfigEntry, RemoteCalendarDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORMS: list[Platform] = [Platform.CALENDAR]
-
-type RemoteCalendarConfigEntry = ConfigEntry[RemoteCalendarDataUpdateCoordinator]
 
 
 async def async_setup_entry(

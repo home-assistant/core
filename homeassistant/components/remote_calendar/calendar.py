@@ -7,19 +7,18 @@ from typing import TYPE_CHECKING
 from ical.event import Event
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
+from . import RemoteCalendarConfigEntry
 from .const import CONF_CALENDAR_NAME
 from .coordinator import RemoteCalendarDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
-type RemoteCalendarConfigEntry = ConfigEntry[RemoteCalendarDataUpdateCoordinator]
 
 
 async def async_setup_entry(
@@ -51,11 +50,8 @@ class RemoteCalendarEntity(
     ) -> None:
         """Initialize RemoteCalendarEntity."""
         super().__init__(coordinator)
-        self.coordinator = coordinator
-        self._event: CalendarEvent | None = None
         self._attr_name = name
         self._attr_unique_id = unique_id
-        self._attr_should_poll = True
 
     @property
     def event(self) -> CalendarEvent | None:
@@ -63,10 +59,8 @@ class RemoteCalendarEntity(
         now = dt_util.now()
         events = self.coordinator.data.timeline_tz(now.tzinfo).active_after(now)
         if event := next(events, None):
-            self._event = _get_calendar_event(event)
-        else:
-            self._event = None
-        return self._event
+            return _get_calendar_event(event)
+        return None
 
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime

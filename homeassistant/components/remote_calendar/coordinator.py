@@ -9,16 +9,17 @@ from ical.calendar_stream import IcsCalendarStream
 from ical.exceptions import CalendarParseError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
+type RemoteCalendarConfigEntry = ConfigEntry[RemoteCalendarDataUpdateCoordinator]
+
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(days=1)
-
-type RemoteCalendarConfigEntry = ConfigEntry[RemoteCalendarDataUpdateCoordinator]
 
 
 class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
@@ -41,15 +42,12 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         )
         self._etag = None
         self._client = get_async_client(hass)
-        self._url = config_entry.data["url"]
+        self._url = config_entry.data[CONF_URL]
 
     async def _async_update_data(self) -> Calendar:
         """Update data from the url."""
-        headers: dict = {}
         try:
-            res = await self._client.get(
-                self._url, headers=headers, follow_redirects=True
-            )
+            res = await self._client.get(self._url, follow_redirects=True)
             res.raise_for_status()
         except (UnsupportedProtocol, ConnectError, HTTPStatusError, ValueError) as err:
             raise UpdateFailed(

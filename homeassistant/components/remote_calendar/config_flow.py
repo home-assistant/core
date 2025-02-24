@@ -42,11 +42,8 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         client = get_async_client(self.hass)
         _LOGGER.debug("User input in fetch url: %s", user_input)
         if user_input is not None:
-            headers: dict = {}
             try:
-                res = await client.get(
-                    user_input[CONF_URL], headers=headers, follow_redirects=True
-                )
+                res = await client.get(user_input[CONF_URL], follow_redirects=True)
             except UnsupportedProtocol as err:
                 errors["base"] = "unsupported_protocol"
                 _LOGGER.debug("Unsupported Protokol: %s", err)
