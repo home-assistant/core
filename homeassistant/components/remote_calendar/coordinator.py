@@ -48,7 +48,6 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         """Update data from the url."""
         try:
             res = await self._client.get(self._url, follow_redirects=True)
-            res.raise_for_status()
         except (UnsupportedProtocol, ConnectError, HTTPStatusError, ValueError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -56,6 +55,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
                 translation_placeholders={"err": str(err)},
             ) from err
         else:
+            res.raise_for_status()
             try:
                 await self.hass.async_add_executor_job(
                     IcsCalendarStream.calendar_from_ics, res.text
