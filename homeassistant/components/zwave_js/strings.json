@@ -344,8 +344,8 @@
           "name": "[%key:component::zwave_js::services::set_value::fields::area_id::name%]"
         },
         "broadcast": {
-          "description": "Whether command should be broadcast to all devices on the network.",
-          "name": "Broadcast?"
+          "description": "Whether the command should be broadcast to all devices on the network.",
+          "name": "Broadcast"
         },
         "command_class": {
           "description": "[%key:component::zwave_js::services::set_value::fields::command_class::description%]",
@@ -434,8 +434,8 @@
           "name": "Entities"
         },
         "refresh_all_values": {
-          "description": "Whether to refresh all values (true) or just the primary value (false).",
-          "name": "Refresh all values?"
+          "description": "Whether to refresh all values or just the primary value.",
+          "name": "Refresh all values"
         }
       },
       "name": "Refresh values"
@@ -592,8 +592,8 @@
           "name": "[%key:component::zwave_js::services::set_config_parameter::fields::value::name%]"
         },
         "wait_for_result": {
-          "description": "Whether or not to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If set to `true`, note that the action can take a while if setting a value on an asleep battery device.",
-          "name": "Wait for result?"
+          "description": "Whether to wait for a response from the node. If not included in the payload, the integration will decide whether to wait or not. If enabled, the action can take a while if setting a value on an asleep battery device.",
+          "name": "Wait for result"
         }
       },
       "name": "Set a value (advanced)"

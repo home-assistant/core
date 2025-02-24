@@ -151,13 +151,7 @@ def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
                     "exc": str(ex),
                 },
             ) from ex
-        coordinator = self.coordinator
-        if coordinator.parent_coordinator:
-            # If there is a parent coordinator we need to refresh
-            # the parent as its what provides the power state data
-            # for the child entities.
-            coordinator = coordinator.parent_coordinator
-        await coordinator.async_request_refresh()
+        await self.coordinator.async_request_refresh()
 
     return _async_wrap
 
@@ -514,7 +508,9 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             )
 
         for child in children:
-            child_coordinator = coordinator.get_child_coordinator(child)
+            child_coordinator = coordinator.get_child_coordinator(
+                child, platform_domain
+            )
 
             child_entities = cls._entities_for_device(
                 hass,
@@ -657,7 +653,9 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
                 device.host,
             )
         for child in children:
-            child_coordinator = coordinator.get_child_coordinator(child)
+            child_coordinator = coordinator.get_child_coordinator(
+                child, platform_domain
+            )
 
             child_entities: list[_E] = cls._entities_for_device(
                 hass,

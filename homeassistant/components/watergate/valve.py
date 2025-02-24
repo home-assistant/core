@@ -8,7 +8,7 @@ from homeassistant.components.valve import (
     ValveState,
 )
 from homeassistant.core import callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import WatergateConfigEntry, WatergateDataCoordinator
 from .entity import WatergateEntity
@@ -20,7 +20,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: WatergateConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all entries for Watergate Platform."""
 

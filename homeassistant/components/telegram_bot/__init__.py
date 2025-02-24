@@ -756,7 +756,8 @@ class TelegramNotificationService:
                 message_thread_id=params[ATTR_MESSAGE_THREAD_ID],
                 context=context,
             )
-            msg_ids[chat_id] = msg.id
+            if msg is not None:
+                msg_ids[chat_id] = msg.id
         return msg_ids
 
     async def delete_message(self, chat_id=None, context=None, **kwargs):

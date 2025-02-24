@@ -21,7 +21,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import LAST_S_TEST
@@ -406,7 +406,7 @@ INFERRED_UNITS = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: APCUPSdConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the APCUPSd sensors from config entries."""
     coordinator = config_entry.runtime_data

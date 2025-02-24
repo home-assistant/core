@@ -967,8 +967,8 @@ build.json @home-assistant/supervisor
 /tests/components/motionblinds_ble/ @LennP @jerrybboy
 /homeassistant/components/motioneye/ @dermotduffy
 /tests/components/motioneye/ @dermotduffy
-/homeassistant/components/motionmount/ @RJPoelstra
-/tests/components/motionmount/ @RJPoelstra
+/homeassistant/components/motionmount/ @laiho-vogels
+/tests/components/motionmount/ @laiho-vogels
 /homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
 /tests/components/mqtt/ @emontnemery @jbouwh @bdraco
 /homeassistant/components/msteams/ @peroyvind
@@ -1138,6 +1138,8 @@ build.json @home-assistant/supervisor
 /tests/components/permobil/ @IsakNyberg
 /homeassistant/components/persistent_notification/ @home-assistant/core
 /tests/components/persistent_notification/ @home-assistant/core
+/homeassistant/components/pglab/ @pglab-electronics
+/tests/components/pglab/ @pglab-electronics
 /homeassistant/components/philips_js/ @elupus
 /tests/components/philips_js/ @elupus
 /homeassistant/components/pi_hole/ @shenxn
@@ -1340,6 +1342,8 @@ build.json @home-assistant/supervisor
 /tests/components/sensorpro/ @bdraco
 /homeassistant/components/sensorpush/ @bdraco
 /tests/components/sensorpush/ @bdraco
+/homeassistant/components/sensorpush_cloud/ @sstallion
+/tests/components/sensorpush_cloud/ @sstallion
 /homeassistant/components/sensoterra/ @markruys
 /tests/components/sensoterra/ @markruys
 /homeassistant/components/sentry/ @dcramer @frenck
@@ -1409,6 +1413,8 @@ build.json @home-assistant/supervisor
 /tests/components/snapcast/ @luar123
 /homeassistant/components/snmp/ @nmaggioni
 /tests/components/snmp/ @nmaggioni
+/homeassistant/components/snoo/ @Lash-L
+/tests/components/snoo/ @Lash-L
 /homeassistant/components/snooz/ @AustinBrunkhorst
 /tests/components/snooz/ @AustinBrunkhorst
 /homeassistant/components/solaredge/ @frenck @bdraco
