@@ -8,14 +8,11 @@ import time
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.helpers.device_registry as dr
 
 # Import the device class from the component that you want to support
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import HomeLinkCoordinator
 from .const import DOMAIN
 
 SCAN_INTERVAL = timedelta(seconds=5)
@@ -26,35 +23,14 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up homelink from a config entry."""
+    """Add the entities for the binary sensor."""
     coordinator = config_entry.runtime_data.coordinator
-    provider = config_entry.runtime_data.provider
-
-    await provider.enable()
-
-    device_data = await provider.discover()
-
-    for device in device_data:
-        device_info = DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, device.id)
-            },
-            name=device.name,
-        )
-
-        buttons = [
-            HomeLinkBinarySensor(b.id, b.name, device_info, coordinator)
-            for b in device.buttons
-        ]
-        async_add_entities(buttons)
-
-        if buttons[0].device_entry is not None:
-            registry = dr.async_get(hass)
-            registry.async_update_device(buttons[0].device_entry.id, name=device.name)
+    async_add_entities(coordinator.buttons)
 
 
-class HomeLinkBinarySensor(CoordinatorEntity[HomeLinkCoordinator], BinarySensorEntity):
+class HomeLinkBinarySensor(
+    CoordinatorEntity["HomeLinkCoordinator"], BinarySensorEntity
+):
     """Binary sensor."""
 
     def __init__(self, id, name, device_info, coordinator) -> None:

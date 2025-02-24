@@ -10,9 +10,12 @@ from homelink.provider import Provider
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import POLLING_INTERVAL
+from .binary_sensor import HomeLinkBinarySensor
+from .const import DOMAIN, POLLING_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +52,32 @@ class HomeLinkCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.last_sync_timestamp = None
         self.last_sync_id = None
         self.config_entry = config_entry
+        self.buttons = []
+
+    async def _async_setup(self):
+        await self.provider.enable()
+
+        device_data = await self.provider.discover()
+
+        for device in device_data:
+            device_info = DeviceInfo(
+                identifiers={
+                    # Serial numbers are unique identifiers within a specific domain
+                    (DOMAIN, device.id)
+                },
+                name=device.name,
+            )
+
+            self.buttons = [
+                HomeLinkBinarySensor(b.id, b.name, device_info, self)
+                for b in device.buttons
+            ]
+
+            if self.buttons[0].device_entry is not None:
+                registry = dr.async_get(self.hass)
+                registry.async_update_device(
+                    self.buttons[0].device_entry.id, name=device.name
+                )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from API endpoint."""
