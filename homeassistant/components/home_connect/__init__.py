@@ -213,7 +213,11 @@ async def _get_client_and_ha_id(
             break
     if entry is None:
         raise ServiceValidationError(
-            "Home Connect config entry not found for that device id"
+            translation_domain=DOMAIN,
+            translation_key="config_entry_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
         )
 
     ha_id = next(
@@ -404,6 +408,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     ) -> None:
         """Execute calls to services executing a command."""
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_command_actions",
+            breaks_in_ha_version="2025.9.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_command_actions",
+        )
 
         try:
             await client.put_command(ha_id, command_key=command_key, value=True)
@@ -610,6 +625,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     async_delete_issue(hass, DOMAIN, "deprecated_set_program_and_option_actions")
+    async_delete_issue(hass, DOMAIN, "deprecated_command_actions")
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
