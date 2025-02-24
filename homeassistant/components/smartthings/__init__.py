@@ -125,3 +125,13 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Handle config entry migration."""
+
+    if entry.version < 3:
+        entry.async_start_reauth(hass)
+        return False
+
+    return True
