@@ -76,6 +76,9 @@
     },
     "file_not_found": {
       "message": "File {filename} not found."
+    },
+    "unsupported_yaml_content_type": {
+      "message": "Unsupported YAML content type: {content_type}"
     }
   },
   "services": {

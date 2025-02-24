@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import json
-import logging
 
 import anyio
 import voluptuous as vol
 import yaml
-import yaml.parser
 
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -16,11 +14,9 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import ATTR_FILE_ENCODING, ATTR_FILE_NAME, DOMAIN, SERVICE_READ_FILE
 
-LOGGER = logging.getLogger(__name__)
-
 
 def async_register_services(hass: HomeAssistant) -> None:
-    """Register services for Hue integration."""
+    """Register services for File integration."""
 
     if not hass.services.has_service(DOMAIN, SERVICE_READ_FILE):
         hass.services.async_register(
@@ -37,9 +33,8 @@ def async_register_services(hass: HomeAssistant) -> None:
         )
 
 
-async def read_file(call: ServiceCall, skip_reload=True) -> dict:
-    """Handle activation of Hue scene."""
-    # Get parameters
+async def read_file(call: ServiceCall) -> dict:
+    """Handle read_file service call."""
     file_name = call.data[ATTR_FILE_NAME]
     file_encoding = call.data[ATTR_FILE_ENCODING].lower()
 
@@ -51,9 +46,11 @@ async def read_file(call: ServiceCall, skip_reload=True) -> dict:
             translation_key="no_access_to_path",
             translation_placeholders={"filename": file_name},
         )
+
     try:
         async with await anyio.open_file(file_name, encoding="utf-8") as file:
             file_content = await file.read()
+
         if file_encoding == "json":
             return json.loads(file_content)
         if file_encoding == "yaml":
@@ -63,22 +60,25 @@ async def read_file(call: ServiceCall, skip_reload=True) -> dict:
             if isinstance(yaml_content, list):
                 return {"list": yaml_content}
             raise HomeAssistantError(
-                f"Unsupported YAML content type: {type(yaml_content)}"
+                translation_domain=DOMAIN,
+                translation_key="unsupported_yaml_content_type",
+                translation_placeholders={"content_type": type(yaml_content)},
             )
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_file_encoding",
+            translation_placeholders={"filename": file_name, "encoding": file_encoding},
+        )
+
     except FileNotFoundError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="file_not_found",
             translation_placeholders={"filename": file_name},
         ) from err
-    except (json.JSONDecodeError, yaml.parser.ParserError) as err:
+    except (json.JSONDecodeError, yaml.YAMLError) as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="file_decoding",
             translation_placeholders={"filename": file_name, "encoding": file_encoding},
         ) from err
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="unsupported_file_encoding",
-        translation_placeholders={"filename": file_name, "encoding": file_encoding},
-    )
