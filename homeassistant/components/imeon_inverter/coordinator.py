@@ -91,18 +91,18 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
                 # Fetch data using distant API
                 await self.api.update()
 
-                # Store data
-                for key, val in self.api.storage.items():
-                    if key != "timeline":
-                        val = self.api.storage[key]
-                        for sub_key, sub_val in val.items():
-                            data[key + "_" + sub_key] = sub_val
-                    else:  # Timeline is a list of dict, not a dict
-                        data[key] = self.api.storage[key]
-
         except TimeoutError as e:
             raise UpdateFailed(
                 "Reconnection failed, please check credentials. If the error persists check the network connection"
             ) from e
+
+        # Store data
+        for key, val in self.api.storage.items():
+            if key != "timeline":
+                val = self.api.storage[key]
+                for sub_key, sub_val in val.items():
+                    data[key + "_" + sub_key] = sub_val
+            else:  # Timeline is a list of dict, not a dict
+                data[key] = self.api.storage[key]
 
         return data  # send stored data so entities can poll it
