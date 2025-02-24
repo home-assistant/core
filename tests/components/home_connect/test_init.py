@@ -152,7 +152,7 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
             "device_id": "DEVICE_ID",
             "affects_to": "selected_program",
             "program": "dishcare_dishwasher_program_eco_50",
-            "b_s_h_common_option_start_in_relative": "00:30:00",
+            "b_s_h_common_option_start_in_relative": 1800,
         },
         "blocking": True,
     },
@@ -173,7 +173,7 @@ SERVICES_SET_PROGRAM_AND_OPTIONS = [
         "service_data": {
             "device_id": "DEVICE_ID",
             "affects_to": "active_program",
-            "consumer_products_coffee_maker_option_coffee_milk_ratio": 60,
+            "consumer_products_coffee_maker_option_coffee_milk_ratio": "consumer_products_coffee_maker_enum_type_coffee_milk_ratio_50_percent",
         },
         "blocking": True,
     },
@@ -338,11 +338,27 @@ async def test_key_value_services(
 
 
 @pytest.mark.parametrize(
-    "service_call",
-    DEPRECATED_SERVICE_KV_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+    ("service_call", "issue_id"),
+    [
+        *zip(
+            DEPRECATED_SERVICE_KV_CALL_PARAMS + SERVICE_PROGRAM_CALL_PARAMS,
+            ["deprecated_set_program_and_option_actions"]
+            * (
+                len(DEPRECATED_SERVICE_KV_CALL_PARAMS)
+                + len(SERVICE_PROGRAM_CALL_PARAMS)
+            ),
+            strict=True,
+        ),
+        *zip(
+            SERVICE_COMMAND_CALL_PARAMS,
+            ["deprecated_command_actions"] * len(SERVICE_COMMAND_CALL_PARAMS),
+            strict=True,
+        ),
+    ],
 )
 async def test_programs_and_options_actions_deprecation(
     service_call: dict[str, Any],
+    issue_id: str,
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     config_entry: MockConfigEntry,
@@ -354,7 +370,6 @@ async def test_programs_and_options_actions_deprecation(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test deprecated service keys."""
-    issue_id = "deprecated_set_program_and_option_actions"
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED

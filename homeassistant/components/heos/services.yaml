@@ -1,3 +1,29 @@
+group_volume_set:
+  target:
+    entity:
+      integration: heos
+      domain: media_player
+  fields:
+    volume_level:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 1
+          step: 0.01
+
+group_volume_down:
+  target:
+    entity:
+      integration: heos
+      domain: media_player
+
+group_volume_up:
+  target:
+    entity:
+      integration: heos
+      domain: media_player
+
 sign_in:
   fields:
     username:

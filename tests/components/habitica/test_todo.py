@@ -601,17 +601,19 @@ async def test_delete_completed_todo_items_exception(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "uid", "previous_uid"),
+    ("entity_id", "uid", "second_pos", "third_pos"),
     [
         (
             "todo.test_user_to_do_s",
             "1aa3137e-ef72-4d1f-91ee-41933602f438",
             "88de7cd9-af2b-49ce-9afd-bf941d87336b",
+            "2f6fcabc-f670-4ec3-ba65-817e8deea490",
         ),
         (
             "todo.test_user_dailies",
             "2c6d136c-a1c3-4bef-b7c4-fa980784b1e1",
             "564b9ac9-c53d-4638-9e7f-1cd96fe19baa",
+            "f2c85972-1a19-4426-bc6d-ce3337b9d99f",
         ),
     ],
     ids=["todo", "daily"],
@@ -623,7 +625,8 @@ async def test_move_todo_item(
     hass_ws_client: WebSocketGenerator,
     entity_id: str,
     uid: str,
-    previous_uid: str,
+    second_pos: str,
+    third_pos: str,
 ) -> None:
     """Test move todo items."""
 
@@ -634,19 +637,34 @@ async def test_move_todo_item(
     assert config_entry.state is ConfigEntryState.LOADED
 
     client = await hass_ws_client()
-    # move to second position
+    # move up to second position
     data = {
         "id": id,
         "type": "todo/item/move",
         "entity_id": entity_id,
         "uid": uid,
-        "previous_uid": previous_uid,
+        "previous_uid": second_pos,
     }
     await client.send_json_auto_id(data)
     resp = await client.receive_json()
     assert resp.get("success")
 
     habitica.reorder_task.assert_awaited_once_with(UUID(uid), 1)
+    habitica.reorder_task.reset_mock()
+
+    # move down to third position
+    data = {
+        "id": id,
+        "type": "todo/item/move",
+        "entity_id": entity_id,
+        "uid": uid,
+        "previous_uid": third_pos,
+    }
+    await client.send_json_auto_id(data)
+    resp = await client.receive_json()
+    assert resp.get("success")
+
+    habitica.reorder_task.assert_awaited_once_with(UUID(uid), 2)
     habitica.reorder_task.reset_mock()
 
     # move to top position

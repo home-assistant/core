@@ -87,7 +87,7 @@ PROGRAMS_TRANSLATION_KEYS_MAP = {
     value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
 }
 
-REFERENCE_MAP_ID_OPTIONS = {
+AVAILABLE_MAPS_ENUM = {
     bsh_key_to_translation_key(option): option
     for option in (
         "ConsumerProducts.CleaningRobot.EnumType.AvailableMaps.TempMap",
@@ -154,6 +154,27 @@ FLOW_RATE_OPTIONS = {
         "ConsumerProducts.CoffeeMaker.EnumType.FlowRate.Normal",
         "ConsumerProducts.CoffeeMaker.EnumType.FlowRate.Intense",
         "ConsumerProducts.CoffeeMaker.EnumType.FlowRate.IntensePlus",
+    )
+}
+
+COFFEE_MILK_RATIO_OPTIONS = {
+    bsh_key_to_translation_key(option): option
+    for option in (
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.10Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.20Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.25Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.30Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.40Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.50Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.55Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.60Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.65Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.67Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.70Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.75Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.80Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.85Percent",
+        "ConsumerProducts.CoffeeMaker.EnumType.CoffeeMilkRatio.90Percent",
     )
 }
 
@@ -284,7 +305,7 @@ PROGRAM_ENUM_OPTIONS = {
     for option_key, options in (
         (
             OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_REFERENCE_MAP_ID,
-            REFERENCE_MAP_ID_OPTIONS,
+            AVAILABLE_MAPS_ENUM,
         ),
         (
             OptionKey.CONSUMER_PRODUCTS_CLEANING_ROBOT_CLEANING_MODE,
@@ -300,6 +321,10 @@ PROGRAM_ENUM_OPTIONS = {
             BEAN_CONTAINER_OPTIONS,
         ),
         (OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FLOW_RATE, FLOW_RATE_OPTIONS),
+        (
+            OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_COFFEE_MILK_RATIO,
+            COFFEE_MILK_RATIO_OPTIONS,
+        ),
         (
             OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_HOT_WATER_TEMPERATURE,
             HOT_WATER_TEMPERATURE_OPTIONS,

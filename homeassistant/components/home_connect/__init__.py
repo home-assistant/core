@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Awaitable
-from datetime import timedelta
 import logging
 from typing import Any, cast
 
@@ -74,9 +73,11 @@ PROGRAM_OPTIONS = {
         value,
     )
     for key, value in {
+        OptionKey.BSH_COMMON_DURATION: int,
+        OptionKey.BSH_COMMON_START_IN_RELATIVE: int,
+        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: int,
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY: int,
         OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_MULTIPLE_BEVERAGES: bool,
-        OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_COFFEE_MILK_RATIO: int,
         OptionKey.DISHCARE_DISHWASHER_INTENSIV_ZONE: bool,
         OptionKey.DISHCARE_DISHWASHER_BRILLIANCE_DRY: bool,
         OptionKey.DISHCARE_DISHWASHER_VARIO_SPEED_PLUS: bool,
@@ -90,18 +91,6 @@ PROGRAM_OPTIONS = {
         OptionKey.COOKING_OVEN_FAST_PRE_HEAT: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE: bool,
         OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE: bool,
-    }.items()
-}
-
-TIME_PROGRAM_OPTIONS = {
-    bsh_key_to_translation_key(key): (
-        key,
-        value,
-    )
-    for key, value in {
-        OptionKey.BSH_COMMON_START_IN_RELATIVE: cv.time_period_str,
-        OptionKey.BSH_COMMON_DURATION: cv.time_period_str,
-        OptionKey.BSH_COMMON_FINISH_IN_RELATIVE: cv.time_period_str,
     }.items()
 }
 
@@ -157,10 +146,7 @@ SERVICE_PROGRAM_SCHEMA = vol.Any(
 
 def _require_program_or_at_least_one_option(data: dict) -> dict:
     if ATTR_PROGRAM not in data and not any(
-        option_key in data
-        for option_key in (
-            PROGRAM_ENUM_OPTIONS | PROGRAM_OPTIONS | TIME_PROGRAM_OPTIONS
-        )
+        option_key in data for option_key in (PROGRAM_ENUM_OPTIONS | PROGRAM_OPTIONS)
     ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -191,9 +177,7 @@ SERVICE_PROGRAM_AND_OPTIONS_SCHEMA = vol.All(
     .extend(
         {
             vol.Optional(translation_key): schema
-            for translation_key, (key, schema) in (
-                PROGRAM_OPTIONS | TIME_PROGRAM_OPTIONS
-            ).items()
+            for translation_key, (key, schema) in PROGRAM_OPTIONS.items()
         }
     ),
     _require_program_or_at_least_one_option,
@@ -203,6 +187,7 @@ SERVICE_COMMAND_SCHEMA = vol.Schema({vol.Required(ATTR_DEVICE_ID): str})
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
@@ -253,7 +238,7 @@ async def _get_client_and_ha_id(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa: C901
     """Set up Home Connect component."""
 
-    async def _async_service_program(call: ServiceCall, start: bool):
+    async def _async_service_program(call: ServiceCall, start: bool) -> None:
         """Execute calls to services taking a program."""
         program = call.data[ATTR_PROGRAM]
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
@@ -339,7 +324,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def _async_service_set_program_options(call: ServiceCall, active: bool):
+    async def _async_service_set_program_options(
+        call: ServiceCall, active: bool
+    ) -> None:
         """Execute calls to services taking a program."""
         option_key = call.data[ATTR_KEY]
         value = call.data[ATTR_VALUE]
@@ -412,9 +399,22 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def _async_service_command(call: ServiceCall, command_key: CommandKey):
+    async def _async_service_command(
+        call: ServiceCall, command_key: CommandKey
+    ) -> None:
         """Execute calls to services executing a command."""
         client, ha_id = await _get_client_and_ha_id(hass, call.data[ATTR_DEVICE_ID])
+
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_command_actions",
+            breaks_in_ha_version="2025.9.0",
+            is_fixable=True,
+            is_persistent=True,
+            severity=IssueSeverity.WARNING,
+            translation_key="deprecated_command_actions",
+        )
 
         try:
             await client.put_command(ha_id, command_key=command_key, value=True)
@@ -428,15 +428,15 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def async_service_option_active(call: ServiceCall):
+    async def async_service_option_active(call: ServiceCall) -> None:
         """Service for setting an option for an active program."""
         await _async_service_set_program_options(call, True)
 
-    async def async_service_option_selected(call: ServiceCall):
+    async def async_service_option_selected(call: ServiceCall) -> None:
         """Service for setting an option for a selected program."""
         await _async_service_set_program_options(call, False)
 
-    async def async_service_setting(call: ServiceCall):
+    async def async_service_setting(call: ServiceCall) -> None:
         """Service for changing a setting."""
         key = call.data[ATTR_KEY]
         value = call.data[ATTR_VALUE]
@@ -455,19 +455,19 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def async_service_pause_program(call: ServiceCall):
+    async def async_service_pause_program(call: ServiceCall) -> None:
         """Service for pausing a program."""
         await _async_service_command(call, CommandKey.BSH_COMMON_PAUSE_PROGRAM)
 
-    async def async_service_resume_program(call: ServiceCall):
+    async def async_service_resume_program(call: ServiceCall) -> None:
         """Service for resuming a paused program."""
         await _async_service_command(call, CommandKey.BSH_COMMON_RESUME_PROGRAM)
 
-    async def async_service_select_program(call: ServiceCall):
+    async def async_service_select_program(call: ServiceCall) -> None:
         """Service for selecting a program."""
         await _async_service_program(call, False)
 
-    async def async_service_set_program_and_options(call: ServiceCall):
+    async def async_service_set_program_and_options(call: ServiceCall) -> None:
         """Service for setting a program and options."""
         data = dict(call.data)
         program = data.pop(ATTR_PROGRAM, None)
@@ -487,13 +487,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
             elif option in PROGRAM_OPTIONS:
                 option_key = PROGRAM_OPTIONS[option][0]
                 options.append(Option(option_key, value))
-            elif option in TIME_PROGRAM_OPTIONS:
-                options.append(
-                    Option(
-                        TIME_PROGRAM_OPTIONS[option][0],
-                        int(cast(timedelta, value).total_seconds()),
-                    )
-                )
+
         method_call: Awaitable[Any]
         exception_translation_key: str
         if program:
@@ -543,7 +537,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                 },
             ) from err
 
-    async def async_service_start_program(call: ServiceCall):
+    async def async_service_start_program(call: ServiceCall) -> None:
         """Service for starting a program."""
         await _async_service_program(call, True)
 
@@ -627,6 +621,7 @@ async def async_unload_entry(
 ) -> bool:
     """Unload a config entry."""
     async_delete_issue(hass, DOMAIN, "deprecated_set_program_and_option_actions")
+    async_delete_issue(hass, DOMAIN, "deprecated_command_actions")
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 

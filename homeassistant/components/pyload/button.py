@@ -18,6 +18,8 @@ from .const import DOMAIN
 from .coordinator import PyLoadConfigEntry
 from .entity import BasePyLoadEntity
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(kw_only=True, frozen=True)
 class PyLoadButtonEntityDescription(ButtonEntityDescription):
