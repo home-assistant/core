@@ -2608,21 +2608,28 @@ async def test_recorder_info_bad_recorder_config(
     assert response["result"]["thread_running"] is False
 
 
-async def test_recorder_info_no_instance(
-    recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+async def test_recorder_info_wait_database_connect(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
-    """Test getting recorder when there is no instance."""
+    """Test getting recorder info waits for recorder database connection."""
     client = await hass_ws_client()
 
-    with patch(
-        "homeassistant.components.recorder.basic_websocket_api.get_instance",
-        return_value=None,
-    ):
-        await client.send_json_auto_id({"type": "recorder/info"})
+    recorder_helper.async_initialize_recorder(hass)
+    await client.send_json_auto_id({"type": "recorder/info"})
+
+    async with async_test_recorder(hass):
         response = await client.receive_json()
         assert response["success"]
-        assert response["result"]["recording"] is False
-        assert response["result"]["thread_running"] is False
+        assert response["result"] == {
+            "backlog": ANY,
+            "max_backlog": 65000,
+            "migration_in_progress": False,
+            "migration_is_live": False,
+            "recording": True,
+            "thread_running": True,
+        }
 
 
 async def test_recorder_info_migration_queue_exhausted(
