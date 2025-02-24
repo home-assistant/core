@@ -251,10 +251,10 @@ class BaseFirmwareUpdateEntity(
         self.async_write_ha_state()
 
     @asynccontextmanager
-    async def _temporarily_stop_owning_software(
+    async def _temporarily_stop_hardware_owners(
         self, device: str
     ) -> AsyncIterator[None]:
-        """Temporarily stop owning addons and integrations."""
+        """Temporarily stop addons and integrations communicating with the device."""
 
         firmware_info = await guess_firmware_info(self.hass, device)
         _LOGGER.debug("Identified firmware info: %s", firmware_info)
@@ -300,7 +300,7 @@ class BaseFirmwareUpdateEntity(
             bootloader_reset=self.bootloader_reset_type,
         )
 
-        async with self._temporarily_stop_owning_software(device):
+        async with self._temporarily_stop_hardware_owners(device):
             try:
                 # Enter the bootloader with indeterminate progress
                 await flasher.enter_bootloader()
