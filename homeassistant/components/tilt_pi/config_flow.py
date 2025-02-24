@@ -1,18 +1,66 @@
-"""Config flow for the Tilt Pi integration."""
+"""Config flow for Tilt Pi integration."""
 
-import my_pypi_dependency
+from __future__ import annotations
 
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_entry_flow
+from typing import Any
+
+import aiohttp
+import voluptuous as vol
+
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
 
+USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_NAME): str,
+        vol.Required(CONF_HOST): str,
+        vol.Optional(CONF_PORT, default=1880): int,
+    }
+)
 
-async def _async_has_devices(hass: HomeAssistant) -> bool:
-    """Return if there are devices that can be discovered."""
-    # TODO Check if there are any devices that can be discovered in the network.
-    devices = await hass.async_add_executor_job(my_pypi_dependency.discover)
-    return len(devices) > 0
 
+class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for Tilt Pi."""
 
-config_entry_flow.register_discovery_flow(DOMAIN, "Tilt Pi", _async_has_devices)
+    VERSION = 1
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial configuration step."""
+
+        if user_input is None:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=USER_DATA_SCHEMA,
+            )
+
+        # Check if device is already configured
+        await self.async_set_unique_id(f"tiltpi_{user_input[CONF_HOST]}")
+        self._abort_if_unique_id_configured()
+
+        errors = {}
+
+        try:
+            session = async_get_clientsession(self.hass)
+            async with session.get(
+                f"http://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/macid/all",
+                timeout=aiohttp.ClientTimeout(10),
+            ) as resp:
+                resp.raise_for_status()
+                await resp.json()
+
+            return self.async_create_entry(
+                title=user_input[CONF_NAME],
+                data=user_input,
+            )
+        except (TimeoutError, aiohttp.ClientError):
+            errors["base"] = "cannot_connect"
+            return self.async_show_form(
+                step_id="user",
+                data_schema=USER_DATA_SCHEMA,
+                errors=errors,
+            )
