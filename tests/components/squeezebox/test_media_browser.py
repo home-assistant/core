@@ -66,63 +66,64 @@ async def test_async_browse_media_root(
         assert item["title"] == LIBRARY[idx]
 
 
+@pytest.mark.parametrize(
+    ("category", "child_count"),
+    [
+        ("Favorites", 4),
+        ("Artists", 4),
+        ("Albums", 4),
+        ("Playlists", 4),
+        ("Genres", 4),
+        ("New Music", 4),
+        ("Apps", 3),
+        ("Radios", 3),
+    ],
+)
 async def test_async_browse_media_with_subitems(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     hass_ws_client: WebSocketGenerator,
+    category: str,
+    child_count: int,
 ) -> None:
     """Test each category with subitems."""
-    for category in (
-        "Favorites",
-        "Artists",
-        "Albums",
-        "Playlists",
-        "Genres",
-        "New Music",
-        "Apps",
-        "Radios",
+    with patch(
+        "homeassistant.components.squeezebox.browse_media.is_internal_request",
+        return_value=False,
     ):
-        with patch(
-            "homeassistant.components.squeezebox.browse_media.is_internal_request",
-            return_value=False,
-        ):
-            client = await hass_ws_client()
-            await client.send_json(
-                {
-                    "id": 1,
-                    "type": "media_player/browse_media",
-                    "entity_id": "media_player.test_player",
-                    "media_content_id": "",
-                    "media_content_type": category,
-                }
-            )
-            response = await client.receive_json()
-            assert response["success"]
-            category_level = response["result"]
-            assert category_level["title"] == MEDIA_TYPE_TO_SQUEEZEBOX[category]
-            assert category_level["children"][0]["title"] == "Fake Item 1"
-            assert (
-                len(category_level["children"]) == 3
-                if category in ["Apps", "Radios"]
-                else 4
-            )
+        client = await hass_ws_client()
+        await client.send_json(
+            {
+                "id": 1,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.test_player",
+                "media_content_id": "",
+                "media_content_type": category,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        category_level = response["result"]
+        assert category_level["title"] == MEDIA_TYPE_TO_SQUEEZEBOX[category]
+        assert category_level["children"][0]["title"] == "Fake Item 1"
+        assert len(category_level["children"]) == child_count
 
-            # Look up a subitem
-            search_type = category_level["children"][0]["media_content_type"]
-            search_id = category_level["children"][0]["media_content_id"]
-            await client.send_json(
-                {
-                    "id": 2,
-                    "type": "media_player/browse_media",
-                    "entity_id": "media_player.test_player",
-                    "media_content_id": search_id,
-                    "media_content_type": search_type,
-                }
-            )
-            response = await client.receive_json()
-            assert response["success"]
-            search = response["result"]
-            assert search["title"] == "Fake Item 1"
+        # Look up a subitem
+        search_type = category_level["children"][0]["media_content_type"]
+        search_id = category_level["children"][0]["media_content_id"]
+        await client.send_json(
+            {
+                "id": 2,
+                "type": "media_player/browse_media",
+                "entity_id": "media_player.test_player",
+                "media_content_id": search_id,
+                "media_content_type": search_type,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        search = response["result"]
+        assert search["title"] == "Fake Item 1"
 
 
 async def test_async_browse_tracks(
