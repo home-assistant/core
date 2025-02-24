@@ -1135,6 +1135,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": True,
                         "create_backup": {
                             "agent_ids": ["hassio.local", "hassio.share", "test-agent"],
                             "include_addons": None,
@@ -1166,6 +1167,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": True,
                         "create_backup": {
                             "agent_ids": ["backup.local", "test-agent"],
                             "include_addons": None,

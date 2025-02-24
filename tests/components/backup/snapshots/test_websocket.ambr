@@ -591,6 +591,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': True,
         'create_backup': dict({
           'agent_ids': list([
             'hassio.local',
@@ -631,6 +632,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': True,
         'create_backup': dict({
           'agent_ids': list([
             'hassio.local',
@@ -670,6 +672,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': False,
         'create_backup': dict({
           'agent_ids': list([
           ]),
@@ -707,6 +710,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': False,
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -752,6 +756,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': True,
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -790,6 +795,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': False,
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -828,6 +834,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': False,
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -867,6 +874,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': False,
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -905,6 +913,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': False,
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -951,6 +960,7 @@
             'protected': False,
           }),
         }),
+        'automatic_backups_configured': False,
         'create_backup': dict({
           'agent_ids': list([
             'test-agent',
@@ -991,6 +1001,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': True,
         'create_backup': dict({
           'agent_ids': list([
             'backup.local',
@@ -1030,6 +1041,7 @@
       'config': dict({
         'agents': dict({
         }),
+        'automatic_backups_configured': True,
         'create_backup': dict({
           'agent_ids': list([
             'backup.local',
