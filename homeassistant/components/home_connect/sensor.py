@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTime, UnitOfVolume
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
@@ -57,12 +57,6 @@ BSH_PROGRAM_SENSORS = (
         ),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.BSH_COMMON_OPTION_DURATION,
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        appliance_types=("Oven",),
-    ),
-    HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,
         native_unit_of_measurement=PERCENTAGE,
         translation_key="program_progress",
@@ -99,16 +93,19 @@ SENSORS = (
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_COFFEE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="coffee_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_POWDER_COFFEE,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="powder_coffee_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_HOT_WATER,
+        entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfVolume.MILLILITERS,
         device_class=SensorDeviceClass.VOLUME,
         state_class=SensorStateClass.TOTAL_INCREASING,
@@ -116,31 +113,37 @@ SENSORS = (
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_HOT_WATER_CUPS,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="hot_water_cups_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_HOT_MILK,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="hot_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_FROTHY_MILK,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="frothy_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_MILK,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_COFFEE_AND_MILK,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="coffee_and_milk_counter",
     ),
     HomeConnectSensorEntityDescription(
         key=StatusKey.CONSUMER_PRODUCTS_COFFEE_MAKER_BEVERAGE_COUNTER_RISTRETTO_ESPRESSO,
+        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key="ristretto_espresso_counter",
     ),

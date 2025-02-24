@@ -42,10 +42,10 @@ BACKUP_CALL = call(
     agent_ids=["test.test-agent"],
     backup_name="test-name",
     extra_metadata={"instance_id": ANY, "with_automatic_settings": True},
-    include_addons=["test-addon"],
+    include_addons=[],
     include_all_addons=False,
     include_database=True,
-    include_folders=["media"],
+    include_folders=None,
     include_homeassistant=True,
     password="test-password",
     on_progress=ANY,
@@ -1121,25 +1121,96 @@ async def test_agents_info(
                 "minor_version": store.STORAGE_VERSION_MINOR,
             },
         },
+        {
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "agents": {},
+                        "create_backup": {
+                            "agent_ids": ["hassio.local", "hassio.share", "test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {
+                            "days": [],
+                            "recurrence": "never",
+                            "state": "never",
+                            "time": None,
+                        },
+                    },
+                },
+                "key": DOMAIN,
+                "version": store.STORAGE_VERSION,
+                "minor_version": store.STORAGE_VERSION_MINOR,
+            },
+        },
+        {
+            "backup": {
+                "data": {
+                    "backups": [],
+                    "config": {
+                        "agents": {},
+                        "create_backup": {
+                            "agent_ids": ["backup.local", "test-agent"],
+                            "include_addons": None,
+                            "include_all_addons": False,
+                            "include_database": False,
+                            "include_folders": None,
+                            "name": None,
+                            "password": None,
+                        },
+                        "retention": {"copies": None, "days": None},
+                        "last_attempted_automatic_backup": None,
+                        "last_completed_automatic_backup": None,
+                        "schedule": {
+                            "days": [],
+                            "recurrence": "never",
+                            "state": "never",
+                            "time": None,
+                        },
+                    },
+                },
+                "key": DOMAIN,
+                "version": store.STORAGE_VERSION,
+                "minor_version": store.STORAGE_VERSION_MINOR,
+            },
+        },
     ],
 )
+@pytest.mark.parametrize(
+    ("with_hassio"),
+    [
+        pytest.param(True, id="with_hassio"),
+        pytest.param(False, id="without_hassio"),
+    ],
+)
+@pytest.mark.usefixtures("supervisor_client")
 @patch("homeassistant.components.backup.config.random.randint", Mock(return_value=600))
-async def test_config_info(
+async def test_config_load_config_info(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     hass_storage: dict[str, Any],
+    with_hassio: bool,
     storage_data: dict[str, Any] | None,
 ) -> None:
-    """Test getting backup config info."""
+    """Test loading stored backup config and reading it via config/info."""
     client = await hass_ws_client(hass)
     await hass.config.async_set_time_zone("Europe/Amsterdam")
     freezer.move_to("2024-11-13T12:01:00+01:00")
 
     hass_storage.update(storage_data)
 
-    await setup_backup_integration(hass)
+    await setup_backup_integration(hass, with_hassio=with_hassio)
     await hass.async_block_till_done()
 
     await client.send_json_auto_id({"type": "backup/config/info"})
@@ -1360,6 +1431,14 @@ async def test_config_update(
         {
             "type": "backup/config/update",
             "agents": {"test-agent1": {"favorite": True}},
+        },
+        {
+            "type": "backup/config/update",
+            "retention": {"copies": 0},
+        },
+        {
+            "type": "backup/config/update",
+            "retention": {"days": 0},
         },
     ],
 )
@@ -1697,10 +1776,10 @@ async def test_config_schedule_logic(
             "agents": {},
             "create_backup": {
                 "agent_ids": ["test.test-agent"],
-                "include_addons": ["test-addon"],
+                "include_addons": [],
                 "include_all_addons": False,
                 "include_database": True,
-                "include_folders": ["media"],
+                "include_folders": [],
                 "name": "test-name",
                 "password": "test-password",
             },
@@ -2158,7 +2237,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test.test-agent"]},
-                "retention": {"copies": 0, "days": None},
+                "retention": {"copies": 1, "days": None},
                 "schedule": {"recurrence": "daily"},
             },
             {
@@ -2232,7 +2311,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test.test-agent"]},
-                "retention": {"copies": 0, "days": None},
+                "retention": {"copies": 1, "days": None},
                 "schedule": {"recurrence": "daily"},
             },
             {
@@ -2301,7 +2380,7 @@ async def test_config_schedule_logic(
             {
                 "type": "backup/config/update",
                 "create_backup": {"agent_ids": ["test.test-agent"]},
-                "retention": {"copies": 0, "days": None},
+                "retention": {"copies": 1, "days": None},
                 "schedule": {"recurrence": "daily"},
             },
             {
@@ -3019,7 +3098,7 @@ async def test_config_retention_copies_logic_manual_backup(
                 {
                     "type": "backup/config/update",
                     "create_backup": {"agent_ids": ["test-agent"]},
-                    "retention": {"copies": None, "days": 0},
+                    "retention": {"copies": None, "days": 1},
                     "schedule": {"recurrence": "never"},
                 }
             ],
