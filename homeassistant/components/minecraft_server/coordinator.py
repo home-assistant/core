@@ -42,7 +42,7 @@ class MinecraftServerCoordinator(DataUpdateCoordinator[MinecraftServerData]):
 
         super().__init__(
             hass=hass,
-            name=config_entry.data[CONF_ADDRESS],
+            name=config_entry.title,
             config_entry=config_entry,
             logger=_LOGGER,
             update_interval=SCAN_INTERVAL,

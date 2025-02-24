@@ -18,6 +18,7 @@ def java_mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=None,
         entry_id=TEST_CONFIG_ENTRY_ID,
+        title="mc.dummyserver.com:25566",
         data={
             CONF_ADDRESS: TEST_ADDRESS,
             CONF_TYPE: MinecraftServerType.JAVA_EDITION,
@@ -33,6 +34,7 @@ def bedrock_mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         unique_id=None,
         entry_id=TEST_CONFIG_ENTRY_ID,
+        title="mc.dummyserver.com:25566",
         data={
             CONF_ADDRESS: TEST_ADDRESS,
             CONF_TYPE: MinecraftServerType.BEDROCK_EDITION,
