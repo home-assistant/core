@@ -104,6 +104,7 @@ homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
 homeassistant.components.backup.*
+homeassistant.components.backup_sftp.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
 homeassistant.components.bayesian.*
