@@ -42,7 +42,7 @@ async def async_setup_intents(hass: HomeAssistant) -> None:
                     value_schema=vol.All(vol.Coerce(int), vol.Range(0, 100)),
                 ),
             },
-            description="Sets the brightness percentage or color",
+            description="Sets the brightness percentage or color of a light",
             platforms={DOMAIN},
         ),
     )
