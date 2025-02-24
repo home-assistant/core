@@ -25,21 +25,21 @@ def mock_imeon_inverter() -> Generator[MagicMock]:
     """Mock data from the device."""
     with (
         patch(
+            "homeassistant.components.imeon_inverter.coordinator.InverterCoordinator",
+            autospec=True,
+        ) as scale_mock,
+        patch(
             "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
             return_value=True,
         ),
         patch(
-            "homeassistant.components.imeon_inverter.config_flow.Inverter.get_serial",
-            return_value=TEST_SERIAL,
+            "homeassistant.components.imeon_inverter.config_flow.Inverter.init",
+            return_value=None,
         ),
         patch(
-            "homeassistant.components.imeon_inverter.async_setup_entry",
-            return_value=True,
+            "homeassistant.components.imeon_inverter.config_flow.Inverter.update",
+            return_value=None,
         ),
-        patch(
-            "homeassistant.components.imeon_inverter.coordinator.InverterCoordinator",
-            autospec=True,
-        ) as scale_mock,
     ):
         scale = scale_mock.return_value
 

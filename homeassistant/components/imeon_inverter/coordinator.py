@@ -78,7 +78,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
         It also includes the login process.
         """
 
-        data = {}
+        data: dict = {}
 
         try:
             async with timeout(TIMEOUT * 4):
