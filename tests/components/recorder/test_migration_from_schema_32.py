@@ -1448,7 +1448,6 @@ async def test_stats_timestamp_conversion_is_reentrant(
                     has_mean=True,
                     has_sum=True,
                     name="1",
-                    has_circular_mean=False,
                 )
             )
 
@@ -1610,7 +1609,6 @@ async def test_stats_timestamp_with_one_by_one(
                     has_mean=True,
                     has_sum=True,
                     name="1",
-                    has_circular_mean=False,
                 )
             )
 
@@ -1844,7 +1842,6 @@ async def test_stats_timestamp_with_one_by_one_removes_duplicates(
                     has_mean=True,
                     has_sum=True,
                     name="1",
-                    has_circular_mean=False,
                 )
             )
 
@@ -2034,7 +2031,6 @@ async def test_stats_migrate_times(
         source="sensor",
         statistic_id="sensor.test",
         unit_of_measurement="cats",
-        has_circular_mean=False,
     )
     number_of_migrations = 5
 

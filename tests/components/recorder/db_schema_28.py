@@ -546,8 +546,6 @@ class StatisticMetaData(TypedDict):
     source: str
     statistic_id: str
     unit_of_measurement: str | None
-    # *** Not originally in v28, only added for recorder to startup ok
-    has_circular_mean: bool
 
 
 class StatisticsMeta(Base):  # type: ignore[misc,valid-type]
@@ -564,8 +562,6 @@ class StatisticsMeta(Base):  # type: ignore[misc,valid-type]
     has_mean = Column(Boolean)
     has_sum = Column(Boolean)
     name = Column(String(255))
-    # *** Not originally in v28, only added for recorder to startup ok
-    has_circular_mean = Column(Boolean, default=False, nullable=False)
 
     @staticmethod
     def from_meta(meta: StatisticMetaData) -> StatisticsMeta:
