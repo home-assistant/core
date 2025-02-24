@@ -31,7 +31,7 @@ async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
     """Return a list of backup agents."""
-    entries: list[AzureStorageConfigEntry] = hass.config_entries.async_entries(DOMAIN)
+    entries: list[AzureStorageConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
     return [AzureStorageBackupAgent(hass, entry) for entry in entries]
 
 
