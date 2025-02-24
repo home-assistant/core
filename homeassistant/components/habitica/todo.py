@@ -132,7 +132,7 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
             pos = 0
 
         try:
-            tasks_order = (
+            tasks_order[:] = (
                 await self.coordinator.habitica.reorder_task(UUID(uid), pos)
             ).data
         except TooManyRequestsError as e:
@@ -282,7 +282,7 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
             tasks,
             key=lambda task: (
                 float("inf")
-                if (uid := (UUID(task.uid)))
+                if (uid := UUID(task.uid))
                 not in (tasks_order := self.coordinator.data.user.tasksOrder.todos)
                 else tasks_order.index(uid)
             ),
@@ -368,7 +368,7 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
             tasks,
             key=lambda task: (
                 float("inf")
-                if (uid := (UUID(task.uid)))
+                if (uid := UUID(task.uid))
                 not in (tasks_order := self.coordinator.data.user.tasksOrder.dailys)
                 else tasks_order.index(uid)
             ),
