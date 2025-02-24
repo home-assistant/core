@@ -66,6 +66,7 @@ async def test_form_user(
     [
         ("Solution 3000", asyncio.exceptions.TimeoutError(), "cannot_connect"),
     ],
+    indirect=["setup_bosch_alarm"],
 )
 async def test_form_exceptions(
     hass: HomeAssistant, exception: Exception, message: str
@@ -88,6 +89,14 @@ async def test_form_exceptions(
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "user"
         assert result["errors"] == {"base": message}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_PORT: 7700},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {}
 
 
 @pytest.mark.usefixtures("setup_bosch_alarm")
@@ -126,6 +135,15 @@ async def test_form_exceptions_user(
             result["flow_id"],
             {CONF_USER_CODE: "1234"},
         )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "auth"
+        assert result["errors"] == {"base": message}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_USER_CODE: "1234"},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize("setup_bosch_alarm", ["Solution 3000"], indirect=True)
