@@ -143,16 +143,6 @@ def query_circular_mean(
     return func.mod(mean_fn, 360)
 
 
-def adjust_circular_mean(engine: Engine, value: float) -> float:
-    """Adjust circular mean if needed."""
-    if engine.dialect.name == SupportedDialect.POSTGRESQL:
-        # Postgres doesn't support modulo on double precision
-        # so we have to do it in Python
-        return value % 360
-
-    return value
-
-
 QUERY_STATISTICS_SUMMARY_MEAN = (
     StatisticsShortTerm.metadata_id,
     func.avg(StatisticsShortTerm.mean),
@@ -483,12 +473,19 @@ def _compile_hourly_statistics(
     if stats:
         for stat in stats:
             metadata_id, _mean, _min, _max, _circular_mean = stat
+            if (
+                engine.dialect.name == SupportedDialect.POSTGRESQL
+                and _circular_mean is not None
+            ):
+                # Postgres doesn't support modulo on double precision
+                # so we have to do it in Python
+                _circular_mean = _circular_mean % 360
             summary[metadata_id] = {
                 "start_ts": start_time_ts,
                 "mean": _mean,
                 "min": _min,
                 "max": _max,
-                "circular_mean": adjust_circular_mean(engine, _circular_mean),
+                "circular_mean": _circular_mean,
             }
 
     stmt = _compile_hourly_statistics_last_sum_stmt(start_time_ts, end_time_ts)
@@ -1293,7 +1290,10 @@ def _get_max_mean_min_statistic_in_sub_period(
         "circular_mean" in types
         and (new_circular_mean := stats[0].circular_mean) is not None
     ):
-        new_circular_mean = adjust_circular_mean(engine, new_circular_mean)
+        if engine.dialect.name == SupportedDialect.POSTGRESQL:
+            # Postgres doesn't support modulo on double precision
+            # so we have to do it in Python
+            new_circular_mean = new_circular_mean % 360
         values = [new_circular_mean]
         if (old_circular_mean := result.get("circular_mean")) is not None:
             values.append(old_circular_mean)
