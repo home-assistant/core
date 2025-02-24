@@ -2480,6 +2480,7 @@ async def test_restore_progress_after_restart_unknown_job(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": True,
                         "create_backup": {
                             "agent_ids": ["test-agent1", "hassio.local", "test-agent2"],
                             "include_addons": ["addon1", "addon2"],
@@ -2511,6 +2512,7 @@ async def test_restore_progress_after_restart_unknown_job(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": True,
                         "create_backup": {
                             "agent_ids": ["test-agent1", "backup.local", "test-agent2"],
                             "include_addons": ["addon1", "addon2"],

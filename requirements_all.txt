@@ -57,7 +57,7 @@ PyFlume==0.6.5
 PyFronius==0.7.3
 
 # homeassistant.components.pyload
-PyLoadAPI==1.4.1
+PyLoadAPI==1.4.2
 
 # homeassistant.components.met_eireann
 PyMetEireann==2024.11.0
@@ -421,6 +421,9 @@ aiowaqi==3.1.0
 # homeassistant.components.watttime
 aiowatttime==0.1.1
 
+# homeassistant.components.webdav
+aiowebdav2==0.2.2
+
 # homeassistant.components.webostv
 aiowebostv==0.7.0
 
@@ -567,6 +570,9 @@ azure-kusto-ingest==4.5.1
 
 # homeassistant.components.azure_service_bus
 azure-servicebus==7.10.0
+
+# homeassistant.components.azure_storage
+azure-storage-blob==12.24.0
 
 # homeassistant.components.holiday
 babel==2.15.0
@@ -2460,6 +2466,9 @@ python-roborock==2.11.1
 # homeassistant.components.smarttub
 python-smarttub==0.0.38
 
+# homeassistant.components.snoo
+python-snoo==0.6.0
+
 # homeassistant.components.songpal
 python-songpal==0.16.2
 
@@ -3049,7 +3058,7 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.1.15
+weheat==2025.2.22
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.12
@@ -3152,7 +3161,7 @@ ziggo-mediabox-xl==1.1.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.60.0
+zwave-js-server-python==0.60.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3

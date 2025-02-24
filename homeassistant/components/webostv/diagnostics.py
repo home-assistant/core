@@ -32,15 +32,8 @@ async def async_get_config_entry_diagnostics(
     client_data = {
         "is_registered": client.is_registered(),
         "is_connected": client.is_connected(),
-        "current_app_id": client.tv_state.current_app_id,
-        "current_channel": client.tv_state.current_channel,
-        "apps": client.tv_state.apps,
-        "inputs": client.tv_state.inputs,
-        "system_info": client.tv_info.system,
-        "software_info": client.tv_info.software,
-        "hello_info": client.tv_info.hello,
-        "sound_output": client.tv_state.sound_output,
-        "is_on": client.tv_state.is_on,
+        "tv_info": client.tv_info.__dict__,
+        "tv_state": client.tv_state.__dict__,
     }
 
     return async_redact_data(
