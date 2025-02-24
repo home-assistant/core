@@ -21,7 +21,7 @@
 # ---
 # name: test_read_file[tests/components/file/fixtures/file_read_list.yaml-yaml]
   dict({
-    'list': list([
+    'yaml': list([
       dict({
         'id': 1,
         'name': 'list_item_1',

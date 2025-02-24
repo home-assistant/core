@@ -55,13 +55,7 @@ async def read_file(call: ServiceCall) -> dict:
             yaml_content = yaml.safe_load(file_content)
             if isinstance(yaml_content, dict):
                 return yaml_content
-            if isinstance(yaml_content, list):
-                return {"list": yaml_content}
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="unsupported_yaml_content_type",
-                translation_placeholders={"content_type": type(yaml_content).__name__},
-            )
+            return {"yaml": yaml_content}
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="unsupported_file_encoding",
