@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, Final
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
@@ -19,6 +19,7 @@ from evohomeasync2.schemas.const import (
     ZoneModelType as EvoZoneModelType,
     ZoneType as EvoZoneType,
 )
+import voluptuous as vol
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -29,21 +30,25 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_MODE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_MODE,
+    PRECISION_TENTHS,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+    async_get_current_platform,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import EVOHOME_KEY
-from .const import (
-    ATTR_DURATION,
-    ATTR_DURATION_UNTIL,
-    ATTR_PERIOD,
-    ATTR_SETPOINT,
-    EvoService,
-)
+from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, EvoService
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity
 
@@ -70,26 +75,62 @@ EVO_PRESET_TO_HA = {
 HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 
+RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
+    {vol.Required(ATTR_ENTITY_ID): cv.entity_id}
+)
+SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
+    {
+        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+        vol.Required(ATTR_SETPOINT): vol.All(
+            vol.Coerce(float), vol.Range(min=4.0, max=35.0)
+        ),
+        vol.Optional(ATTR_DURATION): vol.All(
+            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
+        ),
+    }
+)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
+    add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Create the evohome Controller, and its Zones, if any."""
+    """Set up services for Evohome's Climate entities."""
     if discovery_info is None:
         return
 
-    coordinator = hass.data[EVOHOME_KEY].coordinator
-    loc_idx = hass.data[EVOHOME_KEY].loc_idx
-    tcs = hass.data[EVOHOME_KEY].tcs
+    platform = async_get_current_platform()
+
+    platform.async_register_entity_service(
+        EvoService.RESET_ZONE_OVERRIDE,
+        RESET_ZONE_OVERRIDE_SCHEMA,
+        "async_zone_svc_request",
+    )
+
+    platform.async_register_entity_service(
+        EvoService.SET_ZONE_OVERRIDE,
+        SET_ZONE_OVERRIDE_SCHEMA,
+        "async_zone_svc_request",
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Create the Evohome Controller, and its Zones."""
+
+    coordinator: EvoDataUpdateCoordinator = config_entry.runtime_data["coordinator"]
+    tcs = coordinator.tcs
 
     _LOGGER.debug(
-        "Found the Location/Controller (%s), id=%s, name=%s (location_idx=%s)",
+        "Found the Location/Controller (%s), id=%s, name=%s",
         tcs.model,
         tcs.id,
         tcs.location.name,
-        loc_idx,
     )
 
     entities: list[EvoController | EvoZone] = [EvoController(coordinator, tcs)]
@@ -181,13 +222,13 @@ class EvoZone(EvoChild, EvoClimateEntity):
         # otherwise it is EvoService.SET_ZONE_OVERRIDE
         temperature = max(min(data[ATTR_SETPOINT], self.max_temp), self.min_temp)
 
-        if ATTR_DURATION_UNTIL in data:
-            duration: timedelta = data[ATTR_DURATION_UNTIL]
+        if ATTR_DURATION in data:
+            duration: timedelta = data[ATTR_DURATION]
             if duration.total_seconds() == 0:
                 await self._update_schedule()
                 until = self.setpoints.get("next_sp_from")
             else:
-                until = dt_util.now() + data[ATTR_DURATION_UNTIL]
+                until = dt_util.now() + data[ATTR_DURATION]
         else:
             until = None  # indefinitely
 

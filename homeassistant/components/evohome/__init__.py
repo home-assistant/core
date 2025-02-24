@@ -8,13 +8,10 @@ Note that the API used by this integration's client does not support cooling.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import Final
 
-import evohomeasync as ec1
-import evohomeasync2 as ec2
 from evohomeasync2.const import SZ_CAN_BE_TEMPORARY, SZ_SYSTEM_MODE, SZ_TIMING_MODE
 from evohomeasync2.schemas.const import (
     S2_DURATION as SZ_DURATION,
@@ -23,6 +20,7 @@ from evohomeasync2.schemas.const import (
 )
 import voluptuous as vol
 
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
@@ -33,30 +31,25 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.service import verify_domain_control
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.hass_dict import HassKey
 
 from .const import (
     ATTR_DURATION,
-    ATTR_DURATION_UNTIL,
     ATTR_PERIOD,
     ATTR_SETPOINT,
     CONF_LOCATION_IDX,
+    DEFAULT_SCAN_INTERVAL,
     DOMAIN,
-    SCAN_INTERVAL_DEFAULT,
-    SCAN_INTERVAL_MINIMUM,
+    MINIMUM_SCAN_INTERVAL_LEGACY,
     EvoService,
 )
 from .coordinator import EvoDataUpdateCoordinator
-from .storage import TokenManager
 
 _LOGGER = logging.getLogger(__name__)
 
-CONFIG_SCHEMA: Final = vol.Schema(
+CONFIG_SCHEMA: Final = vol.Schema(  # scan_interval here is a timedelta
     {
         DOMAIN: vol.Schema(
             {
@@ -64,8 +57,11 @@ CONFIG_SCHEMA: Final = vol.Schema(
                 vol.Required(CONF_PASSWORD): cv.string,
                 vol.Optional(CONF_LOCATION_IDX, default=0): cv.positive_int,
                 vol.Optional(
-                    CONF_SCAN_INTERVAL, default=SCAN_INTERVAL_DEFAULT
-                ): vol.All(cv.time_period, vol.Range(min=SCAN_INTERVAL_MINIMUM)),
+                    CONF_SCAN_INTERVAL, default=timedelta(seconds=DEFAULT_SCAN_INTERVAL)
+                ): vol.All(
+                    cv.time_period,
+                    vol.Range(min=timedelta(seconds=MINIMUM_SCAN_INTERVAL_LEGACY)),
+                ),
             }
         )
     },
@@ -84,75 +80,58 @@ SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
         vol.Required(ATTR_SETPOINT): vol.All(
             vol.Coerce(float), vol.Range(min=4.0, max=35.0)
         ),
-        vol.Optional(ATTR_DURATION_UNTIL): vol.All(
+        vol.Optional(ATTR_DURATION): vol.All(
             cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
         ),
     }
 )
 
-EVOHOME_KEY: HassKey[EvoData] = HassKey(DOMAIN)
-
-
-@dataclass
-class EvoData:
-    """Dataclass for storing evohome data."""
-
-    coordinator: EvoDataUpdateCoordinator
-    loc_idx: int
-    tcs: ec2.ControlSystem
+PLATFORMS = (Platform.CLIMATE, Platform.WATER_HEATER)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Evohome integration."""
+    """Create evohome config entry from YAML."""
 
-    token_manager = TokenManager(
-        hass,
-        config[DOMAIN][CONF_USERNAME],
-        config[DOMAIN][CONF_PASSWORD],
-        async_get_clientsession(hass),
-    )
+    if not hass.config_entries.async_entries(DOMAIN) and DOMAIN in config:
+        hass.async_create_task(
+            hass.config_entries.flow.async_init(
+                DOMAIN, context={"source": SOURCE_IMPORT}, data=config[DOMAIN]
+            )
+        )
+
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Load the Evohome config entry."""
+
     coordinator = EvoDataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        ec2.EvohomeClient(token_manager),
-        name=f"{DOMAIN}_coordinator",
-        update_interval=config[DOMAIN][CONF_SCAN_INTERVAL],
-        location_idx=config[DOMAIN][CONF_LOCATION_IDX],
-        client_v1=ec1.EvohomeClient(token_manager),
+        hass, _LOGGER, config_entry=config_entry, name=f"{DOMAIN}_coordinator"
     )
 
-    await coordinator.async_register_shutdown()
     await coordinator.async_first_refresh()
 
     if not coordinator.last_update_success:
         _LOGGER.error(f"Failed to fetch initial data: {coordinator.last_exception}")  # noqa: G004
         return False
 
-    assert coordinator.tcs is not None  # mypy
+    config_entry.runtime_data = {"coordinator": coordinator}
 
-    hass.data[EVOHOME_KEY] = EvoData(
-        coordinator=coordinator,
-        loc_idx=coordinator.loc_idx,
-        tcs=coordinator.tcs,
-    )
+    await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    hass.async_create_task(
-        async_load_platform(hass, Platform.CLIMATE, DOMAIN, {}, config)
-    )
-    if coordinator.tcs.hotwater:
-        hass.async_create_task(
-            async_load_platform(hass, Platform.WATER_HEATER, DOMAIN, {}, config)
-        )
-
-    setup_service_functions(hass, coordinator)
+    setup_service_functions(hass)
 
     return True
 
 
+async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+    """Unload the Evohome config entry."""
+
+    return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
+
+
 @callback
-def setup_service_functions(
-    hass: HomeAssistant, coordinator: EvoDataUpdateCoordinator
-) -> None:
+def setup_service_functions(hass: HomeAssistant) -> None:
     """Set up the service handlers for the system/zone operating modes.
 
     Not all Honeywell TCC-compatible systems support all operating modes. In addition,
@@ -162,18 +141,25 @@ def setup_service_functions(
     It appears that all TCC-compatible systems support the same three zones modes.
     """
 
+    # setup_service_functions() is safe only whilst "single_config_entry" is true
+
+    def coordinator() -> EvoDataUpdateCoordinator:
+        config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+        result: EvoDataUpdateCoordinator = config_entry.runtime_data["coordinator"]
+        return result
+
     @verify_domain_control(hass, DOMAIN)
     async def force_refresh(call: ServiceCall) -> None:
         """Obtain the latest state data via the vendor's RESTful API."""
-        await coordinator.async_refresh()
+        await coordinator().async_refresh()
 
     @verify_domain_control(hass, DOMAIN)
     async def set_system_mode(call: ServiceCall) -> None:
         """Set the system mode."""
-        assert coordinator.tcs is not None  # mypy
+        assert coordinator().tcs is not None  # mypy
 
         payload = {
-            "unique_id": coordinator.tcs.id,
+            "unique_id": coordinator().tcs.id,
             "service": call.service,
             "data": call.data,
         }
@@ -201,12 +187,12 @@ def setup_service_functions(
 
         async_dispatcher_send(hass, DOMAIN, payload)
 
-    assert coordinator.tcs is not None  # mypy
+    assert coordinator().tcs is not None  # mypy
 
     hass.services.async_register(DOMAIN, EvoService.REFRESH_SYSTEM, force_refresh)
 
     # Enumerate which operating modes are supported by this system
-    modes = list(coordinator.tcs.allowed_system_modes)
+    modes = list(coordinator().tcs.allowed_system_modes)
 
     # Not all systems support "AutoWithReset": register this handler only if required
     if any(
@@ -263,16 +249,16 @@ def setup_service_functions(
             schema=vol.Schema(vol.Any(*system_mode_schemas)),
         )
 
-    # The zone modes are consistent across all systems and use the same schema
-    hass.services.async_register(
-        DOMAIN,
-        EvoService.RESET_ZONE_OVERRIDE,
-        set_zone_override,
-        schema=RESET_ZONE_OVERRIDE_SCHEMA,
-    )
-    hass.services.async_register(
-        DOMAIN,
-        EvoService.SET_ZONE_OVERRIDE,
-        set_zone_override,
-        schema=SET_ZONE_OVERRIDE_SCHEMA,
-    )
+    # # The zone modes are consistent across all systems and use the same schema
+    # hass.services.async_register(
+    #     DOMAIN,
+    #     EvoService.RESET_ZONE_OVERRIDE,
+    #     set_zone_override,
+    #     schema=RESET_ZONE_OVERRIDE_SCHEMA,
+    # )
+    # hass.services.async_register(
+    #     DOMAIN,
+    #     EvoService.SET_ZONE_OVERRIDE,
+    #     set_zone_override,
+    #     schema=SET_ZONE_OVERRIDE_SCHEMA,
+    # )
