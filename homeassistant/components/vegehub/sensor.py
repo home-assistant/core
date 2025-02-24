@@ -40,7 +40,6 @@ class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
     _attr_translation_key = "analog_sensor"
     _unit_of_measurement = UnitOfElectricPotential.VOLT
     _attr_device_class = SensorDeviceClass.VOLTAGE
-    _attr_suggested_unit_of_measurement = _unit_of_measurement
     _attr_native_unit_of_measurement = _unit_of_measurement
     _attr_suggested_display_precision = 2
 
@@ -54,21 +53,18 @@ class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
 
         config_entry = coordinator.config_entry
 
-        # This is needed for mypy to understand that config_entry is not None
-        if config_entry is None:
-            raise ValueError("Config entry should never be None for VegeHubSensor")
-
         self._attr_translation_placeholders = {"index": str(index)}
         self._attr_available = False
         self._mac_address = config_entry.data[CONF_MAC]
         self._attr_unique_id = (
-            f"{self._mac_address}_{index}".lower()
+            f"{self._mac_address}_{index}_voltage".lower()
         )  # Generate a unique_id using mac and slot
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._mac_address)},
             name=config_entry.data[CONF_HOST],
             manufacturer=MANUFACTURER,
             model=MODEL,
+            # via_device={(DOMAIN, "hub_" + self._mac_address)},
         )
 
     @callback
@@ -80,4 +76,5 @@ class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
             and self._attr_unique_id in self.coordinator.data
         ):
             self._attr_native_value = self.coordinator.data[self._attr_unique_id]
+            self._attr_available = True
         super()._handle_coordinator_update()

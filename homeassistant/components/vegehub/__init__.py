@@ -15,7 +15,6 @@ from homeassistant.components.webhook import (
     async_register as webhook_register,
     async_unregister as webhook_unregister,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -30,11 +29,9 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from .const import DOMAIN, MANUFACTURER, MODEL, NAME, PLATFORMS
-from .coordinator import VegeHubCoordinator
+from .coordinator import VegeHubConfigEntry, VegeHubCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-type VegeHubConfigEntry = ConfigEntry[VegeHub]
 
 
 @dataclass

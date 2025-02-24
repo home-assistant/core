@@ -1,22 +1,50 @@
 """Fixtures and test data for VegeHub test methods."""
 
+from collections.abc import Generator
 from dataclasses import dataclass
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 from vegehub import VegeHub
 
 from homeassistant.components.vegehub.coordinator import VegeHubCoordinator
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_HOST,
+    CONF_IP_ADDRESS,
+    CONF_MAC,
+    CONF_WEBHOOK_ID,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 
-from tests.common import load_fixture
+from . import init_integration
 
-IP_ADDR = "192.168.0.100"
+from tests.common import MockConfigEntry, load_fixture
+
+TEST_IP = "192.168.0.100"
 TEST_API_KEY = "1234567890ABCD"
-UNIQUE_ID = "aabbccddeeff"
+TEST_UNIQUE_ID = "aabbccddeeff"
 TEST_SERVER = "http://example.com"
 TEST_MAC = "A1:B2:C3:D4:E5:F6"
 TEST_SIMPLE_MAC = "A1B2C3D4E5F6"
+TEST_HOSTNAME = "VegeHub"
+TEST_WEBHOOK_ID = "webhook_id"
+HUB_DATA = {
+    "first_boot": False,
+    "page_updated": False,
+    "error_message": 0,
+    "num_channels": 2,
+    "num_actuators": 2,
+    "version": "3.4.5",
+    "agenda": 1,
+    "batt_v": 9.0,
+    "num_vsens": 0,
+    "is_ac": 0,
+    "has_sd": 0,
+    "on_ap": 0,
+}
 
 
 @dataclass
@@ -28,21 +56,21 @@ class VegeHubData:
 
 
 @pytest.fixture
-def mock_vegehub():
+def mock_vegehub() -> Generator[Any, Any, Any]:
     """Mock the VegeHub library."""
     with patch(
         "homeassistant.components.vegehub.config_flow.VegeHub", autospec=True
     ) as mock_vegehub_class:
-        mock_instance = MagicMock()
+        mock_instance = mock_vegehub_class.return_value
         # Simulate successful API calls
         mock_instance.retrieve_mac_address = AsyncMock(return_value=True)
         mock_instance.setup = AsyncMock(return_value=True)
 
         # Mock properties
-        type(mock_instance).ip_address = PropertyMock(return_value=IP_ADDR)
+        type(mock_instance).ip_address = PropertyMock(return_value=TEST_IP)
         type(mock_instance).mac_address = PropertyMock(return_value=TEST_SIMPLE_MAC)
-        type(mock_instance).unique_id = PropertyMock(return_value=UNIQUE_ID)
-        type(mock_instance).url = PropertyMock(return_value=f"http://{IP_ADDR}")
+        type(mock_instance).unique_id = PropertyMock(return_value=TEST_UNIQUE_ID)
+        type(mock_instance).url = PropertyMock(return_value=f"http://{TEST_IP}")
         type(mock_instance).info = PropertyMock(
             return_value=load_fixture("vegehub/info_hub.json")
         )
@@ -56,18 +84,28 @@ def mock_vegehub():
 
 
 @pytest.fixture(name="mocked_hub")
-def fixture_mocked_hub(mock_vegehub: MagicMock):
+def fixture_mocked_hub(mock_vegehub: MagicMock) -> MagicMock:
     """Fixture for creating a mocked VegeHub instance."""
     return mock_vegehub
 
 
 @pytest.fixture
-def config_entry(mocked_hub: MagicMock, hass: HomeAssistant):
-    """Mock a config entry."""
-    return MagicMock(
-        data={"mac": "1234567890AB", "host": "VegeHub1"},
-        runtime_data=VegeHubData(
-            coordinator=VegeHubCoordinator(hass=hass, device_id=UNIQUE_ID),
-            hub=mocked_hub,
-        ),
+async def vegehub_config_entry(hass: HomeAssistant):
+    """Create a mock VegeHub config entry."""
+    config_entry = MockConfigEntry(
+        domain="vegehub",
+        data={
+            CONF_MAC: TEST_SIMPLE_MAC,
+            CONF_IP_ADDRESS: TEST_IP,
+            CONF_HOST: TEST_HOSTNAME,
+            CONF_DEVICE: HUB_DATA,
+            CONF_WEBHOOK_ID: TEST_WEBHOOK_ID,
+        },
+        unique_id=TEST_SIMPLE_MAC,
     )
+    config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.vegehub.PLATFORMS", [Platform.SENSOR]):
+        await init_integration(hass, config_entry)
+
+    return config_entry
