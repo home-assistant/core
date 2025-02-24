@@ -1890,7 +1890,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "pushsafer",
     "pvoutput",
     "pvpc_hourly_pricing",
-    "pyload",
     "qbittorrent",
     "qingping",
     "qld_bushfire",
