@@ -23,7 +23,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from . import MammotionConfigEntry
-from .coordinator import MammotionDataUpdateCoordinator
+from .coordinator import MammotionBaseUpdateCoordinator
 from .entity import MammotionBaseEntity
 
 
@@ -31,7 +31,7 @@ from .entity import MammotionBaseEntity
 class MammotionConfigNumberEntityDescription(NumberEntityDescription):
     """Describes Mammotion number entity."""
 
-    set_fn: Callable[[MammotionDataUpdateCoordinator, float], None]
+    set_fn: Callable[[MammotionBaseUpdateCoordinator, float], None]
 
 
 NUMBER_ENTITIES: tuple[MammotionConfigNumberEntityDescription, ...] = (
@@ -170,7 +170,7 @@ class MammotionConfigNumberEntity(MammotionBaseEntity, NumberEntity, RestoreEnti
 
     def __init__(
         self,
-        coordinator: MammotionDataUpdateCoordinator,
+        coordinator: MammotionBaseUpdateCoordinator,
         entity_description: MammotionConfigNumberEntityDescription,
     ) -> None:
         super().__init__(coordinator, entity_description.key)
@@ -197,7 +197,7 @@ class MammotionWorkingNumberEntity(MammotionConfigNumberEntity):
 
     def __init__(
         self,
-        coordinator: MammotionDataUpdateCoordinator,
+        coordinator: MammotionBaseUpdateCoordinator,
         entity_description: MammotionConfigNumberEntityDescription,
         limits: DeviceLimits,
     ) -> None:
