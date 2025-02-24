@@ -584,7 +584,7 @@ class StatisticsBase:
     state = Column(DOUBLE_TYPE)
     sum = Column(DOUBLE_TYPE)
     # *** Not originally in v32, only added for recorder to startup ok
-    circular_mean = Column(Boolean)
+    circular_mean = Column(DOUBLE_TYPE)
 
     @classmethod
     def from_stats(cls, metadata_id: int, stats: StatisticData) -> Self:
