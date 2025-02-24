@@ -1,18 +1,22 @@
 # serializer version: 1
-# name: test_sensors[sensor.fakespa_fault-entry]
+# name: test_events[event.fakespa_fault-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'event_types': list([
+        'fault',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.fakespa_fault',
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.fakespa_fault',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -33,16 +37,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.fakespa_fault-state]
+# name: test_events[event.fakespa_fault-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'fault',
+      ]),
       'friendly_name': 'FakeSpa Fault',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.fakespa_fault',
+    'entity_id': 'event.fakespa_fault',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2025-02-15 13:00: TEST (1/2)',
+    'state': 'unknown',
   })
 # ---
