@@ -1019,9 +1019,11 @@ def _reduce_statistics(
                     mean_values.clear()
                 if _want_circular_mean:
                     row["circular_mean"] = (
-                        circular_mean(mean_values) if mean_values else None
+                        circular_mean(circular_mean_values)
+                        if circular_mean_values
+                        else None
                     )
-                    mean_values.clear()
+                    circular_mean_values.clear()
                 if _want_min:
                     row["min"] = min(min_values) if min_values else None
                     min_values.clear()
