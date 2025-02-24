@@ -1,4 +1,4 @@
-"""The tests for evohome."""
+"""The tests for Evohome."""
 
 from __future__ import annotations
 
@@ -11,7 +11,7 @@ from evohomeasync2 import EvohomeClient, exceptions as exc
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.evohome.const import DOMAIN, EvoService
+from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -187,41 +187,3 @@ async def test_setup(
     """
 
     assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_service_refresh_system(
-    hass: HomeAssistant,
-    evohome: EvohomeClient,
-) -> None:
-    """Test EvoService.REFRESH_SYSTEM of an evohome system."""
-
-    # EvoService.REFRESH_SYSTEM
-    with patch("evohomeasync2.location.Location.update") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.REFRESH_SYSTEM,
-            {},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with()
-
-
-@pytest.mark.parametrize("install", ["default"])
-async def test_service_reset_system(
-    hass: HomeAssistant,
-    evohome: EvohomeClient,
-) -> None:
-    """Test EvoService.RESET_SYSTEM of an evohome system."""
-
-    # EvoService.RESET_SYSTEM (if SZ_AUTO_WITH_RESET in modes)
-    with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
-        await hass.services.async_call(
-            DOMAIN,
-            EvoService.RESET_SYSTEM,
-            {},
-            blocking=True,
-        )
-
-        mock_fcn.assert_awaited_once_with("AutoWithReset", until=None)
