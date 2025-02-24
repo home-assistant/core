@@ -86,11 +86,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
+        errors = {}
         if user_input is not None:
             try:
                 # Use load_selector = 0 to fetch the panel model without authentication.
-                (model, _) = await try_connect(user_input, 0)
+                (model, serial) = await try_connect(user_input, 0)
             except (
                 OSError,
                 ConnectionRefusedError,
@@ -153,7 +153,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     await self.async_set_unique_id(str(serial_number))
                     self._abort_if_unique_id_configured()
                 else:
-                    self._async_abort_entries_match({CONF_HOST: user_input[CONF_HOST]})
+                    self._async_abort_entries_match({CONF_HOST: self._data[CONF_HOST]})
                 return self.async_create_entry(title=f"Bosch {model}", data=self._data)
 
         return self.async_show_form(
