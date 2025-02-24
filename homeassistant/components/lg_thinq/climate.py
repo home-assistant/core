@@ -84,8 +84,6 @@ async def async_setup_entry(
 class ThinQClimateEntity(ThinQEntity, ClimateEntity):
     """Represent a thinq climate platform."""
 
-    entity_description: ClimateEntityDescription
-
     def __init__(
         self,
         coordinator: DeviceDataUpdateCoordinator,
