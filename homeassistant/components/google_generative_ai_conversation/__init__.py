@@ -74,7 +74,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         def append_files_to_prompt():
             image_filenames = call.data[CONF_IMAGE_FILENAME]
             filenames = call.data[CONF_FILENAMES]
-            for filename in image_filenames + filenames:
+            for filename in set(image_filenames + filenames):
                 if not hass.config.is_allowed_path(filename):
                     raise HomeAssistantError(
                         f"Cannot read `{filename}`, no access to path; "

@@ -77,7 +77,7 @@ async def test_generate_content_service_with_image(
             "generate_content",
             {
                 "prompt": "Describe this image from my doorbell camera",
-                "filenames": ["doorbell_snapshot.jpg", "context.txt"],
+                "filenames": ["doorbell_snapshot.jpg", "context.txt", "context.txt"],
             },
             blocking=True,
             return_response=True,
