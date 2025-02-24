@@ -13,7 +13,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -25,7 +24,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import CHANNEL_DISPLAY_NAME, SENSOR_EM
-from .coordinator import MerossDataUpdateCoordinator
+from .coordinator import MerossConfigEntry, MerossDataUpdateCoordinator
 from .entity import MerossEntity
 
 
@@ -168,7 +167,7 @@ SENSORS: dict[str, tuple[MerossSensorEntityDescription, ...]] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MerossConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Meross device from a config entry."""

@@ -13,6 +13,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import _LOGGER, DOMAIN, HTTP_UPDATE_INTERVAL, MAX_ERRORS
 
+type MerossConfigEntry = ConfigEntry[MerossDataUpdateCoordinator]
+
 
 class MerossDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Manages polling for state changes from the device."""

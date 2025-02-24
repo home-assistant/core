@@ -9,17 +9,14 @@ from meross_ha.device import DeviceInfo
 from meross_ha.device_manager import async_build_base_device
 from meross_ha.exceptions import DeviceTimeoutError, InvalidMessage, MerossError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
 from .const import _LOGGER
-from .coordinator import MerossDataUpdateCoordinator
+from .coordinator import MerossConfigEntry, MerossDataUpdateCoordinator
 
 PLATFORMS: Final = [Platform.SENSOR]
-
-MerossConfigEntry = ConfigEntry[MerossDataUpdateCoordinator]
 
 
 async def async_setup_entry(
