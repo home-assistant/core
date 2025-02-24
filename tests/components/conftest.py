@@ -624,7 +624,7 @@ async def _validate_translation(
     if not translation_required:
         return
 
-    if translation_errors.get(full_key) == "unused":
+    if translation_errors.get(full_key) in {"used", "unused"}:
         # This translation key is in the ignore list, mark it as used
         translation_errors[full_key] = "used"
         return
