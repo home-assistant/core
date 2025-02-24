@@ -31,7 +31,9 @@ async def async_get_backup_agents(
     hass: HomeAssistant,
 ) -> list[BackupAgent]:
     """Return a list of backup agents."""
-    entries: list[AzureStorageConfigEntry] = hass.config_entries.async_loaded_entries(DOMAIN)
+    entries: list[AzureStorageConfigEntry] = hass.config_entries.async_loaded_entries(
+        DOMAIN
+    )
     return [AzureStorageBackupAgent(hass, entry) for entry in entries]
 
 
@@ -72,10 +74,10 @@ def handle_backup_errors[_R, **P](
                 func.__name__,
                 err.status_code,
                 err.message,
-                exc_info=True
+                exc_info=True,
             )
             raise BackupAgentError(
-                f"Error during backup operation in {func.__name__}: Status {err.status_code}, message: {err.mesage}"
+                f"Error during backup operation in {func.__name__}: Status {err.status_code}, message: {err.message}"
             ) from err
 
     return wrapper
