@@ -1051,8 +1051,8 @@ build.json @home-assistant/supervisor
 /tests/components/numato/ @clssn
 /homeassistant/components/number/ @home-assistant/core @Shulyaka
 /tests/components/number/ @home-assistant/core @Shulyaka
-/homeassistant/components/nut/ @bdraco @ollo69 @pestevez
-/tests/components/nut/ @bdraco @ollo69 @pestevez
+/homeassistant/components/nut/ @bdraco @ollo69 @pestevez @tdfountain
+/tests/components/nut/ @bdraco @ollo69 @pestevez @tdfountain
 /homeassistant/components/nws/ @MatthewFlamm @kamiyo
 /tests/components/nws/ @MatthewFlamm @kamiyo
 /homeassistant/components/nyt_games/ @joostlek
