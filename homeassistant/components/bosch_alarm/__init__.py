@@ -42,7 +42,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     panel_conn = PanelConnection(panel, unique_id, entry.data[CONF_MODEL])
     entry.runtime_data = panel_conn
 
-    entry.async_on_unload(entry.add_update_listener(options_update_listener))
 
     try:
         await panel.connect()
@@ -58,15 +57,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         await panel.disconnect()
         raise ConfigEntryNotReady("Connection failed") from err
 
-    hass.async_create_task(
-        hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    )
+    await async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
-async def options_update_listener(hass: HomeAssistant, config_entry: ConfigEntry):
-    """Handle options update."""
-    await hass.config_entries.async_reload(config_entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

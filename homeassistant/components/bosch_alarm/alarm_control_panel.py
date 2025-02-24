@@ -123,13 +123,12 @@ class AreaAlarmControlPanel(AlarmControlPanelEntity):
 async def async_setup_entry(
     hass: HomeAssistant | None,
     config_entry: ConfigEntry,
-    async_add_entities: entity_platform.AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up control panels for each area."""
     panel_conn = config_entry.runtime_data
     panel = panel_conn.panel
 
-    arming_code = config_entry.options.get(CONF_CODE, None)
 
     async_add_entities(
         AreaAlarmControlPanel(

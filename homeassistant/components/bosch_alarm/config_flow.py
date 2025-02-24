@@ -77,8 +77,6 @@ async def try_connect(data: dict[str, Any], load_selector: int = 0):
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch Alarm."""
 
-    VERSION = 1
-    entry: config_entries.ConfigEntry | None = None
     data: dict[str, Any] = {}
 
     async def async_step_user(
@@ -141,7 +139,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 OSError,
                 ConnectionRefusedError,
                 ssl.SSLError,
-                asyncio.exceptions.TimeoutError,
+                TimeoutError,
             ):
                 _LOGGER.exception("Connection Error")
                 errors["base"] = "cannot_connect"
