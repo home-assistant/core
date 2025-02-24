@@ -115,7 +115,7 @@ def _create_engine_test(
                 "event_context_id_as_binary": (0, 1),
                 "event_type_id_migration": (2, 1),
                 "entity_id_migration": (2, 1),
-                "event_id_post_migration": (0, 0),
+                "event_id_post_migration": (1, 1),
                 "entity_id_post_migration": (0, 1),
             },
             [
@@ -131,7 +131,7 @@ def _create_engine_test(
                 "event_context_id_as_binary": (0, 0),
                 "event_type_id_migration": (2, 1),
                 "entity_id_migration": (2, 1),
-                "event_id_post_migration": (0, 0),
+                "event_id_post_migration": (1, 1),
                 "entity_id_post_migration": (0, 1),
             },
             ["ix_states_entity_id_last_updated_ts"],
@@ -143,13 +143,43 @@ def _create_engine_test(
                 "event_context_id_as_binary": (0, 0),
                 "event_type_id_migration": (0, 0),
                 "entity_id_migration": (2, 1),
-                "event_id_post_migration": (0, 0),
+                "event_id_post_migration": (1, 1),
                 "entity_id_post_migration": (0, 1),
             },
             ["ix_states_entity_id_last_updated_ts"],
         ),
         (
             38,
+            {
+                "state_context_id_as_binary": (0, 0),
+                "event_context_id_as_binary": (0, 0),
+                "event_type_id_migration": (0, 0),
+                "entity_id_migration": (0, 0),
+                "event_id_post_migration": (1, 1),
+                "entity_id_post_migration": (0, 0),
+            },
+            [],
+        ),
+        (
+            43,
+            {
+                "state_context_id_as_binary": (0, 0),
+                "event_context_id_as_binary": (0, 0),
+                "event_type_id_migration": (0, 0),
+                "entity_id_migration": (0, 0),
+                # Schema was not bumped when the SQLite
+                # table rebuild was implemented so we need
+                # run event_id_post_migration up until
+                # schema 44 since its the first one we can
+                # be sure has the foreign key constraint was removed
+                # via https://github.com/home-assistant/core/pull/120779
+                "event_id_post_migration": (1, 1),
+                "entity_id_post_migration": (0, 0),
+            },
+            [],
+        ),
+        (
+            44,
             {
                 "state_context_id_as_binary": (0, 0),
                 "event_context_id_as_binary": (0, 0),
@@ -266,8 +296,14 @@ async def test_data_migrator_logic(
     # the expected number of times.
     for migrator, mock in migrator_mocks.items():
         needs_migrate_calls, migrate_data_calls = expected_migrator_calls[migrator]
-        assert len(mock["needs_migrate"].mock_calls) == needs_migrate_calls
-        assert len(mock["migrate_data"].mock_calls) == migrate_data_calls
+        assert len(mock["needs_migrate"].mock_calls) == needs_migrate_calls, (
+            f"Expected {migrator} needs_migrate to be called {needs_migrate_calls} times,"
+            f" got {len(mock['needs_migrate'].mock_calls)}"
+        )
+        assert len(mock["migrate_data"].mock_calls) == migrate_data_calls, (
+            f"Expected {migrator} migrate_data to be called {migrate_data_calls} times, "
+            f"got {len(mock['migrate_data'].mock_calls)}"
+        )
 
 
 @pytest.mark.parametrize("enable_migrate_state_context_ids", [True])
