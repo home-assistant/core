@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.ohme_home_pro_charge_slot_list-entry]
+# name: test_sensors[sensor.ohme_home_pro_charge_slots-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -12,7 +12,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.ohme_home_pro_charge_slot_list',
+    'entity_id': 'sensor.ohme_home_pro_charge_slots',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -24,7 +24,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Charge slot list',
+    'original_name': 'Charge slots',
     'platform': 'ohme',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -33,13 +33,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensors[sensor.ohme_home_pro_charge_slot_list-state]
+# name: test_sensors[sensor.ohme_home_pro_charge_slots-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ohme Home Pro Charge slot list',
+      'friendly_name': 'Ohme Home Pro Charge slots',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.ohme_home_pro_charge_slot_list',
+    'entity_id': 'sensor.ohme_home_pro_charge_slots',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
