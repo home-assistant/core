@@ -182,6 +182,7 @@ SENSORS = (
     HomeConnectSensorEntityDescription(
         key=StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         translation_key="current_cavity_temperature",
     ),
 )
