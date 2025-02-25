@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from pathlib import Path
 from typing import Any
 
+from asyncssh import SSHClientConnectionOptions, connect
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 import voluptuous as vol
@@ -16,9 +18,9 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util import slugify
 
 from . import SFTPConfigEntryData
-from .client import BackupAgentClient
 from .const import (
     CONF_BACKUP_LOCATION,
     CONF_HOST,
@@ -33,6 +35,43 @@ from .const import (
 
 class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle an SFTP Backup Storage config flow."""
+
+    def _check_pkey_and_password(self, user_input: dict) -> dict:
+        """Check if user provided either one of password or private key.
+
+        Additionally, check if private key exists and make sure it starts
+        with `/config` if full path is not provided by user.
+
+        Returns: user_input object with edited private key location, if edited.
+        """
+        # If both password AND private key are not provided, error out.
+        # We need at least one to perform authentication.
+        if (
+            bool(user_input.get(CONF_PASSWORD)) is False
+            and bool(user_input.get(CONF_PRIVATE_KEY_FILE)) is False
+        ):
+            raise ConfigEntryError(
+                "Please configure password or private key file location for SFTP Backup Storage."
+            )
+
+        if bool(user_input.get(CONF_PRIVATE_KEY_FILE)):
+            # If full path to private key is not provided,
+            # fallback to /config as a main directory to look for pkey.
+            if not user_input[CONF_PRIVATE_KEY_FILE].startswith("/"):
+                user_input[CONF_PRIVATE_KEY_FILE] = (
+                    "/config/" + user_input[CONF_PRIVATE_KEY_FILE]
+                )
+
+            # Error out if we did not find the private key file.
+            if not Path(user_input[CONF_PRIVATE_KEY_FILE]).exists():
+                raise ConfigEntryError(
+                    f"Private key file not found in provided path: `{user_input[CONF_PRIVATE_KEY_FILE]}`."
+                    " Place the key file in config or share directory "
+                    "and point to it by specifying path "
+                    "`/config/private_key` or `/share/private_key`.",
+                )
+
+        return user_input
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -57,6 +96,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             LOGGER.debug("Source: ", self.source)
+
             # Create a session using your credentials
             user_config = SFTPConfigEntryData(
                 host=user_input[CONF_HOST],
@@ -70,18 +110,47 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
             placeholders["backup_location"] = user_config.backup_location
 
             try:
+                # Performs a username-password entry check
+                # Validates private key location if provided.
+                user_input = self._check_pkey_and_password(user_input)
+
                 # Raises:
                 # - OSError, if host or port are not correct.
                 # - asyncssh.misc.PermissionDenied, if credentials are not correct.
                 # - asyncssh.sftp.SFTPNoSuchFile, if directory does not exist.
                 # - asyncssh.sftp.SFTPPermissionDenied, if we don't have access to said directory
-                async with BackupAgentClient(user_config) as client:
-                    await client.list_backup_location()
-                    identifier = client.get_identifier()
-                    LOGGER.debug(
-                        "Will register SFTP Backup Location agent with identifier %s",
-                        identifier,
+                async with (
+                    connect(
+                        host=user_config.host,
+                        port=user_config.port,
+                        options=SSHClientConnectionOptions(
+                            known_hosts=None,
+                            username=user_config.username,
+                            password=user_config.password,
+                            client_keys=[user_config.private_key_file]
+                            if user_config.private_key_file
+                            else None,
+                        ),
+                    ) as ssh,
+                    ssh.start_sftp_client() as sftp,
+                ):
+                    await sftp.chdir(user_config.backup_location)
+                    await sftp.listdir()
+
+                identifier = slugify(
+                    ".".join(
+                        [
+                            user_config.host,
+                            str(user_config.port),
+                            user_config.username,
+                            user_config.backup_location,
+                        ]
                     )
+                )
+                LOGGER.debug(
+                    "Will register SFTP Backup Location agent with identifier %s",
+                    identifier,
+                )
 
             except OSError as e:
                 placeholders["error_message"] = str(e)
@@ -96,6 +165,8 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
             except ConfigEntryError as e:
                 placeholders["error_message"] = str(e)
                 errors["base"] = "config_entry_error"
+                LOGGER.error("Placeholders: %s", placeholders)
+                LOGGER.error("Base: %s", errors)
             except Exception as e:  # noqa: BLE001
                 LOGGER.exception(e)
                 placeholders["error_message"] = str(e)
