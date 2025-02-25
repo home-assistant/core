@@ -8,9 +8,8 @@ from typing import Any
 from inelsmqtt.devices import Device
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import slugify
 
 from . import InelsConfigEntry
@@ -49,7 +48,7 @@ INELS_SWITCH_TYPES: dict[str, InelsSwitchType] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: InelsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Load iNELS switch.."""
 
@@ -120,7 +119,6 @@ class InelsBusSwitch(InelsBaseEntity, SwitchEntity):
         self.entity_description = description
 
         self._attr_unique_id = slugify(f"{self._attr_unique_id}_{description.key}")
-        self.entity_id = f"{Platform.SWITCH}.{self._attr_unique_id}"
         self._attr_name = description.name
 
     @property
