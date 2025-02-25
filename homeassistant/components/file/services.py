@@ -50,18 +50,18 @@ async def read_file(call: ServiceCall) -> dict:
             file_content = await file.read()
 
         if file_encoding == "json":
-            return json.loads(file_content)
-        if file_encoding == "yaml":
-            yaml_content = yaml.safe_load(file_content)
-            if isinstance(yaml_content, dict):
-                return yaml_content
-            return {"yaml": yaml_content}
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="unsupported_file_encoding",
-            translation_placeholders={"filename": file_name, "encoding": file_encoding},
-        )
-
+            data = json.loads(file_content)
+        elif file_encoding == "yaml":
+            data = yaml.safe_load(file_content)
+        else:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="unsupported_file_encoding",
+                translation_placeholders={
+                    "filename": file_name,
+                    "encoding": file_encoding,
+                },
+            )
     except FileNotFoundError as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
@@ -74,3 +74,5 @@ async def read_file(call: ServiceCall) -> dict:
             translation_key="file_decoding",
             translation_placeholders={"filename": file_name, "encoding": file_encoding},
         ) from err
+    else:
+        return {"data": data}

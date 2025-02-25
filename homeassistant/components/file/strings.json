@@ -80,15 +80,15 @@
   },
   "services": {
     "read_file": {
-      "name": "Read File",
-      "description": "Reads a file and return the contents.",
+      "name": "Read file",
+      "description": "Reads a file and returns the contents.",
       "fields": {
         "file_name": {
-          "name": "File Name",
+          "name": "File name",
           "description": "Name of the file to read."
         },
         "file_encoding": {
-          "name": "File Encoding",
+          "name": "File encoding",
           "description": "Encoding of the file (json, yaml.)"
         }
       }
