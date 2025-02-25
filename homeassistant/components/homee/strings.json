@@ -205,6 +205,11 @@
       "watchdog": {
         "name": "Watchdog"
       }
+    },
+    "valve": {
+      "valve_position": {
+        "name": "Valve position"
+      }
     }
   },
   "exceptions": {
