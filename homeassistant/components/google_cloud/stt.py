@@ -30,6 +30,8 @@ from .const import (
     DEFAULT_STT_MODEL,
     DOMAIN,
     STT_LANGUAGES,
+    CONF_TIMEOUT,
+    DEFAULT_TIMEOUT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -66,6 +68,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
         self._entry = entry
         self._client = client
         self._model = entry.options.get(CONF_STT_MODEL, DEFAULT_STT_MODEL)
+        self._timeout = entry.options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
 
     @property
     def supported_languages(self) -> list[str]:
@@ -126,7 +129,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
         try:
             responses = await self._client.streaming_recognize(
                 requests=request_generator(),
-                timeout=10,
+                timeout=self._timeout,
             )
 
             transcript = ""
