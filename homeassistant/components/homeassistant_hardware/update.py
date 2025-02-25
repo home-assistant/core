@@ -41,6 +41,10 @@ from .util import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type FirmwareChangeCallbackType = Callable[
+    [ApplicationType | None, ApplicationType | None], None
+]
+
 
 @dataclass(kw_only=True, frozen=True)
 class FirmwareUpdateEntityDescription(UpdateEntityDescription):
@@ -114,15 +118,29 @@ class BaseFirmwareUpdateEntity(
         self._current_device = device
         self._config_entry = config_entry
         self._current_firmware_info: FirmwareInfo | None = None
+        self._firmware_type_change_callbacks: set[FirmwareChangeCallbackType] = set()
 
         self._latest_manifest: FirmwareManifest | None = None
         self._latest_firmware: FirmwareMetadata | None = None
-        self._maybe_recompute_state()
+        self._maybe_recompute_state(fire_callbacks=False)
 
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
         self._current_firmware_info = firmware_info
         self._maybe_recompute_state()
         self.async_write_ha_state()
+
+    def add_firmware_type_changed_callback(
+        self,
+        change_callback: FirmwareChangeCallbackType,
+    ) -> Callable[[], None]:
+        """Add a callback for when the firmware type changes."""
+        self._firmware_type_change_callbacks.add(change_callback)
+
+        @callback
+        def remove_callback() -> None:
+            self._firmware_type_change_callbacks.discard(change_callback)
+
+        return remove_callback
 
     @property
     def title(self) -> str:
@@ -159,7 +177,7 @@ class BaseFirmwareUpdateEntity(
             )
         ):
             self._latest_manifest = hardware_extra_data.firmware_manifest
-            self._maybe_recompute_state()
+            self._maybe_recompute_state(fire_callbacks=False)
             self.async_write_ha_state()
 
     @property
@@ -188,13 +206,7 @@ class BaseFirmwareUpdateEntity(
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
         raise NotImplementedError
 
-    def _firmware_type_changed(
-        self, old_type: ApplicationType | None, new_type: ApplicationType | None
-    ) -> None:
-        """Handle a firmware type change."""
-        raise NotImplementedError
-
-    def _maybe_recompute_state(self) -> None:
+    def _maybe_recompute_state(self, *, fire_callbacks: bool = True) -> None:
         """Recompute the state of the entity."""
 
         if self._current_firmware_info is None:
@@ -203,13 +215,19 @@ class BaseFirmwareUpdateEntity(
             firmware_type = self._current_firmware_info.firmware_type
 
         if (
-            self.hass is not None
+            fire_callbacks
+            and self.hass is not None
             and firmware_type != self.entity_description.expected_firmware_type
         ):
-            self._firmware_type_changed(
-                old_type=self.entity_description.expected_firmware_type,
-                new_type=firmware_type,
-            )
+            for change_callback in self._firmware_type_change_callbacks.copy():
+                try:
+                    change_callback(
+                        self.entity_description.expected_firmware_type, firmware_type
+                    )
+                except Exception:  # noqa: BLE001
+                    _LOGGER.warning(
+                        "Failed to call firmware type changed callback", exc_info=True
+                    )
             return
 
         if (

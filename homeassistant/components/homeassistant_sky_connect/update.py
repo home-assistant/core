@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import logging
 
+import aiohttp
+
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
@@ -23,7 +25,6 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.reload import async_get_platform_without_config_entry
 
 from .const import (
     DOMAIN,
@@ -76,33 +77,61 @@ FIRMWARE_ENTITY_DESCRIPTIONS: dict[
 }
 
 
+def _async_create_update_entity(
+    hass: HomeAssistant,
+    config_entry: ConfigEntry,
+    session: aiohttp.ClientSession,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> FirmwareUpdateEntity:
+    """Create an update entity that handles firmware type changes."""
+    firmware_type = config_entry.data[FIRMWARE]
+    entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[
+        ApplicationType(firmware_type) if firmware_type is not None else None
+    ]
+
+    entity = FirmwareUpdateEntity(
+        device=config_entry.data["device"],
+        config_entry=config_entry,
+        update_coordinator=FirmwareUpdateCoordinator(
+            hass,
+            session,
+            NABU_CASA_FIRMWARE_RELEASES_URL,
+        ),
+        entity_description=entity_description,
+    )
+
+    def firmware_type_changed(
+        old_type: ApplicationType | None, new_type: ApplicationType | None
+    ) -> None:
+        """Replace the current entity when the firmware type changes."""
+        er.async_get(hass).async_remove(entity.entity_id)
+        async_add_entities(
+            [
+                _async_create_update_entity(
+                    hass, config_entry, session, async_add_entities
+                )
+            ]
+        )
+
+    entity.async_on_remove(
+        entity.add_firmware_type_changed_callback(firmware_type_changed)
+    )
+
+    return entity
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the firmware update config entry."""
-    firmware_type = config_entry.data[FIRMWARE]
-    entity_description = FIRMWARE_ENTITY_DESCRIPTIONS[
-        ApplicationType(firmware_type) if firmware_type is not None else None
-    ]
-
     session = async_get_clientsession(hass)
-
-    async_add_entities(
-        [
-            FirmwareUpdateEntity(
-                device=config_entry.data["device"],
-                config_entry=config_entry,
-                update_coordinator=FirmwareUpdateCoordinator(
-                    hass,
-                    session,
-                    NABU_CASA_FIRMWARE_RELEASES_URL,
-                ),
-                entity_description=entity_description,
-            )
-        ]
+    entity = _async_create_update_entity(
+        hass, config_entry, session, async_add_entities
     )
+
+    async_add_entities([entity])
 
 
 class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
@@ -138,25 +167,3 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
                 FIRMWARE: firmware_info.firmware_type,
             },
         )
-
-    def _firmware_type_changed(
-        self, old_type: ApplicationType | None, new_type: ApplicationType | None
-    ) -> None:
-        update_platform = async_get_platform_without_config_entry(
-            self.hass, self._config_entry.domain, "update"
-        )
-        if update_platform is None:
-            return
-
-        # Remove the current entity when the firmware type changes
-        ent_reg = er.async_get(self.hass)
-        ent_reg.async_remove(self.entity_id)
-
-        # And create a new one
-        new_entity = type(self)(
-            self._current_device,
-            self._config_entry,
-            self.coordinator,
-            FIRMWARE_ENTITY_DESCRIPTIONS[new_type],
-        )
-        update_platform.add_entities([new_entity], update_before_add=True)
