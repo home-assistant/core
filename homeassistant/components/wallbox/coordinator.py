@@ -19,6 +19,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from .const import (
     CHARGER_CURRENCY_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_ECO_SMART_KEY,
+    CHARGER_ECO_SMART_MODE_KEY,
+    CHARGER_ECO_SMART_STATUS_KEY,
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_FEATURES_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
@@ -26,6 +29,7 @@ from .const import (
     CHARGER_MAX_ICP_CURRENT_KEY,
     CHARGER_PLAN_KEY,
     CHARGER_POWER_BOOST_KEY,
+    CHARGER_SOLAR_CHARGING_MODE,
     CHARGER_STATUS_DESCRIPTION_KEY,
     CHARGER_STATUS_ID_KEY,
     CODE_KEY,
@@ -33,6 +37,7 @@ from .const import (
     DOMAIN,
     UPDATE_INTERVAL,
     ChargerStatus,
+    EcoSmartMode,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -160,6 +165,21 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         data[CHARGER_STATUS_DESCRIPTION_KEY] = CHARGER_STATUS.get(
             data[CHARGER_STATUS_ID_KEY], ChargerStatus.UNKNOWN
         )
+
+        # Set current solar charging mode
+        eco_smart_enabled = data[CHARGER_DATA_KEY][CHARGER_ECO_SMART_KEY][
+            CHARGER_ECO_SMART_STATUS_KEY
+        ]
+        eco_smart_mode = data[CHARGER_DATA_KEY][CHARGER_ECO_SMART_KEY][
+            CHARGER_ECO_SMART_MODE_KEY
+        ]
+        if eco_smart_enabled is False:
+            data[CHARGER_SOLAR_CHARGING_MODE] = EcoSmartMode.OFF
+        elif eco_smart_mode == 0:
+            data[CHARGER_SOLAR_CHARGING_MODE] = EcoSmartMode.ECO_MODE
+        elif eco_smart_mode == 1:
+            data[CHARGER_SOLAR_CHARGING_MODE] = EcoSmartMode.FULL_SOLAR
+
         return data
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -239,6 +259,20 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def async_pause_charger(self, pause: bool) -> None:
         """Set wallbox to pause or resume."""
         await self.hass.async_add_executor_job(self._pause_charger, pause)
+        await self.async_request_refresh()
+
+    @_require_authentication
+    def _set_eco_smart(self, enable: bool, mode: int = 0) -> None:
+        """Set wallbox to pause or resume."""
+
+        if enable:
+            self._wallbox.enableEcoSmart(self._station, mode)
+        else:
+            self._wallbox.disableEcoSmart(self._station)
+
+    async def async_set_eco_smart(self, enable: bool, mode: int = 0) -> None:
+        """Set wallbox to pause or resume."""
+        await self.hass.async_add_executor_job(self._set_eco_smart, enable, mode)
         await self.async_request_refresh()
 
 

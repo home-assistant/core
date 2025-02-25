@@ -91,6 +91,11 @@
       "pause_resume": {
         "name": "Pause/resume"
       }
+    },
+    "select": {
+      "eco_smart": {
+        "name": "Solar charging"
+      }
     }
   }
 }
