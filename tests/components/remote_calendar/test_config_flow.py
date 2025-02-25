@@ -12,7 +12,10 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
 from .conftest import CALENDAR_NAME, CALENDER_URL
+
+from tests.common import MockConfigEntry
 
 
 async def test_form_import_ics(
@@ -89,3 +92,55 @@ async def test_no_valid_calendar(
     )
 
     assert result2["type"] is FlowResultType.FORM
+
+
+async def test_duplicate_name(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test two calendars cannot be added with the same name."""
+
+    await setup_integration(hass, config_entry)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result.get("errors")
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: CALENDAR_NAME,
+            CONF_URL: "http://other-calendar.com",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+
+
+async def test_duplicate_url(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test two calendars cannot be added with the same url."""
+
+    await setup_integration(hass, config_entry)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert not result.get("errors")
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_CALENDAR_NAME: "new name",
+            CONF_URL: CALENDER_URL,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"

@@ -36,6 +36,10 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         errors: dict = {}
         _LOGGER.debug("User input: %s", user_input)
+        self._async_abort_entries_match(
+            {CONF_CALENDAR_NAME: user_input[CONF_CALENDAR_NAME]}
+        )
+        self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
         client = get_async_client(self.hass)
         try:
             res = await client.get(user_input[CONF_URL], follow_redirects=True)
