@@ -2075,3 +2075,23 @@ async def test_async_get_integrations_multiple_non_existent(
     integrations_3 = await task3
     assert isinstance(integrations_3["does_not_exist2"], loader.IntegrationNotFound)
     assert isinstance(integrations_3["does_not_exist"], loader.IntegrationNotFound)
+
+    # Make sure IntegrationNotFound is not cached
+    # so configuration errors can be fixed as to
+    # not prevent Home Assistant from being restarted
+    integration = loader.Integration(
+        hass,
+        "custom_components.does_not_exist",
+        None,
+        {
+            "name": "Does not exist",
+            "domain": "does_not_exist",
+        },
+    )
+    with patch.object(
+        loader,
+        "_resolve_integrations_from_root",
+        return_value={"does_not_exist": integration},
+    ):
+        integrations = await loader.async_get_integrations(hass, ["does_not_exist"])
+    assert integrations["does_not_exist"] is integration
