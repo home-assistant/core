@@ -1,7 +1,7 @@
 {
   "domain": "smartthings",
   "name": "SmartThings",
-  "codeowners": [],
+  "codeowners": ["@joostlek"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "dhcp": [

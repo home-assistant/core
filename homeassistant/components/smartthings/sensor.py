@@ -638,16 +638,16 @@ CAPABILITY_TO_SENSORS: dict[
         ]
     },
     # deprecated capability
-    #     Capability.thermostat_setpoint: [
-    #         Map(
-    #             Attribute.thermostat_setpoint,
-    #             "Thermostat Setpoint",
-    #             None,
-    #             SensorDeviceClass.TEMPERATURE,
-    #             None,
-    #             EntityCategory.DIAGNOSTIC,
-    #         )
-    #     ],
+    Capability.THERMOSTAT_SETPOINT: {
+        Attribute.THERMOSTAT_SETPOINT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.THERMOSTAT_SETPOINT,
+                name="Thermostat Setpoint",
+                device_class=SensorDeviceClass.TEMPERATURE,
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        ]
+    },
     Capability.THREE_AXIS: {
         Attribute.THREE_AXIS: [
             SmartThingsSensorEntityDescription(
@@ -716,16 +716,15 @@ CAPABILITY_TO_SENSORS: dict[
         ]
     },
     # part of the proposed spec
-    #     Capability.washer_mode: [
-    #         Map(
-    #             Attribute.washer_mode,
-    #             "Washer Mode",
-    #             None,
-    #             None,
-    #             None,
-    #             EntityCategory.DIAGNOSTIC,
-    #         )
-    #     ],
+    Capability.WASHER_MODE: {
+        Attribute.WASHER_MODE: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.WASHER_MODE,
+                name="Washer Mode",
+                entity_category=EntityCategory.DIAGNOSTIC,
+            )
+        ]
+    },
     Capability.WASHER_OPERATING_STATE: {
         Attribute.MACHINE_STATE: [
             SmartThingsSensorEntityDescription(
