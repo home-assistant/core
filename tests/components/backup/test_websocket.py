@@ -3349,6 +3349,82 @@ async def test_configured_agents_unavailable_repair(
     result = await ws_client.receive_json()
     assert result["result"]["config"]["create_backup"]["agent_ids"] == ["backup.local"]
 
+    # Reload the agents with one agent returned
+    # but not configured for automatic backups.
+
+    get_agents_mock.return_value = [mock_backup_agent("agent")]
+    reload_backup_agents()
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id({"type": "backup/agents/info"})
+    resp = await ws_client.receive_json()
+    assert resp["result"]["agents"] == [
+        {"agent_id": "backup.local", "name": "local"},
+        {"agent_id": "test.agent", "name": "agent"},
+    ]
+
+    assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+
+    await ws_client.send_json_auto_id({"type": "backup/config/info"})
+    result = await ws_client.receive_json()
+    assert result["result"]["config"]["create_backup"]["agent_ids"] == ["backup.local"]
+
+    # Update the automatic backup configuration and configure the test agent.
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": ["backup.local", "test.agent"]},
+        }
+    )
+    result = await ws_client.receive_json()
+
+    assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+
+    await ws_client.send_json_auto_id({"type": "backup/config/info"})
+    result = await ws_client.receive_json()
+    assert result["result"]["config"]["create_backup"]["agent_ids"] == [
+        "backup.local",
+        "test.agent",
+    ]
+
+    # Reload the agents with no agents returned again.
+
+    get_agents_mock.return_value = []
+    reload_backup_agents()
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id({"type": "backup/agents/info"})
+    resp = await ws_client.receive_json()
+    assert resp["result"]["agents"] == [
+        {"agent_id": "backup.local", "name": "local"},
+    ]
+
+    assert issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+
+    await ws_client.send_json_auto_id({"type": "backup/config/info"})
+    result = await ws_client.receive_json()
+    assert result["result"]["config"]["create_backup"]["agent_ids"] == [
+        "backup.local",
+        "test.agent",
+    ]
+
+    # Update the automatic backup configuration removing all agents.
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "backup/config/update",
+            "create_backup": {"agent_ids": []},
+        }
+    )
+    result = await ws_client.receive_json()
+
+    assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id=issue_id)
+
+    await ws_client.send_json_auto_id({"type": "backup/config/info"})
+    result = await ws_client.receive_json()
+    assert result["result"]["config"]["create_backup"]["agent_ids"] == []
+
 
 async def test_subscribe_event(
     hass: HomeAssistant,
