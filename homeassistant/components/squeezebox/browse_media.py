@@ -134,6 +134,7 @@ class BrowseItemResponse:
     child_media_class: dict[str, MediaClass | None]
     can_expand: bool
     can_play: bool
+    title: str
     id: str = ""
 
 
@@ -151,11 +152,12 @@ def _add_new_command_to_browse_data(
 
 
 def _build_response_apps_radios_category(
-    browse_data: BrowseData,
-    cmd: str | MediaType,
+    browse_data: BrowseData, cmd: str | MediaType, item: dict[str, Any]
 ) -> BrowseItemResponse:
     """Build item for App or radio category."""
     return BrowseItemResponse(
+        id=item.get("id", ""),
+        title=item["title"],
         child_item_type=cmd,
         child_media_class=browse_data.content_type_media_class[cmd],
         can_expand=True,
@@ -169,6 +171,8 @@ def _build_response_known_app(
     """Build item for app or radio."""
 
     return BrowseItemResponse(
+        id=item.get("id", ""),
+        title=item["title"],
         child_item_type=search_type,
         child_media_class=browse_data.content_type_media_class[search_type],
         can_play=bool(item["isaudio"] and item.get("url")),
@@ -181,6 +185,7 @@ def _build_response_favorites(item: dict[str, Any]) -> BrowseItemResponse:
     if "album_id" in item:
         return BrowseItemResponse(
             id=str(item["album_id"]),
+            title=item["title"],
             child_item_type=MediaType.ALBUM,
             child_media_class=CONTENT_TYPE_MEDIA_CLASS[MediaType.ALBUM],
             can_expand=True,
@@ -189,6 +194,7 @@ def _build_response_favorites(item: dict[str, Any]) -> BrowseItemResponse:
     if item["hasitems"] and not item["isaudio"]:
         return BrowseItemResponse(
             id=item.get("id", ""),
+            title=item["title"],
             child_item_type="Favorites",
             child_media_class=CONTENT_TYPE_MEDIA_CLASS["Favorites"],
             can_expand=True,
@@ -196,6 +202,7 @@ def _build_response_favorites(item: dict[str, Any]) -> BrowseItemResponse:
         )
     return BrowseItemResponse(
         id=item.get("id", ""),
+        title=item["title"],
         child_item_type="Favorites",
         child_media_class=CONTENT_TYPE_MEDIA_CLASS[MediaType.TRACK],
         can_expand=item["hasitems"],
@@ -263,19 +270,10 @@ async def build_item_response(
         for item in result["items"]:
             item_thumbnail: str | None = None
 
-            if item_type:
-                browse_item_response = BrowseItemResponse(
-                    child_item_type=item_type,
-                    child_media_class=CONTENT_TYPE_MEDIA_CLASS[item_type],
-                    can_expand=CONTENT_TYPE_MEDIA_CLASS[item_type]["children"]
-                    is not None,
-                    can_play=True,
-                )
-
             if search_type == "Favorites":
                 browse_item_response = _build_response_favorites(item)
 
-            if search_type in ["Apps", "Radios"]:
+            elif search_type in ["Apps", "Radios"]:
                 # item["cmd"] contains the name of the command to use with the cli for the app
                 # add the command to the dictionaries
                 if item["title"] == "Search" or item.get("type") in UNPLAYABLE_TYPES:
@@ -288,7 +286,7 @@ async def build_item_response(
                     _add_new_command_to_browse_data(browse_data, app_cmd, "item_id")
 
                 browse_item_response = _build_response_apps_radios_category(
-                    browse_data, app_cmd
+                    browse_data=browse_data, cmd=app_cmd, item=item
                 )
 
             elif search_type in browse_data.known_apps_radios:
@@ -303,6 +301,17 @@ async def build_item_response(
                     browse_data, search_type, item
                 )
 
+            elif item_type:
+                browse_item_response = BrowseItemResponse(
+                    id=str(item.get("id", "")),
+                    title=item["title"],
+                    child_item_type=item_type,
+                    child_media_class=CONTENT_TYPE_MEDIA_CLASS[item_type],
+                    can_expand=CONTENT_TYPE_MEDIA_CLASS[item_type]["children"]
+                    is not None,
+                    can_play=True,
+                )
+
             item_thumbnail = _get_item_thumbnail(
                 item=item,
                 player=player,
@@ -314,7 +323,7 @@ async def build_item_response(
             assert browse_item_response.child_media_class["item"] is not None
             children.append(
                 BrowseMedia(
-                    title=item["title"],
+                    title=browse_item_response.title,
                     media_class=browse_item_response.child_media_class["item"],
                     media_content_id=browse_item_response.id,
                     media_content_type=browse_item_response.child_item_type,
