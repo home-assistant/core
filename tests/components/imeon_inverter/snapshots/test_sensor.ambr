@@ -31,7 +31,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'temp_air_temperature',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_temp_air_temperature',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_temp_air_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -83,7 +83,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_battery_autonomy',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_battery_autonomy',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
@@ -135,7 +135,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_charge_time',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_battery_charge_time',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_battery_charge_time',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
@@ -187,7 +187,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_power',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_battery_power',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_battery_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -239,7 +239,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_soc',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_battery_soc',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_battery_soc',
     'unit_of_measurement': '%',
   })
 # ---
@@ -291,7 +291,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_stored',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_battery_stored',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_battery_stored',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -343,7 +343,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'inverter_charging_current_limit',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_inverter_charging_current_limit',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_inverter_charging_current_limit',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -395,7 +395,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'temp_component_temperature',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_temp_component_temperature',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_temp_component_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -447,7 +447,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_current_l1',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_current_l1',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_grid_current_l1',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -499,7 +499,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_current_l2',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_current_l2',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_grid_current_l2',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -551,7 +551,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_current_l3',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_current_l3',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_grid_current_l3',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -603,7 +603,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_frequency',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_frequency',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_grid_frequency',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -655,7 +655,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_voltage_l1',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_voltage_l1',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_grid_voltage_l1',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -707,7 +707,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_voltage_l2',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_voltage_l2',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_grid_voltage_l2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -759,7 +759,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_voltage_l3',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_voltage_l3',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_grid_voltage_l3',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -811,7 +811,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'inverter_injection_power_limit',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_inverter_injection_power_limit',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_inverter_injection_power_limit',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -863,7 +863,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'input_power_l1',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_input_power_l1',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_input_power_l1',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -915,7 +915,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'input_power_l2',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_input_power_l2',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_input_power_l2',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -967,7 +967,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'input_power_l3',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_input_power_l3',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_input_power_l3',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1019,7 +1019,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'input_power_total',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_input_power_total',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_input_power_total',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1071,7 +1071,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'meter_power',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_meter_power',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_meter_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1123,7 +1123,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'meter_power_protocol',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_meter_power_protocol',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_meter_power_protocol',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1175,7 +1175,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_building_consumption',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_building_consumption',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_building_consumption',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -1227,7 +1227,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_minute_building_consumption',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_minute_building_consumption',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_minute_building_consumption',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1279,7 +1279,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_economy_factor',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_economy_factor',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_economy_factor',
     'unit_of_measurement': '',
   })
 # ---
@@ -1330,7 +1330,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_grid_consumption',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_grid_consumption',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_grid_consumption',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -1382,7 +1382,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_minute_grid_consumption',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_minute_grid_consumption',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_minute_grid_consumption',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1434,7 +1434,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_grid_injection',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_grid_injection',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_grid_injection',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -1486,7 +1486,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_minute_grid_injection',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_minute_grid_injection',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_minute_grid_injection',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1538,7 +1538,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_grid_power_flow',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_grid_power_flow',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_grid_power_flow',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -1590,7 +1590,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_minute_grid_power_flow',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_minute_grid_power_flow',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_minute_grid_power_flow',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1642,7 +1642,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_self_consumption',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_self_consumption',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_self_consumption',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1693,7 +1693,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_self_sufficiency',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_self_sufficiency',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_self_sufficiency',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1744,7 +1744,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_solar_production',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_solar_production',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_solar_production',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -1796,7 +1796,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_minute_solar_production',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_minute_solar_production',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_monitoring_minute_solar_production',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1848,7 +1848,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_current_l1',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_current_l1',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_output_current_l1',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1900,7 +1900,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_current_l2',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_current_l2',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_output_current_l2',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1952,7 +1952,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_current_l3',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_current_l3',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_output_current_l3',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -2004,7 +2004,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_frequency',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_frequency',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_output_frequency',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -2056,7 +2056,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_power_l1',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_power_l1',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_output_power_l1',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2108,7 +2108,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_power_l2',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_power_l2',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_output_power_l2',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2160,7 +2160,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_power_l3',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_power_l3',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_output_power_l3',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2212,7 +2212,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_power_total',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_power_total',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_output_power_total',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2264,7 +2264,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_voltage_l1',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_voltage_l1',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_output_voltage_l1',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -2316,7 +2316,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_voltage_l2',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_voltage_l2',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_output_voltage_l2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -2368,7 +2368,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_voltage_l3',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_voltage_l3',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_output_voltage_l3',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -2420,7 +2420,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pv_consumed',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_pv_consumed',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_pv_consumed',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -2472,7 +2472,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pv_injected',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_pv_injected',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_pv_injected',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -2524,7 +2524,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pv_power_1',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_pv_power_1',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_pv_power_1',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2576,7 +2576,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pv_power_2',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_pv_power_2',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_pv_power_2',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2628,7 +2628,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pv_power_total',
-    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_pv_power_total',
+    'unique_id': '01JMYPQ2QFF6G5V0QJX6HBC94T_pv_power_total',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
