@@ -386,7 +386,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.1
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.10.0
+aiostreammagic==2.11.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==6.0.0
@@ -1553,7 +1553,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.3.0
+ohme==1.3.2
 
 # homeassistant.components.ollama
 ollama==0.4.7
