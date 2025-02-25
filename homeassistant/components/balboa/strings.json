@@ -57,6 +57,11 @@
         }
       }
     },
+    "event": {
+      "fault": {
+        "name": "Fault"
+      }
+    },
     "fan": {
       "pump": {
         "name": "Pump {index}"
