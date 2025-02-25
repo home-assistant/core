@@ -38,7 +38,7 @@
     "sensor": {
       "commands": {
         "name": "Commands",
-        "unit_of_measurement": "[%key:component::sonarr::entity::sensor::commands::name%]"
+        "unit_of_measurement": "commands"
       },
       "diskspace": {
         "name": "Disk space"
@@ -53,11 +53,11 @@
       },
       "upcoming": {
         "name": "Upcoming",
-        "unit_of_measurement": "[%key:component::sonarr::entity::sensor::queue::name%]"
+        "unit_of_measurement": "series"
       },
       "wanted": {
         "name": "Wanted",
-        "unit_of_measurement": "[%key:component::sonarr::entity::sensor::queue::name%]"
+        "unit_of_measurement": "series"
       }
     }
   }
