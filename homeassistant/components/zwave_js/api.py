@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
 import dataclasses
+from datetime import datetime
 from functools import partial, wraps
 from typing import Any, Concatenate, Literal, cast
 
@@ -110,6 +111,7 @@ ENDPOINT = "endpoint"
 VALUE = "value"
 VALUE_SIZE = "value_size"
 VALUE_FORMAT = "value_format"
+ATTR_NVM_DATA = "nvm_data"
 
 # constants for log config commands
 CONFIG = "config"
@@ -455,6 +457,8 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
     websocket_api.async_register_command(hass, websocket_get_integration_settings)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
+    hass.http.register_view(BackupNVMRawView())
+    hass.http.register_view(RestoreNVMView())
 
 
 @websocket_api.require_admin
@@ -2779,3 +2783,98 @@ def websocket_get_integration_settings(
             CONF_INSTALLER_MODE: hass.data[DOMAIN].get(CONF_INSTALLER_MODE, False),
         },
     )
+
+
+class BackupNVMRawView(HomeAssistantView):
+    """View to backup NVM raw data."""
+
+    url = r"/api/zwave_js/nvm_backup/{entry_id}"
+    name = "api:zwave_js:nvm_backup"
+
+    @require_admin
+    async def get(self, request: web.Request, entry_id: str) -> web.Response:
+        """Handle backup NVM raw data request."""
+        hass = request.app[KEY_HASS]
+
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            raise web_exceptions.HTTPNotFound(
+                reason=f"Config entry {entry_id} not found"
+            )
+
+        if entry.state is not ConfigEntryState.LOADED:
+            raise web_exceptions.HTTPServiceUnavailable(
+                reason=f"Config entry {entry_id} not loaded"
+            )
+
+        client: Client = entry.runtime_data[DATA_CLIENT]
+
+        if client.driver is None:
+            raise web_exceptions.HTTPServiceUnavailable(
+                reason=f"Config entry {entry_id} not loaded, driver not ready"
+            )
+
+        data = await client.driver.controller.async_backup_nvm_raw()
+
+        # Generate a filename with timestamp
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"zwavejs_nvm_backup_{timestamp}.bin"
+
+        # Return the data as a downloadable file
+        return web.Response(
+            body=data,
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Content-Type": "application/octet-stream",
+            },
+        )
+
+
+class RestoreNVMView(HomeAssistantView):
+    """View to restore NVM data."""
+
+    url = r"/api/zwave_js/nvm_restore/{entry_id}"
+    name = "api:zwave_js:nvm_restore"
+
+    @require_admin
+    async def post(self, request: web.Request, entry_id: str) -> web.Response:
+        """Handle restore NVM data request."""
+        hass = request.app[KEY_HASS]
+
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry is None:
+            raise web_exceptions.HTTPNotFound(
+                reason=f"Config entry {entry_id} not found"
+            )
+
+        if entry.state is not ConfigEntryState.LOADED:
+            raise web_exceptions.HTTPServiceUnavailable(
+                reason=f"Config entry {entry_id} not loaded"
+            )
+
+        client: Client = entry.runtime_data[DATA_CLIENT]
+
+        if client.driver is None:
+            raise web_exceptions.HTTPServiceUnavailable(
+                reason=f"Config entry {entry_id} not loaded, driver not ready"
+            )
+
+        # Increase max payload
+        request._client_max_size = 1024 * 1024 * 10  # noqa: SLF001
+
+        data = await request.post()
+
+        if "file" not in data or not isinstance(data["file"], web_request.FileField):
+            raise web_exceptions.HTTPBadRequest(
+                reason="No file uploaded or invalid file field"
+            )
+
+        uploaded_file: web_request.FileField = data["file"]
+        nvm_data = await hass.async_add_executor_job(uploaded_file.file.read)
+
+        try:
+            await client.driver.controller.async_restore_nvm(nvm_data)
+        except BaseZwaveJSServerError as err:
+            raise web_exceptions.HTTPBadRequest(reason=str(err)) from err
+
+        return self.json({"success": True})

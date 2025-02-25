@@ -3423,19 +3423,6 @@ async def test_firmware_upload_view_failed_command(
         assert resp.status == HTTPStatus.BAD_REQUEST
 
 
-async def test_firmware_upload_view_invalid_payload(
-    hass: HomeAssistant, multisensor_6, integration, hass_client: ClientSessionGenerator
-) -> None:
-    """Test an invalid payload for the HTTP firmware upload view."""
-    device = get_device(hass, multisensor_6)
-    client = await hass_client()
-    resp = await client.post(
-        f"/api/zwave_js/firmware/upload/{device.id}",
-        data={"wrong_key": BytesIO(bytes(10))},
-    )
-    assert resp.status == HTTPStatus.BAD_REQUEST
-
-
 async def test_firmware_upload_view_no_driver(
     hass: HomeAssistant,
     client,
@@ -5340,3 +5327,160 @@ async def test_subscribe_s2_inclusion(
     msg = await ws_client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
+
+
+async def test_firmware_upload_view_invalid_payload(
+    hass: HomeAssistant, multisensor_6, integration, hass_client: ClientSessionGenerator
+) -> None:
+    """Test uploading firmware with invalid payload."""
+    client = await hass_client()
+    device_id = get_device_id(multisensor_6.client.driver, multisensor_6)
+    resp = await client.post(f"/api/zwave_js/firmware/upload/{device_id}")
+    assert resp.status == HTTPStatus.BAD_REQUEST
+
+
+async def test_nvm_backup_view(
+    hass: HomeAssistant,
+    integration,
+    client,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the backup NVM view."""
+    client = await hass_client()
+
+    # Test backup success
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_backup_nvm_raw",
+        return_value=b"test",
+    ):
+        resp = await client.get(f"/api/zwave_js/nvm_backup/{integration.entry_id}")
+        assert resp.status == HTTPStatus.OK
+        assert await resp.read() == b"test"
+        assert resp.headers["Content-Type"] == "application/octet-stream"
+        assert "zwavejs_nvm_backup_" in resp.headers["Content-Disposition"]
+        assert ".bin" in resp.headers["Content-Disposition"]
+
+    # Test config entry not found
+    resp = await client.get("/api/zwave_js/nvm_backup/not_found")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+    # Test config entry not loaded
+    # First unload the config entry
+    await hass.config_entries.async_unload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    resp = await client.get(f"/api/zwave_js/nvm_backup/{integration.entry_id}")
+    assert resp.status == HTTPStatus.SERVICE_UNAVAILABLE
+
+
+async def test_nvm_restore_view(
+    hass: HomeAssistant,
+    integration,
+    client,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the restore NVM view."""
+    client = await hass_client()
+
+    # Test restore success
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_restore_nvm",
+        return_value={"success": True},
+    ):
+        resp = await client.post(
+            f"/api/zwave_js/nvm_restore/{integration.entry_id}",
+            data={"file": b"test"},
+        )
+        assert resp.status == HTTPStatus.OK
+        assert await resp.json() == {"success": True}
+
+    # Test restore with no file
+    resp = await client.post(f"/api/zwave_js/nvm_restore/{integration.entry_id}")
+    assert resp.status == HTTPStatus.BAD_REQUEST
+
+    # Test config entry not found
+    resp = await client.post("/api/zwave_js/nvm_restore/not_found")
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+    # Test restore failure
+    with patch(
+        "zwave_js_server.model.controller.Controller.async_restore_nvm",
+        side_effect=FailedCommand("test", "test"),
+    ):
+        resp = await client.post(
+            f"/api/zwave_js/nvm_restore/{integration.entry_id}",
+            data={"file": b"test"},
+        )
+        assert resp.status == HTTPStatus.BAD_REQUEST
+
+    # Test config entry not loaded
+    # First unload the config entry
+    await hass.config_entries.async_unload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    resp = await client.post(
+        f"/api/zwave_js/nvm_restore/{integration.entry_id}",
+        data={"file": b"test"},
+    )
+    assert resp.status == HTTPStatus.SERVICE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("method", "url"),
+    [
+        ("get", "/api/zwave_js/nvm_backup/{}"),
+        ("post", "/api/zwave_js/nvm_restore/{}"),
+    ],
+)
+async def test_nvm_view_non_admin_user(
+    hass: HomeAssistant,
+    integration,
+    hass_client: ClientSessionGenerator,
+    hass_admin_user: MockUser,
+    method,
+    url,
+) -> None:
+    """Test the NVM views with non admin user."""
+    hass_admin_user.groups = []
+    client = await hass_client()
+
+    resp = await getattr(client, method)(url.format(integration.entry_id))
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.parametrize(
+    ("method", "url"),
+    [
+        ("get", "/api/zwave_js/nvm_backup/{}"),
+        ("post", "/api/zwave_js/nvm_restore/{}"),
+    ],
+)
+async def test_nvm_view_unloaded_config_entry(
+    hass: HomeAssistant,
+    integration,
+    hass_client: ClientSessionGenerator,
+    method,
+    url,
+) -> None:
+    """Test the NVM views with config entry that is not loaded."""
+    await hass.config_entries.async_unload(integration.entry_id)
+    client = await hass_client()
+
+    resp = await getattr(client, method)(url.format(integration.entry_id))
+    assert resp.status == HTTPStatus.SERVICE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("method", "url"),
+    [
+        ("get", "/api/zwave_js/nvm_backup/INVALID"),
+        ("post", "/api/zwave_js/nvm_restore/INVALID"),
+    ],
+)
+async def test_nvm_view_invalid_entry_id(
+    integration, hass_client: ClientSessionGenerator, method, url
+) -> None:
+    """Test the NVM views with invalid entry id."""
+    client = await hass_client()
+    resp = await getattr(client, method)(url)
+    assert resp.status == HTTPStatus.NOT_FOUND
