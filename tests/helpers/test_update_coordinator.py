@@ -165,8 +165,6 @@ async def test_shutdown_on_entry_unload(
 ) -> None:
     """Test shutdown is requested on entry unload."""
     entry = MockConfigEntry()
-    config_entries.current_entry.set(entry)
-
     calls = 0
 
     async def _refresh() -> int:
@@ -177,6 +175,7 @@ async def test_shutdown_on_entry_unload(
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass,
         _LOGGER,
+        config_entry=entry,
         name="test",
         update_method=_refresh,
         update_interval=DEFAULT_UPDATE_INTERVAL,
@@ -206,6 +205,7 @@ async def test_shutdown_on_hass_stop(
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass,
         _LOGGER,
+        config_entry=None,
         name="test",
         update_method=_refresh,
         update_interval=DEFAULT_UPDATE_INTERVAL,
@@ -844,6 +844,7 @@ async def test_timestamp_date_update_coordinator(hass: HomeAssistant) -> None:
     crd = update_coordinator.TimestampDataUpdateCoordinator[int](
         hass,
         _LOGGER,
+        config_entry=None,
         name="test",
         update_method=refresh,
         update_interval=timedelta(seconds=10),
@@ -870,10 +871,6 @@ async def test_config_entry(hass: HomeAssistant) -> None:
     """Test behavior of coordinator.entry."""
     entry = MockConfigEntry()
 
-    # Default without context should be None
-    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
-    assert crd.config_entry is None
-
     # Explicit None is OK
     crd = update_coordinator.DataUpdateCoordinator[int](
         hass, _LOGGER, name="test", config_entry=None
@@ -886,12 +883,28 @@ async def test_config_entry(hass: HomeAssistant) -> None:
     )
     assert crd.config_entry is entry
 
+    # Default without context should raise
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that rely on the ContextVar, "
+        "but should passing the config entry explicitly - "
+        "see https://developers.home-assistant.io/blog/xxxxxxx. "
+        "Please report this issue",
+    ):
+        crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
+
     # set ContextVar
     config_entries.current_entry.set(entry)
 
-    # Default with ContextVar should match the ContextVar
-    crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
-    assert crd.config_entry is entry
+    # Default with ContextVar should raise
+    with pytest.raises(
+        RuntimeError,
+        match="Detected code that rely on the ContextVar, "
+        "but should passing the config entry explicitly - "
+        "see https://developers.home-assistant.io/blog/xxxxxxx. "
+        "Please report this issue",
+    ):
+        crd = update_coordinator.DataUpdateCoordinator[int](hass, _LOGGER, name="test")
 
     # Explicit entry different from ContextVar not recommended, but should work
     another_entry = MockConfigEntry()
@@ -921,7 +934,7 @@ async def test_listener_unsubscribe_releases_coordinator(hass: HomeAssistant) ->
             self._unsub = None
 
     coordinator = update_coordinator.DataUpdateCoordinator[int](
-        hass, _LOGGER, name="test"
+        hass, _LOGGER, config_entry=None, name="test"
     )
     subscriber = Subscriber()
     subscriber.start_listen(coordinator)
