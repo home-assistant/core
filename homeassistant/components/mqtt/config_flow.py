@@ -45,7 +45,6 @@ from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_DEVICE,
     CONF_DISCOVERY,
-    CONF_ENTITY_CATEGORY,
     CONF_HOST,
     CONF_ICON,
     CONF_NAME,
@@ -55,12 +54,10 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_PROTOCOL,
     CONF_USERNAME,
-    EntityCategory,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers import config_validation as cv, entity_registry as er
-from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.json import json_dumps
 from homeassistant.helpers.selector import (
@@ -102,7 +99,6 @@ from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_DISCOVERY_PREFIX,
-    CONF_ENCODING,
     CONF_ENTITY_PICTURE,
     CONF_KEEPALIVE,
     CONF_OBJECT_ID,
@@ -226,13 +222,6 @@ SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
         translation_key=CONF_PLATFORM,
     )
 )
-ENTITY_CATEGORY_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[category.value for category in EntityCategory],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="entity_category",
-    )
-)
 ICON_SELECTOR = IconSelector(IconSelectorConfig())
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
 
@@ -252,16 +241,12 @@ CORE_PLATFORM_FIELDS = [
     CONF_PLATFORM,
     CONF_OBJECT_ID,
     CONF_NAME,
-    CONF_ENCODING,
     CONF_QOS,
 ]
 
 COMMON_PLATFORM_FIELDS = {
     CONF_ICON: PlatformField(ICON_SELECTOR, False, str),
     CONF_ENTITY_PICTURE: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
-    CONF_ENTITY_CATEGORY: PlatformField(
-        ENTITY_CATEGORY_SELECTOR, False, ENTITY_CATEGORIES_SCHEMA
-    ),
     CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool, default=DEFAULT_RETAIN),
 }
 
@@ -292,7 +277,6 @@ MQTT_DEVICE_ENTITY_SCHEMA = vol.Schema(
         vol.Required(CONF_PLATFORM): SUBENTRY_PLATFORM_SELECTOR,
         vol.Required(CONF_OBJECT_ID): TEXT_SELECTOR,
         vol.Optional(CONF_NAME): TEXT_SELECTOR,
-        vol.Optional(CONF_ENCODING, default=DEFAULT_ENCODING): TEXT_SELECTOR,
         vol.Optional(CONF_QOS, default=DEFAULT_QOS): QOS_SELECTOR,
     }
 )
@@ -928,12 +912,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
                 if self._object_id is not None and self.source == SOURCE_RECONFIGURE:
                     errors[CONF_OBJECT_ID] = "object_id_not_mutable"
             if not errors:
-                # Allow encoding explicitly to be set to `None`
-                if (
-                    CONF_ENCODING in user_input
-                    and str(user_input[CONF_ENCODING]).lower() == "none"
-                ):
-                    user_input[CONF_ENCODING] = ""
                 self._object_id = platform_object_id
                 if component_data := self._subentry_data["components"].setdefault(
                     platform_object_id, {}
@@ -952,11 +930,6 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             suggested_values = deepcopy(
                 self._subentry_data["components"][self._object_id]
             )
-            if (
-                self._subentry_data["components"][self._object_id].get(CONF_ENCODING)
-                == ""
-            ):
-                suggested_values[CONF_ENCODING] = "none"
             data_schema = self.add_suggested_values_to_schema(
                 data_schema, suggested_values
             )

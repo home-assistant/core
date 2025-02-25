@@ -2653,7 +2653,6 @@ async def test_subentry_configflow(
             "platform": "notify",
             "object_id": "bla123",
             "name": "Milkman alert",
-            "encoding": "utf-8",
             "qos": 0,
         },
     )
@@ -2684,7 +2683,6 @@ async def test_subentry_configflow(
             "command_template": "{{ value_json.value }}",
             "icon": "mdi:cow",
             "entity_picture": "https://example.com",
-            "entity_category": "config",
             "retain": False,
         },
     )
@@ -2901,7 +2899,6 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
             "platform": "notify",
             "object_id": "bla456_changed",
             "name": "The second notifier updated",
-            "encoding": "None",
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -2915,7 +2912,6 @@ async def test_subentry_reconfigure_edit_entity_multi_entitites(
             "platform": "notify",
             "object_id": "bla456",
             "name": "The second notifier updated",
-            "encoding": "None",
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -3005,7 +3001,6 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
 
     # assert we can update the entity, there is no select step
     assert components["notify_bla123"]["icon"] == "mdi:cow"
-    assert components["notify_bla123"]["encoding"] == "utf-8"
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {"next_step_id": "update_entity"},

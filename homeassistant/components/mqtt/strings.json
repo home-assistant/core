@@ -150,14 +150,12 @@
             "platform": "Type of entity",
             "object_id": "Entity ID",
             "name": "Entity name",
-            "encoding": "Encoding",
             "qos": "QoS"
           },
           "data_description": {
             "platform": "The type of the entity to configure.",
             "object_id": "An ID to be used as base to generate the entity_id.",
             "name": "The name of the entity. Leave empty to set it to `None` to [mark it as main feature of the MQTT device](https://www.home-assistant.io/integrations/mqtt/#naming-of-mqtt-entities).",
-            "encoding": "The encoding of the payloads received. Defaults to 'utf-8'. Set to `None` to allow to process raw payloads.",
             "qos": "The QoS value this entity should subscrive with."
           }
         },
@@ -189,7 +187,6 @@
             "command_template": "Command template",
             "icon": "Icon",
             "entity_picture": "Entity picture",
-            "entity_category": "Entity category",
             "retain": "Retain"
           },
           "data_description": {
@@ -197,7 +194,6 @@
             "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
             "icon": "The icon assigned to the entity \"{object_id}\".",
             "entity_picture": "An URL to a picture to be assigned \"{object_id}\".",
-            "entity_category": "The entity category for \"{object_id}\". Leave empty if no category is to be set.",
             "retain": "Select if values published by \"{object_id}\" should be retained at the MQTT broker."
           }
         }
