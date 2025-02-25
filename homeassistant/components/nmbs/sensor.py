@@ -38,6 +38,7 @@ from .const import (  # noqa: F401
     CONF_STATION_TO,
     DOMAIN,
     PLATFORMS,
+    async_find_station_with_fallback,
     find_station,
     find_station_by_name,
 )
@@ -104,7 +105,9 @@ async def async_setup_platform(
 
         for station_type in station_types:
             station = (
-                find_station_by_name(hass, config[station_type])
+                await async_find_station_with_fallback(
+                    hass, config[station_type], iRail()
+                )
                 if station_type in config
                 else None
             )
