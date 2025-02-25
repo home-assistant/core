@@ -185,8 +185,11 @@ class BackupConfig:
         if automatic_backups_configured is not UNDEFINED:
             self.data.automatic_backups_configured = automatic_backups_configured
         if create_backup is not UNDEFINED:
-            if new_agent_ids := create_backup.get("agent_ids"):
-                check_unavailable_agents(self._hass, self._manager, new_agent_ids)
+            if "agent_ids" in create_backup:
+                check_unavailable_agents(
+                    self._hass,
+                    self._manager, create_backup["agent_ids"],
+                )
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
         if retention is not UNDEFINED:
             new_retention = RetentionConfig(**retention)
