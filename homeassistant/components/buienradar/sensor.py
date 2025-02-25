@@ -35,7 +35,6 @@ from homeassistant.const import (
     CONF_NAME,
     DEGREE,
     PERCENTAGE,
-    Platform,
     UnitOfIrradiance,
     UnitOfLength,
     UnitOfPrecipitationDepth,
@@ -49,13 +48,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import BuienRadarConfigEntry
-from .const import (
-    CONF_TIMEFRAME,
-    DEFAULT_TIMEFRAME,
-    STATE_CONDITION_CODES,
-    STATE_CONDITIONS,
-    STATE_DETAILED_CONDITIONS,
-)
+from .const import STATE_CONDITION_CODES, STATE_CONDITIONS, STATE_DETAILED_CONDITIONS
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -701,38 +694,22 @@ async def async_setup_entry(
 ) -> None:
     """Create the buienradar sensor."""
     config = entry.data
-    options = entry.options
-
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    timeframe = options.get(
-        CONF_TIMEFRAME, config.get(CONF_TIMEFRAME, DEFAULT_TIMEFRAME)
-    )
-
-    if None in (latitude, longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return
-
-    coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}
+    data = entry.runtime_data
 
     _LOGGER.debug(
         "Initializing buienradar sensor coordinate %s, timeframe %s",
-        coordinates,
-        timeframe,
+        data.coordinates,
+        data.timeframe,
     )
 
     # create weather entities:
     entities = [
-        BrSensor(config.get(CONF_NAME, "Buienradar"), coordinates, description)
+        BrSensor(config.get(CONF_NAME, "Buienradar"), data.coordinates, description)
         for description in SENSOR_TYPES
     ]
 
-    # create weather data:
-    data = BrData(hass, coordinates, timeframe, entities)
-    entry.runtime_data[Platform.SENSOR] = data
-    await data.async_update()
-
+    # add entities
+    data.devices.extend(entities)
     async_add_entities(entities)
 
 

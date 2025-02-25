@@ -43,7 +43,6 @@ from homeassistant.const import (
     CONF_LATITUDE,
     CONF_LONGITUDE,
     CONF_NAME,
-    Platform,
     UnitOfLength,
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -54,7 +53,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BuienRadarConfigEntry
-from .const import DEFAULT_TIMEFRAME
 from .util import BrData
 
 _LOGGER = logging.getLogger(__name__)
@@ -98,25 +96,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the buienradar platform."""
     config = entry.data
-
-    latitude = config.get(CONF_LATITUDE, hass.config.latitude)
-    longitude = config.get(CONF_LONGITUDE, hass.config.longitude)
-
-    if None in (latitude, longitude):
-        _LOGGER.error("Latitude or longitude not set in Home Assistant config")
-        return
-
-    coordinates = {CONF_LATITUDE: float(latitude), CONF_LONGITUDE: float(longitude)}
+    data = entry.runtime_data
+    coordinates = data.coordinates
 
     # create weather entity:
     _LOGGER.debug("Initializing buienradar weather: coordinates %s", coordinates)
     entities = [BrWeather(config, coordinates)]
 
-    # create weather data:
-    data = BrData(hass, coordinates, DEFAULT_TIMEFRAME, entities)
-    entry.runtime_data[Platform.WEATHER] = data
-    await data.async_update()
-
+    # add entities
+    data.devices.extend(entities)
     async_add_entities(entities)
 
 
@@ -133,8 +121,7 @@ class BrWeather(WeatherEntity):
 
     def __init__(self, config, coordinates) -> None:
         """Initialize the platform with a data instance and station name."""
-        self._stationname = config.get(CONF_NAME, "Buienradar")
-        self._attr_name = self._stationname or f"BR {'(unknown station)'}"
+        self._attr_name = config.get(CONF_NAME, "Buienradar")
 
         self._attr_unique_id = (
             f"{coordinates[CONF_LATITUDE]:2.6f}{coordinates[CONF_LONGITUDE]:2.6f}"
@@ -144,13 +131,13 @@ class BrWeather(WeatherEntity):
     @callback
     def data_updated(self, data: BrData) -> None:
         """Update data."""
+        _LOGGER.debug("Updating weather %s", self.entity_id)
         self._attr_attribution = data.attribution
+        if data.stationname:
+            self._attr_attribution = f"{data.attribution} ({data.stationname})"
         self._attr_condition = self._calc_condition(data)
         self._forecast = self._calc_forecast(data)
         self._attr_humidity = data.humidity
-        self._attr_name = (
-            self._stationname or f"BR {data.stationname or '(unknown station)'}"
-        )
         self._attr_native_pressure = data.pressure
         self._attr_native_temperature = data.temperature
         self._attr_native_visibility = data.visibility
