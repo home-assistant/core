@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.components.radio_browser.const import DOMAIN
+from homeassistant.components.radio_browser.const import CONF_ORDER, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -25,7 +25,9 @@ async def test_full_user_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) 
 
     assert result2.get("type") is FlowResultType.CREATE_ENTRY
     assert result2.get("title") == "Radio Browser"
-    assert result2.get("data") == {}
+    assert result2.get("data") == {
+        CONF_ORDER: "name",
+    }
 
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -56,6 +58,8 @@ async def test_onboarding_flow(
 
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result.get("title") == "Radio Browser"
-    assert result.get("data") == {}
+    assert result.get("data") == {
+        CONF_ORDER: "name",
+    }
 
     assert len(mock_setup_entry.mock_calls) == 1

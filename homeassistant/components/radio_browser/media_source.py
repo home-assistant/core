@@ -18,7 +18,7 @@ from homeassistant.components.media_source import (
 from homeassistant.core import HomeAssistant, callback
 
 from . import RadioBrowserConfigEntry
-from .const import DOMAIN
+from .const import CONF_ORDER, DOMAIN
 
 CODEC_TO_MIMETYPE = {
     "MP3": "audio/mpeg",
@@ -139,8 +139,8 @@ class RadioMediaSource(MediaSource):
                 filter_by=FilterBy.COUNTRY_CODE_EXACT,
                 filter_term=country_code,
                 hide_broken=True,
-                order=Order.NAME,
-                reverse=False,
+                order=Order(self.entry.data[CONF_ORDER]),
+                reverse=(Order(self.entry.data[CONF_ORDER]) == Order.CLICK_COUNT),
             )
             return self._async_build_stations(radios, stations)
 
@@ -175,8 +175,8 @@ class RadioMediaSource(MediaSource):
                 filter_by=FilterBy.LANGUAGE_EXACT,
                 filter_term=language,
                 hide_broken=True,
-                order=Order.NAME,
-                reverse=False,
+                order=Order(self.entry.data[CONF_ORDER]),
+                reverse=(Order(self.entry.data[CONF_ORDER]) == Order.CLICK_COUNT),
             )
             return self._async_build_stations(radios, stations)
 
