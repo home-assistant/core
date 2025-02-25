@@ -69,12 +69,12 @@ class HomeeValve(HomeeEntity, ValveEntity):
     @property
     def is_closing(self) -> bool:
         """Return if the valve is closing."""
-        return bool(self._attribute.target_value < self._attribute.current_value)
+        return self._attribute.target_value < self._attribute.current_value
 
     @property
     def is_opening(self) -> bool:
         """Return if the valve is opening."""
-        return bool(self._attribute.target_value > self._attribute.current_value)
+        return self._attribute.target_value > self._attribute.current_value
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
