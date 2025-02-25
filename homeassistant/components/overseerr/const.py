@@ -25,7 +25,7 @@ REGISTERED_NOTIFICATIONS = (
     | NotificationType.REQUEST_PROCESSING_FAILED
     | NotificationType.REQUEST_AUTOMATICALLY_APPROVED
     | NotificationType.ISSUE_REPORTED
-    | NotificationType.ISSUE_COMMENT
+    | NotificationType.ISSUE_COMMENTED
     | NotificationType.ISSUE_RESOLVED
     | NotificationType.ISSUE_REOPENED
 )
