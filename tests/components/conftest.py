@@ -618,7 +618,7 @@ async def _validate_translation(
     full_key = f"component.{component}.{category}.{key}"
     if component in ignore_translations_for_mock_domains:
         try:
-            loader.async_get_loaded_integration(hass, component)
+            await loader.async_get_integration(hass, component)
         except loader.IntegrationNotLoaded:
             return
         # If the integration exists, translation errors should be ignored via the
@@ -629,7 +629,7 @@ async def _validate_translation(
 
     translations = await async_get_translations(hass, "en", category, [component])
     try:
-        loader.async_get_loaded_integration(hass, component)
+        await loader.async_get_integration(hass, component)
     except loader.IntegrationNotLoaded:
         translation_errors[full_key] = (
             f"Translation not found for {component}: `{category}.{key}`. "
