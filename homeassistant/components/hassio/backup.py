@@ -27,11 +27,13 @@ from homeassistant.components.backup import (
     AddonInfo,
     AgentBackup,
     BackupAgent,
+    BackupConfig,
     BackupManagerError,
     BackupNotFound,
     BackupReaderWriter,
     BackupReaderWriterError,
     CreateBackupEvent,
+    CreateBackupParametersDict,
     CreateBackupStage,
     CreateBackupState,
     Folder,
@@ -43,13 +45,13 @@ from homeassistant.components.backup import (
     RestoreBackupStage,
     RestoreBackupState,
     WrittenBackup,
-    async_get_manager as async_get_backup_manager,
     suggested_filename as suggested_backup_filename,
     suggested_filename_from_name_date,
 )
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
@@ -633,6 +635,27 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             _LOGGER.debug("Could not get restore job %s: %s", restore_job_id, err)
             unsub()
 
+    async def async_validate_config(self, *, config: BackupConfig) -> None:
+        """Validate backup config.
+
+        Replace the core backup agent with the hassio default agent.
+        """
+        core_agent_id = "backup.local"
+        create_backup = config.data.create_backup
+        if core_agent_id not in create_backup.agent_ids:
+            _LOGGER.debug("Backup settings don't need to be adjusted")
+            return
+
+        default_agent = await _default_agent(self._client)
+        _LOGGER.info("Adjusting backup settings to not include core backup location")
+        automatic_agents = [
+            agent_id if agent_id != core_agent_id else default_agent
+            for agent_id in create_backup.agent_ids
+        ]
+        config.update(
+            create_backup=CreateBackupParametersDict(agent_ids=automatic_agents)
+        )
+
     @callback
     def _async_listen_job_events(
         self, job_id: UUID, on_event: Callable[[Mapping[str, Any]], None]
@@ -728,7 +751,7 @@ async def backup_addon_before_update(
 
 async def backup_core_before_update(hass: HomeAssistant) -> None:
     """Prepare for updating core."""
-    backup_manager = async_get_backup_manager(hass)
+    backup_manager = await async_get_backup_manager(hass)
     client = get_supervisor_client(hass)
 
     try:
