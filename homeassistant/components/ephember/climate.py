@@ -12,7 +12,6 @@ from pyephember.pyephember import (
     zone_current_temperature,
     zone_is_active,
     zone_is_boost_active,
-    zone_is_hot_water,
     zone_mode,
     zone_name,
     zone_target_temperature,
@@ -66,15 +65,25 @@ def setup_platform(
     """Set up the ephember thermostat."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    ember = EphEmber
+    zones = []
 
     try:
         ember = EphEmber(username, password)
+    except RuntimeError:
+        _LOGGER.error("Cannot login to EphEmber")
+
+    try:
         zones = ember.get_zones()
+    except RuntimeError:
+        _LOGGER.error("Fail to get zones")
+        return
+
+    try:
         for zone in zones:
             add_entities([EphEmberThermostat(ember, zone)])
     except RuntimeError:
-        _LOGGER.error("Cannot connect to EphEmber")
-        return
+        _LOGGER.error("Fail to add zone")
 
     return
 
@@ -85,12 +94,12 @@ class EphEmberThermostat(ClimateEntity):
     _attr_hvac_modes = OPERATION_LIST
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, ember, zone):
+    def __init__(self, ember, zone) -> None:
         """Initialize the thermostat."""
         self._ember = ember
         self._zone_name = zone_name(zone)
         self._zone = zone
-        self._hot_water = zone_is_hot_water(zone)
+        self._hot_water = False
 
         self._attr_name = self._zone_name
 
@@ -106,12 +115,12 @@ class EphEmberThermostat(ClimateEntity):
         )
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return zone_current_temperature(self._zone)
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return zone_target_temperature(self._zone)
 
@@ -133,25 +142,25 @@ class EphEmberThermostat(ClimateEntity):
         """Set the operation mode."""
         mode = self.map_mode_hass_eph(hvac_mode)
         if mode is not None:
-            self._ember.set_mode_by_name(self._zone_name, mode)
+            self._ember.set_zone_mode(self._zone_name, mode)
         else:
             _LOGGER.error("Invalid operation mode provided %s", hvac_mode)
 
     @property
-    def is_aux_heat(self):
+    def is_aux_heat(self) -> bool:
         """Return true if aux heater."""
 
         return zone_is_boost_active(self._zone)
 
     def turn_aux_heat_on(self) -> None:
         """Turn auxiliary heater on."""
-        self._ember.activate_boost_by_name(
+        self._ember.activate_zone_boost(
             self._zone_name, zone_target_temperature(self._zone)
         )
 
     def turn_aux_heat_off(self) -> None:
         """Turn auxiliary heater off."""
-        self._ember.deactivate_boost_by_name(self._zone_name)
+        self._ember.deactivate_zone_boost(self._zone_name)
 
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
@@ -167,10 +176,10 @@ class EphEmberThermostat(ClimateEntity):
         if temperature > self.max_temp or temperature < self.min_temp:
             return
 
-        self._ember.set_target_temperture_by_name(self._zone_name, temperature)
+        self._ember.set_zone_target_temperature(self._zone_name, temperature)
 
     @property
-    def min_temp(self):
+    def min_temp(self) -> float:
         """Return the minimum temperature."""
         # Hot water temp doesn't support being changed
         if self._hot_water:
@@ -179,7 +188,7 @@ class EphEmberThermostat(ClimateEntity):
         return 5.0
 
     @property
-    def max_temp(self):
+    def max_temp(self) -> float:
         """Return the maximum temperature."""
         if self._hot_water:
             return zone_target_temperature(self._zone)
