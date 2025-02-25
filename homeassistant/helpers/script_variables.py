@@ -90,12 +90,14 @@ class ScriptVariables:
 
 
 @dataclass
-class _ParallelStore:
-    """Store used in each parallel sequence."""
+class _ParallelData:
+    """Data used in each parallel sequence."""
 
-    # `special` is for variables that need special treatment in parallel sequences.
+    # `protected` is for variables that need special protection in parallel sequences.
+    # What this means is that such a variable defined in one parallel sequence will not be
+    # clobbered by the variable with the same name defined in another parallel sequence.
     # Currently the only such variable is `wait`.
-    special: dict[str, Any] = field(default_factory=dict)
+    protected: dict[str, Any] = field(default_factory=dict)
     # `outer_scope_writes` is for variables that are written to the outer scope from
     # a parallel sequence. This is used for generating correct traces of changed variables
     # for each of the parallel sequences, isolating them from one another.
@@ -106,8 +108,11 @@ class _ParallelStore:
 class ScriptRunVariables(UserDict[str, Any]):
     """Class to hold script run variables.
 
-    It is a subclass of UserDict, so it has all the usual additional methods available.
-    Operations using those methods are equivalent to assigning values to variables.
+    The purpose of this class is to provide proper variable scoping semantics for scripts.
+    Each instance institutes a new local scope, in which variables can be defined.
+    Each instance has a reference to the previous instance, except for the top-level instance.
+    The instances therefore form a chain, in which variable lookup and assignment is performed.
+    The variables defined lower in the chain naturally override those defined higher up.
     """
 
     # _previous is the previous ScriptRunVariables in the chain
@@ -115,10 +120,10 @@ class ScriptRunVariables(UserDict[str, Any]):
     # _parent is the previous non-empty ScriptRunVariables in the chain
     _parent: ScriptRunVariables | None = None
 
-    # _local_store is the store for local variables
-    _local_store: dict[str, Any] | None = None
-    # _parallel store is used for each parallel sequence
-    _parallel_store: _ParallelStore | None = None
+    # _local_data is the store for local variables
+    _local_data: dict[str, Any] | None = None
+    # _parallel_data is used for each parallel sequence
+    _parallel_data: _ParallelData | None = None
 
     # _non_parallel_scope includes all scopes all the way to the most recent parallel split
     _non_parallel_scope: ChainMap[str, Any]
@@ -131,10 +136,10 @@ class ScriptRunVariables(UserDict[str, Any]):
         initial_data: Mapping[str, Any] | None = None,
     ) -> ScriptRunVariables:
         """Create a new top-level ScriptRunVariables."""
-        local_store: dict[str, Any] = {}
-        non_parallel_scope = full_scope = ChainMap(local_store)
+        local_data: dict[str, Any] = {}
+        non_parallel_scope = full_scope = ChainMap(local_data)
         self = cls(
-            _local_store=local_store,
+            _local_data=local_data,
             _non_parallel_scope=non_parallel_scope,
             _full_scope=full_scope,
         )
@@ -147,27 +152,27 @@ class ScriptRunVariables(UserDict[str, Any]):
 
         :param parallel: Whether the new scope starts a parallel sequence.
         """
-        if self._local_store is not None or self._parallel_store is not None:
+        if self._local_data is not None or self._parallel_data is not None:
             parent = self
         else:
-            parent = cast(  # top level always has a local store, so we can cast safely
+            parent = cast(  # top level always has local data, so we can cast safely
                 ScriptRunVariables, self._parent
             )
 
-        parallel_store: _ParallelStore | None
+        parallel_data: _ParallelData | None
         if not parallel:
-            parallel_store = None
+            parallel_data = None
             non_parallel_scope = self._non_parallel_scope
             full_scope = self._full_scope
         else:
-            parallel_store = _ParallelStore()
-            non_parallel_scope = ChainMap(parallel_store.outer_scope_writes)
-            full_scope = self._full_scope.new_child(parallel_store.special)
+            parallel_data = _ParallelData()
+            non_parallel_scope = ChainMap(parallel_data.outer_scope_writes)
+            full_scope = self._full_scope.new_child(parallel_data.protected)
 
         return ScriptRunVariables(
             _previous=self,
             _parent=parent,
-            _parallel_store=parallel_store,
+            _parallel_data=parallel_data,
             _non_parallel_scope=non_parallel_scope,
             _full_scope=full_scope,
         )
@@ -183,73 +188,47 @@ class ScriptRunVariables(UserDict[str, Any]):
 
     def __setitem__(self, key: str, value: Any) -> None:
         """Assign value to a variable. Equivalent to `assign_single`."""
-        self.assign_single(key, value)
+        self.assign(key, value)
 
     def __delitem__(self, key: str) -> None:
         """Delete a variable (disallowed)."""
         raise TypeError("Deleting items is not allowed in ScriptRunVariables.")
 
-    def assign_single(
-        self, key: str, value: Any, *, parallel_special: bool = False
-    ) -> None:
+    def assign(self, key: str, value: Any, *, parallel_protected: bool = False) -> None:
         """Assign value to a variable.
 
         Value is always assigned to the variable in the nearest scope, in which it is defined.
         If the variable is not defined at all, it is created in the top-level scope.
 
-        :param parallel_special: Whether variable is to be treated specially in parallel sequences.
+        :param parallel_protected: Whether variable is to be protected in parallel sequences.
         """
-        if self._local_store is not None and key in self._local_store:
-            self._local_store[key] = value
+        if self._local_data is not None and key in self._local_data:
+            self._local_data[key] = value
             return
 
         if self._parent is None:
-            assert self._local_store is not None  # top level always has a local store
-            self._local_store[key] = value
+            assert self._local_data is not None  # top level always has local data
+            self._local_data[key] = value
             return
 
-        if self._parallel_store is not None:
-            self._parallel_store.outer_scope_writes[key] = value
-            if parallel_special:
-                self._parallel_store.special[key] = value
+        if self._parallel_data is not None:
+            self._parallel_data.outer_scope_writes[key] = value
+            if parallel_protected:
+                self._parallel_data.protected[key] = value
             else:
-                self._parallel_store.special.pop(key, None)
+                self._parallel_data.protected.pop(key, None)
 
-        self._parent.assign_single(key, value, parallel_special=parallel_special)
+        self._parent.assign(key, value, parallel_protected=parallel_protected)
 
-    def assign(self, new_vars: ScriptVariables) -> None:
-        """Assign rendered values to variables.
-
-        First renders the variable values in order and then assigns each of them.
-        Value is always assigned to the variable in the nearest scope, in which it is defined.
-        If the variable is not defined at all, it is created in the top-level scope.
-        """
-        for key, value in new_vars.async_simple_render(self).items():
-            self.assign_single(key, value)
-
-    def define_single(self, key: str, value: Any) -> None:
+    def define_local(self, key: str, value: Any) -> None:
         """Define a local variable and assign value to it."""
-        self._ensure_local()
-        assert self._local_store is not None
-        self._local_store[key] = value
-
-    def define(self, new_vars: ScriptVariables) -> None:
-        """Define local variables and assign rendered values to them.
-
-        First renders the variable values in order and then assigns each of them.
-        """
-        self._ensure_local()
-        assert self._local_store is not None
-        for key, value in new_vars.async_simple_render(self).items():
-            self._local_store[key] = value
-
-    def _ensure_local(self) -> None:
-        if self._local_store is None:
-            self._local_store = {}
+        if self._local_data is None:
+            self._local_data = {}
             self._non_parallel_scope = self._non_parallel_scope.new_child(
-                self._local_store
+                self._local_data
             )
-            self._full_scope = self._full_scope.new_child(self._local_store)
+            self._full_scope = self._full_scope.new_child(self._local_data)
+        self._local_data[key] = value
 
     @property
     def data(self) -> Mapping[str, Any]:  # type: ignore[override]
@@ -260,11 +239,6 @@ class ScriptRunVariables(UserDict[str, Any]):
         return self._full_scope
 
     @property
-    def full_scope(self) -> Mapping[str, Any]:
-        """Return variables in full scope."""
-        return self._full_scope
-
-    @property
     def non_parallel_scope(self) -> Mapping[str, Any]:
         """Return variables in non-parallel scope."""
         return self._non_parallel_scope
@@ -272,4 +246,4 @@ class ScriptRunVariables(UserDict[str, Any]):
     @property
     def local_scope(self) -> Mapping[str, Any]:
         """Return variables in local scope."""
-        return self._local_store if self._local_store is not None else {}
+        return self._local_data if self._local_data is not None else {}
