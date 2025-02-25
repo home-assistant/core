@@ -18,6 +18,29 @@ FAULT = "fault"
 FAULT_DATE = "fault_date"
 REQUEST_FAULT_LOG_INTERVAL = timedelta(minutes=5)
 
+FAULT_MESSAGE_CODE_MAP: dict[int, str] = {
+    15: "sensor_out_of_sync",
+    16: "low_flow",
+    17: "flow_failed",
+    18: "settings_reset",
+    19: "priming_mode",
+    20: "clock_failed",
+    21: "settings_reset",
+    22: "memory_failure",
+    26: "service_sensor_sync",
+    27: "heater_dry",
+    28: "heater_may_be_dry",
+    29: "water_too_hot",
+    30: "heater_too_hot",
+    31: "sensor_a_fault",
+    32: "sensor_b_fault",
+    34: "pump_stuck",
+    35: "hot_fault",
+    36: "gfci_test_failed",
+    37: "standby_mode",
+}
+FAULT_EVENT_TYPES = sorted(set(FAULT_MESSAGE_CODE_MAP.values()))
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -31,7 +54,7 @@ async def async_setup_entry(
 class BalboaEventEntity(BalboaEntity, EventEntity):
     """Representation of a Balboa event entity."""
 
-    _attr_event_types = [FAULT]
+    _attr_event_types = FAULT_EVENT_TYPES
     _attr_translation_key = FAULT
 
     def __init__(self, spa: SpaClient) -> None:
@@ -46,7 +69,8 @@ class BalboaEventEntity(BalboaEntity, EventEntity):
         fault_date = fault.fault_datetime.isoformat()
         if self.state_attributes.get(FAULT_DATE) != fault_date:
             self._trigger_event(
-                FAULT, {FAULT_DATE: fault_date, "message": fault.message}
+                FAULT_MESSAGE_CODE_MAP.get(fault.message_code, fault.message),
+                {FAULT_DATE: fault_date, "code": fault.message_code},
             )
             self.async_write_ha_state()
 
