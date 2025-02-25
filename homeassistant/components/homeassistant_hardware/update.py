@@ -21,7 +21,6 @@ from homeassistant.components.update import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -180,13 +179,6 @@ class BaseFirmwareUpdateEntity(
         self._maybe_recompute_state()
         self.async_write_ha_state()
 
-        # Update the firmware version in the device registry
-        assert self.device_info is not None
-        device_registry = dr.async_get(self.hass)
-        device_registry.async_get_or_create(
-            config_entry_id=self._config_entry.entry_id, **self.device_info
-        )
-
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
         raise NotImplementedError
 
@@ -230,24 +222,6 @@ class BaseFirmwareUpdateEntity(
         self._attr_latest_version = self.entity_description.version_parser(version)
         self._attr_release_summary = self._latest_firmware.release_notes
         self._attr_release_url = str(self._latest_manifest.html_url)
-
-        firmware_name = self.entity_description.firmware_name
-
-        if (
-            self._current_firmware_info is None
-            or self._current_firmware_info.firmware_version is None
-        ):
-            sw_version = None
-        else:
-            firmware_version = self.entity_description.version_parser(
-                self._current_firmware_info.firmware_version
-            )
-            sw_version = f"{firmware_name} {firmware_version}"
-
-        if self.device_entry is not None:
-            dr.async_get(self.hass).async_update_device(
-                self.device_entry.id, sw_version=sw_version
-            )
 
     @callback
     def _handle_coordinator_update(self) -> None:

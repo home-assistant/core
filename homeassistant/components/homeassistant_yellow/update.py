@@ -23,17 +23,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    FIRMWARE,
-    NABU_CASA_FIRMWARE_RELEASES_URL,
-    RADIO_DEVICE,
-    RADIO_MANUFACTURER,
-    RADIO_MODEL,
-)
+from .const import FIRMWARE, NABU_CASA_FIRMWARE_RELEASES_URL, RADIO_DEVICE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,11 +142,6 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         super().__init__(device, config_entry, update_coordinator, entity_description)
 
         self._attr_unique_id = f"yellow_{self.entity_description.key}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, "yellow")},
-            manufacturer=RADIO_MANUFACTURER,
-            model=RADIO_MODEL,
-        )
 
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
         self.hass.config_entries.async_update_entry(

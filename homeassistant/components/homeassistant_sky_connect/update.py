@@ -23,17 +23,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    DOMAIN,
-    FIRMWARE,
-    MANUFACTURER,
-    NABU_CASA_FIRMWARE_RELEASES_URL,
-    PRODUCT,
-    SERIAL_NUMBER,
-)
+from .const import FIRMWARE, NABU_CASA_FIRMWARE_RELEASES_URL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -151,12 +143,6 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
 
         self._attr_unique_id = (
             f"{self._config_entry.data['serial_number']}_{self.entity_description.key}"
-        )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._config_entry.data[SERIAL_NUMBER])},
-            manufacturer=self._config_entry.data[MANUFACTURER],
-            model=self._config_entry.data[PRODUCT],
-            serial_number=self._config_entry.data[SERIAL_NUMBER][:16],
         )
 
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
