@@ -2653,7 +2653,7 @@ async def test_subentry_configflow(
             "platform": "notify",
             "object_id": "bla123",
             "name": "Milkman alert",
-            "qos": 0,
+            "entity_picture": "https://example.com",
         },
     )
     assert result["type"] is FlowResultType.FORM
@@ -2681,7 +2681,7 @@ async def test_subentry_configflow(
         user_input={
             "command_topic": "test-topic",
             "command_template": "{{ value_json.value }}",
-            "entity_picture": "https://example.com",
+            "qos": 0,
             "retain": False,
         },
     )

@@ -115,8 +115,6 @@ from .const import (
     DEFAULT_PORT,
     DEFAULT_PREFIX,
     DEFAULT_PROTOCOL,
-    DEFAULT_QOS,
-    DEFAULT_RETAIN,
     DEFAULT_TRANSPORT,
     DEFAULT_WILL,
     DEFAULT_WS_PATH,
@@ -132,6 +130,7 @@ from .util import (
     get_file_path,
     valid_birth_will,
     valid_publish_topic,
+    valid_qos_schema,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -155,10 +154,10 @@ PORT_SELECTOR = vol.All(
     vol.Coerce(int),
 )
 PASSWORD_SELECTOR = TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD))
-QOS_SELECTOR = vol.All(
-    NumberSelector(NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)),
-    vol.Coerce(int),
+QOS_SELECTOR = NumberSelector(
+    NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=0, max=2)
 )
+QOS_DATA_SCHEMA = vol.All(QOS_SELECTOR, valid_qos_schema)
 KEEPALIVE_SELECTOR = vol.All(
     NumberSelector(
         NumberSelectorConfig(
@@ -230,22 +229,27 @@ class PlatformField:
     required: bool
     validator: Callable[..., Any]
     error: str | None = None
-    default: Any | None = None
 
 
 CORE_PLATFORM_FIELDS = [
     CONF_PLATFORM,
     CONF_OBJECT_ID,
     CONF_NAME,
-    CONF_QOS,
+    CONF_ENTITY_PICTURE,
 ]
 
-COMMON_PLATFORM_FIELDS = {
+COMMON_ENTITY_FIELDS = {
+    CONF_PLATFORM: PlatformField(SUBENTRY_PLATFORM_SELECTOR, True, str),
+    CONF_OBJECT_ID: PlatformField(TEXT_SELECTOR, True, str),
+    CONF_NAME: PlatformField(TEXT_SELECTOR, False, str),
     CONF_ENTITY_PICTURE: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
-    CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool, default=DEFAULT_RETAIN),
 }
 
-PLATFORM_FIELDS = {
+COMMON_MQTT_FIELDS = {
+    CONF_QOS: PlatformField(QOS_SELECTOR, False, valid_qos_schema),
+    CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool),
+}
+PLATFORM_MQTT_FIELDS = {
     "notify": {
         CONF_COMMAND_TOPIC: PlatformField(
             TEXT_SELECTOR, True, valid_publish_topic, "invalid_publish_topic"
@@ -264,15 +268,6 @@ MQTT_DEVICE_SCHEMA = vol.Schema(
         vol.Optional(ATTR_MODEL): TEXT_SELECTOR,
         vol.Optional(ATTR_MODEL_ID): TEXT_SELECTOR,
         vol.Optional(ATTR_CONFIGURATION_URL): TEXT_SELECTOR,
-    }
-)
-
-MQTT_DEVICE_ENTITY_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_PLATFORM): SUBENTRY_PLATFORM_SELECTOR,
-        vol.Required(CONF_OBJECT_ID): TEXT_SELECTOR,
-        vol.Optional(CONF_NAME): TEXT_SELECTOR,
-        vol.Optional(CONF_QOS, default=DEFAULT_QOS): QOS_SELECTOR,
     }
 )
 
@@ -323,6 +318,34 @@ def validate_field(
         validator(user_input[field])
     except (ValueError, vol.Invalid):
         errors[field] = error
+
+
+@callback
+def validate_user_input(
+    user_input: dict[str, Any],
+    data_schema_fields: dict[str, PlatformField],
+    errors: dict[str, str],
+) -> None:
+    """Validate user input."""
+    for field, value in user_input.items():
+        validator = data_schema_fields[field].validator
+        try:
+            validator(value)
+        except (ValueError, vol.Invalid):
+            errors[field] = data_schema_fields[field].error or "invalid_input"
+
+
+@callback
+def data_schema_from_fields(data_schema_fields: dict[str, PlatformField]) -> vol.Schema:
+    """Generate data schema from platform fields."""
+    return vol.Schema(
+        {
+            vol.Required(field_name)
+            if field_details.required
+            else vol.Optional(field_name): field_details.selector
+            for field_name, field_details in data_schema_fields.items()
+        }
+    )
 
 
 class FlowHandler(ConfigFlow, domain=DOMAIN):
@@ -803,7 +826,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "birth_payload", description={"suggested_value": birth[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_SELECTOR
+        fields[vol.Optional("birth_qos", default=birth[ATTR_QOS])] = QOS_DATA_SCHEMA
         fields[vol.Optional("birth_retain", default=birth[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
@@ -826,7 +849,7 @@ class MQTTOptionsFlowHandler(OptionsFlow):
                 "will_payload", description={"suggested_value": will[CONF_PAYLOAD]}
             )
         ] = TEXT_SELECTOR
-        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_SELECTOR
+        fields[vol.Optional("will_qos", default=will[ATTR_QOS])] = QOS_DATA_SCHEMA
         fields[vol.Optional("will_retain", default=will[ATTR_RETAIN])] = (
             BOOLEAN_SELECTOR
         )
@@ -895,9 +918,11 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         """Add or edit an mqtt entity."""
         errors: dict[str, str] = {}
         mqtt_device = f'"{self._subentry_data[CONF_DEVICE][CONF_NAME]}"'
-        data_schema = MQTT_DEVICE_ENTITY_SCHEMA
+        data_schema_fields = COMMON_ENTITY_FIELDS
+        data_schema = data_schema_from_fields(data_schema_fields)
         if user_input is not None:
             # Add the component but check if the object ID is unique and not reconfiguring
+            validate_user_input(user_input, data_schema_fields, errors)
             platform_object_id = (
                 f"{user_input['platform']}_{slugify(user_input['object_id'])}"
             )
@@ -995,23 +1020,11 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         mqtt_device = f'"{self._subentry_data[CONF_DEVICE][CONF_NAME]}"'
         platform = self._subentry_data["components"][self._object_id][CONF_PLATFORM]
         object_id = self._subentry_data["components"][self._object_id][CONF_OBJECT_ID]
-        data_schema_fields = PLATFORM_FIELDS[platform] | COMMON_PLATFORM_FIELDS
-        data_schema = vol.Schema(
-            {
-                vol.Required(field_name)
-                if field_details.required
-                else vol.Optional(field_name): field_details.selector
-                for field_name, field_details in data_schema_fields.items()
-            }
-        )
+        data_schema_fields = PLATFORM_MQTT_FIELDS[platform] | COMMON_MQTT_FIELDS
+        data_schema = data_schema_from_fields(data_schema_fields)
         if user_input is not None:
             # Test entity fields against the validator
-            for field, value in user_input.items():
-                validator = data_schema_fields[field].validator
-                try:
-                    validator(value)
-                except (ValueError, vol.Invalid):
-                    errors[field] = data_schema_fields[field].error or "invalid_input"
+            validate_user_input(user_input, data_schema_fields, errors)
             if not errors:
                 component_data = self._subentry_data["components"][self._object_id]
                 # Remove the fields from the component data if they are not in the user input
