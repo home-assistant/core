@@ -4,6 +4,15 @@
       "spotify": {
         "default": "mdi:spotify"
       }
+    },
+    "switch": {
+      "library": {
+        "default": "mdi:heart-off",
+        "state": {
+          "on": "mdi:heart",
+          "off": "mdi:heart-outline"
+        }
+      }
     }
   }
 }
