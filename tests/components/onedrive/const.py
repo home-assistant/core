@@ -1,15 +1,6 @@
 """Consts for OneDrive tests."""
 
-from html import escape
-from json import dumps
-
-from onedrive_personal_sdk.models.items import (
-    File,
-    Hashes,
-    IdentitySet,
-    ItemParentReference,
-    User,
-)
+from onedrive_personal_sdk.models.items import IdentitySet, User
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
@@ -37,41 +28,4 @@ IDENTITY_SET = IdentitySet(
         id="id",
         email="john@doe.com",
     )
-)
-
-MOCK_BACKUP_FILE = File(
-    id="id",
-    name="23e64aec.tar",
-    size=34519040,
-    parent_reference=ItemParentReference(
-        drive_id="mock_drive_id", id="id", path="path"
-    ),
-    hashes=Hashes(
-        quick_xor_hash="hash",
-    ),
-    mime_type="application/x-tar",
-    created_by=IDENTITY_SET,
-)
-
-MOCK_METADATA_FILE = File(
-    id="id",
-    name="23e64aec.tar",
-    size=34519040,
-    parent_reference=ItemParentReference(
-        drive_id="mock_drive_id", id="id", path="path"
-    ),
-    hashes=Hashes(
-        quick_xor_hash="hash",
-    ),
-    mime_type="application/x-tar",
-    description=escape(
-        dumps(
-            {
-                "metadata_version": 2,
-                "backup_id": "23e64aec",
-                "backup_file_id": "id",
-            }
-        )
-    ),
-    created_by=IDENTITY_SET,
 )

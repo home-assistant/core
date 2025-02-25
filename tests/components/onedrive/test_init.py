@@ -11,7 +11,7 @@ from onedrive_personal_sdk.exceptions import (
     NotFoundError,
     OneDriveException,
 )
-from onedrive_personal_sdk.models.items import AppRoot, Drive, Folder, ItemUpdate
+from onedrive_personal_sdk.models.items import AppRoot, Drive, File, Folder, ItemUpdate
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from . import setup_integration
-from .const import BACKUP_METADATA, INSTANCE_ID, MOCK_BACKUP_FILE
+from .const import BACKUP_METADATA, INSTANCE_ID
 
 from tests.common import MockConfigEntry
 
@@ -145,9 +145,10 @@ async def test_migrate_metadata_files(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_onedrive_client: MagicMock,
+    mock_backup_file: File,
 ) -> None:
     """Test migration of metadata files."""
-    MOCK_BACKUP_FILE.description = escape(
+    mock_backup_file.description = escape(
         dumps({**BACKUP_METADATA, "metadata_version": 1})
     )
     await setup_integration(hass, mock_config_entry)
