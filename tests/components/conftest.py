@@ -624,7 +624,8 @@ async def _validate_translation(
     if not translation_required:
         return
 
-    if full_key in translation_errors:
+    if translation_errors.get(full_key) in {"used", "unused"}:
+        # This translation key is in the ignore list, mark it as used
         translation_errors[full_key] = "used"
         return
 
@@ -864,6 +865,7 @@ async def check_translations(
     if not isinstance(ignore_translations, list):
         ignore_translations = [ignore_translations]
 
+    # Set all ignored translation keys to "unused"
     translation_errors = {k: "unused" for k in ignore_translations}
 
     translation_coros = set()
@@ -945,10 +947,11 @@ async def check_translations(
     # Run final checks
     unused_ignore = [k for k, v in translation_errors.items() if v == "unused"]
     if unused_ignore:
+        # Some ignored translations were not used
         pytest.fail(
             f"Unused ignore translations: {', '.join(unused_ignore)}. "
             "Please remove them from the ignore_translations fixture."
         )
     for description in translation_errors.values():
-        if description not in {"used", "unused"}:
+        if description != "used":
             pytest.fail(description)

@@ -90,7 +90,6 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     "commands": SonarrSensorEntityDescription[list[Command]](
         key="commands",
         translation_key="commands",
-        native_unit_of_measurement="Commands",
         entity_registry_enabled_default=False,
         value_fn=len,
         attributes_fn=lambda data: {c.name: c.status for c in data},
@@ -107,7 +106,6 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     "queue": SonarrSensorEntityDescription[SonarrQueue](
         key="queue",
         translation_key="queue",
-        native_unit_of_measurement="Episodes",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.totalRecords,
         attributes_fn=get_queue_attr,
@@ -115,7 +113,6 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     "series": SonarrSensorEntityDescription[list[SonarrSeries]](
         key="series",
         translation_key="series",
-        native_unit_of_measurement="Series",
         entity_registry_enabled_default=False,
         value_fn=len,
         attributes_fn=lambda data: {
@@ -129,7 +126,6 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     "upcoming": SonarrSensorEntityDescription[list[SonarrCalendar]](
         key="upcoming",
         translation_key="upcoming",
-        native_unit_of_measurement="Episodes",
         value_fn=len,
         attributes_fn=lambda data: {
             e.series.title: f"S{e.seasonNumber:02d}E{e.episodeNumber:02d}" for e in data
@@ -138,7 +134,6 @@ SENSOR_TYPES: dict[str, SonarrSensorEntityDescription[Any]] = {
     "wanted": SonarrSensorEntityDescription[SonarrWantedMissing](
         key="wanted",
         translation_key="wanted",
-        native_unit_of_measurement="Episodes",
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.totalRecords,
         attributes_fn=get_wanted_attr,

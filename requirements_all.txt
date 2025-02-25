@@ -57,7 +57,7 @@ PyFlume==0.6.5
 PyFronius==0.7.3
 
 # homeassistant.components.pyload
-PyLoadAPI==1.4.1
+PyLoadAPI==1.4.2
 
 # homeassistant.components.met_eireann
 PyMetEireann==2024.11.0
@@ -219,7 +219,7 @@ aiocomelit==0.10.1
 aiodhcpwatcher==1.1.1
 
 # homeassistant.components.dhcp
-aiodiscover==2.6.0
+aiodiscover==2.6.1
 
 # homeassistant.components.dnsip
 aiodns==3.2.0
@@ -273,7 +273,7 @@ aiohomekit==3.2.7
 aiohttp_sse==2.2.0
 
 # homeassistant.components.hue
-aiohue==4.7.3
+aiohue==4.7.4
 
 # homeassistant.components.imap
 aioimaplib==2.0.1
@@ -386,7 +386,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.1
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.10.0
+aiostreammagic==2.11.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==6.0.0
@@ -421,11 +421,14 @@ aiowaqi==3.1.0
 # homeassistant.components.watttime
 aiowatttime==0.1.1
 
+# homeassistant.components.webdav
+aiowebdav2==0.3.0
+
 # homeassistant.components.webostv
-aiowebostv==0.6.2
+aiowebostv==0.7.1
 
 # homeassistant.components.withings
-aiowithings==3.1.5
+aiowithings==3.1.6
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -461,7 +464,7 @@ amcrest==1.9.8
 androidtv[async]==0.0.75
 
 # homeassistant.components.androidtv_remote
-androidtvremote2==0.1.2
+androidtvremote2==0.2.0
 
 # homeassistant.components.anel_pwrctrl
 anel-pwrctrl-homeassistant==0.0.1.dev2
@@ -567,6 +570,9 @@ azure-kusto-ingest==4.5.1
 
 # homeassistant.components.azure_service_bus
 azure-servicebus==7.10.0
+
+# homeassistant.components.azure_storage
+azure-storage-blob==12.24.0
 
 # homeassistant.components.holiday
 babel==2.15.0
@@ -680,7 +686,7 @@ btsmarthub-devicelist==0.2.3
 buienradar==1.0.6
 
 # homeassistant.components.dhcp
-cached-ipaddress==0.8.1
+cached-ipaddress==0.9.2
 
 # homeassistant.components.caldav
 caldav==1.3.9
@@ -940,7 +946,7 @@ flux-led==1.1.3
 
 # homeassistant.components.homekit
 # homeassistant.components.recorder
-fnv-hash-fast==1.2.3
+fnv-hash-fast==1.2.6
 
 # homeassistant.components.foobot
 foobot_async==1.0.0
@@ -1547,7 +1553,7 @@ odp-amsterdam==6.0.2
 oemthermostat==1.1.1
 
 # homeassistant.components.ohme
-ohme==1.3.0
+ohme==1.3.2
 
 # homeassistant.components.ollama
 ollama==0.4.7
@@ -1749,7 +1755,7 @@ py-schluter==0.1.7
 py-sucks==0.9.10
 
 # homeassistant.components.synology_dsm
-py-synologydsm-api==2.6.3
+py-synologydsm-api==2.7.0
 
 # homeassistant.components.atome
 pyAtome==0.1.1
@@ -1972,7 +1978,7 @@ pyforked-daapd==0.1.14
 pyfreedompro==1.1.0
 
 # homeassistant.components.fritzbox
-pyfritzhome==0.6.16
+pyfritzhome==0.6.17
 
 # homeassistant.components.ifttt
 pyfttt==0.3
@@ -2071,7 +2077,7 @@ pykwb==0.0.8
 pylacrosse==0.4
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.4.6
+pylamarzocco==1.4.7
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2223,7 +2229,7 @@ pypoint==3.0.0
 pyprof2calltree==1.4.5
 
 # homeassistant.components.prosegur
-pyprosegur==0.0.13
+pyprosegur==0.0.14
 
 # homeassistant.components.prusalink
 pyprusalink==2.1.1
@@ -2462,6 +2468,9 @@ python-roborock==2.11.1
 
 # homeassistant.components.smarttub
 python-smarttub==0.0.38
+
+# homeassistant.components.snoo
+python-snoo==0.6.0
 
 # homeassistant.components.songpal
 python-songpal==0.16.2
@@ -2754,7 +2763,7 @@ smart-meter-texas==0.5.5
 snapcast==2.3.6
 
 # homeassistant.components.sonos
-soco==0.30.8
+soco==0.30.9
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
@@ -2802,7 +2811,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.5.7
+stookwijzer==1.5.8
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
@@ -2884,7 +2893,7 @@ tessie-api==0.1.1
 # tf-models-official==2.5.0
 
 # homeassistant.components.thermobeacon
-thermobeacon-ble==0.7.0
+thermobeacon-ble==0.8.0
 
 # homeassistant.components.thermopro
 thermopro-ble==0.11.0
@@ -3052,7 +3061,7 @@ webio-api==0.1.11
 webmin-xmlrpc==0.0.2
 
 # homeassistant.components.weheat
-weheat==2025.1.15
+weheat==2025.2.22
 
 # homeassistant.components.whirlpool
 whirlpool-sixth-sense==0.18.12
@@ -3155,7 +3164,7 @@ ziggo-mediabox-xl==1.1.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.60.0
+zwave-js-server-python==0.60.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3

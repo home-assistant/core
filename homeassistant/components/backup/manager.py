@@ -32,7 +32,9 @@ from homeassistant.helpers import (
     instance_id,
     integration_platform,
     issue_registry as ir,
+    start,
 )
+from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -46,6 +48,7 @@ from .agent import (
 from .config import (
     BackupConfig,
     CreateBackupParametersDict,
+    check_unavailable_agents,
     delete_backups_exceeding_configured_count,
 )
 from .const import (
@@ -332,7 +335,9 @@ class BackupManager:
         # Latest backup event and backup event subscribers
         self.last_event: ManagerStateEvent = IdleEvent()
         self.last_non_idle_event: ManagerStateEvent | None = None
-        self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
+        self._backup_event_subscriptions = hass.data[
+            DATA_BACKUP
+        ].backup_event_subscriptions
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -413,6 +418,13 @@ class BackupManager:
                 if isinstance(agent, LocalBackupAgent)
             }
         )
+
+        @callback
+        def check_unavailable_agents_after_start(hass: HomeAssistant) -> None:
+            """Check unavailable agents after start."""
+            check_unavailable_agents(hass, self)
+
+        start.async_at_started(self.hass, check_unavailable_agents_after_start)
 
     async def _add_platform(
         self,
@@ -1278,19 +1290,6 @@ class BackupManager:
             self.last_non_idle_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
-
-    @callback
-    def async_subscribe_events(
-        self,
-        on_event: Callable[[ManagerStateEvent], None],
-    ) -> Callable[[], None]:
-        """Subscribe events."""
-
-        def remove_subscription() -> None:
-            self._backup_event_subscriptions.remove(on_event)
-
-        self._backup_event_subscriptions.append(on_event)
-        return remove_subscription
 
     def _update_issue_backup_failed(self) -> None:
         """Update issue registry when a backup fails."""
