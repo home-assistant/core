@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import AsyncGenerator, AsyncIterator
 from contextlib import asynccontextmanager
-from pathlib import Path
 from typing import TYPE_CHECKING
 
 from asyncssh import (
@@ -13,17 +12,19 @@ from asyncssh import (
     SSHClientConnectionOptions,
     connect,
 )
+from asyncssh.misc import PermissionDenied
+from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 
 from homeassistant.components.backup import BackupAgentError, suggested_filename
 from homeassistant.components.backup.models import AgentBackup
-from homeassistant.exceptions import ConfigEntryError
-from homeassistant.util import slugify
+from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .const import BUF_SIZE, LOGGER
 from .util import AsyncSSHFileWrapper, process_tar_from_adapter
 
 if TYPE_CHECKING:
-    from . import SFTPConfigEntryData
+    from . import SFTPConfigEntry
 
 
 class AsyncFileIterator:
@@ -35,10 +36,15 @@ class AsyncFileIterator:
     """
 
     def __init__(
-        self, cfg: "SFTPConfigEntryData", file_path: str, buffer_size: int = BUF_SIZE
+        self,
+        cfg: "SFTPConfigEntry",
+        hass: HomeAssistant,
+        file_path: str,
+        buffer_size: int = BUF_SIZE,
     ) -> None:
         """Initialize `AsyncFileIterator`."""
-        self.cfg: SFTPConfigEntryData = cfg
+        self.cfg: SFTPConfigEntry = cfg
+        self.hass: HomeAssistant = hass
         self.file_path: str = file_path
         self.buffer_size = buffer_size
         self._client: BackupAgentClient | None = None
@@ -48,7 +54,7 @@ class AsyncFileIterator:
 
     async def _initialize(self) -> None:
         """Load file object."""
-        self._client = await BackupAgentClient(self.cfg).__aenter__()
+        self._client = await BackupAgentClient(self.cfg, self.hass).__aenter__()
         self._fileobj = await self._client.sftp.open(self.file_path, "rb")
         await self._fileobj.__aenter__()
 
@@ -76,54 +82,52 @@ class AsyncFileIterator:
 class BackupAgentClient:
     """Helper class that manages SSH and SFTP Server connections."""
 
-    def __init__(self, config: "SFTPConfigEntryData") -> None:
+    def __init__(self, config: "SFTPConfigEntry", hass: HomeAssistant) -> None:
         """Initialize `BackupAgentClient`."""
-        if (bool(config.private_key_file) is False) and (
-            bool(config.password) is False
-        ):
-            raise ConfigEntryError(
-                "Please configure password or private key file location for SFTP Backup Storage."
-            )
-
-        if config.private_key_file:
-            # If full path is not provided to private_key_file,
-            # default to look at /config directory
-            if not config.private_key_file.startswith("/"):
-                config.private_key_file = f"/config/{config.private_key_file}"
-
-            if not Path(config.private_key_file).exists():
-                raise ConfigEntryError(
-                    "Path to private key file not found. "
-                    "Place the key file in config or share directory "
-                    "and point to it specifying path `/config/private_key` or `/share/private_key`."
-                )
-
-        self.cfg: SFTPConfigEntryData = config
+        self.cfg: SFTPConfigEntry = config
+        self.hass: HomeAssistant = hass
         self._ssh: SSHClientConnection | None = None
         self.sftp: SFTPClient | None = None
-        LOGGER.debug("Initialized with config: %s", self.cfg)
+        LOGGER.debug("Initialized with config: %s", self.cfg.runtime_data)
 
     async def __aenter__(self) -> "BackupAgentClient":
         """Async context manager entrypoint."""
 
         # Configure SSH Client Connection
-        self._ssh = await connect(
-            host=self.cfg.host,
-            port=self.cfg.port,
-            options=SSHClientConnectionOptions(
-                known_hosts=None,
-                username=self.cfg.username,
-                password=self.cfg.password,
-                client_keys=[self.cfg.private_key_file]
-                if self.cfg.private_key_file
-                else None,
-            ),
-        )
+        try:
+            self._ssh = await connect(
+                host=self.cfg.runtime_data.host,
+                port=self.cfg.runtime_data.port,
+                options=SSHClientConnectionOptions(
+                    known_hosts=None,
+                    username=self.cfg.runtime_data.username,
+                    password=self.cfg.runtime_data.password,
+                    client_keys=[self.cfg.runtime_data.private_key_file]
+                    if self.cfg.runtime_data.private_key_file
+                    else None,
+                ),
+            )
+        except (OSError, PermissionDenied) as e:
+            LOGGER.exception(e)
+            LOGGER.error(
+                "Failure while attempting to establish SSH connection. Re-auth might be required."
+            )
+            self.cfg.async_start_reauth(self.hass)
+            raise HomeAssistantError(e) from e
         await self._ssh.__aenter__()
 
         # Configure SFTP Client Connection
-        self.sftp = await self._ssh.start_sftp_client()
-        await self.sftp.__aenter__()
+        try:
+            self.sftp = await self._ssh.start_sftp_client()
+            await self.sftp.__aenter__()
+        except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
+            LOGGER.exception(e)
+            LOGGER.error(
+                "Failed to create SFTP client. Re-configuring integration might be required."
+            )
+            raise RuntimeError(
+                "Failed to create SFTP client. Re-configuring integration might be required."
+            ) from e
 
         return self
 
@@ -146,7 +150,9 @@ class BackupAgentClient:
         if self._ssh is None or self.sftp is None:
             raise RuntimeError("Connection is not initialized.")
 
-        if file_path and not file_path.startswith(self.cfg.backup_location):
+        if file_path and not file_path.startswith(
+            self.cfg.runtime_data.backup_location
+        ):
             raise RuntimeError(
                 f"Attempted to access file outside of configured backup location: {file_path}"
             )
@@ -154,11 +160,9 @@ class BackupAgentClient:
     async def async_delete_backup(self, backup: AgentBackup) -> None:
         """Delete backup archive."""
 
-        assert backup is not None, (
-            "None object passed to `BackupAgentClient.async_delete_backup`."
+        file_path = (
+            f"{self.cfg.runtime_data.backup_location}/{suggested_filename(backup)}"
         )
-
-        file_path = f"{self.cfg.backup_location}/{suggested_filename(backup)}"
         assert await self.sftp.exists(file_path), (
             f"File at provided remote path: {file_path} does not exist."
         )
@@ -182,8 +186,8 @@ class BackupAgentClient:
         for file in await self.list_backup_location():
             LOGGER.debug(
                 "Evaluating remote file: %s@%s:%s ...",
-                self.cfg.username,
-                self.cfg.host,
+                self.cfg.runtime_data.username,
+                self.cfg.runtime_data.host,
                 file,
             )
             async with self.sftp.open(file, "rb") as rfile:
@@ -220,66 +224,41 @@ class BackupAgentClient:
     ) -> list[AgentBackup]:
         """Accept `iterator` as bytes iterator and write backup archive to SFTP Server."""
 
-        assert backup is not None, (
-            "None object passed to `BackupAgentClient.async_upload_backup`."
+        file_path = (
+            f"{self.cfg.runtime_data.backup_location}/{suggested_filename(backup)}"
         )
-        file_path = f"{self.cfg.backup_location}/{suggested_filename(backup)}"
         async with self.sftp.open(file_path, "wb") as f:
             async for b in iterator:
                 await f.write(b)
 
-    def get_identifier(self) -> str:
-        """Return unique identifier.
-
-        Unique identifier consists of:
-        `<host>.<port>.<username>.<remote_path>`.
-        `remote_path`, `host` and `username` has all non-alphanumeric characters replaced by `.`
-
-
-        Example:
-        -------
-        >>> async with BackupAgentClient(config_entry) as client:
-        ...     client.get_identifier()
-        '192_168_0_100.22.user.mnt.backup.storage'
-
-        """
-
-        return slugify(
-            ".".join(
-                [
-                    self.cfg.host,
-                    str(self.cfg.port),
-                    self.cfg.username,
-                    self.cfg.backup_location,
-                ]
-            )
-        )
-
     async def iter_file(self, backup: AgentBackup) -> AsyncFileIterator:
         """Return Async File Iterator object."""
 
-        assert backup is not None, (
-            "None object passed to `BackupAgentClient.iter_file`."
+        file_path = (
+            f"{self.cfg.runtime_data.backup_location}/{suggested_filename(backup)}"
         )
-        file_path = f"{self.cfg.backup_location}/{suggested_filename(backup)}"
         if not await self.sftp.isfile(file_path):
             raise BackupAgentError("Backup not found.")
-        return AsyncFileIterator(self.cfg, file_path, BUF_SIZE)
+        return AsyncFileIterator(self.cfg.runtime_data, file_path, BUF_SIZE)
 
     async def list_backup_location(self) -> list[str]:
         """Return .tar files located in backup location."""
         self._initialized()
         files = []
-        LOGGER.debug("Changing directory to: `%s`", self.cfg.backup_location)
-        await self.sftp.chdir(self.cfg.backup_location)
+        LOGGER.debug(
+            "Changing directory to: `%s`", self.cfg.runtime_data.backup_location
+        )
+        await self.sftp.chdir(self.cfg.runtime_data.backup_location)
 
         for file in await self.sftp.listdir():
             LOGGER.debug(
-                "Checking if file: `%s` is tar file ...", file, self.cfg.backup_location
+                "Checking if file: `%s` is tar file ...",
+                file,
+                self.cfg.runtime_data.backup_location,
             )
             if file.endswith(".tar"):
                 LOGGER.debug("Found tar file name: `%s`.", file)
-                files.append(f"{self.cfg.backup_location}/{file}")
+                files.append(f"{self.cfg.runtime_data.backup_location}/{file}")
         return files
 
     @asynccontextmanager
@@ -337,8 +316,8 @@ class BackupAgentClient:
         self._initialized(file_path=file_path)
 
         # Change new_name to point to full backup_location path
-        if not new_name.startswith(self.cfg.backup_location):
-            new_name = f"{self.cfg.backup_location}/{new_name}"
+        if not new_name.startswith(self.cfg.runtime_data.backup_location):
+            new_name = f"{self.cfg.runtime_data.backup_location}/{new_name}"
 
         # Do nothing name is same.
         if file_path == new_name:
