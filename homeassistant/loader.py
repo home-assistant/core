@@ -1418,6 +1418,8 @@ async def async_get_integrations(
                 results[domain] = cache[domain] = integration
                 future.set_result(integration)
             else:
+                # We don't cache that it doesn't exist, or else people can't fix it
+                # and then restart, because their config will never be valid.
                 del cache[domain]
                 exc = IntegrationNotFound(domain)
                 results[domain] = exc

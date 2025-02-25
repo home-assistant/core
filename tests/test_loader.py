@@ -2064,7 +2064,7 @@ async def test_async_get_integration(hass: HomeAssistant) -> None:
     task3 = hass.async_create_task(
         loader.async_get_integrations(hass, ["does_not_exist"])
     )
-    # Task three should be waiting for the futures  created in task one
+    # Task three should be waiting for the futures created in task one
     integrations_1 = await task1
     assert isinstance(integrations_1["does_not_exist"], loader.IntegrationNotFound)
     integrations_2 = await task2
