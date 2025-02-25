@@ -1991,7 +1991,7 @@ python-otbr-api==2.7.0
 python-overseerr==0.7.0
 
 # homeassistant.components.picnic
-python-picnic-api2==1.2.1
+python-picnic-api2==1.2.2
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
