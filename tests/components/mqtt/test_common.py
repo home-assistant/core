@@ -67,9 +67,8 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
 }
 
 MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
-    "notify_bla123": {
+    "notify_milkman_alert": {
         "platform": "notify",
-        "object_id": "bla123",
         "name": "Milkman alert",
         "qos": 0,
         "command_topic": "test-topic",
@@ -79,19 +78,27 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
     },
 }
 MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
-    "notify_bla456": {
+    "notify_the_second_notifier": {
         "platform": "notify",
-        "object_id": "bla456",
         "name": "The second notifier",
         "qos": 0,
         "command_topic": "test-topic2",
+    },
+}
+MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
+    "notify_none": {
+        "platform": "notify",
+        "qos": 0,
+        "command_topic": "test-topic",
+        "command_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com",
+        "retain": False,
     },
 }
 
 MOCK_SUBENTRY_SENSOR_COMPONENT = {
     "sensor_bla789": {
         "platform": "sensor",
-        "object_id": "bla789",
         "name": "Test sensor",
         "qos": 1,
         "state_topic": "test-topic3",
@@ -101,7 +108,6 @@ MOCK_SUBENTRY_SENSOR_COMPONENT = {
 MOCK_SUBENTRY_LIGHT_COMPONENT = {
     "light_bla0ab": {
         "platform": "light",
-        "object_id": "bla0ab",
         "name": "Test light",
         "qos": 1,
         "command_topic": "test-topic4",
@@ -112,7 +118,6 @@ MOCK_SUBENTRY_LIGHT_COMPONENT = {
 MOCK_SUBENTRY_LIGHT_BAD_SCHEMA = {
     "light_bla0ab": {
         "platform": "light",
-        "object_id": "bla0ab",
         "name": "Test light",
         "qos": 1,
         "command_topic": "bad#topic",
@@ -132,7 +137,7 @@ MOCK_SUBENTRY_DATA = {
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 }
 
-MOCK_SUBENTRY_DATA_SINGLE = {
+MOCK_SUBENTRY_DATA_SINGLE_WITH_ENTITY_NAME = {
     "device": {
         "name": "Milk notifier",
         "sw_version": "1.0",
@@ -142,6 +147,17 @@ MOCK_SUBENTRY_DATA_SINGLE = {
         "configuration_url": "https://example.com",
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
+}
+MOCK_SUBENTRY_DATA_SINGLE_NO_ENTITY_NAME = {
+    "device": {
+        "name": "Milk notifier",
+        "sw_version": "1.0",
+        "hw_version": "2.1 rev a",
+        "model": "Bottle XL",
+        "model_id": "mn002",
+        "configuration_url": "https://example.com",
+    },
+    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME,
 }
 
 MOCK_SUBENTRY_DATA_SET_MIX = {
