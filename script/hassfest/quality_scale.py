@@ -1722,7 +1722,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "mikrotik",
     "mill",
     "min_max",
-    "minecraft_server",
     "minio",
     "mjpeg",
     "moat",
