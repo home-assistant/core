@@ -6,6 +6,7 @@ from collections.abc import AsyncGenerator
 from io import StringIO
 from unittest.mock import Mock, patch
 
+from aiowebdav2 import Property
 from aiowebdav2.exceptions import UnauthorizedError, WebDavError
 import pytest
 
@@ -16,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
-from .const import BACKUP_METADATA, MOCK_LIST_WITH_INFOS
+from .const import BACKUP_METADATA, MOCK_LIST_WITH_PROPERTIES
 
 from tests.common import AsyncMock, MockConfigEntry
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
@@ -210,7 +211,7 @@ async def test_error_on_agents_download(
     """Test we get not found on a not existing backup on download."""
     client = await hass_client()
     backup_id = BACKUP_METADATA["backup_id"]
-    webdav_client.list_with_infos.side_effect = [MOCK_LIST_WITH_INFOS, []]
+    webdav_client.list_with_properties.side_effect = [MOCK_LIST_WITH_PROPERTIES, {}]
 
     resp = await client.get(
         f"/api/backup/download/{backup_id}?agent_id={DOMAIN}.{mock_config_entry.entry_id}"
@@ -261,7 +262,7 @@ async def test_agents_delete_not_found_does_not_throw(
     webdav_client: AsyncMock,
 ) -> None:
     """Test agent delete backup."""
-    webdav_client.list_with_infos.return_value = []
+    webdav_client.list_with_properties.return_value = {}
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -282,7 +283,7 @@ async def test_agents_backup_not_found(
     webdav_client: AsyncMock,
 ) -> None:
     """Test backup not found."""
-    webdav_client.list_with_infos.return_value = []
+    webdav_client.list_with_properties.return_value = []
     backup_id = BACKUP_METADATA["backup_id"]
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
@@ -299,7 +300,7 @@ async def test_raises_on_403(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test we raise on 403."""
-    webdav_client.list_with_infos.side_effect = UnauthorizedError(
+    webdav_client.list_with_properties.side_effect = UnauthorizedError(
         "https://webdav.example.com"
     )
     backup_id = BACKUP_METADATA["backup_id"]
@@ -323,3 +324,30 @@ async def test_listeners_get_cleaned_up(hass: HomeAssistant) -> None:
     remove_listener()
 
     assert hass.data.get(DATA_BACKUP_AGENT_LISTENERS) is None
+
+
+async def test_metadata_misses_backup_id(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    webdav_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test getting a backup when metadata has backup id property."""
+    MOCK_LIST_WITH_PROPERTIES[
+        "/Automatic_backup_2025.2.1_2025-02-10_18.31_30202686.metadata.json"
+    ] = [
+        Property(
+            namespace="homeassistant",
+            name="metadata_version",
+            value="1",
+        )
+    ]
+    webdav_client.list_with_properties.return_value = MOCK_LIST_WITH_PROPERTIES
+
+    backup_id = BACKUP_METADATA["backup_id"]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/details", "backup_id": backup_id})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"]["backup"] is None
