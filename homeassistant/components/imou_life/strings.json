@@ -1,0 +1,41 @@
+{
+  "config": {
+    "step": {
+      "login": {
+        "title": "Login to IMOU Cloud",
+        "data": {
+          "app_id": "AppId",
+          "app_secret": "AppSecret",
+          "api_url": "url"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "AppId is already configured"
+    },
+    "error": {
+      "appIdOrSecret_invalid": "Invalid appId or appSecret",
+      "connect_failed": "Failed to connect to Imou",
+      "request_failed": "Request failed"
+    }
+  },
+  "entity": {
+    "button": {
+      "ptz_up": {
+        "name": "Ptz Up"
+      },
+      "ptz_down": {
+        "name": "Ptz Down"
+      },
+      "ptz_left": {
+        "name": "Ptz Left"
+      },
+      "ptz_right": {
+        "name": "Ptz Right"
+      },
+      "restart_device": {
+        "name": "Restart Device"
+      }
+    }
+  }
+}
