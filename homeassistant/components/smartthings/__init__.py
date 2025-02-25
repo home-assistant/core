@@ -111,10 +111,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         scenes=scenes,
     )
 
-    hass.loop.create_task(
+    entry.async_create_background_task(
+        hass,
         client.subscribe(
             entry.data[CONF_LOCATION_ID], entry.data[CONF_TOKEN][CONF_INSTALLED_APP_ID]
-        )
+        ),
+        "smartthings_webhook",
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
