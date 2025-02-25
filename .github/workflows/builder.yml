@@ -221,6 +221,7 @@ jobs:
           - generic-x86-64
           - intel-nuc
           - khadas-vim3
+          - khadas-vim3l
           - odroid-c2
           - odroid-c4
           - odroid-m1
