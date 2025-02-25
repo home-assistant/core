@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from propcache import cached_property
+from propcache.api import cached_property
 from pyezviz.exceptions import PyEzvizError
 from pyezviz.utils import decrypt_image
 
