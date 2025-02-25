@@ -1,16 +1,23 @@
 """Conversation support for Anthropic."""
 
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
 import json
-from typing import Any, Literal, cast
+from typing import Any, Literal
 
 import anthropic
+from anthropic import AsyncStream
 from anthropic._types import NOT_GIVEN
 from anthropic.types import (
+    InputJSONDelta,
     Message,
     MessageParam,
+    MessageStreamEvent,
+    RawContentBlockDeltaEvent,
+    RawContentBlockStartEvent,
+    RawContentBlockStopEvent,
     TextBlock,
     TextBlockParam,
+    TextDelta,
     ToolParam,
     ToolResultBlockParam,
     ToolUseBlock,
@@ -24,7 +31,7 @@ from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, device_registry as dr, intent, llm
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AnthropicConfigEntry
 from .const import (
@@ -46,7 +53,7 @@ MAX_TOOL_ITERATIONS = 10
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AnthropicConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up conversation entities."""
     agent = AnthropicConversationEntity(config_entry)
@@ -109,7 +116,7 @@ def _convert_content(chat_content: conversation.Content) -> MessageParam:
                         type="tool_use",
                         id=tool_call.id,
                         name=tool_call.tool_name,
-                        input=json.dumps(tool_call.tool_args),
+                        input=tool_call.tool_args,
                     )
                     for tool_call in chat_content.tool_calls or ()
                 ],
@@ -122,6 +129,66 @@ def _convert_content(chat_content: conversation.Content) -> MessageParam:
         )
     # Note: We don't pass SystemContent here as its passed to the API as the prompt
     raise ValueError(f"Unexpected content type: {type(chat_content)}")
+
+
+async def _transform_stream(
+    result: AsyncStream[MessageStreamEvent],
+) -> AsyncGenerator[conversation.AssistantContentDeltaDict]:
+    """Transform the response stream into HA format.
+
+    A typical stream of responses might look something like the following:
+    - RawMessageStartEvent with no content
+    - RawContentBlockStartEvent with an empty TextBlock
+    - RawContentBlockDeltaEvent with a TextDelta
+    - RawContentBlockDeltaEvent with a TextDelta
+    - RawContentBlockDeltaEvent with a TextDelta
+    - ...
+    - RawContentBlockStopEvent
+    - RawContentBlockStartEvent with ToolUseBlock specifying the function name
+    - RawContentBlockDeltaEvent with a InputJSONDelta
+    - RawContentBlockDeltaEvent with a InputJSONDelta
+    - ...
+    - RawContentBlockStopEvent
+    - RawMessageDeltaEvent with a stop_reason='tool_use'
+    - RawMessageStopEvent(type='message_stop')
+    """
+    if result is None:
+        raise TypeError("Expected a stream of messages")
+
+    current_tool_call: dict | None = None
+
+    async for response in result:
+        LOGGER.debug("Received response: %s", response)
+
+        if isinstance(response, RawContentBlockStartEvent):
+            if isinstance(response.content_block, ToolUseBlock):
+                current_tool_call = {
+                    "id": response.content_block.id,
+                    "name": response.content_block.name,
+                    "input": "",
+                }
+            elif isinstance(response.content_block, TextBlock):
+                yield {"role": "assistant"}
+        elif isinstance(response, RawContentBlockDeltaEvent):
+            if isinstance(response.delta, InputJSONDelta):
+                if current_tool_call is None:
+                    raise ValueError("Unexpected delta without a tool call")
+                current_tool_call["input"] += response.delta.partial_json
+            elif isinstance(response.delta, TextDelta):
+                LOGGER.debug("yielding delta: %s", response.delta.text)
+                yield {"content": response.delta.text}
+        elif isinstance(response, RawContentBlockStopEvent):
+            if current_tool_call:
+                yield {
+                    "tool_calls": [
+                        llm.ToolInput(
+                            id=current_tool_call["id"],
+                            tool_name=current_tool_call["name"],
+                            tool_args=json.loads(current_tool_call["input"]),
+                        )
+                    ]
+                }
+            current_tool_call = None
 
 
 class AnthropicConversationEntity(
@@ -206,58 +273,30 @@ class AnthropicConversationEntity(
         # To prevent infinite loops, we limit the number of iterations
         for _iteration in range(MAX_TOOL_ITERATIONS):
             try:
-                response = await client.messages.create(
+                stream = await client.messages.create(
                     model=options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL),
                     messages=messages,
                     tools=tools or NOT_GIVEN,
                     max_tokens=options.get(CONF_MAX_TOKENS, RECOMMENDED_MAX_TOKENS),
                     system=system.content,
                     temperature=options.get(CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE),
+                    stream=True,
                 )
             except anthropic.AnthropicError as err:
                 raise HomeAssistantError(
                     f"Sorry, I had a problem talking to Anthropic: {err}"
                 ) from err
 
-            LOGGER.debug("Response %s", response)
-
-            messages.append(_message_convert(response))
-
-            text = "".join(
+            messages.extend(
                 [
-                    content.text
-                    for content in response.content
-                    if isinstance(content, TextBlock)
+                    _convert_content(content)
+                    async for content in chat_log.async_add_delta_content_stream(
+                        user_input.agent_id, _transform_stream(stream)
+                    )
                 ]
             )
-            tool_inputs = [
-                llm.ToolInput(
-                    id=tool_call.id,
-                    tool_name=tool_call.name,
-                    tool_args=cast(dict[str, Any], tool_call.input),
-                )
-                for tool_call in response.content
-                if isinstance(tool_call, ToolUseBlock)
-            ]
 
-            tool_results = [
-                ToolResultBlockParam(
-                    type="tool_result",
-                    tool_use_id=tool_response.tool_call_id,
-                    content=json.dumps(tool_response.tool_result),
-                )
-                async for tool_response in chat_log.async_add_assistant_content(
-                    conversation.AssistantContent(
-                        agent_id=user_input.agent_id,
-                        content=text,
-                        tool_calls=tool_inputs or None,
-                    )
-                )
-            ]
-            if tool_results:
-                messages.append(MessageParam(role="user", content=tool_results))
-
-            if not tool_inputs:
+            if not chat_log.unresponded_tool_results:
                 break
 
         response_content = chat_log.content[-1]

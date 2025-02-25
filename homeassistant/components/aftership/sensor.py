@@ -14,7 +14,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import Throttle
 
 from . import AfterShipConfigEntry
@@ -42,7 +42,7 @@ PLATFORM_SCHEMA: Final = cv.removed(DOMAIN, raise_if_present=False)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AfterShipConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up AfterShip sensor entities based on a config entry."""
     aftership = config_entry.runtime_data

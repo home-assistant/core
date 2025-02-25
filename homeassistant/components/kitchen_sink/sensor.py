@@ -21,7 +21,6 @@ from .device import async_create_device
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    # pylint: disable-next=hass-argument-type
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Everything but the Kitchen Sink config entry."""
