@@ -39,10 +39,9 @@ from homeassistant.components.media_player import (
 from homeassistant.const import ATTR_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.util.dt import utc_from_timestamp
@@ -138,7 +137,7 @@ def catch_musicassistant_error[_R, **P](
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MusicAssistantConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Music Assistant MediaPlayer(s) from Config Entry."""
     mass = entry.runtime_data.mass

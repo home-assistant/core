@@ -21,7 +21,7 @@ from homeassistant.const import ATTR_COMMAND
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import AndroidTVConfigEntry
@@ -65,7 +65,7 @@ ANDROIDTV_STATES = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AndroidTVConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Android Debug Bridge entity."""
     device_class = entry.runtime_data.aftv.DEVICE_CLASS

@@ -34,7 +34,7 @@ from homeassistant.helpers.recorder import (  # noqa: F401
     get_instance,
     session_scope,
 )
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DEFAULT_MAX_BIND_VARS, DOMAIN, SQLITE_URL_PREFIX, SupportedDialect
 from .db_schema import (

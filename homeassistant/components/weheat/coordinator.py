@@ -13,6 +13,7 @@ from weheat.exceptions import (
     UnauthorizedException,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -30,13 +31,18 @@ EXCEPTIONS = (
     ApiException,
 )
 
+type WeheatConfigEntry = ConfigEntry[list[WeheatDataUpdateCoordinator]]
+
 
 class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
     """A custom coordinator for the Weheat heatpump integration."""
 
+    config_entry: WeheatConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: WeheatConfigEntry,
         session: OAuth2Session,
         heat_pump: HeatPumpDiscovery.HeatPumpInfo,
     ) -> None:
@@ -44,6 +50,7 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
         super().__init__(
             hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=UPDATE_INTERVAL),
         )

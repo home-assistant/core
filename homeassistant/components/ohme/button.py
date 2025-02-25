@@ -10,10 +10,10 @@ from ohme import ApiException, ChargerStatus, OhmeApiClient
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import OhmeConfigEntry
 from .const import DOMAIN
+from .coordinator import OhmeConfigEntry
 from .entity import OhmeEntity, OhmeEntityDescription
 
 PARALLEL_UPDATES = 1
@@ -40,7 +40,7 @@ BUTTON_DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OhmeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up buttons."""
     coordinator = config_entry.runtime_data.charge_session_coordinator

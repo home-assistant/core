@@ -528,13 +528,15 @@ def resolution_suggestions_for_issue_fixture(supervisor_client: AsyncMock) -> As
 @pytest.fixture(name="supervisor_client")
 def supervisor_client() -> Generator[AsyncMock]:
     """Mock the supervisor client."""
-    mounts_info_mock = AsyncMock(spec_set=["mounts"])
+    mounts_info_mock = AsyncMock(spec_set=["default_backup_mount", "mounts"])
+    mounts_info_mock.default_backup_mount = None
     mounts_info_mock.mounts = []
     supervisor_client = AsyncMock()
     supervisor_client.addons = AsyncMock()
     supervisor_client.discovery = AsyncMock()
     supervisor_client.homeassistant = AsyncMock()
     supervisor_client.host = AsyncMock()
+    supervisor_client.jobs = AsyncMock()
     supervisor_client.mounts.info.return_value = mounts_info_mock
     supervisor_client.os = AsyncMock()
     supervisor_client.resolution = AsyncMock()
@@ -570,6 +572,10 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.repairs.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.hassio.update_helper.get_supervisor_client",
             return_value=supervisor_client,
         ),
     ):
@@ -618,7 +624,8 @@ async def _validate_translation(
     if not translation_required:
         return
 
-    if full_key in translation_errors:
+    if translation_errors.get(full_key) in {"used", "unused"}:
+        # This translation key is in the ignore list, mark it as used
         translation_errors[full_key] = "used"
         return
 
@@ -858,6 +865,7 @@ async def check_translations(
     if not isinstance(ignore_translations, list):
         ignore_translations = [ignore_translations]
 
+    # Set all ignored translation keys to "unused"
     translation_errors = {k: "unused" for k in ignore_translations}
 
     translation_coros = set()
@@ -939,10 +947,11 @@ async def check_translations(
     # Run final checks
     unused_ignore = [k for k, v in translation_errors.items() if v == "unused"]
     if unused_ignore:
+        # Some ignored translations were not used
         pytest.fail(
             f"Unused ignore translations: {', '.join(unused_ignore)}. "
             "Please remove them from the ignore_translations fixture."
         )
     for description in translation_errors.values():
-        if description not in {"used", "unused"}:
+        if description != "used":
             pytest.fail(description)

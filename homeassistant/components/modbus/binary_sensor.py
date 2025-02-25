@@ -107,13 +107,9 @@ class ModbusBinarySensor(BasePlatform, RestoreEntity, BinarySensorEntity):
         """Update the state of the sensor."""
 
         # do not allow multiple active calls to the same platform
-        if self._call_active:
-            return
-        self._call_active = True
         result = await self._hub.async_pb_call(
             self._slave, self._address, self._count, self._input_type
         )
-        self._call_active = False
         if result is None:
             self._attr_available = False
             self._result = []

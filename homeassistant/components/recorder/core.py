@@ -43,9 +43,10 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
     async_track_utc_time_change,
 )
+from homeassistant.helpers.recorder import DATA_RECORDER
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.event_type import EventType
 
@@ -183,7 +184,7 @@ class Recorder(threading.Thread):
         self.db_retry_wait = db_retry_wait
         self.database_engine: DatabaseEngine | None = None
         # Database connection is ready, but non-live migration may be in progress
-        db_connected: asyncio.Future[bool] = hass.data[DOMAIN].db_connected
+        db_connected: asyncio.Future[bool] = hass.data[DATA_RECORDER].db_connected
         self.async_db_connected: asyncio.Future[bool] = db_connected
         # Database is ready to use but live migration may be in progress
         self.async_db_ready: asyncio.Future[bool] = hass.loop.create_future()

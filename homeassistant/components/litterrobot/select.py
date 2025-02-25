@@ -12,24 +12,24 @@ from pylitterbot.robot.litterrobot4 import BrightnessLevel
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
-from .entity import LitterRobotEntity, _RobotT
+from .entity import LitterRobotEntity, _WhiskerEntityT
 
 _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
 
 @dataclass(frozen=True, kw_only=True)
 class RobotSelectEntityDescription(
-    SelectEntityDescription, Generic[_RobotT, _CastTypeT]
+    SelectEntityDescription, Generic[_WhiskerEntityT, _CastTypeT]
 ):
     """A class that describes robot select entities."""
 
     entity_category: EntityCategory = EntityCategory.CONFIG
-    current_fn: Callable[[_RobotT], _CastTypeT | None]
-    options_fn: Callable[[_RobotT], list[_CastTypeT]]
-    select_fn: Callable[[_RobotT, str], Coroutine[Any, Any, bool]]
+    current_fn: Callable[[_WhiskerEntityT], _CastTypeT | None]
+    options_fn: Callable[[_WhiskerEntityT], list[_CastTypeT]]
+    select_fn: Callable[[_WhiskerEntityT, str], Coroutine[Any, Any, bool]]
 
 
 ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
@@ -68,7 +68,7 @@ ROBOT_SELECT_MAP: dict[type[Robot], RobotSelectEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot selects using config entry."""
     coordinator = entry.runtime_data
@@ -83,17 +83,19 @@ async def async_setup_entry(
 
 
 class LitterRobotSelectEntity(
-    LitterRobotEntity[_RobotT], SelectEntity, Generic[_RobotT, _CastTypeT]
+    LitterRobotEntity[_WhiskerEntityT],
+    SelectEntity,
+    Generic[_WhiskerEntityT, _CastTypeT],
 ):
     """Litter-Robot Select."""
 
-    entity_description: RobotSelectEntityDescription[_RobotT, _CastTypeT]
+    entity_description: RobotSelectEntityDescription[_WhiskerEntityT, _CastTypeT]
 
     def __init__(
         self,
-        robot: _RobotT,
+        robot: _WhiskerEntityT,
         coordinator: LitterRobotDataUpdateCoordinator,
-        description: RobotSelectEntityDescription[_RobotT, _CastTypeT],
+        description: RobotSelectEntityDescription[_WhiskerEntityT, _CastTypeT],
     ) -> None:
         """Initialize a Litter-Robot select entity."""
         super().__init__(robot, coordinator, description)

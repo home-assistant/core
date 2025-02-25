@@ -8,11 +8,10 @@ from typing import Any
 from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DEFAULT_OFFSET
-from .coordinator import SlideCoordinator
+from .coordinator import SlideConfigEntry, SlideCoordinator
 from .entity import SlideEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SlideConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover(s) for Slide platform."""
 
