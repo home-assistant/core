@@ -1414,18 +1414,12 @@ async def async_get_integrations(
             _resolve_integrations_from_root, hass, components, needed
         )
         for domain, future in needed.items():
-            int_or_exc = integrations.get(domain)
-            # Integration is never subclassed, so we can check for type
-            if type(int_or_exc) is Integration:
-                results[domain] = cache[domain] = int_or_exc
-                future.set_result(int_or_exc)
+            if integration := integrations.get(domain):
+                results[domain] = cache[domain] = integration
+                future.set_result(integration)
             else:
                 del cache[domain]
                 exc = IntegrationNotFound(domain)
-                if int_or_exc:
-                    if TYPE_CHECKING:
-                        assert isinstance(int_or_exc, Exception)
-                    exc.__cause__ = int_or_exc
                 results[domain] = exc
                 # We don't use set_exception because
                 # we expect there will be cases where
