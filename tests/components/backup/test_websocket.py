@@ -35,7 +35,9 @@ from .common import (
     LOCAL_AGENT_ID,
     TEST_BACKUP_ABC123,
     TEST_BACKUP_DEF456,
+    mock_backup_agent,
     setup_backup_integration,
+    setup_backup_platform,
 )
 
 from tests.common import async_fire_time_changed, async_mock_service
@@ -3261,6 +3263,7 @@ async def test_configured_agents_unavailable_repair(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": True,
                         "create_backup": {
                             "agent_ids": ["test.agent"],
                             "include_addons": None,
@@ -3287,11 +3290,10 @@ async def test_configured_agents_unavailable_repair(
             },
         }
     )
-    assert await async_setup_component(hass, DOMAIN, {})
 
-    get_agents_mock = AsyncMock(return_value=[BackupAgentTest("agent", backups=[])])
+    await setup_backup_integration(hass)
+    get_agents_mock = AsyncMock(return_value=[mock_backup_agent("agent")])
     register_listener_mock = Mock()
-
     await setup_backup_platform(
         hass,
         domain="test",
