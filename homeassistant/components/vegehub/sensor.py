@@ -64,7 +64,7 @@ class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
             name=config_entry.data[CONF_HOST],
             manufacturer=MANUFACTURER,
             model=MODEL,
-            # via_device={(DOMAIN, "hub_" + self._mac_address)},
+            via_device=(DOMAIN, "hub_" + self._mac_address),
         )
 
     @callback

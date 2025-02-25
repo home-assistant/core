@@ -14,8 +14,8 @@
         }
       },
       "zeroconf_confirm": {
-        "title": "Set up VegeHub",
-        "description": "Do you want to set up this VegeHub?"
+        "title": "[%key:component::vegehub::config::step::user::title%]",
+        "description": "[%key:component::vegehub::config::step::user::description%]"
       },
       "error_retry": {
         "title": "Retry setup",
