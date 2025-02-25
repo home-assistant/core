@@ -179,6 +179,11 @@ SENSORS = (
         ],
         translation_key="last_selected_map",
     ),
+    HomeConnectSensorEntityDescription(
+        key=StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        translation_key="current_cavity_temperature",
+    ),
 )
 
 EVENT_SENSORS = (
