@@ -404,13 +404,13 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.2.2
+aiowebdav2==0.3.0
 
 # homeassistant.components.webostv
 aiowebostv==0.7.0
 
 # homeassistant.components.withings
-aiowithings==3.1.5
+aiowithings==3.1.6
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
@@ -1691,7 +1691,7 @@ pykrakenapi==0.1.8
 pykulersky==0.5.2
 
 # homeassistant.components.lamarzocco
-pylamarzocco==1.4.6
+pylamarzocco==1.4.7
 
 # homeassistant.components.lastfm
 pylast==5.1.0
@@ -2272,7 +2272,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.5.7
+stookwijzer==1.5.4
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1

@@ -4,18 +4,12 @@ from collections.abc import AsyncIterator, Generator
 from json import dumps
 from unittest.mock import AsyncMock, patch
 
-from aiowebdav2 import Property, PropertyRequest
 import pytest
 
 from homeassistant.components.webdav.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME
 
-from .const import (
-    BACKUP_METADATA,
-    MOCK_GET_PROPERTY_BACKUP_ID,
-    MOCK_GET_PROPERTY_METADATA_VERSION,
-    MOCK_LIST_WITH_INFOS,
-)
+from .const import BACKUP_METADATA, MOCK_LIST_WITH_PROPERTIES
 
 from tests.common import MockConfigEntry
 
@@ -44,14 +38,6 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-def _get_property(path: str, request: PropertyRequest) -> Property:
-    """Return the property of a file."""
-    if path.endswith(".json") and request.name == "metadata_version":
-        return MOCK_GET_PROPERTY_METADATA_VERSION
-
-    return MOCK_GET_PROPERTY_BACKUP_ID
-
-
 async def _download_mock(path: str, timeout=None) -> AsyncIterator[bytes]:
     """Mock the download function."""
     if path.endswith(".json"):
@@ -72,9 +58,8 @@ def mock_webdav_client() -> Generator[AsyncMock]:
         mock = mock_webdav_client.return_value
         mock.check.return_value = True
         mock.mkdir.return_value = True
-        mock.list_with_infos.return_value = MOCK_LIST_WITH_INFOS
+        mock.list_with_properties.return_value = MOCK_LIST_WITH_PROPERTIES
         mock.download_iter.side_effect = _download_mock
         mock.upload_iter.return_value = None
         mock.clean.return_value = None
-        mock.get_property.side_effect = _get_property
         yield mock
