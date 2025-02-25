@@ -53,7 +53,6 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
                 _forecast_daily = await self._smhi_api.async_get_daily_forecast()
                 _forecast_hourly = await self._smhi_api.async_get_hourly_forecast()
         except SmhiForecastException as ex:
-            LOGGER.error("Failed to connect to SMHI API, retry in 5 minutes")
             raise UpdateFailed(
                 "Failed to retrieve the forecast from the SMHI API"
             ) from ex
