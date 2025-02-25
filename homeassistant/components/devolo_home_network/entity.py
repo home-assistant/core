@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from ipaddress import ip_address
-
 from devolo_plc_api.device_api import (
     ConnectedStationInfo,
     NeighborAPInfo,
     WifiGuestAccessGet,
 )
 from devolo_plc_api.plcnet_api import DataRate, LogicalNetwork
+from yarl import URL
 
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -45,9 +44,7 @@ class DevoloEntity(Entity):
         self.entry = entry
 
         self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{self.device.ip}"
-            if ip_address(self.device.ip).version == 4
-            else f"http://[{self.device.ip}]",
+            configuration_url=URL.build(scheme="http", host=self.device.ip),
             identifiers={(DOMAIN, str(self.device.serial_number))},
             manufacturer="devolo",
             model=self.device.product,
