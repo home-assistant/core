@@ -611,7 +611,7 @@ async def test_import_success(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
+    "ignore_missing_translations",
     [
         [  # The schema is dynamically created from input sources
             "component.onkyo.options.step.names.sections.input_sources.data.TV",
