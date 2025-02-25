@@ -2167,7 +2167,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "velux",
     "venstar",
     "vera",
-    "velbus",
     "verisure",
     "versasense",
     "version",
