@@ -95,7 +95,6 @@ def _populate_brand_integrations(
         integration = integrations.get(domain)
         if not integration or integration.integration_type in (
             "entity",
-            "hardware",
             "system",
         ):
             continue
@@ -171,7 +170,7 @@ def _generate_integrations(
             result["integration"][domain] = metadata
         else:  # integration
             integration = integrations[domain]
-            if integration.integration_type in ("entity", "system", "hardware"):
+            if integration.integration_type in ("entity", "system"):
                 continue
 
             if integration.translated_name:
