@@ -13,7 +13,7 @@ import sys
 from homeassistant import runner
 from homeassistant.bootstrap import async_mount_local_lib_path
 from homeassistant.config import get_default_config_dir
-from homeassistant.requirements import pip_kwargs
+from homeassistant.requirements import async_pip_kwargs
 from homeassistant.util.package import install_package, is_installed, is_virtual_env
 
 # mypy: allow-untyped-defs, disallow-any-generics, no-warn-return-any
@@ -51,7 +51,7 @@ def run(args: list[str]) -> int:
     if not is_virtual_env():
         loop.run_until_complete(async_mount_local_lib_path(config_dir))
 
-    _pip_kwargs = pip_kwargs(config_dir)
+    _pip_kwargs = loop.run_until_complete(async_pip_kwargs(config_dir))
 
     logging.basicConfig(stream=sys.stdout, level=logging.INFO)
 
