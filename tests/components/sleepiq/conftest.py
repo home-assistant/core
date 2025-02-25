@@ -7,10 +7,12 @@ from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
 from asyncsleepiq import (
     BED_PRESETS,
+    CoreTemps,
     FootWarmingTemps,
     Side,
     SleepIQActuator,
     SleepIQBed,
+    SleepIQCoreClimate,
     SleepIQFootWarmer,
     SleepIQFoundation,
     SleepIQLight,
@@ -38,6 +40,7 @@ SLEEPER_R_NAME_LOWER = SLEEPER_R_NAME.lower().replace(" ", "_")
 PRESET_L_STATE = "Watch TV"
 PRESET_R_STATE = "Flat"
 FOOT_WARM_TIME = 120
+CORE_CLIMATE_TIME = 120
 
 SLEEPIQ_CONFIG = {
     CONF_USERNAME: "user@email.com",
@@ -91,6 +94,7 @@ def mock_bed() -> MagicMock:
     bed.foundation.lights = [light_1, light_2]
 
     bed.foundation.foot_warmers = []
+    bed.foundation.core_climates = []
     return bed
 
 
@@ -127,6 +131,7 @@ def mock_asyncsleepiq_single_foundation(
         preset.options = BED_PRESETS
 
         mock_bed.foundation.foot_warmers = []
+        mock_bed.foundation.core_climates = []
         yield client
 
 
@@ -184,6 +189,18 @@ def mock_asyncsleepiq(mock_bed: MagicMock) -> Generator[MagicMock]:
         foot_warmer_r.side = Side.RIGHT
         foot_warmer_r.timer = FOOT_WARM_TIME
         foot_warmer_r.temperature = FootWarmingTemps.OFF
+
+        core_climate_l = create_autospec(SleepIQCoreClimate)
+        core_climate_r = create_autospec(SleepIQCoreClimate)
+        mock_bed.foundation.core_climates = [core_climate_l, core_climate_r]
+
+        core_climate_l.side = Side.LEFT
+        core_climate_l.timer = CORE_CLIMATE_TIME
+        core_climate_l.temperature = CoreTemps.MEDIUM
+
+        core_climate_r.side = Side.RIGHT
+        core_climate_r.timer = CORE_CLIMATE_TIME
+        core_climate_r.temperature = CoreTemps.OFF
 
         yield client
 
