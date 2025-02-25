@@ -175,24 +175,26 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
                     kwargs[ATTR_BRIGHTNESS],
                 )
             )
-            await self.async_set_value(self._dimmer_attr, target_value)
+            await self.async_set_homee_value(self._dimmer_attr, target_value)
         else:
             # If no brightness value is given, just turn on.
-            await self.async_set_value(self._on_off_attr, 1)
+            await self.async_set_homee_value(self._on_off_attr, 1)
 
         if ATTR_COLOR_TEMP_KELVIN in kwargs and self._temp_attr is not None:
-            await self.async_set_value(self._temp_attr, kwargs[ATTR_COLOR_TEMP_KELVIN])
+            await self.async_set_homee_value(
+                self._temp_attr, kwargs[ATTR_COLOR_TEMP_KELVIN]
+            )
         if ATTR_HS_COLOR in kwargs:
             color = kwargs[ATTR_HS_COLOR]
             if self._col_attr is not None:
-                await self.async_set_value(
+                await self.async_set_homee_value(
                     self._col_attr,
                     rgb_list_to_decimal(color_hs_to_RGB(*color)),
                 )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
-        await self.async_set_value(self._on_off_attr, 0)
+        await self.async_set_homee_value(self._on_off_attr, 0)
 
     def _get_supported_color_modes(self) -> set[ColorMode]:
         """Determine the supported color modes from the available attributes."""
