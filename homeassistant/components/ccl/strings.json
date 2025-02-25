@@ -20,7 +20,7 @@
       },
       "leakage": {
         "state": {
-          "no_leak": "No Leak",
+          "no_leak": "No leak",
           "leaking": "Leaking"
         }
       }
