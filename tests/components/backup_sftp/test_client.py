@@ -1,6 +1,6 @@
 """Test client for SFTP Backup Location component."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Callable
 import io
 import json
 from tempfile import NamedTemporaryFile
@@ -13,15 +13,14 @@ from homeassistant.components.backup import BackupAgentError, suggested_filename
 from homeassistant.components.backup.models import AgentBackup
 
 # Import the classes and functions under test.
-from homeassistant.components.backup_sftp import SFTPConfigEntryData
+from homeassistant.components.backup_sftp import SFTPConfigEntry, SFTPConfigEntryData
 from homeassistant.components.backup_sftp.client import (
     AsyncFileIterator,
     BackupAgentClient,
 )
-from homeassistant.exceptions import ConfigEntryError
-from homeassistant.util import slugify
+from homeassistant.core import HomeAssistant
 
-from .conftest import USER_INPUT, create_tar_bytes
+from .conftest import create_tar_bytes
 from .test_backup import TEST_AGENT_BACKUP
 from .test_util import BACKUP_DATA
 
@@ -151,21 +150,18 @@ class DummySSHClient:
 # Fixture to patch asyncssh.connect and return our dummy SSH/SFTP objects.
 # -----------------------------------------------------------------------------
 @pytest.fixture
-async def dummy_backup_agent_client() -> AsyncGenerator[BackupAgentClient]:
+async def dummy_backup_agent_client(
+    dummy_connect: Callable[..., DummySSHClient],
+    config_entry: SFTPConfigEntry,
+    hass: HomeAssistant,
+) -> AsyncGenerator[BackupAgentClient]:
     """Fixture that will create a `BackupAgentClient` with dummy SSH/SFTP connections.
 
     This fixture patches asyncssh.connect to return a dummy SSH client,
     initializes the `BackupAgentClient`, and yields it for testing.
     """
-    cfg = SFTPConfigEntryData(**USER_INPUT)
-    dummy_sftp = DummySFTPClient()
-    dummy_ssh = DummySSHClient(dummy_sftp)
-
-    async def dummy_connect(*args, **kwargs):
-        """Replace asyncssh.connect with a dummy connect function."""
-        return dummy_ssh
-
-    # monkeypatch.setattr("homeassistant.components.backup_sftp.client.connect", dummy_connect)
+    cfg = SFTPConfigEntryData(**config_entry.data)
+    setattr(config_entry, "runtime_data", cfg)
 
     with (
         NamedTemporaryFile() as f,
@@ -177,37 +173,33 @@ async def dummy_backup_agent_client() -> AsyncGenerator[BackupAgentClient]:
         )
         f.flush()
         f.seek(0)
-        client = BackupAgentClient(cfg)
+        client = BackupAgentClient(config_entry, hass)
         await client.__aenter__()
         yield client
         await client.__aexit__(None, None, None)
 
 
+@pytest.fixture
+async def dummy_connect() -> AsyncGenerator[BackupAgentClient]:
+    """Fixture that will create a `BackupAgentClient` with dummy SSH/SFTP connections.
+
+    This fixture patches asyncssh.connect to return a dummy SSH client,
+    initializes the `BackupAgentClient`, and yields it for testing.
+    """
+    dummy_sftp = DummySFTPClient()
+    dummy_ssh = DummySSHClient(dummy_sftp)
+
+    async def _dummy_connect(*args, **kwargs):
+        """Replace asyncssh.connect with a dummy connect function."""
+        return dummy_ssh
+
+    return _dummy_connect
+
+
 # -----------------------------------------------------------------------------
 # Test Cases
 # -----------------------------------------------------------------------------
-async def test_get_identifier(dummy_backup_agent_client) -> None:
-    """Test that get_identifier returns a properly slugified identifier.
-
-    The identifier should consist of host, port, username, and backup_location,
-    joined by periods and slugified.
-    """
-    client = dummy_backup_agent_client
-    identifier = client.get_identifier()
-    expected = slugify(
-        ".".join(
-            [
-                client.cfg.host,
-                str(client.cfg.port),
-                client.cfg.username,
-                client.cfg.backup_location,
-            ]
-        )
-    )
-    assert identifier == expected
-
-
-async def test_async_list_backups(dummy_backup_agent_client) -> None:
+async def test_async_list_backups(dummy_backup_agent_client: BackupAgentClient) -> None:
     """Test that async_list_backups returns a list of AgentBackup objects from tar archives.
 
     This test creates a tar archive containing a valid backup.json (together with an extra file)
@@ -220,7 +212,7 @@ async def test_async_list_backups(dummy_backup_agent_client) -> None:
     tar_bytes = create_tar_bytes(
         {"./backup.json": backup_json, "other.txt": "dummy content"}
     )
-    file_path = f"{client.cfg.backup_location}/backup1.tar"
+    file_path = f"{client.cfg.runtime_data.backup_location}/backup1.tar"
     client.sftp._files[file_path] = tar_bytes
 
     async def dummy_listdir():
@@ -265,7 +257,9 @@ async def test_async_list_backups(dummy_backup_agent_client) -> None:
         assert len(backups) == 0
 
 
-async def test_async_delete_backup(dummy_backup_agent_client) -> None:
+async def test_async_delete_backup(
+    dummy_backup_agent_client: BackupAgentClient,
+) -> None:
     """Test that async_delete_backup successfully deletes a backup file from remote SFTP storage.
 
     This test creates a dummy tar archive in the dummy SFTP client's storage, calls
@@ -280,7 +274,7 @@ async def test_async_delete_backup(dummy_backup_agent_client) -> None:
     backup_data = TEST_AGENT_BACKUP.as_dict()
     backup_json = json.dumps(backup_data)
     tar_bytes = create_tar_bytes({"./backup.json": backup_json})
-    file_path = f"{client.cfg.backup_location}/{suggested_filename(AgentBackup(**{**backup_data, 'size': len(tar_bytes)}))}"
+    file_path = f"{client.cfg.runtime_data.backup_location}/{suggested_filename(AgentBackup(**{**backup_data, 'size': len(tar_bytes)}))}"
     client.sftp._files[file_path] = tar_bytes
 
     # Patch exists and isfile to return True.
@@ -292,7 +286,9 @@ async def test_async_delete_backup(dummy_backup_agent_client) -> None:
     assert file_path not in client.sftp._files
 
 
-async def test_async_upload_backup(dummy_backup_agent_client) -> None:
+async def test_async_upload_backup(
+    dummy_backup_agent_client: BackupAgentClient,
+) -> None:
     """Test that async_upload_backup writes data from an async iterator to remote SFTP storage."""
     client = dummy_backup_agent_client
 
@@ -309,22 +305,15 @@ async def test_async_upload_backup(dummy_backup_agent_client) -> None:
     await client.async_upload_backup(dummy_iterator(), backup)
 
 
-async def test_raised_exceptions(dummy_backup_agent_client) -> None:
+async def test_raised_exceptions(
+    dummy_backup_agent_client: BackupAgentClient,
+    config_entry: SFTPConfigEntry,
+    async_cm_mock: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+    hass: HomeAssistant,
+) -> None:
     """Test some cases where exceptions will be raised."""
-    cfg = SFTPConfigEntryData(**USER_INPUT)
-    cfg.password = None
-    cfg.private_key_file = None
-    try:
-        client = BackupAgentClient(cfg)
-    except ConfigEntryError:
-        pass
-    except Exception as e:
-        raise AssertionError("Wrong exception encountered.") from e
-    else:
-        raise AssertionError("Initialization succeeded instead of failed.")
-
-    cfg.password = "password"
-    client = BackupAgentClient(cfg)
+    client = BackupAgentClient(config_entry, hass)
     # This will fail because _ssh and sftp attributes are None
     with pytest.raises(RuntimeError) as excinfo:
         client._initialized()
@@ -337,7 +326,6 @@ async def test_raised_exceptions(dummy_backup_agent_client) -> None:
     assert "Connection is not initialized" in str(excinfo)
 
     # We set value to _sftp
-
     client._ssh = None
     client.sftp = True
     with pytest.raises(RuntimeError) as excinfo:
@@ -354,10 +342,6 @@ async def test_raised_exceptions(dummy_backup_agent_client) -> None:
     )
 
     client = dummy_backup_agent_client
-    with pytest.raises(AssertionError) as excinfo:
-        await client.iter_file(None)
-    assert "None object passed" in str(excinfo)
-
     backup_data = TEST_AGENT_BACKUP.as_dict()
     backup = AgentBackup(**{**backup_data, "size": 0})
     with pytest.raises(BackupAgentError) as excinfo:
@@ -375,23 +359,42 @@ async def test_raised_exceptions(dummy_backup_agent_client) -> None:
         excinfo
     )
 
+    with patch(
+        "homeassistant.components.backup_sftp.client.connect",
+        return_value=async_cm_mock,
+    ):
+        async_cm_mock.start_sftp_client = AsyncMock(
+            side_effect=asyncssh.SFTPNoSuchFile("Error Message")
+        )
+        client = BackupAgentClient(config_entry, hass)
+        with pytest.raises(RuntimeError) as excinfo:
+            await client.__aenter__()
+        assert "Failed to create SFTP client" in caplog.text
 
-async def test_client_open(dummy_backup_agent_client) -> None:
+
+async def test_client_open(dummy_backup_agent_client: BackupAgentClient) -> None:
     """Test if we can open a file and return file-like object."""
     client = dummy_backup_agent_client
     async with client.open("backup_location/file") as f:
         assert isinstance(f, DummySFTPFile)
 
 
-async def test_async_file_iterator(dummy_backup_agent_client) -> None:
+async def test_async_file_iterator(
+    dummy_backup_agent_client: BackupAgentClient,
+    hass: HomeAssistant,
+) -> None:
     """Run tests for `AsyncFileIterator`."""
-    cfg = SFTPConfigEntryData(**USER_INPUT)
     with patch(
         "homeassistant.components.backup_sftp.client.BackupAgentClient"
     ) as client:
         client.return_value = dummy_backup_agent_client
         dummy_backup_agent_client.sftp.open = AsyncMock()
-        iterator = AsyncFileIterator(cfg, "file_path", buffer_size=1)
+        iterator = AsyncFileIterator(
+            cfg=dummy_backup_agent_client.cfg,
+            hass=hass,
+            file_path="file_path",
+            buffer_size=1,
+        )
 
         # This one will not work, as iterator will setup
         # _fileobj. We want this to gain more coverage.

@@ -73,16 +73,14 @@ async def test_setup_error(
     assert entries[0].state is ConfigEntryState.SETUP_RETRY
 
 
-@patch("homeassistant.components.backup_sftp.BackupAgentClient")
+@patch("homeassistant.components.backup_sftp.client.connect")
 async def test_setup_error_reauth(
-    backup_agent_client: MagicMock,
+    mock_connect: AsyncMock,
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
-    async_cm_mock: AsyncMock,
 ) -> None:
     """Test reauth trigger on `BackupAgentClient` failure."""
-    backup_agent_client.return_value = async_cm_mock
-    async_cm_mock.list_backup_location.side_effect = OSError("Error message")
+    mock_connect.side_effect = OSError("Error message")
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)

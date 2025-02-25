@@ -16,11 +16,11 @@ from homeassistant.components.backup_sftp.const import (
     CONF_USERNAME,
     DOMAIN,
 )
+from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry
 
 CONFIG_ENTRY_TITLE = "testsshuser@127.0.0.1"
-TEST_AGENT_ID = "127.0.0.1.22.testsshuser.tmp.backup.location"
 USER_INPUT = {
     CONF_HOST: "127.0.0.1",
     CONF_PORT: 22,
@@ -29,6 +29,16 @@ USER_INPUT = {
     CONF_PRIVATE_KEY_FILE: "private_key",
     CONF_BACKUP_LOCATION: "backup_location",
 }
+TEST_AGENT_ID = slugify(
+    ".".join(
+        [
+            USER_INPUT[CONF_HOST],
+            str(USER_INPUT[CONF_PORT]),
+            USER_INPUT[CONF_USERNAME],
+            USER_INPUT[CONF_BACKUP_LOCATION],
+        ]
+    )
+)
 
 
 class AsyncFileIteratorMock:
@@ -75,6 +85,15 @@ def async_cm_mock() -> AsyncMock:
     return mocked_client
 
 
+@pytest.fixture
+def fake_connect(async_cm_mock):
+    "Prepare a fake `asyncssh.connect` cm to simulate a successful connection."
+    mck = AsyncMock()
+    mck.__aenter__.return_value = mck
+    mck.start_sftp_client = lambda: async_cm_mock
+    return mck
+
+
 @pytest.fixture(name="config_entry")
 def mock_config_entry() -> MockConfigEntry:
     """Fixture for MockConfigEntry."""
@@ -107,6 +126,5 @@ def mock_client() -> Generator[MagicMock]:
         mocked_client.__aenter__ = AsyncMock(return_value=mocked_client)
         mocked_client.__aexit__ = AsyncMock(return_value=None)
 
-        mocked_client.get_identifier = MagicMock(return_value=TEST_AGENT_ID)
         mocked_client.list_backup_location = AsyncMock(return_value=[])
         yield mocked_client
