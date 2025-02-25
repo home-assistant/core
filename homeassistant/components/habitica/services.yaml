@@ -147,7 +147,7 @@ update_reward:
     rename:
       selector:
         text:
-    description:
+    notes:
       required: false
       selector:
         text:
