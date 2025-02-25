@@ -33,6 +33,9 @@
     "appliance_not_found": {
       "message": "Appliance for device ID {device_id} not found"
     },
+    "device_entry_not_found": {
+      "message": "Device entry for device ID {device_id} not found"
+    },
     "config_entry_not_found": {
       "message": "Config entry for device ID {device_id} not found"
     },
