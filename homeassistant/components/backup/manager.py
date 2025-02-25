@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     instance_id,
     integration_platform,
     issue_registry as ir,
+    start,
 )
 from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.json import json_bytes
@@ -47,6 +48,7 @@ from .agent import (
 from .config import (
     BackupConfig,
     CreateBackupParametersDict,
+    check_unavailable_agents,
     delete_backups_exceeding_configured_count,
 )
 from .const import (
@@ -416,6 +418,13 @@ class BackupManager:
                 if isinstance(agent, LocalBackupAgent)
             }
         )
+
+        @callback
+        def check_unavailable_agents_after_start(hass: HomeAssistant) -> None:
+            """Check unavailable agents after start."""
+            check_unavailable_agents(hass, self)
+
+        start.async_at_started(self.hass, check_unavailable_agents_after_start)
 
     async def _add_platform(
         self,
