@@ -27,6 +27,8 @@ from .const import (
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
+PARALLEL_UPDATES = 0
+
 EVENT_OPTIONS = ["confirmed", "off", "present"]
 
 
