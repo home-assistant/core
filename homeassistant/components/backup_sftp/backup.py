@@ -61,7 +61,7 @@ class SFTPBackupAgent(BackupAgent):
         LOGGER.debug("Received request to download backup id: %s", backup_id)
         try:
             backup = await self.async_get_backup(backup_id)
-            async with BackupAgentClient(self._entry.runtime_data) as client:
+            async with BackupAgentClient(self._entry, self._hass) as client:
                 return await client.iter_file(backup)
         except Exception as e:
             LOGGER.exception(e)
@@ -87,7 +87,7 @@ class SFTPBackupAgent(BackupAgent):
             "Establishing SFTP connection to remote host in order to upload backup ..."
         )
         try:
-            async with BackupAgentClient(self._entry.runtime_data) as client:
+            async with BackupAgentClient(self._entry, self._hass) as client:
                 LOGGER.debug("Uploading backup: %s ...", backup.backup_id)
                 await client.async_upload_backup(iterator, backup)
         except Exception as e:
@@ -110,7 +110,7 @@ class SFTPBackupAgent(BackupAgent):
 
         try:
             backup = await self.async_get_backup(backup_id)
-            async with BackupAgentClient(self._entry.runtime_data) as client:
+            async with BackupAgentClient(self._entry, self._hass) as client:
                 await client.async_delete_backup(backup)
         except Exception as err:
             LOGGER.exception(err)
@@ -124,7 +124,7 @@ class SFTPBackupAgent(BackupAgent):
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups stored on SFTP Backup Storage."""
         try:
-            async with BackupAgentClient(self._entry.runtime_data) as client:
+            async with BackupAgentClient(self._entry, self._hass) as client:
                 return await client.async_list_backups()
         except Exception as e:
             LOGGER.exception(e)
