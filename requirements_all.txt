@@ -428,7 +428,7 @@ aiowebdav2==0.3.0
 aiowebostv==0.7.0
 
 # homeassistant.components.withings
-aiowithings==3.1.5
+aiowithings==3.1.6
 
 # homeassistant.components.yandex_transport
 aioymaps==1.2.5
