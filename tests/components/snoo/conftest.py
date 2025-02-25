@@ -1,10 +1,13 @@
 """Common fixtures for the Happiest Baby Snoo tests."""
 
 from collections.abc import Generator
+import time
 from unittest.mock import AsyncMock, patch
 
+from pubnub.models.consumer.pubsub import PNMessageResult
 import pytest
 from python_snoo.containers import SnooDevice
+from python_snoo.pubnub_async import SnooPubNub
 from python_snoo.snoo import Snoo
 
 from .const import MOCK_AMAZON_AUTH, MOCK_SNOO_AUTH, MOCK_SNOO_DEVICES
@@ -29,10 +32,42 @@ class MockedSnoo(Snoo):
 
     async def subscribe(self, device: SnooDevice, function):
         """Mock the subscribe function."""
-        return AsyncMock()
+        self.pubnub = AsyncMock()
+        if device.serialNumber not in self.pubnub_instances:
+            self.pubnub_instances[device.serialNumber] = SnooPubNub(
+                self.pubnub, device.serialNumber
+            )
+        return self.pubnub_instances[device.serialNumber].subscribe(function)
 
     async def send_command(self, command: str, device: SnooDevice, **kwargs):
         """Mock the send command function."""
+        if command == "send_status":
+            # This is only called on first setup.
+            await self.send_mock_message(
+                device,
+                message={
+                    "system_state": "normal",
+                    "sw_version": "v1.14.27",
+                    "state_machine": {
+                        "session_id": "0",
+                        "state": "ONLINE",
+                        "is_active_session": "false",
+                        "since_session_start_ms": -1,
+                        "time_left": -1,
+                        "hold": "off",
+                        "weaning": "off",
+                        "audio": "on",
+                        "up_transition": "NONE",
+                        "down_transition": "NONE",
+                        "sticky_white_noise": "off",
+                    },
+                    "left_safety_clip": 1,
+                    "right_safety_clip": 1,
+                    "event": "status_requested",
+                    "event_time_ms": int(time.time()),
+                    "rx_signal": {"rssi": -45, "strength": 100},
+                },
+            )
         return AsyncMock()
 
     async def authorize(self):
@@ -60,6 +95,19 @@ class MockedSnoo(Snoo):
     async def get_devices(self) -> list[SnooDevice]:
         """Move getting devices."""
         return [SnooDevice.from_dict(dev) for dev in MOCK_SNOO_DEVICES]
+
+    async def send_mock_message(self, device: SnooDevice, message: dict) -> None:
+        """Send a fake message on the pubnub topic."""
+        self.pubnub_instances[device.serialNumber].message(
+            self.pubnub,
+            PNMessageResult(
+                subscription=None,
+                publisher=None,
+                channel=f"ActivityState.{device.serialNumber}",
+                timetoken=int(time.time()),
+                message=message,
+            ),
+        )
 
 
 @pytest.fixture(name="bypass_api")
