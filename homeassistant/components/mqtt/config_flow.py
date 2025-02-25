@@ -98,7 +98,6 @@ from .const import (
     CONF_DISCOVERY_PREFIX,
     CONF_ENTITY_PICTURE,
     CONF_KEEPALIVE,
-    CONF_OBJECT_ID,
     CONF_QOS,
     CONF_RETAIN,
     CONF_TLS_INSECURE,
@@ -233,14 +232,12 @@ class PlatformField:
 
 CORE_PLATFORM_FIELDS = [
     CONF_PLATFORM,
-    CONF_OBJECT_ID,
     CONF_NAME,
     CONF_ENTITY_PICTURE,
 ]
 
 COMMON_ENTITY_FIELDS = {
     CONF_PLATFORM: PlatformField(SUBENTRY_PLATFORM_SELECTOR, True, str),
-    CONF_OBJECT_ID: PlatformField(TEXT_SELECTOR, True, str),
     CONF_NAME: PlatformField(TEXT_SELECTOR, False, str),
     CONF_ENTITY_PICTURE: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
 }
@@ -917,20 +914,20 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Add or edit an mqtt entity."""
         errors: dict[str, str] = {}
-        mqtt_device = f'"{self._subentry_data[CONF_DEVICE][CONF_NAME]}"'
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
         data_schema_fields = COMMON_ENTITY_FIELDS
         data_schema = data_schema_from_fields(data_schema_fields)
         if user_input is not None:
             # Add the component but check if the object ID is unique and not reconfiguring
             validate_user_input(user_input, data_schema_fields, errors)
             platform_object_id = (
-                f"{user_input['platform']}_{slugify(user_input['object_id'])}"
+                f"{user_input['platform']}_{slugify(user_input.get('name', 'none'))}"
             )
             if self._object_id != platform_object_id:
                 if platform_object_id in self._subentry_data["components"]:
-                    errors[CONF_OBJECT_ID] = "object_id_not_unique"
+                    errors[CONF_NAME] = "name_not_unique"
                 if self._object_id is not None and self.source == SOURCE_RECONFIGURE:
-                    errors[CONF_OBJECT_ID] = "object_id_not_mutable"
+                    errors[CONF_NAME] = "name_not_mutable"
             if not errors:
                 self._object_id = platform_object_id
                 if component_data := self._subentry_data["components"].setdefault(
@@ -957,7 +954,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         return self.async_show_form(
             step_id="entity",
             data_schema=data_schema,
-            description_placeholders={"mqtt_device": mqtt_device},
+            description_placeholders={"mqtt_device": device_name},
             errors=errors,
             last_step=False,
         )
@@ -969,9 +966,15 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         if user_input:
             self._object_id = user_input["component"]
             return await self.async_step_entity()
-        entities = list(self._subentry_data["components"].keys())
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        entities = [
+            SelectOptionDict(
+                value=key, label=f"{device_name} {component.get(CONF_NAME, '-')}"
+            )
+            for key, component in self._subentry_data["components"].items()
+        ]
         if len(entities) == 1:
-            self._object_id = entities[0]
+            self._object_id = entities[0]["value"]
             return await self.async_step_entity()
         data_schema = vol.Schema(
             {
@@ -995,7 +998,14 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             self._dirty = True
             del self._subentry_data["components"][user_input["component"]]
             return await self.async_step_summary_menu()
-        entities = list(self._subentry_data["components"].keys())
+
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
+        entities = [
+            SelectOptionDict(
+                value=key, label=f"{device_name} {component.get(CONF_NAME, '-')}"
+            )
+            for key, component in self._subentry_data["components"].items()
+        ]
         data_schema = vol.Schema(
             {
                 vol.Required("component"): SelectSelector(
@@ -1017,9 +1027,16 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         errors: dict[str, str] = {}
         if TYPE_CHECKING:
             assert self._object_id is not None
-        mqtt_device = f'"{self._subentry_data[CONF_DEVICE][CONF_NAME]}"'
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
         platform = self._subentry_data["components"][self._object_id][CONF_PLATFORM]
-        object_id = self._subentry_data["components"][self._object_id][CONF_OBJECT_ID]
+        entity_name: str | None
+        if entity_name := self._subentry_data["components"][self._object_id].get(
+            CONF_NAME
+        ):
+            full_entity_name: str = f"{device_name} {entity_name}"
+        else:
+            full_entity_name = device_name
+
         data_schema_fields = PLATFORM_MQTT_FIELDS[platform] | COMMON_MQTT_FIELDS
         data_schema = data_schema_from_fields(data_schema_fields)
         if user_input is not None:
@@ -1051,9 +1068,9 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             step_id="entity_platform_config",
             data_schema=data_schema,
             description_placeholders={
-                "mqtt_device": mqtt_device,
+                "mqtt_device": device_name,
                 CONF_PLATFORM: platform,
-                CONF_OBJECT_ID: object_id,
+                "entity": full_entity_name,
             },
             errors=errors,
             last_step=False,
@@ -1064,18 +1081,22 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
         """Confirm creating a new MQTT device."""
-        mqtt_device = f'"{self._subentry_data[CONF_DEVICE][CONF_NAME]}"'
+        device_name = self._subentry_data[CONF_DEVICE][CONF_NAME]
         component: dict[str, Any] = next(
             iter(self._subentry_data["components"].values())
         )
-        entity_name = component.get(CONF_NAME, component[CONF_OBJECT_ID])
         platform = component[CONF_PLATFORM]
+        entity_name: str | None
+        if entity_name := component.get(CONF_NAME):
+            full_entity_name: str = f"{device_name} {entity_name}"
+        else:
+            full_entity_name = device_name
+
         return self.async_create_entry(
             data=self._subentry_data,
             title=self._subentry_data[CONF_DEVICE][CONF_NAME],
             description_placeholders={
-                "mqtt_device": mqtt_device,
-                "entity": entity_name,
+                "entity": full_entity_name,
                 CONF_PLATFORM: platform,
             },
         )
@@ -1085,9 +1106,10 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Show summary menu and decide to add more entities or to finish the flow."""
         self._object_id = None
-        mqtt_device = f'"{self._subentry_data[CONF_DEVICE][CONF_NAME]}"'
+        mqtt_device = self._subentry_data[CONF_DEVICE][CONF_NAME]
         mqtt_items = ", ".join(
-            f'"{component}"' for component in self._subentry_data["components"]
+            f"{mqtt_device} {component.get(CONF_NAME, '-')}"
+            for component in self._subentry_data["components"].values()
         )
         menu_options = [
             "entity",

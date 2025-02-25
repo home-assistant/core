@@ -19,6 +19,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
+from homeassistant.util import slugify
 
 from .test_common import (
     MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA,
@@ -488,16 +489,17 @@ async def test_loading_subentries(
     """Test loading subentries."""
     await mqtt_mock_entry()
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    subentry_id, subentry = next(iter(entry.subentries.items()))
+    subentry_id = next(iter(entry.subentries))
     # Each subentry has one device
     device = device_registry.async_get_device({("mqtt", subentry_id)})
     assert device is not None
-    for component in mqtt_config_subentries_data[0]["data"]["components"].values():
+    for object_id, component in mqtt_config_subentries_data[0]["data"][
+        "components"
+    ].items():
         platform = component["platform"]
-        object_id = component["object_id"]
-        entity_id = f"{platform}.{object_id}"
+        entity_id = f"{platform}.{slugify(device.name)}_{slugify(component['name'])}"
         entity_entry_entity_id = entity_registry.async_get_entity_id(
-            platform, mqtt.DOMAIN, f"{subentry_id}_{platform}_{object_id}"
+            platform, mqtt.DOMAIN, f"{subentry_id}_{object_id}"
         )
         assert entity_entry_entity_id == entity_id
         state = hass.states.get(entity_id)
@@ -526,7 +528,7 @@ async def test_loading_subentry_with_bad_component_schema(
     """Test loading subentries."""
     await mqtt_mock_entry()
     entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
-    subentry_id, subentry = next(iter(entry.subentries.items()))
+    subentry_id = next(iter(entry.subentries))
     # Each subentry has one device
     device = device_registry.async_get_device({("mqtt", subentry_id)})
     assert device is None
