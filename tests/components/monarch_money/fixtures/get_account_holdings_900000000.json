@@ -1,0 +1,117 @@
+{
+  "portfolio": {
+    "aggregateHoldings": {
+      "edges": [
+        {
+          "node": {
+            "id": "800000001",
+            "quantity": 101,
+            "basis": 101,
+            "totalValue": 202,
+            "securityPriceChangeDollars": null,
+            "securityPriceChangePercent": null,
+            "lastSyncedAt": "2024-02-18",
+            "holdings": [
+              {
+                "id": "9000000001",
+                "type": null,
+                "typeDisplay": "ETF",
+                "name": "iShares S&P CA AMT-Free Municipal Bd",
+                "ticker": "CMF",
+                "closingPrice": 2,
+                "isManual": false,
+                "closingPriceUpdatedAt": "2024-02-16T00:00:00+00:00",
+                "__typename": "Holding"
+              }
+            ],
+            "security": {
+              "id": "80084056431098865",
+              "name": "iShares S&P CA AMT-Free Municipal Bd",
+              "type": "etf",
+              "ticker": "CMF",
+              "typeDisplay": "ETF",
+              "currentPrice": 2,
+              "currentPriceUpdatedAt": "2024-02-16T21:00:04.365428+00:00",
+              "closingPrice": 2,
+              "closingPriceUpdatedAt": "2023-12-06T00:00:00+00:00",
+              "oneDayChangePercent": 0.01,
+              "oneDayChangeDollars": 0.02,
+              "__typename": "Security"
+            },
+            "__typename": "AggregateHolding"
+          },
+          "__typename": "AggregateHoldingEdge"
+        },
+        {
+          "node": {
+            "id": "700000002",
+            "quantity": 100.0,
+            "basis": 10.0,
+            "totalValue": 10000.0,
+            "securityPriceChangeDollars": null,
+            "securityPriceChangePercent": null,
+            "lastSyncedAt": "2024-02-18",
+            "holdings": [
+              {
+                "id": "140451241456451803",
+                "type": null,
+                "typeDisplay": "Stock",
+                "name": "Alphabet Inc - Ordinary Shares - Class C",
+                "ticker": "GOOG",
+                "closingPrice": 100.0,
+                "isManual": false,
+                "closingPriceUpdatedAt": "2024-02-16T00:00:00+00:00",
+                "__typename": "Holding"
+              }
+            ],
+            "security": {
+              "id": "78663618892209419",
+              "name": "Google Inc.",
+              "type": "equity",
+              "ticker": "GOOG",
+              "typeDisplay": "Stock",
+              "currentPrice": 100.0,
+              "currentPriceUpdatedAt": "2024-02-16T21:05:46.879464+00:00",
+              "closingPrice": 100.0,
+              "closingPriceUpdatedAt": "2023-12-07T07:00:00+00:00",
+              "oneDayChangePercent": 0,
+              "oneDayChangeDollars": 0,
+              "__typename": "Security"
+            },
+            "__typename": "AggregateHolding"
+          },
+          "__typename": "AggregateHoldingEdge"
+        },
+        {
+          "node": {
+            "id": "92233844174242672",
+            "quantity": 5000,
+            "basis": 0.0,
+            "totalValue": 5000,
+            "securityPriceChangeDollars": null,
+            "securityPriceChangePercent": null,
+            "lastSyncedAt": "2024-02-18",
+            "holdings": [
+              {
+                "id": "92233844174242672",
+                "type": null,
+                "typeDisplay": "Cash",
+                "name": "U S Dollar",
+                "ticker": "CUR:USD",
+                "closingPrice": null,
+                "isManual": false,
+                "closingPriceUpdatedAt": null,
+                "__typename": "Holding"
+              }
+            ],
+            "security": null,
+            "__typename": "AggregateHolding"
+          },
+          "__typename": "AggregateHoldingEdge"
+        }
+      ],
+      "__typename": "AggregateHoldingConnection"
+    },
+    "__typename": "Portfolio"
+  }
+}
