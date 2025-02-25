@@ -80,6 +80,7 @@ BOARD_MAP: Final[dict[str, str]] = {
     "Home Assistant Yellow": "yellow",
     "Home Assistant Green": "green",
     "Khadas VIM3": "khadas-vim3",
+    "Khadas VIM3L": "khadas-vim3l",
 }
 
 VALID_BOARDS: Final[list[str]] = list(BOARD_MAP)
