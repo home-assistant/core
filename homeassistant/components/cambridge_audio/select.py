@@ -85,7 +85,6 @@ CONTROL_ENTITIES: tuple[CambridgeAudioSelectEntityDescription, ...] = (
             ControlBusMode.OFF.value,
         ],
         entity_category=EntityCategory.CONFIG,
-        load_fn=lambda client: client.state.control_bus != ControlBusMode.OFF,
         value_fn=lambda client: client.state.control_bus,
         set_value_fn=lambda client, value: client.set_control_bus_mode(
             ControlBusMode(value)
