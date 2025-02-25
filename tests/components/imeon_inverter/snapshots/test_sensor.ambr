@@ -8,6 +8,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -30,7 +31,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'temp_air_temperature',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_temp_air_temperature',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_temp_air_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -47,7 +48,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '25.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_autonomy-entry]
@@ -59,6 +60,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -81,7 +83,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_autonomy',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_battery_autonomy',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_battery_autonomy',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
@@ -98,7 +100,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '4.5',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_charge_time-entry]
@@ -110,6 +112,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -132,7 +135,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_charge_time',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_battery_charge_time',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_battery_charge_time',
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
@@ -149,7 +152,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '120',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_power-entry]
@@ -161,6 +164,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -183,7 +187,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_power',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_battery_power',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_battery_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -200,7 +204,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2500.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_soc-entry]
@@ -212,6 +216,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -234,7 +239,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_soc',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_battery_soc',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_battery_soc',
     'unit_of_measurement': '%',
   })
 # ---
@@ -251,7 +256,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '78.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_battery_stored-entry]
@@ -263,6 +268,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -285,7 +291,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'battery_stored',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_battery_stored',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_battery_stored',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -302,7 +308,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '10.2',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_charging_current_limit-entry]
@@ -314,6 +320,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -336,7 +343,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'inverter_charging_current_limit',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_inverter_charging_current_limit',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_inverter_charging_current_limit',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -353,7 +360,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '50',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_component_temperature-entry]
@@ -365,6 +372,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -387,7 +395,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'temp_component_temperature',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_temp_component_temperature',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_temp_component_temperature',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
@@ -404,7 +412,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '45.5',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_current_l1-entry]
@@ -416,6 +424,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -438,7 +447,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_current_l1',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_grid_current_l1',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_current_l1',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -455,7 +464,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '12.5',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_current_l2-entry]
@@ -467,6 +476,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -489,7 +499,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_current_l2',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_grid_current_l2',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_current_l2',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -506,7 +516,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '10.8',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_current_l3-entry]
@@ -518,6 +528,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -540,7 +551,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_current_l3',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_grid_current_l3',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_current_l3',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -557,7 +568,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '11.2',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_frequency-entry]
@@ -569,6 +580,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -591,7 +603,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_frequency',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_grid_frequency',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_frequency',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -608,7 +620,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '50.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_voltage_l1-entry]
@@ -620,6 +632,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -642,7 +655,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_voltage_l1',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_grid_voltage_l1',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_voltage_l1',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -659,7 +672,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '230.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_voltage_l2-entry]
@@ -671,6 +684,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -693,7 +707,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_voltage_l2',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_grid_voltage_l2',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_voltage_l2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -710,7 +724,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '229.5',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_grid_voltage_l3-entry]
@@ -722,6 +736,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -744,7 +759,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'grid_voltage_l3',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_grid_voltage_l3',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_grid_voltage_l3',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -761,7 +776,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '230.1',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_injection_power_limit-entry]
@@ -773,6 +788,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -795,7 +811,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'inverter_injection_power_limit',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_inverter_injection_power_limit',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_inverter_injection_power_limit',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -812,7 +828,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '5000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_l1-entry]
@@ -824,6 +840,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -846,7 +863,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'input_power_l1',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_input_power_l1',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_input_power_l1',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -863,7 +880,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_l2-entry]
@@ -875,6 +892,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -897,7 +915,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'input_power_l2',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_input_power_l2',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_input_power_l2',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -914,7 +932,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '950.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_l3-entry]
@@ -926,6 +944,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -948,7 +967,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'input_power_l3',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_input_power_l3',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_input_power_l3',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -965,7 +984,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '980.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_input_power_total-entry]
@@ -977,6 +996,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -999,7 +1019,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'input_power_total',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_input_power_total',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_input_power_total',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1016,7 +1036,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2930.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_meter_power-entry]
@@ -1028,6 +1048,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1050,7 +1071,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'meter_power',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_meter_power',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_meter_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1067,7 +1088,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_meter_power_protocol-entry]
@@ -1079,6 +1100,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1101,7 +1123,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'meter_power_protocol',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_meter_power_protocol',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_meter_power_protocol',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1118,7 +1140,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2018.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_building_consumption-entry]
@@ -1130,6 +1152,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1152,7 +1175,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_building_consumption',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_building_consumption',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_building_consumption',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -1169,7 +1192,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3000.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_building_consumption_minute-entry]
@@ -1181,6 +1204,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1203,7 +1227,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_minute_building_consumption',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_minute_building_consumption',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_minute_building_consumption',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1220,7 +1244,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '50.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_economy_factor-entry]
@@ -1232,6 +1256,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1254,7 +1279,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_economy_factor',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_economy_factor',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_economy_factor',
     'unit_of_measurement': '',
   })
 # ---
@@ -1270,7 +1295,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.8',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_grid_consumption-entry]
@@ -1282,6 +1307,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1304,7 +1330,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_grid_consumption',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_grid_consumption',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_grid_consumption',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -1321,7 +1347,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '500.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_grid_consumption_minute-entry]
@@ -1333,6 +1359,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1355,7 +1382,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_minute_grid_consumption',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_minute_grid_consumption',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_minute_grid_consumption',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1372,7 +1399,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '8.3',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_grid_injection-entry]
@@ -1384,6 +1411,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1406,7 +1434,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_grid_injection',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_grid_injection',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_grid_injection',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -1423,7 +1451,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '700.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_grid_injection_minute-entry]
@@ -1435,6 +1463,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1457,7 +1486,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_minute_grid_injection',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_minute_grid_injection',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_minute_grid_injection',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1474,7 +1503,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '11.7',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_grid_power_flow-entry]
@@ -1486,6 +1515,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1508,7 +1538,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_grid_power_flow',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_grid_power_flow',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_grid_power_flow',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -1525,7 +1555,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-200.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_grid_power_flow_minute-entry]
@@ -1537,6 +1567,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1559,7 +1590,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_minute_grid_power_flow',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_minute_grid_power_flow',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_minute_grid_power_flow',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1576,7 +1607,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '-3.4',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_self_consumption-entry]
@@ -1588,6 +1619,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1610,7 +1642,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_self_consumption',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_self_consumption',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_self_consumption',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1626,7 +1658,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '85.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_self_sufficiency-entry]
@@ -1638,6 +1670,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1660,7 +1693,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_self_sufficiency',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_self_sufficiency',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_self_sufficiency',
     'unit_of_measurement': '%',
   })
 # ---
@@ -1676,7 +1709,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '90.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_solar_production-entry]
@@ -1688,6 +1721,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1710,7 +1744,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_solar_production',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_solar_production',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_solar_production',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -1727,7 +1761,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2600.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_monitoring_solar_production_minute-entry]
@@ -1739,6 +1773,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1761,7 +1796,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'monitoring_minute_solar_production',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_monitoring_minute_solar_production',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_monitoring_minute_solar_production',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -1778,7 +1813,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '43.3',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_current_l1-entry]
@@ -1790,6 +1825,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1812,7 +1848,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_current_l1',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_output_current_l1',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_current_l1',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1829,7 +1865,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '15.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_current_l2-entry]
@@ -1841,6 +1877,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1863,7 +1900,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_current_l2',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_output_current_l2',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_current_l2',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1880,7 +1917,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '14.5',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_current_l3-entry]
@@ -1892,6 +1929,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1914,7 +1952,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_current_l3',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_output_current_l3',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_current_l3',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -1931,7 +1969,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '15.2',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_frequency-entry]
@@ -1943,6 +1981,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1965,7 +2004,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_frequency',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_output_frequency',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_frequency',
     'unit_of_measurement': <UnitOfFrequency.HERTZ: 'Hz'>,
   })
 # ---
@@ -1982,7 +2021,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '49.9',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_l1-entry]
@@ -1994,6 +2033,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2016,7 +2056,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_power_l1',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_output_power_l1',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_power_l1',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2033,7 +2073,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1100.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_l2-entry]
@@ -2045,6 +2085,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2067,7 +2108,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_power_l2',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_output_power_l2',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_power_l2',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2084,7 +2125,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1080.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_l3-entry]
@@ -2096,6 +2137,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2118,7 +2160,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_power_l3',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_output_power_l3',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_power_l3',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2135,7 +2177,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1120.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_power_total-entry]
@@ -2147,6 +2189,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2169,7 +2212,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_power_total',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_output_power_total',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_power_total',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2186,7 +2229,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3300.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_voltage_l1-entry]
@@ -2198,6 +2241,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2220,7 +2264,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_voltage_l1',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_output_voltage_l1',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_voltage_l1',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -2237,7 +2281,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '231.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_voltage_l2-entry]
@@ -2249,6 +2293,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2271,7 +2316,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_voltage_l2',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_output_voltage_l2',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_voltage_l2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -2288,7 +2333,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '229.8',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_output_voltage_l3-entry]
@@ -2300,6 +2345,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2322,7 +2368,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'output_voltage_l3',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_output_voltage_l3',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_output_voltage_l3',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -2339,7 +2385,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '230.2',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_consumed-entry]
@@ -2351,6 +2397,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2373,7 +2420,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pv_consumed',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_pv_consumed',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_pv_consumed',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -2390,7 +2437,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1500.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_injected-entry]
@@ -2402,6 +2449,7 @@
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2424,7 +2472,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pv_injected',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_pv_injected',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_pv_injected',
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
@@ -2441,7 +2489,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '800.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_power_1-entry]
@@ -2453,6 +2501,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2475,7 +2524,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pv_power_1',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_pv_power_1',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_pv_power_1',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2492,7 +2541,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1200.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_power_2-entry]
@@ -2504,6 +2553,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2526,7 +2576,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pv_power_2',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_pv_power_2',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_pv_power_2',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2543,7 +2593,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '1300.0',
   })
 # ---
 # name: test_sensors[sensor.imeon_inverter_pv_power_total-entry]
@@ -2555,6 +2605,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -2577,7 +2628,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'pv_power_total',
-    'unique_id': '01JMVQJVX2F6G5V0QJX6HBC94T_pv_power_total',
+    'unique_id': '01JMY3V5ADF6G5V0QJX6HBC94T_pv_power_total',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -2594,6 +2645,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '2500.0',
   })
 # ---
