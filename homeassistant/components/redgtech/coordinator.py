@@ -22,7 +22,7 @@ class RedgtechDevice:
     state: str
     device_type: str = "switch"
 
-class RedgtechDataUpdateCoordinator(DataUpdateCoordinator):
+class RedgtechDataUpdateCoordinator(DataUpdateCoordinator [List[RedgtechDevice]]):
     """Coordinator to manage fetching data from the Redgtech API."""
 
     def __init__(self, hass: HomeAssistant, config_entry: Optional[ConfigEntry] = None):

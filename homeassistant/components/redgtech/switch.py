@@ -17,8 +17,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
     """Set up the switch platform."""
-    entry_data: RedgtechEntryData = hass.data[DOMAIN][config_entry.entry_id]
-    coordinator: RedgtechDataUpdateCoordinator = entry_data.coordinator
+    coordinator = config_entry.runtime_data.coordinator
 
     switches = []
     for device in coordinator.data:
