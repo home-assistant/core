@@ -74,7 +74,6 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
         "qos": 0,
         "command_topic": "test-topic",
         "command_template": "{{ value_json.value }}",
-        "icon": "mdi:cow",
         "entity_picture": "https://example.com",
         "retain": False,
     },

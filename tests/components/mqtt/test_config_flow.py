@@ -2681,7 +2681,6 @@ async def test_subentry_configflow(
         user_input={
             "command_topic": "test-topic",
             "command_template": "{{ value_json.value }}",
-            "icon": "mdi:cow",
             "entity_picture": "https://example.com",
             "retain": False,
         },
@@ -3000,7 +2999,6 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     ]
 
     # assert we can update the entity, there is no select step
-    assert components["notify_bla123"]["icon"] == "mdi:cow"
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         {"next_step_id": "update_entity"},
@@ -3021,7 +3019,6 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
     assert result["step_id"] == "entity_platform_config"
 
     # submit the new platform specific entity data,
-    # but omit the icon, to reset it
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
         user_input={"command_topic": "test-topic1-updated"},
@@ -3044,7 +3041,6 @@ async def test_subentry_reconfigure_edit_entity_single_entity(
 
     # Check out update was successful
     assert "name" not in components["notify_bla123"]
-    assert "icon" not in components["notify_bla123"]
     assert components["notify_bla123"]["command_topic"] == "test-topic1-updated"
 
 

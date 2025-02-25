@@ -185,14 +185,12 @@
           "data": {
             "command_topic": "Command topic",
             "command_template": "Command template",
-            "icon": "Icon",
             "entity_picture": "Entity picture",
             "retain": "Retain"
           },
           "data_description": {
             "command_topic": "The publishing topic that will be used to control the {platform} entity.",
             "command_template": "A [template](https://www.home-assistant.io/docs/configuration/templating/#using-command-templates-with-mqtt) to render the payload to be published at the command topic.",
-            "icon": "The icon assigned to the entity \"{object_id}\".",
             "entity_picture": "An URL to a picture to be assigned \"{object_id}\".",
             "retain": "Select if values published by \"{object_id}\" should be retained at the MQTT broker."
           }
