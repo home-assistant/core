@@ -1,16 +1,18 @@
 """Test the Wolf SmartSet Service Sensor platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 import pytest
 from wolf_comm import (
     PERCENTAGE,
     EnergyParameter,
     HoursParameter,
+    ListItemParameter,
     Parameter,
     PercentageParameter,
     PowerParameter,
     Pressure,
+    SimpleParameter,
     Temperature,
 )
 
@@ -21,7 +23,11 @@ from homeassistant.components.wolflink.const import (
     MANUFACTURER,
     PARAMETERS,
 )
-from homeassistant.components.wolflink.sensor import WolfLinkSensor, async_setup_entry
+from homeassistant.components.wolflink.sensor import (
+    WolfLinkSensor,
+    async_setup_entry,
+    get_entity_description,
+)
 from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
@@ -34,7 +40,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import CONFIG
 
-from tests.common import MockConfigEntry
+from tests.common import Literal, MockConfigEntry
 
 
 @pytest.fixture
@@ -46,6 +52,18 @@ def mock_coordinator(hass: HomeAssistant) -> MagicMock:
     return coordinator
 
 
+@pytest.fixture
+def mock_device_id():
+    """Fixture for a mock device ID."""
+    return "1234"
+
+
+@pytest.fixture
+def mock_parameter():
+    """Fixture for a mock parameter."""
+    return Mock(spec=Parameter)
+
+
 async def mock_config_entry(
     hass: HomeAssistant, device_registry: dr.DeviceRegistry
 ) -> None:
@@ -55,13 +73,9 @@ async def mock_config_entry(
     )
     config_entry.add_to_hass(hass)
 
-    device_id = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, CONFIG[DEVICE_ID])},
-        configuration_url="https://www.wolf-smartset.com/",
-        manufacturer=MANUFACTURER,
-    ).id
-    assert device_registry.async_get(device_id).identifiers == {(DOMAIN, "1234")}
+    device = device_registry.async_get_device({(DOMAIN, CONFIG[DEVICE_ID])})
+    assert device is not None
+    assert device.identifiers == {(DOMAIN, CONFIG[DEVICE_ID])}
 
 
 def test_wolflink_sensor_native_value(mock_coordinator: MagicMock) -> None:
@@ -117,7 +131,7 @@ async def test_async_setup_entry(
     hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
         PARAMETERS: [parameter],
         COORDINATOR: mock_coordinator,
-        DEVICE_ID: "mock_device_id",
+        DEVICE_ID: "1234",
     }
     async_add_entities = MagicMock()
 
@@ -129,3 +143,74 @@ async def test_async_setup_entry(
     entity = entities[0]
     assert isinstance(entity, expected_class)
     assert entity.native_unit_of_measurement == expected_unit
+
+
+def test_get_entity_description() -> None:
+    """Test the get_entity_description function."""
+    parameter = Mock(spec=Temperature)
+    description = get_entity_description(parameter)
+    assert description.device_class == "temperature"
+    assert description.native_unit_of_measurement == "°C"
+
+    parameter = Mock(spec=Pressure)
+    description = get_entity_description(parameter)
+    assert description.device_class == "pressure"
+    assert description.native_unit_of_measurement == "bar"
+
+    parameter = Mock(spec=EnergyParameter)
+    description = get_entity_description(parameter)
+    assert description.device_class == "energy"
+    assert description.native_unit_of_measurement == "kWh"
+
+    parameter = Mock(spec=PowerParameter)
+    description = get_entity_description(parameter)
+    assert description.device_class == "power"
+    assert description.native_unit_of_measurement == "kW"
+
+    parameter = Mock(spec=PercentageParameter)
+    description = get_entity_description(parameter)
+    assert description.native_unit_of_measurement == PERCENTAGE
+
+    parameter = Mock(spec=ListItemParameter)
+    description = get_entity_description(parameter)
+    assert description.translation_key == "state"
+
+    parameter = Mock(spec=HoursParameter)
+    description = get_entity_description(parameter)
+    assert description.native_unit_of_measurement == UnitOfTime.HOURS
+    assert description.icon == "mdi:clock"
+
+    parameter = Mock(spec=SimpleParameter)
+    description = get_entity_description(parameter)
+
+
+def test_wolflink_sensor(
+    mock_coordinator, mock_device_id: Literal["1234"], mock_parameter
+) -> None:
+    """Test the WolfLinkSensor class."""
+    description = get_entity_description(mock_parameter)
+    sensor = WolfLinkSensor(
+        mock_coordinator, mock_parameter, mock_device_id, description
+    )
+
+    assert sensor.entity_description == description
+    assert sensor.wolf_object == mock_parameter
+    assert sensor._attr_name == description.name
+    assert sensor._attr_unique_id == f"{mock_device_id}:{mock_parameter.parameter_id}"
+    assert sensor._attr_device_info["identifiers"] == {(DOMAIN, str(mock_device_id))}
+    assert (
+        sensor._attr_device_info["configuration_url"]
+        == "https://www.wolf-smartset.com/"
+    )
+    assert sensor._attr_device_info["manufacturer"] == MANUFACTURER
+
+    # Test native_value property
+    mock_coordinator.data = {mock_parameter.parameter_id: ("value_id", "state")}
+    assert sensor.native_value == "state"
+
+    # Test extra_state_attributes property
+    assert sensor.extra_state_attributes == {
+        "parameter_id": mock_parameter.parameter_id,
+        "value_id": mock_parameter.value_id,
+        "parent": mock_parameter.parent,
+    }

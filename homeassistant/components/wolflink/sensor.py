@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
 from wolf_comm.models import (
     EnergyParameter,
     HoursParameter,
@@ -10,6 +13,7 @@ from wolf_comm.models import (
     PercentageParameter,
     PowerParameter,
     Pressure,
+    SimpleParameter,
     Temperature,
 )
 
@@ -55,70 +59,95 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-def get_entity_description(parameter: Parameter) -> SensorEntityDescription:
+@dataclass(kw_only=True, frozen=True)
+class WolflinkSensorEntityDescription(SensorEntityDescription):
+    """Describes Wolflink sensor entity."""
+
+    supported_fn: Callable[[Parameter], bool]
+
+
+SENSOR_DESCRIPTIONS = [
+    WolflinkSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        supported_fn=lambda param: isinstance(param, Temperature),
+    ),
+    WolflinkSensorEntityDescription(
+        key="pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        supported_fn=lambda param: isinstance(param, Pressure),
+    ),
+    WolflinkSensorEntityDescription(
+        key="energy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        supported_fn=lambda param: isinstance(param, EnergyParameter),
+    ),
+    WolflinkSensorEntityDescription(
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        supported_fn=lambda param: isinstance(param, PowerParameter),
+    ),
+    WolflinkSensorEntityDescription(
+        key="percentage",
+        native_unit_of_measurement=PERCENTAGE,
+        supported_fn=lambda param: isinstance(param, PercentageParameter),
+    ),
+    WolflinkSensorEntityDescription(
+        key="list_item",
+        translation_key="state",
+        supported_fn=lambda param: isinstance(param, ListItemParameter),
+    ),
+    WolflinkSensorEntityDescription(
+        key="hours",
+        icon="mdi:clock",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        supported_fn=lambda param: isinstance(param, HoursParameter),
+    ),
+    WolflinkSensorEntityDescription(
+        key="default",
+        supported_fn=lambda param: isinstance(param, SimpleParameter),
+    ),
+]
+
+
+def get_entity_description(parameter: Parameter) -> WolflinkSensorEntityDescription:
     """Return the entity description for a given parameter."""
-    if isinstance(parameter, Temperature):
-        return SensorEntityDescription(
-            key=parameter.parameter_id,
-            name=parameter.name,
-            device_class=SensorDeviceClass.TEMPERATURE,
-            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        )
-    if isinstance(parameter, Pressure):
-        return SensorEntityDescription(
-            key=parameter.parameter_id,
-            name=parameter.name,
-            device_class=SensorDeviceClass.PRESSURE,
-            native_unit_of_measurement=UnitOfPressure.BAR,
-        )
-    if isinstance(parameter, EnergyParameter):
-        return SensorEntityDescription(
-            key=parameter.parameter_id,
-            name=parameter.name,
-            device_class=SensorDeviceClass.ENERGY,
-            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        )
-    if isinstance(parameter, PowerParameter):
-        return SensorEntityDescription(
-            key=parameter.parameter_id,
-            name=parameter.name,
-            device_class=SensorDeviceClass.POWER,
-            native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        )
-    if isinstance(parameter, PercentageParameter):
-        return SensorEntityDescription(
-            key=parameter.parameter_id,
-            name=parameter.name,
-            native_unit_of_measurement=PERCENTAGE,
-        )
-    if isinstance(parameter, ListItemParameter):
-        return SensorEntityDescription(
-            key=parameter.parameter_id,
-            name=parameter.name,
-            translation_key="state",
-        )
-    if isinstance(parameter, HoursParameter):
-        return SensorEntityDescription(
-            key=parameter.parameter_id,
-            name=parameter.name,
-            icon="mdi:clock",
-            native_unit_of_measurement=UnitOfTime.HOURS,
-        )
-    return SensorEntityDescription(
+    for description in SENSOR_DESCRIPTIONS:
+        if description.supported_fn(parameter):
+            return WolflinkSensorEntityDescription(
+                key=parameter.parameter_id,
+                name=parameter.name,
+                device_class=description.device_class,
+                native_unit_of_measurement=description.native_unit_of_measurement,
+                icon=description.icon,
+                entity_registry_enabled_default=description.entity_registry_enabled_default,
+                entity_category=description.entity_category,
+                has_entity_name=description.has_entity_name,
+                translation_key=description.translation_key,
+                supported_fn=description.supported_fn,
+            )
+    return WolflinkSensorEntityDescription(
         key=parameter.parameter_id,
         name=parameter.name,
+        supported_fn=lambda param: True,
     )
 
 
 class WolfLinkSensor(CoordinatorEntity, SensorEntity):
     """Base class for all Wolf entities."""
 
+    entity_description: WolflinkSensorEntityDescription
+
     def __init__(
         self,
         coordinator,
         wolf_object: Parameter,
         device_id: str,
-        description: SensorEntityDescription,
+        description: WolflinkSensorEntityDescription,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
@@ -162,10 +191,3 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
             "value_id": self.wolf_object.value_id,
             "parent": self.wolf_object.parent,
         }
-
-    @property
-    def native_unit_of_measurement(self) -> str | None:
-        """Return the unit the value is expressed in."""
-        if isinstance(self.wolf_object, PercentageParameter):
-            return self.wolf_object.unit
-        return self.entity_description.native_unit_of_measurement
