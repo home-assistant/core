@@ -44,6 +44,7 @@ from .const import (
     ATTR_SETTINGS,
     ATTR_STREAMS,
     CONF_EXTRA_PART_WAIT_TIME,
+    CONF_HTTP_HEADERS,
     CONF_LL_HLS,
     CONF_PART_DURATION,
     CONF_RTSP_TRANSPORT,
@@ -166,6 +167,8 @@ def _convert_stream_options(
         pyav_options["rtsp_transport"] = rtsp_transport
     if stream_options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS):
         pyav_options["use_wallclock_as_timestamps"] = "1"
+    if headers := stream_options.get(CONF_HTTP_HEADERS):
+        pyav_options[CONF_HTTP_HEADERS] = headers
 
     # For RTSP streams, prefer TCP
     if isinstance(stream_source, str) and stream_source[:7] == "rtsp://":
@@ -624,5 +627,6 @@ STREAM_OPTIONS_SCHEMA: Final = vol.Schema(
         vol.Optional(CONF_RTSP_TRANSPORT): vol.In(RTSP_TRANSPORTS),
         vol.Optional(CONF_USE_WALLCLOCK_AS_TIMESTAMPS): bool,
         vol.Optional(CONF_EXTRA_PART_WAIT_TIME): cv.positive_float,
+        vol.Optional(CONF_HTTP_HEADERS): cv.string,
     }
 )
