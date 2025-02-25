@@ -96,7 +96,7 @@ def suggested_filenames(backup: AgentBackup) -> tuple[str, str]:
 
 
 def _is_current_metadata_version(properties: list[Property]) -> bool:
-    """Check if is current metadata version."""
+    """Check if any property is of the current metadata version."""
     return any(
         prop.value == METADATA_VERSION
         for prop in properties
