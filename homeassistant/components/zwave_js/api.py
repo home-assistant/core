@@ -111,7 +111,6 @@ ENDPOINT = "endpoint"
 VALUE = "value"
 VALUE_SIZE = "value_size"
 VALUE_FORMAT = "value_format"
-ATTR_NVM_DATA = "nvm_data"
 
 # constants for log config commands
 CONFIG = "config"
