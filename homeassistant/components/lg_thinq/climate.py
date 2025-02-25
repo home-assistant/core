@@ -12,6 +12,8 @@ from thinqconnect.integration import ExtendedProperty
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    SWING_OFF,
+    SWING_ON,
     ClimateEntity,
     ClimateEntityDescription,
     ClimateEntityFeature,
@@ -72,6 +74,13 @@ HVAC_TO_STR: dict[HVACMode, str] = {
 }
 
 THINQ_PRESET_MODE: list[str] = ["air_clean", "aroma", "energy_saving"]
+
+STR_TO_SWING = {
+    "true": SWING_ON,
+    "false": SWING_OFF,
+}
+
+SWING_TO_STR = {v: k for k, v in STR_TO_SWING.items()}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -143,12 +152,12 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
                 ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
             )
         # Supports swing mode.
-        if modes := self.data.swing_modes:
-            self._attr_swing_modes = modes
+        if self.data.swing_modes:
+            self._attr_swing_modes = [SWING_ON, SWING_OFF]
             self._attr_supported_features |= ClimateEntityFeature.SWING_MODE
 
-        if modes := self.data.swing_horizontal_modes:
-            self._attr_swing_horizontal_modes = modes
+        if self.data.swing_horizontal_modes:
+            self._attr_swing_horizontal_modes = [SWING_ON, SWING_OFF]
             self._attr_supported_features |= ClimateEntityFeature.SWING_HORIZONTAL_MODE
 
     def _update_status(self) -> None:
@@ -159,9 +168,11 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
             self._attr_fan_mode = self.data.fan_mode
         if self.supported_features & ClimateEntityFeature.SWING_MODE:
-            self._attr_swing_mode = self.data.swing_mode
+            self._attr_swing_mode = STR_TO_SWING.get(self.data.swing_mode)
         if self.supported_features & ClimateEntityFeature.SWING_HORIZONTAL_MODE:
-            self._attr_swing_horizontal_mode = self.data.swing_horizontal_mode
+            self._attr_swing_horizontal_mode = STR_TO_SWING.get(
+                self.data.swing_horizontal_mode
+            )
 
         if self.data.is_on:
             hvac_mode = self._requested_hvac_mode or self.data.hvac_mode
@@ -290,7 +301,9 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
             swing_mode,
         )
         await self.async_call_api(
-            self.coordinator.api.async_set_swing_mode(self.property_id, swing_mode)
+            self.coordinator.api.async_set_swing_mode(
+                self.property_id, SWING_TO_STR.get(swing_mode)
+            )
         )
 
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
@@ -303,7 +316,7 @@ class ThinQClimateEntity(ThinQEntity, ClimateEntity):
         )
         await self.async_call_api(
             self.coordinator.api.async_set_swing_horizontal_mode(
-                self.property_id, swing_horizontal_mode
+                self.property_id, SWING_TO_STR.get(swing_horizontal_mode)
             )
         )
 
