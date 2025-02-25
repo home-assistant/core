@@ -140,7 +140,7 @@ adax==0.4.0
 adb-shell[async]==0.4.4
 
 # homeassistant.components.alarmdecoder
-adext==0.4.3
+adext==0.4.4
 
 # homeassistant.components.adguard
 adguardhome==0.7.0
@@ -2455,7 +2455,7 @@ python-otbr-api==2.7.0
 python-overseerr==0.7.1
 
 # homeassistant.components.picnic
-python-picnic-api==1.1.0
+python-picnic-api2==1.2.2
 
 # homeassistant.components.rabbitair
 python-rabbitair==0.0.8
@@ -2497,7 +2497,7 @@ pytile==2024.12.0
 pytomorrowio==0.3.6
 
 # homeassistant.components.touchline
-pytouchline==0.7
+pytouchline_extended==0.4.5
 
 # homeassistant.components.touchline_sl
 pytouchlinesl==0.3.0
@@ -2690,7 +2690,7 @@ screenlogicpy==0.10.0
 scsgate==0.1.0
 
 # homeassistant.components.backup
-securetar==2025.1.4
+securetar==2025.2.1
 
 # homeassistant.components.sendgrid
 sendgrid==6.8.2
@@ -2811,7 +2811,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.5.4
+stookwijzer==1.5.8
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1

@@ -17,6 +17,7 @@ from homeassistant.components.habitica.const import (
     ATTR_DIRECTION,
     ATTR_ITEM,
     ATTR_KEYWORD,
+    ATTR_NOTES,
     ATTR_PRIORITY,
     ATTR_REMOVE_TAG,
     ATTR_SKILL,
@@ -38,7 +39,7 @@ from homeassistant.components.habitica.const import (
     SERVICE_TRANSFORMATION,
     SERVICE_UPDATE_REWARD,
 )
-from homeassistant.components.todo import ATTR_DESCRIPTION, ATTR_RENAME
+from homeassistant.components.todo import ATTR_RENAME
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -984,9 +985,9 @@ async def test_task_not_found(
         ),
         (
             {
-                ATTR_DESCRIPTION: "DESCRIPTION",
+                ATTR_NOTES: "NOTES",
             },
-            Task(notes="DESCRIPTION"),
+            Task(notes="NOTES"),
         ),
         (
             {

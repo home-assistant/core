@@ -39,6 +39,7 @@ ATTR_REMOVE_TAG = "remove_tag"
 ATTR_ALIAS = "alias"
 ATTR_PRIORITY = "priority"
 ATTR_COST = "cost"
+ATTR_NOTES = "notes"
 
 SERVICE_CAST_SKILL = "cast_skill"
 SERVICE_START_QUEST = "start_quest"

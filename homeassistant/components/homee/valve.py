@@ -78,4 +78,4 @@ class HomeeValve(HomeeEntity, ValveEntity):
 
     async def async_set_valve_position(self, position: int) -> None:
         """Move the valve to a specific position."""
-        await self.async_set_value(position)
+        await self.async_set_homee_value(position)
