@@ -53,7 +53,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: |
-      The integration does not provide any authentications.
+      The integration does not provide any authentication. 
   test-coverage: done
   # Gold
   devices: done
