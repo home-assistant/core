@@ -19,7 +19,7 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import callback
+from homeassistant.core import CALLBACK_TYPE, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -116,15 +116,10 @@ class BaseFirmwareUpdateEntity(
         self._latest_manifest: FirmwareManifest | None = None
         self._latest_firmware: FirmwareMetadata | None = None
 
-    def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
-        self._current_firmware_info = firmware_info
-        self._maybe_recompute_state()
-        self.async_write_ha_state()
-
     def add_firmware_type_changed_callback(
         self,
         change_callback: FirmwareChangeCallbackType,
-    ) -> Callable[[], None]:
+    ) -> CALLBACK_TYPE:
         """Add a callback for when the firmware type changes."""
         self._firmware_type_change_callbacks.add(change_callback)
 
@@ -133,15 +128,6 @@ class BaseFirmwareUpdateEntity(
             self._firmware_type_change_callbacks.discard(change_callback)
 
         return remove_callback
-
-    @property
-    def title(self) -> str:
-        """Title of the software.
-
-        This helps to differentiate between the device or entity name
-        versus the title of the software installed.
-        """
-        return self.entity_description.firmware_name or "unknown"
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
@@ -170,7 +156,7 @@ class BaseFirmwareUpdateEntity(
 
     @property
     def extra_restore_state_data(self) -> FirmwareUpdateExtraStoredData:
-        """Return Matter specific state data to be restored."""
+        """Return state data to be restored."""
         return FirmwareUpdateExtraStoredData(firmware_manifest=self._latest_manifest)
 
     @callback
@@ -179,23 +165,21 @@ class BaseFirmwareUpdateEntity(
         self._maybe_recompute_state()
         self.async_write_ha_state()
 
-    def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
-        raise NotImplementedError
+    @callback
+    def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
+        """Handle updated firmware info being pushed by an integration."""
+        self._current_firmware_info = firmware_info
 
-    def _maybe_recompute_state(self) -> None:
-        """Recompute the state of the entity."""
-
-        firmware_type = (
+        if (
             self._current_firmware_info.firmware_type
-            if self._current_firmware_info is not None
-            else None
-        )
-
-        if firmware_type != self.entity_description.expected_firmware_type:
+            != self.entity_description.expected_firmware_type
+        ):
+            # If the firmware type has changed, fire callbacks and exit out
             for change_callback in self._firmware_type_change_callbacks.copy():
                 try:
                     change_callback(
-                        self.entity_description.expected_firmware_type, firmware_type
+                        self.entity_description.expected_firmware_type,
+                        self._current_firmware_info.firmware_type,
                     )
                 except Exception:  # noqa: BLE001
                     _LOGGER.warning(
@@ -203,25 +187,49 @@ class BaseFirmwareUpdateEntity(
                     )
             return
 
+        self._maybe_recompute_state()
+        self.async_write_ha_state()
+
+    def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
+        """Update the config entry after new firmware has been installed."""
+        raise NotImplementedError
+
+    def _maybe_recompute_state(self) -> None:
+        """Recompute the state of the entity."""
+        self._attr_title = self.entity_description.firmware_name or "unknown"
+
+        if (
+            self._current_firmware_info is None
+            or self._current_firmware_info.firmware_version is None
+        ):
+            self._attr_installed_version = None
+        else:
+            self._attr_installed_version = self.entity_description.version_parser(
+                self._current_firmware_info.firmware_version
+            )
+
         if (
             self._latest_manifest is None
             or self.entity_description.fw_type is None
             or self.entity_description.version_key is None
         ):
-            return
+            self._latest_firmware = None
+            self._attr_latest_version = None
+            self._attr_release_summary = None
+            self._attr_release_url = None
+        else:
+            self._latest_firmware = next(
+                f
+                for f in self._latest_manifest.firmwares
+                if f.filename.startswith(self.entity_description.fw_type)
+            )
 
-        self._latest_firmware = next(
-            f
-            for f in self._latest_manifest.firmwares
-            if f.filename.startswith(self.entity_description.fw_type)
-        )
-
-        version = cast(
-            str, self._latest_firmware.metadata[self.entity_description.version_key]
-        )
-        self._attr_latest_version = self.entity_description.version_parser(version)
-        self._attr_release_summary = self._latest_firmware.release_notes
-        self._attr_release_url = str(self._latest_manifest.html_url)
+            version = cast(
+                str, self._latest_firmware.metadata[self.entity_description.version_key]
+            )
+            self._attr_latest_version = self.entity_description.version_parser(version)
+            self._attr_release_summary = self._latest_firmware.release_notes
+            self._attr_release_url = str(self._latest_manifest.html_url)
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -229,17 +237,6 @@ class BaseFirmwareUpdateEntity(
         self._latest_manifest = self.coordinator.data
         self._maybe_recompute_state()
         self.async_write_ha_state()
-
-    @property
-    def installed_version(self) -> str | None:
-        """Version installed and in use."""
-        if self._current_firmware_info is None:
-            return None
-
-        if (version := self._current_firmware_info.firmware_version) is None:
-            return None
-
-        return self.entity_description.version_parser(version)
 
     def _update_progress(self, offset: int, total_size: int) -> None:
         """Handle update progress."""
@@ -251,7 +248,6 @@ class BaseFirmwareUpdateEntity(
         self, device: str
     ) -> AsyncIterator[None]:
         """Temporarily stop addons and integrations communicating with the device."""
-
         firmware_info = await guess_firmware_info(self.hass, device)
         _LOGGER.debug("Identified firmware info: %s", firmware_info)
 
