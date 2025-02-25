@@ -34,7 +34,7 @@ async def async_setup_entry(
     entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Create wallbox sensor entities in HASS."""
+    """Create wallbox select entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
         [WallboxSelect(coordinator, SELECT_TYPES[CHARGER_ECO_SMART_KEY])]
@@ -49,7 +49,7 @@ class WallboxSelect(WallboxEntity, SelectEntity):
         coordinator: WallboxCoordinator,
         description: SelectEntityDescription,
     ) -> None:
-        """Initialize a Wallbox switch."""
+        """Initialize a Wallbox select entity."""
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
@@ -62,7 +62,7 @@ class WallboxSelect(WallboxEntity, SelectEntity):
 
     @property
     def available(self) -> bool:
-        """Return the availability of the switch."""
+        """Return the availability of the select entity."""
         return (
             super().available
             and CHARGER_POWER_BOOST_KEY

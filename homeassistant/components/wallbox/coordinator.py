@@ -263,7 +263,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @_require_authentication
     def _set_eco_smart(self, enable: bool, mode: int = 0) -> None:
-        """Set wallbox to pause or resume."""
+        """Set wallbox solar charging mode."""
 
         if enable:
             self._wallbox.enableEcoSmart(self._station, mode)
@@ -271,7 +271,7 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._wallbox.disableEcoSmart(self._station)
 
     async def async_set_eco_smart(self, enable: bool, mode: int = 0) -> None:
-        """Set wallbox to pause or resume."""
+        """Set wallbox solar charging mode."""
         await self.hass.async_add_executor_job(self._set_eco_smart, enable, mode)
         await self.async_request_refresh()
 
