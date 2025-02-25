@@ -13,6 +13,7 @@ from .const import DOMAIN, LOGGER
 class InelsBaseEntity(Entity):
     """Base iNELS device."""
 
+    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -60,11 +61,6 @@ class InelsBaseEntity(Entity):
                     self._device.info_serialized(),
                     e,
                 )
-
-    @property
-    def should_poll(self) -> bool:
-        """Need to poll. Coordinator notifies entity of updates."""
-        return False
 
     @property
     def available(self) -> bool:
