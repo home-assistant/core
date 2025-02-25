@@ -1390,10 +1390,17 @@ async def async_get_integrations(
             # When we have waited and it's UNDEFINED, it doesn't exist
             # We don't cache that it doesn't exist, or else people can't fix it
             # and then restart, because their config will never be valid.
-            if (int_or_fut := cache.get(domain, UNDEFINED)) is UNDEFINED:
+            # Also if another call to async_get_integrations is made, since
+            # the cached value is removed when it's not found, it may be a
+            # asyncio.Future trying again. Since we know it already failed
+            # once we treat this as IntegrationNotFound.
+            if (
+                (int_or_fut := cache.get(domain, UNDEFINED)) is UNDEFINED
+                or type(int_or_fut) is not Integration
+            ):  # Integration is never subclassed, so we can check for type
                 results[domain] = IntegrationNotFound(domain)
             else:
-                results[domain] = cast(Integration, int_or_fut)
+                results[domain] = int_or_fut
 
     if not needed:
         return results
@@ -1421,10 +1428,10 @@ async def async_get_integrations(
         for domain, future in needed.items():
             int_or_exc = integrations.get(domain)
             if not int_or_exc:
-                cache.pop(domain)
+                del cache[domain]
                 results[domain] = IntegrationNotFound(domain)
             elif isinstance(int_or_exc, Exception):
-                cache.pop(domain)
+                del cache[domain]
                 exc = IntegrationNotFound(domain)
                 exc.__cause__ = int_or_exc
                 results[domain] = exc
