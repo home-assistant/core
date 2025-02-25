@@ -2041,8 +2041,10 @@ async def test_manifest_json_fragment_round_trip(hass: HomeAssistant) -> None:
     )
 
 
-async def test_async_get_integration(hass: HomeAssistant) -> None:
-    """Test async_get_integration."""
+async def test_async_get_integrations_multiple_non_existent(
+    hass: HomeAssistant,
+) -> None:
+    """Test async_get_integrations with multiple non-existent integrations."""
     integrations = await loader.async_get_integrations(hass, ["does_not_exist"])
     assert isinstance(integrations["does_not_exist"], loader.IntegrationNotFound)
 

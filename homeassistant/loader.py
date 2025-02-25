@@ -1387,6 +1387,11 @@ async def async_get_integrations(
 
     if in_progress:
         await asyncio.wait(in_progress.values())
+        # Here we retrieve the results we waited for
+        # instead of reading them from the cache since
+        # reading from the cache will have a race if
+        # the integration gets removed from the cache
+        # because it was not found.
         for domain, future in in_progress.items():
             results[domain] = future.result()
 
