@@ -448,6 +448,9 @@ jobs:
     environment: ${{ needs.init.outputs.channel }}
     needs: ["init", "build_base"]
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
     if: github.repository_owner == 'home-assistant' && needs.init.outputs.publish == 'true'
     steps:
       - name: Checkout the repository
@@ -473,16 +476,13 @@ jobs:
         run: |
           # Remove dist, build, and homeassistant.egg-info
           # when build locally for testing!
-          pip install twine build
+          pip install build
           python -m build
 
-      - name: Upload package
-        shell: bash
-        run: |
-          export TWINE_USERNAME="__token__"
-          export TWINE_PASSWORD="${{ secrets.TWINE_TOKEN }}"
-
-          twine upload dist/* --skip-existing
+      - name: Upload package to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.12.4
+        with:
+          skip-existing: true
 
   hassfest-image:
     name: Build and test hassfest image
