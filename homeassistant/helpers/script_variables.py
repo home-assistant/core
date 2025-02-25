@@ -187,7 +187,7 @@ class ScriptRunVariables(UserDict[str, Any]):
         return self._previous
 
     def __setitem__(self, key: str, value: Any) -> None:
-        """Assign value to a variable. Equivalent to `assign_single`."""
+        """Assign value to a variable. Equivalent to `assign`."""
         self.assign(key, value)
 
     def __delitem__(self, key: str) -> None:
