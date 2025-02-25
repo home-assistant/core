@@ -3423,6 +3423,19 @@ async def test_firmware_upload_view_failed_command(
         assert resp.status == HTTPStatus.BAD_REQUEST
 
 
+async def test_firmware_upload_view_invalid_payload(
+    hass: HomeAssistant, multisensor_6, integration, hass_client: ClientSessionGenerator
+) -> None:
+    """Test an invalid payload for the HTTP firmware upload view."""
+    device = get_device(hass, multisensor_6)
+    client = await hass_client()
+    resp = await client.post(
+        f"/api/zwave_js/firmware/upload/{device.id}",
+        data={"wrong_key": BytesIO(bytes(10))},
+    )
+    assert resp.status == HTTPStatus.BAD_REQUEST
+
+
 async def test_firmware_upload_view_no_driver(
     hass: HomeAssistant,
     client,
@@ -5327,16 +5340,6 @@ async def test_subscribe_s2_inclusion(
     msg = await ws_client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_FOUND
-
-
-async def test_firmware_upload_view_invalid_payload(
-    hass: HomeAssistant, multisensor_6, integration, hass_client: ClientSessionGenerator
-) -> None:
-    """Test uploading firmware with invalid payload."""
-    client = await hass_client()
-    device_id = get_device_id(multisensor_6.client.driver, multisensor_6)
-    resp = await client.post(f"/api/zwave_js/firmware/upload/{device_id}")
-    assert resp.status == HTTPStatus.BAD_REQUEST
 
 
 async def test_nvm_backup_view(
