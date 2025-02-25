@@ -18,6 +18,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from tests.common import mock_platform
@@ -125,6 +126,7 @@ async def setup_backup_integration(
 ) -> dict[str, Mock]:
     """Set up the Backup integration."""
     backups = backups or {}
+    async_initialize_backup(hass)
     with (
         patch("homeassistant.components.backup.is_hassio", return_value=with_hassio),
         patch(

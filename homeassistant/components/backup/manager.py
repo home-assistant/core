@@ -32,7 +32,9 @@ from homeassistant.helpers import (
     instance_id,
     integration_platform,
     issue_registry as ir,
+    start,
 )
+from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.json import json_bytes
 from homeassistant.util import dt as dt_util, json as json_util
 
@@ -43,7 +45,12 @@ from .agent import (
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
 )
-from .config import BackupConfig, delete_backups_exceeding_configured_count
+from .config import (
+    BackupConfig,
+    CreateBackupParametersDict,
+    check_unavailable_agents,
+    delete_backups_exceeding_configured_count,
+)
 from .const import (
     BUF_SIZE,
     DATA_MANAGER,
@@ -282,6 +289,10 @@ class BackupReaderWriter(abc.ABC):
     ) -> None:
         """Get restore events after core restart."""
 
+    @abc.abstractmethod
+    async def async_validate_config(self, *, config: BackupConfig) -> None:
+        """Validate backup config."""
+
 
 class IncorrectPasswordError(BackupReaderWriterError):
     """Raised when the password is incorrect."""
@@ -324,7 +335,9 @@ class BackupManager:
         # Latest backup event and backup event subscribers
         self.last_event: ManagerStateEvent = IdleEvent()
         self.last_non_idle_event: ManagerStateEvent | None = None
-        self._backup_event_subscriptions: list[Callable[[ManagerStateEvent], None]] = []
+        self._backup_event_subscriptions = hass.data[
+            DATA_BACKUP
+        ].backup_event_subscriptions
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -333,6 +346,7 @@ class BackupManager:
             self.config.load(stored["config"])
             self.known_backups.load(stored["backups"])
 
+        await self._reader_writer.async_validate_config(config=self.config)
         await self._reader_writer.async_resume_restore_progress_after_restart(
             on_progress=self.async_on_backup_event
         )
@@ -404,6 +418,13 @@ class BackupManager:
                 if isinstance(agent, LocalBackupAgent)
             }
         )
+
+        @callback
+        def check_unavailable_agents_after_start(hass: HomeAssistant) -> None:
+            """Check unavailable agents after start."""
+            check_unavailable_agents(hass, self)
+
+        start.async_at_started(self.hass, check_unavailable_agents_after_start)
 
     async def _add_platform(
         self,
@@ -1270,19 +1291,6 @@ class BackupManager:
         for subscription in self._backup_event_subscriptions:
             subscription(event)
 
-    @callback
-    def async_subscribe_events(
-        self,
-        on_event: Callable[[ManagerStateEvent], None],
-    ) -> Callable[[], None]:
-        """Subscribe events."""
-
-        def remove_subscription() -> None:
-            self._backup_event_subscriptions.remove(on_event)
-
-        self._backup_event_subscriptions.append(on_event)
-        return remove_subscription
-
     def _update_issue_backup_failed(self) -> None:
         """Update issue registry when a backup fails."""
         ir.async_create_issue(
@@ -1831,6 +1839,44 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             )
         )
         on_progress(IdleEvent())
+
+    async def async_validate_config(self, *, config: BackupConfig) -> None:
+        """Validate backup config.
+
+        Update automatic backup settings to not include addons or folders and remove
+        hassio agents in case a backup created by supervisor was restored.
+        """
+        create_backup = config.data.create_backup
+        if (
+            not create_backup.include_addons
+            and not create_backup.include_all_addons
+            and not create_backup.include_folders
+            and not any(a_id.startswith("hassio.") for a_id in create_backup.agent_ids)
+        ):
+            LOGGER.debug("Backup settings don't need to be adjusted")
+            return
+
+        LOGGER.info(
+            "Adjusting backup settings to not include addons, folders or supervisor locations"
+        )
+        automatic_agents = [
+            agent_id
+            for agent_id in create_backup.agent_ids
+            if not agent_id.startswith("hassio.")
+        ]
+        if (
+            self._local_agent_id not in automatic_agents
+            and "hassio.local" in create_backup.agent_ids
+        ):
+            automatic_agents = [self._local_agent_id, *automatic_agents]
+        config.update(
+            create_backup=CreateBackupParametersDict(
+                agent_ids=automatic_agents,
+                include_addons=None,
+                include_all_addons=False,
+                include_folders=None,
+            )
+        )
 
 
 def _generate_backup_id(date: str, name: str) -> str:
