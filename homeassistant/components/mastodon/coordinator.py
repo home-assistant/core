@@ -7,7 +7,7 @@ from datetime import timedelta
 from typing import Any
 
 from mastodon import Mastodon
-from mastodon.Mastodon import Account, Instance, MastodonError
+from mastodon.Mastodon import MastodonError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -21,8 +21,8 @@ class MastodonData:
     """Mastodon data type."""
 
     client: Mastodon
-    instance: Instance
-    account: Account
+    instance: dict
+    account: dict
     coordinator: MastodonCoordinator
 
 
@@ -49,7 +49,7 @@ class MastodonCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def _async_update_data(self) -> dict[str, Any]:
         try:
-            account: Account = await self.hass.async_add_executor_job(
+            account: dict = await self.hass.async_add_executor_job(
                 self.client.account_verify_credentials
             )
         except MastodonError as ex:
