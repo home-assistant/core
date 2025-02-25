@@ -20,7 +20,7 @@ type SMHIConfigEntry = ConfigEntry[SMHIDataUpdateCoordinator]
 
 @dataclass
 class SMHIForecastData:
-    """Dataclass for Sensibo data."""
+    """Dataclass for SMHI data."""
 
     daily: list[SMHIForecast]
     hourly: list[SMHIForecast]
@@ -32,7 +32,7 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
     config_entry: SMHIConfigEntry
 
     def __init__(self, hass: HomeAssistant, config_entry: SMHIConfigEntry) -> None:
-        """Initialize the Sensibo coordinator."""
+        """Initialize the SMHI coordinator."""
         super().__init__(
             hass,
             LOGGER,
@@ -47,7 +47,7 @@ class SMHIDataUpdateCoordinator(DataUpdateCoordinator[SMHIForecastData]):
         )
 
     async def _async_update_data(self) -> SMHIForecastData:
-        """Fetch data from Sensibo."""
+        """Fetch data from SMHI."""
         try:
             async with asyncio.timeout(TIMEOUT):
                 _forecast_daily = await self._smhi_api.async_get_daily_forecast()
