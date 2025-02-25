@@ -17,12 +17,12 @@
           "password": "[%key:common::config_flow::data::password%]"
         },
         "data_description": {
-          "tls": "Enable this if you use a secure connection to your velbus interface, like a Signum.",
-          "host": "The IP address or hostname of the velbus interface.",
-          "port": "The port number of the velbus interface.",
-          "password": "The password of the velbus interface, this is only needed if the interface is password protected."
+          "tls": "Enable this if you use a secure connection to your Velbus interface, like a Signum.",
+          "host": "The IP address or hostname of the Velbus interface.",
+          "port": "The port number of the Velbus interface.",
+          "password": "The password of the Velbus interface, this is only needed if the interface is password protected."
         },
-        "description": "TCP/IP configuration, in case you use a Signum, velserv, velbus-tcp or any other velbus to TCP/IP interface."
+        "description": "TCP/IP configuration, in case you use a Signum, VelServ, velbus-tcp or any other Velbus to TCP/IP interface."
       },
       "usbselect": {
         "title": "USB configuration",
@@ -30,9 +30,9 @@
           "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "port": "Select the serial port for your velbus USB interface."
+          "port": "Select the serial port for your Velbus USB interface."
         },
-        "description": "Select the serial port for your velbus USB interface."
+        "description": "Select the serial port for your Velbus USB interface."
       }
     },
     "error": {
