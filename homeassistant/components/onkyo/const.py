@@ -8,8 +8,6 @@ import pyeiscp
 
 DOMAIN = "onkyo"
 
-INTEGRATION_URL = "/config/integrations/integration/onkyo"
-
 DEVICE_INTERVIEW_TIMEOUT = 5
 DEVICE_DISCOVERY_TIMEOUT = 5
 

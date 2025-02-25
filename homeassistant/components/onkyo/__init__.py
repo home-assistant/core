@@ -7,12 +7,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     DOMAIN,
-    INTEGRATION_URL,
     OPTION_INPUT_SOURCES,
     OPTION_LISTENING_MODES,
     InputSource,
@@ -62,7 +61,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> boo
     sources = {InputSource(k): v for k, v in sources_store.items()}
 
     sound_modes_store: dict[str, str] = entry.options.get(OPTION_LISTENING_MODES, {})
-    handle_sound_mode_migration(hass, entry, sound_modes_store)
     sound_modes = {ListeningMode(k): v for k, v in sound_modes_store.items()}
 
     entry.runtime_data = OnkyoData(receiver, sources, sound_modes)
@@ -89,24 +87,3 @@ async def async_unload_entry(hass: HomeAssistant, entry: OnkyoConfigEntry) -> bo
 async def update_listener(hass: HomeAssistant, entry: OnkyoConfigEntry) -> None:
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
-
-
-def handle_sound_mode_migration(
-    hass: HomeAssistant, entry: OnkyoConfigEntry, sound_modes: dict[str, str]
-) -> None:
-    """Handle sound mode migration."""
-    if not sound_modes:
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            f"sound_mode_not_configured_{entry.entry_id}",
-            breaks_in_ha_version="2025.9.0",
-            is_fixable=False,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key="sound_mode_not_configured",
-            translation_placeholders={"receiver": entry.title, "url": INTEGRATION_URL},
-        )
-    else:
-        ir.async_delete_issue(
-            hass, DOMAIN, f"sound_mode_not_configured_{entry.entry_id}"
-        )
