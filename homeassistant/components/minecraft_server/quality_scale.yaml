@@ -7,12 +7,7 @@ rules:
   brands: done
   common-modules: done
   config-flow: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      Merge test_show_config_form with full flow test.
-      Move full flow test to the top of all tests.
-      All test cases should end in either CREATE_ENTRY or ABORT.
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions:
     status: exempt
