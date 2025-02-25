@@ -60,6 +60,8 @@ SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_CANCEL = "cancel"
 SERVICE_CHANGE = "change"
+SERVICE_ATLEAST = "atleast"
+SERVICE_ATMOST = "atmost"
 SERVICE_FINISH = "finish"
 
 STORAGE_KEY = DOMAIN
@@ -165,6 +167,16 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_CHANGE,
         {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
         "async_change",
+    )
+    component.async_register_entity_service(
+        SERVICE_ATLEAST,
+        {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
+        "async_atleast",
+    )
+    component.async_register_entity_service(
+        SERVICE_ATMOST,
+        {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
+        "async_atmost",
     )
 
     return True
@@ -356,6 +368,44 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self._listener = async_track_point_in_utc_time(
             self.hass, self._async_finished, self._end
         )
+
+    @callback
+    def async_atleast(self, duration: timedelta) -> None:
+        """Increase the remaining time to >= duration"""
+        if self._state == STATUS_PAUSED:
+            # On a paused timer, just update the remaining time (if
+            # necessary).
+            changed = False
+            if self._remaining < duration:
+                self._remaining = duration
+                changed = True
+            if self._running_duration < duration:
+                self._running_duration = duration
+                changed = True
+            if changed:
+                self.async_write_ha_state()
+            return
+
+        new_end = dt_util.utcnow().replace(microsecond=0) + duration
+        if self._state == STATUS_ACTIVE and new_end <= self._end:
+            # The timer already has sufficient time remaining
+            return
+
+        self.async_start(duration)
+
+    @callback
+    def async_atmost(self, duration: timedelta) -> None:
+        """Decrease the remaining time to <= duration"""
+        if self._state == STATUS_IDLE:
+            # The timer is already finished
+            return
+
+        new_end = dt_util.utcnow().replace(microsecond=0) + duration
+        if self._state == STATUS_ACTIVE and self._end <= new_end:
+            # The timer is already set to finish sooner.
+            return
+
+        self.async_start(duration)
 
     @callback
     def async_pause(self) -> None:
