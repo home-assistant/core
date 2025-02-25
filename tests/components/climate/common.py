@@ -20,10 +20,11 @@ from homeassistant.components.climate import (
     SERVICE_SET_HUMIDITY,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_PRESET_MODE,
+    SERVICE_SET_SWING_HORIZONTAL_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    HVACMode,
 )
-from homeassistant.components.climate.const import HVACMode
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -33,6 +34,8 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
+
+from tests.components.mqtt.test_climate import ATTR_SWING_HORIZONTAL_MODE
 
 
 async def async_set_preset_mode(
@@ -209,6 +212,20 @@ def set_operation_mode(
         data[ATTR_ENTITY_ID] = entity_id
 
     hass.services.call(DOMAIN, SERVICE_SET_HVAC_MODE, data)
+
+
+async def async_set_swing_horizontal_mode(
+    hass: HomeAssistant, swing_horizontal_mode: str, entity_id: str = ENTITY_MATCH_ALL
+) -> None:
+    """Set new target swing horizontal mode."""
+    data = {ATTR_SWING_HORIZONTAL_MODE: swing_horizontal_mode}
+
+    if entity_id is not None:
+        data[ATTR_ENTITY_ID] = entity_id
+
+    await hass.services.async_call(
+        DOMAIN, SERVICE_SET_SWING_HORIZONTAL_MODE, data, blocking=True
+    )
 
 
 async def async_set_swing_mode(
