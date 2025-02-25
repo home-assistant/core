@@ -6,14 +6,16 @@ _LOGGER = logging.getLogger(__name__)
 API_BASE_URL = "http://host.docker.internal:8080/api/auth"
 
 
-def authenticate(username, password):
+def authenticate(username, password, uuid):
     """Calls the actual Ezlo API for authentication."""
     _LOGGER.info("Sending login request to Ezlo API...")
+    _LOGGER.info(f"Sending login request with UUID: {uuid}")
 
     payload = {
         "username": username,
         "password": password,
         "oem_id": "1",  # Required as per cURL request
+        "ha_uuid": uuid,  # UUID is always passed
     }
 
     try:

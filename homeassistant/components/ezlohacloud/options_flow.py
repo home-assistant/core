@@ -3,6 +3,11 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.core import callback
 from .api import authenticate, signup
+from homeassistant.helpers.system_info import async_get_system_info
+import uuid
+import logging
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class EzloOptionsFlowHandler(config_entries.OptionsFlow):
@@ -12,7 +17,6 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         """Check login status and show the correct UI."""
         config_data = self.config_entry.data
         is_logged_in = config_data.get("is_logged_in", False)
-        username = config_data.get("user", {}).get("name", "Unknown User")
         token_expiry = config_data.get("token_expiry", 0)
 
         # Check if token is expired
@@ -26,7 +30,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             return self.async_show_menu(
                 step_id="init",
                 menu_options={
-                    "logout": f"🔓 Logout ({username})",
+                    "logout": f"🔓 Logout",
                 },
             )
 
@@ -90,33 +94,52 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_init()
 
     async def async_step_login(self, user_input=None):
-        """Handles login authentication form."""
+        """Handles login authentication form with HA-generated UUID."""
         errors = {}
 
         if user_input is not None:
             username = user_input["username"]
             password = user_input["password"]
 
-            # Call authentication API
+            system_uuid = await self.hass.helpers.instance_id.async_get()
+            _LOGGER.info(
+                f"Retrieved system UUID from instance_id.async_get: {system_uuid}"
+            )
+
+            if not system_uuid:
+                system_info = await async_get_system_info(self.hass)
+                system_uuid = system_info.get("uuid")
+                _LOGGER.info(
+                    f"Retrieved system UUID from async_get_system_info: {system_uuid}"
+                )
+
+            if not system_uuid:
+                system_uuid = str(uuid.uuid4())
+                _LOGGER.warning(
+                    f"Home Assistant UUID missing! Generated fallback UUID: {system_uuid}"
+                )
+                self.hass.config_entries.async_update_entry(
+                    self.config_entry,
+                    data={**self.config_entry.data, "fallback_uuid": system_uuid},
+                )
+
             auth_response = await self.hass.async_add_executor_job(
-                authenticate, username, password
+                authenticate, username, password, system_uuid
             )
 
             if auth_response.get("success"):
-                expiry_time = auth_response["expires_at"]
+                expiry_time = datetime.now() + timedelta(seconds=3600)
 
-                # Store login session persistently
                 new_data = self.config_entry.data.copy()
                 new_data["auth_token"] = auth_response["token"]
-                new_data["user"] = auth_response["user"]
+                new_data["user"] = {"name": username, "email": ""}
                 new_data["is_logged_in"] = True
-                new_data["token_expiry"] = expiry_time  # Store actual expiry
+                new_data["token_expiry"] = expiry_time.timestamp()
 
                 self.hass.config_entries.async_update_entry(
                     self.config_entry, data=new_data
                 )
 
-                # Force refresh options menu after login
                 self.hass.async_create_task(
                     self.hass.config_entries.async_reload(self.config_entry.entry_id)
                 )
