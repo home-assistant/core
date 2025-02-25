@@ -2000,7 +2000,7 @@ python-rabbitair==0.0.8
 python-roborock==2.11.1
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.38
+python-smarttub==0.0.39
 
 # homeassistant.components.snoo
 python-snoo==0.6.0
