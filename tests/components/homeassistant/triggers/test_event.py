@@ -517,6 +517,51 @@ async def test_event_data_with_list(
     await hass.async_block_till_done()
     assert len(service_calls) == 1
 
+    # don't match if property doesn't exist at all
+    hass.bus.async_fire("test_event", {"other_attr": [1, 2]})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
+async def test_event_data_with_list_nested(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test the (non)firing of event when the data schema has nested lists."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "event",
+                    "event_type": "test_event",
+                    "event_data": {"service_data": {"some_attr": [1, 2]}},
+                    "context": {},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.bus.async_fire("test_event", {"service_data": {"some_attr": [1, 2]}})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    # don't match a single value
+    hass.bus.async_fire("test_event", {"service_data": {"some_attr": 1}})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    # don't match a containing list
+    hass.bus.async_fire("test_event", {"service_data": {"some_attr": [1, 2, 3]}})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+    # don't match if property doesn't exist at all
+    hass.bus.async_fire("test_event", {"service_data": {"other_attr": [1, 2]}})
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
 
 @pytest.mark.parametrize(
     "event_type", ["state_reported", ["test_event", "state_reported"]]
