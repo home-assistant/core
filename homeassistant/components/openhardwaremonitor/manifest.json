@@ -1,8 +1,13 @@
 {
   "domain": "openhardwaremonitor",
   "name": "Open Hardware Monitor",
-  "codeowners": [],
+  "codeowners": ["@lazytarget"],
   "documentation": "https://www.home-assistant.io/integrations/openhardwaremonitor",
   "iot_class": "local_polling",
-  "quality_scale": "legacy"
+  "integration_type": "device",
+  "quality_scale": "legacy",
+  "requirements": ["pyopenhardwaremonitor==0.1.6"],
+  "dependencies": [],
+  "config_flow": true,
+  "version": "2.0.0"
 }
