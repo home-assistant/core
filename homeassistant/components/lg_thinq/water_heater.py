@@ -40,13 +40,13 @@ DEVICE_TYPE_WH_MAP: dict[DeviceType, WaterHeaterEntityDescription] = {
 }
 
 # Mapping between device and HA operation modes
-OP_STATE_TO_HA = {
-    "auto": STATE_ECO,  # Auto
-    "heat_pump": STATE_HEAT_PUMP,  # Heat pump
-    "turbo": STATE_PERFORMANCE,  # Turbo
-    "vacation": STATE_OFF,  # Vacation
+DEVICE_OP_MODE_TO_HA = {
+    "auto": STATE_ECO,
+    "heat_pump": STATE_HEAT_PUMP,
+    "turbo": STATE_PERFORMANCE,
+    "vacation": STATE_OFF,
 }
-HA_STATE_TO_OP = {v: k for k, v in OP_STATE_TO_HA.items()}
+HA_STATE_TO_DEVICE_OP_MODE = {v: k for k, v in DEVICE_OP_MODE_TO_HA.items()}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -79,7 +79,7 @@ async def async_setup_entry(
 
 
 class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
-    """Represent a thinq water_heater platform."""
+    """Represent a ThinQ water heater entity."""
 
     def __init__(
         self,
@@ -98,7 +98,7 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
         )
         if modes := self.data.job_modes:
             self._attr_operation_list = [
-                OP_STATE_TO_HA.get(mode, mode) for mode in modes
+                DEVICE_OP_MODE_TO_HA.get(mode, mode) for mode in modes
             ]
         else:
             self._attr_operation_list = [STATE_HEAT_PUMP]
@@ -116,13 +116,12 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
         if self.data.step is not None:
             self._attr_target_temperature_step = self.data.step
 
-        # Update unit.
         self._attr_temperature_unit = (
             self._get_unit_of_measurement(self.data.unit) or UnitOfTemperature.CELSIUS
         )
         if self.data.is_on:
             self._attr_current_operation = (
-                OP_STATE_TO_HA.get(job_mode, job_mode)
+                DEVICE_OP_MODE_TO_HA.get(job_mode, job_mode)
                 if (job_mode := self.data.job_mode) is not None
                 else STATE_HEAT_PUMP
             )
@@ -164,7 +163,7 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
-        mode = HA_STATE_TO_OP.get(operation_mode, operation_mode)
+        mode = HA_STATE_TO_DEVICE_OP_MODE.get(operation_mode, operation_mode)
         _LOGGER.debug(
             "[%s:%s] async_set_operation_mode: %s",
             self.coordinator.device_name,
@@ -177,7 +176,7 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
 
 
 class ThinQWaterBoilerEntity(ThinQWaterHeaterEntity):
-    """Represent a thinq water_heater platform."""
+    """Represent a ThinQ water boiler entity."""
 
     def __init__(
         self,
