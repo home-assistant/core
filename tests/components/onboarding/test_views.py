@@ -16,6 +16,7 @@ from homeassistant.components.onboarding import const, views
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from . import mock_storage
@@ -765,6 +766,7 @@ async def test_onboarding_backup_info(
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -881,6 +883,7 @@ async def test_onboarding_backup_restore(
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -977,6 +980,7 @@ async def test_onboarding_backup_restore_error(
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -1020,6 +1024,7 @@ async def test_onboarding_backup_restore_unexpected_error(
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -1045,6 +1050,7 @@ async def test_onboarding_backup_upload(
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
