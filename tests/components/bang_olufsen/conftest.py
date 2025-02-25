@@ -12,6 +12,8 @@ from mozart_api.models import (
     ListeningModeFeatures,
     ListeningModeRef,
     ListeningModeTrigger,
+    PairedRemote,
+    PairedRemoteResponse,
     PlaybackContentMetadata,
     PlaybackProgress,
     PlaybackState,
@@ -44,6 +46,7 @@ from .const import (
     TEST_JID_4,
     TEST_NAME,
     TEST_NAME_2,
+    TEST_REMOTE_SERIAL,
     TEST_SERIAL_NUMBER,
     TEST_SERIAL_NUMBER_2,
     TEST_SOUND_MODE,
@@ -323,7 +326,19 @@ def mock_mozart_client() -> Generator[AsyncMock]:
             repeat="none",
             shuffle=False,
         )
-
+        client.get_bluetooth_remotes = AsyncMock()
+        client.get_bluetooth_remotes.return_value = PairedRemoteResponse(
+            items=[
+                PairedRemote(
+                    address="",
+                    app_version="1.0.0",
+                    battery_level=50,
+                    connected=True,
+                    serial_number=TEST_REMOTE_SERIAL,
+                    name="BEORC",
+                )
+            ]
+        )
         client.post_standby = AsyncMock()
         client.set_current_volume_level = AsyncMock()
         client.set_volume_mute = AsyncMock()
