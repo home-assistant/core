@@ -1,7 +1,7 @@
 """Test the Imeon Inverter config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant import config_entries
 from homeassistant.components.imeon_inverter.const import DOMAIN
@@ -17,12 +17,11 @@ from tests.common import MockConfigEntry
 async def test_form(
     hass: HomeAssistant,
     mock_login_async_setup_entry: Generator[AsyncMock],
-    mock_login: Generator[AsyncMock],
-    mock_serial: Generator[AsyncMock],
+    mock_imeon_inverter: Generator[MagicMock],
 ) -> None:
     """Test we get the form."""
-    mock_login.return_value = True
-    mock_serial.return_value = TEST_SERIAL
+    mock_imeon_inverter.login.return_value = True
+    mock_imeon_inverter.get_serial.return_value = TEST_SERIAL
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -42,14 +41,14 @@ async def test_form(
 
 
 async def test_form_invalid_auth(
-    hass: HomeAssistant, mock_login: Generator[AsyncMock]
+    hass: HomeAssistant, mock_imeon_inverter: Generator[MagicMock]
 ) -> None:
     """Test we handle invalid auth."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_login.return_value = False
+    mock_imeon_inverter.login.return_value = False
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
