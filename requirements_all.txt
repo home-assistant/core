@@ -57,7 +57,7 @@ PyFlume==0.6.5
 PyFronius==0.7.3
 
 # homeassistant.components.pyload
-PyLoadAPI==1.4.1
+PyLoadAPI==1.4.2
 
 # homeassistant.components.met_eireann
 PyMetEireann==2024.11.0
@@ -386,7 +386,7 @@ aiosolaredge==0.2.0
 aiosteamist==1.0.1
 
 # homeassistant.components.cambridge_audio
-aiostreammagic==2.10.0
+aiostreammagic==2.11.0
 
 # homeassistant.components.switcher_kis
 aioswitcher==6.0.0
@@ -570,6 +570,9 @@ azure-kusto-ingest==4.5.1
 
 # homeassistant.components.azure_service_bus
 azure-servicebus==7.10.0
+
+# homeassistant.components.azure_storage
+azure-storage-blob==12.24.0
 
 # homeassistant.components.holiday
 babel==2.15.0
