@@ -4,9 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from asyncssh.misc import PermissionDenied
-from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
@@ -64,14 +61,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SFTPConfigEntry) -> bool
     # This will raise exception if there is something either wrong
     # with SSH server or config.
     try:
-        async with BackupAgentClient(cfg) as client:
+        async with BackupAgentClient(entry, hass) as client:
             assert isinstance(await client.list_backup_location(), list)
-    except (OSError, PermissionDenied, SFTPNoSuchFile, SFTPPermissionDenied) as e:
+    except HomeAssistantError as e:
         LOGGER.error(
             "Failure occurred during integration setup. Reauth is needed. %s", str(e)
         )
-        entry.async_start_reauth(hass)
-        raise HomeAssistantError(e) from e
+        raise
     except Exception as e:
         raise ConfigEntryNotReady from e
 
