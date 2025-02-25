@@ -17,6 +17,21 @@ ATTR_REQUESTED_BY = "requested_by"
 
 EVENT_KEY = f"{DOMAIN}_event"
 
+MEDIA_EVENT_TYPES = {
+    "pending": "pending",
+    "approved": "approved",
+    "available": "available",
+    "failed": "failed",
+    "declined": "declined",
+    "auto_approved": "auto_approved",
+}
+ISSUE_EVENT_TYPES = {
+    "reported": "reported",
+    "commented": "comment",  # The notification type is ISSUE_COMMENT, but it looks better as "commented"
+    "resolved": "resolved",
+    "reopened": "reopened",
+}
+
 REGISTERED_NOTIFICATIONS = (
     NotificationType.REQUEST_PENDING_APPROVAL
     | NotificationType.REQUEST_APPROVED
