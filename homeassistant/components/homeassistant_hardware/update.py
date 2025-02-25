@@ -116,7 +116,6 @@ class BaseFirmwareUpdateEntity(
 
         self._latest_manifest: FirmwareManifest | None = None
         self._latest_firmware: FirmwareMetadata | None = None
-        self._maybe_recompute_state(fire_callbacks=False)
 
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
         self._current_firmware_info = firmware_info
@@ -167,7 +166,7 @@ class BaseFirmwareUpdateEntity(
             )
         ):
             self._latest_manifest = hardware_extra_data.firmware_manifest
-            self._maybe_recompute_state(fire_callbacks=False)
+            self._maybe_recompute_state()
             self.async_write_ha_state()
 
     @property
@@ -191,19 +190,16 @@ class BaseFirmwareUpdateEntity(
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
         raise NotImplementedError
 
-    def _maybe_recompute_state(self, *, fire_callbacks: bool = True) -> None:
+    def _maybe_recompute_state(self) -> None:
         """Recompute the state of the entity."""
 
-        if self._current_firmware_info is None:
-            firmware_type = None
-        else:
-            firmware_type = self._current_firmware_info.firmware_type
+        firmware_type = (
+            self._current_firmware_info.firmware_type
+            if self._current_firmware_info is not None
+            else None
+        )
 
-        if (
-            fire_callbacks
-            and self.hass is not None
-            and firmware_type != self.entity_description.expected_firmware_type
-        ):
+        if firmware_type != self.entity_description.expected_firmware_type:
             for change_callback in self._firmware_type_change_callbacks.copy():
                 try:
                     change_callback(
