@@ -11,7 +11,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_MAC
 
-from .const import _LOGGER, DISCOVERY_TIMEOUT, DOMAIN
+from .const import _LOGGER, DISCOVERY_TIMEOUT, DOMAIN, UPDATE_INTERVAL
 
 
 class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -21,6 +21,7 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
     MINOR_VERSION = 1
 
     host: str = ""
+    update_interval = 10
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -34,10 +35,10 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a reconfiguration flow initialized by the user."""
         reconfigure_entry = self._get_reconfigure_entry()
         self.host = reconfigure_entry.data[CONF_HOST]
+        self.update_interval = reconfigure_entry.data[UPDATE_INTERVAL]
         return await self._handle_step(
             user_input,
             step_id="reconfigure",
-            default_host=self.host,
             description_placeholders={"device_name": reconfigure_entry.title},
         )
 
@@ -45,12 +46,13 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         step_id: str = "user",
-        default_host: str = "",
         description_placeholders: dict[str, str] | None = None,
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
+            self.host = host
+            self.update_interval = user_input[UPDATE_INTERVAL]
             device = await start_scan_device(host=host)
             if not device:
                 errors["base"] = "no_devices_found"
@@ -61,17 +63,32 @@ class MerossConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._abort_if_unique_id_configured({CONF_HOST: host})
                         return self.async_create_entry(
                             title=device["devName"],
-                            data={CONF_HOST: host, "device": device},
+                            data={
+                                CONF_HOST: host,
+                                UPDATE_INTERVAL: self.update_interval,
+                                "device": device,
+                            },
                         )
                     if step_id == "reconfigure":
                         self._abort_if_unique_id_mismatch(reason="another_device")
                         return self.async_update_reload_and_abort(
                             self._get_reconfigure_entry(),
-                            data_updates={CONF_HOST: host, "device": device},
+                            data_updates={
+                                CONF_HOST: host,
+                                UPDATE_INTERVAL: self.update_interval,
+                                "device": device,
+                            },
                         )
                 errors["base"] = "firmware_not_fully_supported"
 
-        schema = vol.Schema({vol.Required(CONF_HOST, default=default_host): str})
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST, default=self.host): str,
+                vol.Required(UPDATE_INTERVAL, default=self.update_interval): vol.All(
+                    vol.Coerce(int), vol.Range(min=1)
+                ),
+            }
+        )
         return self.async_show_form(
             step_id=step_id,
             data_schema=schema,

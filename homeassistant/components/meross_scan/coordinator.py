@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import _LOGGER, DOMAIN, HTTP_UPDATE_INTERVAL, MAX_ERRORS
+from .const import _LOGGER, DOMAIN, MAX_ERRORS, UPDATE_INTERVAL
 
 type MerossConfigEntry = ConfigEntry[MerossDataUpdateCoordinator]
 
@@ -25,12 +25,13 @@ class MerossDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self, hass: HomeAssistant, config_entry: ConfigEntry, device: BaseDevice
     ) -> None:
         """Initialize the data update coordinator."""
+        update_interval = config_entry.data[UPDATE_INTERVAL]
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN}-{device.device_info.dev_name}",
-            update_interval=timedelta(seconds=HTTP_UPDATE_INTERVAL),
+            update_interval=timedelta(seconds=update_interval),
         )
         self.device = device
         self._error_count = 0

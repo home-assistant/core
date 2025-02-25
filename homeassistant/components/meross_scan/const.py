@@ -7,11 +7,11 @@ from logging import Logger, getLogger
 _LOGGER: Logger = getLogger(__package__)
 
 DISCOVERY_TIMEOUT = 8
-HTTP_UPDATE_INTERVAL = 5
+UPDATE_INTERVAL = "update_interval"
 
 DOMAIN = "meross_scan"
 
-MAX_ERRORS = 2
+MAX_ERRORS = 4
 
 # Energy monitoring
 SENSOR_EM = "em"

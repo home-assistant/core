@@ -26,13 +26,14 @@ async def test_found_device(hass: HomeAssistant) -> None:
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "192.168.1.1"},
+            {"host": "192.168.1.1", "update_interval": 10},
         )
 
         assert result2["type"] is FlowResultType.CREATE_ENTRY
         assert result2["title"] == "em06"
         assert result2["data"] == {
             "host": "192.168.1.1",
+            "update_interval": 10,
             "device": MOCK_DEVICE,
         }
 
@@ -53,7 +54,7 @@ async def test_no_device(hass: HomeAssistant) -> None:
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "192.168.1.1"},
+            {"host": "192.168.1.1", "update_interval": 10},
         )
 
         assert result2["type"] is FlowResultType.FORM
@@ -67,7 +68,7 @@ async def test_reconfigure_successful(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test-mac",
-        data={"host": "192.168.1.1", "device": MOCK_DEVICE},
+        data={"host": "192.168.1.1", "update_interval": 10, "device": MOCK_DEVICE},
     )
     entry.add_to_hass(hass)
 
@@ -82,11 +83,15 @@ async def test_reconfigure_successful(
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "192.168.1.2"},
+            {"host": "192.168.1.2", "update_interval": 10},
         )
         assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "reconfigure_successful"
-        assert entry.data == {"host": "192.168.1.2", "device": MOCK_DEVICE}
+        assert entry.data == {
+            "host": "192.168.1.2",
+            "update_interval": 10,
+            "device": MOCK_DEVICE,
+        }
 
 
 async def test_reconfigure_unsuccessful(
@@ -96,7 +101,7 @@ async def test_reconfigure_unsuccessful(
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="test-mac",
-        data={"host": "192.168.1.1", "device": MOCK_DEVICE},
+        data={"host": "192.168.1.1", "update_interval": 10, "device": MOCK_DEVICE},
     )
     entry.add_to_hass(hass)
 
@@ -113,7 +118,7 @@ async def test_reconfigure_unsuccessful(
         discovery.return_value.broadcast_msg = AsyncMock(return_value=MOCK_DEVICE)
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"host": "192.168.1.2"},
+            {"host": "192.168.1.2", "update_interval": 10},
         )
         assert result2["type"] is FlowResultType.ABORT
         assert result2["reason"] == "another_device"
