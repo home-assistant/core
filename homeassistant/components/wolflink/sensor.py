@@ -10,13 +10,17 @@ from wolf_comm.models import (
     PercentageParameter,
     PowerParameter,
     Pressure,
-    SimpleParameter,
     Temperature,
 )
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
+from homeassistant.components.sensor import (
+    SensorDeviceClass,
+    SensorEntity,
+    SensorEntityDescription,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    PERCENTAGE,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfPressure,
@@ -37,41 +41,90 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all entries for Wolf Platform."""
-
     coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
     parameters = hass.data[DOMAIN][config_entry.entry_id][PARAMETERS]
     device_id = hass.data[DOMAIN][config_entry.entry_id][DEVICE_ID]
 
-    entities: list[WolfLinkSensor] = []
-    for parameter in parameters:
-        if isinstance(parameter, Temperature):
-            entities.append(WolfLinkTemperature(coordinator, parameter, device_id))
-        if isinstance(parameter, Pressure):
-            entities.append(WolfLinkPressure(coordinator, parameter, device_id))
-        if isinstance(parameter, EnergyParameter):
-            entities.append(WolfLinkEnergy(coordinator, parameter, device_id))
-        if isinstance(parameter, PowerParameter):
-            entities.append(WolfLinkPower(coordinator, parameter, device_id))
-        if isinstance(parameter, PercentageParameter):
-            entities.append(WolfLinkPercentage(coordinator, parameter, device_id))
-        if isinstance(parameter, ListItemParameter):
-            entities.append(WolfLinkState(coordinator, parameter, device_id))
-        if isinstance(parameter, HoursParameter):
-            entities.append(WolfLinkHours(coordinator, parameter, device_id))
-        if isinstance(parameter, SimpleParameter):
-            entities.append(WolfLinkSensor(coordinator, parameter, device_id))
+    entities: list[WolfLinkSensor] = [
+        WolfLinkSensor(
+            coordinator, parameter, device_id, get_entity_description(parameter)
+        )
+        for parameter in parameters
+    ]
 
     async_add_entities(entities, True)
+
+
+def get_entity_description(parameter: Parameter) -> SensorEntityDescription:
+    """Return the entity description for a given parameter."""
+    if isinstance(parameter, Temperature):
+        return SensorEntityDescription(
+            key=parameter.parameter_id,
+            name=parameter.name,
+            device_class=SensorDeviceClass.TEMPERATURE,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        )
+    if isinstance(parameter, Pressure):
+        return SensorEntityDescription(
+            key=parameter.parameter_id,
+            name=parameter.name,
+            device_class=SensorDeviceClass.PRESSURE,
+            native_unit_of_measurement=UnitOfPressure.BAR,
+        )
+    if isinstance(parameter, EnergyParameter):
+        return SensorEntityDescription(
+            key=parameter.parameter_id,
+            name=parameter.name,
+            device_class=SensorDeviceClass.ENERGY,
+            native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        )
+    if isinstance(parameter, PowerParameter):
+        return SensorEntityDescription(
+            key=parameter.parameter_id,
+            name=parameter.name,
+            device_class=SensorDeviceClass.POWER,
+            native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        )
+    if isinstance(parameter, PercentageParameter):
+        return SensorEntityDescription(
+            key=parameter.parameter_id,
+            name=parameter.name,
+            native_unit_of_measurement=PERCENTAGE,
+        )
+    if isinstance(parameter, ListItemParameter):
+        return SensorEntityDescription(
+            key=parameter.parameter_id,
+            name=parameter.name,
+            translation_key="state",
+        )
+    if isinstance(parameter, HoursParameter):
+        return SensorEntityDescription(
+            key=parameter.parameter_id,
+            name=parameter.name,
+            icon="mdi:clock",
+            native_unit_of_measurement=UnitOfTime.HOURS,
+        )
+    return SensorEntityDescription(
+        key=parameter.parameter_id,
+        name=parameter.name,
+    )
 
 
 class WolfLinkSensor(CoordinatorEntity, SensorEntity):
     """Base class for all Wolf entities."""
 
-    def __init__(self, coordinator, wolf_object: Parameter, device_id) -> None:
+    def __init__(
+        self,
+        coordinator,
+        wolf_object: Parameter,
+        device_id: str,
+        description: SensorEntityDescription,
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        self.entity_description = description
         self.wolf_object = wolf_object
-        self._attr_name = wolf_object.name
+        self._attr_name = str(description.name)
         self._attr_unique_id = f"{device_id}:{wolf_object.parameter_id}"
         self._state = None
         self._attr_device_info = DeviceInfo(
@@ -81,16 +134,28 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
         )
 
     @property
-    def native_value(self):
+    def native_value(self) -> str | None:
         """Return the state. Wolf Client is returning only changed values so we need to store old value here."""
         if self.wolf_object.parameter_id in self.coordinator.data:
             new_state = self.coordinator.data[self.wolf_object.parameter_id]
             self.wolf_object.value_id = new_state[0]
             self._state = new_state[1]
+            if (
+                isinstance(self.wolf_object, ListItemParameter)
+                and self._state is not None
+            ):
+                resolved_state = [
+                    item
+                    for item in self.wolf_object.items
+                    if item.value == int(self._state)
+                ]
+                if resolved_state:
+                    resolved_name = resolved_state[0].name
+                    self._state = STATES.get(resolved_name, resolved_name)
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
         return {
             "parameter_id": self.wolf_object.parameter_id,
@@ -98,65 +163,9 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
             "parent": self.wolf_object.parent,
         }
 
-
-class WolfLinkHours(WolfLinkSensor):
-    """Class for hour based entities."""
-
-    _attr_icon = "mdi:clock"
-    _attr_native_unit_of_measurement = UnitOfTime.HOURS
-
-
-class WolfLinkTemperature(WolfLinkSensor):
-    """Class for temperature based entities."""
-
-    _attr_device_class = SensorDeviceClass.TEMPERATURE
-    _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
-
-
-class WolfLinkPressure(WolfLinkSensor):
-    """Class for pressure based entities."""
-
-    _attr_device_class = SensorDeviceClass.PRESSURE
-    _attr_native_unit_of_measurement = UnitOfPressure.BAR
-
-
-class WolfLinkPower(WolfLinkSensor):
-    """Class for power based entities."""
-
-    _attr_device_class = SensorDeviceClass.POWER
-    _attr_native_unit_of_measurement = UnitOfPower.KILO_WATT
-
-
-class WolfLinkEnergy(WolfLinkSensor):
-    """Class for energy based entities."""
-
-    _attr_device_class = SensorDeviceClass.ENERGY
-    _attr_native_unit_of_measurement = UnitOfEnergy.KILO_WATT_HOUR
-
-
-class WolfLinkPercentage(WolfLinkSensor):
-    """Class for percentage based entities."""
-
     @property
-    def native_unit_of_measurement(self):
+    def native_unit_of_measurement(self) -> str | None:
         """Return the unit the value is expressed in."""
-        return self.wolf_object.unit
-
-
-class WolfLinkState(WolfLinkSensor):
-    """Class for entities which has defined list of state."""
-
-    _attr_translation_key = "state"
-
-    @property
-    def native_value(self):
-        """Return the state converting with supported values."""
-        state = super().native_value
-        if state is not None:
-            resolved_state = [
-                item for item in self.wolf_object.items if item.value == int(state)
-            ]
-            if resolved_state:
-                resolved_name = resolved_state[0].name
-                return STATES.get(resolved_name, resolved_name)
-        return state
+        if isinstance(self.wolf_object, PercentageParameter):
+            return self.wolf_object.unit
+        return self.entity_description.native_unit_of_measurement
