@@ -50,7 +50,22 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
         if hub[CONF_NAME] == config[DOMAIN][CONF_HUB]:
             hub_config = hub
             break
-    assert hub_config
+    if hub_config is None:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml_import_issue_missing_hub",
+            breaks_in_ha_version="2025.9.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml_import_issue_missing_hub",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Stiebel Eltron",
+            },
+        )
+        return
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_IMPORT},
@@ -68,7 +83,7 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
             hass,
             DOMAIN,
             f"deprecated_yaml_import_issue_{result['reason']}",
-            breaks_in_ha_version="2025.8.0",
+            breaks_in_ha_version="2025.9.0",
             is_fixable=False,
             issue_domain=DOMAIN,
             severity=ir.IssueSeverity.WARNING,
@@ -84,7 +99,7 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2025.8.0",
+        breaks_in_ha_version="2025.9.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
