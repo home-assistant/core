@@ -747,6 +747,7 @@ async def _check_step_or_section_translations(
                 f"{translation_prefix}.sections.{data_key}",
                 description_placeholders,
                 data_value.schema,
+                ignore_translations_for_mock_domains,
             )
             continue
         iqs_config_flow = _get_integration_quality_scale_rule(
