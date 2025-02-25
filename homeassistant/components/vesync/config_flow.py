@@ -71,19 +71,19 @@ class VeSyncFlowHandler(ConfigFlow, domain=DOMAIN):
         """Confirm re-authentication with vesync."""
 
         if user_input:
-            reauth_entry = self._get_reauth_entry()
             username = user_input[CONF_USERNAME]
             password = user_input[CONF_PASSWORD]
-            data = {
-                **reauth_entry.data,
-                CONF_USERNAME: username,
-                CONF_PASSWORD: password,
-            }
 
             manager = VeSync(username, password)
             login = await self.hass.async_add_executor_job(manager.login)
             if login:
-                return self.async_update_reload_and_abort(reauth_entry, data=data)
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
+                        CONF_USERNAME: username,
+                        CONF_PASSWORD: password,
+                    },
+                )
 
         return self.async_show_form(
             step_id="reauth_confirm",

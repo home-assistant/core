@@ -63,13 +63,13 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     assert result["step_id"] == "reauth_confirm"
     assert result["type"] is FlowResultType.FORM
     with patch("pyvesync.vesync.VeSync.login", return_value=True):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
         )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
     assert mock_entry.data == {
         CONF_USERNAME: "new-username",
         CONF_PASSWORD: "new-password",
@@ -90,9 +90,17 @@ async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
 
     with patch("pyvesync.vesync.VeSync.login", return_value=False):
-        result2 = await hass.config_entries.flow.async_configure(
+        result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
         )
 
-    assert result2["type"] is FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
+    with patch("pyvesync.vesync.VeSync.login", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
