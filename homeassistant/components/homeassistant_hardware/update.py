@@ -18,15 +18,10 @@ from homeassistant.components.update import (
     UpdateEntityDescription,
     UpdateEntityFeature,
 )
-from homeassistant.config_entries import (
-    SIGNAL_CONFIG_ENTRY_CHANGED,
-    ConfigEntry,
-    ConfigEntryChange,
-)
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -164,11 +159,7 @@ class BaseFirmwareUpdateEntity(
         )
 
         self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                SIGNAL_CONFIG_ENTRY_CHANGED,
-                self._on_config_entry_change,
-            )
+            self._config_entry.async_on_state_change(self._on_config_entry_change)
         )
 
         if (extra_data := await self.async_get_last_extra_data()) and (
@@ -186,13 +177,8 @@ class BaseFirmwareUpdateEntity(
         return FirmwareUpdateExtraStoredData(firmware_manifest=self._latest_manifest)
 
     @callback
-    def _on_config_entry_change(
-        self, change: ConfigEntryChange, entry: ConfigEntry
-    ) -> None:
+    def _on_config_entry_change(self) -> None:
         """Handle config entry changes."""
-        if entry != self._config_entry:
-            return
-
         self._maybe_recompute_state()
         self.async_write_ha_state()
 
