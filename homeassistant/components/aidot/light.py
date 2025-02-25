@@ -9,7 +9,6 @@ from aidot.const import (
     CONF_HARDWARE_VERSION,
     CONF_ID,
     CONF_IDENTITY,
-    CONF_IPADDRESS,
     CONF_MAC,
     CONF_MAXVALUE,
     CONF_MINVALUE,
@@ -32,9 +31,8 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -43,6 +41,7 @@ from homeassistant.helpers.device_registry import (
     format_mac,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import AidotCoordinator
@@ -76,7 +75,7 @@ async def async_setup_entry(
         ]
         if new_devices:
             async_add_entities(
-                AidotLight(hass, device_info, coordinator.client.login_info)
+                AidotLight(hass, device_info, coordinator)
                 for device_info in new_devices
                 if device_info[CONF_TYPE] == Platform.LIGHT
                 and CONF_AES_KEY in device_info
@@ -93,19 +92,31 @@ async def async_setup_entry(
 
     coordinator.async_add_listener(_async_check_devices)
     async_add_entities(
-        AidotLight(hass, device_info, coordinator.client.login_info)
+        AidotLight(hass, device_info, coordinator)
         for device_info in coordinator.filter_light_list()
     )
 
 
-class AidotLight(LightEntity):
+class AidotLight(CoordinatorEntity, LightEntity):
     """Representation of a Aidot Wi-Fi Light."""
 
-    def __init__(self, hass: HomeAssistant, device, user_info) -> None:
+    async def async_added_to_hass(self) -> None:
+        """Connect to device when this entity is added to HA."""
+        await super().async_added_to_hass()
+        await self._try_connect()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Cleanup resources when entity will be removed from hass."""
+        await super().async_will_remove_from_hass()
+        await self._cleanup_resources()
+
+    def __init__(
+        self, hass: HomeAssistant, device, coordinator: AidotCoordinator
+    ) -> None:
         """Initialize the light."""
-        super().__init__()
+        super().__init__(coordinator, {device[CONF_ID]})
         self.device = device
-        self.user_info = user_info
+        self.user_info = coordinator.client.login_info
         self._attr_unique_id = device[CONF_ID]
         self._attr_name = device[CONF_NAME]
         self.pingtask = None
@@ -149,25 +160,30 @@ class AidotLight(LightEntity):
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
-        self.lanCtrl = Lan(device, user_info)
+        self.lanCtrl = Lan(device, self.user_info)
         self.lanCtrl.setUpdateDeviceCb(self.updateState)
 
-        async def handle_event(event):
-            if not self.lanCtrl.connecting and not self.lanCtrl.connectAndLogin:
-                await self.lanCtrl.connect(event.data[CONF_IPADDRESS])
-                self.pingtask = hass.loop.create_task(self.lanCtrl.ping_task())
-                self.recvtask = hass.loop.create_task(self.lanCtrl.recvData())
-
-        hass.bus.async_listen(device[CONF_ID], handle_event)
-
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, self.release)
-
-    async def release(self, event: Event):
+    async def _cleanup_resources(self):
         """Release task."""
+        self.lanCtrl.setUpdateDeviceCb(None)
         if hasattr(self, "pingtask") and self.pingtask is not None:
             self.pingtask.cancel()
         if hasattr(self, "recvtask") and self.recvtask is not None:
             self.recvtask.cancel()
+        await self.lanCtrl.reset()
+
+    async def _try_connect(self):
+        """Try connect."""
+        aidot_coordinator: AidotCoordinator = self.coordinator
+        device_ip = aidot_coordinator.discovered_devices.get(self.device[CONF_ID])
+        if (
+            device_ip is not None
+            and not self.lanCtrl.connecting
+            and not self.lanCtrl.connectAndLogin
+        ):
+            await self.lanCtrl.connect(device_ip)
+            self.pingtask = self.hass.loop.create_task(self.lanCtrl.ping_task())
+            self.recvtask = self.hass.loop.create_task(self.lanCtrl.recvData())
 
     async def updateState(self):
         """Update the state of the entity."""
@@ -230,15 +246,6 @@ class AidotLight(LightEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS, 255)
-
-        if self.lanCtrl.connectAndLogin is False:
-            _LOGGER.error(
-                "The device is not logged in or may not be on the local area network"
-            )
-            raise HomeAssistantError(
-                "The device is not logged in or may not be on the local area network"
-            )
-
         action = {}
         if ATTR_BRIGHTNESS in kwargs and brightness is not None:
             action.update(self.lanCtrl.getDimingAction(brightness))
@@ -258,11 +265,9 @@ class AidotLight(LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
-        if self.lanCtrl.connectAndLogin is False:
-            _LOGGER.error(
-                "The device is not logged in or may not be on the local area network"
-            )
-            raise HomeAssistantError(
-                "The device is not logged in or may not be on the local area network"
-            )
         await self.lanCtrl.sendDevAttr(self.lanCtrl.getOnOffAction(0))
+
+    @callback
+    def _handle_coordinator_update(self):
+        """Handle updated data from the coordinator."""
+        self._try_connect()

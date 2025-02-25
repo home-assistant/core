@@ -10,7 +10,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
 
 from .coordinator import AidotConfigEntry, AidotCoordinator
 
@@ -33,14 +32,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AidotConfigEntry) -> boo
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-async def cleanup_device_registry(hass: HomeAssistant) -> None:
-    """Remove deleted device registry entry if there are no remaining entities."""
-    device_registry = dr.async_get(hass)
-    for dev_id, device_entry in list(device_registry.devices.items()):
-        for _ in device_entry.identifiers:
-            device_registry.async_remove_device(dev_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

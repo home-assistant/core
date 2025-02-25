@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from aidot.const import CONF_LOGIN_INFO
+from aidot.const import CONF_ACCESS_TOKEN, CONF_ID, CONF_LOGIN_INFO
 import pytest
 
 from homeassistant.components.aidot.const import DOMAIN
@@ -51,6 +51,8 @@ def mock_config_entry() -> MockConfigEntry:
                 CONF_PASSWORD: TEST_PASSWORD,
                 "region": "us",
                 CONF_COUNTRY: TEST_COUNTRY,
+                CONF_ACCESS_TOKEN: "123456789",
+                CONF_ID: "123456",
             }
         },
     )
