@@ -39,7 +39,6 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_DISCOVERY,
     CONF_HOST,
-    CONF_ICON,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PAYLOAD,
@@ -57,8 +56,6 @@ from homeassistant.helpers.selector import (
     BooleanSelector,
     FileSelector,
     FileSelectorConfig,
-    IconSelector,
-    IconSelectorConfig,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -211,7 +208,6 @@ SUBENTRY_PLATFORM_SELECTOR = SelectSelector(
         translation_key=CONF_PLATFORM,
     )
 )
-ICON_SELECTOR = IconSelector(IconSelectorConfig())
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
 
 
@@ -234,7 +230,6 @@ CORE_PLATFORM_FIELDS = [
 ]
 
 COMMON_PLATFORM_FIELDS = {
-    CONF_ICON: PlatformField(ICON_SELECTOR, False, str),
     CONF_ENTITY_PICTURE: PlatformField(TEXT_SELECTOR, False, cv.url, "invalid_url"),
     CONF_RETAIN: PlatformField(BOOLEAN_SELECTOR, False, bool, default=DEFAULT_RETAIN),
 }
