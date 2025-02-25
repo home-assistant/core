@@ -53,11 +53,11 @@
       },
       "upcoming": {
         "name": "Upcoming",
-        "unit_of_measurement": "[%key:component::sonarr::entity::sensor::series::unit_of_measurement%]"
+        "unit_of_measurement": "[%key:component::sonarr::entity::sensor::queue::name%]"
       },
       "wanted": {
         "name": "Wanted",
-        "unit_of_measurement": "[%key:component::sonarr::entity::sensor::series::unit_of_measurement%]"
+        "unit_of_measurement": "[%key:component::sonarr::entity::sensor::queue::name%]"
       }
     }
   }
