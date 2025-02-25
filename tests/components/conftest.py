@@ -628,13 +628,6 @@ async def _validate_translation(
         return
 
     translations = await async_get_translations(hass, "en", category, [component])
-    try:
-        await loader.async_get_integration(hass, component)
-    except loader.IntegrationNotLoaded:
-        translation_errors[full_key] = (
-            f"Translation not found for {component}: `{category}.{key}`. "
-            f"The integration '{component}' does not exist."
-        )
 
     if (translation := translations.get(full_key)) is not None:
         _validate_translation_placeholders(
@@ -646,6 +639,18 @@ async def _validate_translation(
         return
 
     if translation_errors.get(full_key) in {"used", "unused"}:
+        # If the does not integration exist, translation errors should be ignored
+        # via the ignore_translations_for_mock_domains fixture instead of the
+        # ignore_missing_translations fixture.
+        try:
+            await loader.async_get_integration(hass, component)
+        except loader.IntegrationNotLoaded:
+            translation_errors[full_key] = (
+                f"Translation not found for {component}: `{category}.{key}`. "
+                f"The integration '{component}' does not exist."
+            )
+            return
+
         # This translation key is in the ignore list, mark it as used
         translation_errors[full_key] = "used"
         return
