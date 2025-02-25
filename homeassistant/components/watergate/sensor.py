@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfVolume,
     UnitOfVolumeFlowRate,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
@@ -182,7 +182,7 @@ DESCRIPTIONS: list[WatergateSensorEntityDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: WatergateConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all entries for Watergate Platform."""
 

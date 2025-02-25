@@ -2,7 +2,8 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, call
+import logging
+from unittest.mock import AsyncMock, Mock, call
 
 from aioesphomeapi import (
     APIClient,
@@ -13,6 +14,7 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
+    LogLevel,
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArg,
@@ -24,6 +26,7 @@ from homeassistant import config_entries
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
+    CONF_SUBSCRIBE_LOGS,
     DOMAIN,
     STABLE_BLE_VERSION_STR,
 )
@@ -42,6 +45,63 @@ from homeassistant.setup import async_setup_component
 from .conftest import MockESPHomeDevice
 
 from tests.common import MockConfigEntry, async_capture_events, async_mock_service
+
+
+async def test_esphome_device_subscribe_logs(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test configuring a device to subscribe to logs."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "fe80::1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        options={CONF_SUBSCRIBE_LOGS: True},
+    )
+    entry.add_to_hass(hass)
+    device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        entity_info=[],
+        user_service=[],
+        device_info={},
+        states=[],
+    )
+    await hass.async_block_till_done()
+    caplog.set_level(logging.DEBUG)
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_INFO, message=b"test_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_log_message" in caplog.text
+
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_ERROR, message=b"test_error_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_error_log_message" in caplog.text
+
+    caplog.set_level(logging.ERROR)
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_DEBUG, message=b"test_debug_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_debug_log_message" not in caplog.text
+
+    caplog.set_level(logging.DEBUG)
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_DEBUG, message=b"test_debug_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_debug_log_message" in caplog.text
 
 
 async def test_esphome_device_service_calls_not_allowed(

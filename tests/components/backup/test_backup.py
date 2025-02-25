@@ -14,6 +14,7 @@ from syrupy import SnapshotAssertion
 
 from homeassistant.components.backup import DOMAIN, AgentBackup
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from .common import (
@@ -63,6 +64,7 @@ async def test_load_backups(
     side_effect: Exception | None,
 ) -> None:
     """Test load backups."""
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     client = await hass_ws_client(hass)
@@ -82,6 +84,7 @@ async def test_upload(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test upload backup."""
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     client = await hass_client()
@@ -137,6 +140,7 @@ async def test_delete_backup(
     unlink_path: Path | None,
 ) -> None:
     """Test delete backup."""
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     client = await hass_ws_client(hass)

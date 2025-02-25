@@ -18,7 +18,7 @@ from requests.exceptions import ConnectionError as RequestConnectionError
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
     percentage_to_ordered_list_item,
@@ -111,7 +111,7 @@ def _build_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ViCareConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ViCare fan platform."""
     async_add_entities(

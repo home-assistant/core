@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.scene import Scene as SceneEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RoborockConfigEntry
 from .coordinator import RoborockDataUpdateCoordinator
@@ -18,7 +18,7 @@ from .entity import RoborockEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up scene platform."""
     scene_lists = await asyncio.gather(

@@ -16,7 +16,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .api import IottyProxy
 from .coordinator import IottyConfigEntry, IottyDataUpdateCoordinator
@@ -28,7 +28,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: IottyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Activate the iotty Shutter component."""
     _LOGGER.debug("Setup COVER entry id is %s", config_entry.entry_id)

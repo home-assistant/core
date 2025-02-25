@@ -25,7 +25,10 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -143,7 +146,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: CalDavConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the CalDav calendar platform for a config entry."""
     calendars = await async_get_calendars(hass, entry.runtime_data, SUPPORTED_COMPONENT)

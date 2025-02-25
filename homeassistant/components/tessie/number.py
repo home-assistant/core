@@ -23,7 +23,7 @@ from homeassistant.const import (
     UnitOfSpeed,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.icon import icon_for_battery_level
 
 from . import TessieConfigEntry
@@ -111,7 +111,7 @@ ENERGY_INFO_DESCRIPTIONS: tuple[TessieNumberBatteryEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TessieConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
     data = entry.runtime_data

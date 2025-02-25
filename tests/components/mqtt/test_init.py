@@ -45,6 +45,7 @@ from tests.common import (
     MockConfigEntry,
     MockEntity,
     MockEntityPlatform,
+    MockMqttReasonCode,
     async_fire_mqtt_message,
     async_fire_time_changed,
     mock_restore_cache,
@@ -1572,6 +1573,7 @@ async def test_subscribe_connection_status(
     setup_with_birth_msg_client_mock: MqttMockPahoClient,
 ) -> None:
     """Test connextion status subscription."""
+
     mqtt_client_mock = setup_with_birth_msg_client_mock
     mqtt_connected_calls_callback: list[bool] = []
     mqtt_connected_calls_async: list[bool] = []
@@ -1589,7 +1591,7 @@ async def test_subscribe_connection_status(
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -1603,12 +1605,12 @@ async def test_subscribe_connection_status(
 
     # Mock connect status
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 
     # Mock disconnect status
-    mqtt_client_mock.on_disconnect(None, None, 0)
+    mqtt_client_mock.on_disconnect(None, None, 0, MockMqttReasonCode())
     await hass.async_block_till_done()
     assert mqtt.is_connected(hass) is False
 
@@ -1618,7 +1620,7 @@ async def test_subscribe_connection_status(
 
     # Mock connect status
     mock_debouncer.clear()
-    mqtt_client_mock.on_connect(None, None, 0, 0)
+    mqtt_client_mock.on_connect(None, None, 0, MockMqttReasonCode())
     await mock_debouncer.wait()
     assert mqtt.is_connected(hass) is True
 
