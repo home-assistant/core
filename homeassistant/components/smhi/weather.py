@@ -118,6 +118,7 @@ class SmhiWeather(SmhiWeatherBaseEntity, SingleCoordinatorWeatherEntity):
     _attr_supported_features = (
         WeatherEntityFeature.FORECAST_DAILY | WeatherEntityFeature.FORECAST_HOURLY
     )
+    _attr_name = None
 
     def update_entity_data(self) -> None:
         """Refresh the entity data."""
