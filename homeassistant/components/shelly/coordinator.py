@@ -38,8 +38,10 @@ from .bluetooth import async_connect_scanner
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
+    ATTR_COMPONENT,
     ATTR_DEVICE,
     ATTR_GENERATION,
+    ATTR_TEST_TYPE,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
@@ -47,6 +49,7 @@ from .const import (
     DUAL_MODE_LIGHT_MODELS,
     ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
+    EVENT_SHELLY_TEST,
     INPUTS_EVENTS_DICT,
     LOGGER,
     MAX_PUSH_UPDATE_FAILURES,
@@ -60,6 +63,7 @@ from .const import (
     RPC_INPUTS_EVENTS_TYPES,
     RPC_RECONNECT_INTERVAL,
     RPC_SENSORS_POLLING_INTERVAL,
+    RPC_TEST_EVENTS_TYPES,
     SHBTN_MODELS,
     UPDATE_PERIOD_MULTIPLIER,
     BLEScannerMode,
@@ -493,6 +497,7 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         self._event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._ota_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._input_event_listeners: list[Callable[[dict[str, Any]], None]] = []
+        self._test_event_listeners: list[Callable[[dict[str, Any]], None]] = []
         self._connect_task: asyncio.Task | None = None
         entry.async_on_unload(entry.add_update_listener(self._async_update_listener))
 
@@ -558,6 +563,19 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
         return _unsubscribe
 
     @callback
+    def async_subscribe_test_events(
+        self, test_event_callback: Callable[[dict[str, Any]], None]
+    ) -> CALLBACK_TYPE:
+        """Subscribe to test events."""
+
+        def __unsubscribe() -> None:
+            self._test_event_listeners.remove(test_event_callback)
+
+        self._test_event_listeners.append(test_event_callback)
+
+        return __unsubscribe
+
+    @callback
     def async_subscribe_events(
         self, event_callback: Callable[[dict[str, Any]], None]
     ) -> CALLBACK_TYPE:
@@ -599,6 +617,20 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
                     ENTRY_RELOAD_COOLDOWN,
                 )
                 self._debounced_reload.async_schedule_call()
+            elif event_type in RPC_TEST_EVENTS_TYPES:
+                for event_callback in self._test_event_listeners:
+                    event_callback(event)
+                self.hass.bus.async_fire(
+                    EVENT_SHELLY_TEST,
+                    {
+                        ATTR_DEVICE_ID: self.device_id,
+                        ATTR_DEVICE: self.device.hostname,
+                        ATTR_CHANNEL: event["id"] + 1,
+                        ATTR_COMPONENT: event["component"],
+                        ATTR_GENERATION: 2,
+                        ATTR_TEST_TYPE: event["event"],
+                    },
+                )
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 for event_callback in self._input_event_listeners:
                     event_callback(event)
