@@ -91,7 +91,6 @@ class BaseFirmwareUpdateEntity(
 
     # Subclasses provide the mapping between firmware types and entity descriptions
     entity_description: FirmwareUpdateEntityDescription
-    firmware_entity_descriptions: dict[ApplicationType, FirmwareUpdateEntityDescription]
     bootloader_reset_type: str | None = None
 
     _attr_supported_features = (
