@@ -22,6 +22,7 @@ from .helpers import (
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
+    migrate_entities_unique_ids,
 )
 
 SERVICE_SET_LOCK_USER_CODE = "set_lock_user_code"
@@ -38,6 +39,8 @@ async def async_setup_entry(
     """Set up the Zigbee Home Automation Door Lock from config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms[Platform.LOCK]
+
+    await migrate_entities_unique_ids(hass, Platform.LOCK, entities_to_create)
 
     unsub = async_dispatcher_connect(
         hass,
