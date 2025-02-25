@@ -1430,13 +1430,15 @@ async def async_get_integrations(
             if not int_or_exc:
                 del cache[domain]
                 results[domain] = IntegrationNotFound(domain)
-            elif isinstance(int_or_exc, Exception):
+            elif type(int_or_exc) is Integration:
+                results[domain] = cache[domain] = int_or_exc
+            else:
+                if TYPE_CHECKING:
+                    assert isinstance(int_or_exc, Exception)
                 del cache[domain]
                 exc = IntegrationNotFound(domain)
                 exc.__cause__ = int_or_exc
                 results[domain] = exc
-            else:
-                results[domain] = cache[domain] = int_or_exc
             future.set_result(None)
 
     return results
