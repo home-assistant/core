@@ -1430,6 +1430,7 @@ async def async_get_integrations(
             if not int_or_exc:
                 del cache[domain]
                 results[domain] = IntegrationNotFound(domain)
+            # Integration is never subclassed, so we can check for type
             elif type(int_or_exc) is Integration:
                 results[domain] = cache[domain] = int_or_exc
             else:
