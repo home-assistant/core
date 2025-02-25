@@ -572,7 +572,7 @@ async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
         MockModule(
             domain="second_dep",
             async_setup=gen_domain_setup("second_dep"),
-            partial_manifest={"after_dependencies": ["first_dep"]},
+            partial_manifest={"after_dependencies": ["first_dep", "root"]},
         ),
     )
 
@@ -1169,6 +1169,7 @@ async def test_bootstrap_is_cancellation_safe(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test cancellation during async_setup_component does not cancel bootstrap."""
+    mock_integration(hass, MockModule(domain="cancel_integration"))
     with patch.object(
         bootstrap, "async_setup_component", side_effect=asyncio.CancelledError
     ):
