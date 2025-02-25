@@ -396,6 +396,7 @@ homeassistant.components.pure_energie.*
 homeassistant.components.purpleair.*
 homeassistant.components.pushbullet.*
 homeassistant.components.pvoutput.*
+homeassistant.components.pyload.*
 homeassistant.components.python_script.*
 homeassistant.components.qbus.*
 homeassistant.components.qnap_qsw.*
