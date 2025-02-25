@@ -6,9 +6,9 @@ read_file:
       selector:
         text:
     file_encoding:
-      example: "json"
+      example: "JSON"
       selector:
         select:
           options:
-            - "json"
-            - "yaml"
+            - "JSON"
+            - "YAML"

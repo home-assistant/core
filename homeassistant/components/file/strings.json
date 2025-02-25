@@ -89,7 +89,7 @@
         },
         "file_encoding": {
           "name": "File encoding",
-          "description": "Encoding of the file (json, yaml.)"
+          "description": "Encoding of the file (JSON, YAML.)"
         }
       }
     }
