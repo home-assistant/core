@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock
 
 from aioshelly.const import (
     BLU_TRV_IDENTIFIER,
-    MODEL_BLU_GATEWAY_GEN3,
+    MODEL_BLU_GATEWAY_G3,
     MODEL_VALVE,
     MODEL_WALL_DISPLAY,
 )
@@ -782,7 +782,7 @@ async def test_blu_trv_climate_set_temperature(
     entity_id = "climate.trv_name"
     monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 17.1
 
@@ -820,7 +820,7 @@ async def test_blu_trv_climate_disabled(
     entity_id = "climate.trv_name"
     monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 17.1
 
@@ -842,7 +842,7 @@ async def test_blu_trv_climate_hvac_action(
     entity_id = "climate.trv_name"
     monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     assert get_entity_attribute(hass, entity_id, ATTR_HVAC_ACTION) == HVACAction.IDLE
 
