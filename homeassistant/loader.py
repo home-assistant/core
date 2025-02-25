@@ -1423,8 +1423,13 @@ async def async_get_integrations(
                 results[domain] = cache[domain] = integration
                 future.set_result(integration)
             else:
-                # We don't cache that it doesn't exist, or else people can't fix it
-                # and then restart, because their config will never be valid.
+                # We don't cache that it doesn't exist as configuration
+                # validation that relies on integrations being loaded
+                # would be unfixable. For example if a custom integration
+                # was temporarily removed.
+                # This allows restoring a missing integration to fix the
+                # validation error so the config validations checks do not
+                # block restarting.
                 del cache[domain]
                 exc = IntegrationNotFound(domain)
                 results[domain] = exc
