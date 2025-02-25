@@ -124,9 +124,9 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
     "components"
 )
-DATA_INTEGRATIONS: HassKey[dict[str, Integration | asyncio.Future[Integration]]] = (
-    HassKey("integrations")
-)
+DATA_INTEGRATIONS: HassKey[
+    dict[str, Integration | asyncio.Future[Integration | IntegrationNotFound]]
+] = HassKey("integrations")
 DATA_MISSING_PLATFORMS: HassKey[dict[str, bool]] = HassKey("missing_platforms")
 DATA_CUSTOM_COMPONENTS: HassKey[
     dict[str, Integration] | asyncio.Future[dict[str, Integration]]
@@ -1369,15 +1369,17 @@ async def async_get_integrations(
     """Get integrations."""
     cache = hass.data[DATA_INTEGRATIONS]
     results: dict[str, Integration | Exception] = {}
-    needed: dict[str, asyncio.Future[Integration]] = {}
-    in_progress: dict[str, asyncio.Future[Integration]] = {}
+    needed: dict[str, asyncio.Future[Integration | IntegrationNotFound]] = {}
+    in_progress: dict[str, asyncio.Future[Integration | IntegrationNotFound]] = {}
     for domain in domains:
         int_or_fut = cache.get(domain)
         # Integration is never subclassed, so we can check for type
         if type(int_or_fut) is Integration:
             results[domain] = int_or_fut
         elif int_or_fut:
-            in_progress[domain] = cast(asyncio.Future[Integration], int_or_fut)
+            if TYPE_CHECKING:
+                assert isinstance(int_or_fut, asyncio.Future)
+            in_progress[domain] = int_or_fut
         elif "." in domain:
             results[domain] = ValueError(f"Invalid domain {domain}")
         else:
@@ -1386,12 +1388,7 @@ async def async_get_integrations(
     if in_progress:
         await asyncio.wait(in_progress.values())
         for domain, future in in_progress.items():
-            if exc := future.exception():
-                if TYPE_CHECKING:
-                    assert isinstance(exc, IntegrationNotFound)
-                results[domain] = exc
-            else:
-                results[domain] = future.result()
+            results[domain] = future.result()
 
     if not needed:
         return results
@@ -1418,23 +1415,22 @@ async def async_get_integrations(
         )
         for domain, future in needed.items():
             int_or_exc = integrations.get(domain)
-            if not int_or_exc:
-                del cache[domain]
-                result = IntegrationNotFound(domain)
-                results[domain] = result
-                future.set_exception(result)
             # Integration is never subclassed, so we can check for type
-            elif type(int_or_exc) is Integration:
+            if type(int_or_exc) is Integration:
                 results[domain] = cache[domain] = int_or_exc
                 future.set_result(int_or_exc)
             else:
-                if TYPE_CHECKING:
-                    assert isinstance(int_or_exc, Exception)
                 del cache[domain]
                 exc = IntegrationNotFound(domain)
-                exc.__cause__ = int_or_exc
+                if int_or_exc:
+                    if TYPE_CHECKING:
+                        assert isinstance(int_or_exc, Exception)
+                    exc.__cause__ = int_or_exc
                 results[domain] = exc
-                future.set_exception(exc)
+                # We don't use set_exception because
+                # we expect there will be cases where
+                # the a future exception is never retrieved
+                future.set_result(exc)
 
     return results
 
