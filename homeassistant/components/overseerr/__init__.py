@@ -159,7 +159,9 @@ class OverseerrWebhookManager:
         """Handle webhook."""
         data = await request.json()
         LOGGER.debug("Received webhook payload: %s", data)
-        if data["notification_type"].startswith("MEDIA"):
+        if data["notification_type"].startswith("MEDIA") or data[
+            "notification_type"
+        ].startswith("ISSUE"):
             await self.entry.runtime_data.async_refresh()
         async_dispatcher_send(hass, EVENT_KEY, data)
         return HomeAssistantView.json({"message": "ok"})

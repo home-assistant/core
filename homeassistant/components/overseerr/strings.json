@@ -47,6 +47,19 @@
             }
           }
         }
+      },
+      "last_issue_event": {
+        "name": "Last issue event",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "reported": "Reported",
+              "comment": "Comment",
+              "resolved": "Resolved",
+              "reopened": "Reopened"
+            }
+          }
+        }
       }
     },
     "sensor": {
@@ -70,6 +83,24 @@
       },
       "available_requests": {
         "name": "Available requests"
+      },
+      "total_issues": {
+        "name": "Total issues"
+      },
+      "video_issues": {
+        "name": "Video issues"
+      },
+      "audio_issues": {
+        "name": "Audio issues"
+      },
+      "subtitle_issues": {
+        "name": "Subtitle issues"
+      },
+      "other_issues": {
+        "name": "Other issues"
+      },
+      "open_issues": {
+        "name": "Open issues"
       }
     }
   },
