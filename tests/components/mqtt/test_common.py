@@ -71,13 +71,11 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
         "platform": "notify",
         "object_id": "bla123",
         "name": "Milkman alert",
-        "encoding": "utf-8",
         "qos": 0,
         "command_topic": "test-topic",
         "command_template": "{{ value_json.value }}",
         "icon": "mdi:cow",
         "entity_picture": "https://example.com",
-        "entity_category": "config",
         "retain": False,
     },
 }
@@ -87,7 +85,6 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
         "object_id": "bla456",
         "name": "The second notifier",
         "qos": 0,
-        "encoding": "",
         "command_topic": "test-topic2",
     },
 }
