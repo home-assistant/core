@@ -318,14 +318,8 @@ class BaseFirmwareUpdateEntity(
         self._attr_update_percentage = None
         self.async_write_ha_state()
 
-        async with self.coordinator.session.get(
-            self._latest_firmware.url, raise_for_status=True
-        ) as fw_rsp:
-            fw_data = await fw_rsp.read()
-
-        # At this point, we will have a valid firmware image that can be flashed
-        await self.hass.async_add_executor_job(
-            self._latest_firmware.validate_firmware, fw_data
+        fw_data = await self.coordinator.client.async_fetch_firmware(
+            self._latest_firmware
         )
         fw_image = await self.hass.async_add_executor_job(parse_firmware_image, fw_data)
 
