@@ -356,6 +356,7 @@ class DPCode(StrEnum):
     VA_BATTERY = "va_battery"
     VA_HUMIDITY = "va_humidity"
     VA_TEMPERATURE = "va_temperature"
+    VALVE_STATE = "valve_state"
     VOC_STATE = "voc_state"
     VOC_VALUE = "voc_value"
     VOICE_SWITCH = "voice_switch"
