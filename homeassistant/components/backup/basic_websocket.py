@@ -31,7 +31,8 @@ async def handle_subscribe_events(
     def on_event(event: ManagerStateEvent) -> None:
         connection.send_message(websocket_api.event_message(msg["id"], event))
 
-    manager = hass.data[DATA_MANAGER]
-    on_event(manager.last_event)
+    if DATA_MANAGER in hass.data:
+        manager = hass.data[DATA_MANAGER]
+        on_event(manager.last_event)
     connection.subscriptions[msg["id"]] = async_subscribe_events(hass, on_event)
     connection.send_result(msg["id"])

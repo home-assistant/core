@@ -92,8 +92,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     backup_manager = BackupManager(hass, reader_writer)
     hass.data[DATA_MANAGER] = backup_manager
-    await backup_manager.async_setup()
-    hass.data[DATA_BACKUP].manager_ready.set_result(None)
+    try:
+        await backup_manager.async_setup()
+    except Exception as err:
+        hass.data[DATA_BACKUP].manager_ready.set_exception(err)
+        raise
+    else:
+        hass.data[DATA_BACKUP].manager_ready.set_result(None)
 
     async_register_websocket_handlers(hass, with_hassio)
 

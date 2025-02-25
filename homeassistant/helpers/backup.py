@@ -48,7 +48,7 @@ async def async_get_manager(hass: HomeAssistant) -> BackupManager:
 
     Raises HomeAssistantError if the backup integration is not available.
     """
-    if DATA_MANAGER not in hass.data:
+    if DATA_BACKUP not in hass.data:
         raise HomeAssistantError("Backup integration is not available")
 
     await hass.data[DATA_BACKUP].manager_ready
