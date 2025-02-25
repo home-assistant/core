@@ -185,12 +185,9 @@ class BackupConfig:
         if automatic_backups_configured is not UNDEFINED:
             self.data.automatic_backups_configured = automatic_backups_configured
         if create_backup is not UNDEFINED:
-            if "agent_ids" in create_backup:
-                check_unavailable_agents(
-                    self._hass,
-                    self._manager, create_backup["agent_ids"],
-                )
             self.data.create_backup = replace(self.data.create_backup, **create_backup)
+            if "agent_ids" in create_backup:
+                check_unavailable_agents(self._hass, self._manager)
         if retention is not UNDEFINED:
             new_retention = RetentionConfig(**retention)
             if new_retention != self.data.retention:
@@ -574,59 +571,41 @@ async def delete_backups_exceeding_configured_count(manager: BackupManager) -> N
 
 
 @callback
-def check_unavailable_agents(
-    hass: HomeAssistant, manager: BackupManager, new_agent_ids: list[str] | None = None
-) -> None:
+def check_unavailable_agents(hass: HomeAssistant, manager: BackupManager) -> None:
     """Check for unavailable agents."""
     if missing_agent_ids := set(manager.config.data.create_backup.agent_ids) - set(
         manager.backup_agents
     ):
         LOGGER.debug(
-            "Agents %s are configured for automatic backup but are not loaded",
+            "Agents %s are configured for automatic backup but are unavailable",
             missing_agent_ids,
         )
         for agent_id in missing_agent_ids:
-            create_automatic_backup_agents_unavailable_issue(hass, agent_id)
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_{agent_id}",
+                is_fixable=False,
+                learn_more_url="homeassistant://config/backup",
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="automatic_backup_agents_unavailable",
+                translation_placeholders={
+                    "agent_id": agent_id,
+                    "backup_settings": "/config/backup/settings",
+                },
+            )
 
-    # Remove any issues for agents that are now loaded
-    for agent_id in manager.backup_agents:
-        delete_automatic_backup_agents_unavailable_issue(hass, agent_id)
-
-    if new_agent_ids is None:
-        return
-
-    # Remove issues for agents that are no longer configured
-    for agent_id in set(manager.config.data.create_backup.agent_ids) - set(
-        new_agent_ids
-    ):
-        delete_automatic_backup_agents_unavailable_issue(hass, agent_id)
-
-
-@callback
-def create_automatic_backup_agents_unavailable_issue(
-    hass: HomeAssistant, agent_id: str
-) -> None:
-    """Create automatic backup agents unavailable issue."""
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_{agent_id}",
-        is_fixable=False,
-        learn_more_url="homeassistant://config/backup",
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="automatic_backup_agents_unavailable",
-        translation_placeholders={
-            "agent_id": agent_id,
-            "backup_settings": "/config/backup/settings",
-        },
-    )
-
-
-@callback
-def delete_automatic_backup_agents_unavailable_issue(
-    hass: HomeAssistant, agent_id: str
-) -> None:
-    """Delete automatic backup agents unavailable issue."""
-    ir.async_delete_issue(
-        hass, DOMAIN, f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_{agent_id}"
-    )
+    # Remove issues for unavailable agents that are not unavailable anymore.
+    issue_registry = ir.async_get(hass)
+    existing_missing_agent_issue_ids = {
+        issue_id
+        for domain, issue_id in issue_registry.issues
+        if domain == DOMAIN
+        and issue_id.startswith(AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID)
+    }
+    current_missing_agent_issue_ids = {
+        f"{AUTOMATIC_BACKUP_AGENTS_UNAVAILABLE_ISSUE_ID}_{agent_id}"
+        for agent_id in missing_agent_ids
+    }
+    for issue_id in existing_missing_agent_issue_ids - current_missing_agent_issue_ids:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
