@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import StiebelEltronConfigEntry
 
@@ -60,7 +60,7 @@ HA_TO_STE_PRESET = {k: i for i, k in STE_TO_HA_PRESET.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: StiebelEltronConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up STIEBEL ELTRON climate platform."""
 
