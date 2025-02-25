@@ -606,7 +606,7 @@ def _validate_translation_placeholders(
 async def _validate_translation(
     hass: HomeAssistant,
     translation_errors: dict[str, str],
-    ignore_translations_for_mock_domains: list[str],
+    ignore_translations_for_mock_domains: set[str],
     category: str,
     component: str,
     key: str,
@@ -716,7 +716,7 @@ async def _check_step_or_section_translations(
     translation_prefix: str,
     description_placeholders: dict[str, str],
     data_schema: vol.Schema | None,
-    ignore_translations_for_mock_domains: list[str],
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     # neither title nor description are required
     # - title defaults to integration name
@@ -772,7 +772,7 @@ async def _check_config_flow_result_translations(
     flow: FlowHandler,
     result: FlowResult[FlowContext, str],
     translation_errors: dict[str, str],
-    ignore_translations_for_mock_domains: list[str],
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     if result["type"] is FlowResultType.CREATE_ENTRY:
         # No need to check translations for a completed flow
@@ -844,7 +844,7 @@ async def _check_create_issue_translations(
     issue_registry: ir.IssueRegistry,
     issue: ir.IssueEntry,
     translation_errors: dict[str, str],
-    ignore_translations_for_mock_domains: list[str],
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     if issue.translation_key is None:
         # `translation_key` is only None on dismissed issues
@@ -885,7 +885,7 @@ async def _check_exception_translation(
     exception: HomeAssistantError,
     translation_errors: dict[str, str],
     request: pytest.FixtureRequest,
-    ignore_translations_for_mock_domains: list[str],
+    ignore_translations_for_mock_domains: set[str],
 ) -> None:
     if exception.translation_key is None:
         if (
@@ -924,7 +924,9 @@ async def check_translations(
         ignore_missing_translations = [ignore_missing_translations]
 
     if not isinstance(ignore_translations_for_mock_domains, list):
-        ignore_translations_for_mock_domains = [ignore_translations_for_mock_domains]
+        ignored_domains = {ignore_translations_for_mock_domains}
+    else:
+        ignored_domains = set(ignore_translations_for_mock_domains)
 
     # Set all ignored translation keys to "unused"
     translation_errors = {k: "unused" for k in ignore_missing_translations}
@@ -942,7 +944,7 @@ async def check_translations(
     ) -> FlowResult:
         result = await _original_flow_manager_async_handle_step(self, flow, *args)
         await _check_config_flow_result_translations(
-            self, flow, result, translation_errors, ignore_translations_for_mock_domains
+            self, flow, result, translation_errors, ignored_domains
         )
         return result
 
@@ -954,7 +956,7 @@ async def check_translations(
         )
         translation_coros.add(
             _check_create_issue_translations(
-                self, result, translation_errors, ignore_translations_for_mock_domains
+                self, result, translation_errors, ignored_domains
             )
         )
         return result
@@ -987,7 +989,7 @@ async def check_translations(
                     err,
                     translation_errors,
                     request,
-                    ignore_translations_for_mock_domains,
+                    ignored_domains,
                 )
             )
             raise
