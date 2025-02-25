@@ -104,7 +104,7 @@ def _ws_get_statistic_during_period(
     start_time: dt | None,
     end_time: dt | None,
     statistic_id: str,
-    types: set[Literal["max", "mean", "min", "change"]] | None,
+    types: set[Literal["max", "mean", "min", "change", "circular_mean"]] | None,
     units: dict[str, str],
 ) -> bytes:
     """Fetch statistics and convert them to json in the executor."""
@@ -123,7 +123,7 @@ def _ws_get_statistic_during_period(
         vol.Required("type"): "recorder/statistic_during_period",
         vol.Required("statistic_id"): str,
         vol.Optional("types"): vol.All(
-            [vol.Any("max", "mean", "min", "change")], vol.Coerce(set)
+            [vol.Any("max", "mean", "min", "change", "circular_mean")], vol.Coerce(set)
         ),
         vol.Optional("units"): UNIT_SCHEMA,
         **PERIOD_SCHEMA.schema,
@@ -163,7 +163,18 @@ def _ws_get_statistics_during_period(
     statistic_ids: set[str] | None,
     period: Literal["5minute", "day", "hour", "week", "month"],
     units: dict[str, str],
-    types: set[Literal["change", "last_reset", "max", "mean", "min", "state", "sum"]],
+    types: set[
+        Literal[
+            "change",
+            "last_reset",
+            "max",
+            "mean",
+            "min",
+            "state",
+            "sum",
+            "circular_mean",
+        ]
+    ],
 ) -> bytes:
     """Fetch statistics and convert them to json in the executor."""
     result = statistics_during_period(
@@ -208,7 +219,16 @@ async def ws_handle_get_statistics_during_period(
         end_time = None
 
     if (types := msg.get("types")) is None:
-        types = {"change", "last_reset", "max", "mean", "min", "state", "sum"}
+        types = {
+            "change",
+            "last_reset",
+            "max",
+            "mean",
+            "min",
+            "state",
+            "sum",
+            "circle_mean",
+        }
     connection.send_message(
         await get_instance(hass).async_add_executor_job(
             _ws_get_statistics_during_period,
@@ -532,6 +552,8 @@ def ws_import_statistics(
 ) -> None:
     """Import statistics."""
     metadata = msg["metadata"]
+    # The WS command will be changed in a follow up PR
+    metadata["has_circular_mean"] = False
     stats = msg["stats"]
 
     if valid_entity_id(metadata["statistic_id"]):
