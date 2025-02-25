@@ -1,0 +1,6 @@
+# serializer version: 1
+# name: test_has_services[envoy]
+  list([
+    'get_raw_tariff',
+  ])
+# ---
