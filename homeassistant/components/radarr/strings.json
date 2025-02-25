@@ -43,10 +43,12 @@
     },
     "sensor": {
       "movies": {
-        "name": "Movies"
+        "name": "Movies",
+        "unit_of_measurement": "Movies"
       },
       "queue": {
-        "name": "Queue"
+        "name": "Queue",
+        "unit_of_measurement": "Movies"
       },
       "start_time": {
         "name": "Start time"

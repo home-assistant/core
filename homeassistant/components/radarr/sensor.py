@@ -81,14 +81,14 @@ SENSOR_TYPES: dict[str, RadarrSensorEntityDescription[Any]] = {
     "movie": RadarrSensorEntityDescription[int](
         key="movies",
         translation_key="movies",
-        native_unit_of_measurement="Movies",
+        unit_of_measurement=None,
         entity_registry_enabled_default=False,
         value_fn=lambda data, _: data,
     ),
     "queue": RadarrSensorEntityDescription[int](
         key="queue",
         translation_key="queue",
-        native_unit_of_measurement="Movies",
+        unit_of_measurement=None,
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.TOTAL,
         value_fn=lambda data, _: data,
