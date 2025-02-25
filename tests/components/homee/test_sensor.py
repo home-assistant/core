@@ -2,7 +2,6 @@
 
 from unittest.mock import MagicMock, patch
 
-from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -115,7 +114,6 @@ async def test_sensor_snapshot(
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the multisensor snapshot."""

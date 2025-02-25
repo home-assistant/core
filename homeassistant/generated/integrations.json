@@ -3800,6 +3800,12 @@
           "iot_class": "cloud_push",
           "name": "Azure Service Bus"
         },
+        "azure_storage": {
+          "integration_type": "service",
+          "config_flow": true,
+          "iot_class": "cloud_polling",
+          "name": "Azure Storage"
+        },
         "microsoft_face_detect": {
           "integration_type": "hub",
           "config_flow": false,
@@ -5916,6 +5922,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "snoo": {
+      "name": "Happiest Baby Snoo",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_push"
+    },
     "snooz": {
       "name": "Snooz",
       "integration_type": "hub",
@@ -7085,6 +7097,12 @@
           "name": "WeatherflowCloud"
         }
       }
+    },
+    "webdav": {
+      "name": "WebDAV",
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
     },
     "webmin": {
       "name": "Webmin",

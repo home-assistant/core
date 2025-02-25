@@ -27,6 +27,8 @@ from homeassistant.components.backup.manager import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.backup import async_initialize_backup
+from homeassistant.setup import async_setup_component
 
 from .common import (
     LOCAL_AGENT_ID,
@@ -55,6 +57,7 @@ DEFAULT_STORAGE_DATA: dict[str, Any] = {
     "backups": [],
     "config": {
         "agents": {},
+        "automatic_backups_configured": False,
         "create_backup": {
             "agent_ids": [],
             "include_addons": None,
@@ -907,6 +910,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": ["test-addon"],
@@ -938,6 +942,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": True,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -969,6 +974,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1000,6 +1006,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1031,6 +1038,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1062,6 +1070,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1096,6 +1105,7 @@ async def test_agents_info(
                             "test-agent1": {"protected": True},
                             "test-agent2": {"protected": False},
                         },
+                        "automatic_backups_configured": False,
                         "create_backup": {
                             "agent_ids": ["test-agent"],
                             "include_addons": None,
@@ -1127,6 +1137,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": True,
                         "create_backup": {
                             "agent_ids": ["hassio.local", "hassio.share", "test-agent"],
                             "include_addons": None,
@@ -1158,6 +1169,7 @@ async def test_agents_info(
                     "backups": [],
                     "config": {
                         "agents": {},
+                        "automatic_backups_configured": True,
                         "create_backup": {
                             "agent_ids": ["backup.local", "test-agent"],
                             "include_addons": None,
@@ -1342,6 +1354,18 @@ async def test_config_load_config_info(
                     "test-agent2": {"protected": True},
                 },
             },
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "automatic_backups_configured": False,
+            }
+        ],
+        [
+            {
+                "type": "backup/config/update",
+                "automatic_backups_configured": True,
+            }
         ],
     ],
 )
@@ -1774,6 +1798,7 @@ async def test_config_schedule_logic(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test.test-agent"],
                 "include_addons": [],
@@ -2436,6 +2461,7 @@ async def test_config_retention_copies_logic(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],
@@ -2714,6 +2740,7 @@ async def test_config_retention_copies_logic_manual_backup(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],
@@ -3161,6 +3188,7 @@ async def test_config_retention_days_logic(
         "backups": [],
         "config": {
             "agents": {},
+            "automatic_backups_configured": False,
             "create_backup": {
                 "agent_ids": ["test-agent"],
                 "include_addons": ["test-addon"],
@@ -3231,6 +3259,29 @@ async def test_subscribe_event(
     await client.send_json_auto_id({"type": "backup/subscribe_events"})
     assert await client.receive_json() == snapshot
     assert await client.receive_json() == snapshot
+
+    manager.async_on_backup_event(
+        CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS, reason=None)
+    )
+    assert await client.receive_json() == snapshot
+
+
+async def test_subscribe_event_early(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test subscribe event before backup integration has started."""
+    async_initialize_backup(hass)
+    await setup_backup_integration(hass, with_hassio=False)
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "backup/subscribe_events"})
+    assert await client.receive_json() == snapshot
+
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
+    manager = hass.data[DATA_MANAGER]
 
     manager.async_on_backup_event(
         CreateBackupEvent(stage=None, state=CreateBackupState.IN_PROGRESS, reason=None)
