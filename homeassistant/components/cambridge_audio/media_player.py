@@ -9,7 +9,9 @@ from aiostreammagic import (
     RepeatMode as CambridgeRepeatMode,
     ShuffleMode,
     StreamMagicClient,
-    TransportControl,
+    TransportControl
+)
+from aiostreammagic.models import (
     ControlBusMode
 )
 
