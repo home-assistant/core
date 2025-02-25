@@ -40,7 +40,6 @@ from .generated.ssdp import SSDP
 from .generated.usb import USB
 from .generated.zeroconf import HOMEKIT, ZEROCONF
 from .helpers.json import json_bytes, json_fragment
-from .helpers.typing import UNDEFINED
 from .util.hass_dict import HassKey
 from .util.json import JSON_DECODE_EXCEPTIONS, json_loads
 
@@ -125,8 +124,8 @@ BLOCKED_CUSTOM_INTEGRATIONS: dict[str, BlockedIntegration] = {
 DATA_COMPONENTS: HassKey[dict[str, ModuleType | ComponentProtocol]] = HassKey(
     "components"
 )
-DATA_INTEGRATIONS: HassKey[dict[str, Integration | asyncio.Future[None]]] = HassKey(
-    "integrations"
+DATA_INTEGRATIONS: HassKey[dict[str, Integration | asyncio.Future[Integration]]] = (
+    HassKey("integrations")
 )
 DATA_MISSING_PLATFORMS: HassKey[dict[str, bool]] = HassKey("missing_platforms")
 DATA_CUSTOM_COMPONENTS: HassKey[
@@ -1345,7 +1344,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
     Raises IntegrationNotLoaded if the integration is not loaded.
     """
     cache = hass.data[DATA_INTEGRATIONS]
-    int_or_fut = cache.get(domain, UNDEFINED)
+    int_or_fut = cache.get(domain)
     # Integration is never subclassed, so we can check for type
     if type(int_or_fut) is Integration:
         return int_or_fut
@@ -1355,7 +1354,7 @@ def async_get_loaded_integration(hass: HomeAssistant, domain: str) -> Integratio
 async def async_get_integration(hass: HomeAssistant, domain: str) -> Integration:
     """Get integration."""
     cache = hass.data[DATA_INTEGRATIONS]
-    if type(int_or_fut := cache.get(domain, UNDEFINED)) is Integration:
+    if type(int_or_fut := cache.get(domain)) is Integration:
         return int_or_fut
     integrations_or_excs = await async_get_integrations(hass, [domain])
     int_or_exc = integrations_or_excs[domain]
@@ -1370,15 +1369,15 @@ async def async_get_integrations(
     """Get integrations."""
     cache = hass.data[DATA_INTEGRATIONS]
     results: dict[str, Integration | Exception] = {}
-    needed: dict[str, asyncio.Future[None]] = {}
-    in_progress: dict[str, asyncio.Future[None]] = {}
+    needed: dict[str, asyncio.Future[Integration]] = {}
+    in_progress: dict[str, asyncio.Future[Integration]] = {}
     for domain in domains:
-        int_or_fut = cache.get(domain, UNDEFINED)
+        int_or_fut = cache.get(domain)
         # Integration is never subclassed, so we can check for type
         if type(int_or_fut) is Integration:
             results[domain] = int_or_fut
-        elif int_or_fut is not UNDEFINED:
-            in_progress[domain] = cast(asyncio.Future[None], int_or_fut)
+        elif int_or_fut:
+            in_progress[domain] = cast(asyncio.Future[Integration], int_or_fut)
         elif "." in domain:
             results[domain] = ValueError(f"Invalid domain {domain}")
         else:
@@ -1386,21 +1385,13 @@ async def async_get_integrations(
 
     if in_progress:
         await asyncio.wait(in_progress.values())
-        for domain in in_progress:
-            # When we have waited and it's UNDEFINED, it doesn't exist
-            # We don't cache that it doesn't exist, or else people can't fix it
-            # and then restart, because their config will never be valid.
-            # Also if another call to async_get_integrations is made, since
-            # the cached value is removed when it's not found, it may be a
-            # asyncio.Future trying again. Since we know it already failed
-            # once we treat this as IntegrationNotFound.
-            if (
-                (int_or_fut := cache.get(domain, UNDEFINED)) is UNDEFINED
-                or type(int_or_fut) is not Integration
-            ):  # Integration is never subclassed, so we can check for type
-                results[domain] = IntegrationNotFound(domain)
+        for domain, future in in_progress.items():
+            if exc := future.exception():
+                if TYPE_CHECKING:
+                    assert isinstance(exc, IntegrationNotFound)
+                results[domain] = exc
             else:
-                results[domain] = int_or_fut
+                results[domain] = future.result()
 
     if not needed:
         return results
@@ -1412,7 +1403,7 @@ async def async_get_integrations(
     for domain, future in needed.items():
         if integration := custom.get(domain):
             results[domain] = cache[domain] = integration
-            future.set_result(None)
+            future.set_result(integration)
 
     for domain in results:
         if domain in needed:
@@ -1429,10 +1420,13 @@ async def async_get_integrations(
             int_or_exc = integrations.get(domain)
             if not int_or_exc:
                 del cache[domain]
-                results[domain] = IntegrationNotFound(domain)
+                result = IntegrationNotFound(domain)
+                results[domain] = result
+                future.set_exception(result)
             # Integration is never subclassed, so we can check for type
             elif type(int_or_exc) is Integration:
                 results[domain] = cache[domain] = int_or_exc
+                future.set_result(int_or_exc)
             else:
                 if TYPE_CHECKING:
                     assert isinstance(int_or_exc, Exception)
@@ -1440,7 +1434,7 @@ async def async_get_integrations(
                 exc = IntegrationNotFound(domain)
                 exc.__cause__ = int_or_exc
                 results[domain] = exc
-            future.set_result(None)
+                future.set_exception(exc)
 
     return results
 
