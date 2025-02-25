@@ -66,6 +66,127 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "configuration_url": "http://example.com",
 }
 
+MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
+    "notify_milkman_alert": {
+        "platform": "notify",
+        "name": "Milkman alert",
+        "qos": 0,
+        "command_topic": "test-topic",
+        "command_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com",
+        "retain": False,
+    },
+}
+MOCK_SUBENTRY_NOTIFY_COMPONENT2 = {
+    "notify_the_second_notifier": {
+        "platform": "notify",
+        "name": "The second notifier",
+        "qos": 0,
+        "command_topic": "test-topic2",
+    },
+}
+MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
+    "notify_none": {
+        "platform": "notify",
+        "qos": 0,
+        "command_topic": "test-topic",
+        "command_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com",
+        "retain": False,
+    },
+}
+
+MOCK_SUBENTRY_SENSOR_COMPONENT = {
+    "sensor_bla789": {
+        "platform": "sensor",
+        "name": "Test sensor",
+        "qos": 1,
+        "state_topic": "test-topic3",
+    },
+}
+
+MOCK_SUBENTRY_LIGHT_COMPONENT = {
+    "light_bla0ab": {
+        "platform": "light",
+        "name": "Test light",
+        "qos": 1,
+        "command_topic": "test-topic4",
+        "schema": "basic",
+    },
+}
+
+MOCK_SUBENTRY_LIGHT_BAD_SCHEMA = {
+    "light_bla0ab": {
+        "platform": "light",
+        "name": "Test light",
+        "qos": 1,
+        "command_topic": "bad#topic",
+        "schema": "basic",
+    },
+}
+
+MOCK_SUBENTRY_DATA = {
+    "device": {
+        "name": "Milk notifier",
+        "sw_version": "1.0",
+        "hw_version": "2.1 rev a",
+        "model": "Bottle XL",
+        "model_id": "mn002",
+        "configuration_url": "https://example.com",
+    },
+    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
+}
+
+MOCK_SUBENTRY_DATA_SINGLE_WITH_ENTITY_NAME = {
+    "device": {
+        "name": "Milk notifier",
+        "sw_version": "1.0",
+        "hw_version": "2.1 rev a",
+        "model": "Bottle XL",
+        "model_id": "mn002",
+        "configuration_url": "https://example.com",
+    },
+    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
+}
+MOCK_SUBENTRY_DATA_SINGLE_NO_ENTITY_NAME = {
+    "device": {
+        "name": "Milk notifier",
+        "sw_version": "1.0",
+        "hw_version": "2.1 rev a",
+        "model": "Bottle XL",
+        "model_id": "mn002",
+        "configuration_url": "https://example.com",
+    },
+    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME,
+}
+
+MOCK_SUBENTRY_DATA_SET_MIX = {
+    "device": {
+        "name": "Milk notifier",
+        "sw_version": "1.0",
+        "hw_version": "2.1 rev a",
+        "model": "Bottle XL",
+        "model_id": "mn002",
+        "configuration_url": "https://example.com",
+    },
+    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1
+    | MOCK_SUBENTRY_NOTIFY_COMPONENT2
+    | MOCK_SUBENTRY_SENSOR_COMPONENT
+    | MOCK_SUBENTRY_LIGHT_COMPONENT,
+}
+
+MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
+    "device": {
+        "name": "Milk notifier",
+        "sw_version": "1.0",
+        "hw_version": "2.1 rev a",
+        "model": "Bottle XL",
+        "model_id": "mn002",
+        "configuration_url": "https://example.com",
+    },
+    "components": MOCK_SUBENTRY_LIGHT_BAD_SCHEMA,
+}
+
 _SENTINEL = object()
 
 DISCOVERY_COUNT = sum(len(discovery_topic) for discovery_topic in MQTT.values())
