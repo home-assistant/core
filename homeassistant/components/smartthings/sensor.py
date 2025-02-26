@@ -684,6 +684,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.SMOKE,
                 translation_key="smoke_detector",
+                options=["detected", "clear", "tested"],
+                device_class=SensorDeviceClass.ENUM,
             )
         ]
     },
