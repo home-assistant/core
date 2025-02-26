@@ -106,7 +106,7 @@ async def test_reset_reminder(spa, setup_entry, hass: HomeAssistant) -> None:
     reminder.reset.assert_called_with(days)
 
 
-async def test_cover_sensor(spa, setup_entry, hass: HomeAssistant) -> None:
+async def test_cover_sensor(hass: HomeAssistant, spa, setup_entry) -> None:
     """Test cover sensor."""
 
     entity_id = f"binary_sensor.{spa.brand}_{spa.model}_cover_sensor_1"
