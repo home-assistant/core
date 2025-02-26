@@ -30,7 +30,7 @@
           "demo": "Demo",
           "effect": "Effect",
           "movie": "Uploaded effect",
-          "off": "[%key:common::state:off%]",
+          "off": "[%key:common::state::off%]",
           "playlist": "Playlist",
           "rt": "Real time"
         }
