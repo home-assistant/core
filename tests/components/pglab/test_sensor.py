@@ -15,7 +15,7 @@ from tests.typing import MqttMockHAClient
 async def test_attributes(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_pglab
 ) -> None:
-    """Check if sensor is properly created."""
+    """Check if sensors are properly created."""
     topic = "pglab/discovery/E-Board-DD53AC85/config"
     payload = {
         "ip": "192.168.1.16",
@@ -82,7 +82,7 @@ async def test_attributes_update_via_mqtt(
     state = hass.states.get("sensor.test_mpu_voltage")
     assert state.state == "unknown"
 
-    # update sensor value via mqtt
+    # update sensors value via mqtt
     update_payload = {"temp": 33.4, "volt": 3.31, "rtime": 1000}
     async_fire_mqtt_message(hass, "pglab/test/sensor/value", json.dumps(update_payload))
     await hass.async_block_till_done()
