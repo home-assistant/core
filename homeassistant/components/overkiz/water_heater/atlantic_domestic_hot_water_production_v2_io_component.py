@@ -92,6 +92,26 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         )
 
     @property
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        return cast(
+            float,
+            self.executor.select_state(
+                OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
+            ),
+        )
+
+    @property
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        return cast(
+            float,
+            self.executor.select_state(
+                OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
+            ),
+        )
+
+    @property
     def is_state_electric(self) -> bool:
         """Return true if boost mode is on."""
 
@@ -171,7 +191,10 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
 
         return cast(
             float,
-            self.executor.select_state(OverkizState.IO_MIDDLE_WATER_TEMPERATURE),
+            self.executor.select_state(
+                OverkizState.IO_MIDDLE_WATER_TEMPERATURE,
+                OverkizState.MODBUSLINK_MIDDLE_WATER_TEMPERATURE,
+            ),
         )
 
     @property
@@ -181,6 +204,26 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         return cast(
             float,
             self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE),
+        )
+
+    @property
+    def target_temperature_high(self) -> float:
+        """Return the highbound target temperature we try to reach."""
+        return cast(
+            float,
+            self.executor.select_state(
+                OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
+            ),
+        )
+
+    @property
+    def target_temperature_low(self) -> float:
+        """Return the lowbound target temperature we try to reach."""
+        return cast(
+            float,
+            self.executor.select_state(
+                OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
+            ),
         )
 
     @property
@@ -213,7 +256,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
 
-        temperature = kwargs[ATTR_TEMPERATURE]
+        temperature = kwargs.get(ATTR_TEMPERATURE)
         await self.executor.async_execute_command(
             OverkizCommand.SET_TARGET_TEMPERATURE, temperature
         )
@@ -294,10 +337,20 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         """Turn away mode on."""
 
         await self.executor.async_execute_command(
-            OverkizCommand.SET_CURRENT_OPERATING_MODE, OverkizCommandParam.AWAY
+            OverkizCommand.SET_CURRENT_OPERATING_MODE,
+            {
+                OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+                OverkizCommandParam.ABSENCE: OverkizCommandParam.ON,
+            },
         )
 
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
 
-        await self.set_operation_mode(STATE_ECO)
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_CURRENT_OPERATING_MODE,
+            {
+                OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+                OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+            },
+        )
