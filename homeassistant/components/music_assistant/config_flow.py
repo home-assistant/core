@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
+import voluptuous as vol
 from music_assistant_client import MusicAssistantClient
 from music_assistant_client.exceptions import (
     CannotConnect,
@@ -11,7 +12,6 @@ from music_assistant_client.exceptions import (
     MusicAssistantClientException,
 )
 from music_assistant_models.api import ServerInfoMessage
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_URL
@@ -42,7 +42,7 @@ async def get_server_info(hass: HomeAssistant, url: str) -> ServerInfoMessage:
     ) as client:
         if TYPE_CHECKING:
             assert client.server_info is not None
-        return cast(ServerInfoMessage, client.server_info)
+        return client.server_info
 
 
 class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):

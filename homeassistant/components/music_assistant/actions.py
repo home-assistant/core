@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from music_assistant_models.enums import MediaType
 import voluptuous as vol
+from music_assistant_models.enums import MediaType
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
@@ -50,7 +50,15 @@ from .schemas import (
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
-    from music_assistant_models.media_items import Album, Artist, Playlist, Radio, Track
+    from music_assistant_models.media_items import (
+        Album,
+        Artist,
+        Audiobook,
+        Playlist,
+        Podcast,
+        Radio,
+        Track,
+    )
 
     from . import MusicAssistantConfigEntry
 
@@ -185,7 +193,13 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
         "order_by": order_by,
     }
     library_result: (
-        list[Album] | list[Artist] | list[Track] | list[Radio] | list[Playlist]
+        list[Album]
+        | list[Artist]
+        | list[Track]
+        | list[Radio]
+        | list[Playlist]
+        | list[Audiobook]
+        | list[Podcast]
     )
     if media_type == MediaType.ALBUM:
         library_result = await mass.music.get_library_albums(
