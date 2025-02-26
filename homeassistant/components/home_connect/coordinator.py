@@ -440,6 +440,8 @@ class HomeConnectCoordinator(
         self, ha_id: str, program_key: ProgramKey
     ) -> dict[OptionKey, ProgramDefinitionOption]:
         """Get options with constraints for appliance."""
+        if program_key is ProgramKey.UNKNOWN:
+            return {}
         try:
             return {
                 option.key: option
@@ -468,8 +470,7 @@ class HomeConnectCoordinator(
         events = self.data[ha_id].events
         options_to_notify = options.copy()
         options.clear()
-        if program_key is not ProgramKey.UNKNOWN:
-            options.update(await self.get_options_definitions(ha_id, program_key))
+        options.update(await self.get_options_definitions(ha_id, program_key))
 
         for option in options.values():
             option_value = option.constraints.default if option.constraints else None
