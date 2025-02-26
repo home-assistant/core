@@ -49,7 +49,13 @@
         "name": "Air quality"
       },
       "alarm": {
-        "name": "Alarm"
+        "name": "Alarm",
+        "state": {
+          "both": "Strobe and siren",
+          "strobe": "Strobe",
+          "siren": "Siren",
+          "off": "[%key:common::state::off%]"
+        }
       },
       "audio_volume": {
         "name": "Volume"
