@@ -137,41 +137,6 @@ def setup_home_connect_entry(
         defaultdict(list)
     )
 
-    entities: list[HomeConnectEntity] = []
-    for appliance in entry.runtime_data.data.values():
-        entities_to_add = get_entities_for_appliance(entry, appliance)
-        if get_option_entities_for_appliance:
-            entities_to_add.extend(get_option_entities_for_appliance(entry, appliance))
-            for event_key in (
-                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
-                EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
-            ):
-                changed_options_listener_remove_callback = (
-                    entry.runtime_data.async_add_listener(
-                        partial(
-                            _create_option_entities,
-                            entry,
-                            appliance,
-                            known_entity_unique_ids,
-                            get_option_entities_for_appliance,
-                            async_add_entities,
-                        ),
-                        (appliance.info.ha_id, event_key),
-                    )
-                )
-                entry.async_on_unload(changed_options_listener_remove_callback)
-                changed_options_listener_remove_callbacks[appliance.info.ha_id].append(
-                    changed_options_listener_remove_callback
-                )
-        known_entity_unique_ids.update(
-            {
-                cast(str, entity.unique_id): appliance.info.ha_id
-                for entity in entities_to_add
-            }
-        )
-        entities.extend(entities_to_add)
-    async_add_entities(entities)
-
     entry.async_on_unload(
         entry.runtime_data.async_add_special_listener(
             partial(
