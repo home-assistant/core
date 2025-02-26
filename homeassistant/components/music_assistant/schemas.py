@@ -75,10 +75,10 @@ def media_item_dict_from_mass_item(
         ATTR_VERSION: item.version,
         ATTR_IMAGE: mass.get_media_item_image_url(item),
     }
-    artists: list[ItemMapping] | None = None
+    artists: list[ItemMapping] | None
     if artists := getattr(item, "artists", None):
         base[ATTR_ARTISTS] = [media_item_dict_from_mass_item(mass, x) for x in artists]
-    album: ItemMapping | None = None
+    album: ItemMapping | None
     if album := getattr(item, "album", None):
         base[ATTR_ALBUM] = media_item_dict_from_mass_item(mass, album)
     return base
