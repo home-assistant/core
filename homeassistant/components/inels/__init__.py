@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from inelsmqtt import InelsMqtt
 from inelsmqtt.devices import Device
@@ -28,17 +28,15 @@ class InelsData:
     """Represents the data structure for INELS runtime data."""
 
     mqtt: InelsMqtt
-    devices: list[Device] = field(default_factory=list)
+    devices: list[Device]
 
 
-def inels_discovery(inels_data: InelsData) -> None:
+def inels_discovery(mqtt: InelsMqtt) -> list[Device]:
     """Discover iNELS devices."""
 
     try:
-        i_disc = InelsDiscovery(inels_data.mqtt)
-        i_disc.discovery()
-
-        inels_data.devices = i_disc.devices
+        i_disc = InelsDiscovery(mqtt)
+        devices: list[Device] = i_disc.discovery()
     except (
         MQTTException,
         TimeoutError,
@@ -50,14 +48,16 @@ def inels_discovery(inels_data: InelsData) -> None:
         KeyError,
     ) as exc:
         LOGGER.error("Discovery error %s, reason %s", exc.__class__.__name__, exc)
-        inels_data.mqtt.close()
+        mqtt.close()
         raise ConfigEntryNotReady from exc
     except Exception as exc:
         LOGGER.error(
             "Discovery unexpected error %s, reason %s", exc.__class__.__name__, exc
         )
-        inels_data.mqtt.close()
+        mqtt.close()
         raise ConfigEntryNotReady from exc
+    else:
+        return devices
 
 
 async def _async_config_entry_updated(
@@ -72,7 +72,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
     """Set up iNELS from a config entry."""
 
     mqtt = InelsMqtt(entry.data)
-    inels_data = InelsData(mqtt=mqtt)
 
     # Test connection and check for authentication errors
     conn_result = await hass.async_add_executor_job(mqtt.test_connection)
@@ -84,11 +83,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
             raise ConfigEntryNotReady("MQTT Broker is offline or cannot be reached")
         return False
 
-    entry.runtime_data = inels_data
-
     # Raising ConfigEntryNotReady signals to Home Assistant that the setup should be retried later.
     # It is better to retry the entire setup than to recover from errors.
-    await hass.async_add_executor_job(inels_discovery, inels_data)
+    devices = await hass.async_add_executor_job(inels_discovery, mqtt)
+
+    entry.runtime_data = InelsData(mqtt=mqtt, devices=devices)
 
     LOGGER.debug("Finished discovery, setting up platforms")
 
