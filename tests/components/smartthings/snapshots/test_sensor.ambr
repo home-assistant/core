@@ -2654,7 +2654,14 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'on',
+        'off',
+        'silence',
+        'extra_silence',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2672,7 +2679,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Turbo mode',
     'platform': 'smartthings',
@@ -2686,7 +2693,14 @@
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_turbo_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Robot vacuum Turbo mode',
+      'options': list([
+        'on',
+        'off',
+        'silence',
+        'extra_silence',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.robot_vacuum_turbo_mode',
@@ -2907,7 +2921,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'airwash',
+        'air_wash',
         'cooling',
         'drying',
         'finish',
@@ -2953,7 +2967,7 @@
       'device_class': 'enum',
       'friendly_name': 'Dishwasher Job state',
       'options': list([
-        'airwash',
+        'air_wash',
         'cooling',
         'drying',
         'finish',
@@ -3347,25 +3361,7 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'cooling',
-        'delay_wash',
-        'drying',
-        'finished',
-        'none',
-        'refreshing',
-        'weight_sensing',
-        'wrinkle_prevent',
-        'dehumidifying',
-        'ai_drying',
-        'sanitizing',
-        'internal_care',
-        'freeze_protection',
-        'continuous_dehumidifying',
-        'thawing_frozen_inside',
-      ]),
-    }),
+    'capabilities': None,
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3383,7 +3379,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Job state',
     'platform': 'smartthings',
@@ -3397,25 +3393,7 @@
 # name: test_all_entities[da_wm_wd_000001][sensor.dryer_job_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
       'friendly_name': 'Dryer Job state',
-      'options': list([
-        'cooling',
-        'delay_wash',
-        'drying',
-        'finished',
-        'none',
-        'refreshing',
-        'weight_sensing',
-        'wrinkle_prevent',
-        'dehumidifying',
-        'ai_drying',
-        'sanitizing',
-        'internal_care',
-        'freeze_protection',
-        'continuous_dehumidifying',
-        'thawing_frozen_inside',
-      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dryer_job_state',
@@ -3789,7 +3767,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'airwash',
+        'air_wash',
         'ai_rinse',
         'ai_spin',
         'ai_wash',
@@ -3841,7 +3819,7 @@
       'device_class': 'enum',
       'friendly_name': 'Washer Job state',
       'options': list([
-        'airwash',
+        'air_wash',
         'ai_rinse',
         'ai_spin',
         'ai_wash',

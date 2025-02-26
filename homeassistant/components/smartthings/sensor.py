@@ -43,9 +43,10 @@ THERMOSTAT_CAPABILITIES = {
 }
 
 JOB_STATE_MAP = {
-    "airWash": "airwash",
+    "airWash": "air_wash",
+    "airwash": "air_wash",
     "aIRinse": "ai_rinse",
-    "aiSpin": "ai_spin",
+    "aISpin": "ai_spin",
     "aIWash": "ai_wash",
     "aIDrying": "ai_drying",
     "internalCare": "internal_care",
@@ -70,6 +71,10 @@ OVEN_JOB_STATE_MAP = {
 
 MEDIA_PLAYBACK_STATE_MAP = {
     "fast forwarding": "fast_forwarding",
+}
+
+ROBOT_CLEANER_TURBO_MODE_STATE_MAP = {
+    "extraSilence": "extra_silence",
 }
 
 ROBOT_CLEANER_MOVEMENT_MAP = {
@@ -264,7 +269,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.DISHWASHER_JOB_STATE,
                 translation_key="dishwasher_job_state",
                 options=[
-                    "airwash",
+                    "air_wash",
                     "cooling",
                     "drying",
                     "finish",
@@ -685,6 +690,11 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ROBOT_CLEANER_TURBO_MODE,
                 translation_key="robot_cleaner_turbo_mode",
+                options=["on", "off", "silence", "extra_silence"],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: ROBOT_CLEANER_TURBO_MODE_STATE_MAP.get(
+                    value, value
+                ),
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
         ]
@@ -714,6 +724,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.SMOKE,
                 translation_key="smoke_detector",
+                options=["detected", "clear", "tested"],
+                device_class=SensorDeviceClass.ENUM,
             )
         ]
     },
@@ -888,7 +900,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.WASHER_JOB_STATE,
                 translation_key="washer_job_state",
                 options=[
-                    "airwash",
+                    "air_wash",
                     "ai_rinse",
                     "ai_spin",
                     "ai_wash",

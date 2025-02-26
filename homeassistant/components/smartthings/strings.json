@@ -85,7 +85,7 @@
       "dishwasher_job_state": {
         "name": "Job state",
         "state": {
-          "airwash": "Airwash",
+          "air_wash": "Air wash",
           "cooling": "Cooling",
           "drying": "Drying",
           "finish": "Finish",
@@ -295,13 +295,24 @@
         }
       },
       "robot_cleaner_turbo_mode": {
-        "name": "Turbo mode"
+        "name": "Turbo mode",
+        "state": {
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]",
+          "silence": "Silent",
+          "extra_silence": "Extra silent"
+        }
       },
       "link_quality": {
         "name": "Link quality"
       },
       "smoke_detector": {
-        "name": "Smoke detector"
+        "name": "Smoke detector",
+        "state": {
+          "detected": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::detected%]",
+          "clear": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::clear%]",
+          "tested": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::tested%]"
+        }
       },
       "thermostat_cooling_setpoint": {
         "name": "Cooling set point"
@@ -353,7 +364,7 @@
       "washer_job_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
         "state": {
-          "airwash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::airwash%]",
+          "air_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::air_wash%]",
           "ai_rise": "AI rise",
           "ai_spin": "AI spin",
           "ai_wash": "AI wash",
