@@ -326,6 +326,8 @@ CAPABILITY_TO_SENSORS: dict[
                     "continuous_dehumidifying",
                     "thawing_frozen_inside",
                 ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: JOB_STATE_MAP.get(value, value),
             )
         ],
         Attribute.COMPLETION_TIME: [
