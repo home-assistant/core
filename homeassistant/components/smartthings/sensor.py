@@ -61,6 +61,10 @@ MEDIA_PLAYBACK_STATE_MAP = {
     "fast forwarding": "fast_forwarding",
 }
 
+ROBOT_CLEANER_TURBO_MODE_STATE_MAP = {
+    "extraSilence": "extra_silence",
+}
+
 ROBOT_CLEANER_MOVEMENT_MAP = {
     "powerOff": "off",
 }
@@ -655,6 +659,11 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ROBOT_CLEANER_TURBO_MODE,
                 translation_key="robot_cleaner_turbo_mode",
+                options=["on", "off", "silence", "extra_silence"],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: ROBOT_CLEANER_TURBO_MODE_STATE_MAP.get(
+                    value, value
+                ),
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
         ]

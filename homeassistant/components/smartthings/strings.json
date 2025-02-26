@@ -278,7 +278,13 @@
         }
       },
       "robot_cleaner_turbo_mode": {
-        "name": "Turbo mode"
+        "name": "Turbo mode",
+        "state": {
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]",
+          "silence": "Silent",
+          "extra_silence": "Extra silent"
+        }
       },
       "link_quality": {
         "name": "Link quality"
