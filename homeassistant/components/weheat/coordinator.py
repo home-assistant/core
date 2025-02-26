@@ -69,8 +69,8 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
     @property
     def readable_name(self) -> str | None:
         """Return the readable name of the heat pump."""
-        if self.heat_pump_info.name:
-            return self.heat_pump_info.name
+        if self.heat_pump_info.device_name:
+            return self.heat_pump_info.device_name
         return self.heat_pump_info.model
 
     @property

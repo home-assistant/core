@@ -17,6 +17,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -24,6 +25,7 @@ from homeassistant.helpers.typing import StateType
 
 from .const import (
     DISPLAY_PRECISION_COP,
+    DISPLAY_PRECISION_FLOW,
     DISPLAY_PRECISION_WATER_TEMP,
     DISPLAY_PRECISION_WATTS,
 )
@@ -172,6 +174,14 @@ SENSORS = [
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda status: status.compressor_percentage,
     ),
+    WeHeatSensorEntityDescription(
+        translation_key="central_heating_flow_volume",
+        key="central_heating_flow_volume",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_FLOW,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        value_fn=lambda status: status.central_heating_flow_volume,
+    ),
 ]
 
 
@@ -193,6 +203,14 @@ DHW_SENSORS = [
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=DISPLAY_PRECISION_WATER_TEMP,
         value_fn=lambda status: status.dhw_bottom_temperature,
+    ),
+    WeHeatSensorEntityDescription(
+        translation_key="dhw_flow_volume",
+        key="dhw_flow_volume",
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=DISPLAY_PRECISION_FLOW,
+        native_unit_of_measurement=UnitOfVolumeFlowRate.CUBIC_METERS_PER_HOUR,
+        value_fn=lambda status: status.dhw_flow_volume,
     ),
 ]
 
