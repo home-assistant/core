@@ -47,10 +47,10 @@ class PGLabDeviceSensor:
 
     @property
     def state(self) -> dict:
-        """Return the device sensor state."""
+        """Return the device sensors state."""
         return self._sensors.state
 
     @property
     def sensors(self) -> PyPGLabSensors:
-        """Return the pypglab device sensor."""
+        """Return the pypglab device sensors."""
         return self._sensors
