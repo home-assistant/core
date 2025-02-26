@@ -57,6 +57,7 @@ async def test_esphome_device_subscribe_logs(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test configuring a device to subscribe to logs."""
+    assert await async_setup_component(hass, "logger", {"logger": {}})
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -76,6 +77,15 @@ async def test_esphome_device_subscribe_logs(
         states=[],
     )
     await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "DEBUG"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_VERY_VERBOSE
+
     caplog.set_level(logging.DEBUG)
     device.mock_on_log_message(
         Mock(level=LogLevel.LOG_LEVEL_INFO, message=b"test_log_message")
@@ -102,6 +112,14 @@ async def test_esphome_device_subscribe_logs(
     )
     await hass.async_block_till_done()
     assert "test_debug_log_message" in caplog.text
+
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "WARNING"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_WARN
 
 
 async def test_esphome_device_service_calls_not_allowed(

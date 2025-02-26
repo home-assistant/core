@@ -230,6 +230,7 @@ class MockESPHomeDevice:
         )
         self.on_log_message: Callable[[SubscribeLogsResponse], None]
         self.device_info = device_info
+        self.current_log_level = LogLevel.LOG_LEVEL_NONE
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -435,6 +436,7 @@ async def _mock_generic_device_entry(
     ) -> None:
         """Subscribe to log messages."""
         mock_device.set_on_log_message(on_log_message)
+        mock_device.current_log_level = log_level
 
     def _subscribe_voice_assistant(
         *,
