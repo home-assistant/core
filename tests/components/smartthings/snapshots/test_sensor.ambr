@@ -2733,7 +2733,20 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'airwash',
+        'cooling',
+        'drying',
+        'finish',
+        'pre_drain',
+        'pre_wash',
+        'rinse',
+        'spin',
+        'wash',
+        'wrinkle_prevent',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2751,7 +2764,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Job state',
     'platform': 'smartthings',
@@ -2765,7 +2778,20 @@
 # name: test_all_entities[da_wm_dw_000001][sensor.dishwasher_job_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Dishwasher Job state',
+      'options': list([
+        'airwash',
+        'cooling',
+        'drying',
+        'finish',
+        'pre_drain',
+        'pre_wash',
+        'rinse',
+        'spin',
+        'wash',
+        'wrinkle_prevent',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.dishwasher_job_state',

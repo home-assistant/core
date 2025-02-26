@@ -67,7 +67,19 @@
         "name": "Machine state"
       },
       "dishwasher_job_state": {
-        "name": "Job state"
+        "name": "Job state",
+        "state": {
+          "airwash": "Airwash",
+          "cooling": "Cooling",
+          "drying": "Drying",
+          "finish": "Finish",
+          "pre_drain": "Pre-drain",
+          "pre_wash": "Pre-wash",
+          "rinse": "Rinse",
+          "spin": "Spin",
+          "wash": "Wash",
+          "wrinkle_prevent": "Wrinkle prevention"
+        }
       },
       "completion_time": {
         "name": "Completion time"
