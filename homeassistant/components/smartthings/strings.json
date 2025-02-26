@@ -207,7 +207,26 @@
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]"
       },
       "oven_job_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]"
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
+        "state": {
+          "cleaning": "Cleaning",
+          "cooking": "Cooking",
+          "cooling": "Cooling",
+          "draining": "Draining",
+          "preheat": "Preheat",
+          "ready": "Ready",
+          "rinsing": "Rinsing",
+          "finished": "Finished",
+          "scheduled_start": "Scheduled start",
+          "warming": "Warming",
+          "defrosting": "Defrosting",
+          "sensing": "Sensing",
+          "searing": "Searing",
+          "fast_preheat": "Fast preheat",
+          "scheduled_end": "Scheduled end",
+          "stone_heating": "Stone heating",
+          "time_hold_preheat": "Time hold preheat"
+        }
       },
       "oven_setpoint": {
         "name": "Set point"
