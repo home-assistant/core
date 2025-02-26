@@ -319,16 +319,27 @@ async def test_ip_bans_file_creation(
         )
 
 
+@middleware
+async def mock_auth(request, handler):
+    """Mock auth middleware."""
+    if "auth_true" in request.path:
+        request[KEY_AUTHENTICATED] = True
+    else:
+        request[KEY_AUTHENTICATED] = False
+    return await handler(request)
+
+
+async def auth_handler(request):
+    """Return 200 status code."""
+    return None, 200
+
+
 async def test_failed_login_attempts_counter(
     hass: HomeAssistant, aiohttp_client: ClientSessionGenerator
 ) -> None:
     """Testing if failed login attempts counter increased."""
     app = web.Application()
     app[KEY_HASS] = hass
-
-    async def auth_handler(request):
-        """Return 200 status code."""
-        return None, 200
 
     async def auth_true_handler(request):
         """Return 200 status code."""
@@ -350,15 +361,6 @@ async def test_failed_login_attempts_counter(
     setup_bans(hass, app, 5)
     remote_ip = ip_address("200.201.202.204")
     mock_real_ip(app)("200.201.202.204")
-
-    @middleware
-    async def mock_auth(request, handler):
-        """Mock auth middleware."""
-        if "auth_true" in request.path:
-            request[KEY_AUTHENTICATED] = True
-        else:
-            request[KEY_AUTHENTICATED] = False
-        return await handler(request)
 
     app.middlewares.append(mock_auth)
 
@@ -420,19 +422,23 @@ async def test_single_ban_file_entry(
 @pytest.mark.parametrize(
     ("source_ip_address", "ip_whitelist", "result"),
     [
+        # Tests with a ip_address in the whitelist
         ("200.200.200.200", ["200.200.200.200", "200.200.200.201"], 0),
         ("200.200.200.201", ["200.200.200.200", "200.200.200.201"], 0),
+        # Test with an ip_address not in the whitelist
         ("200.200.200.203", ["200.200.200.200", "200.200.200.201"], 1),
+        # Test with no whitelist
+        ("200.200.200.204", None, 1),
     ],
 )
 async def test_ban_ip_whitelist(
     hass: HomeAssistant,
     aiohttp_client: ClientSessionGenerator,
     source_ip_address: str,
-    ip_whitelist: list[str],
+    ip_whitelist: list[str] | None,
     result: int,
 ) -> None:
-    """Testing if failed login attempts counter increased."""
+    """Test the IP whitelist functionality."""
 
     await async_setup_component(
         hass,
@@ -441,11 +447,6 @@ async def test_ban_ip_whitelist(
     )
 
     app = hass.http.app
-
-    async def auth_handler(request):
-        """Return 200 status code."""
-        return None, 200
-
     app.router.add_get(
         "/auth_false",
         request_handler_factory(hass, Mock(requires_auth=True), auth_handler),
@@ -456,16 +457,6 @@ async def test_ban_ip_whitelist(
 
     remote_ip = ip_address(source_ip_address)
     mock_real_ip(app)(source_ip_address)
-
-    @middleware
-    async def mock_auth(request, handler):
-        """Mock auth middleware."""
-        if "auth_true" in request.path:
-            request[KEY_AUTHENTICATED] = True
-        else:
-            request[KEY_AUTHENTICATED] = False
-        return await handler(request)
-
     app.middlewares.append(mock_auth)
 
     client = await aiohttp_client(app)
