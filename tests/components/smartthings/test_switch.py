@@ -37,7 +37,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.SWITCH)
 
 
-@pytest.mark.parametrize("fixture", ["c2c_arlo_pro_3_switch"])
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
 @pytest.mark.parametrize(
     ("action", "command"),
     [
@@ -66,7 +66,7 @@ async def test_switch_turn_on_off(
     )
 
 
-@pytest.mark.parametrize("fixture", ["c2c_arlo_pro_3_switch"])
+@pytest.mark.parametrize("device_fixture", ["c2c_arlo_pro_3_switch"])
 async def test_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,

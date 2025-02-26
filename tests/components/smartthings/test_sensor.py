@@ -28,7 +28,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.SENSOR)
 
 
-@pytest.mark.parametrize("fixture", ["aeotec_home_energy_meter_gen5"])
+@pytest.mark.parametrize("device_fixture", ["aeotec_home_energy_meter_gen5"])
 async def test_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,

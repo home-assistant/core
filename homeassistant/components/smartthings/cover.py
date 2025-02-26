@@ -71,8 +71,15 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
-        self.supports_shade = self.supports_capability(Capability.WINDOW_SHADE_LEVEL)
-        if self.supports_capability(Capability.SWITCH_LEVEL) or self.supports_shade:
+        if self.supports_capability(Capability.WINDOW_SHADE_LEVEL):
+            self.level_capability = Capability.WINDOW_SHADE_LEVEL
+            self.level_command = Command.SET_SHADE_LEVEL
+        else:
+            self.level_capability = Capability.SWITCH_LEVEL
+            self.level_command = Command.SET_LEVEL
+        if self.supports_capability(
+            Capability.SWITCH_LEVEL
+        ) or self.supports_capability(Capability.WINDOW_SHADE_LEVEL):
             self._attr_supported_features |= CoverEntityFeature.SET_POSITION
 
         if self.supports_capability(Capability.DOOR_CONTROL):
@@ -91,12 +98,8 @@ class SmartThingsCover(SmartThingsEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.execute_device_command(
-            (
-                Capability.WINDOW_SHADE_LEVEL
-                if self.supports_shade
-                else Capability.SWITCH_LEVEL
-            ),
-            (Command.SET_SHADE_LEVEL if self.supports_shade else Command.SET_LEVEL),
+            self.level_capability,
+            self.level_command,
             argument=kwargs[ATTR_POSITION],
         )
 

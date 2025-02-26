@@ -64,7 +64,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.CLIMATE)
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_fan_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -88,7 +88,7 @@ async def test_ac_set_fan_mode(
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_hvac_mode_off(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -111,7 +111,7 @@ async def test_ac_set_hvac_mode_off(
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 @pytest.mark.parametrize(
     ("hvac_mode", "argument"),
     [
@@ -155,7 +155,7 @@ async def test_ac_set_hvac_mode(
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_hvac_mode_turns_on(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -191,7 +191,7 @@ async def test_ac_set_hvac_mode_turns_on(
     ]
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_hvac_mode_wind(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -223,7 +223,7 @@ async def test_ac_set_hvac_mode_wind(
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_temperature(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -247,7 +247,7 @@ async def test_ac_set_temperature(
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_temperature_and_hvac_mode_while_off(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -296,7 +296,7 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
     ]
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_temperature_and_hvac_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -334,7 +334,7 @@ async def test_ac_set_temperature_and_hvac_mode(
     ]
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_temperature_and_hvac_mode_off(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -371,7 +371,7 @@ async def test_ac_set_temperature_and_hvac_mode_off(
     ]
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 @pytest.mark.parametrize(
     ("service", "command"),
     [
@@ -403,7 +403,7 @@ async def test_ac_toggle_power(
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_swing_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -433,7 +433,7 @@ async def test_ac_set_swing_mode(
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_set_preset_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -457,7 +457,7 @@ async def test_ac_set_preset_mode(
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_ac_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -480,7 +480,7 @@ async def test_ac_state_update(
     assert hass.states.get("climate.ac_office_granit").state == HVACMode.HEAT
 
 
-@pytest.mark.parametrize("fixture", ["da_ac_rac_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 @pytest.mark.parametrize(
     (
         "capability",
@@ -583,7 +583,7 @@ async def test_ac_state_attributes_update(
     )
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 async def test_thermostat_set_fan_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -607,7 +607,7 @@ async def test_thermostat_set_fan_mode(
     )
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 async def test_thermostat_set_hvac_mode(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -631,7 +631,7 @@ async def test_thermostat_set_hvac_mode(
     )
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 @pytest.mark.parametrize(
     ("state", "data", "calls"),
     [
@@ -726,7 +726,7 @@ async def test_thermostat_set_temperature(
     assert devices.execute_device_command.mock_calls == calls
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 async def test_humidity(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -743,7 +743,7 @@ async def test_humidity(
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 50
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 async def test_updating_humidity(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -771,7 +771,7 @@ async def test_updating_humidity(
     assert hass.states.get("climate.asd").attributes[ATTR_CURRENT_HUMIDITY] == 40
 
 
-@pytest.mark.parametrize("fixture", ["virtual_thermostat"])
+@pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 @pytest.mark.parametrize(
     (
         "capability",

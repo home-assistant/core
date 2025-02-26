@@ -51,7 +51,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.LIGHT)
 
 
-@pytest.mark.parametrize("fixture", ["hue_rgbw_color_bulb"])
+@pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
 @pytest.mark.parametrize(
     ("data", "calls"),
     [
@@ -147,7 +147,7 @@ async def test_turn_on_light(
     assert devices.execute_device_command.mock_calls == calls
 
 
-@pytest.mark.parametrize("fixture", ["hue_rgbw_color_bulb"])
+@pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
 @pytest.mark.parametrize(
     ("data", "calls"),
     [
@@ -195,7 +195,7 @@ async def test_turn_off_light(
     assert devices.execute_device_command.mock_calls == calls
 
 
-@pytest.mark.parametrize("fixture", ["hue_rgbw_color_bulb"])
+@pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
 async def test_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -218,7 +218,7 @@ async def test_state_update(
     assert hass.states.get("light.standing_light").state == STATE_ON
 
 
-@pytest.mark.parametrize("fixture", ["hue_rgbw_color_bulb"])
+@pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
 async def test_updating_brightness(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -242,7 +242,7 @@ async def test_updating_brightness(
     assert hass.states.get("light.standing_light").attributes[ATTR_BRIGHTNESS] == 51
 
 
-@pytest.mark.parametrize("fixture", ["hue_rgbw_color_bulb"])
+@pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
 async def test_updating_hs(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -272,7 +272,7 @@ async def test_updating_hs(
     )
 
 
-@pytest.mark.parametrize("fixture", ["hue_rgbw_color_bulb"])
+@pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
 async def test_updating_color_temp(
     hass: HomeAssistant,
     devices: AsyncMock,

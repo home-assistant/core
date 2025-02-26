@@ -30,7 +30,7 @@ async def test_all_entities(
     )
 
 
-@pytest.mark.parametrize("fixture", ["da_ref_normal_000001"])
+@pytest.mark.parametrize("device_fixture", ["da_ref_normal_000001"])
 async def test_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,

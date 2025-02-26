@@ -30,7 +30,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.LOCK)
 
 
-@pytest.mark.parametrize("fixture", ["yale_push_button_deadbolt_lock"])
+@pytest.mark.parametrize("device_fixture", ["yale_push_button_deadbolt_lock"])
 @pytest.mark.parametrize(
     ("action", "command"),
     [
@@ -62,7 +62,7 @@ async def test_lock_unlock(
     )
 
 
-@pytest.mark.parametrize("fixture", ["yale_push_button_deadbolt_lock"])
+@pytest.mark.parametrize("device_fixture", ["yale_push_button_deadbolt_lock"])
 async def test_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,

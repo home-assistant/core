@@ -43,7 +43,7 @@ async def test_all_entities(
     snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.COVER)
 
 
-@pytest.mark.parametrize("fixture", ["c2c_shade"])
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
 @pytest.mark.parametrize(
     ("action", "command"),
     [
@@ -75,7 +75,7 @@ async def test_cover_open_close(
     )
 
 
-@pytest.mark.parametrize("fixture", ["c2c_shade"])
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
 async def test_cover_set_position(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -99,7 +99,7 @@ async def test_cover_set_position(
     )
 
 
-@pytest.mark.parametrize("fixture", ["c2c_shade"])
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
 async def test_cover_battery(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -116,7 +116,7 @@ async def test_cover_battery(
     assert state.attributes[ATTR_BATTERY_LEVEL] == 50
 
 
-@pytest.mark.parametrize("fixture", ["c2c_shade"])
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
 async def test_cover_battery_updating(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -146,7 +146,7 @@ async def test_cover_battery_updating(
     assert state.attributes[ATTR_BATTERY_LEVEL] == 49
 
 
-@pytest.mark.parametrize("fixture", ["c2c_shade"])
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
 async def test_state_update(
     hass: HomeAssistant,
     devices: AsyncMock,
@@ -169,7 +169,7 @@ async def test_state_update(
     assert hass.states.get("cover.curtain_1a").state == STATE_OPENING
 
 
-@pytest.mark.parametrize("fixture", ["c2c_shade"])
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
 async def test_position_update(
     hass: HomeAssistant,
     devices: AsyncMock,
