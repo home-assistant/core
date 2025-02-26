@@ -48,6 +48,7 @@ async def async_setup_entry(
 class SmartThingsFan(SmartThingsEntity, FanEntity):
     """Define a SmartThings Fan."""
 
+    _attr_name = None
     _attr_speed_count = int_states_in_range(SPEED_RANGE)
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
