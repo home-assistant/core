@@ -558,57 +558,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_dust_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ac_office_granit_dust_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Dust level',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'dust_level',
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.dustLevel',
-    'unit_of_measurement': 'μg/m^3',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_dust_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'AC Office Granit Dust level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m^3',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ac_office_granit_dust_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -765,57 +714,6 @@
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_fine_dust_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.ac_office_granit_fine_dust_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Fine dust level',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'fine_dust_level',
-    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.fineDustLevel',
-    'unit_of_measurement': 'μg/m^3',
-  })
-# ---
-# name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_fine_dust_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'AC Office Granit Fine dust level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m^3',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.ac_office_granit_fine_dust_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -866,6 +764,110 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '60',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ac_office_granit_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.dustLevel',
+    'unit_of_measurement': 'μg/m^3',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm10',
+      'friendly_name': 'AC Office Granit PM10',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μg/m^3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ac_office_granit_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_pm2_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.ac_office_granit_pm2_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
+    'original_icon': None,
+    'original_name': 'PM2.5',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d.fineDustLevel',
+    'unit_of_measurement': 'μg/m^3',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_pm2_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm25',
+      'friendly_name': 'AC Office Granit PM2.5',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'μg/m^3',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.ac_office_granit_pm2_5',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_all_entities[da_ac_rac_000001][sensor.ac_office_granit_power-entry]
@@ -1125,56 +1127,6 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_dust_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.aire_dormitorio_principal_dust_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Dust level',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'dust_level',
-    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.dustLevel',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_dust_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Aire Dormitorio Principal Dust level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.aire_dormitorio_principal_dust_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1331,56 +1283,6 @@
     'state': '0.0',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_fine_dust_level-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.aire_dormitorio_principal_fine_dust_level',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Fine dust level',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'fine_dust_level',
-    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.fineDustLevel',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_fine_dust_level-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Aire Dormitorio Principal Fine dust level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.aire_dormitorio_principal_fine_dust_level',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
 # name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_humidity-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -1474,6 +1376,110 @@
     }),
     'context': <ANY>,
     'entity_id': 'sensor.aire_dormitorio_principal_odor_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aire_dormitorio_principal_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.dustLevel',
+    'unit_of_measurement': 'µg/m³',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm10',
+      'friendly_name': 'Aire Dormitorio Principal PM10',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'µg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aire_dormitorio_principal_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_pm2_5-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.aire_dormitorio_principal_pm2_5',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
+    'original_icon': None,
+    'original_name': 'PM2.5',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e.fineDustLevel',
+    'unit_of_measurement': 'µg/m³',
+  })
+# ---
+# name: test_all_entities[da_ac_rac_01001][sensor.aire_dormitorio_principal_pm2_5-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'pm25',
+      'friendly_name': 'Aire Dormitorio Principal PM2.5',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'µg/m³',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.aire_dormitorio_principal_pm2_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

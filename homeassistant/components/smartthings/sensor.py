@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
@@ -240,14 +241,16 @@ CAPABILITY_TO_SENSORS: dict[
         Attribute.DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.DUST_LEVEL,
-                translation_key="dust_level",
+                device_class=SensorDeviceClass.PM10,
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ],
         Attribute.FINE_DUST_LEVEL: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.FINE_DUST_LEVEL,
-                translation_key="fine_dust_level",
+                device_class=SensorDeviceClass.PM25,
+                native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
                 state_class=SensorStateClass.MEASUREMENT,
             )
         ],

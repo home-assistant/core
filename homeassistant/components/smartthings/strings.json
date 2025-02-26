@@ -86,12 +86,6 @@
       "dryer_job_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]"
       },
-      "dust_level": {
-        "name": "Dust level"
-      },
-      "fine_dust_level": {
-        "name": "Fine dust level"
-      },
       "equivalent_carbon_dioxide": {
         "name": "Equivalent carbon dioxide"
       },
