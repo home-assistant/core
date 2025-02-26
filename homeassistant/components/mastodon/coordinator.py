@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from mastodon import Mastodon
-from mastodon.Mastodon import Account, Instance, MastodonError
+from mastodon.Mastodon import Account, InstanceV2, MastodonError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -20,7 +20,7 @@ class MastodonData:
     """Mastodon data type."""
 
     client: Mastodon
-    instance: Instance
+    instance: InstanceV2
     account: Account
     coordinator: MastodonCoordinator
 

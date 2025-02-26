@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from mastodon.Mastodon import Account, Instance
+from mastodon.Mastodon import Account, InstanceV2
 import pytest
 
 from homeassistant.components.mastodon.const import CONF_BASE_URL, DOMAIN
@@ -32,7 +32,7 @@ def mock_mastodon_client() -> Generator[AsyncMock]:
         ) as mock_client,
     ):
         client = mock_client.return_value
-        client.instance.return_value = Instance.from_json(
+        client.instance_v2.return_value = InstanceV2.from_json(
             load_fixture("instance.json", DOMAIN)
         )
         client.account_verify_credentials.return_value = Account.from_json(
