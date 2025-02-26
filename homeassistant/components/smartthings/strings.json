@@ -348,7 +348,7 @@
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
         "state": {
           "air_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::air_wash%]",
-          "ai_rise": "AI rise",
+          "ai_rinse": "AI rinse",
           "ai_spin": "AI spin",
           "ai_wash": "AI wash",
           "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
