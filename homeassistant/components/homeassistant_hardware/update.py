@@ -244,7 +244,10 @@ class BaseFirmwareUpdateEntity(
 
     def _update_progress(self, offset: int, total_size: int) -> None:
         """Handle update progress."""
-        self._attr_update_percentage = (offset * 100) / total_size
+
+        # Firmware updates in ~30s so we still get responsive update progress even
+        # without decimal places
+        self._attr_update_percentage = round((offset * 100) / total_size)
         self.async_write_ha_state()
 
     @asynccontextmanager
