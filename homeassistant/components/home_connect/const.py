@@ -4,6 +4,8 @@ from typing import cast
 
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
 
+from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
+
 from .utils import bsh_key_to_translation_key
 
 DOMAIN = "home_connect"
@@ -20,6 +22,13 @@ APPLIANCES_WITH_PROGRAMS = (
     "Washer",
     "WasherDryer",
 )
+
+UNIT_MAP = {
+    "seconds": UnitOfTime.SECONDS,
+    "ml": UnitOfVolume.MILLILITERS,
+    "°C": UnitOfTemperature.CELSIUS,
+    "°F": UnitOfTemperature.FAHRENHEIT,
+}
 
 
 BSH_POWER_ON = "BSH.Common.EnumType.PowerState.On"

@@ -23,6 +23,7 @@ from .const import (
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
+    UNIT_MAP,
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
@@ -40,6 +41,7 @@ class HomeConnectSensorEntityDescription(
 
     default_value: str | None = None
     appliance_types: tuple[str, ...] | None = None
+    fetch_unit: bool = False
 
 
 BSH_PROGRAM_SENSORS = (
@@ -184,6 +186,7 @@ SENSORS = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         translation_key="oven_current_cavity_temperature",
+        fetch_unit=True,
     ),
 )
 
@@ -317,6 +320,26 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
                 self._attr_native_value = slugify(cast(str, status).split(".")[-1])
             case _:
                 self._attr_native_value = status
+
+    async def async_added_to_hass(self) -> None:
+        """When entity is added to hass."""
+        await super().async_added_to_hass()
+        if self.entity_description.fetch_unit:
+            data = self.appliance.status[cast(StatusKey, self.bsh_key)]
+            if data.unit:
+                self._attr_native_unit_of_measurement = UNIT_MAP.get(
+                    data.unit, data.unit
+                )
+            else:
+                await self.fetch_unit()
+
+    async def fetch_unit(self) -> None:
+        """Fetch the unit of measurement."""
+        data = await self.coordinator.client.get_status_value(
+            self.appliance.info.ha_id, status_key=cast(StatusKey, self.bsh_key)
+        )
+        if data.unit:
+            self._attr_native_unit_of_measurement = UNIT_MAP.get(data.unit, data.unit)
 
 
 class HomeConnectProgramSensor(HomeConnectSensor):
