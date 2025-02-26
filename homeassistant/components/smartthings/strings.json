@@ -104,7 +104,12 @@
         "name": "Dryer mode"
       },
       "dryer_machine_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]"
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
+        "state": {
+          "pause": "[%key:common::state::paused%]",
+          "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "stop": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::stop%]"
+        }
       },
       "dryer_job_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]"
