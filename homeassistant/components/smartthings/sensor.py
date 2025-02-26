@@ -93,6 +93,8 @@ OVEN_MODE = {
     "Rinse": "rinse",
 }
 
+WASHER_OPTIONS = ["pause", "run", "stop"]
+
 
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
     """Return the power attributes."""
@@ -242,7 +244,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="dishwasher_machine_state",
-                options=["pause", "run", "stop"],
+                options=WASHER_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
             )
         ],
@@ -847,6 +849,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="washer_machine_state",
+                options=WASHER_OPTIONS,
+                device_class=SensorDeviceClass.ENUM,
             )
         ],
         Attribute.WASHER_JOB_STATE: [
