@@ -207,26 +207,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         )
 
     @property
-    def target_temperature_high(self) -> float:
-        """Return the highbound target temperature we try to reach."""
-        return cast(
-            float,
-            self.executor.select_state(
-                OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
-            ),
-        )
-
-    @property
-    def target_temperature_low(self) -> float:
-        """Return the lowbound target temperature we try to reach."""
-        return cast(
-            float,
-            self.executor.select_state(
-                OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
-            ),
-        )
-
-    @property
     def current_operation(self) -> str | None:
         """Return current operation."""
 
