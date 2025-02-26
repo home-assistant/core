@@ -33,6 +33,7 @@ CAPABILITY_TO_SENSORS: dict[
     Capability.ACCELERATION_SENSOR: {
         Attribute.ACCELERATION: SmartThingsBinarySensorEntityDescription(
             key=Attribute.ACCELERATION,
+            translation_key="acceleration",
             device_class=BinarySensorDeviceClass.MOVING,
             is_on_key="active",
         )
@@ -47,6 +48,7 @@ CAPABILITY_TO_SENSORS: dict[
     Capability.FILTER_STATUS: {
         Attribute.FILTER_STATUS: SmartThingsBinarySensorEntityDescription(
             key=Attribute.FILTER_STATUS,
+            translation_key="filter_status",
             device_class=BinarySensorDeviceClass.PROBLEM,
             is_on_key="replace",
         )
@@ -75,7 +77,7 @@ CAPABILITY_TO_SENSORS: dict[
     Capability.TAMPER_ALERT: {
         Attribute.TAMPER: SmartThingsBinarySensorEntityDescription(
             key=Attribute.TAMPER,
-            device_class=BinarySensorDeviceClass.PROBLEM,
+            device_class=BinarySensorDeviceClass.TAMPER,
             is_on_key="detected",
             entity_category=EntityCategory.DIAGNOSTIC,
         )
@@ -83,6 +85,7 @@ CAPABILITY_TO_SENSORS: dict[
     Capability.VALVE: {
         Attribute.VALVE: SmartThingsBinarySensorEntityDescription(
             key=Attribute.VALVE,
+            translation_key="valve",
             device_class=BinarySensorDeviceClass.OPENING,
             is_on_key="open",
         )
@@ -133,7 +136,6 @@ class SmartThingsBinarySensor(SmartThingsEntity, BinarySensorEntity):
         self._attribute = attribute
         self.capability = capability
         self.entity_description = entity_description
-        self._attr_name = f"{device.device.label} {attribute}"
         self._attr_unique_id = f"{device.device.device_id}.{attribute}"
 
     @property

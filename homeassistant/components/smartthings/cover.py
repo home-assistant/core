@@ -51,6 +51,7 @@ async def async_setup_entry(
 class SmartThingsCover(SmartThingsEntity, CoverEntity):
     """Define a SmartThings cover."""
 
+    _attr_name = None
     _state: CoverState | None = None
 
     def __init__(
