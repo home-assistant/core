@@ -11,7 +11,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_S
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 async def test_full_flow(
@@ -130,6 +130,37 @@ async def test_flow_errors(
         },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_flow_version_error(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test flow version error."""
+    instance = load_json_object_fixture("instance.json", DOMAIN)
+    instance["version"] = "1.0"
+    mock_mastodon_client.instance.return_value = instance
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_BASE_URL: "https://mastodon.social",
+            CONF_CLIENT_ID: "client_id",
+            CONF_CLIENT_SECRET: "client_secret",
+            CONF_ACCESS_TOKEN: "access_token",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "mastodon_version"}
 
 
 async def test_duplicate(

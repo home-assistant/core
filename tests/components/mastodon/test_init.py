@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock
 
 from mastodon.Mastodon import MastodonError
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mastodon.config_flow import MastodonConfigFlow
@@ -14,7 +15,7 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 async def test_device_info(
@@ -44,6 +45,41 @@ async def test_initialization_failure(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_old_version(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup of Mastodon entry with too old instance version of Mastodon."""
+    instance = load_json_object_fixture("instance.json", DOMAIN)
+    instance["version"] = "0.1.0"
+    mock_mastodon_client.instance.return_value = instance
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_setup_unknown_version(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup of Mastodon entry with unknown instance version of Mastodon."""
+    instance = load_json_object_fixture("instance.json", DOMAIN)
+    instance["version"] = "unknown"
+    mock_mastodon_client.instance.return_value = instance
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        "It seems like your Mastodon instance version is unknown, this instance"
+        " could have changes that stop this integration working" in caplog.text
+    )
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_migrate(

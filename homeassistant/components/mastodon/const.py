@@ -3,9 +3,13 @@
 import logging
 from typing import Final
 
+from awesomeversion import AwesomeVersion
+
 LOGGER = logging.getLogger(__name__)
 
 DOMAIN: Final = "mastodon"
+
+MIN_REQUIRED_MASTODON_VERSION = AwesomeVersion("4.0.0")
 
 CONF_BASE_URL: Final = "base_url"
 DATA_HASS_CONFIG = "mastodon_hass_config"

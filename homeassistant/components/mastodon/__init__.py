@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from awesomeversion import AwesomeVersion
 from mastodon.Mastodon import Mastodon, MastodonError
 
 from homeassistant.const import (
@@ -12,12 +13,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
 
-from .const import CONF_BASE_URL, DOMAIN, LOGGER
+from .const import CONF_BASE_URL, DOMAIN, LOGGER, MIN_REQUIRED_MASTODON_VERSION
 from .coordinator import MastodonConfigEntry, MastodonCoordinator, MastodonData
 from .services import setup_services
 from .utils import construct_mastodon_username, create_mastodon_client
@@ -46,6 +47,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> 
         raise ConfigEntryNotReady("Failed to connect") from ex
 
     assert entry.unique_id
+
+    version = AwesomeVersion(instance["version"])
+    if not version.valid:
+        LOGGER.warning(
+            "It seems like your Mastodon instance version is unknown, this instance"
+            " could have changes that stop this integration working"
+        )
+    if version.valid and version < MIN_REQUIRED_MASTODON_VERSION:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="version_error",
+            translation_placeholders={
+                "mastodon_version": instance["version"],
+                "min_version": MIN_REQUIRED_MASTODON_VERSION,
+            },
+        )
 
     coordinator = MastodonCoordinator(hass, entry, client)
 

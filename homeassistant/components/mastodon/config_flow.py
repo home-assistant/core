@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from awesomeversion import AwesomeVersion
 from mastodon.Mastodon import MastodonNetworkError, MastodonUnauthorizedError
 import voluptuous as vol
 from yarl import URL
@@ -17,7 +18,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util import slugify
 
-from .const import CONF_BASE_URL, DOMAIN, LOGGER
+from .const import CONF_BASE_URL, DOMAIN, LOGGER, MIN_REQUIRED_MASTODON_VERSION
 from .utils import construct_mastodon_username, create_mastodon_client
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -70,6 +71,7 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             instance = client.instance()
             account = client.account_verify_credentials()
+            version = AwesomeVersion(instance["version"])
 
         except MastodonNetworkError:
             return None, None, {"base": "network_error"}
@@ -78,6 +80,8 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unexpected error")
             return None, None, {"base": "unknown"}
+        if version.valid and version < MIN_REQUIRED_MASTODON_VERSION:
+            return None, None, {"base": "mastodon_version"}
         return instance, account, {}
 
     def show_user_form(

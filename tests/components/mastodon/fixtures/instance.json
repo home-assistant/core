@@ -1,7 +1,7 @@
 {
   "domain": "mastodon.social",
   "title": "Mastodon",
-  "version": "4.0.0rc1",
+  "version": "4.0.0",
   "source_url": "https://github.com/mastodon/mastodon",
   "description": "The original server operated by the Mastodon gGmbH non-profit",
   "usage": {
