@@ -263,7 +263,14 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'both',
+        'strobe',
+        'siren',
+        'off',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -281,7 +288,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Alarm',
     'platform': 'smartthings',
@@ -295,7 +302,14 @@
 # name: test_all_entities[c2c_arlo_pro_3_switch][sensor.2nd_floor_hallway_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': '2nd Floor Hallway Alarm',
+      'options': list([
+        'both',
+        'strobe',
+        'siren',
+        'off',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.2nd_floor_hallway_alarm',
