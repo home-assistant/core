@@ -39,7 +39,7 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("binary_sensor.refrigerator_contact").state == STATE_OFF
+    assert hass.states.get("binary_sensor.refrigerator_door").state == STATE_OFF
 
     await trigger_update(
         hass,
@@ -50,4 +50,4 @@ async def test_state_update(
         "open",
     )
 
-    assert hass.states.get("binary_sensor.refrigerator_contact").state == STATE_ON
+    assert hass.states.get("binary_sensor.refrigerator_door").state == STATE_ON

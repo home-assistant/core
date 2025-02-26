@@ -135,6 +135,8 @@ async def async_setup_entry(
 class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings climate entities."""
 
+    _attr_name = None
+
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Init the class."""
         super().__init__(
@@ -322,6 +324,7 @@ class SmartThingsThermostat(SmartThingsEntity, ClimateEntity):
 class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
     """Define a SmartThings Air Conditioner."""
 
+    _attr_name = None
     _attr_preset_mode = None
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
