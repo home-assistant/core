@@ -1022,22 +1022,6 @@
           "normal": "[%key:component::lg_thinq::entity::sensor::current_dish_washing_course::state::delicate%]"
         }
       }
-    },
-    "water_heater": {
-      "water_boiler": {
-        "state_attributes": {
-          "current_temperature": {
-            "name": "Hot water temperature"
-          }
-        }
-      },
-      "water_heater": {
-        "state_attributes": {
-          "current_temperature": {
-            "name": "[%key:component::lg_thinq::entity::water_heater::water_boiler::state_attributes::current_temperature::name%]"
-          }
-        }
-      }
     }
   }
 }
