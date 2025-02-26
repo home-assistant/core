@@ -32,10 +32,18 @@ type MastodonConfigEntry = ConfigEntry[MastodonData]
 class MastodonCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Mastodon data."""
 
-    def __init__(self, hass: HomeAssistant, client: Mastodon) -> None:
+    config_entry: MastodonConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: MastodonConfigEntry, client: Mastodon
+    ) -> None:
         """Initialize coordinator."""
         super().__init__(
-            hass, logger=LOGGER, name="Mastodon", update_interval=timedelta(hours=1)
+            hass,
+            logger=LOGGER,
+            config_entry=config_entry,
+            name="Mastodon",
+            update_interval=timedelta(hours=1),
         )
         self.client = client
 
