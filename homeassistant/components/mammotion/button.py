@@ -3,7 +3,11 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from homeassistant.components.button import (
+    ENTITY_ID_FORMAT,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -89,6 +93,9 @@ class MammotionButtonSensorEntity(MammotionBaseEntity, ButtonEntity):
         super().__init__(coordinator, entity_description.key)
         self.entity_description = entity_description
         self._attr_translation_key = entity_description.key
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            f"{coordinator.device_name}_{entity_description.key}"
+        )
 
     async def async_press(self) -> None:
         """Handle the button press."""
