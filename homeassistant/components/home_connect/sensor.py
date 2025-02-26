@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime, UnitOfVolume
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfVolume
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util, slugify
@@ -26,6 +26,8 @@ from .const import (
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
+
+PARALLEL_UPDATES = 0
 
 EVENT_OPTIONS = ["confirmed", "off", "present"]
 
@@ -55,12 +57,6 @@ BSH_PROGRAM_SENSORS = (
             "Washer",
             "WasherDryer",
         ),
-    ),
-    HomeConnectSensorEntityDescription(
-        key=EventKey.BSH_COMMON_OPTION_DURATION,
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        appliance_types=("Oven",),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS,
@@ -182,6 +178,12 @@ SENSORS = (
             "map3",
         ],
         translation_key="last_selected_map",
+    ),
+    HomeConnectSensorEntityDescription(
+        key=StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="current_cavity_temperature",
     ),
 )
 
