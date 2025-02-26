@@ -292,6 +292,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="dryer_machine_state",
+                options=WASHER_OPTIONS,
+                device_class=SensorDeviceClass.ENUM,
             )
         ],
         Attribute.DRYER_JOB_STATE: [
