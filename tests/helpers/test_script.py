@@ -1809,6 +1809,49 @@ async def test_wait_in_sequence(hass: HomeAssistant) -> None:
     assert_action_trace(expected_trace)
 
 
+async def test_wait_in_parallel(hass: HomeAssistant) -> None:
+    """Test wait variable is not set after parallel ends."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "parallel": [
+                {
+                    "alias": "Sequential group",
+                    "sequence": [
+                        {
+                            "alias": "variables",
+                            "variables": {"state": "off"},
+                        },
+                        {
+                            "alias": "wait template",
+                            "wait_template": "{{ state == 'off' }}",
+                        },
+                    ],
+                }
+            ]
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+
+    expected_var = {"completed": True, "remaining": None}
+
+    assert "wait" not in result.variables
+
+    expected_trace = {
+        "0": [{}],
+        "0/parallel/0/sequence/0": [{"variables": {"state": "off"}}],
+        "0/parallel/0/sequence/1": [
+            {
+                "result": {"wait": expected_var},
+                "variables": {"wait": expected_var},
+            }
+        ],
+    }
+    assert_action_trace(expected_trace)
+
+
 async def test_wait_for_trigger_bad(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
