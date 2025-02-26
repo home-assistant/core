@@ -196,6 +196,10 @@ class BaseFirmwareUpdateEntity(
 
     def _maybe_recompute_state(self) -> None:
         """Recompute the state of the entity."""
+
+        # This entity is not currently associated with a device so we must manually
+        # give it a name
+        self._attr_name = self._config_entry.title
         self._attr_title = self.entity_description.firmware_name or "unknown"
 
         if (
