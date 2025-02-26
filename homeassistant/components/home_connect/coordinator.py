@@ -37,7 +37,7 @@ from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -289,29 +289,13 @@ class HomeConnectCoordinator(
 
     async def _async_update_data(self) -> dict[str, HomeConnectApplianceData]:
         """Fetch data from Home Connect."""
-        try:
-            appliances = await self.client.get_home_appliances()
-        except UnauthorizedError as error:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="auth_error",
-                translation_placeholders=get_dict_from_home_connect_error(error),
-            ) from error
-        except HomeConnectError as error:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="fetch_api_error",
-                translation_placeholders=get_dict_from_home_connect_error(error),
-            ) from error
-
-        if not self.data:
-            self.data = {}
-
-        for appliance in appliances.homeappliances:
+        for appliance_data in self.data.values():
+            appliance = appliance_data.info
+            ha_id = appliance.ha_id
             while True:
                 try:
-                    self.data[appliance.ha_id] = await self._get_appliance_data(
-                        appliance, self.data.get(appliance.ha_id)
+                    self.data[ha_id] = await self._get_appliance_data(
+                        appliance, self.data.get(ha_id)
                     )
                 except TooManyRequestsError as err:
                     _LOGGER.debug(
@@ -328,6 +312,13 @@ class HomeConnectCoordinator(
                 listener()
 
         return self.data
+
+    async def async_setup(self) -> None:
+        """Set up the devices."""
+        try:
+            await self._async_setup()
+        except UpdateFailed as err:
+            raise ConfigEntryNotReady from err
 
     async def _async_setup(self) -> None:
         """Set up the devices."""
@@ -346,6 +337,7 @@ class HomeConnectCoordinator(
                 translation_placeholders=get_dict_from_home_connect_error(error),
             ) from error
 
+        self.data = {}
         for appliance in appliances.homeappliances:
             self.device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
@@ -353,6 +345,15 @@ class HomeConnectCoordinator(
                 manufacturer=appliance.brand,
                 name=appliance.name,
                 model=appliance.vib,
+            )
+            self.data[appliance.ha_id] = HomeConnectApplianceData(
+                commands=set(),
+                events={},
+                info=appliance,
+                options={},
+                programs=[],
+                settings={},
+                status={},
             )
 
     async def refresh_and_trigger_connected_event(self) -> None:
