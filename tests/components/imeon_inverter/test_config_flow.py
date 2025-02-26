@@ -17,12 +17,8 @@ from tests.common import MockConfigEntry
 async def test_form(
     hass: HomeAssistant,
     mock_login_async_setup_entry: Generator[AsyncMock],
-    mock_imeon_inverter: Generator[MagicMock],
 ) -> None:
     """Test we get the form."""
-    mock_imeon_inverter.login.return_value = True
-    mock_imeon_inverter.get_serial.return_value = TEST_SERIAL
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -59,14 +55,14 @@ async def test_form_invalid_auth(
 
 
 async def test_form_timeout(
-    hass: HomeAssistant, mock_login: Generator[AsyncMock]
+    hass: HomeAssistant, mock_imeon_inverter: Generator[MagicMock]
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_login.side_effect = TimeoutError
+    mock_imeon_inverter.login.side_effect = TimeoutError
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
@@ -77,14 +73,14 @@ async def test_form_timeout(
 
 
 async def test_form_invalid_host(
-    hass: HomeAssistant, mock_login: Generator[AsyncMock]
+    hass: HomeAssistant, mock_imeon_inverter: Generator[MagicMock]
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_login.side_effect = ValueError("Host invalid")
+    mock_imeon_inverter.login.side_effect = ValueError("Host invalid")
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
@@ -95,14 +91,14 @@ async def test_form_invalid_host(
 
 
 async def test_form_invalid_route(
-    hass: HomeAssistant, mock_login: Generator[AsyncMock]
+    hass: HomeAssistant, mock_imeon_inverter: Generator[MagicMock]
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_login.side_effect = ValueError("Route invalid")
+    mock_imeon_inverter.login.side_effect = ValueError("Route invalid")
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
@@ -113,14 +109,14 @@ async def test_form_invalid_route(
 
 
 async def test_form_exception(
-    hass: HomeAssistant, mock_login: Generator[AsyncMock]
+    hass: HomeAssistant, mock_imeon_inverter: Generator[MagicMock]
 ) -> None:
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_login.side_effect = ValueError
+    mock_imeon_inverter.login.side_effect = ValueError
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
@@ -131,10 +127,7 @@ async def test_form_exception(
 
 
 async def test_manual_setup_already_exists(
-    hass: HomeAssistant,
-    mock_login_async_setup_entry: Generator[AsyncMock],
-    mock_login: Generator[AsyncMock],
-    mock_serial: Generator[AsyncMock],
+    hass: HomeAssistant, mock_login_async_setup_entry: Generator[AsyncMock]
 ) -> None:
     """Test that a flow with an existing host aborts."""
     entry = MockConfigEntry(
@@ -149,9 +142,6 @@ async def test_manual_setup_already_exists(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_login.return_value = True
-    mock_serial.return_value = TEST_SERIAL
-
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
     )
@@ -161,17 +151,14 @@ async def test_manual_setup_already_exists(
 
 
 async def test_get_serial_timeout(
-    hass: HomeAssistant,
-    mock_login: Generator[AsyncMock],
-    mock_serial: Generator[AsyncMock],
+    hass: HomeAssistant, mock_imeon_inverter: Generator[MagicMock]
 ) -> None:
     """Test we handle timeout exception for getting serial."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_login.return_value = True
-    mock_serial.side_effect = TimeoutError
+    mock_imeon_inverter.get_serial.side_effect = TimeoutError
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT

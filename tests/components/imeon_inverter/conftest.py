@@ -20,7 +20,7 @@ TEST_USER_INPUT = {
 TEST_SERIAL = "111111111111111"
 
 
-@pytest.fixture
+@pytest.fixture(autouse=True)
 def mock_imeon_inverter() -> Generator[MagicMock]:
     """Mock data from the device."""
     with (
@@ -28,32 +28,16 @@ def mock_imeon_inverter() -> Generator[MagicMock]:
             "homeassistant.components.imeon_inverter.coordinator.Inverter",
             autospec=True,
         ) as inverter_mock,
+        patch(
+            "homeassistant.components.imeon_inverter.config_flow.Inverter",
+            new=inverter_mock,
+        ),
     ):
         inverter = inverter_mock.return_value
+        inverter.login.return_value = True
+        inverter.get_serial.return_value = TEST_SERIAL
         inverter.storage = load_json_object_fixture("sensor_data.json", DOMAIN)
         yield inverter
-
-
-@pytest.fixture
-def mock_login() -> Generator[AsyncMock]:
-    """Fixture for mocking login."""
-    with (
-        patch(
-            "homeassistant.components.imeon_inverter.config_flow.Inverter.login",
-        ) as mock,
-    ):
-        yield mock
-
-
-@pytest.fixture
-def mock_serial() -> Generator[AsyncMock]:
-    """Fixture for mocking serial."""
-    with (
-        patch(
-            "homeassistant.components.imeon_inverter.config_flow.Inverter.get_serial",
-        ) as mock,
-    ):
-        yield mock
 
 
 @pytest.fixture
