@@ -511,10 +511,7 @@ def _default_area_candidate_filter(
     candidate: MatchTargetsCandidate, possible_area_ids: Collection[str]
 ) -> bool:
     """Keep candidates in the possible areas."""
-    if not candidate.area:
-        return False
-
-    return bool(candidate.area.id) and (candidate.area.id in possible_area_ids)
+    return (candidate.area is not None) and (candidate.area.id in possible_area_ids)
 
 
 @callback
