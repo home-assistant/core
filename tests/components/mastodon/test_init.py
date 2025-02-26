@@ -60,7 +60,7 @@ async def test_migrate(
             CONF_CLIENT_SECRET: "client_secret",
             CONF_ACCESS_TOKEN: "access_token",
         },
-        title="@trwnh@mastodon.social",
+        title="@codechimp_bot@mastodon.social",
         unique_id="client_id",
         version=1,
         minor_version=1,
@@ -79,4 +79,4 @@ async def test_migrate(
     }
     assert config_entry.version == MastodonConfigFlow.VERSION
     assert config_entry.minor_version == MastodonConfigFlow.MINOR_VERSION
-    assert config_entry.unique_id == "trwnh_mastodon_social"
+    assert config_entry.unique_id == "codechimp_bot_mastodon_social"

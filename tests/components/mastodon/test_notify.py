@@ -26,11 +26,11 @@ async def test_notify(
     """Test sending a message."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.services.has_service(NOTIFY_DOMAIN, "trwnh_mastodon_social")
+    assert hass.services.has_service(NOTIFY_DOMAIN, "codechimp_bot_mastodon_social")
 
     await hass.services.async_call(
         NOTIFY_DOMAIN,
-        "trwnh_mastodon_social",
+        "codechimp_bot_mastodon_social",
         {
             "message": "test toot",
         },
@@ -56,7 +56,7 @@ async def test_notify_failed(
     with pytest.raises(HomeAssistantError, match="Unable to send message"):
         await hass.services.async_call(
             NOTIFY_DOMAIN,
-            "trwnh_mastodon_social",
+            "codechimp_bot_mastodon_social",
             {
                 "message": "test toot",
             },

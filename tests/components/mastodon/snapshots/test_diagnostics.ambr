@@ -2,106 +2,78 @@
 # name: test_entry_diagnostics
   dict({
     'account': dict({
-      'acct': 'trwnh',
-      'avatar': 'https://files.mastodon.social/accounts/avatars/000/014/715/original/34aa222f4ae2e0a9.png',
-      'avatar_static': 'https://files.mastodon.social/accounts/avatars/000/014/715/original/34aa222f4ae2e0a9.png',
-      'bot': False,
-      'created_at': '2016-11-24T10:02:12.085Z',
-      'display_name': 'infinite love ⴳ',
+      'acct': 'codechimp_bot',
+      'avatar': 'https://files.mastodon.social/accounts/avatars/112/919/825/578/723/732/original/ace63f0ed0b4fd30.png',
+      'avatar_static': 'https://files.mastodon.social/accounts/avatars/112/919/825/578/723/732/original/ace63f0ed0b4fd30.png',
+      'bot': True,
+      'created_at': '2024-08-07T00:00:00+00:00',
+      'discoverable': False,
+      'display_name': 'CodeChimp Bot',
       'emojis': list([
-        dict({
-          'shortcode': 'fatyoshi',
-          'static_url': 'https://files.mastodon.social/custom_emojis/images/000/023/920/static/e57ecb623faa0dc9.png',
-          'url': 'https://files.mastodon.social/custom_emojis/images/000/023/920/original/e57ecb623faa0dc9.png',
-          'visible_in_picker': True,
-        }),
       ]),
       'fields': list([
-        dict({
-          'name': 'Website',
-          'value': '<a href="https://trwnh.com" rel="me nofollow noopener noreferrer" target="_blank"><span class="invisible">https://</span><span class="">trwnh.com</span><span class="invisible"></span></a>',
-          'verified_at': '2019-08-29T04:14:55.571+00:00',
-        }),
-        dict({
-          'name': 'Sponsor',
-          'value': '<a href="https://liberapay.com/at" rel="me nofollow noopener noreferrer" target="_blank"><span class="invisible">https://</span><span class="">liberapay.com/at</span><span class="invisible"></span></a>',
-          'verified_at': '2019-11-15T10:06:15.557+00:00',
-        }),
-        dict({
-          'name': 'Fan of:',
-          'value': 'Punk-rock and post-hardcore (Circa Survive, letlive., La Dispute, THE FEVER 333)Manga (Yu-Gi-Oh!, One Piece, JoJo&apos;s Bizarre Adventure, Death Note, Shaman King)Platformers and RPGs (Banjo-Kazooie, Boktai, Final Fantasy Crystal Chronicles)',
-          'verified_at': None,
-        }),
-        dict({
-          'name': 'Main topics:',
-          'value': 'systemic analysis, design patterns, anticapitalism, info/tech freedom, theory and philosophy, and otherwise being a genuine and decent wholesome poster. i&apos;m just here to hang out and talk to cool people!',
-          'verified_at': None,
-        }),
       ]),
-      'followers_count': 821,
-      'following_count': 178,
-      'header': 'https://files.mastodon.social/accounts/headers/000/014/715/original/5c6fc24edb3bb873.jpg',
-      'header_static': 'https://files.mastodon.social/accounts/headers/000/014/715/original/5c6fc24edb3bb873.jpg',
-      'id': '14715',
-      'last_status_at': '2019-11-24T15:49:42.251Z',
+      'followers_count': 1,
+      'following_count': 0,
+      'group': False,
+      'header': 'https://mastodon.social/headers/original/missing.png',
+      'header_static': 'https://mastodon.social/headers/original/missing.png',
+      'hide_collections': False,
+      'id': '112919825578723732',
+      'indexable': False,
+      'last_status_at': '2025-02-01T00:00:00',
+      'limited': None,
       'locked': False,
-      'note': '<p>i have approximate knowledge of many things. perpetual student. (nb/ace/they)</p><p>xmpp/email: a@trwnh.com<br /><a href="https://trwnh.com" rel="nofollow noopener noreferrer" target="_blank"><span class="invisible">https://</span><span class="">trwnh.com</span><span class="invisible"></span></a><br />help me live: <a href="https://liberapay.com/at" rel="nofollow noopener noreferrer" target="_blank"><span class="invisible">https://</span><span class="">liberapay.com/at</span><span class="invisible"></span></a> or <a href="https://paypal.me/trwnh" rel="nofollow noopener noreferrer" target="_blank"><span class="invisible">https://</span><span class="">paypal.me/trwnh</span><span class="invisible"></span></a></p><p>- my triggers are moths and glitter<br />- i have all notifs except mentions turned off, so please interact if you wanna be friends! i literally will not notice otherwise<br />- dm me if i did something wrong, so i can improve<br />- purest person on fedi, do not lewd in my presence<br />- #1 ami cole fan account</p><p>:fatyoshi:</p>',
+      'memorial': None,
+      'moved_to_account': None,
+      'mute_expires_at': None,
+      'noindex': True,
+      'note': '<p>A bot account that will be used for testing, expect junk posts here.<br />Managed by <span class="h-card" translate="no"><a href="https://mastodon.online/@codechimp" class="u-url mention">@<span>codechimp</span></a></span></p>',
+      'role': dict({
+        'color': '',
+        'highlighted': False,
+        'id': '-99',
+        'name': '',
+        'permissions': '65536',
+      }),
+      'roles': list([
+      ]),
       'source': dict({
+        'attribution_domains': list([
+        ]),
+        'discoverable': False,
         'fields': list([
-          dict({
-            'name': 'Website',
-            'value': 'https://trwnh.com',
-            'verified_at': '2019-08-29T04:14:55.571+00:00',
-          }),
-          dict({
-            'name': 'Sponsor',
-            'value': 'https://liberapay.com/at',
-            'verified_at': '2019-11-15T10:06:15.557+00:00',
-          }),
-          dict({
-            'name': 'Fan of:',
-            'value': "Punk-rock and post-hardcore (Circa Survive, letlive., La Dispute, THE FEVER 333)Manga (Yu-Gi-Oh!, One Piece, JoJo's Bizarre Adventure, Death Note, Shaman King)Platformers and RPGs (Banjo-Kazooie, Boktai, Final Fantasy Crystal Chronicles)",
-            'verified_at': None,
-          }),
-          dict({
-            'name': 'Main topics:',
-            'value': "systemic analysis, design patterns, anticapitalism, info/tech freedom, theory and philosophy, and otherwise being a genuine and decent wholesome poster. i'm just here to hang out and talk to cool people!",
-            'verified_at': None,
-          }),
         ]),
         'follow_requests_count': 0,
+        'hide_collections': False,
+        'indexable': False,
         'language': '',
         'note': '''
-          i have approximate knowledge of many things. perpetual student. (nb/ace/they)
-          
-          xmpp/email: a@trwnh.com
-          https://trwnh.com
-          help me live: https://liberapay.com/at or https://paypal.me/trwnh
-          
-          - my triggers are moths and glitter
-          - i have all notifs except mentions turned off, so please interact if you wanna be friends! i literally will not notice otherwise
-          - dm me if i did something wrong, so i can improve
-          - purest person on fedi, do not lewd in my presence
-          - #1 ami cole fan account
-          
-          :fatyoshi:
+          A bot account that will be used for testing, expect junk posts here.
+          Managed by @codechimp@mastodon.online
         ''',
-        'privacy': 'public',
+        'privacy': 'unlisted',
         'sensitive': False,
       }),
-      'statuses_count': 33120,
-      'url': 'https://mastodon.social/@trwnh',
-      'username': 'trwnh',
+      'statuses_count': 0,
+      'suspended': None,
+      'uri': 'https://mastodon.social/users/codechimp_bot',
+      'url': 'https://mastodon.social/@codechimp_bot',
+      'username': 'codechimp_bot',
     }),
     'instance': dict({
+      'api_versions': dict({
+        'mastodon': 3,
+      }),
       'configuration': dict({
         'accounts': dict({
           'max_featured_tags': 10,
-          'max_pinned_statuses': 4,
+          'max_pinned_statuses': 5,
         }),
         'media_attachments': dict({
-          'image_matrix_limit': 16777216,
-          'image_size_limit': 10485760,
+          'description_limit': 1500,
+          'image_matrix_limit': 33177600,
+          'image_size_limit': 16777216,
           'supported_mime_types': list([
             'image/jpeg',
             'image/png',
@@ -109,6 +81,7 @@
             'image/heic',
             'image/heif',
             'image/webp',
+            'image/avif',
             'video/webm',
             'video/mp4',
             'video/quicktime',
@@ -131,9 +104,9 @@
             'audio/3gpp',
             'video/x-ms-asf',
           ]),
-          'video_frame_rate_limit': 60,
-          'video_matrix_limit': 2304000,
-          'video_size_limit': 41943040,
+          'video_frame_rate_limit': 120,
+          'video_matrix_limit': 8294400,
+          'video_size_limit': 103809024,
         }),
         'polls': dict({
           'max_characters_per_option': 50,
@@ -150,80 +123,149 @@
           'enabled': True,
         }),
         'urls': dict({
-          'streaming': 'wss://mastodon.social',
+          'status': 'https://status.mastodon.social',
+          'streaming': 'wss://streaming.mastodon.social',
         }),
         'vapid': dict({
-          'public_key': 'BCkMmVdKDnKYwzVCDC99Iuc9GvId-x7-kKtuHnLgfF98ENiZp_aj-UNthbCdI70DqN1zUVis-x0Wrot2sBagkMc=',
+          'public_key': 'BCk-QqERU0q-CfYZjcuB6lnyyOYfJ2AifKqfeGIm7Z-HiTU5T9eTG5GxVA0_OH5mMlI4UkkDTpaZwozy0TzdZ2M=',
         }),
       }),
       'contact': dict({
         'account': dict({
-          'acct': 'Gargron',
-          'avatar': 'https://files.mastodon.social/accounts/avatars/000/000/001/original/dc4286ceb8fab734.jpg',
-          'avatar_static': 'https://files.mastodon.social/accounts/avatars/000/000/001/original/dc4286ceb8fab734.jpg',
+          'acct': 'Mastodon',
+          'avatar': 'https://files.mastodon.social/accounts/avatars/000/013/179/original/b4ceb19c9c54ec7e.png',
+          'avatar_static': 'https://files.mastodon.social/accounts/avatars/000/013/179/original/b4ceb19c9c54ec7e.png',
           'bot': False,
-          'created_at': '2016-03-16T00:00:00.000Z',
+          'created_at': '2016-11-23T00:00:00+00:00',
           'discoverable': True,
-          'display_name': 'Eugen 💀',
+          'display_name': 'Mastodon',
           'emojis': list([
           ]),
           'fields': list([
             dict({
+              'name': 'Homepage',
+              'value': '<a href="https://joinmastodon.org" target="_blank" rel="nofollow noopener me" translate="no"><span class="invisible">https://</span><span class="">joinmastodon.org</span><span class="invisible"></span></a>',
+              'verified_at': '2018-10-31T04:11:00.076+00:00',
+            }),
+            dict({
               'name': 'Patreon',
-              'value': '<a href="https://www.patreon.com/mastodon" target="_blank" rel="nofollow noopener noreferrer me"><span class="invisible">https://www.</span><span class="">patreon.com/mastodon</span><span class="invisible"></span></a>',
+              'value': '<a href="https://patreon.com/mastodon" target="_blank" rel="nofollow noopener me" translate="no"><span class="invisible">https://</span><span class="">patreon.com/mastodon</span><span class="invisible"></span></a>',
               'verified_at': None,
             }),
+            dict({
+              'name': 'GitHub',
+              'value': '<a href="https://github.com/mastodon" target="_blank" rel="nofollow noopener me" translate="no"><span class="invisible">https://</span><span class="">github.com/mastodon</span><span class="invisible"></span></a>',
+              'verified_at': '2023-07-21T13:27:45.996+00:00',
+            }),
           ]),
-          'followers_count': 133026,
-          'following_count': 311,
+          'followers_count': 838237,
+          'following_count': 4,
           'group': False,
-          'header': 'https://files.mastodon.social/accounts/headers/000/000/001/original/3b91c9965d00888b.jpeg',
-          'header_static': 'https://files.mastodon.social/accounts/headers/000/000/001/original/3b91c9965d00888b.jpeg',
-          'id': '1',
-          'last_status_at': '2022-10-31',
+          'header': 'https://files.mastodon.social/accounts/headers/000/013/179/original/1375be116fbe0f1d.png',
+          'header_static': 'https://files.mastodon.social/accounts/headers/000/013/179/original/1375be116fbe0f1d.png',
+          'hide_collections': False,
+          'id': '13179',
+          'indexable': False,
+          'last_status_at': '2025-02-14T00:00:00',
+          'limited': None,
           'locked': False,
+          'memorial': None,
+          'moved_to_account': None,
+          'mute_expires_at': None,
           'noindex': False,
-          'note': '<p>Founder, CEO and lead developer <span class="h-card"><a href="https://mastodon.social/@Mastodon" class="u-url mention">@<span>Mastodon</span></a></span>, Germany.</p>',
-          'statuses_count': 72605,
-          'url': 'https://mastodon.social/@Gargron',
-          'username': 'Gargron',
+          'note': '<p>Free, open-source decentralized social media platform.</p>',
+          'role': None,
+          'roles': list([
+          ]),
+          'source': None,
+          'statuses_count': 289,
+          'suspended': None,
+          'uri': 'https://mastodon.social/users/Mastodon',
+          'url': 'https://mastodon.social/@Mastodon',
+          'username': 'Mastodon',
         }),
         'email': 'staff@mastodon.social',
       }),
       'description': 'The original server operated by the Mastodon gGmbH non-profit',
       'domain': 'mastodon.social',
+      'icon': list([
+        dict({
+          'size': '36x36',
+          'src': 'https://mastodon.social/packs/media/icons/android-chrome-36x36-4c61fdb42936428af85afdbf8c6a45a8.png',
+        }),
+        dict({
+          'size': '48x48',
+          'src': 'https://mastodon.social/packs/media/icons/android-chrome-48x48-2027aead76dc906c981043d658a8258d.png',
+        }),
+        dict({
+          'size': '72x72',
+          'src': 'https://mastodon.social/packs/media/icons/android-chrome-72x72-799d90b81f5b28cea7355a0c0b356381.png',
+        }),
+        dict({
+          'size': '96x96',
+          'src': 'https://mastodon.social/packs/media/icons/android-chrome-96x96-c2dfcfa1268c56e59edddfe20d818b91.png',
+        }),
+        dict({
+          'size': '144x144',
+          'src': 'https://mastodon.social/packs/media/icons/android-chrome-144x144-ff3110f7772743bdd0c1c47fb7b2d4e0.png',
+        }),
+        dict({
+          'size': '192x192',
+          'src': 'https://mastodon.social/packs/media/icons/android-chrome-192x192-eddc1ed540e97b926202b7b857989d60.png',
+        }),
+        dict({
+          'size': '256x256',
+          'src': 'https://mastodon.social/packs/media/icons/android-chrome-256x256-7b2b43926019259f7c9ddee627d80a0f.png',
+        }),
+        dict({
+          'size': '384x384',
+          'src': 'https://mastodon.social/packs/media/icons/android-chrome-384x384-72068ed50b02828fc505a8d69b321dea.png',
+        }),
+        dict({
+          'size': '512x512',
+          'src': 'https://mastodon.social/packs/media/icons/android-chrome-512x512-ccb53c9fcbb5f61bf741cc54998318f0.png',
+        }),
+      ]),
       'languages': list([
         'en',
       ]),
       'registrations': dict({
         'approval_required': False,
-        'enabled': False,
+        'enabled': True,
         'message': None,
+        'sign_up_url': None,
+        'url': None,
       }),
       'rules': list([
         dict({
+          'hint': 'This includes content that is particularly provocative even if it may not show specific body parts, as well as dead bodies, bloody injuries, and other gore. Particularly obscene content may be prohibited entirely. Profile pictures and header images may not contain sexually explicit or violent media.',
           'id': '1',
-          'text': 'Sexually explicit or violent media must be marked as sensitive when posting',
+          'text': 'Sexually explicit or violent media must be marked as sensitive or with a content warning',
         }),
         dict({
+          'hint': 'Transphobic behavior such as intentional misgendering and deadnaming is strictly prohibited. Promotion of "conversion therapy" is strictly prohibited. Criticism of governments and religions is permissible unless being used as a proxy for discrimination.',
           'id': '2',
-          'text': 'No racism, sexism, homophobia, transphobia, xenophobia, or casteism',
+          'text': 'No racism, sexism, homophobia, transphobia, ableism, xenophobia, or casteism.',
         }),
         dict({
+          'hint': 'Calling for people or groups to be assassinated, murdered, or attacked physically is strictly prohibited. Support for violent groups or events is prohibited.',
           'id': '3',
           'text': 'No incitement of violence or promotion of violent ideologies',
         }),
         dict({
+          'hint': 'Repeat attempts to communicate with users who have blocked you or creation of accounts solely to harass or insult individuals is strictly prohibited. Coordinated activity to attack other users is prohibited. Posting of private personal information about others is prohibited.',
           'id': '4',
-          'text': 'No harassment, dogpiling or doxxing of other users',
+          'text': 'No harassment, block evasion, dogpiling, or doxxing of others',
         }),
         dict({
-          'id': '5',
-          'text': 'No content illegal in Germany',
-        }),
-        dict({
+          'hint': 'False and misleading information and links from low-quality sources may not be posted, especially if they are likely to mislead or confuse others or endanger their safety.',
           'id': '7',
-          'text': 'Do not share intentionally false or misleading information',
+          'text': 'Do not share information widely-known to be false and misleading',
+        }),
+        dict({
+          'hint': 'Content created by others must clearly provide a reference to the author, creator, or source. For adult content, this should include performers. Accounts may not solely post AI-generated content.',
+          'id': '1008',
+          'text': 'Content created by others must be attributed, and use of generative AI must be disclosed',
         }),
       ]),
       'source_url': 'https://github.com/mastodon/mastodon',
@@ -231,17 +273,18 @@
         'blurhash': 'UeKUpFxuo~R%0nW;WCnhF6RjaJt757oJodS$',
         'url': 'https://files.mastodon.social/site_uploads/files/000/000/001/@1x/57c12f441d083cde.png',
         'versions': dict({
-          '@1x': 'https://files.mastodon.social/site_uploads/files/000/000/001/@1x/57c12f441d083cde.png',
-          '@2x': 'https://files.mastodon.social/site_uploads/files/000/000/001/@2x/57c12f441d083cde.png',
+          'at1x': 'https://files.mastodon.social/site_uploads/files/000/000/001/@1x/57c12f441d083cde.png',
+          'at2x': 'https://files.mastodon.social/site_uploads/files/000/000/001/@2x/57c12f441d083cde.png',
         }),
       }),
       'title': 'Mastodon',
+      'uri': 'mastodon.social',
       'usage': dict({
         'users': dict({
-          'active_month': 123122,
+          'active_month': 380143,
         }),
       }),
-      'version': '4.0.0rc1',
+      'version': '4.4.0-nightly.2025-02-07',
     }),
   })
 # ---

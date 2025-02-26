@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_followers-entry]
+# name: test_sensors[sensor.mastodon_codechimp_bot_mastodon_social_followers-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_followers',
+    'entity_id': 'sensor.mastodon_codechimp_bot_mastodon_social_followers',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -31,26 +31,26 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'followers',
-    'unique_id': 'trwnh_mastodon_social_followers',
+    'unique_id': 'codechimp_bot_mastodon_social_followers',
     'unit_of_measurement': 'accounts',
   })
 # ---
-# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_followers-state]
+# name: test_sensors[sensor.mastodon_codechimp_bot_mastodon_social_followers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Followers',
+      'friendly_name': 'Mastodon @codechimp_bot@mastodon.social Followers',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'accounts',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_followers',
+    'entity_id': 'sensor.mastodon_codechimp_bot_mastodon_social_followers',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '821',
+    'state': '1',
   })
 # ---
-# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_following-entry]
+# name: test_sensors[sensor.mastodon_codechimp_bot_mastodon_social_following-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -65,7 +65,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_following',
+    'entity_id': 'sensor.mastodon_codechimp_bot_mastodon_social_following',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -82,26 +82,26 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'following',
-    'unique_id': 'trwnh_mastodon_social_following',
+    'unique_id': 'codechimp_bot_mastodon_social_following',
     'unit_of_measurement': 'accounts',
   })
 # ---
-# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_following-state]
+# name: test_sensors[sensor.mastodon_codechimp_bot_mastodon_social_following-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Following',
+      'friendly_name': 'Mastodon @codechimp_bot@mastodon.social Following',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'accounts',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_following',
+    'entity_id': 'sensor.mastodon_codechimp_bot_mastodon_social_following',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '178',
+    'state': '0',
   })
 # ---
-# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_posts-entry]
+# name: test_sensors[sensor.mastodon_codechimp_bot_mastodon_social_posts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -116,7 +116,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_posts',
+    'entity_id': 'sensor.mastodon_codechimp_bot_mastodon_social_posts',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -133,22 +133,22 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'posts',
-    'unique_id': 'trwnh_mastodon_social_posts',
+    'unique_id': 'codechimp_bot_mastodon_social_posts',
     'unit_of_measurement': 'posts',
   })
 # ---
-# name: test_sensors[sensor.mastodon_trwnh_mastodon_social_posts-state]
+# name: test_sensors[sensor.mastodon_codechimp_bot_mastodon_social_posts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mastodon @trwnh@mastodon.social Posts',
+      'friendly_name': 'Mastodon @codechimp_bot@mastodon.social Posts',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
       'unit_of_measurement': 'posts',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mastodon_trwnh_mastodon_social_posts',
+    'entity_id': 'sensor.mastodon_codechimp_bot_mastodon_social_posts',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '33120',
+    'state': '0',
   })
 # ---

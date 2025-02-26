@@ -14,21 +14,21 @@
     'identifiers': set({
       tuple(
         'mastodon',
-        'trwnh_mastodon_social',
+        'codechimp_bot_mastodon_social',
       ),
     }),
     'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Mastodon gGmbH',
-    'model': '@trwnh@mastodon.social',
+    'model': '@codechimp_bot@mastodon.social',
     'model_id': None,
-    'name': 'Mastodon @trwnh@mastodon.social',
+    'name': 'Mastodon @codechimp_bot@mastodon.social',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': '4.0.0rc1',
+    'sw_version': '4.4.0-nightly.2025-02-07',
     'via_device_id': None,
   })
 # ---

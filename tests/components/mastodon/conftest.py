@@ -3,12 +3,13 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
+from mastodon.Mastodon import Account, Instance
 import pytest
 
 from homeassistant.components.mastodon.const import CONF_BASE_URL, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_CLIENT_ID, CONF_CLIENT_SECRET
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture
@@ -31,9 +32,11 @@ def mock_mastodon_client() -> Generator[AsyncMock]:
         ) as mock_client,
     ):
         client = mock_client.return_value
-        client.instance.return_value = load_json_object_fixture("instance.json", DOMAIN)
-        client.account_verify_credentials.return_value = load_json_object_fixture(
-            "account_verify_credentials.json", DOMAIN
+        client.instance.return_value = Instance.from_json(
+            load_fixture("instance.json", DOMAIN)
+        )
+        client.account_verify_credentials.return_value = Account.from_json(
+            load_fixture("account_verify_credentials.json", DOMAIN)
         )
         client.status_post.return_value = None
         yield client
@@ -44,7 +47,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="@trwnh@mastodon.social",
+        title="@codechimp_bot@mastodon.social",
         data={
             CONF_BASE_URL: "https://mastodon.social",
             CONF_CLIENT_ID: "client_id",
@@ -52,7 +55,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_ACCESS_TOKEN: "access_token",
         },
         entry_id="01J35M4AH9HYRC2V0G6RNVNWJH",
-        unique_id="trwnh_mastodon_social",
+        unique_id="codechimp_bot_mastodon_social",
         version=1,
         minor_version=2,
     )
