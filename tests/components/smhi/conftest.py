@@ -49,7 +49,7 @@ async def load_int(
         entry_id="1",
         unique_id="59.32624-17.84197",
         version=3,
-        title="Home",
+        title="Test",
     )
 
     config_entry.add_to_hass(hass)
@@ -92,7 +92,7 @@ async def get_data_from_library(
         aioclient_mock.create_session(hass.loop),
     )
     with patch.object(
-        client,
+        client._api,
         "async_get_data",
         return_value=load_json[0],
     ):
