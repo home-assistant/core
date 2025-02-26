@@ -18,6 +18,7 @@ CAPABILITIES = (
     Capability.SWITCH_LEVEL,
     Capability.COLOR_CONTROL,
     Capability.COLOR_TEMPERATURE,
+    Capability.FAN_SPEED,
 )
 
 AC_CAPABILITIES = (

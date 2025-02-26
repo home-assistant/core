@@ -80,8 +80,8 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         else:
             value = math.ceil(percentage_to_ranged_value(SPEED_RANGE, percentage))
             await self.execute_device_command(
-                Capability.SWITCH,
-                Command.OFF,
+                Capability.FAN_SPEED,
+                Command.SET_FAN_SPEED,
                 argument=value,
             )
 
