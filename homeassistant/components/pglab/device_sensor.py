@@ -5,6 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from pypglab.device import Device as PyPGLabDevice
+from pypglab.sensor import Sensor as PyPGLabSensors
 
 from homeassistant.core import callback
 
@@ -19,7 +20,7 @@ class PGLabDeviceSensor:
         """Initialize the device sensor."""
 
         # get a reference of PG Lab device internal sensors state
-        self._sensors = pglab_device.sensors
+        self._sensors: PyPGLabSensors = pglab_device.sensors
 
         self._ha_sensors: list[PGLabEntity] = []  # list of HA entity sensors
 
@@ -45,11 +46,11 @@ class PGLabDeviceSensor:
             s.state_updated(payload)
 
     @property
-    def state(self):
+    def state(self) -> dict:
         """Return the device sensor state."""
         return self._sensors.state
 
     @property
-    def sensors(self):
+    def sensors(self) -> PyPGLabSensors:
         """Return the pypglab device sensor."""
         return self._sensors

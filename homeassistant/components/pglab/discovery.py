@@ -98,7 +98,7 @@ class DiscoverDeviceInfo:
         return self._entities
 
     @property
-    def sensors(self):
+    def sensors(self) -> PGLabDeviceSensor:
         """Return the PGLab device sensor."""
         return self._sensors
 
@@ -107,7 +107,7 @@ async def createDiscoverDeviceInfo(pglab_device: PyPGLabDevice) -> DiscoverDevic
     """Create a new DiscoverDeviceInfo instance."""
     discovery_info = DiscoverDeviceInfo(pglab_device)
 
-    # Be sure to be notified when the sensor state changes.
+    # Subscribe to sensor state changes.
     await discovery_info.sensors.subscribe_topics()
     return discovery_info
 
