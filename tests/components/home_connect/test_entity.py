@@ -85,7 +85,7 @@ def platforms() -> list[str]:
             [False, True, True],
             (
                 OptionKey.DISHCARE_DISHWASHER_HYGIENE_PLUS,
-                "switch.dishwasher_hygiene_plus",
+                "switch.dishwasher_hygiene",
             ),
             (OptionKey.DISHCARE_DISHWASHER_EXTRA_DRY, "switch.dishwasher_extra_dry"),
         )
