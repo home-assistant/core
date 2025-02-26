@@ -4539,7 +4539,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TV Channel',
+    'original_name': 'TV channel',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4551,7 +4551,7 @@
 # name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_tv_channel-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '[TV] Samsung 8 Series (49) TV Channel',
+      'friendly_name': '[TV] Samsung 8 Series (49) TV channel',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.tv_samsung_8_series_49_tv_channel',
@@ -4586,7 +4586,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'TV Channel Name',
+    'original_name': 'TV channel name',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -4598,7 +4598,7 @@
 # name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_tv_channel_name-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': '[TV] Samsung 8 Series (49) TV Channel Name',
+      'friendly_name': '[TV] Samsung 8 Series (49) TV channel name',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.tv_samsung_8_series_49_tv_channel_name',
