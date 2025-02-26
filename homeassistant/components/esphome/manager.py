@@ -381,15 +381,13 @@ class ESPHomeManager:
 
     def _async_on_log(self, msg: SubscribeLogsResponse) -> None:
         """Handle a log message from the API."""
-        logger_level = LOG_LEVEL_TO_LOGGER.get(msg.level, logging.DEBUG)
-        if _LOGGER.isEnabledFor(logger_level):
-            log: bytes = msg.message
-            _LOGGER.log(
-                logger_level,
-                "%s: %s",
-                self.entry.title,
-                ANSI_ESCAPE_78BIT.sub(b"", log).decode("utf-8", "backslashreplace"),
-            )
+        log: bytes = msg.message
+        _LOGGER.log(
+            LOG_LEVEL_TO_LOGGER.get(msg.level, logging.DEBUG),
+            "%s: %s",
+            self.entry.title,
+            ANSI_ESCAPE_78BIT.sub(b"", log).decode("utf-8", "backslashreplace"),
+        )
 
     @callback
     def _async_get_equivalent_log_level(self) -> LogLevel:
