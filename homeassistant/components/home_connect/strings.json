@@ -1529,8 +1529,8 @@
           "map3": "Map 3"
         }
       },
-      "current_cavity_temperature": {
-        "name": "Current cavity temperature"
+      "oven_current_cavity_temperature": {
+        "name": "Current oven cavity temperature"
       },
       "freezer_door_alarm": {
         "name": "Freezer door alarm",
