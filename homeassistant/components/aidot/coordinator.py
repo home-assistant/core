@@ -22,7 +22,7 @@ from aidot.exceptions import AidotAuthFailed, AidotUserOrPassIncorrect
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -71,7 +71,7 @@ class AidotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             await self.async_auto_login()
         except AidotUserOrPassIncorrect as error:
-            raise ConfigEntryAuthFailed from error
+            raise ConfigEntryError from error
 
         def discover(dev_id, event: Mapping[str, Any]) -> None:
             self.discovered_devices[dev_id] = event[CONF_IPADDRESS]
@@ -85,11 +85,11 @@ class AidotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             device_list = await self.client.async_get_all_device()
         except AidotAuthFailed as error:
             self.token_fresh_cb()
-            raise ConfigEntryAuthFailed from error
+            raise ConfigEntryError from error
         return device_list
 
     @property
-    def context_callbacks(self):
+    def context_callbacks(self) -> dict[str, list[Callable[[], None]]]:
         """Return a dict of all callbacks registered for a given context."""
         callbacks = defaultdict(list)
         for update_callback, context in list(self._listeners.values()):

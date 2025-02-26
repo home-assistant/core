@@ -5,7 +5,6 @@ import logging
 from typing import Any
 
 from aidot.const import (
-    CONF_AES_KEY,
     CONF_HARDWARE_VERSION,
     CONF_ID,
     CONF_IDENTITY,
@@ -17,7 +16,6 @@ from aidot.const import (
     CONF_PRODUCT,
     CONF_PROPERTIES,
     CONF_SERVICE_MODULES,
-    CONF_TYPE,
     Attribute,
     Identity,
 )
@@ -31,13 +29,10 @@ from homeassistant.components.light import (
     LightEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
-    DeviceRegistry,
     format_mac,
 )
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -54,51 +49,17 @@ async def async_setup_entry(
 ) -> None:
     """Set up Light."""
     coordinator: AidotCoordinator = entry.runtime_data
-
-    @callback
-    def _async_check_devices():
-        filter_cloud_devices = coordinator.filter_light_list()
-        device_registry: DeviceRegistry = dr.async_get(hass)
-        cloud_device_ids = [device[CONF_ID] for device in filter_cloud_devices]
-        ha_exist_device_ids = [
-            identifier[1]
-            for device_entry in device_registry.devices.values()
-            for identifier in device_entry.identifiers
-            if identifier[0] == DOMAIN and entry.entry_id in device_entry.config_entries
-        ]
-
-        # add new device
-        new_devices = [
-            device
-            for device in filter_cloud_devices
-            if device[CONF_ID] not in ha_exist_device_ids
-        ]
-        if new_devices:
-            async_add_entities(
-                AidotLight(hass, device_info, coordinator)
-                for device_info in new_devices
-                if device_info[CONF_TYPE] == Platform.LIGHT
-                and CONF_AES_KEY in device_info
-                and device_info[CONF_AES_KEY][0] is not None
-            )
-
-        # remove device
-        removed_device_ids = set(ha_exist_device_ids) - set(cloud_device_ids)
-        for removed_device_id in removed_device_ids or []:
-            if device := device_registry.async_get_device(
-                identifiers={(DOMAIN, removed_device_id)}
-            ):
-                device_registry.async_remove_device(device.id)
-
-    coordinator.async_add_listener(_async_check_devices)
     async_add_entities(
         AidotLight(hass, device_info, coordinator)
         for device_info in coordinator.filter_light_list()
     )
 
 
-class AidotLight(CoordinatorEntity, LightEntity):
+class AidotLight(CoordinatorEntity[AidotCoordinator], LightEntity):
     """Representation of a Aidot Wi-Fi Light."""
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     async def async_added_to_hass(self) -> None:
         """Connect to device when this entity is added to HA."""
@@ -118,7 +79,6 @@ class AidotLight(CoordinatorEntity, LightEntity):
         self.device = device
         self.user_info = coordinator.client.login_info
         self._attr_unique_id = device[CONF_ID]
-        self._attr_name = device[CONF_NAME]
         self.pingtask = None
         self.recvtask = None
 
@@ -126,9 +86,8 @@ class AidotLight(CoordinatorEntity, LightEntity):
         manufacturer = modelId.split(".")[0]
         model = modelId[len(manufacturer) + 1 :]
         mac = format_mac(device[CONF_MAC]) if device[CONF_MAC] is not None else ""
-        identifiers: set[tuple[str, str]] = (
-            set({(DOMAIN, self._attr_unique_id)}) if self._attr_unique_id else set()
-        )
+        identifiers: set[tuple[str, str]] = set({(DOMAIN, self._attr_unique_id)})
+
         self._attr_device_info = DeviceInfo(
             identifiers=identifiers,
             connections={(CONNECTION_NETWORK_MAC, mac)},
@@ -174,8 +133,7 @@ class AidotLight(CoordinatorEntity, LightEntity):
 
     async def _try_connect(self):
         """Try connect."""
-        aidot_coordinator: AidotCoordinator = self.coordinator
-        device_ip = aidot_coordinator.discovered_devices.get(self.device[CONF_ID])
+        device_ip = self.coordinator.discovered_devices.get(self.device[CONF_ID])
         if (
             device_ip is not None
             and not self.lanCtrl.connecting

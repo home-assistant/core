@@ -2,33 +2,19 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
 
 from aidot.client import AidotClient
 from aidot.const import CONF_LOGIN_INFO, DEFAULT_COUNTRY_NAME, SUPPORTED_COUNTRY_NAMES
-from aidot.exceptions import AidotUserOrPassIncorrect, InvalidHost
+from aidot.exceptions import AidotUserOrPassIncorrect
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
-
-
-async def validate_input(hass: HomeAssistant, data: dict) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from DATA_SCHEMA with values provided by the user.
-    """
-    if len(data["host"]) < 3:
-        raise InvalidHost
-    return {"title": data["host"]}
 
 
 class AidotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
@@ -50,14 +36,16 @@ class AidotConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             try:
                 login_info = await client.async_post_login()
+            except AidotUserOrPassIncorrect:
+                errors["base"] = "account_pwd_incorrect"
+
+            if not errors:
                 return self.async_create_entry(
                     title=f"{user_input[CONF_USERNAME]} {user_input[CONF_COUNTRY]}",
                     data={
                         CONF_LOGIN_INFO: login_info,
                     },
                 )
-            except AidotUserOrPassIncorrect:
-                errors["base"] = "account_pwd_incorrect"
 
         DATA_SCHEMA = vol.Schema(
             {
