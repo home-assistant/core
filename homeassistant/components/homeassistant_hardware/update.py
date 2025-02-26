@@ -151,7 +151,7 @@ class BaseFirmwareUpdateEntity(
             )
         ):
             self._latest_manifest = hardware_extra_data.firmware_manifest
-            self._maybe_recompute_state()
+            self._update_attributes()
 
     @property
     def extra_restore_state_data(self) -> FirmwareUpdateExtraStoredData:
@@ -161,7 +161,7 @@ class BaseFirmwareUpdateEntity(
     @callback
     def _on_config_entry_change(self) -> None:
         """Handle config entry changes."""
-        self._maybe_recompute_state()
+        self._update_attributes()
         self.async_write_ha_state()
 
     @callback
@@ -186,15 +186,15 @@ class BaseFirmwareUpdateEntity(
                     )
             return
 
-        self._maybe_recompute_state()
+        self._update_attributes()
         self.async_write_ha_state()
 
     def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
         """Update the config entry after new firmware has been installed."""
         raise NotImplementedError
 
-    def _maybe_recompute_state(self) -> None:
-        """Recompute the state of the entity."""
+    def _update_attributes(self) -> None:
+        """Recompute the attributes of the entity."""
 
         # This entity is not currently associated with a device so we must manually
         # give it a name
@@ -238,7 +238,7 @@ class BaseFirmwareUpdateEntity(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._latest_manifest = self.coordinator.data
-        self._maybe_recompute_state()
+        self._update_attributes()
         self.async_write_ha_state()
 
     def _update_progress(self, offset: int, total_size: int) -> None:
