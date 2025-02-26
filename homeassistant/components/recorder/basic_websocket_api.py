@@ -10,6 +10,7 @@ from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import recorder as recorder_helper
 
+from . import format_default_url
 from .util import get_instance
 
 
@@ -34,6 +35,7 @@ async def ws_info(
     await hass.data[recorder_helper.DATA_RECORDER].db_connected
     instance = get_instance(hass)
     backlog = instance.backlog
+    default_db_url = instance.db_url == format_default_url(hass)
     migration_in_progress = instance.migration_in_progress
     migration_is_live = instance.migration_is_live
     recording = instance.recording
@@ -44,6 +46,7 @@ async def ws_info(
 
     recorder_info = {
         "backlog": backlog,
+        "default_db_url": default_db_url,
         "max_backlog": max_backlog,
         "migration_in_progress": migration_in_progress,
         "migration_is_live": migration_is_live,
