@@ -195,6 +195,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="dishwasher_machine_state",
+                options=["pause", "run", "stop"],
+                device_class=SensorDeviceClass.ENUM,
             )
         ],
         Attribute.DISHWASHER_JOB_STATE: [
