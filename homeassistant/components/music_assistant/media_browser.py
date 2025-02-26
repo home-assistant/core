@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from music_assistant_models.media_items import MediaItemType
 
@@ -348,9 +348,12 @@ def build_item(
         title = item.name
     img_url = mass.get_media_item_image_url(item)
 
+    if TYPE_CHECKING:
+        assert item.uri is not None
+
     return BrowseMedia(
         media_class=media_class or item.media_type.value,
-        media_content_id=cast(str, item.uri),
+        media_content_id=item.uri,
         media_content_type=MediaType.MUSIC,
         title=title,
         can_play=True,
