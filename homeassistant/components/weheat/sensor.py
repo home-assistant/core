@@ -22,13 +22,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import HeatPumpInfo, WeheatConfigEntry
 from .const import (
     DISPLAY_PRECISION_COP,
     DISPLAY_PRECISION_WATER_TEMP,
     DISPLAY_PRECISION_WATTS,
 )
-from .coordinator import WeheatDataUpdateCoordinator, WeheatEnergyUpdateCoordinator
+from .coordinator import (
+    HeatPumpInfo,
+    WeheatConfigEntry,
+    WeheatDataUpdateCoordinator,
+    WeheatEnergyUpdateCoordinator,
+)
 from .entity import WeheatEntity
 
 # Coordinator is used to centralize the data updates
