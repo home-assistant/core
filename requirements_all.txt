@@ -19,7 +19,7 @@ DoorBirdPy==3.0.8
 HAP-python==4.9.2
 
 # homeassistant.components.tasmota
-HATasmota==0.9.2
+HATasmota==0.10.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.8.1
@@ -1155,7 +1155,7 @@ holidays==0.67
 home-assistant-frontend==20250226.0
 
 # homeassistant.components.conversation
-home-assistant-intents==2025.2.5
+home-assistant-intents==2025.2.26
 
 # homeassistant.components.homematicip_cloud
 homematicip==1.1.7
@@ -2808,7 +2808,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.6.0
+stookwijzer==1.6.1
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
@@ -3149,7 +3149,7 @@ zeroconf==0.145.1
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.50
+zha==0.0.51
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.13
