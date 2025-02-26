@@ -256,7 +256,7 @@ async def test_missing_backup_no_shares(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
+    "ignore_missing_translations",
     ["component.synology_dsm.issues.other_issue.title"],
 )
 async def test_other_fixable_issues(
