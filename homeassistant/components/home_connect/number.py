@@ -1,10 +1,11 @@
 """Provides number enties for Home Connect."""
 
+from datetime import datetime
 import logging
 from typing import cast
 
 from aiohomeconnect.model import GetSetting, OptionKey, SettingKey
-from aiohomeconnect.model.error import HomeConnectError
+from aiohomeconnect.model.error import HomeConnectError, TooManyRequestsError
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -14,9 +15,11 @@ from homeassistant.components.number import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.event import async_call_later
 
 from .common import setup_home_connect_entry
 from .const import (
+    API_DEFAULT_RETRY_AFTER,
     DOMAIN,
     SVE_TRANSLATION_KEY_SET_SETTING,
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
@@ -189,29 +192,49 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
                 },
             ) from err
 
-    async def async_fetch_constraints(self) -> None:
+    async def async_fetch_constraints(self, _: datetime | None = None) -> None:
         """Fetch the max and min values and step for the number entity."""
-        try:
-            data = await self.coordinator.client.get_setting(
-                self.appliance.info.ha_id, setting_key=SettingKey(self.bsh_key)
-            )
-        except HomeConnectError as err:
-            _LOGGER.error("An error occurred: %s", err)
-        else:
-            self.set_constraints(data)
+        setting_key = cast(SettingKey, self.bsh_key)
+        data = self.appliance.settings.get(setting_key)
+        if not data or not data.unit or not data.constraints:
+            try:
+                data = await self.coordinator.client.get_setting(
+                    self.appliance.info.ha_id, setting_key=setting_key
+                )
+            except TooManyRequestsError as err:
+                async_call_later(
+                    self.hass,
+                    err.retry_after or API_DEFAULT_RETRY_AFTER,
+                    self.async_fetch_constraints,
+                )
+            except HomeConnectError as err:
+                _LOGGER.error("An error occurred: %s", err)
+            else:
+                if data.unit:
+                    self._attr_native_unit_of_measurement = data.unit
+                    self.__dict__.pop("native_unit_of_measurement", None)
+                self.set_constraints(data)
 
     def set_constraints(self, setting: GetSetting) -> None:
         """Set constraints for the number entity."""
+        if setting.unit:
+            self._attr_native_unit_of_measurement = UNIT_MAP.get(
+                setting.unit, setting.unit
+            )
         if not (constraints := setting.constraints):
             return
         if constraints.max:
             self._attr_native_max_value = constraints.max
+            self.__dict__.pop("native_max_value", None)
         if constraints.min:
             self._attr_native_min_value = constraints.min
+            self.__dict__.pop("native_min_value", None)
         if constraints.step_size:
             self._attr_native_step = constraints.step_size
         else:
             self._attr_native_step = 0.1 if setting.type == "Double" else 1
+        self.__dict__.pop("native_step", None)
+        self.async_write_ha_state()
 
     def update_native_value(self) -> None:
         """Update status when an event for the entity is received."""
@@ -222,10 +245,10 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         data = self.appliance.settings[cast(SettingKey, self.bsh_key)]
-        self._attr_native_unit_of_measurement = data.unit
         self.set_constraints(data)
         if (
-            not hasattr(self, "_attr_native_min_value")
+            not hasattr(self, "_attr_native_unit_of_measurement")
+            or not hasattr(self, "_attr_native_min_value")
             or not hasattr(self, "_attr_native_max_value")
             or not hasattr(self, "_attr_native_step")
         ):

@@ -1,7 +1,8 @@
 """Tests for home_connect select entities."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
@@ -21,6 +22,7 @@ from aiohomeconnect.model.error import (
     ActiveProgramNotSetError,
     HomeConnectError,
     SelectedProgramNotSetError,
+    TooManyRequestsError,
 )
 from aiohomeconnect.model.program import (
     EnumerateProgram,
@@ -49,6 +51,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import async_call_later
 
 from tests.common import MockConfigEntry
 
@@ -560,6 +563,84 @@ async def test_fetch_allowed_values(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert set(entity_state.attributes[ATTR_OPTIONS]) == expected_options
+
+
+@pytest.mark.parametrize("appliance_ha_id", ["Hood"], indirect=True)
+@pytest.mark.parametrize(
+    (
+        "entity_id",
+        "setting_key",
+        "allowed_values",
+        "expected_options",
+    ),
+    [
+        (
+            "select.hood_ambient_light_color",
+            SettingKey.BSH_COMMON_AMBIENT_LIGHT_COLOR,
+            [f"BSH.Common.EnumType.AmbientLightColor.Color{i}" for i in range(50)],
+            {str(i) for i in range(1, 50)},
+        ),
+    ],
+)
+async def test_fetch_allowed_values_after_rate_limit_error(
+    appliance_ha_id: str,
+    entity_id: str,
+    setting_key: SettingKey,
+    allowed_values: list[str | None],
+    expected_options: set[str],
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test fetch allowed values."""
+    retry_after = 42
+
+    def get_settings_side_effect(ha_id: str):
+        if ha_id != appliance_ha_id:
+            return ArrayOfSettings([])
+        return ArrayOfSettings(
+            [
+                GetSetting(
+                    key=setting_key,
+                    raw_key=setting_key.value,
+                    value="",  # Not important
+                )
+            ]
+        )
+
+    client.get_settings = AsyncMock(side_effect=get_settings_side_effect)
+    client.get_setting = AsyncMock(
+        side_effect=[
+            TooManyRequestsError("error.key", retry_after=retry_after),
+            GetSetting(
+                key=setting_key,
+                raw_key=setting_key.value,
+                value="",  # Not important
+                constraints=SettingConstraints(
+                    allowed_values=allowed_values,
+                ),
+            ),
+        ]
+    )
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    with patch(
+        "homeassistant.components.home_connect.select.async_call_later",
+        side_effect=lambda hass, delay, action: async_call_later(hass, 0.01, action),
+    ) as _async_call_later:
+        assert await integration_setup(client)
+        await asyncio.sleep(0.1)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    _async_call_later.assert_called_once()
+    assert _async_call_later.call_args.args[1] == retry_after
+    assert client.get_setting.call_count == 2
 
     entity_state = hass.states.get(entity_id)
     assert entity_state

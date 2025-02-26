@@ -1,7 +1,8 @@
 """Tests for home_connect sensor entities."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
@@ -13,7 +14,7 @@ from aiohomeconnect.model import (
     Status,
     StatusKey,
 )
-from aiohomeconnect.model.error import HomeConnectApiError
+from aiohomeconnect.model.error import HomeConnectApiError, TooManyRequestsError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -26,10 +27,12 @@ from homeassistant.components.home_connect.const import (
     BSH_EVENT_PRESENT_STATE_PRESENT,
     DOMAIN,
 )
+from homeassistant.components.home_connect.coordinator import HomeConnectError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.event import async_call_later
 
 from tests.common import MockConfigEntry
 
@@ -648,3 +651,128 @@ async def test_sensor_unit_fetching(
     )
 
     assert client.get_status_value.call_count == get_status_value_call_count
+
+
+@pytest.mark.parametrize(
+    (
+        "appliance_ha_id",
+        "entity_id",
+        "status_key",
+    ),
+    [
+        (
+            "Oven",
+            "sensor.oven_current_oven_cavity_temperature",
+            StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
+        ),
+    ],
+    indirect=["appliance_ha_id"],
+)
+async def test_sensor_unit_fetching_error(
+    appliance_ha_id: str,
+    entity_id: str,
+    status_key: StatusKey,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test that the sensor entities are capable of fetching units."""
+
+    async def get_status_mock(ha_id: str) -> ArrayOfStatus:
+        if ha_id != appliance_ha_id:
+            return ArrayOfStatus([])
+        return ArrayOfStatus(
+            [
+                Status(
+                    key=status_key,
+                    raw_key=status_key.value,
+                    value=0,
+                )
+            ]
+        )
+
+    client.get_status = AsyncMock(side_effect=get_status_mock)
+    client.get_status_value = AsyncMock(side_effect=HomeConnectError())
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    assert hass.states.get(entity_id)
+
+
+@pytest.mark.parametrize(
+    (
+        "appliance_ha_id",
+        "entity_id",
+        "status_key",
+        "unit",
+    ),
+    [
+        (
+            "Oven",
+            "sensor.oven_current_oven_cavity_temperature",
+            StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
+            "°C",
+        ),
+    ],
+    indirect=["appliance_ha_id"],
+)
+async def test_sensor_unit_fetching_after_rate_limit_error(
+    appliance_ha_id: str,
+    entity_id: str,
+    status_key: StatusKey,
+    unit: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test that the sensor entities are capable of fetching units."""
+    retry_after = 42
+
+    async def get_status_mock(ha_id: str) -> ArrayOfStatus:
+        if ha_id != appliance_ha_id:
+            return ArrayOfStatus([])
+        return ArrayOfStatus(
+            [
+                Status(
+                    key=status_key,
+                    raw_key=status_key.value,
+                    value=0,
+                )
+            ]
+        )
+
+    client.get_status = AsyncMock(side_effect=get_status_mock)
+    client.get_status_value = AsyncMock(
+        side_effect=[
+            TooManyRequestsError("error.key", retry_after=retry_after),
+            Status(
+                key=status_key,
+                raw_key=status_key.value,
+                value=0,
+                unit=unit,
+            ),
+        ]
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    with patch(
+        "homeassistant.components.home_connect.sensor.async_call_later",
+        side_effect=lambda hass, delay, action: async_call_later(hass, 0.01, action),
+    ) as _async_call_later:
+        assert await integration_setup(client)
+        await asyncio.sleep(0.1)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    _async_call_later.assert_called_once()
+    assert _async_call_later.call_args.args[1] == retry_after
+    assert client.get_status_value.call_count == 2
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert entity_state.attributes["unit_of_measurement"] == unit
