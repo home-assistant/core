@@ -43,7 +43,8 @@ THERMOSTAT_CAPABILITIES = {
 }
 
 JOB_STATE_MAP = {
-    "airWash": "airwash",
+    "airWash": "air_wash",
+    "airwash": "air_wash",
     "aIRinse": "ai_rinse",
     "aiSpin": "ai_spin",
     "aIWash": "ai_wash",
@@ -254,7 +255,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.DISHWASHER_JOB_STATE,
                 translation_key="dishwasher_job_state",
                 options=[
-                    "airwash",
+                    "air_wash",
                     "cooling",
                     "drying",
                     "finish",
@@ -841,7 +842,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.WASHER_JOB_STATE,
                 translation_key="washer_job_state",
                 options=[
-                    "airwash",
+                    "air_wash",
                     "ai_rinse",
                     "ai_spin",
                     "ai_wash",

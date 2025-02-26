@@ -2863,7 +2863,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'airwash',
+        'air_wash',
         'cooling',
         'drying',
         'finish',
@@ -2909,7 +2909,7 @@
       'device_class': 'enum',
       'friendly_name': 'Dishwasher Job state',
       'options': list([
-        'airwash',
+        'air_wash',
         'cooling',
         'drying',
         'finish',
@@ -3709,7 +3709,7 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'airwash',
+        'air_wash',
         'ai_rinse',
         'ai_spin',
         'ai_wash',
@@ -3761,7 +3761,7 @@
       'device_class': 'enum',
       'friendly_name': 'Washer Job state',
       'options': list([
-        'airwash',
+        'air_wash',
         'ai_rinse',
         'ai_spin',
         'ai_wash',

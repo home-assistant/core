@@ -85,7 +85,7 @@
       "dishwasher_job_state": {
         "name": "Job state",
         "state": {
-          "airwash": "Airwash",
+          "air_wash": "Air wash",
           "cooling": "Cooling",
           "drying": "Drying",
           "finish": "Finish",
@@ -311,7 +311,7 @@
       "washer_job_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
         "state": {
-          "airwash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::airwash%]",
+          "air_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::air_wash%]",
           "ai_rise": "AI rise",
           "ai_spin": "AI spin",
           "ai_wash": "AI wash",
