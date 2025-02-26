@@ -152,7 +152,6 @@ class BaseFirmwareUpdateEntity(
         ):
             self._latest_manifest = hardware_extra_data.firmware_manifest
             self._maybe_recompute_state()
-            self.async_write_ha_state()
 
     @property
     def extra_restore_state_data(self) -> FirmwareUpdateExtraStoredData:
