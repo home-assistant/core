@@ -58,7 +58,7 @@
       "fields": {
         "time_period": {
           "name": "Time period",
-          "description": "Time for which to override the schedule."
+          "description": "Duration for which to override the schedule."
         }
       }
     }
