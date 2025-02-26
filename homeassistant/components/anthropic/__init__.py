@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from functools import partial
+
 import anthropic
 
 from homeassistant.config_entries import ConfigEntry
@@ -20,7 +22,9 @@ type AnthropicConfigEntry = ConfigEntry[anthropic.AsyncClient]
 
 async def async_setup_entry(hass: HomeAssistant, entry: AnthropicConfigEntry) -> bool:
     """Set up Anthropic from a config entry."""
-    client = anthropic.AsyncAnthropic(api_key=entry.data[CONF_API_KEY])
+    client = await hass.async_add_executor_job(
+        partial(anthropic.AsyncAnthropic, api_key=entry.data[CONF_API_KEY])
+    )
     try:
         model_id = entry.options.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
         model = await client.models.retrieve(model_id=model_id, timeout=10.0)

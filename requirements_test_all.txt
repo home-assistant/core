@@ -119,7 +119,7 @@ Tami4EdgeAPI==3.0
 WSDiscovery==2.1.2
 
 # homeassistant.components.accuweather
-accuweather==4.0.0
+accuweather==4.1.0
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.1.1
+aioesphomeapi==29.2.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -353,7 +353,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==12.4.2
+aioshelly==13.0.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -1520,7 +1520,7 @@ pyblackbird==0.6
 pyblu==2.0.0
 
 # homeassistant.components.neato
-pybotvac==0.0.25
+pybotvac==0.0.26
 
 # homeassistant.components.braviatv
 pybravia==0.3.4
@@ -2000,7 +2000,7 @@ python-rabbitair==0.0.8
 python-roborock==2.11.1
 
 # homeassistant.components.smarttub
-python-smarttub==0.0.38
+python-smarttub==0.0.39
 
 # homeassistant.components.snoo
 python-snoo==0.6.0
@@ -2012,7 +2012,7 @@ python-songpal==0.16.2
 python-tado==0.18.6
 
 # homeassistant.components.technove
-python-technove==1.3.1
+python-technove==2.0.0
 
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==21.5
@@ -2272,7 +2272,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.5.4
+stookwijzer==1.6.0
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
@@ -2541,7 +2541,7 @@ zeroconf==0.145.1
 zeversolar==0.3.2
 
 # homeassistant.components.zha
-zha==0.0.49
+zha==0.0.50
 
 # homeassistant.components.zwave_js
 zwave-js-server-python==0.60.1
