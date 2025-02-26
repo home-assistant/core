@@ -42,6 +42,13 @@ THERMOSTAT_CAPABILITIES = {
     Capability.THERMOSTAT_MODE,
 }
 
+JOB_STATE_MAP = {
+    "preDrain": "pre_drain",
+    "preWash": "pre_wash",
+    "wrinklePrevent": "wrinkle_prevent",
+    "unknown": None,
+}
+
 
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
     """Return the power attributes."""
@@ -194,6 +201,20 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.DISHWASHER_JOB_STATE,
                 translation_key="dishwasher_job_state",
+                options=[
+                    "airwash",
+                    "cooling",
+                    "drying",
+                    "finish",
+                    "pre_drain",
+                    "pre_wash",
+                    "rinse",
+                    "spin",
+                    "wash",
+                    "wrinkle_prevent",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: JOB_STATE_MAP.get(value, value),
             )
         ],
         Attribute.COMPLETION_TIME: [
