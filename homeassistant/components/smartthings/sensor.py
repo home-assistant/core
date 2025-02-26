@@ -67,6 +67,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     extra_state_attributes_fn: Callable[[Any], dict[str, Any]] | None = None
     unique_id_separator: str = "."
     capability_ignore_list: list[set[Capability]] | None = None
+    options_attribute: Attribute | None = None
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -374,6 +375,9 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.INPUT_SOURCE,
                 translation_key="media_input_source",
+                device_class=SensorDeviceClass.ENUM,
+                options_attribute=Attribute.SUPPORTED_INPUT_SOURCES,
+                value_fn=lambda value: value.lower(),
             )
         ]
     },
@@ -841,3 +845,13 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
                 self.get_attribute_value(self.capability, self._attribute)
             )
         return None
+
+    @property
+    def options(self) -> list[str] | None:
+        """Return the options for this sensor."""
+        if self.entity_description.options_attribute:
+            options = self.get_attribute_value(
+                self.capability, self.entity_description.options_attribute
+            )
+            return [option.lower() for option in options]
+        return super().options

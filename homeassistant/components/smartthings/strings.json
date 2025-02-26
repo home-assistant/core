@@ -128,7 +128,34 @@
         "name": "Infrared level"
       },
       "media_input_source": {
-        "name": "Media input source"
+        "name": "Media input source",
+        "state": {
+          "am": "AM",
+          "fm": "FM",
+          "cd": "CD",
+          "hdmi": "HDMI",
+          "hdmi1": "HDMI 1",
+          "hdmi2": "HDMI 2",
+          "hdmi3": "HDMI 3",
+          "hdmi4": "HDMI 4",
+          "hdmi5": "HDMI 5",
+          "hdmi6": "HDMI 6",
+          "digitaltv": "Digital TV",
+          "usb": "USB",
+          "youtube": "YouTube",
+          "aux": "AUX",
+          "bluetooth": "Bluetooth",
+          "digital": "Digital",
+          "melon": "Melon",
+          "wifi": "Wi-Fi",
+          "network": "Network",
+          "optical": "Optical",
+          "coaxial": "Coaxial",
+          "analog1": "Analog 1",
+          "analog2": "Analog 2",
+          "analog3": "Analog 3",
+          "phono": "Phono"
+        }
       },
       "media_playback_repeat": {
         "name": "Media playback repeat"
