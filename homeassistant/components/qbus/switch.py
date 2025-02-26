@@ -2,13 +2,12 @@
 
 from typing import Any
 
-from qbusmqttapi.discovery import QbusMqttOutput
-from qbusmqttapi.state import QbusMqttOnOffState, StateType
-
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from qbusmqttapi.discovery import QbusMqttOutput
+from qbusmqttapi.state import QbusMqttOnOffState, StateType
 
 from .coordinator import QbusConfigEntry
 from .entity import QbusEntity, add_new_outputs

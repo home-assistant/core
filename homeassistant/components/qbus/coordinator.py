@@ -6,9 +6,6 @@ from datetime import datetime
 import logging
 from typing import cast
 
-from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice, QbusMqttOutput
-from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
-
 from homeassistant.components.mqtt import (
     ReceiveMessage,
     async_wait_for_mqtt_client,
@@ -22,6 +19,8 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.hass_dict import HassKey
+from qbusmqttapi.discovery import QbusDiscovery, QbusMqttDevice, QbusMqttOutput
+from qbusmqttapi.factory import QbusMqttMessageFactory, QbusMqttTopicFactory
 
 from .const import CONF_SERIAL_NUMBER, DOMAIN, MANUFACTURER
 
