@@ -1,0 +1,35 @@
+{
+  "config": {
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_devices": "[%key:common::config_flow::abort::no_devices_found%]",
+      "no_devices_selected": "You have to select at least 1 device to continue."
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "scan_interval": "Update interval"
+        },
+        "data_description": {
+          "host": "The IP address or hostname of the system running Libre Hardware Monitor.",
+          "port": "The port of your Libre Hardware Monitor web server. By default 8085.",
+          "scan_interval": "In seconds, maximum 30, minimum 5 (this is a limitation by Home Assistant)."
+        }
+      },
+      "select_devices": {
+        "data": {
+          "devices": "Select devices"
+        },
+        "data_description": {
+          "devices": "Pick the hardware devices you want to add to Home Assistant."
+        }
+      }
+    }
+  }
+}
