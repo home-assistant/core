@@ -110,7 +110,11 @@
   },
   "config_subentries": {
     "device": {
-      "title": "Add MQTT device",
+      "initiate_flow": {
+        "user": "Add MQTT Device",
+        "reconfigure": "Reconfigure MQTT Device"
+      },
+      "entry_type": "MQTT Device",
       "step": {
         "device": {
           "title": "Configure MQTT device details",
