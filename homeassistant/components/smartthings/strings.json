@@ -107,7 +107,24 @@
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]"
       },
       "dryer_job_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]"
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
+        "state": {
+          "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
+          "delay_wash": "[%key:component::smartthings::entity::sensor::washer_job_state::state::delay_wash%]",
+          "drying": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::drying%]",
+          "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]",
+          "none": "[%key:component::smartthings::entity::sensor::washer_job_state::state::none%]",
+          "refreshing": "Refreshing",
+          "weight_sensing": "[%key:component::smartthings::entity::sensor::washer_job_state::state::weight_sensing%]",
+          "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]",
+          "dehumidifying": "Dehumidifying",
+          "ai_drying": "AI drying",
+          "sanitizing": "Sanitizing",
+          "internal_care": "Internal care",
+          "freeze_protection": "Freeze protection",
+          "continuous_dehumidifying": "Continuous dehumidifying",
+          "thawing_frozen_inside": "Thawing frozen inside"
+        }
       },
       "equivalent_carbon_dioxide": {
         "name": "Equivalent carbon dioxide"
