@@ -1894,6 +1894,12 @@ async def test_supports_transition_template_updates(
         supported_features == LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
     )
 
+    hass.states.async_set("sensor.test", 0)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    supported_features = state.attributes.get("supported_features")
+    assert supported_features == LightEntityFeature.EFFECT
+
 
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
