@@ -11,6 +11,7 @@ from homeassistant.components.climate import (
     ATTR_HUMIDITY,
     ATTR_HVAC_MODE,
     ATTR_PRESET_MODE,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -34,8 +35,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.loader import bind_hass
-
-from tests.components.mqtt.test_climate import ATTR_SWING_HORIZONTAL_MODE
 
 
 async def async_set_preset_mode(
