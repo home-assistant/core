@@ -64,7 +64,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
 CAPABILITY_TO_SENSORS: dict[
     Capability, dict[Attribute, list[SmartThingsSensorEntityDescription]]
 ] = {
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.ACTIVITY_LIGHTING_MODE: {
         Attribute.LIGHTING_MODE: [
             SmartThingsSensorEntityDescription(
@@ -127,7 +127,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.BODY_MASS_INDEX_MEASUREMENT: {
         Attribute.BMI_MEASUREMENT: [
             SmartThingsSensorEntityDescription(
@@ -138,7 +138,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.BODY_WEIGHT_MEASUREMENT: {
         Attribute.BODY_WEIGHT_MEASUREMENT: [
             SmartThingsSensorEntityDescription(
@@ -150,7 +150,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.CARBON_DIOXIDE_MEASUREMENT: {
         Attribute.CARBON_DIOXIDE: [
             SmartThingsSensorEntityDescription(
@@ -162,7 +162,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.CARBON_MONOXIDE_DETECTOR: {
         Attribute.CARBON_MONOXIDE: [
             SmartThingsSensorEntityDescription(
@@ -171,7 +171,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.CARBON_MONOXIDE_MEASUREMENT: {
         Attribute.CARBON_MONOXIDE_LEVEL: [
             SmartThingsSensorEntityDescription(
@@ -205,7 +205,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
-    # part of the proposed spec, no fixtures
+    # part of the proposed spec, Haven't seen at devices yet
     Capability.DRYER_MODE: {
         Attribute.DRYER_MODE: [
             SmartThingsSensorEntityDescription(
@@ -264,7 +264,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.EQUIVALENT_CARBON_DIOXIDE_MEASUREMENT: {
         Attribute.EQUIVALENT_CARBON_DIOXIDE_MEASUREMENT: [
             SmartThingsSensorEntityDescription(
@@ -276,7 +276,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.FORMALDEHYDE_MEASUREMENT: {
         Attribute.FORMALDEHYDE_LEVEL: [
             SmartThingsSensorEntityDescription(
@@ -287,7 +287,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.GAS_METER: {
         Attribute.GAS_METER: [
             SmartThingsSensorEntityDescription(
@@ -322,7 +322,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.ILLUMINANCE_MEASUREMENT: {
         Attribute.ILLUMINANCE: [
             SmartThingsSensorEntityDescription(
@@ -334,7 +334,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.INFRARED_LEVEL: {
         Attribute.INFRARED_LEVEL: [
             SmartThingsSensorEntityDescription(
@@ -353,7 +353,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # part of the proposed spec, no fixtures
+    # part of the proposed spec, Haven't seen at devices yet
     Capability.MEDIA_PLAYBACK_REPEAT: {
         Attribute.PLAYBACK_REPEAT_MODE: [
             SmartThingsSensorEntityDescription(
@@ -362,7 +362,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # part of the proposed spec, no fixtures
+    # part of the proposed spec, Haven't seen at devices yet
     Capability.MEDIA_PLAYBACK_SHUFFLE: {
         Attribute.PLAYBACK_SHUFFLE: [
             SmartThingsSensorEntityDescription(
@@ -480,7 +480,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.POWER_SOURCE: {
         Attribute.POWER_SOURCE: [
             SmartThingsSensorEntityDescription(
@@ -537,7 +537,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.SIGNAL_STRENGTH: {
         Attribute.LQI: [
             SmartThingsSensorEntityDescription(
@@ -557,7 +557,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.SMOKE_DETECTOR: {
         Attribute.SMOKE: [
             SmartThingsSensorEntityDescription(
@@ -593,7 +593,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.THERMOSTAT_FAN_MODE: {
         Attribute.THERMOSTAT_FAN_MODE: [
             SmartThingsSensorEntityDescription(
@@ -604,7 +604,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.THERMOSTAT_HEATING_SETPOINT: {
         Attribute.HEATING_SETPOINT: [
             SmartThingsSensorEntityDescription(
@@ -616,7 +616,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.THERMOSTAT_MODE: {
         Attribute.THERMOSTAT_MODE: [
             SmartThingsSensorEntityDescription(
@@ -627,7 +627,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.THERMOSTAT_OPERATING_STATE: {
         Attribute.THERMOSTAT_OPERATING_STATE: [
             SmartThingsSensorEntityDescription(
@@ -684,7 +684,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ],
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.TVOC_MEASUREMENT: {
         Attribute.TVOC_LEVEL: [
             SmartThingsSensorEntityDescription(
@@ -695,7 +695,7 @@ CAPABILITY_TO_SENSORS: dict[
             )
         ]
     },
-    # no fixtures
+    # Haven't seen at devices yet
     Capability.ULTRAVIOLET_INDEX: {
         Attribute.ULTRAVIOLET_INDEX: [
             SmartThingsSensorEntityDescription(
