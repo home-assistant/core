@@ -42,10 +42,8 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
-    AddEntitiesCallback,
     async_get_current_platform,
 )
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from .const import ATTR_DURATION, ATTR_PERIOD, ATTR_SETPOINT, EvoService
@@ -54,10 +52,10 @@ from .entity import EvoChild, EvoEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-PRESET_RESET = "Reset"  # reset all child zones to EvoZoneMode.FOLLOW_SCHEDULE
-PRESET_CUSTOM = "Custom"
+PRESET_RESET: Final = "Reset"  # reset all child zones to EvoZoneMode.FOLLOW_SCHEDULE
+PRESET_CUSTOM: Final = "Custom"
 
-TCS_PRESET_TO_HA = {
+TCS_PRESET_TO_HA: Final = {
     EvoSystemMode.AWAY: PRESET_AWAY,
     EvoSystemMode.CUSTOM: PRESET_CUSTOM,
     EvoSystemMode.AUTO_WITH_ECO: PRESET_ECO,
@@ -65,54 +63,54 @@ TCS_PRESET_TO_HA = {
     EvoSystemMode.AUTO_WITH_RESET: PRESET_RESET,
 }  # EvoSystemMode.AUTO: None,
 
-HA_PRESET_TO_TCS = {v: k for k, v in TCS_PRESET_TO_HA.items()}
+HA_PRESET_TO_TCS: Final = {v: k for k, v in TCS_PRESET_TO_HA.items()}
 
-EVO_PRESET_TO_HA = {
+EVO_PRESET_TO_HA: Final = {
     EvoZoneMode.FOLLOW_SCHEDULE: PRESET_NONE,
     EvoZoneMode.TEMPORARY_OVERRIDE: "temporary",
     EvoZoneMode.PERMANENT_OVERRIDE: "permanent",
 }
-HA_PRESET_TO_EVO = {v: k for k, v in EVO_PRESET_TO_HA.items()}
+HA_PRESET_TO_EVO: Final = {v: k for k, v in EVO_PRESET_TO_HA.items()}
 
 
-RESET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
-    {vol.Required(ATTR_ENTITY_ID): cv.entity_id}
-)
-SET_ZONE_OVERRIDE_SCHEMA: Final = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_SETPOINT): vol.All(
-            vol.Coerce(float), vol.Range(min=4.0, max=35.0)
-        ),
-        vol.Optional(ATTR_DURATION): vol.All(
-            cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
-        ),
-    }
-)
+RESET_ZONE_OVERRIDE_SCHEMA: Final = {vol.Required(ATTR_ENTITY_ID): cv.entity_id}
+SET_ZONE_OVERRIDE_SCHEMA: Final = {
+    vol.Required(ATTR_ENTITY_ID): cv.entity_id,
+    vol.Required(ATTR_SETPOINT): vol.All(
+        vol.Coerce(float), vol.Range(min=4.0, max=35.0)
+    ),
+    vol.Optional(ATTR_DURATION): vol.All(
+        cv.time_period, vol.Range(min=timedelta(days=0), max=timedelta(days=1))
+    ),
+}
 
 
-async def async_setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
-) -> None:
-    """Set up services for Evohome's Climate entities."""
-    if discovery_info is None:
-        return
+async def _register_entity_services(tcs: evo.ControlSystem) -> None:
+    """Register the service handlers for Evohome's Climate entities.
+
+    Not all Honeywell TCC-compatible systems support all operating modes. In addition,
+    each mode will require any of four distinct service schemas.
+
+    It appears that all TCC-compatible systems support the same three zones modes.
+    """
+
+    # these  is safe only whilst "single_config_entry" is true
 
     platform = async_get_current_platform()
 
+    # First, register the services for the Zones...
     platform.async_register_entity_service(
         EvoService.RESET_ZONE_OVERRIDE,
-        RESET_ZONE_OVERRIDE_SCHEMA,
-        "async_zone_svc_request",
+        RESET_ZONE_OVERRIDE_SCHEMA,  # type: ignore[arg-type]
+        "async_reset_zone_override",
+        required_features=ClimateEntityFeature.TARGET_TEMPERATURE,
     )
 
     platform.async_register_entity_service(
         EvoService.SET_ZONE_OVERRIDE,
-        SET_ZONE_OVERRIDE_SCHEMA,
-        "async_zone_svc_request",
+        SET_ZONE_OVERRIDE_SCHEMA,  # type: ignore[arg-type]
+        "async_set_zone_override",
+        required_features=ClimateEntityFeature.TARGET_TEMPERATURE,
     )
 
 
@@ -168,6 +166,8 @@ async def async_setup_entry(
     for entity in entities:
         await entity.update_attrs()
 
+    await _register_entity_services(tcs)
+
 
 class EvoClimateEntity(EvoEntity, ClimateEntity):
     """Base for any evohome-compatible climate entity (controller, zone)."""
@@ -213,22 +213,28 @@ class EvoZone(EvoChild, EvoClimateEntity):
             | ClimateEntityFeature.TURN_ON
         )
 
-    async def async_zone_svc_request(self, service: str, data: dict[str, Any]) -> None:
+    async def async_reset_zone_override(self) -> None:
+        """Process a service request (setpoint override) for a heating zone."""
+
+        await self.coordinator.call_client_api(self._evo_device.reset())
+
+    async def async_set_zone_override(
+        self,
+        /,
+        *,
+        setpoint: int,
+        duration: timedelta | None = None,
+    ) -> None:
         """Process a service request (setpoint override) for a zone."""
-        if service == EvoService.RESET_ZONE_OVERRIDE:
-            await self.coordinator.call_client_api(self._evo_device.reset())
-            return
 
-        # otherwise it is EvoService.SET_ZONE_OVERRIDE
-        temperature = max(min(data[ATTR_SETPOINT], self.max_temp), self.min_temp)
+        temperature = max(min(setpoint, self.max_temp), self.min_temp)
 
-        if ATTR_DURATION in data:
-            duration: timedelta = data[ATTR_DURATION]
+        if duration is not None:
             if duration.total_seconds() == 0:
                 await self._update_schedule()
                 until = self.setpoints.get("next_sp_from")
             else:
-                until = dt_util.now() + data[ATTR_DURATION]
+                until = dt_util.now() + duration
         else:
             until = None  # indefinitely
 
