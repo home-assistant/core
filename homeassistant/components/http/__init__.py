@@ -181,7 +181,7 @@ class ConfData(TypedDict, total=False):
     use_x_forwarded_for: bool
     use_x_frame_options: bool
     trusted_proxies: list[IPv4Network | IPv6Network]
-    ip_whitelist: list[IPv4Address | IPv6Address]
+    ip_whitelist: list[IPv4Address | IPv6Address] | None
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
@@ -232,7 +232,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     use_x_frame_options = conf[CONF_USE_X_FRAME_OPTIONS]
     trusted_proxies = conf.get(CONF_TRUSTED_PROXIES) or []
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
-    ip_whitelist = conf.get(CONF_IP_WHITELIST, [])
+    ip_whitelist = conf.get(CONF_IP_WHITELIST)
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
 

@@ -83,10 +83,6 @@ async def ban_middleware(
         _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
         return await handler(request)
 
-    ip_whitelist = request.app.get(KEY_IP_WHITELIST)
-    if ip_whitelist and ip_address(request.remote) in ip_whitelist:
-        return await handler(request)
-
     if ip_bans_lookup := ban_manager.ip_bans_lookup:
         # Verify if IP is not banned
         ip_address_ = ip_address(request.remote)  # type: ignore[arg-type]
@@ -156,6 +152,11 @@ async def process_wrong_login(request: Request) -> None:
 
     # Check if ban middleware is loaded
     if KEY_BAN_MANAGER not in request.app or request.app[KEY_LOGIN_THRESHOLD] < 1:
+        return
+
+    # Check if ip is whitelisted
+    ip_whitelist = request.app.get(KEY_IP_WHITELIST)
+    if ip_whitelist and remote_addr in ip_whitelist:
         return
 
     request.app[KEY_FAILED_LOGIN_ATTEMPTS][remote_addr] += 1
