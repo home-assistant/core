@@ -77,10 +77,10 @@ async def test_attributes_update_via_mqtt(
 
     # check original sensors state
     state = hass.states.get("sensor.test_temperature")
-    assert state.state == "0"
+    assert state.state == "unknown"
 
     state = hass.states.get("sensor.test_mpu_voltage")
-    assert state.state == "0"
+    assert state.state == "unknown"
 
     # update sensor value via mqtt
     update_payload = {"temp": 33.4, "volt": 3.31, "rtime": 1000}
