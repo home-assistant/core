@@ -64,7 +64,12 @@
         "name": "Carbon monoxide detector"
       },
       "dishwasher_machine_state": {
-        "name": "Machine state"
+        "name": "Machine state",
+        "state": {
+          "pause": "[%key:common::state::paused%]",
+          "run": "Running",
+          "stop": "Stopped"
+        }
       },
       "dishwasher_job_state": {
         "name": "Job state"
