@@ -255,7 +255,19 @@
         "name": "Cleaning mode"
       },
       "robot_cleaner_movement": {
-        "name": "Movement"
+        "name": "Movement",
+        "state": {
+          "homing": "Homing",
+          "idle": "[%key:common::state::idle%]",
+          "charging": "[%key:common::state::charging%]",
+          "alarm": "Alarm",
+          "off": "[%key:common::state::off%]",
+          "reserve": "Reserve",
+          "point": "Point",
+          "after": "After",
+          "cleaning": "Cleaning",
+          "pause": "[%key:common::state::paused%]"
+        }
       },
       "robot_cleaner_turbo_mode": {
         "name": "Turbo mode"
