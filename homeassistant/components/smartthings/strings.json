@@ -204,10 +204,34 @@
         }
       },
       "oven_machine_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]"
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
+        "state": {
+          "ready": "Ready",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "paused": "[%key:common::state::paused%]"
+        }
       },
       "oven_job_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]"
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
+        "state": {
+          "cleaning": "Cleaning",
+          "cooking": "Cooking",
+          "cooling": "Cooling",
+          "draining": "Draining",
+          "preheat": "Preheat",
+          "ready": "Ready",
+          "rinsing": "Rinsing",
+          "finished": "Finished",
+          "scheduled_start": "Scheduled start",
+          "warming": "Warming",
+          "defrosting": "Defrosting",
+          "sensing": "Sensing",
+          "searing": "Searing",
+          "fast_preheat": "Fast preheat",
+          "scheduled_end": "Scheduled end",
+          "stone_heating": "Stone heating",
+          "time_hold_preheat": "Time hold preheat"
+        }
       },
       "oven_setpoint": {
         "name": "Set point"
@@ -228,10 +252,30 @@
         "name": "[%key:component::smartthings::entity::sensor::oven_setpoint::name%]"
       },
       "robot_cleaner_cleaning_mode": {
-        "name": "Cleaning mode"
+        "name": "Cleaning mode",
+        "state": {
+          "auto": "Auto",
+          "part": "Partial",
+          "repeat": "Repeat",
+          "manual": "Manual",
+          "stop": "[%key:common::action::stop%]",
+          "map": "Map"
+        }
       },
       "robot_cleaner_movement": {
-        "name": "Movement"
+        "name": "Movement",
+        "state": {
+          "homing": "Homing",
+          "idle": "[%key:common::state::idle%]",
+          "charging": "[%key:common::state::charging%]",
+          "alarm": "Alarm",
+          "off": "[%key:common::state::off%]",
+          "reserve": "Reserve",
+          "point": "Point",
+          "after": "After",
+          "cleaning": "Cleaning",
+          "pause": "[%key:common::state::paused%]"
+        }
       },
       "robot_cleaner_turbo_mode": {
         "name": "Turbo mode",
@@ -288,7 +332,12 @@
         "name": "Washer mode"
       },
       "washer_machine_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]"
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
+        "state": {
+          "pause": "[%key:common::state::paused%]",
+          "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "stop": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::stop%]"
+        }
       },
       "washer_job_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]"

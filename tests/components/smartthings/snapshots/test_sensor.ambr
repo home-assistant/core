@@ -1758,7 +1758,27 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'cleaning',
+        'cooking',
+        'cooling',
+        'draining',
+        'preheat',
+        'ready',
+        'rinsing',
+        'finished',
+        'scheduled_start',
+        'warming',
+        'defrosting',
+        'sensing',
+        'searing',
+        'fast_preheat',
+        'scheduled_end',
+        'stone_heating',
+        'time_hold_preheat',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1776,7 +1796,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Job state',
     'platform': 'smartthings',
@@ -1790,7 +1810,27 @@
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_job_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Microwave Job state',
+      'options': list([
+        'cleaning',
+        'cooking',
+        'cooling',
+        'draining',
+        'preheat',
+        'ready',
+        'rinsing',
+        'finished',
+        'scheduled_start',
+        'warming',
+        'defrosting',
+        'sensing',
+        'searing',
+        'fast_preheat',
+        'scheduled_end',
+        'stone_heating',
+        'time_hold_preheat',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.microwave_job_state',
@@ -1805,7 +1845,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'ready',
+        'running',
+        'paused',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1823,7 +1869,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Machine state',
     'platform': 'smartthings',
@@ -1837,7 +1883,13 @@
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_machine_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Microwave Machine state',
+      'options': list([
+        'ready',
+        'running',
+        'paused',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.microwave_machine_state',
@@ -2464,7 +2516,16 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'part',
+        'repeat',
+        'manual',
+        'stop',
+        'map',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2482,7 +2543,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Cleaning mode',
     'platform': 'smartthings',
@@ -2496,7 +2557,16 @@
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_cleaning_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Robot vacuum Cleaning mode',
+      'options': list([
+        'auto',
+        'part',
+        'repeat',
+        'manual',
+        'stop',
+        'map',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.robot_vacuum_cleaning_mode',
@@ -2511,7 +2581,20 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'homing',
+        'idle',
+        'charging',
+        'alarm',
+        'off',
+        'reserve',
+        'point',
+        'after',
+        'cleaning',
+        'pause',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -2529,7 +2612,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Movement',
     'platform': 'smartthings',
@@ -2543,7 +2626,20 @@
 # name: test_all_entities[da_rvc_normal_000001][sensor.robot_vacuum_movement-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Robot vacuum Movement',
+      'options': list([
+        'homing',
+        'idle',
+        'charging',
+        'alarm',
+        'off',
+        'reserve',
+        'point',
+        'after',
+        'cleaning',
+        'pause',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.robot_vacuum_movement',
@@ -3716,7 +3812,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'pause',
+        'run',
+        'stop',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -3734,7 +3836,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Machine state',
     'platform': 'smartthings',
@@ -3748,7 +3850,13 @@
 # name: test_all_entities[da_wm_wm_000001][sensor.washer_machine_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Washer Machine state',
+      'options': list([
+        'pause',
+        'run',
+        'stop',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.washer_machine_state',
