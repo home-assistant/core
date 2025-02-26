@@ -13,7 +13,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN, SMARTTUB_CONTROLLER
-from .entity import SmartTubBuiltinSensorBase
+from .entity import SmartTubOnboardSensorBase
 
 # the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
@@ -89,7 +89,7 @@ async def async_setup_entry(
     )
 
 
-class SmartTubBuiltinSensor(SmartTubBuiltinSensorBase, SensorEntity):
+class SmartTubBuiltinSensor(SmartTubOnboardSensorBase, SensorEntity):
     """Generic class for SmartTub status sensors."""
 
     @property

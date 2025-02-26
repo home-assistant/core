@@ -25,7 +25,7 @@ from .const import (
     SMARTTUB_CONTROLLER,
 )
 from .entity import (
-    SmartTubBuiltinSensorBase,
+    SmartTubOnboardSensorBase,
     SmartTubEntity,
     SmartTubExternalSensorBase,
 )
@@ -98,7 +98,7 @@ async def async_setup_entry(
     )
 
 
-class SmartTubOnline(SmartTubBuiltinSensorBase, BinarySensorEntity):
+class SmartTubOnline(SmartTubOnboardSensorBase, BinarySensorEntity):
     """A binary sensor indicating whether the spa is currently online (connected to the cloud)."""
 
     _attr_device_class = BinarySensorDeviceClass.CONNECTIVITY

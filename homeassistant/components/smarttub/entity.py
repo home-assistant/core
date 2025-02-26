@@ -42,8 +42,8 @@ class SmartTubEntity(CoordinatorEntity):
         return self.coordinator.data[self.spa.id].get("status")
 
 
-class SmartTubBuiltinSensorBase(SmartTubEntity):
-    """Base class for SmartTub built-in sensors."""
+class SmartTubOnboardSensorBase(SmartTubEntity):
+    """Base class for SmartTub onboard sensors."""
 
     def __init__(self, coordinator, spa, sensor_name, state_key):
         """Initialize the entity."""
