@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine, Mapping
 from contextlib import suppress
 import functools
 import os
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, cast
 
 from music_assistant_models.enums import (
     EventType,
@@ -20,6 +20,7 @@ from music_assistant_models.enums import (
 from music_assistant_models.errors import MediaNotFoundError, MusicAssistantError
 from music_assistant_models.event import MassEvent
 from music_assistant_models.media_items import ItemMapping, MediaItemType, Track
+from music_assistant_models.player_queue import PlayerQueue
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -78,7 +79,6 @@ from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
     from music_assistant_models.player import Player
-    from music_assistant_models.player_queue import PlayerQueue
 
 SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.PAUSE
@@ -246,7 +246,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         """Return the active queue for this player (if any)."""
         if not self.player.active_source:
             return None
-        return self.mass.player_queues.get(self.player.active_source)
+        return cast(
+            PlayerQueue | None, self.mass.player_queues.get(self.player.active_source)
+        )
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:

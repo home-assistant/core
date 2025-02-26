@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from music_assistant_models.enums import EventType
 from music_assistant_models.event import MassEvent
@@ -56,7 +56,7 @@ class MusicAssistantEntity(Entity):
     @property
     def player(self) -> Player:
         """Return the Mass Player attached to this HA entity."""
-        return self.mass.players[self.player_id]
+        return cast(Player, self.mass.players[self.player_id])
 
     @property
     def unique_id(self) -> str | None:

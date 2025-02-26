@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from music_assistant_models.media_items import MediaItemType
 
@@ -342,7 +342,7 @@ def build_item(
 
     return BrowseMedia(
         media_class=media_class or item.media_type.value,
-        media_content_id=item.uri,
+        media_content_id=cast(str, item.uri),
         media_content_type=MediaType.MUSIC,
         title=title,
         can_play=True,
