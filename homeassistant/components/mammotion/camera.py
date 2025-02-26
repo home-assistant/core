@@ -11,7 +11,13 @@ from pymammotion.aliyun.model.stream_subscription_response import (
 )
 from pymammotion.utility.device_type import DeviceType
 
-from homeassistant.components.camera import Camera, CameraEntityDescription, StreamType
+from homeassistant.components.camera import (
+    ENTITY_ID_FORMAT,
+    Camera,
+    CameraEntityDescription,
+    StreamType,
+    WebRTCSendMessage,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -69,6 +75,9 @@ class MammotionWebRTCCamera(MammotionBaseEntity, Camera):
         self.entity_description = entity_description
         self._attr_translation_key = entity_description.key
         self._stream_data: StreamSubscriptionResponse | None = None
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            f"{coordinator.device_name}_{entity_description.key}"
+        )
 
     @property
     def frontend_stream_type(self) -> StreamType | None:
@@ -94,53 +103,7 @@ class MammotionWebRTCCamera(MammotionBaseEntity, Camera):
         # WebRTC cameras typically don't support still images
         return None
 
-    async def async_get_stream_source(self) -> str | None:
+    async def async_handle_async_webrtc_offer(
+        self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
+    ) -> None:
         """Return the source of the stream."""
-        try:
-            self._stream_data = self.entity_description.stream_fn(self.coordinator)
-            print(self._stream_data)
-            if not self._stream_data:
-                return None
-
-            # Construct WebRTC offer using the stream data
-            # This is a simplified example - adjust based on your WebRTC implementation
-            return {
-                "sdp": self._create_webrtc_offer(),
-                "type": "offer",
-            }
-        except Exception:
-            # _LOGGER.error("Failed to get stream source: %s", ex)
-            return None
-
-    def _create_webrtc_offer(self) -> str:
-        """Create WebRTC offer from stream data."""
-        if not self._stream_data:
-            return ""
-
-        # Create SDP offer using the stream data
-        # This is a placeholder - implement according to your WebRTC requirements
-        sdp = f"""v=0
-            o=- {self._stream_data.uid} 2 IN IP4 0.0.0.0
-            s=-
-            t=0 0
-            a=group:BUNDLE 0
-            a=msid-semantic: WMS
-            m=video 9 UDP/TLS/RTP/SAVPF 96
-            c=IN IP4 0.0.0.0
-            a=rtcp:9 IN IP4 0.0.0.0
-            a=ice-ufrag:{self._stream_data.token[:8]}
-                a=ice-pwd:{self._stream_data.token[8:24]}
-            a=fingerprint:sha-256 {self._stream_data.token[24:]}
-            a=setup:actpass
-            a=mid:0
-            a=extmap:1 urn:ietf:params:rtp-hdrext:toffset
-            a=sendrecv
-            a=rtcp-mux
-            a=rtcp-rsize
-            a=rtpmap:96 H264/90000
-            a=rtcp-fb:96 nack
-            a=rtcp-fb:96 nack pli
-            a=rtcp-fb:96 goog-remb
-            a=fmtp:96 level-asymmetry-allowed=1;packetization-mode=1;profile-level-id=42e01f
-            """
-        return sdp

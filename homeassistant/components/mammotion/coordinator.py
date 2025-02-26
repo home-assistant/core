@@ -8,28 +8,15 @@ from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
 import betterproto
-from pymammotion import CloudIOTGateway
 from pymammotion.aliyun.cloud_gateway import (
     DeviceOfflineException,
     GatewayTimeoutException,
 )
-from pymammotion.aliyun.model.aep_response import AepResponse
-from pymammotion.aliyun.model.connect_response import ConnectResponse
-from pymammotion.aliyun.model.dev_by_account_response import (
-    Device,
-    ListingDevByAccountResponse,
-)
-from pymammotion.aliyun.model.login_by_oauth_response import LoginByOAuthResponse
-from pymammotion.aliyun.model.regions_response import RegionResponse
-from pymammotion.aliyun.model.session_by_authcode_response import (
-    SessionByAuthCodeResponse,
-)
+from pymammotion.aliyun.model.dev_by_account_response import Device
 from pymammotion.data.model import GenerateRouteInformation, HashList
 from pymammotion.data.model.device import MowerInfo, MowingDevice
 from pymammotion.data.model.device_config import OperationSettings, create_path_order
 from pymammotion.data.model.report_info import Maintain
-from pymammotion.http.http import MammotionHTTP
-from pymammotion.http.model.http import LoginResponseData, Response
 from pymammotion.mammotion.devices.mammotion import ConnectionPreference, Mammotion
 from pymammotion.proto.mctrl_sys import RptAct, RptInfoType
 from pymammotion.utility.constant import WorkMode
@@ -132,6 +119,29 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         await self.manager.login_and_initiate_cloud(account, password, True)
         self.store_cloud_credentials()
 
+    def store_cloud_credentials(self) -> None:
+        """Store cloud credentials in config entry."""
+        # config_updates = {}
+        mammotion_cloud = self.manager.mqtt_list.get(
+            self.config_entry.data.get(CONF_ACCOUNTNAME, "")
+        )
+        cloud_client = mammotion_cloud.cloud_client if mammotion_cloud else None
+
+        if cloud_client is not None:
+            config_updates = {
+                **self.config_entry.data,
+                CONF_CONNECT_DATA: cloud_client.connect_response,
+                CONF_AUTH_DATA: cloud_client.login_by_oauth_response,
+                CONF_REGION_DATA: cloud_client.region_response,
+                CONF_AEP_DATA: cloud_client.aep_response,
+                CONF_SESSION_DATA: cloud_client.session_by_authcode_response,
+                CONF_DEVICE_DATA: cloud_client.devices_by_account_response,
+                CONF_MAMMOTION_DATA: cloud_client.mammotion_http.response,
+            }
+            self.hass.config_entries.async_update_entry(
+                self.config_entry, data=config_updates
+            )
+
     async def async_send_command(self, command: str, **kwargs: Any) -> bool:
         """Send command."""
         if not self.manager.get_device_by_name(self.device_name).mower_state.online:
@@ -193,94 +203,6 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         if model_id := mower.mower_state.model_id:
             if model_id is not None or model_id != device_entry.model_id:
                 device_registry.async_update_device(device_entry.id, model_id=model_id)
-
-    def store_cloud_credentials(self) -> None:
-        """Store cloud credentials in config entry."""
-        # config_updates = {}
-        mammotion_cloud = self.manager.mqtt_list.get(
-            self.config_entry.data.get(CONF_ACCOUNTNAME, "")
-        )
-        cloud_client = mammotion_cloud.cloud_client if mammotion_cloud else None
-
-        if cloud_client is not None:
-            config_updates = {
-                **self.config_entry.data,
-                CONF_CONNECT_DATA: cloud_client.connect_response,
-                CONF_AUTH_DATA: cloud_client.login_by_oauth_response,
-                CONF_REGION_DATA: cloud_client.region_response,
-                CONF_AEP_DATA: cloud_client.aep_response,
-                CONF_SESSION_DATA: cloud_client.session_by_authcode_response,
-                CONF_DEVICE_DATA: cloud_client.devices_by_account_response,
-                CONF_MAMMOTION_DATA: cloud_client.mammotion_http.response,
-            }
-            self.hass.config_entries.async_update_entry(
-                self.config_entry, data=config_updates
-            )
-
-    async def _async_update_notification(self, res: tuple[str, Any | None]) -> None:
-        """Update data from incoming messages."""
-        if res[0] == "sys" and res[1] is not None:
-            sys_msg = betterproto.which_one_of(res[1], "SubSysMsg")
-            if sys_msg[0] == "toapp_report_data":
-                mower = self.manager.mower(self.device_name)
-                self.async_set_updated_data(mower)
-
-    async def check_and_restore_cloud(self) -> CloudIOTGateway | None:
-        """Check and restore previous cloud connection."""
-
-        auth_data = self.config_entry.data.get(CONF_AUTH_DATA)
-        region_data = self.config_entry.data.get(CONF_REGION_DATA)
-        aep_data = self.config_entry.data.get(CONF_AEP_DATA)
-        session_data = self.config_entry.data.get(CONF_SESSION_DATA)
-        device_data = self.config_entry.data.get(CONF_DEVICE_DATA)
-        connect_data = self.config_entry.data.get(CONF_CONNECT_DATA)
-        mammotion_data = self.config_entry.data.get(CONF_MAMMOTION_DATA)
-
-        if any(
-            data is None
-            for data in [
-                auth_data,
-                region_data,
-                aep_data,
-                session_data,
-                device_data,
-                connect_data,
-                mammotion_data,
-            ]
-        ):
-            return None
-
-        cloud_client = CloudIOTGateway(
-            connect_response=ConnectResponse.from_dict(connect_data)
-            if isinstance(connect_data, dict)
-            else connect_data,
-            aep_response=AepResponse.from_dict(aep_data)
-            if isinstance(aep_data, dict)
-            else aep_data,
-            region_response=RegionResponse.from_dict(region_data)
-            if isinstance(region_data, dict)
-            else region_data,
-            session_by_authcode_response=SessionByAuthCodeResponse.from_dict(
-                session_data
-            )
-            if isinstance(session_data, dict)
-            else session_data,
-            dev_by_account=ListingDevByAccountResponse.from_dict(device_data)
-            if isinstance(device_data, dict)
-            else device_data,
-            login_by_oauth_response=LoginByOAuthResponse.from_dict(auth_data)
-            if isinstance(auth_data, dict)
-            else auth_data,
-        )
-
-        if isinstance(mammotion_data, dict):
-            mammotion_data = Response[LoginResponseData].from_dict(mammotion_data)
-
-        cloud_client.set_http(MammotionHTTP(response=mammotion_data))
-
-        await self.hass.async_add_executor_job(cloud_client.check_or_refresh_session)
-
-        return cloud_client
 
     # async def async_setup(self) -> None:
     #     """Set coordinator up."""
@@ -488,21 +410,21 @@ class MammotionBaseUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         """Return operation settings for planning."""
         return self._operation_settings
 
-    # async def async_restore_data(self) -> None:
-    #     """Restore saved data."""
-    #     store = Store(self.hass, version=1, key=self.device_name)
-    #     restored_data = await store.async_load()
-    #     try:
-    #         if restored_data:
-    #             mower_state = MowingDevice().from_dict(restored_data)
-    #             self.manager.get_device_by_name(
-    #                 self.device_name
-    #             ).mower_state = mower_state
-    #     except InvalidFieldValue:
-    #         """invalid"""
-    #         self.data = MowingDevice()
-    #         self.manager.get_device_by_name(self.device_name).mower_state = self.data
-    #
+    async def async_restore_data(self) -> None:
+        """Restore saved data."""
+        store = Store(self.hass, version=1, key=self.device_name)
+        restored_data = await store.async_load()
+        try:
+            if restored_data:
+                mower_state = MowingDevice().from_dict(restored_data)
+                self.manager.get_device_by_name(
+                    self.device_name
+                ).mower_state = mower_state
+        except InvalidFieldValue:
+            """invalid"""
+            self.data = MowingDevice()
+            self.manager.get_device_by_name(self.device_name).mower_state = self.data
+
     async def async_save_data(self, data: MowingDevice) -> None:
         """Get map data from the device."""
         store = Store(self.hass, version=1, key=self.device_name)
@@ -585,54 +507,21 @@ class MammotionReportUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevi
 
         return data
 
+    async def _async_update_notification(self, res: tuple[str, Any | None]) -> None:
+        """Update data from incoming messages."""
+        if res[0] == "sys" and res[1] is not None:
+            sys_msg = betterproto.which_one_of(res[1], "SubSysMsg")
+            if sys_msg[0] == "toapp_report_data":
+                mower = self.manager.mower(self.device_name)
+                self.async_set_updated_data(mower)
 
-# class MammotionDataUpdateCoordinator(MammotionBaseUpdateCoordinator[MowingDevice]):
-#     """Class to manage fetching mammotion data."""
-#
-#     def __init__(self, hass: HomeAssistant, config_entry: MammotionConfigEntry) -> None:
-#         """Initialize global mammotion data updater."""
-#         super().__init__(
-#             hass=hass,
-#             config_entry=config_entry,
-#             update_interval=DEFAULT_INTERVAL,
-#         )
-#
-#
-#     async def _async_update_data(self) -> MowingDevice:
-#         """Get data from the device."""
-#
-#         if not self.enabled:
-#             return self.data
-#
-#         device = self.manager.get_device_by_name(self.device_name)
-#
-#         if self.update_failures > 3 and device.preference is ConnectionPreference.WIFI:
-#             """Don't hammer the mammotion/ali servers"""
-#             loop = asyncio.get_running_loop()
-#             loop.call_later(600, self.clear_update_failures)
-#
-#             return self.data
-#
-#         await self.async_send_command("get_report_cfg")
-#
-#         LOGGER.debug("Updated Mammotion device %s", self.device_name)
-#         LOGGER.debug("================= Debug Log =================")
-#         LOGGER.debug(
-#             "Mammotion device data: %s",
-#             asdict(self.manager.get_device_by_name(self.device_name).mower_state),
-#         )
-#         LOGGER.debug("==================================")
-#
-#         self.update_failures = 0
-#         data = self.manager.get_device_by_name(self.device_name).mower_state
-#         # await self.async_save_data(data)
-#
-#         if data.report_data.dev.sys_status is WorkMode.MODE_WORKING:
-#             self.update_interval = WORKING_INTERVAL
-#         else:
-#             self.update_interval = DEFAULT_INTERVAL
-#
-#         return data
+    async def _async_setup(self) -> None:
+        device = self.manager.get_device_by_name(self.device_name)
+
+        if device.has_cloud():
+            device.cloud().set_notification_callback(self._async_update_notification)
+        elif device.has_ble():
+            device.ble().set_notification_callback(self._async_update_notification)
 
 
 class MammotionMaintenanceUpdateCoordinator(MammotionBaseUpdateCoordinator[Maintain]):

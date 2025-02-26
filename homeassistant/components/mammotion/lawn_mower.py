@@ -114,6 +114,7 @@ class MammotionLawnMowerEntity(MammotionBaseEntity, LawnMowerEntity):
         """Initialize the lawn mower."""
         super().__init__(coordinator, "mower")
         self._attr_name = None  # main feature of device
+        self.entity_id = f"lawn_mower_{coordinator.device_name}"
 
     @property
     def rpt_dev_status(self) -> DeviceData:
