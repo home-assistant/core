@@ -234,7 +234,7 @@
           "part": "Partial",
           "repeat": "Repeat",
           "manual": "Manual",
-          "stop": "Stop",
+          "stop": "[%key:common::action::stop%]",
           "map": "Map"
         }
       },
