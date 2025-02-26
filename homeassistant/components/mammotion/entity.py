@@ -47,12 +47,19 @@ class MammotionBaseEntity(CoordinatorEntity[MammotionBaseUpdateCoordinator]):
             if mower.mqtt_properties is not None:
                 model_id = mower.mqtt_properties.params.items.extMod.value
 
+        nick_name = self.coordinator.device.nickName
+        device_name = (
+            self.coordinator.device_name
+            if nick_name is None or nick_name == ""
+            else self.coordinator.device.nickName
+        )
+
         return DeviceInfo(
             identifiers={(DOMAIN, self.coordinator.device.deviceName)},
             manufacturer="Mammotion",
             serial_number=self.coordinator.device_name.split("-", 1)[-1],
             model_id=model_id,
-            name=self.coordinator.device.nickName,
+            name=device_name,
             sw_version=swversion,
             model=self.coordinator.device.productModel,
             suggested_area="Garden",
