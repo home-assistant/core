@@ -228,7 +228,15 @@
         "name": "[%key:component::smartthings::entity::sensor::oven_setpoint::name%]"
       },
       "robot_cleaner_cleaning_mode": {
-        "name": "Cleaning mode"
+        "name": "Cleaning mode",
+        "state": {
+          "auto": "Auto",
+          "part": "Partial",
+          "repeat": "Repeat",
+          "manual": "Manual",
+          "stop": "Stop",
+          "map": "Map"
+        }
       },
       "robot_cleaner_movement": {
         "name": "Movement"

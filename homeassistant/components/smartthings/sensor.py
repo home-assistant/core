@@ -585,6 +585,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ROBOT_CLEANER_CLEANING_MODE,
                 translation_key="robot_cleaner_cleaning_mode",
+                options=["auto", "part", "repeat", "manual", "stop", "map"],
+                device_class=SensorDeviceClass.ENUM,
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
         ],
