@@ -49,6 +49,14 @@ JOB_STATE_MAP = {
     "unknown": None,
 }
 
+OVEN_JOB_STATE_MAP = {
+    "scheduledStart": "scheduled_start",
+    "fastPreheat": "fast_preheat",
+    "scheduledEnd": "scheduled_end",
+    "stone_heating": "stone_heating",
+    "timeHoldPreheat": "time_hold_preheat",
+}
+
 MEDIA_PLAYBACK_STATE_MAP = {
     "fast forwarding": "fast_forwarding",
 }
@@ -480,6 +488,27 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.OVEN_JOB_STATE,
                 translation_key="oven_job_state",
+                options=[
+                    "cleaning",
+                    "cooking",
+                    "cooling",
+                    "draining",
+                    "preheat",
+                    "ready",
+                    "rinsing",
+                    "finished",
+                    "scheduled_start",
+                    "warming",
+                    "defrosting",
+                    "sensing",
+                    "searing",
+                    "fast_preheat",
+                    "scheduled_end",
+                    "stone_heating",
+                    "time_hold_preheat",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: OVEN_JOB_STATE_MAP.get(value, value),
             )
         ],
         Attribute.COMPLETION_TIME: [
