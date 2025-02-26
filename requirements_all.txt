@@ -1447,7 +1447,7 @@ mozart-api==4.1.1.116.4
 mullvad-api==1.0.0
 
 # homeassistant.components.music_assistant
-music-assistant-client==1.0.8
+music-assistant-client==1.1.1
 
 # homeassistant.components.tts
 mutagen==1.47.0
@@ -2310,10 +2310,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartapp==0.3.5
-
-# homeassistant.components.smartthings
-pysmartthings==0.7.8
+pysmartthings==1.2.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
