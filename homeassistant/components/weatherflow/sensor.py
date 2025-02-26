@@ -269,7 +269,6 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         translation_key="wind_direction",
         device_class=SensorDeviceClass.WIND_DIRECTION,
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
         event_subscriptions=[EVENT_RAPID_WIND, EVENT_OBSERVATION],
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
@@ -278,7 +277,6 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         translation_key="wind_direction_average",
         device_class=SensorDeviceClass.WIND_DIRECTION,
         native_unit_of_measurement=DEGREE,
-        state_class=SensorStateClass.MEASUREMENT,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
     ),
 )
