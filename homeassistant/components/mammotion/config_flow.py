@@ -92,6 +92,7 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
         }
         self._config = {
             CONF_BLE_DEVICES: ble_devices,
+            CONF_ADDRESS: self._discovered_device.address,
         }
 
         try:

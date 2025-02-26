@@ -5,6 +5,7 @@ from pymammotion.data.model.device_limits import DeviceLimits
 from pymammotion.utility.device_type import DeviceType
 
 from homeassistant.components.number import (
+    ENTITY_ID_FORMAT,
     NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
@@ -184,6 +185,9 @@ class MammotionConfigNumberEntity(MammotionBaseEntity, NumberEntity, RestoreEnti
             self._attr_native_value = 0
         if self.entity_description.key == "toward_included_angle":
             self._attr_native_value = 90
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            f"{coordinator.device_name}_{entity_description.key}"
+        )
 
     async def async_set_native_value(self, value: float) -> None:
         """Set native value for number."""
@@ -206,6 +210,9 @@ class MammotionWorkingNumberEntity(MammotionConfigNumberEntity):
 
         min_attr = f"{entity_description.key}_min"
         max_attr = f"{entity_description.key}_max"
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            f"{coordinator.device_name}_{entity_description.key}"
+        )
 
         if hasattr(limits, min_attr) and hasattr(limits, max_attr):
             self._attr_native_min_value = getattr(limits, min_attr)

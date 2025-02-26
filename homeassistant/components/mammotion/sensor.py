@@ -14,6 +14,7 @@ from pymammotion.utility.constant.device_constant import (
 from pymammotion.utility.device_type import DeviceType
 
 from homeassistant.components.sensor import (
+    ENTITY_ID_FORMAT,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -278,12 +279,15 @@ class MammotionSensorEntity(MammotionBaseEntity, SensorEntity):
     def __init__(
         self,
         coordinator: MammotionReportUpdateCoordinator,
-        description: MammotionSensorEntityDescription,
+        entity_description: MammotionSensorEntityDescription,
     ) -> None:
         """Set up MammotionSensor."""
-        super().__init__(coordinator, description.key)
-        self.entity_description = description
-        self._attr_translation_key = description.key
+        super().__init__(coordinator, entity_description.key)
+        self.entity_description = entity_description
+        self._attr_translation_key = entity_description.key
+        self.entity_id = ENTITY_ID_FORMAT.format(
+            f"{coordinator.device_name}_{entity_description.key}"
+        )
 
     @property
     def native_value(self) -> StateType:
