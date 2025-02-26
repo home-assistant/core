@@ -42,6 +42,8 @@ async def async_setup_entry(
 class SmartThingsLock(SmartThingsEntity, LockEntity):
     """Define a SmartThings lock."""
 
+    _attr_name = None
+
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         await self.execute_device_command(

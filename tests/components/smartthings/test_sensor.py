@@ -37,10 +37,7 @@ async def test_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert (
-        hass.states.get("sensor.aeotec_energy_monitor_energy_meter").state
-        == "19978.536"
-    )
+    assert hass.states.get("sensor.aeotec_energy_monitor_energy_2").state == "19978.536"
 
     await trigger_update(
         hass,
@@ -51,6 +48,4 @@ async def test_state_update(
         20000.0,
     )
 
-    assert (
-        hass.states.get("sensor.aeotec_energy_monitor_energy_meter").state == "20000.0"
-    )
+    assert hass.states.get("sensor.aeotec_energy_monitor_energy_2").state == "20000.0"
