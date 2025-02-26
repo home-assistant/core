@@ -575,6 +575,7 @@ async def test_sensors_states(
         "status_key",
         "unit_get_status",
         "unit_get_status_value",
+        "get_status_value_call_count",
     ),
     [
         (
@@ -583,6 +584,7 @@ async def test_sensors_states(
             StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
             "°C",
             None,
+            0,
         ),
         (
             "Oven",
@@ -590,6 +592,7 @@ async def test_sensors_states(
             StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
             None,
             "°C",
+            1,
         ),
     ],
     indirect=["appliance_ha_id"],
@@ -600,6 +603,7 @@ async def test_sensor_unit_fetching(
     status_key: StatusKey,
     unit_get_status: str | None,
     unit_get_status_value: str | None,
+    get_status_value_call_count: int,
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
@@ -643,4 +647,4 @@ async def test_sensor_unit_fetching(
         or unit_get_status_value
     )
 
-    assert client.get_status_value.call_count == 0 or not unit_get_status
+    assert client.get_status_value.call_count == get_status_value_call_count
