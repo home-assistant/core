@@ -1,8 +1,8 @@
 """Client for SFTP Backup Location integration."""
 
-import asyncio
-from collections.abc import AsyncGenerator, AsyncIterator
-from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
+from dataclasses import dataclass
+import json
 from typing import TYPE_CHECKING
 
 from asyncssh import (
@@ -15,13 +15,12 @@ from asyncssh import (
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 
-from homeassistant.components.backup import BackupAgentError, suggested_filename
+from homeassistant.components.backup import suggested_filename
 from homeassistant.components.backup.models import AgentBackup
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 from .const import BUF_SIZE, LOGGER
-from .util import AsyncSSHFileWrapper, process_tar_from_adapter
 
 if TYPE_CHECKING:
     from . import SFTPConfigEntry
@@ -77,6 +76,15 @@ class AsyncFileIterator:
             finally:
                 raise StopAsyncIteration
         return chunk
+
+
+@dataclass(kw_only=True)
+class BackupMetadata:
+    """Represent single backup file metadata."""
+
+    file_path: str
+    metadata: dict[str, str | dict[str | list[str]]]
+    metadata_file: str
 
 
 class BackupAgentClient:
@@ -157,63 +165,76 @@ class BackupAgentClient:
                 f"Attempted to access file outside of configured backup location: {file_path}"
             )
 
-    async def async_delete_backup(self, backup: AgentBackup) -> None:
-        """Delete backup archive."""
+    async def _load_metadata(self, backup: AgentBackup) -> BackupMetadata:
+        """Return `BackupMetadata` object`.
 
-        file_path = (
-            f"{self.cfg.runtime_data.backup_location}/{suggested_filename(backup)}"
-        )
-        assert await self.sftp.exists(file_path), (
-            f"File at provided remote path: {file_path} does not exist."
-        )
-        assert await self.sftp.isfile(file_path), (
-            f"Provided remote path: {file_path} is not file."
-        )
+        Raises
+        ------
+        `AssertionError` -- if metadata file is not found.
 
-        LOGGER.debug("Removing file at path: %s", file_path)
-        await self.sftp.unlink(file_path)
-
-    async def async_list_backups(self) -> list[AgentBackup]:
-        """Iterate through backups.
-
-        Helper method that iterates through remote files and returns
-        a list of `AgentBackup` objects.
         """
 
+        metadata_file = f"{self.cfg.runtime_data.backup_location}/.{backup.backup_id}_hass_backup_metadata.json"
+        assert await self.sftp.exists(metadata_file), (
+            f"Metadata file not found at remote location: {metadata_file}"
+        )
+
+        async with self.sftp.open(metadata_file, "r") as f:
+            return BackupMetadata(
+                **json.loads(await f.read()), metadata_file=metadata_file
+            )
+
+    async def async_delete_backup(self, backup: AgentBackup) -> None:
+        """Delete backup archive.
+
+        Raises
+        ------
+        `AssertionError` -- if either metadata file or archive is not found.
+
+        """
+
+        metadata: BackupMetadata = await self._load_metadata(backup)
+
+        try:
+            assert await self.sftp.exists(metadata.file_path), (
+                f"File at provided remote location: {metadata.file_path} does not exist."
+            )
+        except AssertionError:
+            # If for whatever reason, archive does not exist but metadata file does,
+            # remove the metadata file.
+            await self.sftp.unlink(metadata.metadata_file)
+            raise
+
+        LOGGER.debug("Removing file at path: %s", metadata.file_path)
+        await self.sftp.unlink(metadata.file_path)
+        LOGGER.debug("Removing metadata at path: %s", metadata.metadata_file)
+        await self.sftp.unlink(metadata.metadata_file)
+
+    async def async_list_backups(self) -> list[AgentBackup]:
+        """Iterate through a list of metadata files and return a list of `AgentBackup` objects."""
+
         backups: list[AgentBackup] = []
-        loop = asyncio.get_running_loop()
 
         for file in await self.list_backup_location():
             LOGGER.debug(
-                "Evaluating remote file: %s@%s:%s ...",
+                "Evaluating metadata file at remote location: %s@%s:%s ...",
                 self.cfg.runtime_data.username,
                 self.cfg.runtime_data.host,
                 file,
             )
-            async with self.sftp.open(file, "rb") as rfile:
-                adapter = AsyncSSHFileWrapper(rfile, loop)
-                try:
-                    metadata = await loop.run_in_executor(
-                        None, process_tar_from_adapter, adapter, file
-                    )
-                    if metadata is None:
-                        continue
-                except Exception as e:  # noqa: BLE001
-                    LOGGER.exception(e)
-                    LOGGER.error(
-                        "Failed to load backup metadata from file: %s. Ignoring.", file
-                    )
-                    continue
-                metadata["size"] = (await rfile.stat()).size
-                backup = AgentBackup(**metadata)
-                backups.append(backup)
 
-                # Attempt to rename backup file to match the naming schema
-                # of `suggested_filename` function.
-                # Nothing will happen if file name is same.
-                #
-                # This is due to: https://github.com/home-assistant/core/issues/138853
-                await self.rename(file, suggested_filename(backup))
+            try:
+                async with self.sftp.open(file, "r") as rfile:
+                    metadata = BackupMetadata(
+                        **json.loads(await rfile.read()), metadata_file=file
+                    )
+                    backups.append(AgentBackup.from_dict(metadata.metadata))
+            except Exception as e:  # noqa: BLE001
+                LOGGER.exception(e)
+                LOGGER.error(
+                    "Failed to load backup metadata from file: %s. Ignoring.", file
+                )
+                continue
 
         return backups
 
@@ -231,18 +252,37 @@ class BackupAgentClient:
             async for b in iterator:
                 await f.write(b)
 
-    async def iter_file(self, backup: AgentBackup) -> AsyncFileIterator:
-        """Return Async File Iterator object."""
+        LOGGER.debug("Writing backup metadata ...")
+        metadata: dict[str, str] = {
+            "file_path": file_path,
+            "metadata": backup.as_dict(),
+        }
+        async with self.sftp.open(
+            f"{self.cfg.runtime_data.backup_location}/.{backup.backup_id}_hass_backup_metadata.json",
+            "w",
+        ) as f:
+            await f.write(json.dumps(metadata))
 
-        file_path = (
-            f"{self.cfg.runtime_data.backup_location}/{suggested_filename(backup)}"
-        )
-        if not await self.sftp.isfile(file_path):
-            raise BackupAgentError("Backup not found.")
-        return AsyncFileIterator(self.cfg.runtime_data, file_path, BUF_SIZE)
+    async def iter_file(self, backup: AgentBackup) -> AsyncFileIterator:
+        """Return Async File Iterator object.
+
+        `SFTPClientFile` object (that would be returned with `sftp.open`) is not an iterator.
+        So we return custom made class - `AsyncFileIterator` that would allow iteration on file object.
+
+        Raises
+        ------
+        - `AssertionError` -- if metadata file is not found.
+        - `FileNotFoundError` -- if backup archive is not found.
+
+        """
+
+        metadata: BackupMetadata = await self._load_metadata(backup)
+        if not await self.sftp.exists(metadata.file_path):
+            raise FileNotFoundError("Backup archive not found on remote location.")
+        return AsyncFileIterator(self.cfg, self.hass, metadata.file_path, BUF_SIZE)
 
     async def list_backup_location(self) -> list[str]:
-        """Return .tar files located in backup location."""
+        """Return a list of `*_hass_backup_metadata.json` files located in backup location."""
         self._initialized()
         files = []
         LOGGER.debug(
@@ -256,73 +296,7 @@ class BackupAgentClient:
                 file,
                 self.cfg.runtime_data.backup_location,
             )
-            if file.endswith(".tar"):
-                LOGGER.debug("Found tar file name: `%s`.", file)
+            if file.endswith("_hass_backup_metadata.json"):
+                LOGGER.debug("Found metadata file: `%s`.", file)
                 files.append(f"{self.cfg.runtime_data.backup_location}/{file}")
         return files
-
-    @asynccontextmanager
-    async def open(
-        self, file_path: str, mode: str = "rb"
-    ) -> AsyncGenerator[SFTPClientFile]:
-        """Open a remote file.
-
-        This method opens a remote file and returns an
-        :class:`SFTPClientFile` object which can be used to read and
-        write data and get and set file attributes.
-
-
-        The following open mode flags are supported:
-          ==== =============================================
-          Mode Flags
-          ==== =============================================
-          r    FXF_READ
-          w    FXF_WRITE | FXF_CREAT | FXF_TRUNC
-          a    FXF_WRITE | FXF_CREAT | FXF_APPEND
-          x    FXF_WRITE | FXF_CREAT | FXF_EXCL
-
-          r+   FXF_READ | FXF_WRITE
-          w+   FXF_READ | FXF_WRITE | FXF_CREAT | FXF_TRUNC
-          a+   FXF_READ | FXF_WRITE | FXF_CREAT | FXF_APPEND
-          x+   FXF_READ | FXF_WRITE | FXF_CREAT | FXF_EXCL
-          ==== =============================================
-
-        Including a 'b' in the mode causes the `encoding` to be set
-        to `None`, forcing all data to be read and written as bytes
-        in binary format.
-
-        :param file_path:
-            The name of the remote file to open
-        :param mode: (optional)
-            The access mode to use for the remote file (see above)
-
-        :returns: An :class:`SFTPClientFile` to use to access the file
-
-        :raises: | :exc:`ValueError` if the mode is not valid
-                 | :exc:`SFTPError` if the server returns an error
-
-        """
-        self._initialized(file_path=file_path)
-
-        async with self.sftp.open(file_path, mode) as f:
-            LOGGER.debug("Opening `%s` in `%s` mode.", file_path, mode)
-            yield f
-
-    async def rename(self, file_path: str, new_name: str) -> str:
-        """Rename `file_path` to `new_name`.
-
-        Returns full path to new file name.
-        """
-        self._initialized(file_path=file_path)
-
-        # Change new_name to point to full backup_location path
-        if not new_name.startswith(self.cfg.runtime_data.backup_location):
-            new_name = f"{self.cfg.runtime_data.backup_location}/{new_name}"
-
-        # Do nothing name is same.
-        if file_path == new_name:
-            return new_name
-
-        LOGGER.debug("Renaming `%s` to `%s`.", file_path, new_name)
-        await self.sftp.rename(file_path, new_name)
-        return new_name
