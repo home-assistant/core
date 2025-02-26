@@ -1,6 +1,6 @@
 """Support for Qbus thermostat."""
 
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -22,6 +22,8 @@ from .coordinator import QbusConfigEntry
 from .entity import QbusEntity, add_new_outputs
 
 PARALLEL_UPDATES = 0
+
+STATE_REQUEST_DELAY = timedelta(seconds=2)
 
 
 async def async_setup_entry(
@@ -50,8 +52,6 @@ async def async_setup_entry(
 class QbusClimate(QbusEntity, ClimateEntity):
     """Representation of a Qbus climate entity."""
 
-    _STATE_REQUEST_DELAY = 2
-
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
@@ -73,6 +73,9 @@ class QbusClimate(QbusEntity, ClimateEntity):
         self._attr_max_temp = set_temp.get("max", 35)
         self._attr_target_temperature_step = set_temp.get("step", 0.5)
         self._attr_preset_modes = current_regime.get("enumValues", [])
+        self._attr_preset_mode = (
+            self._attr_preset_modes[0] if len(self._attr_preset_modes) > 0 else ""
+        )
 
         self._cancel_state_request: CALLBACK_TYPE | None = None
 
@@ -119,14 +122,16 @@ class QbusClimate(QbusEntity, ClimateEntity):
         self._determine_hvac_mode_and_action()
 
         # When the state type is "event", the payload only contains the changed
-        # property. Request the state to get the full payload.
+        # property. Request the state to get the full payload. However, changing
+        # temperature step by step could cause a flood of state requests, so we're
+        # holding off a few seconds before requesting the full state.
         if state.type == StateType.EVENT:
             if self._cancel_state_request is not None:
                 self._cancel_state_request()
                 self._cancel_state_request = None
 
             self._cancel_state_request = async_call_later(
-                self.hass, self._STATE_REQUEST_DELAY, self._async_request_state
+                self.hass, STATE_REQUEST_DELAY, self._async_request_state
             )
 
         self.async_schedule_update_ha_state()
