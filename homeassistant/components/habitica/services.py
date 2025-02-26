@@ -22,7 +22,7 @@ from habiticalib import (
 )
 import voluptuous as vol
 
-from homeassistant.components.todo import ATTR_DESCRIPTION, ATTR_RENAME
+from homeassistant.components.todo import ATTR_RENAME
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_NAME, CONF_NAME
 from homeassistant.core import (
@@ -45,6 +45,7 @@ from .const import (
     ATTR_DIRECTION,
     ATTR_ITEM,
     ATTR_KEYWORD,
+    ATTR_NOTES,
     ATTR_PATH,
     ATTR_PRIORITY,
     ATTR_REMOVE_TAG,
@@ -116,7 +117,7 @@ SERVICE_UPDATE_TASK_SCHEMA = vol.Schema(
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
         vol.Required(ATTR_TASK): cv.string,
         vol.Optional(ATTR_RENAME): cv.string,
-        vol.Optional(ATTR_DESCRIPTION): cv.string,
+        vol.Optional(ATTR_NOTES): cv.string,
         vol.Optional(ATTR_TAG): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_REMOVE_TAG): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_ALIAS): vol.All(
@@ -566,8 +567,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         if rename := call.data.get(ATTR_RENAME):
             data["text"] = rename
 
-        if (description := call.data.get(ATTR_DESCRIPTION)) is not None:
-            data["notes"] = description
+        if (notes := call.data.get(ATTR_NOTES)) is not None:
+            data["notes"] = notes
 
         tags = cast(list[str], call.data.get(ATTR_TAG))
         remove_tags = cast(list[str], call.data.get(ATTR_REMOVE_TAG))

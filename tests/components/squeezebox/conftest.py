@@ -132,6 +132,7 @@ async def mock_async_browse(
     child_types = {
         "favorites": "favorites",
         "new music": "album",
+        "album artists": "artists",
         "albums": "album",
         "album": "track",
         "genres": "genre",

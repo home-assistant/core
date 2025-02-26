@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name        = "homeassistant"
-version     = "2025.3.0.dev0"
+version     = "2025.4.0.dev0"
 license     = {text = "Apache-2.0"}
 description = "Open-source home automation platform running on Python 3."
 readme      = "README.rst"
@@ -66,7 +66,7 @@ dependencies    = [
     "python-slugify==8.0.4",
     "PyYAML==6.0.2",
     "requests==2.32.3",
-    "securetar==2025.1.4",
+    "securetar==2025.2.1",
     "SQLAlchemy==2.0.38",
     "standard-aifc==3.13.0",
     "standard-telnetlib==3.13.0",

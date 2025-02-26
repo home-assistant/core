@@ -1,0 +1,59 @@
+{
+  "items": [
+    {
+      "deviceId": "571af102-15db-4030-b76b-245a691f74a5",
+      "name": "c2c-shade",
+      "label": "Curtain 1A",
+      "manufacturerName": "SmartThings",
+      "presentationId": "SmartThings-smartthings-c2c-shade",
+      "deviceManufacturerCode": "WonderLabs Company",
+      "locationId": "88a3a314-f0c8-40b4-bb44-44ba06c9c42f",
+      "ownerId": "12d4af93-cb68-b108-87f5-625437d7371f",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "windowShade",
+              "version": 1
+            },
+            {
+              "id": "switchLevel",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "healthCheck",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Blind",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2025-02-07T23:01:15.883Z",
+      "profile": {
+        "id": "0ceffb3e-10d3-4123-bb42-2a92c93c6e25"
+      },
+      "viper": {
+        "manufacturerName": "WonderLabs Company",
+        "modelName": "WoCurtain3",
+        "hwVersion": "WoCurtain3-WoCurtain3",
+        "endpointAppId": "viper_f18eb770-077d-11ea-bb72-9922e3ed0d38"
+      },
+      "type": "VIPER",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

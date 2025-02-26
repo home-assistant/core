@@ -49,6 +49,23 @@
         "default": "mdi:map-marker-remove-variant"
       }
     },
+    "button": {
+      "open_door": {
+        "default": "mdi:door-open"
+      },
+      "partly_open_door": {
+        "default": "mdi:door-open"
+      },
+      "pause_program": {
+        "default": "mdi:pause"
+      },
+      "resume_program": {
+        "default": "mdi:play"
+      },
+      "stop_program": {
+        "default": "mdi:stop"
+      }
+    },
     "sensor": {
       "operation_state": {
         "default": "mdi:state-machine",
