@@ -440,13 +440,25 @@ class HomeConnectCoordinator(
         self, ha_id: str, program_key: ProgramKey
     ) -> dict[OptionKey, ProgramDefinitionOption]:
         """Get options with constraints for appliance."""
-        return {
-            option.key: option
-            for option in (
-                await self.client.get_available_program(ha_id, program_key=program_key)
-            ).options
-            or []
-        }
+        try:
+            return {
+                option.key: option
+                for option in (
+                    await self.client.get_available_program(
+                        ha_id, program_key=program_key
+                    )
+                ).options
+                or []
+            }
+        except HomeConnectError as error:
+            _LOGGER.debug(
+                "Error fetching options for %s: %s",
+                ha_id,
+                error
+                if isinstance(error, HomeConnectApiError)
+                else type(error).__name__,
+            )
+            return {}
 
     async def update_options(
         self, ha_id: str, event_key: EventKey, program_key: ProgramKey
