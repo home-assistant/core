@@ -40,7 +40,7 @@ KEY_FAILED_LOGIN_ATTEMPTS = AppKey[defaultdict[IPv4Address | IPv6Address, int]](
     "ha_failed_login_attempts"
 )
 KEY_LOGIN_THRESHOLD = AppKey[int]("ban_manager.ip_bans_lookup")
-KEY_IP_WHITELIST = AppKey[list[IPv4Address | IPv6Address]]("ha_ip_whitelist")
+KEY_IP_WHITELIST = AppKey[list[IPv4Address | IPv6Address] | None]("ha_ip_whitelist")
 
 NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"

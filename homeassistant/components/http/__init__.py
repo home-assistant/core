@@ -401,7 +401,7 @@ class HomeAssistantHTTP:
         login_threshold: int,
         is_ban_enabled: bool,
         use_x_frame_options: bool,
-        ip_whitelist: list[IPv4Address | IPv6Address],
+        ip_whitelist: list[IPv4Address | IPv6Address] | None,
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
