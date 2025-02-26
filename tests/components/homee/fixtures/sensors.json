@@ -710,6 +710,34 @@
       "based_on": 1,
       "data": "",
       "name": ""
+    },
+    {
+      "id": 34,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
+      "maximum": 100,
+      "current_value": 2.0,
+      "target_value": 2.0,
+      "last_value": 2.0,
+      "unit": "%",
+      "step_value": 1.0,
+      "editable": 0,
+      "type": 11,
+      "state": 1,
+      "last_changed": 1739320320,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": "",
+      "options": {
+        "history": {
+          "day": 1,
+          "week": 26,
+          "month": 6
+        }
+      }
     }
   ]
 }
