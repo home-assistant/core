@@ -49,6 +49,10 @@ JOB_STATE_MAP = {
     "unknown": None,
 }
 
+MEDIA_PLAYBACK_STATE_MAP = {
+    "fast forwarding": "fast_forwarding",
+}
+
 
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
     """Return the power attributes."""
@@ -404,6 +408,16 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.PLAYBACK_STATUS,
                 translation_key="media_playback_status",
+                options=[
+                    "paused",
+                    "playing",
+                    "stopped",
+                    "fast_forwarding",
+                    "rewinding",
+                    "buffering",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: MEDIA_PLAYBACK_STATE_MAP.get(value, value),
             )
         ]
     },
