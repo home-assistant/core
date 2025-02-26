@@ -31,6 +31,9 @@
       },
       "ct_current": {
         "default": "mdi:gauge"
+      },
+      "slot_list": {
+        "default": "mdi:calendar-clock"
       }
     },
     "switch": {

@@ -220,7 +220,8 @@ SCALE_KEY_ENTITIES: tuple[LaMarzoccoKeyNumberEntityDescription, ...] = (
             config.bbw_settings.doses[key] if config.bbw_settings else None
         ),
         supported_fn=(
-            lambda coordinator: coordinator.device.model == MachineModel.LINEA_MINI
+            lambda coordinator: coordinator.device.model
+            in (MachineModel.LINEA_MINI, MachineModel.LINEA_MINI_R)
             and coordinator.device.config.scale is not None
         ),
     ),

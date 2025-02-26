@@ -20,6 +20,7 @@ from music_assistant_models.enums import (
 from music_assistant_models.errors import MediaNotFoundError, MusicAssistantError
 from music_assistant_models.event import MassEvent
 from music_assistant_models.media_items import ItemMapping, MediaItemType, Track
+from music_assistant_models.player_queue import PlayerQueue
 import voluptuous as vol
 
 from homeassistant.components import media_source
@@ -78,7 +79,6 @@ from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
     from music_assistant_models.player import Player
-    from music_assistant_models.player_queue import PlayerQueue
 
 SUPPORTED_FEATURES = (
     MediaPlayerEntityFeature.PAUSE
@@ -473,6 +473,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 album=album,
                 media_type=MediaType(media_type) if media_type else None,
             ):
+                if TYPE_CHECKING:
+                    assert item.uri is not None
                 media_uris.append(item.uri)
 
         if not media_uris:

@@ -51,15 +51,16 @@ class YoLinkLockEntity(YoLinkEntity, LockEntity):
     def update_entity_state(self, state: dict[str, Any]) -> None:
         """Update HA Entity State."""
         state_value = state.get("state")
-        if self.coordinator.device.device_type == ATTR_DEVICE_LOCK_V2:
-            self._attr_is_locked = (
-                state_value["lock"] == "locked" if state_value is not None else None
-            )
-        else:
-            self._attr_is_locked = (
-                state_value == "locked" if state_value is not None else None
-            )
-        self.async_write_ha_state()
+        if state_value is not None:
+            if self.coordinator.device.device_type == ATTR_DEVICE_LOCK_V2:
+                self._attr_is_locked = (
+                    state_value["lock"] == "locked" if state_value is not None else None
+                )
+            else:
+                self._attr_is_locked = (
+                    state_value == "locked" if state_value is not None else None
+                )
+            self.async_write_ha_state()
 
     async def call_lock_state_change(self, state: str) -> None:
         """Call setState api to change lock state."""
@@ -69,7 +70,7 @@ class YoLinkLockEntity(YoLinkEntity, LockEntity):
             )
         else:
             await self.call_device(ClientRequest("setState", {"state": state}))
-        self._attr_is_locked = state == "lock"
+        self._attr_is_locked = state in ["locked", "lock"]
         self.async_write_ha_state()
 
     async def async_lock(self, **kwargs: Any) -> None:

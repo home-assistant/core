@@ -48,6 +48,7 @@ from .schemas import (
 
 if TYPE_CHECKING:
     from music_assistant_client import MusicAssistantClient
+    from music_assistant_models.media_items import Album, Artist, Playlist, Radio, Track
 
     from . import MusicAssistantConfigEntry
 
@@ -173,6 +174,9 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
         "offset": offset,
         "order_by": order_by,
     }
+    library_result: (
+        list[Album] | list[Artist] | list[Track] | list[Radio] | list[Playlist]
+    )
     if media_type == MediaType.ALBUM:
         library_result = await mass.music.get_library_albums(
             **base_params,
@@ -181,7 +185,7 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
     elif media_type == MediaType.ARTIST:
         library_result = await mass.music.get_library_artists(
             **base_params,
-            album_artists_only=call.data.get(ATTR_ALBUM_ARTISTS_ONLY),
+            album_artists_only=bool(call.data.get(ATTR_ALBUM_ARTISTS_ONLY)),
         )
     elif media_type == MediaType.TRACK:
         library_result = await mass.music.get_library_tracks(

@@ -65,20 +65,20 @@ MEDIA_ITEM_SCHEMA = vol.Schema(
 
 def media_item_dict_from_mass_item(
     mass: MusicAssistantClient,
-    item: MediaItemType | ItemMapping | None,
-) -> dict[str, Any] | None:
+    item: MediaItemType | ItemMapping,
+) -> dict[str, Any]:
     """Parse a Music Assistant MediaItem."""
-    if not item:
-        return None
-    base = {
+    base: dict[str, Any] = {
         ATTR_MEDIA_TYPE: item.media_type,
         ATTR_URI: item.uri,
         ATTR_NAME: item.name,
         ATTR_VERSION: item.version,
         ATTR_IMAGE: mass.get_media_item_image_url(item),
     }
+    artists: list[ItemMapping] | None
     if artists := getattr(item, "artists", None):
         base[ATTR_ARTISTS] = [media_item_dict_from_mass_item(mass, x) for x in artists]
+    album: ItemMapping | None
     if album := getattr(item, "album", None):
         base[ATTR_ALBUM] = media_item_dict_from_mass_item(mass, album)
     return base
@@ -151,7 +151,11 @@ def queue_item_dict_from_mass_item(
         ATTR_QUEUE_ITEM_ID: item.queue_item_id,
         ATTR_NAME: item.name,
         ATTR_DURATION: item.duration,
-        ATTR_MEDIA_ITEM: media_item_dict_from_mass_item(mass, item.media_item),
+        ATTR_MEDIA_ITEM: (
+            media_item_dict_from_mass_item(mass, item.media_item)
+            if item.media_item
+            else None
+        ),
     }
     if streamdetails := item.streamdetails:
         base[ATTR_STREAM_TITLE] = streamdetails.stream_title

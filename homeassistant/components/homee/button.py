@@ -75,4 +75,4 @@ class HomeeButton(HomeeEntity, ButtonEntity):
 
     async def async_press(self) -> None:
         """Handle the button press."""
-        await self.async_set_value(1)
+        await self.async_set_homee_value(1)

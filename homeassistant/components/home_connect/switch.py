@@ -42,6 +42,7 @@ from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
 SWITCHES = (
     SwitchEntityDescription(

@@ -14,6 +14,7 @@ from habiticalib import (
     HabiticaResponse,
     HabiticaScoreResponse,
     HabiticaSleepResponse,
+    HabiticaTagResponse,
     HabiticaTaskOrderResponse,
     HabiticaTaskResponse,
     HabiticaTasksResponse,
@@ -143,6 +144,12 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
             HabiticaUserAnonymizedResponse.from_json(
                 load_fixture("anonymized.json", DOMAIN)
             )
+        )
+        client.update_task.return_value = HabiticaTaskResponse.from_json(
+            load_fixture("task.json", DOMAIN)
+        )
+        client.create_tag.return_value = HabiticaTagResponse.from_json(
+            load_fixture("create_tag.json", DOMAIN)
         )
         client.habitipy.return_value = {
             "tasks": {

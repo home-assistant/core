@@ -37,22 +37,27 @@
   "entity": {
     "sensor": {
       "commands": {
-        "name": "Commands"
+        "name": "Commands",
+        "unit_of_measurement": "commands"
       },
       "diskspace": {
         "name": "Disk space"
       },
       "queue": {
-        "name": "Queue"
+        "name": "Queue",
+        "unit_of_measurement": "episodes"
       },
       "series": {
-        "name": "Shows"
+        "name": "Shows",
+        "unit_of_measurement": "series"
       },
       "upcoming": {
-        "name": "Upcoming"
+        "name": "Upcoming",
+        "unit_of_measurement": "[%key:component::sonarr::entity::sensor::queue::unit_of_measurement%]"
       },
       "wanted": {
-        "name": "Wanted"
+        "name": "Wanted",
+        "unit_of_measurement": "[%key:component::sonarr::entity::sensor::queue::unit_of_measurement%]"
       }
     }
   }

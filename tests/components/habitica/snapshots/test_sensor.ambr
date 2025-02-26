@@ -1271,6 +1271,10 @@
           'th': False,
           'w': True,
         }),
+        'tags': list([
+          '3450351f-1323-4c7e-9fd2-0cdff25b3ce0',
+          'b2780f82-b3b5-49a3-a677-48f2c8c7e3bb',
+        ]),
         'text': 'Belohne Dich selbst',
         'type': 'reward',
         'value': 10.0,

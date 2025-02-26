@@ -263,7 +263,7 @@
           "paused": "[%key:common::state::paused%]",
           "error": "Error",
           "seeking_charger": "Seeking charger",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "docked": "Docked"
         }
       },

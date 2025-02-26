@@ -35,6 +35,11 @@ ATTR_TYPE = "type"
 ATTR_PRIORITY = "priority"
 ATTR_TAG = "tag"
 ATTR_KEYWORD = "keyword"
+ATTR_REMOVE_TAG = "remove_tag"
+ATTR_ALIAS = "alias"
+ATTR_PRIORITY = "priority"
+ATTR_COST = "cost"
+ATTR_NOTES = "notes"
 
 SERVICE_CAST_SKILL = "cast_skill"
 SERVICE_START_QUEST = "start_quest"
@@ -50,6 +55,7 @@ SERVICE_SCORE_REWARD = "score_reward"
 
 SERVICE_TRANSFORMATION = "transformation"
 
+SERVICE_UPDATE_REWARD = "update_reward"
 
 DEVELOPER_ID = "4c4ca53f-c059-4ffa-966e-9d29dd405daf"
 X_CLIENT = f"{DEVELOPER_ID} - {APPLICATION_NAME} {__version__}"

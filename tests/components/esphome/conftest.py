@@ -6,7 +6,7 @@ import asyncio
 from asyncio import Event
 from collections.abc import AsyncGenerator, Awaitable, Callable, Coroutine
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aioesphomeapi import (
@@ -17,6 +17,7 @@ from aioesphomeapi import (
     EntityInfo,
     EntityState,
     HomeassistantServiceCall,
+    LogLevel,
     ReconnectLogic,
     UserService,
     VoiceAssistantAnnounceFinished,
@@ -41,6 +42,10 @@ from homeassistant.setup import async_setup_component
 from . import DASHBOARD_HOST, DASHBOARD_PORT, DASHBOARD_SLUG
 
 from tests.common import MockConfigEntry
+
+if TYPE_CHECKING:
+    from aioesphomeapi.api_pb2 import SubscribeLogsResponse
+
 
 _ONE_SECOND = 16000 * 2  # 16Khz 16-bit
 
@@ -154,6 +159,7 @@ def mock_client(mock_device_info) -> APIClient:
     mock_client.device_info = AsyncMock(return_value=mock_device_info)
     mock_client.connect = AsyncMock()
     mock_client.disconnect = AsyncMock()
+    mock_client.subscribe_logs = Mock()
     mock_client.list_entities_services = AsyncMock(return_value=([], []))
     mock_client.address = "127.0.0.1"
     mock_client.api_version = APIVersion(99, 99)
@@ -222,7 +228,9 @@ class MockESPHomeDevice:
             ]
             | None
         )
+        self.on_log_message: Callable[[SubscribeLogsResponse], None]
         self.device_info = device_info
+        self.current_log_level = LogLevel.LOG_LEVEL_NONE
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -249,6 +257,16 @@ class MockESPHomeDevice:
     async def mock_disconnect(self, expected_disconnect: bool) -> None:
         """Mock disconnecting."""
         await self.on_disconnect(expected_disconnect)
+
+    def set_on_log_message(
+        self, on_log_message: Callable[[SubscribeLogsResponse], None]
+    ) -> None:
+        """Set the log message callback."""
+        self.on_log_message = on_log_message
+
+    def mock_on_log_message(self, log_message: SubscribeLogsResponse) -> None:
+        """Mock on log message."""
+        self.on_log_message(log_message)
 
     def set_on_connect(self, on_connect: Callable[[], None]) -> None:
         """Set the connect callback."""
@@ -413,6 +431,14 @@ async def _mock_generic_device_entry(
             on_state_sub, on_state_request
         )
 
+    def _subscribe_logs(
+        on_log_message: Callable[[SubscribeLogsResponse], None], log_level: LogLevel
+    ) -> Callable[[], None]:
+        """Subscribe to log messages."""
+        mock_device.set_on_log_message(on_log_message)
+        mock_device.current_log_level = log_level
+        return lambda: None
+
     def _subscribe_voice_assistant(
         *,
         handle_start: Callable[
@@ -453,6 +479,7 @@ async def _mock_generic_device_entry(
     mock_client.subscribe_states = _subscribe_states
     mock_client.subscribe_service_calls = _subscribe_service_calls
     mock_client.subscribe_home_assistant_states = _subscribe_home_assistant_states
+    mock_client.subscribe_logs = _subscribe_logs
 
     try_connect_done = Event()
 

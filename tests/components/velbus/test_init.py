@@ -16,6 +16,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import init_integration
+from .const import PORT_TCP
 
 from tests.common import MockConfigEntry
 
@@ -107,16 +108,41 @@ async def test_migrate_config_entry(
     """Test successful migration of entry data."""
     legacy_config = {CONF_NAME: "fake_name", CONF_PORT: "1.2.3.4:5678"}
     entry = MockConfigEntry(domain=DOMAIN, unique_id="my own id", data=legacy_config)
-    entry.add_to_hass(hass)
-
-    assert dict(entry.data) == legacy_config
     assert entry.version == 1
+    assert entry.minor_version == 1
+
+    entry.add_to_hass(hass)
 
     # test in case we do not have a cache
     with patch("os.path.isdir", return_value=True), patch("shutil.rmtree"):
         await hass.config_entries.async_setup(entry.entry_id)
         assert dict(entry.data) == legacy_config
         assert entry.version == 2
+        assert entry.minor_version == 2
+
+
+@pytest.mark.parametrize(
+    ("unique_id", "expected"),
+    [("vid:pid_serial_manufacturer_decription", "serial"), (None, None)],
+)
+async def test_migrate_config_entry_unique_id(
+    hass: HomeAssistant,
+    controller: AsyncMock,
+    unique_id: str,
+    expected: str,
+) -> None:
+    """Test the migration of unique id."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_PORT: PORT_TCP, CONF_NAME: "velbus home"},
+        unique_id=unique_id,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    assert entry.unique_id == expected
+    assert entry.version == 2
+    assert entry.minor_version == 2
 
 
 async def test_api_call(

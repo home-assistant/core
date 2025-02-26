@@ -77,6 +77,7 @@ async def test_async_browse_media_root(
         ("Playlists", 4),
         ("Genres", 4),
         ("New Music", 4),
+        ("Album Artists", 4),
         ("Apps", 3),
         ("Radios", 3),
     ],

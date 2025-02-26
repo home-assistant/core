@@ -38,7 +38,6 @@
       "module": "pytest",
       "justMyCode": false,
       "args": [
-        "--timeout=10",
         "--picked"
       ],
     },

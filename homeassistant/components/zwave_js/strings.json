@@ -516,8 +516,8 @@
           "name": "Auto relock time"
         },
         "block_to_block": {
-          "description": "Enable block-to-block functionality.",
-          "name": "Block to block"
+          "description": "Whether the lock should run the motor until it hits resistance.",
+          "name": "Block to Block"
         },
         "hold_and_release_time": {
           "description": "Duration in seconds the latch stays retracted.",
@@ -529,11 +529,11 @@
         },
         "operation_type": {
           "description": "The operation type of the lock.",
-          "name": "Operation Type"
+          "name": "Operation type"
         },
         "twist_assist": {
-          "description": "Enable Twist Assist.",
-          "name": "Twist assist"
+          "description": "Whether the motor should help in locking and unlocking.",
+          "name": "Twist Assist"
         }
       },
       "name": "Set lock configuration"

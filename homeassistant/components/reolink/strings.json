@@ -741,8 +741,8 @@
       "battery_state": {
         "name": "Battery state",
         "state": {
-          "discharging": "Discharging",
-          "charging": "Charging",
+          "discharging": "[%key:common::state::discharging%]",
+          "charging": "[%key:common::state::charging%]",
           "chargecomplete": "Charge complete"
         }
       },

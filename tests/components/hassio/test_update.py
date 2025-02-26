@@ -18,6 +18,7 @@ from homeassistant.components.hassio.const import REQUEST_REFRESH_DELAY
 from homeassistant.const import __version__ as HAVERSION
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -235,6 +236,13 @@ async def test_update_addon(hass: HomeAssistant, update_addon: AsyncMock) -> Non
     update_addon.assert_called_once_with("test", StoreAddonUpdate(backup=False))
 
 
+async def setup_backup_integration(hass: HomeAssistant) -> None:
+    """Set up the backup integration."""
+    async_initialize_backup(hass)
+    assert await async_setup_component(hass, "backup", {})
+    await hass.async_block_till_done()
+
+
 @pytest.mark.parametrize(
     ("commands", "default_mount", "expected_kwargs"),
     [
@@ -318,8 +326,7 @@ async def test_update_addon_with_backup(
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-    assert await async_setup_component(hass, "backup", {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     client = await hass_ws_client(hass)
     for command in commands:
@@ -413,8 +420,7 @@ async def test_update_addon_with_backup_removes_old_backups(
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-    assert await async_setup_component(hass, "backup", {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     supervisor_client.mounts.info.return_value.default_backup_mount = None
     with (
@@ -588,8 +594,7 @@ async def test_update_core_with_backup(
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-    assert await async_setup_component(hass, "backup", {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     client = await hass_ws_client(hass)
     for command in commands:
@@ -691,8 +696,7 @@ async def test_update_addon_with_backup_and_error(
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-    assert await async_setup_component(hass, "backup", {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     supervisor_client.homeassistant.update.return_value = None
     supervisor_client.mounts.info.return_value.default_backup_mount = None
@@ -811,8 +815,7 @@ async def test_update_core_with_backup_and_error(
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
-    assert await async_setup_component(hass, "backup", {})
-    await hass.async_block_till_done()
+    await setup_backup_integration(hass)
 
     supervisor_client.homeassistant.update.return_value = None
     supervisor_client.mounts.info.return_value.default_backup_mount = None

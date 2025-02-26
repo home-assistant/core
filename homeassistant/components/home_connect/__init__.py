@@ -203,7 +203,13 @@ async def _get_client_and_ha_id(
     device_registry = dr.async_get(hass)
     device_entry = device_registry.async_get(device_id)
     if device_entry is None:
-        raise ServiceValidationError("Device entry not found for device id")
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_entry_not_found",
+            translation_placeholders={
+                "device_id": device_id,
+            },
+        )
     entry: HomeConnectConfigEntry | None = None
     for entry_id in device_entry.config_entries:
         _entry = hass.config_entries.async_get_entry(entry_id)

@@ -42,12 +42,12 @@ async def async_migrate_entry(
     LOGGER.debug("Migrating from version %s", entry.version)
 
     if entry.version == 1:
-        latitude, longitude = await Stookwijzer.async_transform_coordinates(
+        longitude, latitude = await Stookwijzer.async_transform_coordinates(
             entry.data[CONF_LOCATION][CONF_LATITUDE],
             entry.data[CONF_LOCATION][CONF_LONGITUDE],
         )
 
-        if not latitude or not longitude:
+        if not longitude or not latitude:
             ir.async_create_issue(
                 hass,
                 DOMAIN,

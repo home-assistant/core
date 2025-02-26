@@ -23,6 +23,7 @@ from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
+    CONF_SUBSCRIBE_LOGS,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
     DOMAIN,
 )
@@ -1295,14 +1296,57 @@ async def test_zeroconf_no_encryption_key_via_dashboard(
     assert result["step_id"] == "encryption_key"
 
 
-@pytest.mark.parametrize("option_value", [True, False])
-async def test_option_flow(
+async def test_option_flow_allow_service_calls(
     hass: HomeAssistant,
-    option_value: bool,
     mock_client: APIClient,
     mock_generic_device_entry,
 ) -> None:
-    """Test config flow options."""
+    """Test config flow options for allow service calls."""
+    entry = await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=[],
+        user_service=[],
+        states=[],
+    )
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {
+        CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+        CONF_SUBSCRIBE_LOGS: False,
+    }
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+    assert result["data_schema"]({}) == {
+        CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+        CONF_SUBSCRIBE_LOGS: False,
+    }
+    with patch(
+        "homeassistant.components.esphome.async_setup_entry", return_value=True
+    ) as mock_reload:
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_ALLOW_SERVICE_CALLS: True, CONF_SUBSCRIBE_LOGS: False},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_ALLOW_SERVICE_CALLS: True,
+        CONF_SUBSCRIBE_LOGS: False,
+    }
+    assert len(mock_reload.mock_calls) == 1
+
+
+async def test_option_flow_subscribe_logs(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry,
+) -> None:
+    """Test config flow options with subscribe logs."""
     entry = await mock_generic_device_entry(
         mock_client=mock_client,
         entity_info=[],
@@ -1315,7 +1359,8 @@ async def test_option_flow(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
     assert result["data_schema"]({}) == {
-        CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
+        CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
+        CONF_SUBSCRIBE_LOGS: False,
     }
 
     with patch(
@@ -1323,15 +1368,16 @@ async def test_option_flow(
     ) as mock_reload:
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],
-            user_input={
-                CONF_ALLOW_SERVICE_CALLS: option_value,
-            },
+            user_input={CONF_ALLOW_SERVICE_CALLS: False, CONF_SUBSCRIBE_LOGS: True},
         )
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_ALLOW_SERVICE_CALLS: option_value}
-    assert len(mock_reload.mock_calls) == int(option_value)
+    assert result["data"] == {
+        CONF_ALLOW_SERVICE_CALLS: False,
+        CONF_SUBSCRIBE_LOGS: True,
+    }
+    assert len(mock_reload.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("mock_zeroconf")

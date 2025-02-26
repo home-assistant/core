@@ -30,6 +30,9 @@ KEY_VERSION = "version"
 UNIT_PLAYERS_MAX = "players"
 UNIT_PLAYERS_ONLINE = "players"
 
+# Coordinator is used to centralize the data updates.
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class MinecraftServerSensorEntityDescription(SensorEntityDescription):

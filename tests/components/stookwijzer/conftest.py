@@ -71,8 +71,8 @@ def mock_stookwijzer() -> Generator[MagicMock]:
         ),
     ):
         stookwijzer_mock.async_transform_coordinates.return_value = (
-            200000.123456789,
             450000.123456789,
+            200000.123456789,
         )
 
         client = stookwijzer_mock.return_value
