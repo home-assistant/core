@@ -3,21 +3,25 @@
 from __future__ import annotations
 
 import asyncio
-import functools
-import os
 from collections.abc import Callable, Coroutine, Mapping
 from contextlib import suppress
+import functools
+import os
 from typing import TYPE_CHECKING, Any, Concatenate
 
-import voluptuous as vol
-from music_assistant_models.enums import EventType, MediaType, PlayerFeature
-from music_assistant_models.enums import PlayerState as MassPlayerState
-from music_assistant_models.enums import QueueOption
-from music_assistant_models.enums import RepeatMode as MassRepeatMode
+from music_assistant_models.enums import (
+    EventType,
+    MediaType,
+    PlayerFeature,
+    PlayerState as MassPlayerState,
+    QueueOption,
+    RepeatMode as MassRepeatMode,
+)
 from music_assistant_models.errors import MediaNotFoundError, MusicAssistantError
 from music_assistant_models.event import MassEvent
 from music_assistant_models.media_items import ItemMapping, MediaItemType, Track
 from music_assistant_models.player_queue import PlayerQueue
+import voluptuous as vol
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -29,17 +33,14 @@ from homeassistant.components.media_player import (
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
-)
-from homeassistant.components.media_player import MediaType as HAMediaType
-from homeassistant.components.media_player import (
+    MediaType as HAMediaType,
     RepeatMode,
     async_process_play_media_url,
 )
 from homeassistant.const import ATTR_NAME, STATE_OFF
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     async_get_current_platform,

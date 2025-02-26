@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import voluptuous as vol
 from music_assistant_models.enums import MediaType
+import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import (
