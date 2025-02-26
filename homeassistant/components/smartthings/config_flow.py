@@ -11,7 +11,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import CONF_LOCATION_ID, DOMAIN, SCOPES
+from .const import CONF_LOCATION_ID, DOMAIN, OLD_DATA, SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -51,13 +51,12 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             )
 
         if (entry := self._get_reauth_entry()) and CONF_TOKEN not in entry.data:
-            if entry.data[CONF_LOCATION_ID] != location.location_id:
+            if entry.data[OLD_DATA][CONF_LOCATION_ID] != location.location_id:
                 return self.async_abort(reason="reauth_location_mismatch")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(),
-                data={
+                data_updates={
                     **data,
-                    "old_data": dict(entry.data),
                     CONF_LOCATION_ID: location.location_id,
                 },
                 unique_id=location.location_id,

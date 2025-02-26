@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
+from homeassistant.components.smartthings import OLD_DATA
 from homeassistant.components.smartthings.const import (
     CONF_INSTALLED_APP_ID,
     CONF_LOCATION_ID,
@@ -418,12 +419,14 @@ async def test_migration_wrong_location(
     assert result["reason"] == "reauth_location_mismatch"
     assert mock_old_config_entry.state is ConfigEntryState.SETUP_ERROR
     assert mock_old_config_entry.data == {
-        CONF_ACCESS_TOKEN: "mock-access-token",
-        CONF_REFRESH_TOKEN: "mock-refresh-token",
-        CONF_CLIENT_ID: "CLIENT_ID",
-        CONF_CLIENT_SECRET: "CLIENT_SECRET",
-        CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
-        CONF_INSTALLED_APP_ID: "123aa123-2be1-4e40-b257-e4ef59083324",
+        OLD_DATA: {
+            CONF_ACCESS_TOKEN: "mock-access-token",
+            CONF_REFRESH_TOKEN: "mock-refresh-token",
+            CONF_CLIENT_ID: "CLIENT_ID",
+            CONF_CLIENT_SECRET: "CLIENT_SECRET",
+            CONF_LOCATION_ID: "397678e5-9995-4a39-9d9f-ae6ba310236c",
+            CONF_INSTALLED_APP_ID: "123aa123-2be1-4e40-b257-e4ef59083324",
+        }
     }
     assert (
         mock_old_config_entry.unique_id

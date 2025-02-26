@@ -27,7 +27,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 
-from .const import CONF_INSTALLED_APP_ID, CONF_LOCATION_ID, MAIN
+from .const import CONF_INSTALLED_APP_ID, CONF_LOCATION_ID, MAIN, OLD_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -137,7 +137,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Handle config entry migration."""
 
     if entry.version < 3:
-        hass.config_entries.async_update_entry(entry, version=3)
-        return True
+        # We keep the old data around, so we can use that to clean up the webhook in the future
+        hass.config_entries.async_update_entry(
+            entry, version=3, data={OLD_DATA: dict(entry.data)}
+        )
 
     return True

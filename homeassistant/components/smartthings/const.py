@@ -27,3 +27,4 @@ CONF_LOCATION_ID = "location_id"
 CONF_REFRESH_TOKEN = "refresh_token"
 
 MAIN = "main"
+OLD_DATA = "old_data"
