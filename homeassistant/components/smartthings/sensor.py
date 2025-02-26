@@ -72,6 +72,10 @@ MEDIA_PLAYBACK_STATE_MAP = {
     "fast forwarding": "fast_forwarding",
 }
 
+ROBOT_CLEANER_MOVEMENT_MAP = {
+    "powerOff": "off",
+}
+
 OVEN_MODE = {
     "Conventional": "conventional",
     "Bake": "bake",
@@ -99,6 +103,8 @@ OVEN_MODE = {
     "Descale": "descale",
     "Rinse": "rinse",
 }
+
+WASHER_OPTIONS = ["pause", "run", "stop"]
 
 
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
@@ -249,7 +255,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="dishwasher_machine_state",
-                options=["pause", "run", "stop"],
+                options=WASHER_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
             )
         ],
@@ -644,6 +650,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ROBOT_CLEANER_CLEANING_MODE,
                 translation_key="robot_cleaner_cleaning_mode",
+                options=["auto", "part", "repeat", "manual", "stop", "map"],
+                device_class=SensorDeviceClass.ENUM,
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
         ],
@@ -653,6 +661,20 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ROBOT_CLEANER_MOVEMENT,
                 translation_key="robot_cleaner_movement",
+                options=[
+                    "homing",
+                    "idle",
+                    "charging",
+                    "alarm",
+                    "off",
+                    "reserve",
+                    "point",
+                    "after",
+                    "cleaning",
+                    "pause",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: ROBOT_CLEANER_MOVEMENT_MAP.get(value, value),
             )
         ]
     },
@@ -855,6 +877,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="washer_machine_state",
+                options=WASHER_OPTIONS,
+                device_class=SensorDeviceClass.ENUM,
             )
         ],
         Attribute.WASHER_JOB_STATE: [
