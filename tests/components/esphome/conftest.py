@@ -433,10 +433,11 @@ async def _mock_generic_device_entry(
 
     def _subscribe_logs(
         on_log_message: Callable[[SubscribeLogsResponse], None], log_level: LogLevel
-    ) -> None:
+    ) -> Callable[[], None]:
         """Subscribe to log messages."""
         mock_device.set_on_log_message(on_log_message)
         mock_device.current_log_level = log_level
+        return lambda: None
 
     def _subscribe_voice_assistant(
         *,

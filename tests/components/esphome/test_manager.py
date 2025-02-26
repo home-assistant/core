@@ -120,6 +120,20 @@ async def test_esphome_device_subscribe_logs(
         blocking=True,
     )
     assert device.current_log_level == LogLevel.LOG_LEVEL_WARN
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "ERROR"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_ERROR
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "INFO"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_CONFIG
 
 
 async def test_esphome_device_service_calls_not_allowed(
