@@ -40,7 +40,7 @@ from homeassistant.helpers import device_registry as dr
 
 from .const import CONFIG
 
-from tests.common import Literal, MockConfigEntry
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -184,9 +184,7 @@ def test_get_entity_description() -> None:
     description = get_entity_description(parameter)
 
 
-def test_wolflink_sensor(
-    mock_coordinator, mock_device_id: Literal["1234"], mock_parameter
-) -> None:
+def test_wolflink_sensor(mock_coordinator, mock_device_id, mock_parameter) -> None:
     """Test the WolfLinkSensor class."""
     description = get_entity_description(mock_parameter)
     sensor = WolfLinkSensor(
@@ -195,7 +193,7 @@ def test_wolflink_sensor(
 
     assert sensor.entity_description == description
     assert sensor.wolf_object == mock_parameter
-    assert sensor._attr_name == description.name
+    assert sensor._attr_name == str(description.name)
     assert sensor._attr_unique_id == f"{mock_device_id}:{mock_parameter.parameter_id}"
     assert sensor._attr_device_info["identifiers"] == {(DOMAIN, str(mock_device_id))}
     assert (
