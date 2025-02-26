@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HUMIDITY,
     ATTR_HVAC_ACTION,
+    ATTR_SWING_HORIZONTAL_MODE,
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
@@ -85,6 +86,7 @@ DEFAULT_CONFIG = {
             "temperature_high_command_topic": "temperature-high-topic",
             "fan_mode_command_topic": "fan-mode-topic",
             "swing_mode_command_topic": "swing-mode-topic",
+            "swing_horizontal_mode_command_topic": "swing-horizontal-mode-topic",
             "preset_mode_command_topic": "preset-mode-topic",
             "preset_modes": [
                 "eco",
@@ -111,6 +113,7 @@ async def test_setup_params(
     assert state.attributes.get("temperature") == 21
     assert state.attributes.get("fan_mode") == "low"
     assert state.attributes.get("swing_mode") == "off"
+    assert state.attributes.get("swing_horizontal_mode") == "off"
     assert state.state == "off"
     assert state.attributes.get("min_temp") == DEFAULT_MIN_TEMP
     assert state.attributes.get("max_temp") == DEFAULT_MAX_TEMP
@@ -123,6 +126,7 @@ async def test_setup_params(
         | ClimateEntityFeature.TARGET_HUMIDITY
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.SWING_HORIZONTAL_MODE
         | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
@@ -159,6 +163,7 @@ async def test_supported_features(
     state = hass.states.get(ENTITY_CLIMATE)
     support = (
         ClimateEntityFeature.TARGET_TEMPERATURE
+        | ClimateEntityFeature.SWING_HORIZONTAL_MODE
         | ClimateEntityFeature.SWING_MODE
         | ClimateEntityFeature.FAN_MODE
         | ClimateEntityFeature.PRESET_MODE
@@ -562,12 +567,29 @@ async def test_set_swing_mode_bad_attr(
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") == "off"
 
+    assert state.attributes.get("swing_horizontal_mode") == "off"
+    with pytest.raises(vol.Invalid) as excinfo:
+        await common.async_set_swing_horizontal_mode(hass, None, ENTITY_CLIMATE)  # type:ignore[arg-type]
+    assert (
+        "string value is None for dictionary value @ data['swing_horizontal_mode']"
+        in str(excinfo.value)
+    )
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("swing_horizontal_mode") == "off"
+
 
 @pytest.mark.parametrize(
     "hass_config",
     [
         help_custom_config(
-            climate.DOMAIN, DEFAULT_CONFIG, ({"swing_mode_state_topic": "swing-state"},)
+            climate.DOMAIN,
+            DEFAULT_CONFIG,
+            (
+                {
+                    "swing_mode_state_topic": "swing-state",
+                    "swing_horizontal_mode_state_topic": "swing-horizontal-state",
+                },
+            ),
         )
     ],
 )
@@ -579,18 +601,31 @@ async def test_set_swing_pessimistic(
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") is None
+    assert state.attributes.get("swing_horizontal_mode") is None
 
     await common.async_set_swing_mode(hass, "on", ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") is None
 
+    await common.async_set_swing_horizontal_mode(hass, "on", ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("swing_horizontal_mode") is None
+
     async_fire_mqtt_message(hass, "swing-state", "on")
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") == "on"
 
+    async_fire_mqtt_message(hass, "swing-horizontal-state", "on")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("swing_horizontal_mode") == "on"
+
     async_fire_mqtt_message(hass, "swing-state", "bogus state")
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") == "on"
+
+    async_fire_mqtt_message(hass, "swing-horizontal-state", "bogus state")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("swing_horizontal_mode") == "on"
 
 
 @pytest.mark.parametrize(
@@ -599,7 +634,13 @@ async def test_set_swing_pessimistic(
         help_custom_config(
             climate.DOMAIN,
             DEFAULT_CONFIG,
-            ({"swing_mode_state_topic": "swing-state", "optimistic": True},),
+            (
+                {
+                    "swing_mode_state_topic": "swing-state",
+                    "swing_horizontal_mode_state_topic": "swing-horizontal-state",
+                    "optimistic": True,
+                },
+            ),
         )
     ],
 )
@@ -611,18 +652,31 @@ async def test_set_swing_optimistic(
 
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") == "off"
+    assert state.attributes.get("swing_horizontal_mode") == "off"
 
     await common.async_set_swing_mode(hass, "on", ENTITY_CLIMATE)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") == "on"
 
+    await common.async_set_swing_horizontal_mode(hass, "on", ENTITY_CLIMATE)
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("swing_horizontal_mode") == "on"
+
     async_fire_mqtt_message(hass, "swing-state", "off")
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") == "off"
 
+    async_fire_mqtt_message(hass, "swing-horizontal-state", "off")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("swing_horizontal_mode") == "off"
+
     async_fire_mqtt_message(hass, "swing-state", "bogus state")
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") == "off"
+
+    async_fire_mqtt_message(hass, "swing-horizontal-state", "bogus state")
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("swing_horizontal_mode") == "off"
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -638,6 +692,15 @@ async def test_set_swing(
     mqtt_mock.async_publish.assert_called_once_with("swing-mode-topic", "on", 0, False)
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") == "on"
+    mqtt_mock.reset_mock()
+
+    assert state.attributes.get("swing_horizontal_mode") == "off"
+    await common.async_set_swing_horizontal_mode(hass, "on", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "swing-horizontal-mode-topic", "on", 0, False
+    )
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("swing_horizontal_mode") == "on"
 
 
 @pytest.mark.parametrize("hass_config", [DEFAULT_CONFIG])
@@ -1337,6 +1400,7 @@ async def test_get_target_temperature_low_high_with_templates(
                     "temperature_low_command_topic": "temperature-low-topic",
                     "temperature_high_command_topic": "temperature-high-topic",
                     "fan_mode_command_topic": "fan-mode-topic",
+                    "swing_horizontal_mode_command_topic": "swing-horizontal-mode-topic",
                     "swing_mode_command_topic": "swing-mode-topic",
                     "preset_mode_command_topic": "preset-mode-topic",
                     "preset_modes": [
@@ -1359,6 +1423,7 @@ async def test_get_target_temperature_low_high_with_templates(
                     "action_topic": "action",
                     "mode_state_topic": "mode-state",
                     "fan_mode_state_topic": "fan-state",
+                    "swing_horizontal_mode_state_topic": "swing-horizontal-state",
                     "swing_mode_state_topic": "swing-state",
                     "temperature_state_topic": "temperature-state",
                     "target_humidity_state_topic": "humidity-state",
@@ -1395,6 +1460,12 @@ async def test_get_with_templates(
     async_fire_mqtt_message(hass, "swing-state", '"on"')
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.attributes.get("swing_mode") == "on"
+
+    # Swing Horizontal Mode
+    assert state.attributes.get("swing_horizontal_mode") is None
+    async_fire_mqtt_message(hass, "swing-horizontal-state", '"on"')
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("swing_horizontal_mode") == "on"
 
     # Temperature - with valid value
     assert state.attributes.get("temperature") is None
@@ -1495,6 +1566,7 @@ async def test_get_with_templates(
                     "temperature_low_command_topic": "temperature-low-topic",
                     "temperature_high_command_topic": "temperature-high-topic",
                     "fan_mode_command_topic": "fan-mode-topic",
+                    "swing_horizontal_mode_command_topic": "swing-horizontal-mode-topic",
                     "swing_mode_command_topic": "swing-mode-topic",
                     "preset_mode_command_topic": "preset-mode-topic",
                     "preset_modes": [
@@ -1511,6 +1583,7 @@ async def test_get_with_templates(
                     "power_command_template": "power: {{ value }}",
                     "preset_mode_command_template": "preset_mode: {{ value }}",
                     "mode_command_template": "mode: {{ value }}",
+                    "swing_horizontal_mode_command_template": "swing_horizontal_mode: {{ value }}",
                     "swing_mode_command_template": "swing_mode: {{ value }}",
                     "temperature_command_template": "temp: {{ value }}",
                     "temperature_high_command_template": "temp_hi: {{ value }}",
@@ -1579,6 +1652,15 @@ async def test_set_and_templates(
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get(ENTITY_CLIMATE)
     assert state.state == "off"
+
+    # Swing Horizontal Mode
+    await common.async_set_swing_horizontal_mode(hass, "on", ENTITY_CLIMATE)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "swing-horizontal-mode-topic", "swing_horizontal_mode: on", 0, False
+    )
+    mqtt_mock.async_publish.reset_mock()
+    state = hass.states.get(ENTITY_CLIMATE)
+    assert state.attributes.get("swing_horizontal_mode") == "on"
 
     # Swing Mode
     await common.async_set_swing_mode(hass, "on", ENTITY_CLIMATE)
@@ -1940,6 +2022,7 @@ async def test_unique_id(
         ("fan_mode_state_topic", "low", ATTR_FAN_MODE, "low"),
         ("mode_state_topic", "cool", None, None),
         ("mode_state_topic", "fan_only", None, None),
+        ("swing_horizontal_mode_state_topic", "on", ATTR_SWING_HORIZONTAL_MODE, "on"),
         ("swing_mode_state_topic", "on", ATTR_SWING_MODE, "on"),
         ("temperature_low_state_topic", "19.1", ATTR_TARGET_TEMP_LOW, 19.1),
         ("temperature_high_state_topic", "22.9", ATTR_TARGET_TEMP_HIGH, 22.9),
@@ -2179,6 +2262,13 @@ async def test_precision_whole(
             "fan_mode_command_template",
         ),
         (
+            climate.SERVICE_SET_SWING_HORIZONTAL_MODE,
+            "swing_horizontal_mode_command_topic",
+            {"swing_horizontal_mode": "on"},
+            "on",
+            "swing_horizontal_mode_command_template",
+        ),
+        (
             climate.SERVICE_SET_SWING_MODE,
             "swing_mode_command_topic",
             {"swing_mode": "on"},
@@ -2378,6 +2468,7 @@ async def test_unload_entry(
                     "current_temperature_topic": "current-temperature-topic",
                     "preset_mode_state_topic": "preset-mode-state-topic",
                     "preset_modes": ["eco", "away"],
+                    "swing_horizontal_mode_state_topic": "swing-horizontal-mode-state-topic",
                     "swing_mode_state_topic": "swing-mode-state-topic",
                     "target_humidity_state_topic": "target-humidity-state-topic",
                     "temperature_high_state_topic": "temperature-high-state-topic",
@@ -2399,6 +2490,7 @@ async def test_unload_entry(
         ("current-humidity-topic", "45", "46"),
         ("current-temperature-topic", "18.0", "18.1"),
         ("preset-mode-state-topic", "eco", "away"),
+        ("swing-horizontal-mode-state-topic", "on", "off"),
         ("swing-mode-state-topic", "on", "off"),
         ("target-humidity-state-topic", "45", "50"),
         ("temperature-state-topic", "18", "19"),
