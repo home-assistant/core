@@ -12,10 +12,9 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClient
 
 
-async def test_attributes(
-    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_pglab
-) -> None:
-    """Check if sensors are properly created."""
+async def send_discovery_message(hass: HomeAssistant) -> None:
+    """Send mqtt discovery message."""
+
     topic = "pglab/discovery/E-Board-DD53AC85/config"
     payload = {
         "ip": "192.168.1.16",
@@ -35,6 +34,14 @@ async def test_attributes(
         json.dumps(payload),
     )
     await hass.async_block_till_done()
+
+
+async def test_attributes(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_pglab
+) -> None:
+    """Check if sensors are properly created."""
+
+    await send_discovery_message(hass)
 
     state = hass.states.get("sensor.test_temperature")
     assert state.attributes.get("device_class") == SensorDeviceClass.TEMPERATURE
@@ -55,25 +62,8 @@ async def test_attributes_update_via_mqtt(
     hass: HomeAssistant, mqtt_mock: MqttMockHAClient, setup_pglab
 ) -> None:
     """Check if sensor are properly created."""
-    topic = "pglab/discovery/E-Board-DD53AC85/config"
-    payload = {
-        "ip": "192.168.1.16",
-        "mac": "80:34:28:1B:18:5A",
-        "name": "test",
-        "hw": "1.0.7",
-        "fw": "1.0.0",
-        "type": "E-Board",
-        "id": "E-Board-DD53AC85",
-        "manufacturer": "PG LAB Electronics",
-        "params": {"shutters": 0, "boards": "00000000"},
-    }
 
-    async_fire_mqtt_message(
-        hass,
-        topic,
-        json.dumps(payload),
-    )
-    await hass.async_block_till_done()
+    await send_discovery_message(hass)
 
     # check original sensors state
     state = hass.states.get("sensor.test_temperature")
