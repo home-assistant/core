@@ -44,7 +44,7 @@ async def test_form_invalid_auth(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_imeon_inverter.__aenter__.return_value.login.return_value = False
+    mock_imeon_inverter.login.return_value = False
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
@@ -62,7 +62,7 @@ async def test_form_timeout(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_imeon_inverter.__aenter__.return_value.login.side_effect = TimeoutError
+    mock_imeon_inverter.login.side_effect = TimeoutError
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
@@ -80,9 +80,7 @@ async def test_form_invalid_host(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_imeon_inverter.__aenter__.return_value.login.side_effect = ValueError(
-        "Host invalid"
-    )
+    mock_imeon_inverter.login.side_effect = ValueError("Host invalid")
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
@@ -100,9 +98,7 @@ async def test_form_invalid_route(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_imeon_inverter.__aenter__.return_value.login.side_effect = ValueError(
-        "Route invalid"
-    )
+    mock_imeon_inverter.login.side_effect = ValueError("Route invalid")
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
@@ -120,7 +116,7 @@ async def test_form_exception(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_imeon_inverter.__aenter__.return_value.login.side_effect = ValueError
+    mock_imeon_inverter.login.side_effect = ValueError
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
@@ -148,8 +144,8 @@ async def test_manual_setup_already_exists(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_imeon_inverter.__aenter__.return_value.login.reutrun_value = True
-    mock_imeon_inverter.__aenter__.return_value.get_serial.return_value = TEST_SERIAL
+    mock_imeon_inverter.login.reutrun_value = True
+    mock_imeon_inverter.get_serial.return_value = TEST_SERIAL
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
@@ -167,7 +163,7 @@ async def test_get_serial_timeout(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_imeon_inverter.__aenter__.return_value.get_serial.side_effect = TimeoutError
+    mock_imeon_inverter.get_serial.side_effect = TimeoutError
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
