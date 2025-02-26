@@ -296,13 +296,16 @@ class BaseFirmwareUpdateEntity(
 
         async with self._temporarily_stop_hardware_owners(device):
             try:
-                # Enter the bootloader with indeterminate progress
-                await flasher.enter_bootloader()
+                try:
+                    # Enter the bootloader with indeterminate progress
+                    await flasher.enter_bootloader()
 
-                # Flash the firmware, with progress
-                await flasher.flash_firmware(
-                    fw_image, progress_callback=self._update_progress
-                )
+                    # Flash the firmware, with progress
+                    await flasher.flash_firmware(
+                        fw_image, progress_callback=self._update_progress
+                    )
+                except Exception as err:
+                    raise HomeAssistantError("Failed to flash firmware") from err
 
                 # Probe the running application type with indeterminate progress
                 self._attr_update_percentage = None
