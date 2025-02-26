@@ -2562,7 +2562,7 @@ async def test_recorder_info(
     assert response["success"]
     assert response["result"] == {
         "backlog": 0,
-        "default_db_url": False,  # We never use the default URL in tests
+        "db_in_default_location": False,  # We never use the default URL in tests
         "max_backlog": 65000,
         "migration_in_progress": False,
         "migration_is_live": False,
@@ -2572,7 +2572,7 @@ async def test_recorder_info(
 
 
 @pytest.mark.parametrize(
-    ("db_url", "default_db_url"),
+    ("db_url", "db_in_default_location"),
     [
         ("sqlite:///{config_dir}/home-assistant_v2.db", True),
         ("sqlite:///{config_dir}/custom.db", False),
@@ -2584,7 +2584,7 @@ async def test_recorder_info_default_url(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     db_url: str,
-    default_db_url: bool,
+    db_in_default_location: bool,
 ) -> None:
     """Test getting recorder status."""
     client = await hass_ws_client()
@@ -2600,7 +2600,7 @@ async def test_recorder_info_default_url(
         assert response["success"]
         assert response["result"] == {
             "backlog": 0,
-            "default_db_url": default_db_url,
+            "db_in_default_location": db_in_default_location,
             "max_backlog": 65000,
             "migration_in_progress": False,
             "migration_is_live": False,
@@ -2663,7 +2663,7 @@ async def test_recorder_info_wait_database_connect(
         assert response["success"]
         assert response["result"] == {
             "backlog": ANY,
-            "default_db_url": False,
+            "db_in_default_location": False,
             "max_backlog": 65000,
             "migration_in_progress": False,
             "migration_is_live": False,
