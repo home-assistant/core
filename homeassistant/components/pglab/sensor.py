@@ -28,14 +28,13 @@ PARALLEL_UPDATES = 0
 SENSOR_INFO: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key=SENSOR_TEMPERATURE,
-        translation_key="temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorEntityDescription(
         key=SENSOR_VOLTAGE,
-        translation_key="voltage",
+        translation_key="mpu_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
         state_class=SensorStateClass.MEASUREMENT,

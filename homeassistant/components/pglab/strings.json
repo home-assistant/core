@@ -27,7 +27,7 @@
       "runtime": {
         "name": "Run time"
       },
-      "voltage": {
+      "mpu_voltage": {
         "name": "MPU voltage"
       }
     }
