@@ -27,6 +27,8 @@ from .const import (
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 
+PARALLEL_UPDATES = 0
+
 EVENT_OPTIONS = ["confirmed", "off", "present"]
 
 
@@ -176,6 +178,12 @@ SENSORS = (
             "map3",
         ],
         translation_key="last_selected_map",
+    ),
+    HomeConnectSensorEntityDescription(
+        key=StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        translation_key="current_cavity_temperature",
     ),
 )
 

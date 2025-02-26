@@ -32,6 +32,7 @@ from homeassistant.helpers import (
     instance_id,
     integration_platform,
     issue_registry as ir,
+    start,
 )
 from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.json import json_bytes
@@ -47,6 +48,7 @@ from .agent import (
 from .config import (
     BackupConfig,
     CreateBackupParametersDict,
+    check_unavailable_agents,
     delete_backups_exceeding_configured_count,
 )
 from .const import (
@@ -416,6 +418,13 @@ class BackupManager:
                 if isinstance(agent, LocalBackupAgent)
             }
         )
+
+        @callback
+        def check_unavailable_agents_after_start(hass: HomeAssistant) -> None:
+            """Check unavailable agents after start."""
+            check_unavailable_agents(hass, self)
+
+        start.async_at_started(self.hass, check_unavailable_agents_after_start)
 
     async def _add_platform(
         self,
@@ -1611,7 +1620,13 @@ class CoreBackupReaderWriter(BackupReaderWriter):
         """Generate backup contents and return the size."""
         if not tar_file_path:
             tar_file_path = self.temp_backup_dir / f"{backup_data['slug']}.tar"
-        make_backup_dir(tar_file_path.parent)
+        try:
+            make_backup_dir(tar_file_path.parent)
+        except OSError as err:
+            raise BackupReaderWriterError(
+                f"Failed to create dir {tar_file_path.parent}: "
+                f"{err} ({err.__class__.__name__})"
+            ) from err
 
         excludes = EXCLUDE_FROM_BACKUP
         if not database_included:
@@ -1649,7 +1664,14 @@ class CoreBackupReaderWriter(BackupReaderWriter):
                     file_filter=is_excluded_by_filter,
                     arcname="data",
                 )
-        return (tar_file_path, tar_file_path.stat().st_size)
+        try:
+            stat_result = tar_file_path.stat()
+        except OSError as err:
+            raise BackupReaderWriterError(
+                f"Error getting size of {tar_file_path}: "
+                f"{err} ({err.__class__.__name__})"
+            ) from err
+        return (tar_file_path, stat_result.st_size)
 
     async def async_receive_backup(
         self,
