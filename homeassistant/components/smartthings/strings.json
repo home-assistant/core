@@ -240,7 +240,12 @@
         "name": "Link quality"
       },
       "smoke_detector": {
-        "name": "Smoke detector"
+        "name": "Smoke detector",
+        "state": {
+          "detected": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::detected%]",
+          "clear": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::clear%]",
+          "tested": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::tested%]"
+        }
       },
       "thermostat_cooling_setpoint": {
         "name": "Cooling set point"
