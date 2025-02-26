@@ -104,6 +104,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ALARM,
                 translation_key="alarm",
+                options=["both", "strobe", "siren", "off"],
+                device_class=SensorDeviceClass.ENUM,
             )
         ]
     },
