@@ -39,7 +39,7 @@ async def test_initialization_failure(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test initialization failure."""
-    mock_mastodon_client.instance_v2.side_effect = MastodonError
+    mock_mastodon_client.instance.side_effect = MastodonError
 
     await setup_integration(hass, mock_config_entry)
 

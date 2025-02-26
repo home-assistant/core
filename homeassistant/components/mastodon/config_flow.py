@@ -6,7 +6,7 @@ from typing import Any
 
 from mastodon.Mastodon import (
     Account,
-    InstanceV2,
+    Instance,
     MastodonNetworkError,
     MastodonUnauthorizedError,
 )
@@ -61,7 +61,7 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
         client_secret: str,
         access_token: str,
     ) -> tuple[
-        InstanceV2 | None,
+        Instance | None,
         Account | None,
         dict[str, str],
     ]:
@@ -73,7 +73,7 @@ class MastodonConfigFlow(ConfigFlow, domain=DOMAIN):
                 client_secret,
                 access_token,
             )
-            instance = client.instance_v2()
+            instance = client.instance()
             account = client.account_verify_credentials()
 
         except MastodonNetworkError:
