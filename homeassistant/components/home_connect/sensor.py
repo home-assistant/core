@@ -1,10 +1,12 @@
 """Provides a sensor for Home Connect."""
 
+import contextlib
 from dataclasses import dataclass
 from datetime import timedelta
 from typing import cast
 
 from aiohomeconnect.model import EventKey, StatusKey
+from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -335,11 +337,14 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
     async def fetch_unit(self) -> None:
         """Fetch the unit of measurement."""
-        data = await self.coordinator.client.get_status_value(
-            self.appliance.info.ha_id, status_key=cast(StatusKey, self.bsh_key)
-        )
-        if data.unit:
-            self._attr_native_unit_of_measurement = UNIT_MAP.get(data.unit, data.unit)
+        with contextlib.suppress(HomeConnectError):
+            data = await self.coordinator.client.get_status_value(
+                self.appliance.info.ha_id, status_key=cast(StatusKey, self.bsh_key)
+            )
+            if data.unit:
+                self._attr_native_unit_of_measurement = UNIT_MAP.get(
+                    data.unit, data.unit
+                )
 
 
 class HomeConnectProgramSensor(HomeConnectSensor):
