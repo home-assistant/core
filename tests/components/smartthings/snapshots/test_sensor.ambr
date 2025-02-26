@@ -1805,7 +1805,13 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'ready',
+        'running',
+        'paused',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1823,7 +1829,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Machine state',
     'platform': 'smartthings',
@@ -1837,7 +1843,13 @@
 # name: test_all_entities[da_ks_microwave_0101x][sensor.microwave_machine_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Microwave Machine state',
+      'options': list([
+        'ready',
+        'running',
+        'paused',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.microwave_machine_state',

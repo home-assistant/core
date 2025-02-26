@@ -173,7 +173,12 @@
         "name": "Oven mode"
       },
       "oven_machine_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]"
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
+        "state": {
+          "ready": "Ready",
+          "running": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "paused": "[%key:common::state::paused%]"
+        }
       },
       "oven_job_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]"

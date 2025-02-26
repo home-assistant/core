@@ -443,6 +443,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="oven_machine_state",
+                options=["ready", "running", "paused"],
+                device_class=SensorDeviceClass.ENUM,
             )
         ],
         Attribute.OVEN_JOB_STATE: [
