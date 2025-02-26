@@ -6,7 +6,7 @@ import mimetypes
 from typing import Any
 
 from mastodon import Mastodon
-from mastodon.Mastodon import Account, Instance
+from mastodon.Mastodon import Account, Instance, InstanceV2
 
 from .const import DEFAULT_NAME
 
@@ -24,11 +24,13 @@ def create_mastodon_client(
 
 
 def construct_mastodon_username(
-    instance: Instance | None, account: Account | None
+    instance: InstanceV2 | Instance | None, account: Account | None
 ) -> str:
     """Construct a mastodon username from the account and instance."""
     if instance and account:
-        return f"@{account.username}@{instance.domain}"
+        if type(instance) is InstanceV2:
+            return f"@{account.username}@{instance.domain}"
+        return f"@{account.username}@{instance.uri}"
 
     return DEFAULT_NAME
 
