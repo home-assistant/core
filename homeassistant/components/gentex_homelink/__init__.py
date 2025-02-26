@@ -15,7 +15,7 @@ from . import api
 from .const import DOMAIN
 from .coordinator import HomeLinkCoordinator, HomeLinkData
 
-PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
+PLATFORMS: list[Platform] = [Platform.EVENT]
 
 type HomeLinkConfigEntry = ConfigEntry[HomeLinkData]
 
