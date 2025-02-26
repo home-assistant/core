@@ -7,7 +7,7 @@ from collections.abc import Callable, Coroutine, Mapping
 from contextlib import suppress
 import functools
 import os
-from typing import TYPE_CHECKING, Any, Concatenate, cast
+from typing import TYPE_CHECKING, Any, Concatenate
 
 from music_assistant_models.enums import (
     EventType,
@@ -246,9 +246,7 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         """Return the active queue for this player (if any)."""
         if not self.player.active_source:
             return None
-        return cast(
-            PlayerQueue | None, self.mass.player_queues.get(self.player.active_source)
-        )
+        return self.mass.player_queues.get(self.player.active_source)
 
     @property
     def extra_state_attributes(self) -> Mapping[str, Any]:
@@ -475,6 +473,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 album=album,
                 media_type=MediaType(media_type) if media_type else None,
             ):
+                if TYPE_CHECKING:
+                    assert item.uri is not None
                 media_uris.append(item.uri)
 
         if not media_uris:

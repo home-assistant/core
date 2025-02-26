@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any
 
 from music_assistant_client import MusicAssistantClient
 from music_assistant_client.exceptions import (
@@ -42,7 +42,7 @@ async def get_server_info(hass: HomeAssistant, url: str) -> ServerInfoMessage:
     ) as client:
         if TYPE_CHECKING:
             assert client.server_info is not None
-        return cast(ServerInfoMessage, client.server_info)
+        return client.server_info
 
 
 class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
