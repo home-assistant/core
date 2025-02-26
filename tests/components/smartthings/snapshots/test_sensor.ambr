@@ -4349,7 +4349,16 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -4367,7 +4376,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Media playback status',
     'platform': 'smartthings',
@@ -4381,7 +4390,16 @@
 # name: test_all_entities[sonos_player][sensor.elliots_rum_media_playback_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Elliots Rum Media playback status',
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.elliots_rum_media_playback_status',
@@ -4444,7 +4462,16 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -4462,7 +4489,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Media playback status',
     'platform': 'smartthings',
@@ -4476,7 +4503,16 @@
 # name: test_all_entities[vd_network_audio_002s][sensor.soundbar_living_media_playback_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': 'Soundbar Living Media playback status',
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.soundbar_living_media_playback_status',
@@ -4600,7 +4636,16 @@
     'aliases': set({
     }),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -4618,7 +4663,7 @@
     'name': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Media playback status',
     'platform': 'smartthings',
@@ -4632,7 +4677,16 @@
 # name: test_all_entities[vd_stv_2017_k][sensor.tv_samsung_8_series_49_media_playback_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'enum',
       'friendly_name': '[TV] Samsung 8 Series (49) Media playback status',
+      'options': list([
+        'paused',
+        'playing',
+        'stopped',
+        'fast_forwarding',
+        'rewinding',
+        'buffering',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.tv_samsung_8_series_49_media_playback_status',
