@@ -46,7 +46,7 @@ JOB_STATE_MAP = {
     "airWash": "air_wash",
     "airwash": "air_wash",
     "aIRinse": "ai_rinse",
-    "aiSpin": "ai_spin",
+    "aISpin": "ai_spin",
     "aIWash": "ai_wash",
     "delayWash": "delay_wash",
     "weightSensing": "weight_sensing",
