@@ -982,7 +982,15 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
             None,
             None,
             True,
-            {},
+            {
+                (DOMAIN, "automatic_backup_agents_unavailable_test.unknown"): {
+                    "translation_key": "automatic_backup_agents_unavailable",
+                    "translation_placeholders": {
+                        "agent_id": "test.unknown",
+                        "backup_settings": "/config/backup/settings",
+                    },
+                },
+            },
         ),
         (
             ["test.remote", "test.unknown"],
@@ -994,7 +1002,14 @@ async def delayed_boom(*args, **kwargs) -> tuple[NewBackup, Any]:
                 (DOMAIN, "automatic_backup_failed"): {
                     "translation_key": "automatic_backup_failed_upload_agents",
                     "translation_placeholders": {"failed_agents": "test.unknown"},
-                }
+                },
+                (DOMAIN, "automatic_backup_agents_unavailable_test.unknown"): {
+                    "translation_key": "automatic_backup_agents_unavailable",
+                    "translation_placeholders": {
+                        "agent_id": "test.unknown",
+                        "backup_settings": "/config/backup/settings",
+                    },
+                },
             },
         ),
         # Error raised in async_initiate_backup

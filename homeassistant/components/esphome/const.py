@@ -5,6 +5,7 @@ from awesomeversion import AwesomeVersion
 DOMAIN = "esphome"
 
 CONF_ALLOW_SERVICE_CALLS = "allow_service_calls"
+CONF_SUBSCRIBE_LOGS = "subscribe_logs"
 CONF_DEVICE_NAME = "device_name"
 CONF_NOISE_PSK = "noise_psk"
 
