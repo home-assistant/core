@@ -4,6 +4,7 @@
 set_system_mode:
   fields:
     mode:
+      required: true
       example: Away
       selector:
         select:
