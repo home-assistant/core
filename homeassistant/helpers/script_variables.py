@@ -95,7 +95,8 @@ class _ParallelData:
 
     # `protected` is for variables that need special protection in parallel sequences.
     # What this means is that such a variable defined in one parallel sequence will not be
-    # clobbered by the variable with the same name defined in another parallel sequence.
+    # clobbered by the variable with the same name assigned in another parallel sequence.
+    # It also means that such a variable will not be visible in the outer scope.
     # Currently the only such variable is `wait`.
     protected: dict[str, Any] = field(default_factory=dict)
     # `outer_scope_writes` is for variables that are written to the outer scope from
@@ -185,7 +186,7 @@ class ScriptRunVariables(UserDict[str, Any]):
         Does no clean-up, but simply returns the previous scope.
         """
         if self._previous is None:
-            raise ValueError("Cannot exit root scope")
+            raise ValueError("Cannot exit top-level scope")
         return self._previous
 
     def __setitem__(self, key: str, value: Any) -> None:
