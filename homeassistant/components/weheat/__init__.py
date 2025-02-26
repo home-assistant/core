@@ -108,9 +108,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
 
         new_heat_pump = HeatPumpInfo(pump_info)
         new_data_coordinator = WeheatDataUpdateCoordinator(
-            hass, session, pump_info, nr_of_pumps
+            hass, entry, session, pump_info, nr_of_pumps
         )
-        new_energy_coordinator = WeheatEnergyUpdateCoordinator(hass, session, pump_info)
+        new_energy_coordinator = WeheatEnergyUpdateCoordinator(
+            hass, entry, session, pump_info
+        )
 
         await new_data_coordinator.async_config_entry_first_refresh()
         await new_energy_coordinator.async_config_entry_first_refresh()

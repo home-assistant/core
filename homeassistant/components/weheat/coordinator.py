@@ -21,6 +21,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from . import WeheatConfigEntry
 from .const import API_URL, DOMAIN, ENERGY_UPDATE_INTERVAL, LOG_UPDATE_INTERVAL, LOGGER
 
 EXCEPTIONS = (
@@ -36,9 +37,12 @@ EXCEPTIONS = (
 class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
     """A custom coordinator for the Weheat heatpump integration."""
 
+    config_entry: WeheatConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: WeheatConfigEntry,
         session: OAuth2Session,
         heat_pump: HeatPumpDiscovery.HeatPumpInfo,
         nr_of_heat_pumps: int,
@@ -46,6 +50,7 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
         """Initialize the data coordinator."""
         super().__init__(
             hass,
+            config_entry=config_entry,
             logger=LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=LOG_UPDATE_INTERVAL * nr_of_heat_pumps),
@@ -75,15 +80,19 @@ class WeheatDataUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
 class WeheatEnergyUpdateCoordinator(DataUpdateCoordinator[HeatPump]):
     """A custom Energy coordinator for the Weheat heatpump integration."""
 
+    config_entry: WeheatConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: WeheatConfigEntry,
         session: OAuth2Session,
         heat_pump: HeatPumpDiscovery.HeatPumpInfo,
     ) -> None:
         """Initialize the data coordinator."""
         super().__init__(
             hass,
+            config_entry=config_entry,
             logger=LOGGER,
             name=DOMAIN,
             update_interval=timedelta(seconds=ENERGY_UPDATE_INTERVAL),
