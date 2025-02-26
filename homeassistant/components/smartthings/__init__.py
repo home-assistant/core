@@ -149,22 +149,21 @@ def process_status(
     status: dict[str, dict[Capability, dict[Attribute, Status]]],
 ) -> dict[str, dict[Capability, dict[Attribute, Status]]]:
     """Remove disabled capabilities from status."""
-    if (main_component := status.get("main")) is None:
-        return status
-    if (
+    if (main_component := status.get("main")) is None or (
         disabled_capabilities_capability := main_component.get(
             Capability.CUSTOM_DISABLED_CAPABILITIES
         )
-    ) is not None:
-        disabled_capabilities = cast(
-            list[Capability],
-            disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
-        )
-        for capability in disabled_capabilities:
-            # We still need to make sure the climate entity can work without this capability
-            if (
-                capability in main_component
-                and capability != Capability.DEMAND_RESPONSE_LOAD_CONTROL
-            ):
-                del main_component[capability]
+    ) is None:
+        return status
+    disabled_capabilities = cast(
+        list[Capability],
+        disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
+    )
+    for capability in disabled_capabilities:
+        # We still need to make sure the climate entity can work without this capability
+        if (
+            capability in main_component
+            and capability != Capability.DEMAND_RESPONSE_LOAD_CONTROL
+        ):
+            del main_component[capability]
     return status
