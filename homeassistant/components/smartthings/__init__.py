@@ -66,6 +66,8 @@ PLATFORMS = [
 
 async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) -> bool:
     """Initialize config entry which represents an installed SmartApp."""
+    # The oauth smartthings entry will have a token, older ones are version 3
+    # but still require reauthentication
     if CONF_TOKEN not in entry.data:
         raise ConfigEntryAuthFailed("Config entry missing token")
     implementation = await async_get_config_entry_implementation(hass, entry)
