@@ -19,7 +19,7 @@ DoorBirdPy==3.0.8
 HAP-python==4.9.2
 
 # homeassistant.components.tasmota
-HATasmota==0.9.2
+HATasmota==0.10.0
 
 # homeassistant.components.mastodon
 Mastodon.py==1.8.1
@@ -2269,7 +2269,7 @@ statsd==3.2.1
 steamodd==4.21
 
 # homeassistant.components.stookwijzer
-stookwijzer==1.6.0
+stookwijzer==1.6.1
 
 # homeassistant.components.streamlabswater
 streamlabswater==1.0.1
