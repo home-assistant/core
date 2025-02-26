@@ -220,11 +220,12 @@ def _get_item_thumbnail(
     entity: MediaPlayerEntity,
     item_type: str | MediaType | None,
     search_type: str,
+    internal_request: bool,
 ) -> str | None:
     """Construct path to thumbnail image."""
     _item_thumbnail: str | None = None
     if artwork_track_id := item.get("artwork_track_id"):
-        if is_internal_request(entity.hass):
+        if internal_request:
             _item_thumbnail = player.generate_image_url_from_track_id(artwork_track_id)
         elif item_type is not None:
             _item_thumbnail = entity.get_browse_image_url(
@@ -245,6 +246,8 @@ async def build_item_response(
     browse_data: BrowseData,
 ) -> BrowseMedia:
     """Create response payload for search described by payload."""
+
+    internal_request = is_internal_request(entity.hass)
 
     search_id = payload["search_id"]
     search_type = payload["search_type"]
@@ -322,6 +325,7 @@ async def build_item_response(
                 entity=entity,
                 item_type=item_type,
                 search_type=search_type,
+                internal_request=internal_request,
             )
 
             assert browse_item_response.child_media_class["item"] is not None
