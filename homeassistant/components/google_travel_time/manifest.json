@@ -3,6 +3,7 @@
   "name": "Google Maps Travel Time",
   "codeowners": ["@eifinger"],
   "config_flow": true,
+  "version": "1.0.0",
   "documentation": "https://www.home-assistant.io/integrations/google_travel_time",
   "iot_class": "cloud_polling",
   "loggers": ["googlemaps", "homeassistant.helpers.location"],

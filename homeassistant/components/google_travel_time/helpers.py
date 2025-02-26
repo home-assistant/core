@@ -13,7 +13,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 def validate_config_entry(
-    hass: HomeAssistant, api_key: str, origin: str, destination: str
+    hass: HomeAssistant, api_key: str, origin: str, destination: str, use_routes_api: bool = False
 ) -> None:
     """Return whether the config entry data is valid."""
     resolved_origin = find_coordinates(hass, origin)
@@ -23,8 +23,21 @@ def validate_config_entry(
     except ValueError as value_error:
         _LOGGER.error("Malformed API key")
         raise InvalidApiKeyException from value_error
+
     try:
-        distance_matrix(client, resolved_origin, resolved_destination, mode="driving")
+        if use_routes_api:
+            # Validate using the Routes API
+            response = client.directions(
+                origin=resolved_origin,
+                destination=resolved_destination,
+                mode="driving",
+                departure_time="now",
+            )
+            if not response or len(response) == 0:
+                raise UnknownException("Routes API returned no data")
+        else:
+            # Validate using the Distance Matrix API
+            distance_matrix(client, resolved_origin, resolved_destination, mode="driving")
     except ApiError as api_error:
         if api_error.status == "REQUEST_DENIED":
             _LOGGER.error("Request denied: %s", api_error.message)

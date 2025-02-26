@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import datetime, timedelta
 import logging
+import requests
 
 from googlemaps import Client
 from googlemaps.distance_matrix import distance_matrix
@@ -18,12 +19,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_NAME,
+    CONF_LANGUAGE,
     EVENT_HOMEASSISTANT_STARTED,
     UnitOfTime,
 )
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.location import find_coordinates
 from homeassistant.util import dt as dt_util
 
@@ -33,6 +35,8 @@ from .const import (
     CONF_DEPARTURE_TIME,
     CONF_DESTINATION,
     CONF_ORIGIN,
+    CONF_USE_ROUTES_API,
+    CONF_UNITS,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -55,18 +59,19 @@ def convert_time_to_utc(timestr):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up a Google travel time sensor entry."""
     api_key = config_entry.data[CONF_API_KEY]
     origin = config_entry.data[CONF_ORIGIN]
     destination = config_entry.data[CONF_DESTINATION]
     name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+    use_routes_api = config_entry.options.get(CONF_USE_ROUTES_API, False)
 
     client = Client(api_key, timeout=10)
 
     sensor = GoogleTravelTimeSensor(
-        config_entry, name, api_key, origin, destination, client
+        config_entry, name, api_key, origin, destination, use_routes_api, client
     )
 
     async_add_entities([sensor], False)
@@ -80,7 +85,7 @@ class GoogleTravelTimeSensor(SensorEntity):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_state_class = SensorStateClass.MEASUREMENT
 
-    def __init__(self, config_entry, name, api_key, origin, destination, client):
+    def __init__(self, config_entry, name, api_key, origin, destination, use_routes_api, client):
         """Initialize the sensor."""
         self._attr_name = name
         self._attr_unique_id = config_entry.entry_id
@@ -96,8 +101,11 @@ class GoogleTravelTimeSensor(SensorEntity):
         self._client = client
         self._origin = origin
         self._destination = destination
+        self._use_routes_api = use_routes_api
         self._resolved_origin = None
         self._resolved_destination = None
+        self._name = name
+        self._state = None
 
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
@@ -109,17 +117,14 @@ class GoogleTravelTimeSensor(SensorEntity):
             await self.first_update()
 
     @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if self._matrix is None:
-            return None
+    def name(self):
+        """Return the name of the sensor."""
+        return self._name
 
-        _data = self._matrix["rows"][0]["elements"][0]
-        if "duration_in_traffic" in _data:
-            return round(_data["duration_in_traffic"]["value"] / 60)
-        if "duration" in _data:
-            return round(_data["duration"]["value"] / 60)
-        return None
+    @property
+    def state(self):
+        """Return the state of the sensor."""
+        return self._state
 
     @property
     def extra_state_attributes(self):
@@ -130,14 +135,16 @@ class GoogleTravelTimeSensor(SensorEntity):
         res = self._matrix.copy()
         options = self._config_entry.options.copy()
         res.update(options)
-        del res["rows"]
-        _data = self._matrix["rows"][0]["elements"][0]
-        if "duration_in_traffic" in _data:
-            res["duration_in_traffic"] = _data["duration_in_traffic"]["text"]
-        if "duration" in _data:
-            res["duration"] = _data["duration"]["text"]
-        if "distance" in _data:
-            res["distance"] = _data["distance"]["text"]
+
+        if "rows" in res:
+            del res["rows"]
+        
+        if "rows" in self._matrix and self._matrix["rows"]:
+            elements = self._matrix["rows"][0].get("elements", [{}])[0]
+            res["duration_in_traffic"] = elements.get("duration_in_traffic", {}).get("text", "N/A")
+            res["duration"] = elements.get("duration", {}).get("text", "N/A")
+            res["distance"] = elements.get("distance", {}).get("text", "N/A")
+
         res["origin"] = self._resolved_origin
         res["destination"] = self._resolved_destination
         return res
@@ -174,12 +181,78 @@ class GoogleTravelTimeSensor(SensorEntity):
         )
         if self._resolved_destination is not None and self._resolved_origin is not None:
             try:
-                self._matrix = distance_matrix(
-                    self._client,
-                    self._resolved_origin,
-                    self._resolved_destination,
-                    **options_copy,
-                )
+                if options_copy.get("use_routes_api"):
+                    # Gebruik de Routes API
+                    _LOGGER.debug("Using Routes API for travel time.")
+                    self._matrix = self.get_routes_data(options_copy)
+                    self._state = self._matrix.get("duration")
+                else:
+                    # Gebruik de Distance Matrix API
+                    _LOGGER.debug("Using Distance Matrix API for travel time.")
+                    self._matrix = distance_matrix(
+                        self._client,
+                        self._resolved_origin,
+                        self._resolved_destination,
+                        **{k: v for k, v in options_copy.items() if k not in ["use_routes_api"]},
+                    )
             except (ApiError, TransportError, Timeout) as ex:
                 _LOGGER.error("Error getting travel time: %s", ex)
                 self._matrix = None
+
+    # Detecteren of de gebruiker een Place ID of coördinaten gebruikt
+    def parse_location(self, location):
+        if "," in location:  # Controleer of het een coördinatenpaar is
+            lat, lng = map(float, location.split(","))
+            return {"latLng": {"latitude": lat, "longitude": lng}}
+        else:
+            return {"placeId": location}
+
+    def get_routes_data(self, options):
+        """Fetch new state data for the sensor."""
+        url = "https://routes.googleapis.com/directions/v2:computeRoutes"
+        headers = {
+            "Content-Type": "application/json",
+            "X-Goog-Api-Key": self._api_key,
+            "X-Goog-FieldMask": "routes.duration,routes.distanceMeters"
+        }
+
+        payload = {
+            "origin": {"location": self.parse_location(self._resolved_origin)},
+            "destination": {"location": self.parse_location(self._resolved_destination)},
+            "travelMode": "DRIVE", #options.get("mode", "driving"),
+            "languageCode": "en-US",
+            "routingPreference": "TRAFFIC_AWARE",
+            "computeAlternativeRoutes": False,
+            "units": "METRIC",
+            "routeModifiers": {
+                "avoidTolls": False,
+                "avoidHighways": False,
+                "avoidFerries": False
+            },
+            
+        }
+
+        try:
+            response = requests.post(url, json=payload, headers=headers, timeout=10)
+            response.raise_for_status()
+            data = response.json()
+
+            # Extract travel time and distance
+            if "routes" in data and data["routes"]:
+                route = data["routes"][0]
+                duration = int(route["duration"][:-1]) if "duration" in route else 0 # Duration in seconds
+                distance = int(route["distanceMeters"]) if "distanceMeters" in route else 0  # Distance in meters
+
+                return {
+                    "duration": round(duration / 60),  # Convert to minutes
+                    "distance": distance / 1000,  # Convert to kilometers
+                    "origin": self._origin,
+                    "destination": self._destination,
+                }
+            else:
+                _LOGGER.error("No routes found in the response")
+                return None
+
+        except requests.exceptions.RequestException as error:
+            _LOGGER.error("Error fetching data from Google Routes API: %s, Payload: %s", error, payload)
+            return None

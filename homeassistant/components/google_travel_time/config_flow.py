@@ -37,6 +37,7 @@ from .const import (
     CONF_TRANSIT_MODE,
     CONF_TRANSIT_ROUTING_PREFERENCE,
     CONF_UNITS,
+    CONF_USE_ROUTES_API,
     DEFAULT_NAME,
     DEPARTURE_TIME,
     DOMAIN,
@@ -62,6 +63,7 @@ RECONFIGURE_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = RECONFIGURE_SCHEMA.extend(
     {
         vol.Required(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_USE_ROUTES_API, default=False): cv.boolean,
     }
 )
 
@@ -131,6 +133,7 @@ OPTIONS_SCHEMA = vol.Schema(
                 translation_key=CONF_TRANSIT_ROUTING_PREFERENCE,
             )
         ),
+        vol.Optional(CONF_USE_ROUTES_API, default=False): cv.boolean,
     }
 )
 

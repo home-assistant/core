@@ -17,6 +17,7 @@ CONF_TRANSIT_MODE = "transit_mode"
 CONF_TRANSIT_ROUTING_PREFERENCE = "transit_routing_preference"
 CONF_TIME_TYPE = "time_type"
 CONF_TIME = "time"
+CONF_USE_ROUTES_API = "use_routes_api"
 
 ARRIVAL_TIME = "Arrival Time"
 DEPARTURE_TIME = "Departure Time"
