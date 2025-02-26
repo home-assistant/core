@@ -40,6 +40,7 @@ set_zone_override:
           domain: climate
     setpoint:
       required: true
+      default: 19.5
       selector:
         number:
           min: 4.0
