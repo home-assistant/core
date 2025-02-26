@@ -78,13 +78,13 @@ class MusicCastDeviceEntity(MusicCastEntity):
 
         return device_info
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         await super().async_added_to_hass()
         # All entities should register callbacks to update HA when their state changes
         self.coordinator.musiccast.register_callback(self.async_write_ha_state)
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         await super().async_will_remove_from_hass()
         self.coordinator.musiccast.remove_callback(self.async_write_ha_state)
