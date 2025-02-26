@@ -49,8 +49,20 @@ JOB_STATE_MAP = {
     "unknown": None,
 }
 
+OVEN_JOB_STATE_MAP = {
+    "scheduledStart": "scheduled_start",
+    "fastPreheat": "fast_preheat",
+    "scheduledEnd": "scheduled_end",
+    "stone_heating": "stone_heating",
+    "timeHoldPreheat": "time_hold_preheat",
+}
+
 MEDIA_PLAYBACK_STATE_MAP = {
     "fast forwarding": "fast_forwarding",
+}
+
+ROBOT_CLEANER_MOVEMENT_MAP = {
+    "powerOff": "off",
 }
 
 OVEN_MODE = {
@@ -80,6 +92,8 @@ OVEN_MODE = {
     "Descale": "descale",
     "Rinse": "rinse",
 }
+
+WASHER_OPTIONS = ["pause", "run", "stop"]
 
 
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
@@ -230,7 +244,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="dishwasher_machine_state",
-                options=["pause", "run", "stop"],
+                options=WASHER_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
             )
         ],
@@ -474,12 +488,35 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="oven_machine_state",
+                options=["ready", "running", "paused"],
+                device_class=SensorDeviceClass.ENUM,
             )
         ],
         Attribute.OVEN_JOB_STATE: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.OVEN_JOB_STATE,
                 translation_key="oven_job_state",
+                options=[
+                    "cleaning",
+                    "cooking",
+                    "cooling",
+                    "draining",
+                    "preheat",
+                    "ready",
+                    "rinsing",
+                    "finished",
+                    "scheduled_start",
+                    "warming",
+                    "defrosting",
+                    "sensing",
+                    "searing",
+                    "fast_preheat",
+                    "scheduled_end",
+                    "stone_heating",
+                    "time_hold_preheat",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: OVEN_JOB_STATE_MAP.get(value, value),
             )
         ],
         Attribute.COMPLETION_TIME: [
@@ -585,6 +622,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ROBOT_CLEANER_CLEANING_MODE,
                 translation_key="robot_cleaner_cleaning_mode",
+                options=["auto", "part", "repeat", "manual", "stop", "map"],
+                device_class=SensorDeviceClass.ENUM,
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
         ],
@@ -594,6 +633,20 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ROBOT_CLEANER_MOVEMENT,
                 translation_key="robot_cleaner_movement",
+                options=[
+                    "homing",
+                    "idle",
+                    "charging",
+                    "alarm",
+                    "off",
+                    "reserve",
+                    "point",
+                    "after",
+                    "cleaning",
+                    "pause",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: ROBOT_CLEANER_MOVEMENT_MAP.get(value, value),
             )
         ]
     },
@@ -798,6 +851,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="washer_machine_state",
+                options=WASHER_OPTIONS,
+                device_class=SensorDeviceClass.ENUM,
             )
         ],
         Attribute.WASHER_JOB_STATE: [
