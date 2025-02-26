@@ -157,9 +157,8 @@ class OwningIntegration:
             yield
             return
 
-        await hass.config_entries.async_unload(entry.entry_id)
-
         try:
+            await hass.config_entries.async_unload(entry.entry_id)
             yield
         finally:
             await hass.config_entries.async_setup(entry.entry_id)
