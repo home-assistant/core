@@ -26,9 +26,6 @@ STATE_ECO
 DHWModeState.manualEcoActive
 OperatingModeState.eco
 
-STATE_ELECTRIC
-OperatingModeState.boost
-
 STATE_HIGH_DEMAND
 OperatingModeState.max
 
@@ -68,9 +65,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         STATE_ECO,
         STATE_OFF,
         STATE_PERFORMANCE,
-        STATE_ELECTRIC,
         STATE_HIGH_DEMAND,
         STATE_HEAT_PUMP,
+        STATE_ELECTRIC,
     ]
 
     def __init__(
@@ -78,18 +75,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     ) -> None:
         """Init method."""
         super().__init__(device_url, coordinator)
-        self._attr_max_temp = cast(
-            float,
-            self.executor.select_state(
-                OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
-            ),
-        )
-        self._attr_min_temp = cast(
-            float,
-            self.executor.select_state(
-                OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
-            ),
-        )
 
     @property
     def min_temp(self) -> float:
@@ -109,15 +94,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             self.executor.select_state(
                 OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
             ),
-        )
-
-    @property
-    def is_state_electric(self) -> bool:
-        """Return true if boost mode is on."""
-
-        return (
-            self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
-            == OverkizCommandParam.BOOST
         )
 
     @property
@@ -169,7 +145,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     @property
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
-
         return self.executor.select_state(OverkizState.CORE_OPERATING_MODE) in (
             "antifreeze",  # TODO: pyoverkiz PR
             OverkizCommandParam.AWAY,
@@ -213,11 +188,11 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         if self.is_away_mode_on:
             return STATE_OFF
 
+        if self.is_boost_mode_on:
+            return STATE_ELECTRIC
+
         if self.is_off_mode:
             return STATE_OFF
-
-        if self.is_state_electric:
-            return STATE_ELECTRIC
 
         if self.is_state_eco:
             return STATE_ECO
@@ -233,6 +208,14 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
 
         return None
 
+    @property
+    def is_boost_mode_on(self) -> bool:
+        """Return true if boost mode is on."""
+        return (
+            cast(int, self.executor.select_state(OverkizState.CORE_BOOST_MODE_DURATION))
+            > 0
+        )
+
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
 
@@ -245,18 +228,26 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         """Set new operation mode."""
 
         if operation_mode == STATE_OFF:
+            if self.is_boost_mode_on:
+                await self.async_turn_boost_mode_off()
+            if self.is_away_mode_on:
+                await self.async_turn_away_mode_off()
             await self.executor.async_execute_command(
-                OverkizCommand.SET_CURRENT_OPERATING_MODE, OverkizCommandParam.OFF
+                OverkizCommand.SET_CURRENT_OPERATING_MODE,
+                OverkizCommandParam.OFF,
+                refresh_afterwards=False,
             )
-        elif operation_mode == STATE_ELECTRIC:
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_CURRENT_OPERATING_MODE, OverkizCommandParam.BOOST
-            )
+            await self.coordinator.async_refresh()
         elif operation_mode == STATE_ECO:
             """
             DHWModeState.manualEcoActive
             OperatingModeState.eco
             """
+            if self.is_boost_mode_on:
+                await self.async_turn_boost_mode_off()
+            if self.is_away_mode_on:
+                await self.async_turn_away_mode_off()
+
             # TODO: choose one
             await self.executor.async_execute_command(
                 OverkizCommand.SET_CURRENT_OPERATING_MODE,
@@ -279,6 +270,11 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             DHWModeState.autoMode
             OperatingModeState.auto
             """
+            if self.is_boost_mode_on:
+                await self.async_turn_boost_mode_off()
+            if self.is_away_mode_on:
+                await self.async_turn_away_mode_off()
+
             # TODO: choose one
             await self.executor.async_execute_command(
                 OverkizCommand.SET_CURRENT_OPERATING_MODE,
@@ -300,6 +296,11 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             OperatingModeState.prog
             OperatingModeState.program
             """
+            if self.is_boost_mode_on:
+                await self.async_turn_boost_mode_off()
+            if self.is_away_mode_on:
+                await self.async_turn_away_mode_off()
+
             # TODO: choose one
             await self.executor.async_execute_command(
                 OverkizCommand.SET_CURRENT_OPERATING_MODE,
@@ -334,3 +335,47 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
             },
         )
+
+    async def async_turn_boost_mode_on(self) -> None:
+        """Turn boost mode on."""
+
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_CURRENT_OPERATING_MODE,
+            {
+                OverkizCommandParam.RELAUNCH: OverkizCommandParam.ON,
+                OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+            },
+            refresh_afterwards=False,
+        )
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_BOOST_MODE_DURATION,
+            7,
+            refresh_afterwards=False,
+        )
+        await self.executor.async_execute_command(
+            OverkizCommand.REFRESH_BOOST_MODE_DURATION,
+            refresh_afterwards=False,
+        )
+        await self.coordinator.async_refresh()
+
+    async def async_turn_boost_mode_off(self) -> None:
+        """Turn boost mode off."""
+
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_CURRENT_OPERATING_MODE,
+            {
+                OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
+                OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
+            },
+            refresh_afterwards=False,
+        )
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_BOOST_MODE_DURATION,
+            0,
+            refresh_afterwards=False,
+        )
+        await self.executor.async_execute_command(
+            OverkizCommand.REFRESH_BOOST_MODE_DURATION,
+            refresh_afterwards=False,
+        )
+        await self.coordinator.async_refresh()
