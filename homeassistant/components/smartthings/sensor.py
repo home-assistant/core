@@ -53,6 +53,10 @@ MEDIA_PLAYBACK_STATE_MAP = {
     "fast forwarding": "fast_forwarding",
 }
 
+ROBOT_CLEANER_MOVEMENT_MAP = {
+    "powerOff": "off",
+}
+
 OVEN_MODE = {
     "Conventional": "conventional",
     "Bake": "bake",
@@ -594,6 +598,20 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ROBOT_CLEANER_MOVEMENT,
                 translation_key="robot_cleaner_movement",
+                options=[
+                    "homing",
+                    "idle",
+                    "charging",
+                    "alarm",
+                    "off",
+                    "reserve",
+                    "point",
+                    "after",
+                    "cleaning",
+                    "pause",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: ROBOT_CLEANER_MOVEMENT_MAP.get(value, value),
             )
         ]
     },
