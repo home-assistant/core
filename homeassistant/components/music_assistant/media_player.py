@@ -475,6 +475,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                 album=album,
                 media_type=MediaType(media_type) if media_type else None,
             ):
+                if TYPE_CHECKING:
+                    assert item.uri is not None
                 media_uris.append(item.uri)
 
         if not media_uris:

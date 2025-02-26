@@ -1044,6 +1044,63 @@
       },
       "valve_duration": {
         "name": "Irrigation duration"
+      },
+      "down_movement": {
+        "name": "Down movement"
+      },
+      "sustain_time": {
+        "name": "Sustain time"
+      },
+      "up_movement": {
+        "name": "Up movement"
+      },
+      "large_motion_detection_sensitivity": {
+        "name": "Motion detection sensitivity"
+      },
+      "large_motion_detection_distance": {
+        "name": "Motion detection distance"
+      },
+      "medium_motion_detection_distance": {
+        "name": "Medium motion detection distance"
+      },
+      "medium_motion_detection_sensitivity": {
+        "name": "Medium motion detection sensitivity"
+      },
+      "small_motion_detection_distance": {
+        "name": "Small motion detection distance"
+      },
+      "small_motion_detection_sensitivity": {
+        "name": "Small motion detection sensitivity"
+      },
+      "static_detection_sensitivity": {
+        "name": "Static detection sensitivity"
+      },
+      "static_detection_distance": {
+        "name": "Static detection distance"
+      },
+      "motion_detection_sensitivity": {
+        "name": "Motion detection sensitivity"
+      },
+      "holiday_temperature": {
+        "name": "Holiday temperature"
+      },
+      "boost_time": {
+        "name": "Boost time"
+      },
+      "antifrost_temperature": {
+        "name": "Antifrost temperature"
+      },
+      "eco_temperature": {
+        "name": "Eco temperature"
+      },
+      "comfort_temperature": {
+        "name": "Comfort temperature"
+      },
+      "valve_state_auto_shutdown": {
+        "name": "Valve state auto shutdown"
+      },
+      "shutdown_timer": {
+        "name": "Shutdown timer"
       }
     },
     "select": {
@@ -1235,6 +1292,33 @@
       },
       "eco_mode": {
         "name": "Eco mode"
+      },
+      "mode": {
+        "name": "Mode"
+      },
+      "reverse": {
+        "name": "Reverse"
+      },
+      "motion_state": {
+        "name": "Motion state"
+      },
+      "motion_detection_mode": {
+        "name": "Motion detection mode"
+      },
+      "screen_orientation": {
+        "name": "Screen orientation"
+      },
+      "motor_thrust": {
+        "name": "Motor thrust"
+      },
+      "display_brightness": {
+        "name": "Display brightness"
+      },
+      "display_orientation": {
+        "name": "Display orientation"
+      },
+      "hysteresis_mode": {
+        "name": "Hysteresis mode"
       }
     },
     "sensor": {
@@ -1561,6 +1645,27 @@
       },
       "error_status": {
         "name": "Error status"
+      },
+      "brightness_level": {
+        "name": "Brightness level"
+      },
+      "average_light_intensity_20mins": {
+        "name": "Average light intensity last 20 min"
+      },
+      "todays_max_light_intensity": {
+        "name": "Today's max light intensity"
+      },
+      "fault_code": {
+        "name": "Fault code"
+      },
+      "water_flow": {
+        "name": "Water flow"
+      },
+      "remaining_watering_time": {
+        "name": "Remaining watering time"
+      },
+      "last_watering_duration": {
+        "name": "Last watering duration"
       }
     },
     "switch": {
@@ -1746,6 +1851,30 @@
       },
       "total_flow_reset_switch": {
         "name": "Total flow reset switch"
+      },
+      "touch_control": {
+        "name": "Touch control"
+      },
+      "sound_enabled": {
+        "name": "Sound enabled"
+      },
+      "invert_relay": {
+        "name": "Invert relay"
+      },
+      "boost_heating": {
+        "name": "Boost heating"
+      },
+      "holiday_mode": {
+        "name": "Holiday mode"
+      },
+      "heating_stop": {
+        "name": "Heating stop"
+      },
+      "schedule_mode": {
+        "name": "Schedule mode"
+      },
+      "auto_clean": {
+        "name": "Auto clean"
       }
     }
   }
