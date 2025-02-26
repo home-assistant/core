@@ -43,6 +43,13 @@ THERMOSTAT_CAPABILITIES = {
 }
 
 JOB_STATE_MAP = {
+    "airWash": "airwash",
+    "aIRinse": "ai_rinse",
+    "aiSpin": "ai_spin",
+    "aIWash": "ai_wash",
+    "delayWash": "delay_wash",
+    "weightSensing": "weight_sensing",
+    "freezeProtection": "freeze_protection",
     "preDrain": "pre_drain",
     "preWash": "pre_wash",
     "wrinklePrevent": "wrinkle_prevent",
@@ -833,6 +840,26 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.WASHER_JOB_STATE,
                 translation_key="washer_job_state",
+                options=[
+                    "airwash",
+                    "ai_rinse",
+                    "ai_spin",
+                    "ai_wash",
+                    "cooling",
+                    "delay_wash",
+                    "drying",
+                    "finish",
+                    "none",
+                    "pre_wash",
+                    "rinse",
+                    "spin",
+                    "wash",
+                    "weight_sensing",
+                    "wrinkle_prevent",
+                    "freeze_protection",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: JOB_STATE_MAP.get(value, value),
             )
         ],
         Attribute.COMPLETION_TIME: [
