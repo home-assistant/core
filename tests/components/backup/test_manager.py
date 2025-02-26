@@ -1412,11 +1412,12 @@ async def test_initiate_backup_file_error_upload_to_agents(
         "atomic_contents_add_exception",
         "stat_call_count",
         "stat_exception",
+        "error_message",
     ),
     [
-        (1, OSError("Boom!"), 0, None, 0, None),
-        (1, None, 1, OSError("Boom!"), 0, None),
-        (1, None, 1, None, 1, OSError("Boom!")),
+        (1, OSError("Boom!"), 0, None, 0, None, "Failed to create dir"),
+        (1, None, 1, OSError("Boom!"), 0, None, "Boom!"),
+        (1, None, 1, None, 1, OSError("Boom!"), "Error getting size"),
     ],
 )
 async def test_initiate_backup_file_error_create_backup(
@@ -1424,12 +1425,14 @@ async def test_initiate_backup_file_error_create_backup(
     hass_ws_client: WebSocketGenerator,
     generate_backup_id: MagicMock,
     path_glob: MagicMock,
+    caplog: pytest.LogCaptureFixture,
     mkdir_call_count: int,
     mkdir_exception: Exception | None,
     atomic_contents_add_call_count: int,
     atomic_contents_add_exception: Exception | None,
     stat_call_count: int,
     stat_exception: Exception | None,
+    error_message: str,
 ) -> None:
     """Test file error during generate backup, while creating backup."""
     agent_ids = ["test.remote"]
@@ -1512,6 +1515,8 @@ async def test_initiate_backup_file_error_create_backup(
     assert atomic_contents_add_mock.call_count == atomic_contents_add_call_count
     assert mkdir_mock.call_count == mkdir_call_count
     assert stat_mock.call_count == stat_call_count
+
+    assert error_message in caplog.text
 
 
 def _mock_local_backup_agent(name: str) -> Mock:
