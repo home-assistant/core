@@ -23,6 +23,7 @@ from .const import (
     ATTR_ALBUM_TYPE,
     ATTR_ALBUMS,
     ATTR_ARTISTS,
+    ATTR_AUDIOBOOKS,
     ATTR_CONFIG_ENTRY_ID,
     ATTR_FAVORITE,
     ATTR_ITEMS,
@@ -32,6 +33,7 @@ from .const import (
     ATTR_OFFSET,
     ATTR_ORDER_BY,
     ATTR_PLAYLISTS,
+    ATTR_PODCASTS,
     ATTR_RADIO,
     ATTR_SEARCH,
     ATTR_SEARCH_ALBUM,
@@ -154,6 +156,14 @@ async def handle_search(call: ServiceCall) -> ServiceResponse:
                 media_item_dict_from_mass_item(mass, item)
                 for item in search_results.radio
             ],
+            ATTR_AUDIOBOOKS: [
+                media_item_dict_from_mass_item(mass, item)
+                for item in search_results.audiobooks
+            ],
+            ATTR_PODCASTS: [
+                media_item_dict_from_mass_item(mass, item)
+                for item in search_results.podcasts
+            ],
         }
     )
     return response
@@ -193,6 +203,14 @@ async def handle_get_library(call: ServiceCall) -> ServiceResponse:
         )
     elif media_type == MediaType.PLAYLIST:
         library_result = await mass.music.get_library_playlists(
+            **base_params,
+        )
+    elif media_type == MediaType.AUDIOBOOK:
+        library_result = await mass.music.get_library_audiobooks(
+            **base_params,
+        )
+    elif media_type == MediaType.PODCAST:
+        library_result = await mass.music.get_library_podcasts(
             **base_params,
         )
     else:
