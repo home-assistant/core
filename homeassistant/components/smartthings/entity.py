@@ -17,6 +17,7 @@ class SmartThingsEntity(Entity):
     """Defines a SmartThings entity."""
 
     _attr_should_poll = False
+    _attr_has_entity_name = True
 
     def __init__(
         self, client: SmartThings, device: FullDevice, capabilities: set[Capability]
@@ -30,7 +31,6 @@ class SmartThingsEntity(Entity):
             if capability in device.status[MAIN]
         }
         self.device = device
-        self._attr_name = device.device.label
         self._attr_unique_id = device.device.device_id
         self._attr_device_info = DeviceInfo(
             configuration_url="https://account.smartthings.com",

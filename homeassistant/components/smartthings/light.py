@@ -56,6 +56,7 @@ def convert_scale(
 class SmartThingsLight(SmartThingsEntity, LightEntity):
     """Define a SmartThings Light."""
 
+    _attr_name = None
     _attr_supported_color_modes: set[ColorMode]
 
     # SmartThings does not expose this attribute, instead it's
