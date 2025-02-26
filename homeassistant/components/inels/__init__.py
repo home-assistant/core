@@ -97,11 +97,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
     return True
 
 
-async def async_reload_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> None:
-    """Reload all devices."""
-    await hass.config_entries.async_reload(entry.entry_id)
-
-
 async def async_unload_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> bool:
     """Unload a config entry."""
     entry.runtime_data.mqtt.unsubscribe_listeners()
