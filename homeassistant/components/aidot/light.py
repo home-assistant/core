@@ -270,4 +270,4 @@ class AidotLight(CoordinatorEntity, LightEntity):
     @callback
     def _handle_coordinator_update(self):
         """Handle updated data from the coordinator."""
-        self._try_connect()
+        self.hass.async_create_task(self._try_connect())

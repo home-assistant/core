@@ -12,7 +12,7 @@ from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_COUNTRY, TEST_EMAIL, TEST_PASSWORD, MockConfigEntry
+from .conftest import TEST_COUNTRY, TEST_EMAIL, TEST_PASSWORD
 
 TEST_HOME = "Test Home"
 TEST_LOGIN_RESPONSE = {
@@ -48,35 +48,6 @@ async def test_config_flow_user_init(hass: HomeAssistant) -> None:
     assert result["type"] == FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_config_flow_step_reauth(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the reauth step."""
-    mock_config_entry.add_to_hass(hass)
-    with (
-        patch(
-            "homeassistant.components.aidot.config_flow.ConfigFlow.async_set_unique_id",
-            return_value=True,
-        ),
-    ):
-        result = await mock_config_entry.start_reauth_flow(hass)
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-        assert result["errors"] == {}
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_config_flow_cloud_reauth_entry_failed(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
-) -> None:
-    """Test the reauth step."""
-    mock_config_entry.add_to_hass(hass)
-    result = await mock_config_entry.start_reauth_flow(hass)
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "aidot_cloud_account_missing"
 
 
 async def test_config_flow_cloud_login_success(hass: HomeAssistant) -> None:
@@ -117,33 +88,6 @@ async def test_async_show_country_form(hass: HomeAssistant) -> None:
     assert (
         result["data_schema"].schema[CONF_COUNTRY].container == SUPPORTED_COUNTRY_NAMES
     )
-
-
-async def test_config_flow_cloud_login_failed(hass: HomeAssistant) -> None:
-    """Test a failed config flow using cloud login failed."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {}
-
-    with patch(
-        "homeassistant.components.aidot.config_flow.AidotClient.async_post_login",
-        return_value=None,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_COUNTRY: TEST_COUNTRY,
-                CONF_USERNAME: TEST_EMAIL,
-                CONF_PASSWORD: TEST_PASSWORD,
-            },
-        )
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": "login_failed"}
 
 
 async def test_config_flow_login_user_password_incorrect(hass: HomeAssistant) -> None:

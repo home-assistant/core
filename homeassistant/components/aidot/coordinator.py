@@ -35,11 +35,11 @@ type AidotConfigEntry = ConfigEntry[AidotCoordinator]
 
 
 class AidotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching IOmeter data."""
+    """Class to manage fetching Aidot data."""
 
     config_entry: AidotConfigEntry
     client: AidotClient
-    discovered_devices: dict[str, str] = {}
+    discovered_devices: dict[str, str]
 
     def __init__(
         self,
@@ -60,6 +60,33 @@ class AidotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client.set_token_fresh_cb(self.token_fresh_cb)
         self.identifier = config_entry.entry_id
+        self.discovered_devices = {}
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator.
+
+        Can be overwritten by integrations to load data or resources
+        only once during the first refresh.
+        """
+        try:
+            await self.async_auto_login()
+        except AidotUserOrPassIncorrect as error:
+            raise ConfigEntryAuthFailed from error
+
+        def discover(dev_id, event: Mapping[str, Any]) -> None:
+            self.discovered_devices[dev_id] = event[CONF_IPADDRESS]
+            self.async_update_context_listeners([dev_id])
+
+        await Discover().broadcast_message(discover, self.client.login_info[CONF_ID])
+
+    async def _async_update_data(self) -> dict[str, Any]:
+        """Update data async."""
+        try:
+            device_list = await self.client.async_get_all_device()
+        except AidotAuthFailed as error:
+            self.token_fresh_cb()
+            raise ConfigEntryAuthFailed from error
+        return device_list
 
     @property
     def context_callbacks(self):
@@ -101,49 +128,28 @@ class AidotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return release_update
 
-    def filter_light_list(self):
+    def filter_light_list(self) -> list[dict[str, Any]]:
         """Filter light."""
         return [
             device
-            for device in self.data.get(CONF_DEVICE_LIST)
+            for device in self.data[CONF_DEVICE_LIST]
             if device[CONF_TYPE] == Platform.LIGHT
             and CONF_AES_KEY in device
             and device[CONF_AES_KEY][0] is not None
         ]
 
-    def token_fresh_cb(self):
+    def token_fresh_cb(self) -> None:
         """Update token."""
-        data = {**self.config_entry.data, CONF_LOGIN_INFO: self.client.login_info}
-        self.hass.config_entries.async_update_entry(self.config_entry, data=data)
+        self.hass.config_entries.async_update_entry(
+            self.config_entry, data={CONF_LOGIN_INFO: self.client.login_info.copy()}
+        )
 
-    async def async_auto_login(self):
+    async def async_auto_login(self) -> None:
         """Async auto login."""
-        if self.client.login_info[CONF_ACCESS_TOKEN] is None:
+        if self.client.login_info.get(CONF_ACCESS_TOKEN) is None:
             try:
                 login_info = await self.client.async_post_login()
                 if login_info is not None:
                     self.token_fresh_cb()
             except AidotUserOrPassIncorrect as error:
                 raise AidotUserOrPassIncorrect from error
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Update data async."""
-        try:
-            device_list = await self.client.async_get_all_device()
-        except AidotAuthFailed as error:
-            self.token_fresh_cb()
-            raise ConfigEntryAuthFailed from error
-        return {CONF_DEVICE_LIST: device_list}
-
-    async def _async_setup(self) -> None:
-        """Set up the coordinator.
-
-        Can be overwritten by integrations to load data or resources
-        only once during the first refresh.
-        """
-
-        def discover(dev_id, event: Mapping[str, Any]):
-            self.discovered_devices[dev_id] = event[CONF_IPADDRESS]
-            self.async_update_context_listeners([dev_id])
-
-        await Discover().broadcast_message(discover, self.client.login_info[CONF_ID])
