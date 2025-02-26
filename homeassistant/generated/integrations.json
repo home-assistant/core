@@ -6152,6 +6152,12 @@
       "iot_class": "calculated",
       "single_config_entry": true
     },
+    "sunricher": {
+      "name": "Sunricher",
+      "iot_standards": [
+        "zigbee"
+      ]
+    },
     "sunweg": {
       "name": "Sun WEG",
       "integration_type": "hub",
