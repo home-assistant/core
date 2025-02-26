@@ -3794,18 +3794,7 @@ async def test_parallel(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
         "to_state": ANY,
     }
     expected_trace = {
-        "0": [
-            {
-                "variables": {
-                    "what": "world",
-                    "wait": {
-                        "completed": True,
-                        "remaining": None,
-                        "trigger": expected_trigger,
-                    },
-                }
-            }
-        ],
+        "0": [{"variables": {"what": "world"}}],
         "0/parallel/0/sequence/0": [
             {
                 "result": {

@@ -166,7 +166,9 @@ class ScriptRunVariables(UserDict[str, Any]):
             full_scope = self._full_scope
         else:
             parallel_data = _ParallelData()
-            non_parallel_scope = ChainMap(parallel_data.outer_scope_writes)
+            non_parallel_scope = ChainMap(
+                parallel_data.protected, parallel_data.outer_scope_writes
+            )
             full_scope = self._full_scope.new_child(parallel_data.protected)
 
         return ScriptRunVariables(
@@ -212,11 +214,11 @@ class ScriptRunVariables(UserDict[str, Any]):
             return
 
         if self._parallel_data is not None:
-            self._parallel_data.outer_scope_writes[key] = value
             if parallel_protected:
                 self._parallel_data.protected[key] = value
-            else:
-                self._parallel_data.protected.pop(key, None)
+                return
+            self._parallel_data.protected.pop(key, None)
+            self._parallel_data.outer_scope_writes[key] = value
 
         self._parent.assign(key, value, parallel_protected=parallel_protected)
 

@@ -193,5 +193,5 @@ async def test_script_vars_parallel() -> None:
     assert script_vars_3b.exit_scope() is script_vars_2b
     assert script_vars_2b.exit_scope() is script_vars
 
-    assert script_vars._full_scope == {"x": "b", "y": "b", "z": 1}
-    assert script_vars.local_scope == {"x": "b", "y": "b", "z": 1}
+    assert script_vars._full_scope == {"x": "b", "y": 1, "z": 1}
+    assert script_vars.local_scope == {"x": "b", "y": 1, "z": 1}
