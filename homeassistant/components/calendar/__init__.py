@@ -31,7 +31,7 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -870,6 +870,10 @@ async def async_get_events_service(
         end = start + service_call.data[EVENT_DURATION]
     else:
         end = service_call.data[EVENT_END_DATETIME]
+
+    if start >= end:
+        raise ServiceValidationError("End date must be after start date")
+
     calendar_event_list = await calendar.async_get_events(
         calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
     )

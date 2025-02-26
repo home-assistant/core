@@ -14,7 +14,11 @@ import voluptuous as vol
 
 from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    ServiceValidationError,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -448,7 +452,7 @@ async def test_list_events_service(
     service: str,
     expected: dict[str, Any],
 ) -> None:
-    """Test listing events from the service call using exlplicit start and end time.
+    """Test listing events from the service call using explicit start and end time.
 
     This test uses a fixed date/time so that it can deterministically test the
     string output values.
@@ -549,6 +553,46 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
             SERVICE_GET_EVENTS,
             {
                 "entity_id": "calendar.calendar_1",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "frozen_time", ["2023-06-22 10:30:00+00:00"], ids=["frozen_time"]
+)
+@pytest.mark.parametrize(
+    ("service_data"),
+    [
+        {
+            "start_date_time": "2023-06-22T04:30:00-06:00",
+            "end_date_time": "2023-06-22T04:30:00-06:00",
+        },
+        {
+            "start_date_time": "2023-06-22T04:30:00",
+            "end_date_time": "2023-06-22T04:30:00",
+        },
+        {"start_date_time": "2023-06-22", "end_date_time": "2023-06-22"},
+        {"start_date_time": "2023-06-22 10:00:00", "duration": "0"},
+    ],
+)
+async def test_list_events_service_same_dates(
+    hass: HomeAssistant,
+    service_data: dict[str, str],
+) -> None:
+    """Test listing events from the service call using the same start and end time."""
+
+    with pytest.raises(
+        ServiceValidationError, match="End date must be after start date"
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_EVENTS,
+            target={"entity_id": ["calendar.calendar_1"]},
+            service_data={
+                "entity_id": "calendar.calendar_1",
+                **service_data,
             },
             blocking=True,
             return_response=True,
