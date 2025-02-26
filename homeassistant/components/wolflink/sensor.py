@@ -39,6 +39,70 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import COORDINATOR, DEVICE_ID, DOMAIN, MANUFACTURER, PARAMETERS, STATES
 
 
+@dataclass(kw_only=True, frozen=True)
+class WolflinkSensorEntityDescription(SensorEntityDescription):
+    """Describes Wolflink sensor entity."""
+
+    name_fn: Callable[[Parameter], str]
+    supported_fn: Callable[[Parameter], bool]
+
+
+SENSOR_DESCRIPTIONS = [
+    WolflinkSensorEntityDescription(
+        key="temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        supported_fn=lambda param: isinstance(param, Temperature),
+        name_fn=lambda param: param.name,
+    ),
+    WolflinkSensorEntityDescription(
+        key="pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        supported_fn=lambda param: isinstance(param, Pressure),
+        name_fn=lambda param: param.name,
+    ),
+    WolflinkSensorEntityDescription(
+        key="energy",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        supported_fn=lambda param: isinstance(param, EnergyParameter),
+        name_fn=lambda param: param.name,
+    ),
+    WolflinkSensorEntityDescription(
+        key="power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        supported_fn=lambda param: isinstance(param, PowerParameter),
+        name_fn=lambda param: param.name,
+    ),
+    WolflinkSensorEntityDescription(
+        key="percentage",
+        native_unit_of_measurement=PERCENTAGE,
+        supported_fn=lambda param: isinstance(param, PercentageParameter),
+        name_fn=lambda param: param.name,
+    ),
+    WolflinkSensorEntityDescription(
+        key="list_item",
+        translation_key="state",
+        supported_fn=lambda param: isinstance(param, ListItemParameter),
+        name_fn=lambda param: param.name,
+    ),
+    WolflinkSensorEntityDescription(
+        key="hours",
+        icon="mdi:clock",
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        supported_fn=lambda param: isinstance(param, HoursParameter),
+        name_fn=lambda param: param.name,
+    ),
+    WolflinkSensorEntityDescription(
+        key="default",
+        supported_fn=lambda param: isinstance(param, SimpleParameter),
+        name_fn=lambda param: param.name,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
@@ -50,91 +114,13 @@ async def async_setup_entry(
     device_id = hass.data[DOMAIN][config_entry.entry_id][DEVICE_ID]
 
     entities: list[WolfLinkSensor] = [
-        WolfLinkSensor(
-            coordinator, parameter, device_id, get_entity_description(parameter)
-        )
+        WolfLinkSensor(coordinator, parameter, device_id, description)
         for parameter in parameters
+        for description in SENSOR_DESCRIPTIONS
+        if description.supported_fn(parameter)
     ]
 
     async_add_entities(entities, True)
-
-
-@dataclass(kw_only=True, frozen=True)
-class WolflinkSensorEntityDescription(SensorEntityDescription):
-    """Describes Wolflink sensor entity."""
-
-    supported_fn: Callable[[Parameter], bool]
-
-
-SENSOR_DESCRIPTIONS = [
-    WolflinkSensorEntityDescription(
-        key="temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        supported_fn=lambda param: isinstance(param, Temperature),
-    ),
-    WolflinkSensorEntityDescription(
-        key="pressure",
-        device_class=SensorDeviceClass.PRESSURE,
-        native_unit_of_measurement=UnitOfPressure.BAR,
-        supported_fn=lambda param: isinstance(param, Pressure),
-    ),
-    WolflinkSensorEntityDescription(
-        key="energy",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        supported_fn=lambda param: isinstance(param, EnergyParameter),
-    ),
-    WolflinkSensorEntityDescription(
-        key="power",
-        device_class=SensorDeviceClass.POWER,
-        native_unit_of_measurement=UnitOfPower.KILO_WATT,
-        supported_fn=lambda param: isinstance(param, PowerParameter),
-    ),
-    WolflinkSensorEntityDescription(
-        key="percentage",
-        native_unit_of_measurement=PERCENTAGE,
-        supported_fn=lambda param: isinstance(param, PercentageParameter),
-    ),
-    WolflinkSensorEntityDescription(
-        key="list_item",
-        translation_key="state",
-        supported_fn=lambda param: isinstance(param, ListItemParameter),
-    ),
-    WolflinkSensorEntityDescription(
-        key="hours",
-        icon="mdi:clock",
-        native_unit_of_measurement=UnitOfTime.HOURS,
-        supported_fn=lambda param: isinstance(param, HoursParameter),
-    ),
-    WolflinkSensorEntityDescription(
-        key="default",
-        supported_fn=lambda param: isinstance(param, SimpleParameter),
-    ),
-]
-
-
-def get_entity_description(parameter: Parameter) -> WolflinkSensorEntityDescription:
-    """Return the entity description for a given parameter."""
-    for description in SENSOR_DESCRIPTIONS:
-        if description.supported_fn(parameter):
-            return WolflinkSensorEntityDescription(
-                key=parameter.parameter_id,
-                name=parameter.name,
-                device_class=description.device_class,
-                native_unit_of_measurement=description.native_unit_of_measurement,
-                icon=description.icon,
-                entity_registry_enabled_default=description.entity_registry_enabled_default,
-                entity_category=description.entity_category,
-                has_entity_name=description.has_entity_name,
-                translation_key=description.translation_key,
-                supported_fn=description.supported_fn,
-            )
-    return WolflinkSensorEntityDescription(
-        key=parameter.parameter_id,
-        name=parameter.name,
-        supported_fn=lambda param: True,
-    )
 
 
 class WolfLinkSensor(CoordinatorEntity, SensorEntity):
@@ -153,7 +139,7 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self.wolf_object = wolf_object
-        self._attr_name = str(description.name)
+        self._attr_name = description.name_fn(wolf_object)
         self._attr_unique_id = f"{device_id}:{wolf_object.parameter_id}"
         self._state = None
         self._attr_device_info = DeviceInfo(
