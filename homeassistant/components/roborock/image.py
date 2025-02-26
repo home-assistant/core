@@ -126,6 +126,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             )
             or self.cached_map == b""
         ):
+            # This will tell async_image it should update.
             self._attr_image_last_updated = dt_util.utcnow()
         super()._handle_coordinator_update()
 
@@ -149,6 +150,8 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
                 )
             if self.cached_map != content:
                 self.cached_map = content
+                # Update the last updated timestamp as we just updated the content.
+                self._attr_image_last_updated = dt_util.utcnow()
                 await self.coordinator.map_storage.async_save_map(
                     self.map_flag,
                     content,
