@@ -94,7 +94,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_init()
 
     async def async_step_login(self, user_input=None):
-        """Handles login authentication form with HA-generated UUID."""
+        """Handles login authentication form with HA instance UUID or empty ID if missing."""
         errors = {}
 
         if user_input is not None:
@@ -107,21 +107,8 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             )
 
             if not system_uuid:
-                system_info = await async_get_system_info(self.hass)
-                system_uuid = system_info.get("uuid")
-                _LOGGER.info(
-                    f"Retrieved system UUID from async_get_system_info: {system_uuid}"
-                )
-
-            if not system_uuid:
-                system_uuid = str(uuid.uuid4())
-                _LOGGER.warning(
-                    f"Home Assistant UUID missing! Generated fallback UUID: {system_uuid}"
-                )
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry,
-                    data={**self.config_entry.data, "fallback_uuid": system_uuid},
-                )
+                system_uuid = ""
+                _LOGGER.warning("Home Assistant UUID missing!")
 
             auth_response = await self.hass.async_add_executor_job(
                 authenticate, username, password, system_uuid
