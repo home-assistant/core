@@ -47,7 +47,7 @@ async def async_migrate_entry(
             entry.data[CONF_LOCATION][CONF_LONGITUDE],
         )
 
-        if not latitude or not longitude:
+        if not longitude or not latitude:
             ir.async_create_issue(
                 hass,
                 DOMAIN,

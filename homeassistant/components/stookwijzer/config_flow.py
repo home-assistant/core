@@ -29,7 +29,7 @@ class StookwijzerFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_LOCATION][CONF_LATITUDE],
                 user_input[CONF_LOCATION][CONF_LONGITUDE],
             )
-            if latitude and longitude:
+            if longitude and latitude:
                 return self.async_create_entry(
                     title="Stookwijzer",
                     data={CONF_LATITUDE: latitude, CONF_LONGITUDE: longitude},
