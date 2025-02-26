@@ -331,7 +331,7 @@ async def test_deep_sleep_device(
     assert state.state == STATE_ON
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
-    assert state.state == "123"
+    assert state.state == "123.0"
 
     await mock_device.mock_disconnect(False)
     await hass.async_block_till_done()
@@ -350,7 +350,7 @@ async def test_deep_sleep_device(
     assert state.state == STATE_ON
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
-    assert state.state == "123"
+    assert state.state == "123.0"
 
     await mock_device.mock_disconnect(True)
     await hass.async_block_till_done()
@@ -364,7 +364,7 @@ async def test_deep_sleep_device(
     assert state.state == STATE_OFF
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
-    assert state.state == "56"
+    assert state.state == "56.0"
 
     await mock_device.mock_disconnect(True)
     await hass.async_block_till_done()
@@ -373,7 +373,7 @@ async def test_deep_sleep_device(
     assert state.state == STATE_OFF
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
-    assert state.state == "56"
+    assert state.state == "56.0"
 
     await mock_device.mock_connect()
     await hass.async_block_till_done()
