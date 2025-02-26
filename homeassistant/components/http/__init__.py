@@ -7,7 +7,14 @@ from collections.abc import Collection
 from dataclasses import dataclass
 import datetime
 from functools import partial
-from ipaddress import IPv4Network, IPv6Network, ip_network
+from ipaddress import (
+    IPv4Address,
+    IPv4Network,
+    IPv6Address,
+    IPv6Network,
+    ip_address,
+    ip_network,
+)
 import logging
 import os
 import socket
@@ -88,6 +95,7 @@ CONF_TRUSTED_PROXIES: Final = "trusted_proxies"
 CONF_LOGIN_ATTEMPTS_THRESHOLD: Final = "login_attempts_threshold"
 CONF_IP_BAN_ENABLED: Final = "ip_ban_enabled"
 CONF_SSL_PROFILE: Final = "ssl_profile"
+CONF_IP_WHITELIST: Final = "ip_whitelist"
 
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
@@ -129,6 +137,7 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Inclusive(CONF_TRUSTED_PROXIES, "proxy"): vol.All(
                 cv.ensure_list, [ip_network]
             ),
+            vol.Optional(CONF_IP_WHITELIST): vol.All(cv.ensure_list, [ip_address]),
             vol.Optional(
                 CONF_LOGIN_ATTEMPTS_THRESHOLD, default=NO_LOGIN_ATTEMPT_THRESHOLD
             ): vol.Any(cv.positive_int, NO_LOGIN_ATTEMPT_THRESHOLD),
@@ -172,6 +181,7 @@ class ConfData(TypedDict, total=False):
     use_x_forwarded_for: bool
     use_x_frame_options: bool
     trusted_proxies: list[IPv4Network | IPv6Network]
+    ip_whitelist: list[IPv4Address | IPv6Address]
     login_attempts_threshold: int
     ip_ban_enabled: bool
     ssl_profile: str
@@ -222,6 +232,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     use_x_frame_options = conf[CONF_USE_X_FRAME_OPTIONS]
     trusted_proxies = conf.get(CONF_TRUSTED_PROXIES) or []
     is_ban_enabled = conf[CONF_IP_BAN_ENABLED]
+    ip_whitelist = conf.get(CONF_IP_WHITELIST, [])
     login_threshold = conf[CONF_LOGIN_ATTEMPTS_THRESHOLD]
     ssl_profile = conf[CONF_SSL_PROFILE]
 
@@ -242,6 +253,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         use_x_forwarded_for=use_x_forwarded_for,
         login_threshold=login_threshold,
         is_ban_enabled=is_ban_enabled,
+        ip_whitelist=ip_whitelist,
         use_x_frame_options=use_x_frame_options,
     )
 
@@ -389,6 +401,7 @@ class HomeAssistantHTTP:
         login_threshold: int,
         is_ban_enabled: bool,
         use_x_frame_options: bool,
+        ip_whitelist: list[IPv4Address | IPv6Address],
     ) -> None:
         """Initialize the server."""
         self.app[KEY_HASS] = self.hass
@@ -403,7 +416,7 @@ class HomeAssistantHTTP:
         setup_request_context(self.app, current_request)
 
         if is_ban_enabled:
-            setup_bans(self.hass, self.app, login_threshold)
+            setup_bans(self.hass, self.app, login_threshold, ip_whitelist=ip_whitelist)
 
         await async_setup_auth(self.hass, self.app)
 

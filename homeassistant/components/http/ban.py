@@ -40,6 +40,7 @@ KEY_FAILED_LOGIN_ATTEMPTS = AppKey[defaultdict[IPv4Address | IPv6Address, int]](
     "ha_failed_login_attempts"
 )
 KEY_LOGIN_THRESHOLD = AppKey[int]("ban_manager.ip_bans_lookup")
+KEY_IP_WHITELIST = AppKey[list[IPv4Address | IPv6Address]]("ha_ip_whitelist")
 
 NOTIFICATION_ID_BAN: Final = "ip-ban"
 NOTIFICATION_ID_LOGIN: Final = "http-login"
@@ -53,12 +54,18 @@ SCHEMA_IP_BAN_ENTRY: Final = vol.Schema(
 
 
 @callback
-def setup_bans(hass: HomeAssistant, app: Application, login_threshold: int) -> None:
+def setup_bans(
+    hass: HomeAssistant,
+    app: Application,
+    login_threshold: int,
+    ip_whitelist: list[IPv4Address | IPv6Address] | None = None,
+) -> None:
     """Create IP Ban middleware for the app."""
     app.middlewares.append(ban_middleware)
     app[KEY_FAILED_LOGIN_ATTEMPTS] = defaultdict[IPv4Address | IPv6Address, int](int)
     app[KEY_LOGIN_THRESHOLD] = login_threshold
     app[KEY_BAN_MANAGER] = IpBanManager(hass)
+    app[KEY_IP_WHITELIST] = ip_whitelist
 
     async def ban_startup(app: Application) -> None:
         """Initialize bans when app starts up."""
@@ -74,6 +81,10 @@ async def ban_middleware(
     """IP Ban middleware."""
     if (ban_manager := request.app.get(KEY_BAN_MANAGER)) is None:
         _LOGGER.error("IP Ban middleware loaded but banned IPs not loaded")
+        return await handler(request)
+
+    ip_whitelist = request.app.get(KEY_IP_WHITELIST)
+    if ip_whitelist and ip_address(request.remote) in ip_whitelist:
         return await handler(request)
 
     if ip_bans_lookup := ban_manager.ip_bans_lookup:

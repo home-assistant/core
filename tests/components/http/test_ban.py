@@ -11,7 +11,12 @@ from aiohttp.web_middlewares import middleware
 import pytest
 
 from homeassistant.components import http
-from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS
+from homeassistant.components.http import (
+    CONF_IP_WHITELIST,
+    CONF_LOGIN_ATTEMPTS_THRESHOLD,
+    KEY_AUTHENTICATED,
+    KEY_HASS,
+)
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
@@ -410,3 +415,61 @@ async def test_single_ban_file_entry(
         await manager.async_add_ban(remote_ip)
 
     assert m_open.call_count == 1
+
+
+@pytest.mark.parametrize(
+    ("source_ip_address", "ip_whitelist", "result"),
+    [
+        ("200.200.200.200", ["200.200.200.200", "200.200.200.201"], 0),
+        ("200.200.200.201", ["200.200.200.200", "200.200.200.201"], 0),
+        ("200.200.200.203", ["200.200.200.200", "200.200.200.201"], 1),
+    ],
+)
+async def test_ban_ip_whitelist(
+    hass: HomeAssistant,
+    aiohttp_client: ClientSessionGenerator,
+    source_ip_address: str,
+    ip_whitelist: list[str],
+    result: int,
+) -> None:
+    """Testing if failed login attempts counter increased."""
+
+    await async_setup_component(
+        hass,
+        "http",
+        {"http": {CONF_IP_WHITELIST: ip_whitelist, CONF_LOGIN_ATTEMPTS_THRESHOLD: 2}},
+    )
+
+    app = hass.http.app
+
+    async def auth_handler(request):
+        """Return 200 status code."""
+        return None, 200
+
+    app.router.add_get(
+        "/auth_false",
+        request_handler_factory(hass, Mock(requires_auth=True), auth_handler),
+    )
+    app.router.add_get(
+        "/", request_handler_factory(hass, Mock(requires_auth=False), auth_handler)
+    )
+
+    remote_ip = ip_address(source_ip_address)
+    mock_real_ip(app)(source_ip_address)
+
+    @middleware
+    async def mock_auth(request, handler):
+        """Mock auth middleware."""
+        if "auth_true" in request.path:
+            request[KEY_AUTHENTICATED] = True
+        else:
+            request[KEY_AUTHENTICATED] = False
+        return await handler(request)
+
+    app.middlewares.append(mock_auth)
+
+    client = await aiohttp_client(app)
+
+    resp = await client.get("/auth_false")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+    assert app[KEY_FAILED_LOGIN_ATTEMPTS][remote_ip] == result
