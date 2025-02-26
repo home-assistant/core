@@ -1198,14 +1198,13 @@ class _ScriptRun:
         self._step_log("wait for trigger", timeout)
 
         variables = dict(self._variables)
-        self._variables.assign(
+        self._variables.assign_parallel_protected(
             "wait",
             {
                 "remaining": timeout,
                 "completed": False,
                 "trigger": None,
             },
-            parallel_protected=True,
         )
         trace_set_result(wait=self._variables["wait"])
 
@@ -1252,8 +1251,8 @@ class _ScriptRun:
         timeout = self._get_timeout_seconds_from_action()
         self._step_log("wait template", timeout)
 
-        self._variables.assign(
-            "wait", {"remaining": timeout, "completed": False}, parallel_protected=True
+        self._variables.assign_parallel_protected(
+            "wait", {"remaining": timeout, "completed": False}
         )
         trace_set_result(wait=self._variables["wait"])
 

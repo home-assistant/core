@@ -177,10 +177,10 @@ async def test_script_vars_parallel() -> None:
     script_vars_3b = script_vars_2b.enter_scope()
 
     script_vars_3a["x"] = "a"
-    script_vars_3a.assign("y", "a", parallel_protected=True)
+    script_vars_3a.assign_parallel_protected("y", "a")
 
     script_vars_3b["x"] = "b"
-    script_vars_3b.assign("y", "b", parallel_protected=True)
+    script_vars_3b.assign_parallel_protected("y", "b")
 
     assert script_vars_3a._full_scope == {"x": "b", "y": "a", "z": 1}
     assert script_vars_3a.non_parallel_scope == {"x": "a", "y": "a"}

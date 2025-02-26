@@ -189,15 +189,19 @@ class ScriptRunVariables(UserDict[str, Any]):
             raise ValueError("Cannot exit top-level scope")
         return self._previous
 
-    def __setitem__(self, key: str, value: Any) -> None:
-        """Assign value to a variable. Equivalent to `assign`."""
-        self.assign(key, value)
-
     def __delitem__(self, key: str) -> None:
         """Delete a variable (disallowed)."""
         raise TypeError("Deleting items is not allowed in ScriptRunVariables.")
 
-    def assign(self, key: str, value: Any, *, parallel_protected: bool = False) -> None:
+    def __setitem__(self, key: str, value: Any) -> None:
+        """Assign value to a variable."""
+        self._assign(key, value, parallel_protected=False)
+
+    def assign_parallel_protected(self, key: str, value: Any) -> None:
+        """Assign value to a variable which is to be protected in parallel sequences."""
+        self._assign(key, value, parallel_protected=True)
+
+    def _assign(self, key: str, value: Any, *, parallel_protected: bool) -> None:
         """Assign value to a variable.
 
         Value is always assigned to the variable in the nearest scope, in which it is defined.
@@ -221,7 +225,7 @@ class ScriptRunVariables(UserDict[str, Any]):
             self._parallel_data.protected.pop(key, None)
             self._parallel_data.outer_scope_writes[key] = value
 
-        self._parent.assign(key, value, parallel_protected=parallel_protected)
+        self._parent._assign(key, value, parallel_protected=parallel_protected)  # noqa: SLF001
 
     def define_local(self, key: str, value: Any) -> None:
         """Define a local variable and assign value to it."""
