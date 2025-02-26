@@ -53,6 +53,34 @@ MEDIA_PLAYBACK_STATE_MAP = {
     "fast forwarding": "fast_forwarding",
 }
 
+OVEN_MODE = {
+    "Conventional": "conventional",
+    "Bake": "bake",
+    "BottomHeat": "bottom_heat",
+    "ConvectionBake": "convection_bake",
+    "ConvectionRoast": "convection_roast",
+    "Broil": "broil",
+    "ConvectionBroil": "convection_broil",
+    "SteamCook": "steam_cook",
+    "SteamBake": "steam_bake",
+    "SteamRoast": "steam_roast",
+    "SteamBottomHeatplusConvection": "steam_bottom_heat_plus_convection",
+    "Microwave": "microwave",
+    "MWplusGrill": "microwave_plus_grill",
+    "MWplusConvection": "microwave_plus_convection",
+    "MWplusHotBlast": "microwave_plus_hot_blast",
+    "MWplusHotBlast2": "microwave_plus_hot_blast_2",
+    "SlimMiddle": "slim_middle",
+    "SlimStrong": "slim_strong",
+    "SlowCook": "slow_cook",
+    "Proof": "proof",
+    "Dehydrate": "dehydrate",
+    "Others": "others",
+    "StrongSteam": "strong_steam",
+    "Descale": "descale",
+    "Rinse": "rinse",
+}
+
 
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
     """Return the power attributes."""
@@ -435,6 +463,9 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.OVEN_MODE,
                 translation_key="oven_mode",
                 entity_category=EntityCategory.DIAGNOSTIC,
+                options=list(OVEN_MODE.values()),
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: OVEN_MODE.get(value, value),
             )
         ]
     },

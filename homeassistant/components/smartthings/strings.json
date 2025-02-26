@@ -170,7 +170,38 @@
         "name": "Odor sensor"
       },
       "oven_mode": {
-        "name": "Oven mode"
+        "name": "Oven mode",
+        "state": {
+          "heating": "Heating",
+          "grill": "Grill",
+          "warming": "Warming",
+          "defrosting": "Defrosting",
+          "conventional": "Conventional",
+          "bake": "Bake",
+          "bottom_heat": "Bottom heat",
+          "convection_bake": "Convection bake",
+          "convection_roast": "Convection roast",
+          "broil": "Broil",
+          "convection_broil": "Convection broil",
+          "steam_cook": "Steam cook",
+          "steam_bake": "Steam bake",
+          "steam_roast": "Steam roast",
+          "steam_bottom_heat_plus_convection": "Steam bottom heat plus convection",
+          "microwave": "Microwave",
+          "microwave_plus_grill": "Microwave plus grill",
+          "microwave_plus_convection": "Microwave plus convection",
+          "microwave_plus_hot_blast": "Microwave plus hot blast",
+          "microwave_plus_hot_blast_2": "Microwave plus hot blast 2",
+          "slim_middle": "Slim middle",
+          "slim_strong": "Slim strong",
+          "slow_cook": "Slow cook",
+          "proof": "Proof",
+          "dehydrate": "Dehydrate",
+          "others": "Others",
+          "strong_steam": "Strong steam",
+          "descale": "Descale",
+          "rinse": "Rinse"
+        }
       },
       "oven_machine_state": {
         "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]"
