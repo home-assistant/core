@@ -9,8 +9,11 @@ from typing import Any
 
 from renson_endura_delta.renson import RensonVentilation
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -18,21 +21,23 @@ _LOGGER = logging.getLogger(__name__)
 class RensonCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Data update coordinator for Renson."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
-        name: str,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         api: RensonVentilation,
-        update_interval=timedelta(seconds=30),
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             # Name of the data. For logging purposes.
-            name=name,
+            name=DOMAIN,
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=update_interval,
+            update_interval=timedelta(seconds=30),
         )
         self.api = api
 

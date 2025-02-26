@@ -6,17 +6,14 @@ import asyncio
 
 from autarco import Autarco, AutarcoConnectionError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .coordinator import AutarcoDataUpdateCoordinator
+from .coordinator import AutarcoConfigEntry, AutarcoDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
-
-type AutarcoConfigEntry = ConfigEntry[list[AutarcoDataUpdateCoordinator]]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AutarcoConfigEntry) -> bool:
@@ -34,7 +31,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: AutarcoConfigEntry) -> b
         raise ConfigEntryNotReady from err
 
     coordinators: list[AutarcoDataUpdateCoordinator] = [
-        AutarcoDataUpdateCoordinator(hass, client, site) for site in account_sites
+        AutarcoDataUpdateCoordinator(hass, entry, client, site)
+        for site in account_sites
     ]
 
     await asyncio.gather(

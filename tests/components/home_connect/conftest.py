@@ -9,8 +9,10 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
+    ArrayOfCommands,
     ArrayOfEvents,
     ArrayOfHomeAppliances,
+    ArrayOfOptions,
     ArrayOfPrograms,
     ArrayOfSettings,
     ArrayOfStatus,
@@ -18,9 +20,16 @@ from aiohomeconnect.model import (
     EventKey,
     EventMessage,
     EventType,
+    GetSetting,
+    HomeAppliance,
     Option,
+    Program,
+    ProgramDefinition,
+    ProgramKey,
+    SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectApiError, HomeConnectError
+from aiohomeconnect.model.program import EnumerateProgram
 import pytest
 
 from homeassistant.components.application_credentials import (
@@ -41,6 +50,9 @@ MOCK_PROGRAMS: dict[str, Any] = load_json_object_fixture("home_connect/programs.
 MOCK_SETTINGS: dict[str, Any] = load_json_object_fixture("home_connect/settings.json")
 MOCK_STATUS = ArrayOfStatus.from_dict(
     load_json_object_fixture("home_connect/status.json")["data"]
+)
+MOCK_AVAILABLE_COMMANDS: dict[str, Any] = load_json_object_fixture(
+    "home_connect/available_commands.json"
 )
 
 
@@ -143,6 +155,14 @@ async def mock_integration_setup(
     return run
 
 
+def _get_specific_appliance_side_effect(ha_id: str) -> HomeAppliance:
+    """Get specific appliance side effect."""
+    for appliance in copy.deepcopy(MOCK_APPLIANCES).homeappliances:
+        if appliance.ha_id == ha_id:
+            return appliance
+    raise HomeConnectApiError("error.key", "error description")
+
+
 def _get_set_program_side_effect(
     event_queue: asyncio.Queue[list[EventMessage]], event_key: EventKey
 ):
@@ -186,13 +206,13 @@ def _get_set_program_side_effect(
     return set_program_side_effect
 
 
-def _get_set_key_value_side_effect(
-    event_queue: asyncio.Queue[list[EventMessage]], parameter_key: str
+def _get_set_setting_side_effect(
+    event_queue: asyncio.Queue[list[EventMessage]],
 ):
-    """Set program options side effect."""
+    """Set settings side effect."""
 
-    async def set_key_value_side_effect(ha_id: str, *_, **kwargs) -> None:
-        event_key = EventKey(kwargs[parameter_key])
+    async def set_settings_side_effect(ha_id: str, *_, **kwargs) -> None:
+        event_key = EventKey(kwargs["setting_key"])
         await event_queue.put(
             [
                 EventMessage(
@@ -214,7 +234,48 @@ def _get_set_key_value_side_effect(
             ]
         )
 
-    return set_key_value_side_effect
+    return set_settings_side_effect
+
+
+def _get_set_program_options_side_effect(
+    event_queue: asyncio.Queue[list[EventMessage]],
+):
+    """Set programs side effect."""
+
+    async def set_program_options_side_effect(ha_id: str, *_, **kwargs) -> None:
+        await event_queue.put(
+            [
+                EventMessage(
+                    ha_id,
+                    EventType.NOTIFY,
+                    ArrayOfEvents(
+                        [
+                            Event(
+                                key=EventKey(option.key),
+                                raw_key=option.key.value,
+                                timestamp=0,
+                                level="",
+                                handling="",
+                                value=option.value,
+                            )
+                            for option in (
+                                cast(ArrayOfOptions, kwargs["array_of_options"]).options
+                                if "array_of_options" in kwargs
+                                else [
+                                    Option(
+                                        kwargs["option_key"],
+                                        kwargs["value"],
+                                        unit=kwargs["unit"],
+                                    )
+                                ]
+                            )
+                        ]
+                    ),
+                ),
+            ]
+        )
+
+    return set_program_options_side_effect
 
 
 async def _get_all_programs_side_effect(ha_id: str) -> ArrayOfPrograms:
@@ -227,7 +288,14 @@ async def _get_all_programs_side_effect(ha_id: str) -> ArrayOfPrograms:
     if appliance_type not in MOCK_PROGRAMS:
         raise HomeConnectApiError("error.key", "error description")
 
-    return ArrayOfPrograms.from_dict(MOCK_PROGRAMS[appliance_type]["data"])
+    return ArrayOfPrograms(
+        [
+            EnumerateProgram.from_dict(program)
+            for program in MOCK_PROGRAMS[appliance_type]["data"]["programs"]
+        ],
+        Program.from_dict(MOCK_PROGRAMS[appliance_type]["data"]["programs"][0]),
+        Program.from_dict(MOCK_PROGRAMS[appliance_type]["data"]["programs"][0]),
+    )
 
 
 async def _get_settings_side_effect(ha_id: str) -> ArrayOfSettings:
@@ -242,6 +310,32 @@ async def _get_settings_side_effect(ha_id: str) -> ArrayOfSettings:
             {},
         ).get("data", {"settings": []})
     )
+
+
+async def _get_setting_side_effect(ha_id: str, setting_key: SettingKey):
+    """Get setting."""
+    for appliance in MOCK_APPLIANCES.homeappliances:
+        if appliance.ha_id == ha_id:
+            settings = MOCK_SETTINGS.get(
+                next(
+                    appliance
+                    for appliance in MOCK_APPLIANCES.homeappliances
+                    if appliance.ha_id == ha_id
+                ).type,
+                {},
+            ).get("data", {"settings": []})
+            for setting_dict in cast(list[dict], settings["settings"]):
+                if setting_dict["key"] == setting_key:
+                    return GetSetting.from_dict(setting_dict)
+    raise HomeConnectApiError("error.key", "error description")
+
+
+async def _get_available_commands_side_effect(ha_id: str) -> ArrayOfCommands:
+    """Get available commands."""
+    for appliance in MOCK_APPLIANCES.homeappliances:
+        if appliance.ha_id == ha_id and appliance.type in MOCK_AVAILABLE_COMMANDS:
+            return ArrayOfCommands.from_dict(MOCK_AVAILABLE_COMMANDS[appliance.type])
+    raise HomeConnectApiError("error.key", "error description")
 
 
 @pytest.fixture(name="client")
@@ -259,13 +353,39 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
 
     mock.add_events = add_events
 
+    async def set_program_option_side_effect(ha_id: str, *_, **kwargs) -> None:
+        event_key = EventKey(kwargs["option_key"])
+        await event_queue.put(
+            [
+                EventMessage(
+                    ha_id,
+                    EventType.NOTIFY,
+                    ArrayOfEvents(
+                        [
+                            Event(
+                                key=event_key,
+                                raw_key=event_key.value,
+                                timestamp=0,
+                                level="",
+                                handling="",
+                                value=kwargs["value"],
+                            )
+                        ]
+                    ),
+                ),
+            ]
+        )
+
     async def stream_all_events() -> AsyncGenerator[EventMessage]:
         """Mock stream_all_events."""
         while True:
             for event in await event_queue.get():
                 yield event
 
-    mock.get_home_appliances = AsyncMock(return_value=MOCK_APPLIANCES)
+    mock.get_home_appliances = AsyncMock(return_value=copy.deepcopy(MOCK_APPLIANCES))
+    mock.get_specific_appliance = AsyncMock(
+        side_effect=_get_specific_appliance_side_effect
+    )
     mock.stream_all_events = stream_all_events
     mock.start_program = AsyncMock(
         side_effect=_get_set_program_side_effect(
@@ -277,19 +397,41 @@ def mock_client(request: pytest.FixtureRequest) -> MagicMock:
             event_queue, EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM
         ),
     )
+    mock.stop_program = AsyncMock()
     mock.set_active_program_option = AsyncMock(
-        side_effect=_get_set_key_value_side_effect(event_queue, "option_key"),
+        side_effect=_get_set_program_options_side_effect(event_queue),
+    )
+    mock.set_active_program_options = AsyncMock(
+        side_effect=_get_set_program_options_side_effect(event_queue),
     )
     mock.set_selected_program_option = AsyncMock(
-        side_effect=_get_set_key_value_side_effect(event_queue, "option_key"),
+        side_effect=_get_set_program_options_side_effect(event_queue),
+    )
+    mock.set_selected_program_options = AsyncMock(
+        side_effect=_get_set_program_options_side_effect(event_queue),
     )
     mock.set_setting = AsyncMock(
-        side_effect=_get_set_key_value_side_effect(event_queue, "setting_key"),
+        side_effect=_get_set_setting_side_effect(event_queue),
     )
     mock.get_settings = AsyncMock(side_effect=_get_settings_side_effect)
+    mock.get_setting = AsyncMock(side_effect=_get_setting_side_effect)
     mock.get_status = AsyncMock(return_value=copy.deepcopy(MOCK_STATUS))
     mock.get_all_programs = AsyncMock(side_effect=_get_all_programs_side_effect)
+    mock.get_available_commands = AsyncMock(
+        side_effect=_get_available_commands_side_effect
+    )
     mock.put_command = AsyncMock()
+    mock.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(ProgramKey.UNKNOWN, options=[])
+    )
+    mock.get_active_program_options = AsyncMock(return_value=ArrayOfOptions([]))
+    mock.get_selected_program_options = AsyncMock(return_value=ArrayOfOptions([]))
+    mock.set_active_program_option = AsyncMock(
+        side_effect=set_program_option_side_effect
+    )
+    mock.set_selected_program_option = AsyncMock(
+        side_effect=set_program_option_side_effect
+    )
 
     mock.side_effect = mock
     return mock
@@ -314,20 +456,29 @@ def mock_client_with_exception(request: pytest.FixtureRequest) -> MagicMock:
             for event in await event_queue.get():
                 yield event
 
-    mock.get_home_appliances = AsyncMock(return_value=MOCK_APPLIANCES)
+    mock.get_home_appliances = AsyncMock(return_value=copy.deepcopy(MOCK_APPLIANCES))
     mock.stream_all_events = stream_all_events
 
     mock.start_program = AsyncMock(side_effect=exception)
     mock.stop_program = AsyncMock(side_effect=exception)
     mock.set_selected_program = AsyncMock(side_effect=exception)
+    mock.stop_program = AsyncMock(side_effect=exception)
     mock.set_active_program_option = AsyncMock(side_effect=exception)
+    mock.set_active_program_options = AsyncMock(side_effect=exception)
     mock.set_selected_program_option = AsyncMock(side_effect=exception)
+    mock.set_selected_program_options = AsyncMock(side_effect=exception)
     mock.set_setting = AsyncMock(side_effect=exception)
     mock.get_settings = AsyncMock(side_effect=exception)
     mock.get_setting = AsyncMock(side_effect=exception)
     mock.get_status = AsyncMock(side_effect=exception)
     mock.get_all_programs = AsyncMock(side_effect=exception)
+    mock.get_available_commands = AsyncMock(side_effect=exception)
     mock.put_command = AsyncMock(side_effect=exception)
+    mock.get_available_program = AsyncMock(side_effect=exception)
+    mock.get_active_program_options = AsyncMock(side_effect=exception)
+    mock.get_selected_program_options = AsyncMock(side_effect=exception)
+    mock.set_active_program_option = AsyncMock(side_effect=exception)
+    mock.set_selected_program_option = AsyncMock(side_effect=exception)
 
     return mock
 

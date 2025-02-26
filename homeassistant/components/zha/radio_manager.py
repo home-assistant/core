@@ -420,7 +420,7 @@ class ZhaMultiPANMigrationHelper:
         self._radio_mgr.radio_type = new_radio_type
         self._radio_mgr.device_path = new_device_settings[CONF_DEVICE_PATH]
         self._radio_mgr.device_settings = new_device_settings
-        device_settings = self._radio_mgr.device_settings.copy()  # type: ignore[union-attr]
+        device_settings = self._radio_mgr.device_settings.copy()
 
         # Update the config entry settings
         self._hass.config_entries.async_update_entry(

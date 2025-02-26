@@ -44,7 +44,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         aiohttp.ClientError,
     ) as ex:
         raise ConfigEntryNotReady(f"Unable to connect to bridge at {host}") from ex
-    coordinator = LoqedDataCoordinator(hass, api, lock, entry)
+    coordinator = LoqedDataCoordinator(hass, entry, api, lock)
     await coordinator.ensure_webhooks()
 
     await coordinator.async_config_entry_first_refresh()

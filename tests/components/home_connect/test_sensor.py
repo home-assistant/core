@@ -1,7 +1,7 @@
 """Tests for home_connect sensor entities."""
 
 from collections.abc import Awaitable, Callable
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
@@ -12,6 +12,7 @@ from aiohomeconnect.model import (
     Status,
     StatusKey,
 )
+from aiohomeconnect.model.error import HomeConnectApiError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -22,10 +23,12 @@ from homeassistant.components.home_connect.const import (
     BSH_EVENT_PRESENT_STATE_CONFIRMED,
     BSH_EVENT_PRESENT_STATE_OFF,
     BSH_EVENT_PRESENT_STATE_PRESENT,
+    DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import Platform
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -92,6 +95,164 @@ async def test_sensors(
     assert config_entry.state == ConfigEntryState.NOT_LOADED
     assert await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
+
+
+async def test_paired_depaired_devices_flow(
+    appliance_ha_id: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that removed devices are correctly removed from and added to hass on API events."""
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    assert device
+    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
+    assert entity_entries
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.DEPAIRED,
+                data=ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    assert not device
+    for entity_entry in entity_entries:
+        assert not entity_registry.async_get(entity_entry.entity_id)
+
+    # Now that all everything related to the device is removed, pair it again
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.PAIRED,
+                data=ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    for entity_entry in entity_entries:
+        assert entity_registry.async_get(entity_entry.entity_id)
+
+
+async def test_connected_devices(
+    appliance_ha_id: str,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that devices reconnected.
+
+    Specifically those devices whose settings, status, etc. could
+    not be obtained while disconnected and once connected, the entities are added.
+    """
+    get_status_original_mock = client.get_status
+
+    def get_status_side_effect(ha_id: str):
+        if ha_id == appliance_ha_id:
+            raise HomeConnectApiError(
+                "SDK.Error.HomeAppliance.Connection.Initialization.Failed"
+            )
+        return get_status_original_mock.return_value
+
+    client.get_status = AsyncMock(side_effect=get_status_side_effect)
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+    client.get_status = get_status_original_mock
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    assert device
+    entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.CONNECTED,
+                data=ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, appliance_ha_id)})
+    assert device
+    new_entity_entries = entity_registry.entities.get_entries_for_device_id(device.id)
+    assert len(new_entity_entries) > len(entity_entries)
+
+
+@pytest.mark.parametrize("appliance_ha_id", [TEST_HC_APP], indirect=True)
+async def test_sensor_entity_availabilty(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+    appliance_ha_id: str,
+) -> None:
+    """Test if sensor entities availability are based on the appliance connection state."""
+    entity_ids = [
+        "sensor.dishwasher_operation_state",
+        "sensor.dishwasher_salt_nearly_empty",
+    ]
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.DISCONNECTED,
+                ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        assert hass.states.is_state(entity_id, STATE_UNAVAILABLE)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance_ha_id,
+                EventType.CONNECTED,
+                ArrayOfEvents([]),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    for entity_id in entity_ids:
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state != STATE_UNAVAILABLE
 
 
 # Appliance_ha_id program sequence with a delayed start.

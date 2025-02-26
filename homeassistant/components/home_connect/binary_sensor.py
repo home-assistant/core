@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import cast
 
-from aiohomeconnect.model import StatusKey
+from aiohomeconnect.model import EventKey, StatusKey
 
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.binary_sensor import (
@@ -12,15 +12,17 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.components.script import scripts_with_entity
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     async_create_issue,
     async_delete_issue,
 )
 
+from .common import setup_home_connect_entry
 from .const import (
     BSH_DOOR_STATE_CLOSED,
     BSH_DOOR_STATE_LOCKED,
@@ -35,6 +37,8 @@ from .coordinator import (
     HomeConnectCoordinator,
 )
 from .entity import HomeConnectEntity
+
+PARALLEL_UPDATES = 0
 
 REFRIGERATION_DOOR_BOOLEAN_MAP = {
     REFRIGERATION_STATUS_DOOR_CLOSED: False,
@@ -93,10 +97,22 @@ BINARY_SENSORS = (
         translation_key="lost",
     ),
     HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_BOTTLE_COOLER,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="bottle_cooler_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
         key=StatusKey.REFRIGERATION_COMMON_DOOR_CHILLER_COMMON,
         boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
         device_class=BinarySensorDeviceClass.DOOR,
         translation_key="chiller_door",
+    ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_FLEX_COMPARTMENT,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="flex_compartment_door",
     ),
     HomeConnectBinarySensorEntityDescription(
         key=StatusKey.REFRIGERATION_COMMON_DOOR_FREEZER,
@@ -110,27 +126,51 @@ BINARY_SENSORS = (
         device_class=BinarySensorDeviceClass.DOOR,
         translation_key="refrigerator_door",
     ),
+    HomeConnectBinarySensorEntityDescription(
+        key=StatusKey.REFRIGERATION_COMMON_DOOR_WINE_COMPARTMENT,
+        boolean_map=REFRIGERATION_DOOR_BOOLEAN_MAP,
+        device_class=BinarySensorDeviceClass.DOOR,
+        translation_key="wine_compartment_door",
+    ),
 )
+
+CONNECTED_BINARY_ENTITY_DESCRIPTION = BinarySensorEntityDescription(
+    key=EventKey.BSH_COMMON_APPLIANCE_CONNECTED,
+    device_class=BinarySensorDeviceClass.CONNECTIVITY,
+)
+
+
+def _get_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectEntity]:
+    """Get a list of entities."""
+    entities: list[HomeConnectEntity] = [
+        HomeConnectConnectivityBinarySensor(
+            entry.runtime_data, appliance, CONNECTED_BINARY_ENTITY_DESCRIPTION
+        )
+    ]
+    entities.extend(
+        HomeConnectBinarySensor(entry.runtime_data, appliance, description)
+        for description in BINARY_SENSORS
+        if description.key in appliance.status
+    )
+    if StatusKey.BSH_COMMON_DOOR_STATE in appliance.status:
+        entities.append(HomeConnectDoorBinarySensor(entry.runtime_data, appliance))
+    return entities
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Home Connect binary sensor."""
-
-    entities: list[BinarySensorEntity] = []
-    for appliance in entry.runtime_data.data.values():
-        entities.extend(
-            HomeConnectBinarySensor(entry.runtime_data, appliance, description)
-            for description in BINARY_SENSORS
-            if description.key in appliance.status
-        )
-        if StatusKey.BSH_COMMON_DOOR_STATE in appliance.status:
-            entities.append(HomeConnectDoorBinarySensor(entry.runtime_data, appliance))
-
-    async_add_entities(entities)
+    setup_home_connect_entry(
+        entry,
+        _get_entities_for_appliance,
+        async_add_entities,
+    )
 
 
 class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
@@ -147,6 +187,21 @@ class HomeConnectBinarySensor(HomeConnectEntity, BinarySensorEntity):
             self._attr_is_on = self.entity_description.boolean_map.get(status)
         else:
             self._attr_is_on = None
+
+
+class HomeConnectConnectivityBinarySensor(HomeConnectEntity, BinarySensorEntity):
+    """Binary sensor for Home Connect appliance's connection status."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def update_native_value(self) -> None:
+        """Set the native value of the binary sensor."""
+        self._attr_is_on = self.appliance.info.connected
+
+    @property
+    def available(self) -> bool:
+        """Return the availability."""
+        return self.coordinator.last_update_success
 
 
 class HomeConnectDoorBinarySensor(HomeConnectBinarySensor):

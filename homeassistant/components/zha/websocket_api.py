@@ -37,6 +37,7 @@ from zha.application.const import (
     WARNING_DEVICE_STROBE_HIGH,
     WARNING_DEVICE_STROBE_YES,
     ZHA_CLUSTER_HANDLER_MSG,
+    ZHA_GW_MSG,
 )
 from zha.application.gateway import Gateway
 from zha.application.helpers import (
@@ -330,7 +331,7 @@ async def websocket_permit_devices(
         connection.send_message(websocket_api.event_message(msg["id"], data))
 
     remove_dispatcher_function = async_dispatcher_connect(
-        hass, "zha_gateway_message", forward_messages
+        hass, ZHA_GW_MSG, forward_messages
     )
 
     @callback
