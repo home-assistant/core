@@ -61,7 +61,12 @@
         "name": "Body weight"
       },
       "carbon_monoxide_detector": {
-        "name": "Carbon monoxide detector"
+        "name": "Carbon monoxide detector",
+        "state": {
+          "detected": "Detected",
+          "clear": "Clear",
+          "tested": "Tested"
+        }
       },
       "dishwasher_machine_state": {
         "name": "Machine state"
