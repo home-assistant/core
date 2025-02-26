@@ -7,7 +7,8 @@ import time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
-    from .coordinator import HomeLinkCoordinator  # noqa: TC004
+    # Import keeps mypy happy but is a circular reference otherwise
+    from .coordinator import HomeLinkCoordinator  # noqa: F401
 
 from homeassistant.components.event import EventEntity
 from homeassistant.config_entries import ConfigEntry
@@ -33,7 +34,7 @@ async def async_setup_entry(
     async_add_entities(coordinator.buttons)
 
 
-class HomeLinkEventEntity(CoordinatorEntity[HomeLinkCoordinator], EventEntity):
+class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity):
     """Event Entity."""
 
     _attr_event_types = [
