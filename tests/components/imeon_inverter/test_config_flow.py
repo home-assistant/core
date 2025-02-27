@@ -3,6 +3,8 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.imeon_inverter.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS
@@ -14,9 +16,10 @@ from .conftest import TEST_SERIAL, TEST_USER_INPUT
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_async_setup_entry")
 async def test_form(
     hass: HomeAssistant,
-    mock_login_async_setup_entry: Generator[AsyncMock],
+    mock_async_setup_entry: Generator[AsyncMock],
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -33,7 +36,7 @@ async def test_form(
     assert result2["type"] is FlowResultType.CREATE_ENTRY
     assert result2["title"] == TEST_USER_INPUT[CONF_ADDRESS]
     assert result2["data"] == TEST_USER_INPUT
-    assert mock_login_async_setup_entry.call_count == 1
+    assert mock_async_setup_entry.call_count == 1
 
 
 async def test_form_invalid_auth(
@@ -53,6 +56,14 @@ async def test_form_invalid_auth(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_auth"}
 
+    mock_imeon_inverter.login.return_value = True
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_INPUT
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_timeout(
     hass: HomeAssistant, mock_imeon_inverter: Generator[MagicMock]
@@ -70,6 +81,14 @@ async def test_form_timeout(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    mock_imeon_inverter.login.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_INPUT
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_invalid_host(
@@ -89,6 +108,14 @@ async def test_form_invalid_host(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_host"}
 
+    mock_imeon_inverter.login.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_INPUT
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_form_invalid_route(
     hass: HomeAssistant, mock_imeon_inverter: Generator[MagicMock]
@@ -106,6 +133,14 @@ async def test_form_invalid_route(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "invalid_route"}
+
+    mock_imeon_inverter.login.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_INPUT
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_form_exception(
@@ -125,10 +160,18 @@ async def test_form_exception(
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
+    mock_imeon_inverter.login.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_INPUT
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
+
 
 async def test_manual_setup_already_exists(
     hass: HomeAssistant,
-    mock_login_async_setup_entry: Generator[AsyncMock],
+    mock_async_setup_entry: Generator[AsyncMock],
     mock_imeon_inverter: Generator[MagicMock],
 ) -> None:
     """Test that a flow with an existing host aborts."""
@@ -171,3 +214,11 @@ async def test_get_serial_timeout(
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
+
+    mock_imeon_inverter.get_serial.side_effect = None
+
+    result3 = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TEST_USER_INPUT
+    )
+
+    assert result3["type"] is FlowResultType.CREATE_ENTRY
