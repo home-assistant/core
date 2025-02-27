@@ -6,12 +6,15 @@ import pytest
 from homeassistant.components.tilt_pi.const import DOMAIN
 from homeassistant.components.tilt_pi.coordinator import TiltPiDataUpdateCoordinator
 from homeassistant.components.tilt_pi.model import TiltColor
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
+
+TEST_HOST = "192.168.1.123"
+TEST_PORT = 1880
 
 
 @pytest.fixture
@@ -19,7 +22,10 @@ def mock_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_HOST: "192.168.1.123"},
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_PORT: TEST_PORT,
+        },
         unique_id="test123",
     )
 
@@ -31,7 +37,7 @@ async def test_coordinator_async_update_data(
 ) -> None:
     """Test coordinator update with valid data."""
     aioclient_mock.get(
-        "http://192.168.1.123/macid/all",
+        f"http://{TEST_HOST}:{TEST_PORT}/macid/all",
         json=[
             {
                 "mac": "00:1A:2B:3C:4D:5E",
@@ -71,7 +77,7 @@ async def test_coordinator_async_update_data_empty_response(
 ) -> None:
     """Test coordinator update with valid data."""
     aioclient_mock.get(
-        "http://192.168.1.123/macid/all",
+        f"http://{TEST_HOST}:{TEST_PORT}/macid/all",
         json=[],
     )
 
@@ -88,7 +94,7 @@ async def test_coordinator_async_update_data_connection_error(
 ) -> None:
     """Test coordinator handling connection error."""
     aioclient_mock.get(
-        "http://192.168.1.123/macid/all",
+        f"http://{TEST_HOST}:{TEST_PORT}/macid/all",
         exc=aiohttp.ClientError,
     )
 
@@ -104,7 +110,7 @@ async def test_coordinator_async_update_data_timeout_error(
 ) -> None:
     """Test coordinator handling connection error."""
     aioclient_mock.get(
-        "http://192.168.1.123/macid/all",
+        f"http://{TEST_HOST}:{TEST_PORT}/macid/all",
         exc=TimeoutError,
     )
 

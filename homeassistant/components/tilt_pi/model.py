@@ -7,14 +7,14 @@ from enum import StrEnum
 class TiltColor(StrEnum):
     """Tilt color options."""
 
-    RED = "red"
-    GREEN = "green"
-    BLACK = "black"
-    PURPLE = "purple"
-    ORANGE = "orange"
-    BLUE = "blue"
-    YELLOW = "yellow"
-    PINK = "pink"
+    BLUE = "Blue"
+    BLACK = "Black"
+    RED = "Red"
+    GREEN = "Green"
+    ORANGE = "Orange"
+    YELLOW = "Yellow"
+    PURPLE = "Purple"
+    PINK = "Pink"
 
 
 @dataclass

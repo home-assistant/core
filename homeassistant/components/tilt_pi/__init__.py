@@ -5,31 +5,35 @@ from __future__ import annotations
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 
-# TODO List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-_PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR]
+from .const import DOMAIN
+from .coordinator import TiltPiDataUpdateCoordinator
 
-# TODO Create ConfigEntry type alias with API object
-# Alias name should be prefixed by integration name
-type New_NameConfigEntry = ConfigEntry[MyApi]  # noqa: F821
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
-# TODO Update entry annotation
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Tilt Pi from a config entry."""
+    coordinator = TiltPiDataUpdateCoordinator(hass, entry)
 
-    # TODO 1. Create API instance
-    # TODO 2. Validate the API connection (and authentication)
-    # TODO 3. Store an API object for your platforms to access
-    # entry.runtime_data = MyAPI(...)
+    try:
+        await coordinator.async_config_entry_first_refresh()
+        entry.runtime_data = coordinator
+    except ConfigEntryNotReady:
+        await coordinator.async_shutdown()
+        raise
 
-    await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-# TODO Update entry annotation
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        coordinator: TiltPiDataUpdateCoordinator = hass.data[DOMAIN].pop(entry.entry_id)
+        await coordinator.async_shutdown()
+
+    return unload_ok

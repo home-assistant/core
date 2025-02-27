@@ -7,7 +7,7 @@ import logging
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -15,6 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .model import TiltColor, TiltHydrometerData
 
 _LOGGER = logging.getLogger(__name__)
+DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 
 
 class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[list[TiltHydrometerData]]):
@@ -22,23 +23,26 @@ class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[list[TiltHydrometerData]
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Tilt Pi",
-            update_interval=timedelta(seconds=30),
+            update_interval=DEFAULT_SCAN_INTERVAL,
         )
-        self.config_entry = entry
-        self._host = entry.data[CONF_HOST]
+        self._host = config_entry.data[CONF_HOST]
+        self._port = config_entry.data[CONF_PORT]
         self._session = async_get_clientsession(hass)
+        self.identifier = config_entry.entry_id
 
     async def _async_update_data(self) -> list[TiltHydrometerData]:
         """Fetch data from Tilt Pi."""
         try:
             async with self._session.get(
-                f"http://{self._host}/macid/all", timeout=aiohttp.ClientTimeout(10)
+                f"http://{self._host}:{self._port}/macid/all",
+                timeout=aiohttp.ClientTimeout(10),
             ) as resp:
                 resp.raise_for_status()
                 data = await resp.json()
@@ -48,7 +52,7 @@ class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[list[TiltHydrometerData]
         return [
             TiltHydrometerData(
                 mac_id=hydrometer["mac"],
-                color=TiltColor(hydrometer["Color"].lower()),
+                color=TiltColor(hydrometer["Color"].title()),
                 temperature=float(hydrometer["Temp"]),
                 gravity=float(hydrometer["SG"]),
             )
