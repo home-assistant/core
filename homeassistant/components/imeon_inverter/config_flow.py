@@ -32,14 +32,24 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            connection = False
-
             async with Inverter(user_input[CONF_ADDRESS]) as client:
                 try:
                     # Check connection
-                    connection = await client.login(
+                    if await client.login(
                         user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-                    )
+                    ):
+                        serial = await client.get_serial()
+
+                        # Check if entry already exists
+                        await self.async_set_unique_id(serial)
+                        self._abort_if_unique_id_configured()
+
+                        # Create a new configuration entry if login succeeds
+                        return self.async_create_entry(
+                            title=user_input[CONF_ADDRESS], data=user_input
+                        )
+
+                    errors["base"] = "invalid_auth"
 
                 except TimeoutError:
                     errors["base"] = "cannot_connect"
@@ -53,25 +63,6 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     else:
                         errors["base"] = "unknown"
-
-                else:
-                    if connection:
-                        try:
-                            # Check if entry already exists
-                            serial = await client.get_serial()
-                            await self.async_set_unique_id(serial)
-                            self._abort_if_unique_id_configured()
-
-                        except TimeoutError:
-                            errors["base"] = "cannot_connect"
-
-                        else:
-                            # Create a new configuration entry if login succeeds
-                            return self.async_create_entry(
-                                title=user_input[CONF_ADDRESS], data=user_input
-                            )
-                    else:
-                        errors["base"] = "invalid_auth"
 
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
