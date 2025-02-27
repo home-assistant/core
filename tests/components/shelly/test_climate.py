@@ -751,8 +751,8 @@ async def test_wall_display_thermostat_mode_external_actuator(
 
     new_status = deepcopy(mock_rpc_device.status)
     new_status["sys"]["relay_in_thermostat"] = False
+    new_status.pop("cover:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
-    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
 
