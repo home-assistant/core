@@ -175,6 +175,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
                 CONF_FOLDER_ID: folder.id,
                 CONF_FOLDER_NAME: f"backups_{instance_id[:8]}",
             },
+            minor_version=2,
         )
         _LOGGER.debug("Migration to version 1.2 successful")
     return True

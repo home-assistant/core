@@ -253,6 +253,7 @@ async def test_1_1_to_1_2_migration(
     await setup_integration(hass, old_config_entry)
     assert old_config_entry.data[CONF_FOLDER_ID] == mock_folder.id
     assert old_config_entry.data[CONF_FOLDER_NAME] == mock_folder.name
+    assert old_config_entry.minor_version == 2
 
 
 async def test_1_1_to_1_2_migration_failure(
@@ -276,6 +277,7 @@ async def test_1_1_to_1_2_migration_failure(
 
     await setup_integration(hass, old_config_entry)
     assert old_config_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert old_config_entry.minor_version == 1
 
 
 async def test_migration_guard_against_major_downgrade(
