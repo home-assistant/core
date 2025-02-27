@@ -30,7 +30,7 @@ class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial configuration step."""
+        """Handle a configuration flow initialized by the user."""
 
         if user_input is None:
             return self.async_show_form(

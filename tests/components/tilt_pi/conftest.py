@@ -1,14 +1,27 @@
 """Common fixtures for the Tilt Pi tests."""
 
+from types import MappingProxyType
+
 import pytest
 
 from homeassistant.components.tilt_pi.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
 from tests.common import MockConfigEntry
 
+TEST_NAME = "Test TiltPi"
 TEST_HOST = "192.168.1.123"
 TEST_PORT = 1880
+
+
+@pytest.fixture
+def mock_config_entry_data() -> MappingProxyType[str, any]:
+    """Return the default mocked config entry data."""
+    return {
+        CONF_NAME: TEST_NAME,
+        CONF_HOST: TEST_HOST,
+        CONF_PORT: TEST_PORT,
+    }
 
 
 @pytest.fixture
@@ -17,6 +30,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={
+            CONF_NAME: TEST_NAME,
             CONF_HOST: TEST_HOST,
             CONF_PORT: TEST_PORT,
         },
