@@ -11,7 +11,7 @@ from homeassistant.components.homee.const import (
     WINDOW_MAP,
     WINDOW_MAP_REVERSED,
 )
-from homeassistant.const import LIGHT_LUX, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -85,34 +85,6 @@ async def test_window_position(
             hass.states.get("sensor.test_multisensor_window_position").state
             == WINDOW_MAP_REVERSED[i]
         )
-
-
-async def test_brightness_sensor(
-    hass: HomeAssistant,
-    mock_homee: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test brightness sensor's lx & klx units and naming of multi-instance sensors."""
-    mock_homee.nodes = [build_mock_node("sensors.json")]
-    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
-    await setup_integration(hass, mock_config_entry)
-
-    # Sensor with Homee unit %
-    sensor_state = hass.states.get("sensor.test_multisensor_illuminance_1")
-    assert sensor_state.state == "1000.0"
-    assert sensor_state.attributes["unit_of_measurement"] == LIGHT_LUX
-    assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 1"
-
-    sensor_state = hass.states.get("sensor.test_multisensor_illuminance_2")
-    assert sensor_state.state == "175.0"
-    assert sensor_state.attributes["unit_of_measurement"] == LIGHT_LUX
-    assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 2"
-
-    # Sensor with Homee unit klx
-    sensor_state = hass.states.get("sensor.test_multisensor_illuminance_3")
-    assert sensor_state.state == "7000.0"
-    assert sensor_state.attributes["unit_of_measurement"] == LIGHT_LUX
-    assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 3"
 
 
 async def test_sensor_snapshot(
