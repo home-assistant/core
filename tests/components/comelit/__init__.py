@@ -1,4 +1,4 @@
-"""Tests for the Comelit integration."""
+"""Tests for the Comelit SimpleHome integration."""
 
 from homeassistant.core import HomeAssistant
 

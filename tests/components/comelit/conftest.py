@@ -1,4 +1,4 @@
-"""Configure tests for Comelit."""
+"""Configure tests for Comelit SimpleHome."""
 
 import pytest
 

@@ -24,8 +24,6 @@ from .const import (
 
 from tests.common import MockConfigEntry
 
-MOCK_USER_BRIDGE_DATA = {}
-
 
 async def test_flow_serial_bridge(
     hass: HomeAssistant,
