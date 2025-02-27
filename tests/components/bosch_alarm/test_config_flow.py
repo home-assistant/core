@@ -6,33 +6,30 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.bosch_alarm.const import (
-    CONF_INSTALLER_CODE,
-    CONF_USER_CODE,
-    DOMAIN,
-)
-from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PASSWORD, CONF_PORT
+from homeassistant.components.bosch_alarm.const import DOMAIN
+from homeassistant.const import CONF_HOST, CONF_MODEL, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+
+from .conftest import MockBoschAlarmConfig
 
 from tests.common import MockConfigEntry
 
 
-@pytest.mark.usefixtures("setup_bosch_alarm")
+@pytest.mark.usefixtures("bosch_alarm_test_data")
 @pytest.mark.parametrize(
-    ("setup_bosch_alarm", "config"),
+    ("bosch_alarm_test_data"),
     [
-        ("Solution 3000", {CONF_USER_CODE: "1234"}),
-        ("AMAX 3000", {CONF_INSTALLER_CODE: "1234", CONF_PASSWORD: "1234567890"}),
-        ("B5512 (US1B)", {CONF_PASSWORD: "1234567890"}),
+        "Solution 3000",
+        "AMAX 3000",
+        "B5512 (US1B)",
     ],
-    indirect=["setup_bosch_alarm"],
+    indirect=["bosch_alarm_test_data"],
 )
 async def test_form_user(
-    hass: HomeAssistant, setup_bosch_alarm: str, config: dict
+    hass: HomeAssistant, bosch_alarm_test_data: MockBoschAlarmConfig
 ) -> None:
     """Test the config flow for bosch_alarm."""
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -48,25 +45,27 @@ async def test_form_user(
     assert result["errors"] == {}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        config,
+        bosch_alarm_test_data.config,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == f"Bosch {setup_bosch_alarm}"
+    assert result["title"] == f"Bosch {bosch_alarm_test_data.model}"
     assert result["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 7700,
-        CONF_MODEL: setup_bosch_alarm,
-        **config,
+        CONF_MODEL: bosch_alarm_test_data.model,
+        **bosch_alarm_test_data.config,
     }
 
 
-@pytest.mark.usefixtures("setup_bosch_alarm")
+@pytest.mark.usefixtures("bosch_alarm_test_data")
 @pytest.mark.parametrize(
-    ("setup_bosch_alarm", "exception", "message"),
+    ("bosch_alarm_test_data", "exception", "message"),
     [
         ("Solution 3000", asyncio.exceptions.TimeoutError(), "cannot_connect"),
+        ("AMAX 3000", asyncio.exceptions.TimeoutError(), "cannot_connect"),
+        ("B5512 (US1B)", asyncio.exceptions.TimeoutError(), "cannot_connect"),
     ],
-    indirect=["setup_bosch_alarm"],
+    indirect=["bosch_alarm_test_data"],
 )
 async def test_form_exceptions(
     hass: HomeAssistant, exception: Exception, message: str
@@ -99,17 +98,24 @@ async def test_form_exceptions(
     assert result["errors"] == {}
 
 
-@pytest.mark.usefixtures("setup_bosch_alarm")
+@pytest.mark.usefixtures("bosch_alarm_test_data")
 @pytest.mark.parametrize(
-    ("setup_bosch_alarm", "exception", "message"),
+    ("bosch_alarm_test_data", "exception", "message"),
     [
         ("Solution 3000", PermissionError(), "invalid_auth"),
         ("Solution 3000", asyncio.exceptions.TimeoutError(), "cannot_connect"),
+        ("AMAX 3000", PermissionError(), "invalid_auth"),
+        ("AMAX 3000", asyncio.exceptions.TimeoutError(), "cannot_connect"),
+        ("B5512 (US1B)", PermissionError(), "invalid_auth"),
+        ("B5512 (US1B)", asyncio.exceptions.TimeoutError(), "cannot_connect"),
     ],
-    indirect=["setup_bosch_alarm"],
+    indirect=["bosch_alarm_test_data"],
 )
 async def test_form_exceptions_user(
-    hass: HomeAssistant, exception: Exception, message: str
+    hass: HomeAssistant,
+    exception: Exception,
+    message: str,
+    bosch_alarm_test_data: MockBoschAlarmConfig,
 ) -> None:
     """Test we handle exceptions correctly."""
 
@@ -133,7 +139,7 @@ async def test_form_exceptions_user(
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {CONF_USER_CODE: "1234"},
+            bosch_alarm_test_data.config,
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth"
@@ -141,19 +147,25 @@ async def test_form_exceptions_user(
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_USER_CODE: "1234"},
+        bosch_alarm_test_data.config,
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.parametrize("setup_bosch_alarm", ["Solution 3000"], indirect=True)
-@pytest.mark.usefixtures("setup_bosch_alarm")
-async def test_entry_already_configured(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "bosch_alarm_test_data",
+    [
+        "Solution 3000",
+        "AMAX 3000",
+        "B5512 (US1B)",
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("bosch_alarm_test_data")
+async def test_entry_already_configured(
+    hass: HomeAssistant, bosch_alarm_test_data: MockBoschAlarmConfig
+) -> None:
     """Test if configuring an entity twice results in an error."""
-
-    async def connect(self, load_selector):
-        self.model = "Solution 3000"
-
     entry = MockConfigEntry(
         domain="bosch_alarm", unique_id="unique_id", data={CONF_HOST: "0.0.0.0"}
     )
@@ -173,7 +185,7 @@ async def test_entry_already_configured(hass: HomeAssistant) -> None:
     assert result["errors"] == {}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {CONF_USER_CODE: "1234"},
+        bosch_alarm_test_data.config,
     )
 
     assert result["type"] is FlowResultType.ABORT
