@@ -1383,6 +1383,7 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "ecobee",
     "ecoforest",
     "econet",
+    "ecovacs",
     "ecowitt",
     "eddystone_temperature",
     "edimax",
