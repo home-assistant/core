@@ -265,12 +265,6 @@ class MammotionConfigFlow(ConfigFlow, domain=DOMAIN):
             vol.Optional(CONF_USE_WIFI, default=True): cv.boolean,
         }
 
-        if self._config.get(CONF_ADDRESS) is None:
-            schema = {
-                vol.Required(CONF_ACCOUNTNAME): vol.All(cv.string, vol.Strip),
-                vol.Required(CONF_PASSWORD): vol.All(cv.string, vol.Strip),
-            }
-
         return self.async_show_form(step_id="wifi", data_schema=vol.Schema(schema))
 
     async def async_step_wifi_confirm(
