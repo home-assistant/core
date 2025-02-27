@@ -7,7 +7,6 @@ from random import randint
 from time import time
 from typing import TYPE_CHECKING, Any
 
-from tesla_fleet_api import EnergySpecific, VehicleSpecific
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     InvalidToken,
@@ -17,6 +16,8 @@ from tesla_fleet_api.exceptions import (
     TeslaFleetError,
     VehicleOffline,
 )
+from tesla_fleet_api.tesla.energysite import EnergySite
+from tesla_fleet_api.tesla.vehicle.fleet import VehicleFleet
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -70,7 +71,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: VehicleSpecific,
+        api: VehicleFleet,
         product: dict,
     ) -> None:
         """Initialize TeslaFleet Vehicle Update Coordinator."""
@@ -149,7 +150,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
     ) -> None:
         """Initialize TeslaFleet Energy Site Live coordinator."""
         super().__init__(
@@ -202,7 +203,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
     ) -> None:
         """Initialize Tesla Fleet Energy Site History coordinator."""
         super().__init__(
@@ -266,7 +267,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self,
         hass: HomeAssistant,
         config_entry: TeslaFleetConfigEntry,
-        api: EnergySpecific,
+        api: EnergySite,
         product: dict,
     ) -> None:
         """Initialize TeslaFleet Energy Info coordinator."""
