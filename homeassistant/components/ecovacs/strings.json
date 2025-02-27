@@ -50,6 +50,9 @@
       "relocate": {
         "name": "Relocate"
       },
+      "reset_lifespan_base_station_filter": {
+        "name": "Reset station filter lifespan"
+      },
       "reset_lifespan_blade": {
         "name": "Reset blade lifespan"
       },
@@ -70,6 +73,9 @@
       },
       "reset_lifespan_side_brush": {
         "name": "Reset side brush lifespan"
+      },
+      "station_action_empty_dustbin": {
+        "name": "Empty dustbin"
       }
     },
     "event": {
@@ -111,6 +117,9 @@
           }
         }
       },
+      "lifespan_base_station_filter": {
+        "name": "Station filter lifespan"
+      },
       "lifespan_blade": {
         "name": "Blade lifespan"
       },
@@ -143,6 +152,13 @@
       },
       "network_ssid": {
         "name": "Wi-Fi SSID"
+      },
+      "station_state": {
+        "name": "Station state",
+        "state": {
+          "idle": "[%key:common::state::idle%]",
+          "emptying_dustbin": "Emptying dustbin"
+        }
       },
       "stats_area": {
         "name": "Area cleaned"
@@ -238,7 +254,7 @@
       "message": "Params are required for the command: {command}"
     },
     "vacuum_raw_get_positions_not_supported": {
-      "message": "Getting the positions of the chargers and the device itself is not supported"
+      "message": "Retrieving the positions of the chargers and the device itself is not supported"
     }
   },
   "selector": {
@@ -252,7 +268,7 @@
   "services": {
     "raw_get_positions": {
       "name": "Get raw positions",
-      "description": "Get the raw response for the positions of the chargers and the device itself."
+      "description": "Retrieves a raw response containing the positions of the chargers and the device itself."
     }
   }
 }

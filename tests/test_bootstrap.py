@@ -12,8 +12,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, loader, runner
-import homeassistant.config as config_util
+from homeassistant import bootstrap, config as config_util, core, loader, runner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     BASE_PLATFORMS,
@@ -788,6 +787,9 @@ async def test_setup_hass_recovery_mode(
 ) -> None:
     """Test it works."""
     with (
+        patch(
+            "homeassistant.core.HomeAssistant", wraps=core.HomeAssistant
+        ) as mock_hass,
         patch("homeassistant.components.browser.setup") as browser_setup,
         patch(
             "homeassistant.config_entries.ConfigEntries.async_domains",
@@ -805,6 +807,8 @@ async def test_setup_hass_recovery_mode(
                 recovery_mode=True,
             ),
         )
+
+    mock_hass.assert_called_once()
 
     assert "recovery_mode" in hass.config.components
     assert len(mock_mount_local_lib_path.mock_calls) == 0
@@ -1091,7 +1095,7 @@ async def test_tasks_logged_that_block_stage_1(
         patch.object(bootstrap, "STAGE_1_TIMEOUT", 0),
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
         patch.object(
-            bootstrap, "STAGE_1_INTEGRATIONS", [*original_stage_1, "normal_integration"]
+            bootstrap, "STAGE_1_INTEGRATIONS", {*original_stage_1, "normal_integration"}
         ),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
@@ -1177,7 +1181,7 @@ async def test_bootstrap_is_cancellation_safe(
 @pytest.mark.parametrize("load_registries", [False])
 async def test_bootstrap_empty_integrations(hass: HomeAssistant) -> None:
     """Test setting up an empty integrations does not raise."""
-    await bootstrap.async_setup_multi_components(hass, set(), {})
+    await bootstrap._async_setup_multi_components(hass, set(), {})
     await hass.async_block_till_done()
 
 
@@ -1312,7 +1316,7 @@ async def test_bootstrap_dependencies(
         ),
     ):
         bootstrap.async_set_domains_to_be_loaded(hass, {integration})
-        await bootstrap.async_setup_multi_components(hass, {integration}, {})
+        await bootstrap._async_setup_multi_components(hass, {integration}, {})
         await hass.async_block_till_done()
 
     for assertion in assertions:
@@ -1374,11 +1378,11 @@ async def test_pre_import_no_requirements(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.timeout(20)
-async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
-    """Test that the bootstrap does not preload stage 1 integrations.
+async def test_bootstrap_does_not_preimport_stage_1_integrations() -> None:
+    """Test that the bootstrap does not preimport stage 1 integrations.
 
     If this test fails it means that stage1 integrations are being
-    loaded too soon and will not get their requirements updated
+    imported too soon and will not get their requirements updated
     before they are loaded at runtime.
     """
 
@@ -1404,7 +1408,7 @@ async def test_cancellation_does_not_leak_upward_from_async_setup(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting up an integration that raises asyncio.CancelledError."""
-    await bootstrap.async_setup_multi_components(
+    await bootstrap._async_setup_multi_components(
         hass, {"test_package_raises_cancelled_error"}, {}
     )
     await hass.async_block_till_done()
@@ -1425,12 +1429,12 @@ async def test_cancellation_does_not_leak_upward_from_async_setup_entry(
         domain="test_package_raises_cancelled_error_config_entry", data={}
     )
     entry.add_to_hass(hass)
-    await bootstrap.async_setup_multi_components(
+    await bootstrap._async_setup_multi_components(
         hass, {"test_package_raises_cancelled_error_config_entry"}, {}
     )
     await hass.async_block_till_done()
 
-    await bootstrap.async_setup_multi_components(hass, {"test_package"}, {})
+    await bootstrap._async_setup_multi_components(hass, {"test_package"}, {})
     await hass.async_block_till_done()
     assert (
         "Error setting up entry Mock Title for test_package_raises_cancelled_error_config_entry"

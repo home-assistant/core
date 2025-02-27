@@ -6,7 +6,7 @@ import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import json
-from typing import Any, cast
+from typing import Any
 
 from jsonpath import jsonpath
 
@@ -51,9 +51,7 @@ async def async_setup_platform(
     if not discovery_info:
         return
 
-    discovery_info = cast(DiscoveryInfoType, discovery_info)
     sensor_config = discovery_info
-
     command: str = sensor_config[CONF_COMMAND]
     command_timeout: int = sensor_config[CONF_COMMAND_TIMEOUT]
     json_attributes: list[str] | None = sensor_config.get(CONF_JSON_ATTRIBUTES)

@@ -1,0 +1,20 @@
+{
+  "entity": {
+    "sensor": {
+      "link_quality": {
+        "default": "mdi:signal"
+      },
+      "window_position": {
+        "default": "mdi:window-closed"
+      }
+    },
+    "switch": {
+      "watchdog_on_off": {
+        "default": "mdi:dog"
+      },
+      "manual_operation": {
+        "default": "mdi:hand-back-left"
+      }
+    }
+  }
+}

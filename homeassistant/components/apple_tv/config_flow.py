@@ -34,6 +34,7 @@ from homeassistant.helpers.schema_config_entry_flow import (
     SchemaFlowFormStep,
     SchemaOptionsFlowHandler,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_CREDENTIALS, CONF_IDENTIFIERS, CONF_START_OFF, DOMAIN
 
@@ -98,7 +99,6 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     scan_filter: str | None = None
-    all_identifiers: set[str]
     atv: BaseConfig | None = None
     atv_identifiers: list[str] | None = None
     _host: str  # host in zeroconf discovery info, should not be accessed by other flows
@@ -118,6 +118,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize a new AppleTVConfigFlow."""
         self.credentials: dict[int, str | None] = {}  # Protocol -> credentials
+        self.all_identifiers: set[str] = set()
 
     @property
     def device_identifier(self) -> str | None:
@@ -133,7 +134,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         unique_id for said entry. When a new (zeroconf) service or device is
         discovered, the identifier is first used to look up if it belongs to an
         existing config entry. If that's the case, the unique_id from that entry is
-        re-used, otherwise the newly discovered identifier is used instead.
+        reused, otherwise the newly discovered identifier is used instead.
         """
         assert self.atv
         all_identifiers = set(self.atv.all_identifiers)
@@ -204,7 +205,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle device found via zeroconf."""
         if discovery_info.ip_address.version == 6:

@@ -33,7 +33,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -261,7 +261,9 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tibber sensor."""
 
@@ -285,7 +287,7 @@ async def async_setup_entry(
         if home.has_active_subscription:
             entities.append(TibberSensorElPrice(home))
             if coordinator is None:
-                coordinator = TibberDataCoordinator(hass, tibber_connection)
+                coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
             entities.extend(
                 TibberDataSensor(home, coordinator, entity_description)
                 for entity_description in SENSORS
@@ -531,7 +533,7 @@ class TibberRtEntityCreator:
 
     def __init__(
         self,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
         tibber_home: tibber.TibberHome,
         entity_registry: er.EntityRegistry,
     ) -> None:

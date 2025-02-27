@@ -1,26 +1,31 @@
 """Set up ohme integration."""
 
-from dataclasses import dataclass
-
 from ohme import ApiException, AuthException, OhmeApiClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
-from .coordinator import OhmeAdvancedSettingsCoordinator, OhmeChargeSessionCoordinator
+from .coordinator import (
+    OhmeAdvancedSettingsCoordinator,
+    OhmeChargeSessionCoordinator,
+    OhmeConfigEntry,
+    OhmeDeviceInfoCoordinator,
+    OhmeRuntimeData,
+)
+from .services import async_setup_services
 
-type OhmeConfigEntry = ConfigEntry[OhmeRuntimeData]
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-@dataclass()
-class OhmeRuntimeData:
-    """Dataclass to hold ohme coordinators."""
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Ohme integration."""
+    async_setup_services(hass)
 
-    charge_session_coordinator: OhmeChargeSessionCoordinator
-    advanced_settings_coordinator: OhmeAdvancedSettingsCoordinator
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool:
@@ -36,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool
                 translation_key="device_info_failed", translation_domain=DOMAIN
             )
     except AuthException as e:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_key="auth_failed", translation_domain=DOMAIN
         ) from e
     except ApiException as e:
@@ -45,8 +50,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool
         ) from e
 
     coordinators = (
-        OhmeChargeSessionCoordinator(hass, client),
-        OhmeAdvancedSettingsCoordinator(hass, client),
+        OhmeChargeSessionCoordinator(hass, entry, client),
+        OhmeAdvancedSettingsCoordinator(hass, entry, client),
+        OhmeDeviceInfoCoordinator(hass, entry, client),
     )
 
     for coordinator in coordinators:

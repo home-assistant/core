@@ -94,4 +94,7 @@ rules:
     status: exempt
     comment: |
       This integration does not use web sessions.
-  strict-typing: done
+  strict-typing:
+    status: todo
+    comment: |
+      Requirement 'aioimaplib==1.1.0' appears untyped

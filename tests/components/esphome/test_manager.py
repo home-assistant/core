@@ -2,7 +2,8 @@
 
 import asyncio
 from collections.abc import Awaitable, Callable
-from unittest.mock import AsyncMock, call
+import logging
+from unittest.mock import AsyncMock, Mock, call
 
 from aioesphomeapi import (
     APIClient,
@@ -13,6 +14,7 @@ from aioesphomeapi import (
     HomeassistantServiceCall,
     InvalidAuthAPIError,
     InvalidEncryptionKeyAPIError,
+    LogLevel,
     RequiresEncryptionAPIError,
     UserService,
     UserServiceArg,
@@ -21,10 +23,10 @@ from aioesphomeapi import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
     CONF_DEVICE_NAME,
+    CONF_SUBSCRIBE_LOGS,
     DOMAIN,
     STABLE_BLE_VERSION_STR,
 )
@@ -37,11 +39,101 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDevice
 
 from tests.common import MockConfigEntry, async_capture_events, async_mock_service
+
+
+async def test_esphome_device_subscribe_logs(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test configuring a device to subscribe to logs."""
+    assert await async_setup_component(hass, "logger", {"logger": {}})
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "fe80::1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        options={CONF_SUBSCRIBE_LOGS: True},
+    )
+    entry.add_to_hass(hass)
+    device: MockESPHomeDevice = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        entity_info=[],
+        user_service=[],
+        device_info={},
+        states=[],
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "DEBUG"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_VERY_VERBOSE
+
+    caplog.set_level(logging.DEBUG)
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_INFO, message=b"test_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_log_message" in caplog.text
+
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_ERROR, message=b"test_error_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_error_log_message" in caplog.text
+
+    caplog.set_level(logging.ERROR)
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_DEBUG, message=b"test_debug_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_debug_log_message" not in caplog.text
+
+    caplog.set_level(logging.DEBUG)
+    device.mock_on_log_message(
+        Mock(level=LogLevel.LOG_LEVEL_DEBUG, message=b"test_debug_log_message")
+    )
+    await hass.async_block_till_done()
+    assert "test_debug_log_message" in caplog.text
+
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "WARNING"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_WARN
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "ERROR"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_ERROR
+    await hass.services.async_call(
+        "logger",
+        "set_level",
+        {"homeassistant.components.esphome": "INFO"},
+        blocking=True,
+    )
+    assert device.current_log_level == LogLevel.LOG_LEVEL_CONFIG
 
 
 async def test_esphome_device_service_calls_not_allowed(
@@ -598,7 +690,7 @@ async def test_connection_aborted_wrong_device(
     mock_client.disconnect = AsyncMock()
     caplog.clear()
     # Make sure discovery triggers a reconnect
-    service_info = dhcp.DhcpServiceInfo(
+    service_info = DhcpServiceInfo(
         ip="192.168.43.184",
         hostname="test",
         macaddress="1122334455aa",
@@ -1098,6 +1190,42 @@ async def test_esphome_device_with_web_server(
         connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
     )
     assert dev.configuration_url == "http://test.local:80"
+
+
+async def test_esphome_device_with_ipv6_web_server(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: Callable[
+        [APIClient, list[EntityInfo], list[UserService], list[EntityState]],
+        Awaitable[MockESPHomeDevice],
+    ],
+) -> None:
+    """Test a device with a web server."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "fe80::1",
+            CONF_PORT: 6053,
+            CONF_PASSWORD: "",
+        },
+        options={},
+    )
+    entry.add_to_hass(hass)
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        entity_info=[],
+        user_service=[],
+        device_info={"webserver_port": 80},
+        states=[],
+    )
+    await hass.async_block_till_done()
+    entry = device.entry
+    dev = device_registry.async_get_device(
+        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    )
+    assert dev.configuration_url == "http://[fe80::1]:80"
 
 
 async def test_esphome_device_with_compilation_time(

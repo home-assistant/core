@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import Any, Final
 
-from duotecno.controller import PyDuotecno
 from duotecno.unit import SensUnit
 
 from homeassistant.components.climate import (
@@ -12,12 +11,11 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import DuotecnoConfigEntry
 from .entity import DuotecnoEntity, api_call
 
 HVACMODE: Final = {
@@ -33,13 +31,13 @@ PRESETMODES_REVERSE: Final = {value: key for key, value in PRESETMODES.items()}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: DuotecnoConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Duotecno climate based on config_entry."""
-    cntrl: PyDuotecno = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        DuotecnoClimate(channel) for channel in cntrl.get_units(["SensUnit"])
+        DuotecnoClimate(channel)
+        for channel in entry.runtime_data.get_units(["SensUnit"])
     )
 
 

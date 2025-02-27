@@ -36,7 +36,7 @@ async def test_symo_inverter(
     mock_responses(aioclient_mock, night=True)
     await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     assert_state("sensor.symo_20_dc_current", 0)
     assert_state("sensor.symo_20_energy_day", 10828)
     assert_state("sensor.symo_20_total_energy", 44186900)
@@ -49,7 +49,7 @@ async def test_symo_inverter(
     freezer.tick(FroniusInverterUpdateCoordinator.default_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 64
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 65
     # 4 additional AC entities
     assert_state("sensor.symo_20_dc_current", 2.19)
     assert_state("sensor.symo_20_energy_day", 1113)
@@ -108,7 +108,7 @@ async def test_symo_meter(
     mock_responses(aioclient_mock)
     await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 64
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 65
     # states are rounded to 4 decimals
     assert_state("sensor.smart_meter_63a_current_phase_1", 7.755)
     assert_state("sensor.smart_meter_63a_current_phase_2", 6.68)
@@ -205,7 +205,7 @@ async def test_symo_power_flow(
     mock_responses(aioclient_mock, night=True)
     await setup_fronius_integration(hass)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     # states are rounded to 4 decimals
     assert_state("sensor.solarnet_energy_day", 10828)
     assert_state("sensor.solarnet_total_energy", 44186900)
@@ -223,7 +223,7 @@ async def test_symo_power_flow(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     # 54 because power_flow `rel_SelfConsumption` and `P_PV` is not `null` anymore
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 60
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 61
     assert_state("sensor.solarnet_energy_day", 1101.7001)
     assert_state("sensor.solarnet_total_energy", 44188000)
     assert_state("sensor.solarnet_energy_year", 25508788)
@@ -242,7 +242,7 @@ async def test_symo_power_flow(
     freezer.tick(FroniusPowerFlowUpdateCoordinator.default_interval)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 60
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 61
     assert_state("sensor.solarnet_energy_day", 10828)
     assert_state("sensor.solarnet_total_energy", 44186900)
     assert_state("sensor.solarnet_energy_year", 25507686)
@@ -271,7 +271,7 @@ async def test_gen24(
     mock_responses(aioclient_mock, fixture_set="gen24")
     config_entry = await setup_fronius_integration(hass, is_logger=False)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 58
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 59
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     assert_state("sensor.inverter_name_total_energy", 1530193.42)
@@ -313,7 +313,7 @@ async def test_gen24_storage(
         hass, is_logger=False, unique_id="12345678"
     )
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 72
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 73
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Devices
@@ -367,7 +367,7 @@ async def test_primo_s0(
     mock_responses(aioclient_mock, fixture_set="primo_s0", inverter_ids=[1, 2])
     config_entry = await setup_fronius_integration(hass, is_logger=True)
 
-    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 47
+    assert len(hass.states.async_all(domain_filter=SENSOR_DOMAIN)) == 49
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
     # Devices

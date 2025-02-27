@@ -14,27 +14,18 @@ rules:
     comment: |
       Entities doesn't subscribe to events.
   dependency-transparency: done
-  action-setup:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+  action-setup: done
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
-  docs-actions:
-    status: exempt
-    comment: |
-      This integration does not provide additional actions.
+  docs-actions: done
   brands: done
   # Silver
   config-entry-unloading: done
   log-when-unavailable: done
   entity-unavailable: done
-  action-exceptions:
-    status: exempt
-    comment: |
-      No actions.
+  action-exceptions: done
   reauthentication-flow:
     status: exempt
     comment: |
