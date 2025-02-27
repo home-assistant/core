@@ -89,7 +89,6 @@ SUPPORTED_FEATURES_BASE = (
     | MediaPlayerEntityFeature.REPEAT_SET
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
-    | MediaPlayerEntityFeature.VOLUME_STEP
     | MediaPlayerEntityFeature.CLEAR_PLAYLIST
     | MediaPlayerEntityFeature.BROWSE_MEDIA
     | MediaPlayerEntityFeature.MEDIA_ENQUEUE
