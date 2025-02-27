@@ -9,6 +9,7 @@ from typing import Any, cast
 from aioshelly.block_device import Block
 from aioshelly.const import MODEL_2, MODEL_25, RPC_GENERATIONS
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_PLATFORM
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_PLATFORM,
     SwitchEntity,
@@ -63,7 +64,7 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     method_params_fn: Callable[[int | None, bool], dict]
 
 
-RPC_PREVIOUS_SWITCHES = {
+RPC_RELAY_SWITCHES = {
     "switch": RpcSwitchDescription(
         key="switch",
         sub_key="output",
@@ -172,7 +173,7 @@ def async_setup_rpc_entry(
     assert coordinator
 
     async_setup_entry_rpc(
-        hass, config_entry, async_add_entities, RPC_PREVIOUS_SWITCHES, RpcPreviousSwitch
+        hass, config_entry, async_add_entities, RPC_RELAY_SWITCHES, RpcRelaySwitch
     )
 
     async_setup_entry_rpc(
@@ -202,6 +203,17 @@ def async_setup_rpc_entry(
         SWITCH_PLATFORM,
         coordinator.device.status,
         "script",
+    )
+
+    # if the climate is removed, from the device configuration, we need
+    # to remove orphaned entities
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        CLIMATE_PLATFORM,
+        coordinator.device.status,
+        "thermostat",
     )
 
 
@@ -312,7 +324,7 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
         )
 
 
-class RpcPreviousSwitch(RpcSwitch):
+class RpcRelaySwitch(RpcSwitch):
     """Entity that controls a switch on RPC based Shelly devices."""
 
     # False to avoid double naming as True is inerithed from base class
