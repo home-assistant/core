@@ -92,7 +92,9 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
     @property
     def _area(self) -> ComelitVedoAreaObject:
         """Return area object."""
-        return self.coordinator.data[ALARM_AREAS][self._area_index]
+        return cast(
+            ComelitVedoAreaObject, self.coordinator.data[ALARM_AREAS][self._area_index]
+        )
 
     @property
     def available(self) -> bool:

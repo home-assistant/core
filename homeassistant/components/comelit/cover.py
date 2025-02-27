@@ -68,7 +68,7 @@ class ComelitCoverEntity(
     @property
     def device_status(self) -> int:
         """Return current device status."""
-        return self.coordinator.data[COVER][self._device.index].status
+        return cast(int, self.coordinator.data[COVER][self._device.index].status)
 
     @property
     def is_closed(self) -> bool | None:

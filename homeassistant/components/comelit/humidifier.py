@@ -128,46 +128,46 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         # CLIMATE has a 2 item tuple:
         # - first  for Clima
         # - second for Humidifier
-        return self.coordinator.data[CLIMATE][self._device.index].val[1]
+        return cast(list, self.coordinator.data[CLIMATE][self._device.index].val[1])
 
     @property
     def _api_mode(self) -> str:
         """Return device mode."""
         # Values from API: "O", "L", "U"
-        return self._humidifier[2]
+        return cast(str, self._humidifier[2])
 
     @property
     def _api_active(self) -> bool:
         "Return device active/idle."
-        return self._humidifier[1]
+        return cast(bool, self._humidifier[1])
 
     @property
     def _api_automatic(self) -> bool:
         """Return device in automatic/manual mode."""
-        return self._humidifier[3] == HumidifierComelitMode.AUTO
+        return cast(bool, self._humidifier[3] == HumidifierComelitMode.AUTO)
 
     @property
     def target_humidity(self) -> float:
         """Set target humidity."""
-        return self._humidifier[4] / 10
+        return cast(float, self._humidifier[4] / 10)
 
     @property
     def current_humidity(self) -> float:
         """Return current humidity."""
-        return self._humidifier[0] / 10
+        return cast(float, self._humidifier[0] / 10)
 
     @property
-    def is_on(self) -> bool | None:
+    def is_on(self) -> bool:
         """Return true is humidifier is on."""
-        return self._api_mode == self._active_mode
+        return bool(self._api_mode == self._active_mode)
 
     @property
-    def mode(self) -> str | None:
+    def mode(self) -> str:
         """Return current mode."""
         return MODE_AUTO if self._api_automatic else MODE_NORMAL
 
     @property
-    def action(self) -> HumidifierAction | None:
+    def action(self) -> HumidifierAction:
         """Return current action."""
 
         if self._api_mode == HumidifierComelitMode.OFF:

@@ -120,33 +120,33 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         # CLIMATE has a 2 item tuple:
         # - first  for Clima
         # - second for Humidifier
-        return self.coordinator.data[CLIMATE][self._device.index].val[0]
+        return cast(list, self.coordinator.data[CLIMATE][self._device.index].val[0])
 
     @property
     def _api_mode(self) -> str:
         """Return device mode."""
         # Values from API: "O", "L", "U"
-        return self._clima[2]
+        return cast(str, self._clima[2])
 
     @property
     def _api_active(self) -> bool:
         "Return device active/idle."
-        return self._clima[1]
+        return cast(bool, self._clima[1])
 
     @property
     def _api_automatic(self) -> bool:
         """Return device in automatic/manual mode."""
-        return self._clima[3] == ClimaComelitMode.AUTO
+        return cast(bool, self._clima[3] == ClimaComelitMode.AUTO)
 
     @property
     def target_temperature(self) -> float:
         """Set target temperature."""
-        return self._clima[4] / 10
+        return cast(float, self._clima[4] / 10)
 
     @property
     def current_temperature(self) -> float:
         """Return current temperature."""
-        return self._clima[0] / 10
+        return cast(float, self._clima[0] / 10)
 
     @property
     def hvac_mode(self) -> HVACMode | None:
@@ -159,7 +159,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
             return HVACMode.AUTO
 
         if self._api_mode in API_STATUS:
-            return API_STATUS[self._api_mode]["hvac_mode"]
+            return cast(HVACMode, API_STATUS[self._api_mode]["hvac_mode"])
 
         return None
 
@@ -174,7 +174,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
             return HVACAction.IDLE
 
         if self._api_mode in API_STATUS:
-            return API_STATUS[self._api_mode]["hvac_action"]
+            return cast(HVACAction, API_STATUS[self._api_mode]["hvac_action"])
 
         return None
 
