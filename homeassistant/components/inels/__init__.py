@@ -73,27 +73,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> boo
 
     mqtt = InelsMqtt(entry.data)
 
-    # Test connection and check for authentication errors
-    conn_result = await hass.async_add_executor_job(mqtt.test_connection)
-    if isinstance(conn_result, int):  # None -> no error, int -> error code
-        await hass.async_add_executor_job(mqtt.close)
-        if conn_result in (4, 5):
-            raise ConfigEntryAuthFailed("Invalid authentication")
-        if conn_result == 3:
-            raise ConfigEntryNotReady("MQTT Broker is offline or cannot be reached")
+    def connect_and_discover_devices() -> list[Device] | None:
+        """Test connection and discover devices."""
+        conn_result = mqtt.test_connection()
+        if isinstance(conn_result, int):  # None -> no error, int -> error code
+            mqtt.close()
+            if conn_result in (4, 5):
+                raise ConfigEntryAuthFailed("Invalid authentication")
+            if conn_result == 3:
+                raise ConfigEntryNotReady("MQTT Broker is offline or cannot be reached")
+            return None
+        return inels_discovery(mqtt)
+
+    # Raising errors signals to Home Assistant that the setup should be retried later.
+    # It is better to retry the entire setup than to recover from errors.
+    devices = await hass.async_add_executor_job(connect_and_discover_devices)
+
+    # Check for errors that were not explicitly raised
+    if devices is None:
         return False
 
-    # Raising ConfigEntryNotReady signals to Home Assistant that the setup should be retried later.
-    # It is better to retry the entire setup than to recover from errors.
-    devices = await hass.async_add_executor_job(inels_discovery, mqtt)
+    # If no devices are discovered, continue with the setup
+    if not devices:
+        LOGGER.warning("No devices discovered")
 
     entry.runtime_data = InelsData(mqtt=mqtt, devices=devices)
 
-    LOGGER.debug("Finished discovery, setting up platforms")
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    LOGGER.info("Platform setup complete")
     return True
 
 
