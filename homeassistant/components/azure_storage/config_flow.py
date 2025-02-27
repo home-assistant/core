@@ -120,3 +120,41 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the entry."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            container_client = ContainerClient(
+                account_url=self.get_account_url(
+                    reconfigure_entry.data[CONF_ACCOUNT_NAME]
+                ),
+                container_name=user_input[CONF_CONTAINER_NAME],
+                credential=user_input[CONF_STORAGE_ACCOUNT_KEY],
+                transport=AioHttpTransport(session=async_get_clientsession(self.hass)),
+            )
+            errors = await self.validate_config(container_client)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    data={**reconfigure_entry.data, **user_input},
+                )
+        return self.async_show_form(
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_CONTAINER_NAME,
+                        default=reconfigure_entry.data[CONF_CONTAINER_NAME],
+                    ): str,
+                    vol.Required(
+                        CONF_STORAGE_ACCOUNT_KEY,
+                        default=reconfigure_entry.data[CONF_STORAGE_ACCOUNT_KEY],
+                    ): str,
+                }
+            ),
+            errors=errors,
+        )
