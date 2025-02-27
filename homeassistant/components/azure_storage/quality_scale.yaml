@@ -57,7 +57,7 @@ rules:
     status: exempt
     comment: |
       This integration does not have platforms.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
