@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from aiohttp import ClientError
 from pysmartthings import (
@@ -93,7 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     try:
         devices = await client.get_devices()
         for device in devices:
-            status = await client.get_device_status(device.device_id)
+            status = process_status(await client.get_device_status(device.device_id))
             device_status[device.device_id] = FullDevice(device=device, status=status)
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
@@ -143,3 +143,27 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         )
 
     return True
+
+
+def process_status(
+    status: dict[str, dict[Capability, dict[Attribute, Status]]],
+) -> dict[str, dict[Capability, dict[Attribute, Status]]]:
+    """Remove disabled capabilities from status."""
+    if (main_component := status.get("main")) is None or (
+        disabled_capabilities_capability := main_component.get(
+            Capability.CUSTOM_DISABLED_CAPABILITIES
+        )
+    ) is None:
+        return status
+    disabled_capabilities = cast(
+        list[Capability],
+        disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
+    )
+    for capability in disabled_capabilities:
+        # We still need to make sure the climate entity can work without this capability
+        if (
+            capability in main_component
+            and capability != Capability.DEMAND_RESPONSE_LOAD_CONTROL
+        ):
+            del main_component[capability]
+    return status
