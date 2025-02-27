@@ -1,5 +1,7 @@
 """Tests for the switch module."""
 
+from contextlib import nullcontext
+
 import pytest
 import requests_mock
 from syrupy import SnapshotAssertion
@@ -11,6 +13,8 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from .common import ALL_DEVICE_NAMES, mock_devices_response
 
 from tests.common import MockConfigEntry
+
+NoException = nullcontext()
 
 
 @pytest.mark.parametrize("device_name", ALL_DEVICE_NAMES)
