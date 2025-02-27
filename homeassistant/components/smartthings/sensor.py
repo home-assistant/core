@@ -130,6 +130,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     unique_id_separator: str = "."
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
+    except_if_state_none: bool = False
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -579,6 +580,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energy"] / 1000,
+                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="power_meter",
@@ -587,6 +589,7 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfPower.WATT,
                 value_fn=lambda value: value["power"],
                 extra_state_attributes_fn=power_attributes,
+                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="deltaEnergy_meter",
@@ -595,6 +598,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["deltaEnergy"] / 1000,
+                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="powerEnergy_meter",
@@ -603,6 +607,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["powerEnergy"] / 1000,
+                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="energySaved_meter",
@@ -611,6 +616,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energySaved"] / 1000,
+                except_if_state_none=True,
             ),
         ]
     },
@@ -953,14 +959,20 @@ async def async_setup_entry(
     async_add_entities(
         SmartThingsSensor(entry_data.client, device, description, capability, attribute)
         for device in entry_data.devices.values()
-        for capability, attributes in device.status[MAIN].items()
-        if capability in CAPABILITY_TO_SENSORS
-        for attribute in attributes
-        for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
-        if not description.capability_ignore_list
-        or not any(
-            all(capability in device.status[MAIN] for capability in capability_list)
-            for capability_list in description.capability_ignore_list
+        for capability, attributes in CAPABILITY_TO_SENSORS.items()
+        if capability in device.status[MAIN]
+        for attribute, descriptions in attributes.items()
+        for description in descriptions
+        if (
+            not description.capability_ignore_list
+            or not any(
+                all(capability in device.status[MAIN] for capability in capability_list)
+                for capability_list in description.capability_ignore_list
+            )
+        )
+        and (
+            not description.except_if_state_none
+            or device.status[MAIN][capability][attribute].value is not None
         )
     )
 

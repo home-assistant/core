@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[aeotec_home_energy_meter_gen5][sensor.aeotec_energy_monitor_energy_2-entry]
+# name: test_all_entities[aeotec_home_energy_meter_gen5][sensor.aeotec_energy_monitor_energy-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -14,7 +14,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.aeotec_energy_monitor_energy_2',
+    'entity_id': 'sensor.aeotec_energy_monitor_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -35,7 +35,7 @@
     'unit_of_measurement': 'kWh',
   })
 # ---
-# name: test_all_entities[aeotec_home_energy_meter_gen5][sensor.aeotec_energy_monitor_energy_2-state]
+# name: test_all_entities[aeotec_home_energy_meter_gen5][sensor.aeotec_energy_monitor_energy-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -44,7 +44,7 @@
       'unit_of_measurement': 'kWh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.aeotec_energy_monitor_energy_2',
+    'entity_id': 'sensor.aeotec_energy_monitor_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
