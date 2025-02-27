@@ -434,9 +434,10 @@ class InverterSensor(CoordinatorEntity[InverterCoordinator], SensorEntity):
         self.entity_description = description
         self.data_key = description.key
         self._attr_translation_key = description.key
-        self._attr_unique_id = f"{entry.entry_id}_{self.data_key}"
+        assert entry.unique_id
+        self._attr_unique_id = f"{entry.unique_id}_{self.data_key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)},
+            identifiers={(DOMAIN, entry.unique_id)},
             name="Imeon inverter",
             manufacturer="Imeon Energy",
             model="Home Assistant Integration",

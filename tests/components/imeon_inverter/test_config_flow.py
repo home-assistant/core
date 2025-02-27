@@ -128,7 +128,7 @@ async def test_manual_setup_already_exists(
 async def test_get_serial_timeout(
     hass: HomeAssistant, mock_imeon_inverter: Generator[MagicMock]
 ) -> None:
-    """Test we handle timeout exception for getting serial."""
+    """Test the timeout error handling of getting the serial number."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
