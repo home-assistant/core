@@ -33,12 +33,12 @@ dbus-fast==2.33.0
 fnv-hash-fast==1.2.6
 go2rtc-client==0.1.2
 ha-ffmpeg==3.2.2
-habluetooth==3.24.0
+habluetooth==3.24.1
 hass-nabucasa==0.92.0
 hassil==2.2.3
 home-assistant-bluetooth==1.13.1
-home-assistant-frontend==20250226.0
-home-assistant-intents==2025.2.5
+home-assistant-frontend==20250227.0
+home-assistant-intents==2025.2.26
 httpx==0.28.1
 ifaddr==0.2.0
 Jinja2==3.1.5

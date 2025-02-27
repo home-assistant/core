@@ -46,7 +46,7 @@ class FullDevice:
     """Define an object to hold device data."""
 
     device: Device
-    status: dict[str, dict[Capability, dict[Attribute, Status]]]
+    status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]]
 
 
 type SmartThingsConfigEntry = ConfigEntry[SmartThingsData]
@@ -146,8 +146,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 def process_status(
-    status: dict[str, dict[Capability, dict[Attribute, Status]]],
-) -> dict[str, dict[Capability, dict[Attribute, Status]]]:
+    status: dict[str, dict[Capability | str, dict[Attribute | str, Status]]],
+) -> dict[str, dict[Capability | str, dict[Attribute | str, Status]]]:
     """Remove disabled capabilities from status."""
     if (main_component := status.get("main")) is None or (
         disabled_capabilities_capability := main_component.get(
@@ -156,7 +156,7 @@ def process_status(
     ) is None:
         return status
     disabled_capabilities = cast(
-        list[Capability],
+        list[Capability | str],
         disabled_capabilities_capability[Attribute.DISABLED_CAPABILITIES].value,
     )
     for capability in disabled_capabilities:
