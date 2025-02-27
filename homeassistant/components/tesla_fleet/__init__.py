@@ -5,12 +5,7 @@ from typing import Final
 
 from aiohttp.client_exceptions import ClientResponseError
 import jwt
-from tesla_fleet_api import (
-    EnergySpecific,
-    TeslaFleetApi,
-    VehicleSigned,
-    VehicleSpecific,
-)
+from tesla_fleet_api import TeslaFleetApi
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     InvalidRegion,
@@ -136,9 +131,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             if signing:
                 if not tesla.private_key:
                     await tesla.get_private_key(hass.config.path("tesla_fleet.key"))
-                api = VehicleSigned(tesla.vehicle, vin)
+                api = tesla.vehicles.createSigned(vin)
             else:
-                api = VehicleSpecific(tesla.vehicle, vin)
+                api = tesla.vehicles.createFleet(vin)
             coordinator = TeslaFleetVehicleDataCoordinator(hass, entry, api, product)
 
             await coordinator.async_config_entry_first_refresh()
@@ -173,7 +168,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 )
                 continue
 
-            api = EnergySpecific(tesla.energy, site_id)
+            api = tesla.energySites.create(site_id)
 
             live_coordinator = TeslaFleetEnergySiteLiveCoordinator(hass, entry, api)
             history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
