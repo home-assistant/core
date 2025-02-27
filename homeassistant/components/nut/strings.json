@@ -75,10 +75,10 @@
       "test_panel_start": "Start testing the UPS panel",
       "test_panel_stop": "Stop a UPS panel test",
       "test_system_start": "Start a system test"
-      "outlet1_on": "outlet1 on",
-      "outlet1_off": "outlet1 off",
-      "outlet2_on": "outlet2 on",
-      "outlet2_off": "outlet2 off"
+      "outlet_1_load_on": "Power outlet 1 on",
+      "outlet_1_load_off": "Power outlet 1 off",
+      "outlet_2_load_on": "Power outlet 2 on",
+      "outlet_2_load_off": "Power outlet 1 off"
     }
   },
   "entity": {
