@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensors[initial_sensor_mpu_voltage]
+# name: test_sensors[mpu_voltage][initial_sensor_mpu_voltage]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -15,38 +15,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[initial_sensor_run_time]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'test Run time',
-      'icon': 'mdi:progress-clock',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_run_time',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensors[initial_sensor_temperature]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'device_class': 'temperature',
-      'friendly_name': 'test Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.test_temperature',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'unknown',
-  })
-# ---
-# name: test_sensors[updated_sensor_mpu_voltage]
+# name: test_sensors[mpu_voltage][updated_sensor_mpu_voltage]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'voltage',
@@ -62,7 +31,22 @@
     'state': '3.31',
   })
 # ---
-# name: test_sensors[updated_sensor_run_time]
+# name: test_sensors[run_time][initial_sensor_run_time]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'test Run time',
+      'icon': 'mdi:progress-clock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_run_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[run_time][updated_sensor_run_time]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -77,7 +61,23 @@
     'state': '2024-02-26T01:04:54+00:00',
   })
 # ---
-# name: test_sensors[updated_sensor_temperature]
+# name: test_sensors[temperature][initial_sensor_temperature]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'test Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.test_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensors[temperature][updated_sensor_temperature]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
