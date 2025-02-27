@@ -3273,6 +3273,36 @@ async def test_title_updated_if_mac_address(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
+async def test_cleanup_orphened_remote_scanner_config_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test the remote scanner config entries get cleaned up when orphened."""
+    connector = (
+        HaBluetoothConnector(MockBleakClient, "mock_bleak_client", lambda: False),
+    )
+    scanner = FakeRemoteScanner("esp32", "esp32", connector, True)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOURCE: scanner.source,
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: "no_longer_exists",
+        },
+        unique_id=scanner.source,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Orphened remote scanner config entry should be cleaned up
+    assert not hass.config_entries.async_entry_for_domain_unique_id(
+        "bluetooth", scanner.source
+    )
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
 async def test_fix_incorrect_mac_remote_scanner_config_entry(
     hass: HomeAssistant,
 ) -> None:
