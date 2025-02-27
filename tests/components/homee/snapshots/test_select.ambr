@@ -57,7 +57,7 @@
     'state': 'off',
   })
 # ---
-# name: test_select_snapshot[select.test_select_none-entry]
+# name: test_select_snapshot[select.test_select_motor_rotation-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -75,7 +75,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.test_select_none',
+    'entity_id': 'select.test_select_motor_rotation',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -87,7 +87,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Motor rotation',
     'platform': 'homee',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -96,17 +96,17 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select_snapshot[select.test_select_none-state]
+# name: test_select_snapshot[select.test_select_motor_rotation-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Select None',
+      'friendly_name': 'Test Select Motor rotation',
       'options': list([
         'normal',
         'reverse',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.test_select_none',
+    'entity_id': 'select.test_select_motor_rotation',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
