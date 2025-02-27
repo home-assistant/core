@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.2.0
+aioesphomeapi==29.3.0
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -249,7 +249,7 @@ aioharmony==0.4.1
 aiohasupervisor==0.3.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.15.0
+aiohomeconnect==0.15.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
@@ -1882,7 +1882,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.0.0
+pysmartthings==2.0.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2

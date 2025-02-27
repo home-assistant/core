@@ -21,24 +21,23 @@ async def async_get_device_diagnostics(
     hass: HomeAssistant, entry: SmartThingsConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
+    client = entry.runtime_data.client
     device_id = next(
         identifier for identifier in device.identifiers if identifier[0] == DOMAIN
-    )[0]
+    )[1]
+
+    device_status = await client.get_device_status(device_id)
 
     events: list[DeviceEvent] = []
 
     def register_event(event: DeviceEvent) -> None:
         events.append(event)
 
-    client = entry.runtime_data.client
-
     listener = client.add_device_event_listener(device_id, register_event)
 
     await asyncio.sleep(EVENT_WAIT_TIME)
 
     listener()
-
-    device_status = await client.get_device_status(device_id)
 
     status: dict[str, Any] = {}
     for component, capabilities in device_status.items():
