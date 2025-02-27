@@ -39,8 +39,8 @@
           "container_name": "[%key:component::azure_storage::config::step::user::data_description::container_name%]",
           "storage_account_key": "[%key:component::azure_storage::config::step::user::data_description::storage_account_key%]"
         },
-        "description": "Provide a new storage account key.",
-        "title": "Reauthenticate Azure storage account"
+        "description": "Change the settings of the Azure storage integration.",
+        "title": "Reconfigure Azure storage account"
       }
     },
     "abort": {
