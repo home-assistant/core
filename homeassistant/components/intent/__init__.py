@@ -9,6 +9,7 @@ from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components import http
+from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -140,6 +141,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     intent.async_register(hass, GetCurrentDateIntentHandler())
     intent.async_register(hass, GetCurrentTimeIntentHandler())
     intent.async_register(hass, RespondIntentHandler())
+    intent.async_register(hass, GetTemperatureIntent())
 
     return True
 
@@ -441,6 +443,48 @@ class RespondIntentHandler(intent.IntentHandler):
         if "response" in slots:
             response.async_set_speech(slots["response"]["value"])
 
+        return response
+
+
+class GetTemperatureIntent(intent.IntentHandler):
+    """Handle GetTemperature intents."""
+
+    intent_type = intent.INTENT_GET_TEMPERATURE
+    description = "Gets the current temperature of a climate device or entity"
+    slot_schema = {
+        vol.Optional("area"): intent.non_empty_string,
+        vol.Optional("name"): intent.non_empty_string,
+    }
+    platforms = {CLIMATE_DOMAIN}
+
+    async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
+        """Handle the intent."""
+        hass = intent_obj.hass
+        slots = self.async_validate_slots(intent_obj.slots)
+
+        name: str | None = None
+        if "name" in slots:
+            name = slots["name"]["value"]
+
+        area: str | None = None
+        if "area" in slots:
+            area = slots["area"]["value"]
+
+        match_constraints = intent.MatchTargetsConstraints(
+            name=name,
+            area_name=area,
+            domains=[CLIMATE_DOMAIN],
+            assistant=intent_obj.assistant,
+        )
+        match_result = intent.async_match_targets(hass, match_constraints)
+        if not match_result.is_match:
+            raise intent.MatchFailedError(
+                result=match_result, constraints=match_constraints
+            )
+
+        response = intent_obj.create_response()
+        response.response_type = intent.IntentResponseType.QUERY_ANSWER
+        response.async_set_states(matched_states=match_result.states)
         return response
 
 
