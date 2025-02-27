@@ -8,6 +8,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.gentex_homelink import async_setup_entry
+from homeassistant.components.gentex_homelink.const import (
+    EVENT_TIMEOUT,
+    POLLING_INTERVAL,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -115,7 +119,7 @@ async def test_get_state_updates(
         assert all(buttons_unknown)
 
         logging.info("Fire first event. Buttons should be on")
-        freezer.tick(5)
+        freezer.tick(POLLING_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         states = hass.states.async_all()
@@ -128,7 +132,7 @@ async def test_get_state_updates(
         logging.info(
             "Fetch data again. Buttons should be off because the request has the same id and more than 10s has elapsed"
         )
-        freezer.tick(11)
+        freezer.tick(EVENT_TIMEOUT + 1)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         states = hass.states.async_all()
@@ -141,6 +145,7 @@ async def test_get_state_updates(
         logging.info(
             "Fetch data again. Buttons should be on because the request has a different timestamp and id"
         )
+
         freezer.tick(100)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -155,7 +160,7 @@ async def test_get_state_updates(
         logging.info(
             "Fetch data again. Buttons should be off because the id is the same"
         )
-        freezer.tick(15)
+        freezer.tick(EVENT_TIMEOUT + 1)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import timedelta
 import time
 from typing import TYPE_CHECKING
 
@@ -19,9 +18,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, EVENT_OFF, EVENT_PRESSED
-
-SCAN_INTERVAL = timedelta(seconds=5)
+from .const import DOMAIN, EVENT_OFF, EVENT_PRESSED, EVENT_TIMEOUT
 
 
 async def async_setup_entry(
@@ -39,8 +36,8 @@ class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity)
 
     _attr_has_entity_name = True
     _attr_event_types = [
-        "Pressed",
-        "Off",
+        EVENT_PRESSED,
+        EVENT_OFF,
     ]
 
     def __init__(self, id, param_name, device_id, device_name, coordinator) -> None:
@@ -80,7 +77,7 @@ class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity)
             self.last_request_id = latest_update["requestId"]
         elif (
             self.state_attributes["event_type"] == EVENT_PRESSED
-            and time.time() - latest_update["timestamp"] < 10
+            and time.time() - latest_update["timestamp"] < EVENT_TIMEOUT
         ):
             self._trigger_event(EVENT_OFF)
         self.async_write_ha_state()
