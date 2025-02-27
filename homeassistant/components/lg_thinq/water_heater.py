@@ -30,12 +30,10 @@ DEVICE_TYPE_WH_MAP: dict[DeviceType, WaterHeaterEntityDescription] = {
     DeviceType.WATER_HEATER: WaterHeaterEntityDescription(
         key=ExtendedProperty.WATER_HEATER,
         name=None,
-        translation_key=ExtendedProperty.WATER_HEATER,
     ),
     DeviceType.SYSTEM_BOILER: WaterHeaterEntityDescription(
         key=ExtendedProperty.WATER_BOILER,
         name=None,
-        translation_key=ExtendedProperty.WATER_BOILER,
     ),
 }
 
