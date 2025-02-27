@@ -161,8 +161,8 @@ async def test_reauth_flow_errors(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
-
-    # fix and finish the test
+    
+    # fix the error and finish the flow successfully
     mock_client.exists.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_STORAGE_ACCOUNT_KEY: "new_key"}
@@ -196,3 +196,4 @@ async def test_reconfigure_flow(
         **USER_INPUT,
         CONF_CONTAINER_NAME: "new_container",
     }
+
