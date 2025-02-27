@@ -57,7 +57,7 @@ async def trigger_update(
     data: dict[str, Any] | None = None,
 ) -> None:
     """Trigger an update."""
-    for call in mock.add_device_event_listener.call_args_list:
+    for call in mock.add_device_capability_event_listener.call_args_list:
         if call[0][0] == device_id and call[0][2] == capability:
             call[0][3](
                 DeviceEvent(
