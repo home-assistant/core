@@ -14,9 +14,10 @@ from homeassistant.const import CONF_ADDRESS, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import INTERVAL, TIMEOUT
+from .const import TIMEOUT
 
 HUBNAME = "imeon_inverter_hub"
+INTERVAL = timedelta(seconds=60)
 _LOGGER = logging.getLogger(__name__)
 
 type InverterConfigEntry = ConfigEntry[InverterCoordinator]
@@ -45,7 +46,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
             # Name of the data. For logging purposes.
             name=HUBNAME,
             # Polling interval. Will only be polled if there are subscribers.
-            update_interval=timedelta(seconds=INTERVAL),
+            update_interval=INTERVAL,
             always_update=True,
             config_entry=entry,
         )
