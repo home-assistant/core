@@ -15,7 +15,7 @@ from propcache.api import cached_property
 import voluptuous as vol
 from yarl import URL
 
-from homeassistant.components import onboarding, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, StaticPathConfig
 from homeassistant.components.websocket_api import ActiveConnection
 from homeassistant.config import async_hass_config_yaml
@@ -653,6 +653,9 @@ class IndexView(web_urldispatcher.AbstractResource):
 
     async def get(self, request: web.Request) -> web.Response:
         """Serve the index page for panel pages."""
+        # pylint: disable-next=import-outside-toplevel
+        from homeassistant.components import onboarding
+
         hass = request.app[KEY_HASS]
 
         if not onboarding.async_is_onboarded(hass):
