@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from aiohttp import CookieJar
-from pyloadapi.api import PyLoadAPI
+from pyloadapi import PyLoadAPI
 
 from homeassistant.const import (
     CONF_HOST,

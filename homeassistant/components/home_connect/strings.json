@@ -33,6 +33,12 @@
     "appliance_not_found": {
       "message": "Appliance for device ID {device_id} not found"
     },
+    "device_entry_not_found": {
+      "message": "Device entry for device ID {device_id} not found"
+    },
+    "config_entry_not_found": {
+      "message": "Config entry for device ID {device_id} not found"
+    },
     "turn_on_light": {
       "message": "Error turning on {entity_id}: {error}"
     },
@@ -348,7 +354,7 @@
       "options": {
         "consumer_products_coffee_maker_enum_type_flow_rate_normal": "Normal",
         "consumer_products_coffee_maker_enum_type_flow_rate_intense": "Intense",
-        "consumer_products_coffee_maker_enum_type_flow_rate_intense_plus": "Intense plus"
+        "consumer_products_coffee_maker_enum_type_flow_rate_intense_plus": "Intense +"
       }
     },
     "coffee_milk_ratio": {
@@ -404,7 +410,7 @@
         "laundry_care_dryer_enum_type_drying_target_iron_dry": "Iron dry",
         "laundry_care_dryer_enum_type_drying_target_gentle_dry": "Gentle dry",
         "laundry_care_dryer_enum_type_drying_target_cupboard_dry": "Cupboard dry",
-        "laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus": "Cupboard dry plus",
+        "laundry_care_dryer_enum_type_drying_target_cupboard_dry_plus": "Cupboard dry +",
         "laundry_care_dryer_enum_type_drying_target_extra_dry": "Extra dry"
       }
     },
@@ -586,7 +592,7 @@
           "description": "Defines if the program sequence is optimized with a special drying cycle to ensure more shine on glasses and plastic items."
         },
         "dishcare_dishwasher_option_vario_speed_plus": {
-          "name": "Vario speed plus",
+          "name": "Vario speed +",
           "description": "Defines if the program run time is reduced by up to 66% with the usual optimum cleaning and drying."
         },
         "dishcare_dishwasher_option_silence_on_demand": {
@@ -602,7 +608,7 @@
           "description": "Defines if improved drying for glasses and plasticware is enabled."
         },
         "dishcare_dishwasher_option_hygiene_plus": {
-          "name": "Hygiene plus",
+          "name": "Hygiene +",
           "description": "Defines if the cleaning is done with increased temperature. This ensures maximum hygienic cleanliness for regular use."
         },
         "dishcare_dishwasher_option_eco_dry": {
@@ -1456,7 +1462,7 @@
           "inactive": "Inactive",
           "ready": "Ready",
           "delayedstart": "Delayed start",
-          "run": "Run",
+          "run": "Running",
           "pause": "[%key:common::state::paused%]",
           "actionrequired": "Action required",
           "finished": "Finished",
@@ -1522,6 +1528,9 @@
           "map2": "Map 2",
           "map3": "Map 3"
         }
+      },
+      "oven_current_cavity_temperature": {
+        "name": "Current oven cavity temperature"
       },
       "freezer_door_alarm": {
         "name": "Freezer door alarm",

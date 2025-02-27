@@ -589,9 +589,7 @@ async def test_services_appliance_not_found(
     )
     service_call["service_data"]["device_id"] = device_entry.id
 
-    with pytest.raises(
-        ServiceValidationError, match=r"Home Connect config entry.*not found"
-    ):
+    with pytest.raises(ServiceValidationError, match=r"Config entry.*not found"):
         await hass.services.async_call(**service_call)
 
     device_entry = device_registry.async_get_or_create(
