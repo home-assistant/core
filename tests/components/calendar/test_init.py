@@ -589,7 +589,6 @@ async def test_list_events_service_same_dates(
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_EVENTS,
-            target={"entity_id": ["calendar.calendar_1"]},
             service_data={
                 "entity_id": "calendar.calendar_1",
                 **service_data,
