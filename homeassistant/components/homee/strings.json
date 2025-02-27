@@ -119,11 +119,34 @@
           "level2": "Level 2"
         }
       },
+      "switch_type": {
+        "name": "Type of controlling switch",
+        "state": {
+          "0": "Momentary action",
+          "1": "Rocker switch",
+          "2": "Depends on model (see manual)"
+        }
+      },
       "restore_last_known_state": {
         "name": "Restore state after power loss",
         "state": {
           "disabled": "Do not restore state",
           "enabled": "Restore last state before power loss"
+        }
+      },
+      "wind_monitoring_state": {
+        "name": "Threshold for wind trigger",
+        "state": {
+          "0": "0 m/s",
+          "1": "2.5 m/s",
+          "2": "5 m/s",
+          "3": "7.5 m/s",
+          "4": "10 m/s",
+          "5": "12.5 m/s",
+          "6": "15 m/s",
+          "7": "17.5 m/s",
+          "8": "20 m/s",
+          "9": "22.5 m/s"
         }
       }
     },

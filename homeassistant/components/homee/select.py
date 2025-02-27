@@ -4,6 +4,7 @@ from pyHomee.const import AttributeType
 from pyHomee.model import HomeeAttribute
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -14,10 +15,22 @@ SELECT_DESCRIPTIONS: dict[AttributeType, SelectEntityDescription] = {
     AttributeType.REPEATER_MODE: SelectEntityDescription(
         key="repeater_mode",
         options=["off", "level1", "level2"],
+        entity_category=EntityCategory.CONFIG,
     ),
     AttributeType.RESTORE_LAST_KNOWN_STATE: SelectEntityDescription(
         key="restore_last_known_state",
         options=["disabled", "enabled"],
+        entity_category=EntityCategory.CONFIG,
+    ),
+    AttributeType.SWITCH_TYPE: SelectEntityDescription(
+        key="switch_type",
+        options=["0", "1", "2"],
+        entity_category=EntityCategory.CONFIG,
+    ),
+    AttributeType.WIND_MONITORING_STATE: SelectEntityDescription(
+        key="wind_monitoring_state",
+        options=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 
@@ -27,7 +40,7 @@ async def async_setup_entry(
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the homee platform for the select integration."""
+    """Add the Homee platform for the select integration."""
 
     async_add_entities(
         HomeeSelect(attribute, config_entry, SELECT_DESCRIPTIONS[attribute.type])
@@ -38,7 +51,7 @@ async def async_setup_entry(
 
 
 class HomeeSelect(HomeeEntity, SelectEntity):
-    """Representation of a homee select device."""
+    """Representation of a Homee select device."""
 
     def __init__(
         self,
@@ -46,7 +59,7 @@ class HomeeSelect(HomeeEntity, SelectEntity):
         entry: HomeeConfigEntry,
         description: SelectEntityDescription,
     ) -> None:
-        """Initialize a homee sensor entity."""
+        """Initialize a Homee select entity."""
         super().__init__(attribute, entry)
         self.entity_description = description
         if description.options:
