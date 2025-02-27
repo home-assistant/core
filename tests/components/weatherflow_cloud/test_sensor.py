@@ -4,7 +4,8 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from syrupy.assertion import SnapshotAssertion
+import pytest
+from syrupy import SnapshotAssertion
 from weatherflow4py.models.rest.observation import ObservationStationREST
 
 from homeassistant.components.weatherflow_cloud import DOMAIN
@@ -17,17 +18,19 @@ from . import setup_integration
 from tests.common import (
     MockConfigEntry,
     async_fire_time_changed,
-    async_load_fixture,
+    load_fixture,
     snapshot_platform,
 )
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_api: AsyncMock,
+    mock_rest_api: AsyncMock,
+    mock_websocket_api: AsyncMock,
 ) -> None:
     """Test all entities."""
     with patch(
@@ -38,17 +41,19 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities_with_lightning_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_api: AsyncMock,
+    mock_rest_api: AsyncMock,
+    mock_websocket_api: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test all entities."""
 
     get_observation_response_data = ObservationStationREST.from_json(
-        await async_load_fixture(hass, "station_observation_error.json", DOMAIN)
+        load_fixture("station_observation_error.json", DOMAIN)
     )
 
     with patch(
@@ -62,9 +67,9 @@ async def test_all_entities_with_lightning_error(
         )
 
         # Update the data in our API
-        all_data = await mock_api.get_all_data()
+        all_data = await mock_rest_api.get_all_data()
         all_data[24432].observation = get_observation_response_data
-        mock_api.get_all_data.return_value = all_data
+        mock_rest_api.get_all_data.return_value = all_data
 
         # Move time forward
         freezer.tick(timedelta(minutes=5))
