@@ -110,7 +110,7 @@ def _get_title(search_type: str, id_string: str) -> str:
     """Extract a suitable title from the content id string."""
     try:
         if search_type == MEDIA_TYPE_FOLDER:
-            # Format is S://path/folder1/folder2
+            # Format is S://server/share/folder
             # If just S: this will be in the mappings; otherwise use the last folder in path.
             title = LIBRARY_TITLES_MAPPING.get(
                 id_string, urllib.parse.unquote(id_string.split("/")[-1])
@@ -521,12 +521,10 @@ def can_play(item_class: str, item_id: str | None = None) -> bool:
 
     Used by async_browse_media.
     """
-    # Folders are playable once we reach the sub_folder level.
-    # Format is S://server_address/folder/sub_folder/...
+    # Folders are playable once we reach the folder level.
+    # Format is S://server_address/share/folder/...
     if item_id and item_class == "object.container" and item_id.startswith("S:"):
-        if item_id.count("/") > 3:
-            return True
-        return False
+        return item_id.count("/") > 3
     return SONOS_TO_MEDIA_TYPES.get(item_class) in PLAYABLE_MEDIA_TYPES
 
 
