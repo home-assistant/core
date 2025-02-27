@@ -1,0 +1,201 @@
+{
+  "shutter": {
+    "num": 17,
+    "desc": [
+      "Camera 2",
+      "Camera 1",
+      "Cameretta",
+      "Lavanderia",
+      "Bagno Piano Primo",
+      "Cabina Armadio",
+      "Studio 1",
+      "Studio 2",
+      "Terrazzo",
+      "Cucina 1",
+      "Cucina 2",
+      "Cucina 3",
+      "Dispensa",
+      "Soggiorno 1",
+      "Soggiorno 2",
+      "Soggiorno 3",
+      "Bagno Piano Terra"
+    ],
+    "env": [1, 1, 2, 3, 4, 5, 6, 6, 7, 8, 8, 8, 9, 10, 10, 10, 11],
+    "status": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "val": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "type": [4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4],
+    "protected": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "env_desc": [
+      "",
+      "Camera Matrimoniale",
+      "Cameretta",
+      "Lavanderia",
+      "Bagno Piano Primo",
+      "Cabina armadio",
+      "Studio",
+      "Terrazzo",
+      "Cucina",
+      "Dispensa cucina",
+      "Soggiorno",
+      "Bagno Piano Terra",
+      "Giardino",
+      "Contatori"
+    ]
+  },
+  "light": {
+    "num": 4,
+    "desc": ["Strip Giardino", "Fari Fioriera", "Fari alberi", "Fari Pergola"],
+    "env": [12, 12, 12, 12],
+    "status": [0, 0, 0, 0],
+    "val": [0, 0, 0, 0],
+    "type": [0, 0, 0, 0],
+    "protected": [0, 0, 0, 0],
+    "env_desc": [
+      "",
+      "Camera Matrimoniale",
+      "Cameretta",
+      "Lavanderia",
+      "Bagno Piano Primo",
+      "Cabina armadio",
+      "Studio",
+      "Terrazzo",
+      "Cucina",
+      "Dispensa cucina",
+      "Soggiorno",
+      "Bagno Piano Terra",
+      "Giardino",
+      "Contatori"
+    ]
+  },
+  "irrigation": {
+    "num": 4,
+    "desc": ["Giardino fronte", "Giardino lato", "Giardino retro", "Fioriere"],
+    "env": [0, 0, 0, 0],
+    "status": [0, 0, 0, 0],
+    "val": [0, 0, 0, 0],
+    "type": [0, 0, 0, 0],
+    "protected": [0, 0, 0, 0],
+    "env_desc": [
+      "",
+      "Camera Matrimoniale",
+      "Cameretta",
+      "Lavanderia",
+      "Bagno Piano Primo",
+      "Cabina armadio",
+      "Studio",
+      "Terrazzo",
+      "Cucina",
+      "Dispensa cucina",
+      "Soggiorno",
+      "Bagno Piano Terra",
+      "Giardino",
+      "Contatori"
+    ]
+  },
+  "clima": {
+    "num": 9,
+    "desc": [
+      "Camera Matrimoniale",
+      "Cameretta",
+      "Lavanderia",
+      "Bagno Piano Primo",
+      "Studio",
+      "Cucina",
+      "Dispensa",
+      "Ingresso",
+      "Bagno Piano Terra"
+    ],
+    "env": [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "status": [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "val": [
+      [
+        [232, 0, "L", "M", 260, 0, 0, "B"],
+        [583, 0, "O", "M", 500, 0, 0, "N"],
+        [0, 0]
+      ],
+      [
+        [230, 0, "O", "M", 355, 0, 0, "B"],
+        [600, 0, "O", "M", 500, 0, 0, "N"],
+        [0, 0]
+      ],
+      [
+        [222, 0, "O", "M", 355, 0, 0, "B"],
+        [691, 0, "O", "M", 550, 0, 0, "N"],
+        [0, 0]
+      ],
+      [
+        [227, 0, "O", "M", 355, 0, 0, "B"],
+        [637, 0, "O", "M", 500, 0, 0, "N"],
+        [0, 0]
+      ],
+      [
+        [234, 0, "O", "M", 355, 0, 0, "B"],
+        [576, 0, "O", "M", 500, 0, 0, "N"],
+        [0, 0]
+      ],
+      [
+        [224, 0, "O", "M", 355, 0, 0, "B"],
+        [653, 0, "O", "M", 0, 0, 0, "N"],
+        [0, 0]
+      ],
+      [
+        [236, 0, "O", "M", 355, 0, 0, "B"],
+        [636, 0, "O", "M", 0, 0, 0, "N"],
+        [0, 0]
+      ],
+      [
+        [232, 0, "O", "M", 355, 0, 0, "B"],
+        [555, 0, "O", "M", 0, 0, 0, "N"],
+        [0, 0]
+      ],
+      [
+        [221, 0, "O", "M", 355, 0, 0, "B"],
+        [648, 0, "O", "M", 0, 0, 0, "N"],
+        [0, 0]
+      ]
+    ],
+    "type": [13, 13, 13, 13, 13, 13, 13, 13, 13],
+    "protected": [0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "env_desc": [
+      "",
+      "Camera Matrimoniale",
+      "Cameretta",
+      "Lavanderia",
+      "Bagno Piano Primo",
+      "Cabina armadio",
+      "Studio",
+      "Terrazzo",
+      "Cucina",
+      "Dispensa cucina",
+      "Soggiorno",
+      "Bagno Piano Terra",
+      "Giardino",
+      "Contatori"
+    ]
+  },
+  "other": {
+    "num": 2,
+    "desc": ["Piano induzione", "Cambio Contatore"],
+    "env": [8, 13],
+    "status": [0, 0],
+    "val": [0, 0],
+    "type": [0, 0],
+    "protected": [0, 0],
+    "env_desc": [
+      "",
+      "Camera Matrimoniale",
+      "Cameretta",
+      "Lavanderia",
+      "Bagno Piano Primo",
+      "Cabina armadio",
+      "Studio",
+      "Terrazzo",
+      "Cucina",
+      "Dispensa cucina",
+      "Soggiorno",
+      "Bagno Piano Terra",
+      "Giardino",
+      "Contatori"
+    ]
+  }
+}

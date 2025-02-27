@@ -4,43 +4,11 @@
     'device_info': dict({
       'devices': list([
         dict({
-          'clima': list([
-          ]),
-        }),
-        dict({
           'shutter': list([
-            dict({
-              '0': dict({
-                'human_status': 'closed',
-                'name': 'Cover0',
-                'power': 0.0,
-                'power_unit': 'W',
-                'protected': 0,
-                'status': 0,
-                'val': 0,
-                'zone': 'Open space',
-              }),
-            }),
           ]),
         }),
         dict({
           'light': list([
-            dict({
-              '0': dict({
-                'human_status': 'off',
-                'name': 'Light0',
-                'power': 0.0,
-                'power_unit': 'W',
-                'protected': 0,
-                'status': 0,
-                'val': 0,
-                'zone': 'Bathroom',
-              }),
-            }),
-          ]),
-        }),
-        dict({
-          'other': list([
           ]),
         }),
         dict({
@@ -48,7 +16,11 @@
           ]),
         }),
         dict({
-          'scenario': list([
+          'clima': list([
+          ]),
+        }),
+        dict({
+          'other': list([
           ]),
         }),
       ]),
@@ -57,9 +29,10 @@
     }),
     'entry': dict({
       'data': dict({
-        'host': 'fake_host',
+        'host': 'fake_bridge_host',
         'pin': '**REDACTED**',
         'port': 80,
+        'type': 'Serial bridge',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -85,35 +58,19 @@
     'device_info': dict({
       'devices': list([
         dict({
-          'aree': list([
-            dict({
-              '0': dict({
-                'alarm': False,
-                'alarm_memory': False,
-                'anomaly': False,
-                'armed': False,
-                'human_status': 'unknown',
-                'in_time': False,
-                'name': 'Area0',
-                'out_time': False,
-                'p1': True,
-                'p2': False,
-                'ready': False,
-                'sabotage': False,
-              }),
-            }),
+          'area_description': list([
           ]),
         }),
         dict({
-          'zone': list([
-            dict({
-              '0': dict({
-                'human_status': 'rest',
-                'name': 'Zone0',
-                'status': 0,
-                'status_api': '0x000',
-              }),
-            }),
+          'zone_description': list([
+          ]),
+        }),
+        dict({
+          'area_statistics': list([
+          ]),
+        }),
+        dict({
+          'zone_statistics': list([
           ]),
         }),
       ]),
