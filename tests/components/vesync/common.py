@@ -31,7 +31,7 @@ ON_OFF_TESTS = {
         "entity": "humidifier.humidifier_200s",
         "device_name": "Humidifier 200s",
     },
-    "switch_Display": {
+    "switch_display": {
         "turn_on_func": "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on_display",
         "turn_off_func": "pyvesync.vesyncfan.VeSyncHumid200300S.turn_off_display",
         "update_func": "homeassistant.components.vesync.switch.VeSyncSwitchEntity.schedule_update_ha_state",
