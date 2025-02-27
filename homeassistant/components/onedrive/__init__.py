@@ -162,7 +162,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
         try:
             approot = await client.get_approot()
             folder = await client.get_drive_item(
-                f"{approot.id}/:backups_{instance_id[:8]}:"
+                f"{approot.id}:/backups_{instance_id[:8]}:"
             )
         except OneDriveException:
             _LOGGER.exception("Migration to version 1.2 failed")
