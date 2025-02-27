@@ -180,31 +180,3 @@ async def test_sensor(
 
     state = hass.states.get(f"{wolf_parameter.parameter_id}")
     assert state == snapshot
-
-    def test_wolflink_sensor_native_value_list_item() -> None:
-        """Test WolflinkSensor native value for ListItemParameter."""
-        coordinator = MagicMock()
-        parameter = MagicMock(spec=ListItemParameter)
-        parameter.parameter_id = 788457854
-        parameter.items = [
-            MagicMock(value=1, name="Pump"),
-            MagicMock(value=2, name="Heating"),
-        ]
-        sensor = WolfLinkSensor(coordinator, parameter, "1234", MagicMock())
-        coordinator.data = {"list_item_param": [None, 1]}
-        assert sensor.native_value == "Pump"
-
-        coordinator.data = {"list_item_param": [None, 2]}
-        assert sensor.native_value == "Heating"
-
-        coordinator.data = {"list_item_param": [None, 3]}
-        assert sensor.native_value == 3
-
-    def test_wolflink_sensor_native_value_no_data() -> None:
-        """Test WolflinkSensor native value when no data is available."""
-        coordinator = MagicMock()
-        parameter = MagicMock()
-        parameter.parameter_id = "no_data_param"
-        sensor = WolfLinkSensor(coordinator, parameter, "mock_device_id", MagicMock())
-        coordinator.data = {}
-        assert sensor.native_value is None
