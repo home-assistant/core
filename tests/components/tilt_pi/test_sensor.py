@@ -5,7 +5,6 @@ from unittest.mock import Mock, patch
 import pytest
 from syrupy import SnapshotAssertion
 
-from homeassistant.components.tilt_pi.const import DOMAIN
 from homeassistant.components.tilt_pi.coordinator import TiltPiDataUpdateCoordinator
 from homeassistant.components.tilt_pi.model import TiltHydrometerData
 from homeassistant.const import Platform
@@ -74,17 +73,3 @@ async def test_all_sensors(
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
-async def test_sensors(hass: HomeAssistant) -> None:
-    """Test setting up creates the sensors."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="00:1A:2B:3C:4D:5E",
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all()) == 0
