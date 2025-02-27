@@ -53,6 +53,7 @@ from . import UnjoinData, media_browser
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
+    MEDIA_TYPE_FOLDER,
     MEDIA_TYPES_TO_SONOS,
     MODELS_LINEIN_AND_TV,
     MODELS_LINEIN_ONLY,
@@ -647,6 +648,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     media_id, timeout=LONG_SERVICE_TIMEOUT
                 )
                 soco.play_from_queue(0)
+        elif media_type == MEDIA_TYPE_FOLDER:
+            self._play_media_folder(
+                soco=soco, media_type=media_type, media_id=media_id, enqueue=enqueue
+            )
         elif media_type in {MediaType.MUSIC, MediaType.TRACK}:
             # If media ID is a relative URL, we serve it from HA.
             media_id = async_process_play_media_url(self.hass, media_id)
@@ -703,6 +708,44 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     "media_type": media_type,
                 },
             )
+
+    def _play_media_folder(
+        self,
+        soco: SoCo,
+        media_type: MediaType | str,
+        media_id: str,
+        enqueue: MediaPlayerEnqueue,
+    ):
+        """Play media from a folder."""
+        search_type = MEDIA_TYPES_TO_SONOS[media_type]
+        matches = self.media.library.browse_by_idstring(
+            search_type, media_id, full_album_art_uri=False
+        )
+        self._play_media_items_queue(soco, matches, enqueue)
+
+    def _play_media_items_queue(
+        self, soco: SoCo, items: list[MusicServiceItem], enqueue: MediaPlayerEnqueue
+    ):
+        """Manage adding, replacing, playing items onto the sonos queue."""
+        _LOGGER.debug(
+            "_play_media_items_queue item_item_list [%s] enqueue [%s]",
+            items,
+            enqueue,
+        )
+        if enqueue == MediaPlayerEnqueue.REPLACE:
+            soco.clear_queue()
+
+        if enqueue in (MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE):
+            soco.add_multiple_to_queue(items, timeout=LONG_SERVICE_TIMEOUT)
+            if enqueue == MediaPlayerEnqueue.REPLACE:
+                soco.play_from_queue(0)
+        else:
+            pos = (self.media.queue_position or 0) + 1
+            new_pos = soco.add_multiple_to_queue(
+                items, position=pos, timeout=LONG_SERVICE_TIMEOUT
+            )
+            if enqueue == MediaPlayerEnqueue.PLAY:
+                soco.play_from_queue(new_pos - 1)
 
     def _play_media_queue(
         self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue

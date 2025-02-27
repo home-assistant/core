@@ -32,6 +32,7 @@ from .const import (
     SONOS_ALBUM,
     SONOS_ALBUM_ARTIST,
     SONOS_GENRE,
+    SONOS_SHARE,
     SONOS_TO_MEDIA_CLASSES,
     SONOS_TO_MEDIA_TYPES,
     SONOS_TRACKS,
@@ -240,6 +241,8 @@ def build_item_response(
     if not title:
         try:
             title = urllib.parse.unquote(payload["idstring"].split("/")[1])
+            if title == "":
+                title = urllib.parse.unquote(payload["idstring"].split("/")[-1])
         except IndexError:
             title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
 
@@ -255,6 +258,8 @@ def build_item_response(
     for item in media:
         with suppress(UnknownMediaType):
             children.append(item_payload(item, get_thumbnail_url))
+
+    title = title.replace("//", " ").replace("/", " ")
 
     return BrowseMedia(
         title=title,
@@ -285,8 +290,10 @@ def item_payload(item: DidlObject, get_thumbnail_url=None) -> BrowseMedia:
     if getattr(item, "album_art_uri", None):
         thumbnail = get_thumbnail_url(media_class, content_id, item=item)
 
+    title: str = item.title
+
     return BrowseMedia(
-        title=item.title,
+        title=title.replace("//", " ").replace("/", " "),
         thumbnail=thumbnail,
         media_class=media_class,
         media_content_id=content_id,
@@ -553,6 +560,15 @@ def get_media(
             None,
         )
 
+    if search_type == SONOS_SHARE:
+        matches = media_library.browse_by_idstring(
+            search_type, item_id, full_album_art_uri=True
+        )
+        matches = media_library.get_music_library_information(
+            search_type, search_term=item_id, full_album_art_uri=True
+        )
+        if matches:
+            return matches[0]
     if not item_id.startswith("A:ALBUM") and search_type == SONOS_ALBUM:
         item_id = "A:ALBUMARTIST/" + "/".join(item_id.split("/")[2:])
 
