@@ -39,7 +39,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import AidotCoordinator
+from .coordinator import AidotCoordinator, AidotDeviceDiscoverCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,7 +55,7 @@ async def async_setup_entry(
     )
 
 
-class AidotLight(CoordinatorEntity[AidotCoordinator], LightEntity):
+class AidotLight(CoordinatorEntity[AidotDeviceDiscoverCoordinator], LightEntity):
     """Representation of a Aidot Wi-Fi Light."""
 
     _attr_has_entity_name = True
@@ -75,9 +75,10 @@ class AidotLight(CoordinatorEntity[AidotCoordinator], LightEntity):
         self, hass: HomeAssistant, device, coordinator: AidotCoordinator
     ) -> None:
         """Initialize the light."""
-        super().__init__(coordinator, {device[CONF_ID]})
+        super().__init__(coordinator.discover_coordinator)
+        # super().__init__(coordinator, {device[CONF_ID]})
         self.device = device
-        self.user_info = coordinator.client.login_info
+        self.user_info = coordinator.update_coordinator.client.login_info
         self._attr_unique_id = device[CONF_ID]
         self.pingtask = None
         self.recvtask = None
@@ -133,7 +134,7 @@ class AidotLight(CoordinatorEntity[AidotCoordinator], LightEntity):
 
     async def _try_connect(self):
         """Try connect."""
-        device_ip = self.coordinator.discovered_devices.get(self.device[CONF_ID])
+        device_ip = self.coordinator.data.get(self.device[CONF_ID])
         if (
             device_ip is not None
             and not self.lanCtrl.connecting

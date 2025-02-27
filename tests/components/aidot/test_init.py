@@ -32,7 +32,7 @@ def aidot_init_fixture():
     """Aidot and entry setup."""
     with (
         patch(
-            "homeassistant.components.aidot.coordinator.Discover.broadcast_message",
+            "homeassistant.components.aidot.coordinator.Discover.fetch_devices_info",
             new=AsyncMock(),
         ),
         patch(

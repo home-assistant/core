@@ -1,8 +1,6 @@
 """Coordinator for Aidot."""
 
-from collections import defaultdict
-from collections.abc import Callable, Iterable, Mapping
-from datetime import timedelta
+from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -11,40 +9,36 @@ from aidot.const import (
     CONF_ACCESS_TOKEN,
     CONF_AES_KEY,
     CONF_DEVICE_LIST,
-    CONF_ID,
-    CONF_IPADDRESS,
     CONF_LOGIN_INFO,
     CONF_TYPE,
 )
 from aidot.discover import Discover
-from aidot.exceptions import AidotAuthFailed, AidotUserOrPassIncorrect
+from aidot.exceptions import AidotAuthFailed, AidotOSError, AidotUserOrPassIncorrect
 
+from homeassistant.components.sensor import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
 
-_LOGGER = logging.getLogger(__name__)
-DEFAULT_SCAN_INTERVAL = timedelta(hours=6)
-
 type AidotConfigEntry = ConfigEntry[AidotCoordinator]
+_LOGGER = logging.getLogger(__name__)
 
 
-class AidotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Aidot data."""
 
-    config_entry: AidotConfigEntry
+    config_entry: ConfigEntry
     client: AidotClient
-    discovered_devices: dict[str, str]
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: AidotConfigEntry,
+        config_entry: ConfigEntry,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -52,7 +46,7 @@ class AidotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=DEFAULT_SCAN_INTERVAL,
+            update_interval=timedelta(hours=6),
         )
         self.client = AidotClient(
             session=async_get_clientsession(hass),
@@ -60,7 +54,6 @@ class AidotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.client.set_token_fresh_cb(self.token_fresh_cb)
         self.identifier = config_entry.entry_id
-        self.discovered_devices = {}
 
     async def _async_setup(self) -> None:
         """Set up the coordinator.
@@ -73,12 +66,6 @@ class AidotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except AidotUserOrPassIncorrect as error:
             raise ConfigEntryError from error
 
-        def discover(dev_id, event: Mapping[str, Any]) -> None:
-            self.discovered_devices[dev_id] = event[CONF_IPADDRESS]
-            self.async_update_context_listeners([dev_id])
-
-        await Discover().broadcast_message(discover, self.client.login_info[CONF_ID])
-
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data async."""
         try:
@@ -87,46 +74,6 @@ class AidotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.token_fresh_cb()
             raise ConfigEntryError from error
         return device_list
-
-    @property
-    def context_callbacks(self) -> dict[str, list[Callable[[], None]]]:
-        """Return a dict of all callbacks registered for a given context."""
-        callbacks = defaultdict(list)
-        for update_callback, context in list(self._listeners.values()):
-            assert isinstance(context, set)
-            for device_id in context:
-                callbacks[device_id].append(update_callback)
-        return callbacks
-
-    @callback
-    def async_update_context_listeners(self, contexts: Iterable[Any]) -> None:
-        """Update all listeners given a set of contexts."""
-        update_callbacks = set()
-        for context in contexts:
-            update_callbacks.update(self.context_callbacks.get(context, []))
-
-        for update_callback in update_callbacks:
-            update_callback()
-
-    @callback
-    def async_add_listener(
-        self, update_callback: CALLBACK_TYPE, context: Any = None
-    ) -> Callable[[], None]:
-        """Wrap standard function to prune cached callback database."""
-        if context is None:
-            context = set()
-        elif not isinstance(context, set):
-            context = {context}
-
-        release = super().async_add_listener(update_callback, context)
-        self.__dict__.pop("context_callbacks", None)
-
-        @callback
-        def release_update():
-            release()
-            self.__dict__.pop("context_callbacks", None)
-
-        return release_update
 
     def filter_light_list(self) -> list[dict[str, Any]]:
         """Filter light."""
@@ -153,3 +100,78 @@ class AidotCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     self.token_fresh_cb()
             except AidotUserOrPassIncorrect as error:
                 raise AidotUserOrPassIncorrect from error
+
+
+class AidotDeviceDiscoverCoordinator(DataUpdateCoordinator[dict[str, str]]):
+    """Class to manage discover device ip."""
+
+    config_entry: ConfigEntry
+    discover: Discover
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=5),
+        )
+        self.identifier = config_entry.entry_id
+        self.discover = Discover(config_entry.data[CONF_LOGIN_INFO])
+
+    async def _async_update_data(self) -> dict[str, str]:
+        """Update data async."""
+        try:
+            data = await self.discover.fetch_devices_info()
+        except AidotOSError as error:
+            raise UpdateFailed(f"Error Found Device with Aidot: {error}") from error
+        return data
+
+    @callback
+    def async_add_listener(
+        self, update_callback: Callable, context: Any = None
+    ) -> Callable:
+        """Wrap standard function to prune cached callback database and add cleanup."""
+        release = super().async_add_listener(update_callback, context)
+
+        @callback
+        def release_update():
+            release()
+            self._cleanup(context)
+
+        return release_update
+
+    def _cleanup(self, context: Any):
+        """Perform cleanup actions when a listener is removed."""
+        self.discover.close()
+
+
+class AidotCoordinator:
+    """Class to manage Aidot data."""
+
+    discover_coordinator: AidotDeviceDiscoverCoordinator
+    update_coordinator: AidotDeviceUpdateCoordinator
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AidotConfigEntry,
+    ) -> None:
+        """Initialize coordinator."""
+
+        self.discover_coordinator = AidotDeviceDiscoverCoordinator(hass, config_entry)
+        self.update_coordinator = AidotDeviceUpdateCoordinator(hass, config_entry)
+
+    async def async_config_entry_first_refresh(self) -> None:
+        """Discover device ip and fetch device list."""
+        await self.discover_coordinator.async_config_entry_first_refresh()
+        await self.update_coordinator.async_config_entry_first_refresh()
+
+    def filter_light_list(self) -> list[dict[str, Any]]:
+        """Filter light."""
+        return self.update_coordinator.filter_light_list()

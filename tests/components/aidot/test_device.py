@@ -32,7 +32,7 @@ def device_fixture():
             "homeassistant.components.aidot.light.AidotCoordinator", return_value=Mock()
         ),
         patch(
-            "homeassistant.components.aidot.coordinator.Discover.broadcast_message",
+            "homeassistant.components.aidot.coordinator.Discover.fetch_devices_info",
             new=AsyncMock(),
         ),
         patch(
