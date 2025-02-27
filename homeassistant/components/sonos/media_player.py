@@ -710,20 +710,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 },
             )
 
-    def _play_media_folder(
-        self,
-        soco: SoCo,
-        media_type: MediaType | str,
-        media_id: str,
-        enqueue: MediaPlayerEnqueue,
-    ):
-        """Play media from a folder."""
-        search_type = MEDIA_TYPES_TO_SONOS[media_type]
-        matches = self.media.library.browse_by_idstring(
-            search_type, media_id, full_album_art_uri=False
-        )
-        self._play_media_items_queue(soco, matches, enqueue)
-
     def _play_media_queue_helper(
         self,
         soco: SoCo,
@@ -773,6 +759,20 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             enqueue,
             add_to_queue=partial(soco.add_to_queue, timeout=LONG_SERVICE_TIMEOUT),
         )
+
+    def _play_media_folder(
+        self,
+        soco: SoCo,
+        media_type: MediaType | str,
+        media_id: str,
+        enqueue: MediaPlayerEnqueue,
+    ):
+        """Play media from a folder."""
+        search_type = MEDIA_TYPES_TO_SONOS[media_type]
+        matches = self.media.library.browse_by_idstring(
+            search_type, media_id, full_album_art_uri=False
+        )
+        self._play_media_items_queue(soco, matches, enqueue)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:
