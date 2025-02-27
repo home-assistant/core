@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import asyncio
-from typing import Any
+from typing import Any, cast
 
 from pysmartthings import Attribute, Capability, Command, DeviceEvent, SmartThings
 
@@ -69,7 +69,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
     # highest kelvin found supported across 20+ handlers.
     _attr_max_color_temp_kelvin = 9000  # 111 mireds
 
-    _last_color_mode: Capability | str | None = None
+    _last_color_mode: Capability | None = None
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize a SmartThingsLight."""
@@ -200,7 +200,7 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
     def _update_handler(self, event: DeviceEvent) -> None:
         """Handle device updates."""
         if event.capability in (Capability.COLOR_CONTROL, Capability.COLOR_TEMPERATURE):
-            self._last_color_mode = event.capability
+            self._last_color_mode = cast(Capability, event.capability)
         super()._update_handler(event)
 
     @property
