@@ -2377,7 +2377,6 @@ twilio==6.32.0
 # homeassistant.components.twitch
 twitchAPI==4.2.1
 
-# homeassistant.components.mm
 # homeassistant.components.monarch_money
 typedmonarchmoney==0.4.4
 
