@@ -174,7 +174,7 @@ class WebDavCalendarEntity(CoordinatorEntity[CalDavUpdateCoordinator], CalendarE
 
     def __init__(
         self,
-        name: str,
+        name: str | None,
         entity_id: str,
         coordinator: CalDavUpdateCoordinator,
         unique_id: str | None = None,

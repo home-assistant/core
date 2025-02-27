@@ -590,7 +590,7 @@ DEVICE_CLASS_UNITS: dict[SensorDeviceClass, set[type[StrEnum] | str | None]] = {
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     },
     SensorDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
-    SensorDeviceClass.SPEED: set(UnitOfSpeed).union(set(UnitOfVolumetricFlux)),
+    SensorDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
     SensorDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     SensorDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {

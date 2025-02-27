@@ -50,6 +50,12 @@ INCLUDED_REQUIREMENTS_WHEELS = {
     "pyuserinput",
 }
 
+EXCLUDED_REQUIREMENTS_WHEELS = {
+    # Exclude 'electrickiwi-api' temporarily, until <3.13 pin is removed upstream.
+    # https://github.com/mikey0000/EK-API/pull/1
+    "electrickiwi-api",
+}
+
 
 # Requirements to exclude or include when running github actions.
 # Requirements listed in "exclude" will be commented-out in
@@ -64,7 +70,7 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
         "markers": {},
     },
     "wheels_aarch64": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
@@ -73,22 +79,23 @@ OVERRIDDEN_REQUIREMENTS_ACTIONS = {
     # "flimsy" on 386). The following packages depend on pandas,
     # so we comment them out.
     "wheels_armhf": {
-        "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS
+        | {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
     "wheels_armv7": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
     "wheels_amd64": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
     "wheels_i386": {
-        "exclude": set(),
+        "exclude": EXCLUDED_REQUIREMENTS_WHEELS,
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
@@ -198,6 +205,10 @@ pysnmplib==1000000000.0.0
 # The get-mac package has been replaced with getmac. Installing get-mac alongside getmac
 # breaks getmac due to them both sharing the same python package name inside 'getmac'.
 get-mac==1000000000.0.0
+
+# Poetry is a build dependency. Installing it as a runtime dependency almost
+# always indicates an issue with library requirements.
+poetry==1000000000.0.0
 
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.

@@ -12,6 +12,7 @@ from typing import Any, Literal
 
 from aiohttp import ClientError
 from hass_nabucasa import Cloud, CloudError
+from hass_nabucasa.api import CloudApiNonRetryableError
 from hass_nabucasa.cloud_api import async_files_delete_file, async_files_list
 
 from homeassistant.components.backup import AgentBackup, BackupAgent, BackupAgentError
@@ -145,9 +146,19 @@ class CloudBackupAgent(BackupAgent):
                     size=size,
                 )
                 break
+            except CloudApiNonRetryableError as err:
+                if err.code == "NC-SH-FH-03":
+                    raise BackupAgentError(
+                        translation_domain=DOMAIN,
+                        translation_key="backup_size_too_large",
+                        translation_placeholders={
+                            "size": str(round(size / (1024**3), 2))
+                        },
+                    ) from err
+                raise BackupAgentError(f"Failed to upload backup {err}") from err
             except CloudError as err:
                 if tries == _RETRY_LIMIT:
-                    raise BackupAgentError("Failed to upload backup") from err
+                    raise BackupAgentError(f"Failed to upload backup {err}") from err
                 tries += 1
                 retry_timer = random.randint(_RETRY_SECONDS_MIN, _RETRY_SECONDS_MAX)
                 _LOGGER.info(

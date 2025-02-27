@@ -192,9 +192,9 @@ class MillSensor(MillBaseEntity, SensorEntity):
         mill_device: mill.Socket | mill.Heater,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, mill_device)
         self.entity_description = entity_description
         self._attr_unique_id = f"{mill_device.device_id}_{entity_description.key}"
+        super().__init__(coordinator, mill_device)
 
     @callback
     def _update_attr(self, device):

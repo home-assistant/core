@@ -86,9 +86,7 @@ CLEANUP_INTERVAL = 3600 * 24
 ORPHANED_ENTITY_KEEP_SECONDS = 3600 * 24 * 30
 
 ENTITY_CATEGORY_VALUE_TO_INDEX: dict[EntityCategory | None, int] = {
-    # mypy does not understand strenum
-    val: idx  # type: ignore[misc]
-    for idx, val in enumerate(EntityCategory)
+    val: idx for idx, val in enumerate(EntityCategory)
 }
 ENTITY_CATEGORY_INDEX_TO_VALUE = dict(enumerate(EntityCategory))
 

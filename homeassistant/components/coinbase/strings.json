@@ -29,7 +29,7 @@
           "account_balance_currencies": "Wallet balances to report.",
           "exchange_rate_currencies": "Exchange rates to report.",
           "exchange_base": "Base currency for exchange rate sensors.",
-          "exchnage_rate_precision": "Number of decimal places for exchange rates."
+          "exchange_rate_precision": "Number of decimal places for exchange rates."
         }
       }
     },
