@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import datetime
 from functools import partial
 import logging
@@ -723,12 +724,16 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         )
         self._play_media_items_queue(soco, matches, enqueue)
 
-    def _play_media_items_queue(
-        self, soco: SoCo, items: list[MusicServiceItem], enqueue: MediaPlayerEnqueue
+    def _play_media_queue_helper(
+        self,
+        soco: SoCo,
+        items: list[MusicServiceItem] | MusicServiceItem,
+        enqueue: MediaPlayerEnqueue,
+        add_to_queue: Callable,
     ):
         """Manage adding, replacing, playing items onto the sonos queue."""
         _LOGGER.debug(
-            "_play_media_items_queue item_item_list [%s] enqueue [%s]",
+            "_play_media_queue items [%s] enqueue [%s]",
             items,
             enqueue,
         )
@@ -736,41 +741,38 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.clear_queue()
 
         if enqueue in (MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE):
-            soco.add_multiple_to_queue(items, timeout=LONG_SERVICE_TIMEOUT)
+            add_to_queue(items)
             if enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.play_from_queue(0)
         else:
             pos = (self.media.queue_position or 0) + 1
-            new_pos = soco.add_multiple_to_queue(
-                items, position=pos, timeout=LONG_SERVICE_TIMEOUT
-            )
+            new_pos = add_to_queue(items, position=pos)
             if enqueue == MediaPlayerEnqueue.PLAY:
                 soco.play_from_queue(new_pos - 1)
+
+    def _play_media_items_queue(
+        self, soco: SoCo, items: list[MusicServiceItem], enqueue: MediaPlayerEnqueue
+    ):
+        """Manage adding, replacing, playing items onto the sonos queue."""
+        self._play_media_queue_helper(
+            soco,
+            items,
+            enqueue,
+            add_to_queue=partial(
+                soco.add_multiple_to_queue, timeout=LONG_SERVICE_TIMEOUT
+            ),
+        )
 
     def _play_media_queue(
         self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
     ):
         """Manage adding, replacing, playing items onto the sonos queue."""
-        _LOGGER.debug(
-            "_play_media_queue item_id [%s] title [%s] enqueue [%s]",
-            item.item_id,
-            item.title,
+        self._play_media_queue_helper(
+            soco,
+            item,
             enqueue,
+            add_to_queue=partial(soco.add_to_queue, timeout=LONG_SERVICE_TIMEOUT),
         )
-        if enqueue == MediaPlayerEnqueue.REPLACE:
-            soco.clear_queue()
-
-        if enqueue in (MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE):
-            soco.add_to_queue(item, timeout=LONG_SERVICE_TIMEOUT)
-            if enqueue == MediaPlayerEnqueue.REPLACE:
-                soco.play_from_queue(0)
-        else:
-            pos = (self.media.queue_position or 0) + 1
-            new_pos = soco.add_to_queue(
-                item, position=pos, timeout=LONG_SERVICE_TIMEOUT
-            )
-            if enqueue == MediaPlayerEnqueue.PLAY:
-                soco.play_from_queue(new_pos - 1)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:

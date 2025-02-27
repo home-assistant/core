@@ -107,7 +107,7 @@ def media_source_filter(item: BrowseMedia) -> bool:
 
 
 def _get_title(search_type: str, id_string: str) -> str:
-    """Extract a suitable title from the contents id string."""
+    """Extract a suitable title from the content id string."""
     try:
         if search_type == MEDIA_TYPE_FOLDER:
             # Format is S://path/folder1/folder2
@@ -410,12 +410,8 @@ def library_payload(media_library: MusicLibrary, get_thumbnail_url=None) -> Brow
         with suppress(UnknownMediaType):
             children.append(item_payload(item, get_thumbnail_url))
 
-    didl_item = DidlContainer(
-        title="Folders",
-        # This is ignored. Sonos gets the title from the item_id
-        parent_id="",  # Ditto
-        item_id="S:",
-    )
+    # Create container for root of browsing music library folders.
+    didl_item = DidlContainer(title="Folders", parent_id="", item_id="S:")
     children.append(item_payload(didl_item, get_thumbnail_url))
 
     return BrowseMedia(
