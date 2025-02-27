@@ -461,7 +461,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="media_input_source",
                 device_class=SensorDeviceClass.ENUM,
                 options_attribute=Attribute.SUPPORTED_INPUT_SOURCES,
-                value_fn=lambda value: value.lower(),
+                value_fn=lambda value: value.lower() if value else None,
             )
         ]
     },
