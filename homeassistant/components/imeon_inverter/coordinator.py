@@ -73,7 +73,7 @@ class InverterCoordinator(DataUpdateCoordinator[dict[str, str | float | int]]):
         It also includes the login process.
         """
 
-        data: dict = {}
+        data: dict[str, str | float | int] = {}
 
         async with timeout(TIMEOUT * 4):
             # Am I logged in ? If not log in

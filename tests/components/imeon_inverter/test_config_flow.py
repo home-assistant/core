@@ -11,12 +11,13 @@ from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import TEST_ERROR, TEST_SERIAL, TEST_USER_INPUT
+from .conftest import TEST_SERIAL, TEST_USER_INPUT
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("mock_async_setup_entry")
 
-@pytest.mark.usefixtures("mock_async_setup_entry")
+
 async def test_form(
     hass: HomeAssistant,
     mock_async_setup_entry: Generator[AsyncMock],
@@ -65,7 +66,15 @@ async def test_form_invalid_auth(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.parametrize(("error", "expected"), TEST_ERROR)
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        (TimeoutError, "cannot_connect"),
+        (ValueError("Host invalid"), "invalid_host"),
+        (ValueError("Route invalid"), "invalid_route"),
+        (ValueError, "unknown"),
+    ],
+)
 async def test_form_exception(
     hass: HomeAssistant,
     mock_imeon_inverter: Generator[MagicMock],

@@ -40,16 +40,8 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     ):
                         serial = await client.get_serial()
 
-                        # Check if entry already exists
-                        await self.async_set_unique_id(serial)
-                        self._abort_if_unique_id_configured()
-
-                        # Create a new configuration entry if login succeeds
-                        return self.async_create_entry(
-                            title=user_input[CONF_ADDRESS], data=user_input
-                        )
-
-                    errors["base"] = "invalid_auth"
+                    else:
+                        errors["base"] = "invalid_auth"
 
                 except TimeoutError:
                     errors["base"] = "cannot_connect"
@@ -63,6 +55,16 @@ class ImeonInverterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
                     else:
                         errors["base"] = "unknown"
+
+                if not errors:
+                    # Check if entry already exists
+                    await self.async_set_unique_id(serial)
+                    self._abort_if_unique_id_configured()
+
+                    # Create a new configuration entry if login succeeds
+                    return self.async_create_entry(
+                        title=user_input[CONF_ADDRESS], data=user_input
+                    )
 
         return self.async_show_form(
             step_id="user", data_schema=CONFIG_SCHEMA, errors=errors
