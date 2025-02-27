@@ -17,13 +17,15 @@ from .model import TiltColor, TiltHydrometerData
 _LOGGER = logging.getLogger(__name__)
 DEFAULT_SCAN_INTERVAL = timedelta(seconds=10)
 
+type TiltPiConfigEntry = ConfigEntry[TiltPiDataUpdateCoordinator]
+
 
 class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[list[TiltHydrometerData]]):
     """Class to manage fetching Tilt Pi data."""
 
-    config_entry: ConfigEntry
+    config_entry: TiltPiConfigEntry
 
-    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: TiltPiConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,

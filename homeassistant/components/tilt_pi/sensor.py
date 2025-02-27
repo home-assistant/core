@@ -12,13 +12,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .coordinator import TiltPiDataUpdateCoordinator
+from .coordinator import TiltPiConfigEntry, TiltPiDataUpdateCoordinator
 from .entity import TiltEntity
 from .model import TiltHydrometerData
 
@@ -56,7 +55,7 @@ SENSOR_TYPES: Final[list[TiltEntityDescription]] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: TiltPiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tilt Hydrometer sensors."""
