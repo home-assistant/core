@@ -60,14 +60,6 @@ def inels_discovery(mqtt: InelsMqtt) -> list[Device]:
         return devices
 
 
-async def _async_config_entry_updated(
-    hass: HomeAssistant, entry: InelsConfigEntry
-) -> None:
-    """Call when config entry being updated."""
-
-    await hass.async_add_executor_job(entry.runtime_data.mqtt.disconnect)
-
-
 async def async_setup_entry(hass: HomeAssistant, entry: InelsConfigEntry) -> bool:
     """Set up iNELS from a config entry."""
 
