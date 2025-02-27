@@ -259,8 +259,6 @@ def build_item_response(
         with suppress(UnknownMediaType):
             children.append(item_payload(item, get_thumbnail_url))
 
-    title = title.replace("//", " ").replace("/", " ")
-
     return BrowseMedia(
         title=title,
         thumbnail=thumbnail,
@@ -290,10 +288,8 @@ def item_payload(item: DidlObject, get_thumbnail_url=None) -> BrowseMedia:
     if getattr(item, "album_art_uri", None):
         thumbnail = get_thumbnail_url(media_class, content_id, item=item)
 
-    title: str = item.title
-
     return BrowseMedia(
-        title=title.replace("//", " ").replace("/", " "),
+        title=item.title,
         thumbnail=thumbnail,
         media_class=media_class,
         media_content_id=content_id,
