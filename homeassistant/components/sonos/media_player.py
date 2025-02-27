@@ -727,38 +727,28 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             soco.clear_queue()
 
         if enqueue in (MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE):
-            add_to_queue(items)
+            add_to_queue(items, timeout=LONG_SERVICE_TIMEOUT)
             if enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.play_from_queue(0)
         else:
             pos = (self.media.queue_position or 0) + 1
-            new_pos = add_to_queue(items, position=pos)
+            new_pos = add_to_queue(items, timeout=LONG_SERVICE_TIMEOUT, position=pos)
             if enqueue == MediaPlayerEnqueue.PLAY:
                 soco.play_from_queue(new_pos - 1)
 
     def _play_media_items_queue(
         self, soco: SoCo, items: list[MusicServiceItem], enqueue: MediaPlayerEnqueue
     ):
-        """Manage adding, replacing, playing items onto the sonos queue."""
-        self._play_media_queue_helper(
-            soco,
-            items,
-            enqueue,
-            add_to_queue=partial(
-                soco.add_multiple_to_queue, timeout=LONG_SERVICE_TIMEOUT
-            ),
-        )
+        """Manage adding, replacing, playing multiple music service items on the queue."""
+        add_to_queue = partial(soco.add_multiple_to_queue)
+        self._play_media_queue_helper(soco, items, enqueue, add_to_queue)
 
     def _play_media_queue(
         self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
     ):
-        """Manage adding, replacing, playing items onto the sonos queue."""
-        self._play_media_queue_helper(
-            soco,
-            item,
-            enqueue,
-            add_to_queue=partial(soco.add_to_queue, timeout=LONG_SERVICE_TIMEOUT),
-        )
+        """Manage adding, replacing, playing a single music service item on the queue."""
+        add_to_queue = partial(soco.add_to_queue)
+        self._play_media_queue_helper(soco, item, enqueue, add_to_queue)
 
     def _play_media_folder(
         self,
@@ -769,10 +759,10 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     ):
         """Play media from a folder."""
         search_type = MEDIA_TYPES_TO_SONOS[media_type]
-        matches = self.media.library.browse_by_idstring(
+        items = self.media.library.browse_by_idstring(
             search_type, media_id, full_album_art_uri=False
         )
-        self._play_media_items_queue(soco, matches, enqueue)
+        self._play_media_items_queue(soco, items, enqueue)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:
