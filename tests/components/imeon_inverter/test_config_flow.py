@@ -29,14 +29,14 @@ async def test_form(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
     )
     await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == TEST_USER_INPUT[CONF_ADDRESS]
-    assert result2["data"] == TEST_USER_INPUT
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == TEST_USER_INPUT[CONF_ADDRESS]
+    assert result["data"] == TEST_USER_INPUT
     assert mock_async_setup_entry.call_count == 1
 
 
@@ -50,20 +50,20 @@ async def test_form_invalid_auth(
 
     mock_imeon_inverter.login.return_value = False
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
     mock_imeon_inverter.login.return_value = True
 
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
     )
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -88,47 +88,41 @@ async def test_form_exception(
 
     mock_imeon_inverter.login.side_effect = error
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": expected}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected}
 
     mock_imeon_inverter.login.side_effect = None
 
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
     )
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_manual_setup_already_exists(
     hass: HomeAssistant,
-    mock_async_setup_entry: Generator[AsyncMock],
     mock_imeon_inverter: Generator[MagicMock],
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that a flow with an existing host aborts."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id=TEST_SERIAL,
-        data=TEST_USER_INPUT,
-    )
-
-    entry.add_to_hass(hass)
+    """Test that a flow with an existing id aborts."""
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     mock_imeon_inverter.get_serial.return_value = TEST_SERIAL
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
     )
 
-    assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 async def test_get_serial_timeout(
@@ -141,17 +135,17 @@ async def test_get_serial_timeout(
 
     mock_imeon_inverter.get_serial.side_effect = TimeoutError
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
     )
 
-    assert result2["type"] is FlowResultType.FORM
-    assert result2["errors"] == {"base": "cannot_connect"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
 
     mock_imeon_inverter.get_serial.side_effect = None
 
-    result3 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], TEST_USER_INPUT
     )
 
-    assert result3["type"] is FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
