@@ -9,15 +9,18 @@ from homeassistant.components.comelit.const import (
 )
 from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 
-from .const import BRIDGE_HOST, BRIDGE_PIN, BRIDGE_PORT, VEDO_HOST, VEDO_PIN, VEDO_PORT
-
-from tests.common import (
-    AsyncMock,
-    Generator,
-    MockConfigEntry,
-    load_json_object_fixture,
-    patch,
+from .const import (
+    BRIDGE_DEVICE_QUERY,
+    BRIDGE_HOST,
+    BRIDGE_PIN,
+    BRIDGE_PORT,
+    VEDO_DEVICE_QUERY,
+    VEDO_HOST,
+    VEDO_PIN,
+    VEDO_PORT,
 )
+
+from tests.common import AsyncMock, Generator, MockConfigEntry, patch
 
 
 @pytest.fixture
@@ -44,9 +47,7 @@ def mock_serial_bridge() -> Generator[AsyncMock]:
         ),
     ):
         bridge = mock_comelit_serial_bridge.return_value
-        bridge.get_all_devices.return_value = load_json_object_fixture(
-            "get_all_devices.json", COMELIT_DOMAIN
-        )
+        bridge.get_all_devices.return_value = BRIDGE_DEVICE_QUERY
         bridge.host = BRIDGE_HOST
         bridge.port = BRIDGE_PORT
         bridge.pin = BRIDGE_PIN
@@ -81,9 +82,7 @@ def mock_vedo() -> Generator[AsyncMock]:
         ),
     ):
         vedo = mock_comelit_vedo.return_value
-        vedo.get_all_areas_and_zones.return_value = load_json_object_fixture(
-            "get_all_areas_and_zones.json", COMELIT_DOMAIN
-        )
+        vedo.get_all_areas_and_zones.return_value = VEDO_DEVICE_QUERY
         vedo.host = VEDO_HOST
         vedo.port = VEDO_PORT
         vedo.pin = VEDO_PIN
