@@ -18,7 +18,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType
 
-from .common import mock_multiple_device_responses
+from .common import ON_OFF_TESTS, mock_multiple_device_responses
 
 from tests.common import MockConfigEntry
 
@@ -163,11 +163,17 @@ def humidifier_300s_fixture():
     )
 
 
-@pytest.fixture(name="humidifier_config_entry")
-async def humidifier_config_entry(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
+@pytest.fixture(name="on_off_config_entry")
+async def on_off_config_entry(
+    hass: HomeAssistant,
+    requests_mock: requests_mock.Mocker,
+    config,
+    platform,
 ) -> MockConfigEntry:
-    """Create a mock VeSync config entry for `Humidifier 200s`."""
+    """Create a mock VeSync config entry for a device specified by the test."""
+
+    device_name = ON_OFF_TESTS[platform]["device_name"]
+
     entry = MockConfigEntry(
         title="VeSync",
         domain=DOMAIN,
@@ -175,7 +181,6 @@ async def humidifier_config_entry(
     )
     entry.add_to_hass(hass)
 
-    device_name = "Humidifier 200s"
     mock_multiple_device_responses(requests_mock, [device_name])
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -213,8 +218,8 @@ async def switch_old_id_config_entry(
     entry.add_to_hass(hass)
 
     wall_switch = "Wall Switch"
-    humidifer = "Humidifier 200s"
+    humidifier = "Humidifier 200s"
 
-    mock_multiple_device_responses(requests_mock, [wall_switch, humidifer])
+    mock_multiple_device_responses(requests_mock, [wall_switch, humidifier])
 
     return entry
