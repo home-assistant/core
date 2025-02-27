@@ -123,6 +123,8 @@ def reolink_connect_class() -> Generator[MagicMock]:
             "{'host':'TEST_RESPONSE','channel':'TEST_RESPONSE'}"
         )
 
+        reolink_connect.chime_list = []
+
         # enums
         host_mock.whiteled_mode.return_value = 1
         host_mock.whiteled_mode_list.return_value = ["off", "auto"]
@@ -137,6 +139,10 @@ def reolink_connect_class() -> Generator[MagicMock]:
         host_mock.baichuan.events_active = False
         host_mock.baichuan.privacy_mode.return_value = False
         host_mock.baichuan.subscribe_events.side_effect = ReolinkError("Test error")
+        host_mock.baichuan.abilities = {
+            0: {"chnID": 0, "aitype": 34615},
+            "Host": {"pushAlarm": 7},
+        }
 
         yield host_mock_class
 
