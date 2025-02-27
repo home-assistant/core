@@ -3,37 +3,21 @@
 import aiohttp
 import pytest
 
-from homeassistant.components.tilt_pi.const import DOMAIN
 from homeassistant.components.tilt_pi.coordinator import TiltPiDataUpdateCoordinator
 from homeassistant.components.tilt_pi.model import TiltColor
-from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from .conftest import TEST_HOST, TEST_PORT
+
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
-
-TEST_HOST = "192.168.1.123"
-TEST_PORT = 1880
-
-
-@pytest.fixture
-def mock_entry() -> MockConfigEntry:
-    """Return the default mocked config entry."""
-    return MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: TEST_HOST,
-            CONF_PORT: TEST_PORT,
-        },
-        unique_id="test123",
-    )
 
 
 async def test_coordinator_async_update_data(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test coordinator update with valid data."""
     aioclient_mock.get(
@@ -54,7 +38,7 @@ async def test_coordinator_async_update_data(
         ],
     )
 
-    coordinator = TiltPiDataUpdateCoordinator(hass, mock_entry)
+    coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
     data = await coordinator._async_update_data()
 
     assert len(data) == 2
@@ -73,7 +57,7 @@ async def test_coordinator_async_update_data(
 async def test_coordinator_async_update_data_empty_response(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test coordinator update with valid data."""
     aioclient_mock.get(
@@ -81,7 +65,7 @@ async def test_coordinator_async_update_data_empty_response(
         json=[],
     )
 
-    coordinator = TiltPiDataUpdateCoordinator(hass, mock_entry)
+    coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
     data = await coordinator._async_update_data()
 
     assert len(data) == 0
@@ -90,7 +74,7 @@ async def test_coordinator_async_update_data_empty_response(
 async def test_coordinator_async_update_data_connection_error(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test coordinator handling connection error."""
     aioclient_mock.get(
@@ -98,7 +82,7 @@ async def test_coordinator_async_update_data_connection_error(
         exc=aiohttp.ClientError,
     )
 
-    coordinator = TiltPiDataUpdateCoordinator(hass, mock_entry)
+    coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
@@ -106,7 +90,7 @@ async def test_coordinator_async_update_data_connection_error(
 async def test_coordinator_async_update_data_timeout_error(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
-    mock_entry: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test coordinator handling connection error."""
     aioclient_mock.get(
@@ -114,6 +98,6 @@ async def test_coordinator_async_update_data_timeout_error(
         exc=TimeoutError,
     )
 
-    coordinator = TiltPiDataUpdateCoordinator(hass, mock_entry)
+    coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()

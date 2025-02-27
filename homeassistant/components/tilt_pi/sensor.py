@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Final
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -13,41 +17,82 @@ from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import TiltPiDataUpdateCoordinator
 from .model import TiltHydrometerData
 
+ATTR_TEMPERATURE = "temperature"
+ATTR_GRAVITY = "gravity"
+
+
+@dataclass(frozen=True, kw_only=True)
+class TiltEntityDescription(SensorEntityDescription):
+    """Describes TiltHydrometerData sensor entity."""
+
+    value_fn: Callable[[TiltHydrometerData], StateType]
+
+
+SENSOR_TYPES: Final[list[TiltEntityDescription]] = [
+    TiltEntityDescription(
+        key=ATTR_TEMPERATURE,
+        name="Temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.temperature,
+    ),
+    TiltEntityDescription(
+        key=ATTR_GRAVITY,
+        name="Gravity",
+        native_unit_of_measurement="SG",
+        # device_class=SensorDeviceClass.,
+        icon="mdi:water",
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda data: data.gravity,
+    ),
+]
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Tilt Hydrometer sensors."""
-    coordinator: TiltPiDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: TiltPiDataUpdateCoordinator = config_entry.runtime_data
 
     async_add_entities(
-        [TiltTemperatureSensor(coordinator, data) for data in coordinator.data]
-        + [TiltGravitySensor(coordinator, data) for data in coordinator.data]
+        TiltSensor(
+            coordinator=coordinator,
+            description=description,
+            hydrometer=hydrometer,
+        )
+        for description in SENSOR_TYPES
+        for hydrometer in coordinator.data
     )
 
 
-class TiltSensorBase(CoordinatorEntity[TiltPiDataUpdateCoordinator], SensorEntity):
-    """Base sensor for Tilt Hydrometer."""
+class TiltSensor(CoordinatorEntity[TiltPiDataUpdateCoordinator], SensorEntity):
+    """Defines a Tilt sensor."""
+
+    entity_description: TiltEntityDescription
 
     def __init__(
         self,
         coordinator: TiltPiDataUpdateCoordinator,
-        description: SensorEntityDescription,
+        description: TiltEntityDescription,
         hydrometer: TiltHydrometerData,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
+        self.coordinator = coordinator
         self.entity_description = description
         self._hydrometer = hydrometer
         self._mac_id = hydrometer.mac_id
+        self._attr_has_entity_name = True
         self._attr_unique_id = f"{hydrometer.mac_id}_{description.key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, hydrometer.mac_id)},
@@ -55,71 +100,20 @@ class TiltSensorBase(CoordinatorEntity[TiltPiDataUpdateCoordinator], SensorEntit
             manufacturer="Tilt Hydrometer",
             model=f"{hydrometer.color} Tilt Hydrometer",
         )
-        self._attr_has_entity_name = True
 
     def _get_current_hydrometer(self) -> TiltHydrometerData | None:
         """Get current hydrometer data."""
         if not self.coordinator.data:
             return None
-        return next(
-            (h for h in self.coordinator.data if h.mac_id == self._mac_id),
-            None,
-        )
 
-
-class TiltTemperatureSensor(TiltSensorBase):
-    """Temperature sensor for Tilt Hydrometer."""
-
-    def __init__(
-        self,
-        coordinator: TiltPiDataUpdateCoordinator,
-        hydrometer: TiltHydrometerData,
-    ) -> None:
-        """Initialize the temperature sensor."""
-        super().__init__(
-            coordinator,
-            SensorEntityDescription(
-                key="temperature",
-                name="Temperature",
-                native_unit_of_measurement=UnitOfTemperature.FAHRENHEIT,
-                device_class=SensorDeviceClass.TEMPERATURE,
-                state_class=SensorStateClass.MEASUREMENT,
-            ),
-            hydrometer,
-        )
-
-    @property
-    def native_value(self) -> float | None:
-        """Return the temperature."""
-        if hydrometer := self._get_current_hydrometer():
-            return hydrometer.temperature
+        for hydrometer in self.coordinator.data:
+            if hydrometer.mac_id == self._mac_id:
+                return hydrometer
         return None
 
-
-class TiltGravitySensor(TiltSensorBase):
-    """Specific gravity sensor for Tilt Hydrometer."""
-
-    def __init__(
-        self,
-        coordinator: TiltPiDataUpdateCoordinator,
-        hydrometer: TiltHydrometerData,
-    ) -> None:
-        """Initialize the gravity sensor."""
-        super().__init__(
-            coordinator,
-            SensorEntityDescription(
-                key="gravity",
-                name="Specific Gravity",
-                native_unit_of_measurement="SG",
-                icon="mdi:water",
-                state_class=SensorStateClass.MEASUREMENT,
-            ),
-            hydrometer,
-        )
-
     @property
-    def native_value(self) -> float | None:
-        """Return the specific gravity."""
+    def native_value(self) -> StateType:
+        """Return the sensor value."""
         if hydrometer := self._get_current_hydrometer():
-            return hydrometer.gravity
+            return self.entity_description.value_fn(hydrometer)
         return None

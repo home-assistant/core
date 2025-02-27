@@ -1,18 +1,22 @@
 """Test the Tilt Hydrometer sensors."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
+from syrupy import SnapshotAssertion
 
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.tilt_pi.const import DOMAIN
 from homeassistant.components.tilt_pi.coordinator import TiltPiDataUpdateCoordinator
 from homeassistant.components.tilt_pi.model import TiltHydrometerData
-from homeassistant.components.tilt_pi.sensor import (
-    TiltGravitySensor,
-    TiltTemperatureSensor,
-)
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration
+from .conftest import TEST_HOST, TEST_PORT
+
+from tests.common import MockConfigEntry, snapshot_platform
+from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 @pytest.fixture
@@ -34,49 +38,53 @@ def mock_coordinator(mock_tilt_data) -> TiltPiDataUpdateCoordinator:
     return coordinator
 
 
-async def test_tilt_temperature_sensor(
-    mock_coordinator: TiltPiDataUpdateCoordinator,
-    mock_tilt_data: TiltHydrometerData,
+async def test_all_sensors(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the temperature sensor."""
-    sensor = TiltTemperatureSensor(mock_coordinator, mock_tilt_data)
+    """Test the Tilt Pi sensors.
 
-    assert sensor.unique_id == f"{mock_tilt_data.mac_id}_temperature"
-    assert sensor.device_class == SensorDeviceClass.TEMPERATURE
-    assert sensor.state_class == SensorStateClass.MEASUREMENT
-    assert sensor.native_unit_of_measurement == UnitOfTemperature.FAHRENHEIT
-    assert sensor.native_value == 68.0
-    assert sensor.has_entity_name is True
+    When making changes to this test, ensure that the snapshot reflects the
+    new data by generating it via:
 
-    # Test device info
-    assert sensor.device_info["identifiers"] == {(DOMAIN, mock_tilt_data.mac_id)}
-    assert sensor.device_info["name"] == "Tilt Purple"
-    assert sensor.device_info["manufacturer"] == "Tilt Hydrometer"
-    assert sensor.device_info["model"] == "Purple Tilt Hydrometer"
+        $ pytest tests/components/tilt_pi/test_sensor.py -v --snapshot-update
+    """
+    aioclient_mock.get(
+        f"http://{TEST_HOST}:{TEST_PORT}/macid/all",
+        json=[
+            {
+                "mac": "00:1A:2B:3C:4D:5E",
+                "Color": "BLACK",
+                "SG": 1.010,
+                "Temp": "55.0",
+            },
+            {
+                "mac": "00:1s:99:f1:d2:4f",
+                "Color": "YELLOW",
+                "SG": 1.015,
+                "Temp": "68.0",
+            },
+        ],
+    )
 
-    # Test with no data
-    mock_coordinator.data = []
-    assert sensor.native_value is None
+    with patch("homeassistant.components.tilt_pi.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_tilt_gravity_sensor(
-    mock_coordinator: TiltPiDataUpdateCoordinator,
-    mock_tilt_data: TiltHydrometerData,
-) -> None:
-    """Test the gravity sensor."""
-    sensor = TiltGravitySensor(mock_coordinator, mock_tilt_data)
+async def test_sensors(hass: HomeAssistant) -> None:
+    """Test setting up creates the sensors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="00:1A:2B:3C:4D:5E",
+    )
+    entry.add_to_hass(hass)
 
-    assert sensor.unique_id == f"{mock_tilt_data.mac_id}_gravity"
-    assert sensor.state_class == SensorStateClass.MEASUREMENT
-    assert sensor.native_unit_of_measurement == "SG"
-    assert sensor.icon == "mdi:water"
-    assert sensor.native_value == 1.052
-    assert sensor.has_entity_name is True
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Test device info
-    assert sensor.device_info["identifiers"] == {(DOMAIN, mock_tilt_data.mac_id)}
-    assert sensor.device_info["name"] == "Tilt Purple"
-
-    # Test with no data
-    mock_coordinator.data = []
-    assert sensor.native_value is None
+    assert len(hass.states.async_all()) == 0
