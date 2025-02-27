@@ -135,10 +135,10 @@
         }
       },
       "restore_last_known_state": {
-        "name": "Restore state after power loss",
+        "name": "Behavior after power loss",
         "state": {
-          "disabled": "Do not restore state",
-          "enabled": "Restore last state before power loss"
+          "disabled": "Turned off",
+          "enabled": "Restore last state"
         }
       },
       "wind_monitoring_state": {
