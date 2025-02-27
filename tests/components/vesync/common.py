@@ -5,8 +5,6 @@ from typing import Any
 
 import requests_mock
 
-from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
-from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vesync.const import DOMAIN
 from homeassistant.util.json import JsonObjectType
 
@@ -17,30 +15,12 @@ ENTITY_HUMIDIFIER_MIST_LEVEL = "number.humidifier_200s_mist_level"
 ENTITY_HUMIDIFIER_HUMIDITY = "sensor.humidifier_200s_humidity"
 ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT = "select.humidifier_300s_night_light_level"
 
+ENTITY_SWITCH_DISPLAY = "switch.humidifier_200s_display"
+
 ALL_DEVICES = load_json_object_fixture("vesync-devices.json", DOMAIN)
 ALL_DEVICE_NAMES: list[str] = [
     dev["deviceName"] for dev in ALL_DEVICES["result"]["list"]
 ]
-
-ON_OFF_TESTS = {
-    "humidifier": {
-        "turn_on_func": "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on",
-        "turn_off_func": "pyvesync.vesyncfan.VeSyncHumid200300S.turn_off",
-        "update_func": "homeassistant.components.vesync.humidifier.VeSyncHumidifierHA.schedule_update_ha_state",
-        "domain": HUMIDIFIER_DOMAIN,
-        "entity": "humidifier.humidifier_200s",
-        "device_name": "Humidifier 200s",
-    },
-    "switch_Display": {
-        "turn_on_func": "pyvesync.vesyncfan.VeSyncHumid200300S.turn_on_display",
-        "turn_off_func": "pyvesync.vesyncfan.VeSyncHumid200300S.turn_off_display",
-        "update_func": "homeassistant.components.vesync.switch.VeSyncSwitchEntity.schedule_update_ha_state",
-        "domain": SWITCH_DOMAIN,
-        "entity": "switch.humidifier_200s_display",
-        "device_name": "Humidifier 200s",
-    },
-}
-
 DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
     "Humidifier 200s": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-200s.json")
