@@ -68,6 +68,9 @@ async def test_general_data(
         build_mock_node("cover_with_position_slats.json"),
         build_mock_node("homee.json"),
     ]
+    mock_homee.get_node_by_id = (
+        lambda node_id: mock_homee.nodes[0] if node_id == 3 else mock_homee.nodes[1]
+    )
     await setup_integration(hass, mock_config_entry)
 
     # Verify hub created correctly.
@@ -142,6 +145,7 @@ async def test_unload_entry(
 ) -> None:
     """Test unloading of config entry."""
     mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state == ConfigEntryState.LOADED

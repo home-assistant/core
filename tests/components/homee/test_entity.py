@@ -22,6 +22,7 @@ async def test_entity_connection_listener(
 ) -> None:
     """Test if loss of connection is sensed correctly."""
     mock_homee.nodes = [build_mock_node("sensors.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
     states = hass.states.get("sensor.test_multisensor_energy_1")
@@ -47,6 +48,7 @@ async def test_node_entity_connection_listener(
 ) -> None:
     """Test if loss of connection is sensed correctly."""
     mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
     states = hass.states.get("cover.test_cover")
@@ -72,6 +74,7 @@ async def test_entity_update_action(
 ) -> None:
     """Test the update_entity action for a HomeeEntity."""
     mock_homee.nodes = [build_mock_node("sensors.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
     await async_setup_component(hass, HA_DOMAIN, {})
 
@@ -92,6 +95,7 @@ async def test_node_entity_update_action(
 ) -> None:
     """Test the update_entity action for a HomeeEntity."""
     mock_homee.nodes = [build_mock_node("cover_with_position_slats.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
     await async_setup_component(hass, HA_DOMAIN, {})
 
