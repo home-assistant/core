@@ -37,19 +37,20 @@ async def async_setup_entry(
 class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity):
     """Event Entity."""
 
+    _attr_has_entity_name = True
     _attr_event_types = [
         "Pressed",
         "Off",
     ]
 
-    def __init__(self, id, name, device_id, device_name, coordinator) -> None:
+    def __init__(self, id, param_name, device_id, device_name, coordinator) -> None:
         """Initialize the event entity."""
         super().__init__(coordinator, context=id)
+
         self.id = id
-        self._attr_has_entity_name = True
-        self.name = name
-        self.unique_id = f"{id}"
-        self.last_request_id = None
+        name = param_name
+        self._attr_name = name
+        self._attr_unique_id = id
         self._attr_device_info = DeviceInfo(
             identifiers={
                 # Serial numbers are unique identifiers within a specific domain
@@ -58,10 +59,17 @@ class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity)
             name=device_name,
         )
 
+        self.name = name
+        self.unique_id = id
+        self.last_request_id = None
+
     @callback
     def _handle_coordinator_update(self) -> None:
         """Update this button."""
         if not self.coordinator.data or self.id not in self.coordinator.data:
+            if self.state_attributes["event_type"] == EVENT_PRESSED:
+                self._trigger_event(EVENT_OFF)
+                self.async_write_ha_state()
             return
         if self.last_request_id is None:
             self._trigger_event(EVENT_OFF)
@@ -70,7 +78,7 @@ class HomeLinkEventEntity(CoordinatorEntity["HomeLinkCoordinator"], EventEntity)
         if latest_update["requestId"] != self.last_request_id:
             self._trigger_event(EVENT_PRESSED)
             self.last_request_id = latest_update["requestId"]
-        if (
+        elif (
             self.state_attributes["event_type"] == EVENT_PRESSED
             and time.time() - latest_update["timestamp"] < 10
         ):
