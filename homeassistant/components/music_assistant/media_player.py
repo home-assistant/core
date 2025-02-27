@@ -234,6 +234,19 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
             )
         )
 
+        # we subscribe to the player config changed event to update
+        # the supported features of the player
+        async def player_config_changed(event: MassEvent) -> None:
+            self._set_supported_features()
+            await self.async_on_update()
+            self.async_write_ha_state()
+
+        self.async_on_remove(
+            self.mass.subscribe(
+                player_config_changed, EventType.PLAYER_CONFIG_UPDATED, self.player_id
+            )
+        )
+
     @property
     def active_queue(self) -> PlayerQueue | None:
         """Return the active queue for this player (if any)."""
