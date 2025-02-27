@@ -142,11 +142,6 @@ class EzvizCamera(EzvizEntity, Camera):
             self._attr_supported_features = CameraEntityFeature.STREAM
 
     @property
-    def available(self) -> bool:
-        """Return True if entity is available."""
-        return self.data["status"] != 2
-
-    @property
     def is_on(self) -> bool:
         """Return true if on."""
         return bool(self.data["status"])

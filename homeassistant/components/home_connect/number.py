@@ -11,7 +11,6 @@ from homeassistant.components.number import (
     NumberEntity,
     NumberEntityDescription,
 )
-from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,6 +22,7 @@ from .const import (
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
+    UNIT_MAP,
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity
@@ -30,12 +30,7 @@ from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
-UNIT_MAP = {
-    "seconds": UnitOfTime.SECONDS,
-    "ml": UnitOfVolume.MILLILITERS,
-    "°C": UnitOfTemperature.CELSIUS,
-    "°F": UnitOfTemperature.FAHRENHEIT,
-}
+PARALLEL_UPDATES = 1
 
 NUMBERS = (
     NumberEntityDescription(
@@ -82,6 +77,11 @@ NUMBERS = (
         key=SettingKey.REFRIGERATION_COMMON_WINE_COMPARTMENT_3_SETPOINT_TEMPERATURE,
         device_class=NumberDeviceClass.TEMPERATURE,
         translation_key="wine_compartment_3_setpoint_temperature",
+    ),
+    NumberEntityDescription(
+        key=SettingKey.COOKING_HOOD_COLOR_TEMPERATURE_PERCENT,
+        translation_key="color_temperature_percent",
+        native_unit_of_measurement="%",
     ),
     NumberEntityDescription(
         key=SettingKey.LAUNDRY_CARE_WASHER_I_DOS_1_BASE_LEVEL,

@@ -146,6 +146,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if content_type:
                 headers[hdrs.CONTENT_TYPE] = content_type
 
+            _LOGGER.debug(
+                "Calling %s %s with headers: %s and payload: %s",
+                method,
+                request_url,
+                headers,
+                payload,
+            )
+
             try:
                 async with getattr(websession, method)(
                     request_url,

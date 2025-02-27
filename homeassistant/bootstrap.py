@@ -74,6 +74,7 @@ from .core_config import async_process_ha_core_config
 from .exceptions import HomeAssistantError
 from .helpers import (
     area_registry,
+    backup,
     category_registry,
     config_validation as cv,
     device_registry,
@@ -163,16 +164,6 @@ FRONTEND_INTEGRATIONS = {
     # integrations can be removed and database migration status is
     # visible in frontend
     "frontend",
-    # Hassio is an after dependency of backup, after dependencies
-    # are not promoted from stage 2 to earlier stages, so we need to
-    # add it here. Hassio needs to be setup before backup, otherwise
-    # the backup integration will think we are a container/core install
-    # when using HAOS or Supervised install.
-    "hassio",
-    # Backup is an after dependency of frontend, after dependencies
-    # are not promoted from stage 2 to earlier stages, so we need to
-    # add it here.
-    "backup",
 }
 # Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
 # The substage containing recorder should have no timeout, as it could cancel a database migration.
@@ -206,6 +197,8 @@ STAGE_1_INTEGRATIONS = {
     "mqtt_eventstream",
     # To provide account link implementations
     "cloud",
+    # Ensure supervisor is available
+    "hassio",
 }
 
 DEFAULT_INTEGRATIONS = {
@@ -328,10 +321,10 @@ async def async_setup_hass(
 
     block_async_io.enable()
 
-    config_dict = None
-    basic_setup_success = False
-
     if not (recovery_mode := runtime_config.recovery_mode):
+        config_dict = None
+        basic_setup_success = False
+
         await hass.async_add_executor_job(conf_util.process_ha_config_upgrade, hass)
 
         try:
@@ -349,39 +342,43 @@ async def async_setup_hass(
                 await async_from_config_dict(config_dict, hass) is not None
             )
 
-    if config_dict is None:
-        recovery_mode = True
-        await stop_hass(hass)
-        hass = await create_hass()
+        if config_dict is None:
+            recovery_mode = True
+            await stop_hass(hass)
+            hass = await create_hass()
 
-    elif not basic_setup_success:
-        _LOGGER.warning("Unable to set up core integrations. Activating recovery mode")
-        recovery_mode = True
-        await stop_hass(hass)
-        hass = await create_hass()
+        elif not basic_setup_success:
+            _LOGGER.warning(
+                "Unable to set up core integrations. Activating recovery mode"
+            )
+            recovery_mode = True
+            await stop_hass(hass)
+            hass = await create_hass()
 
-    elif any(domain not in hass.config.components for domain in CRITICAL_INTEGRATIONS):
-        _LOGGER.warning(
-            "Detected that %s did not load. Activating recovery mode",
-            ",".join(CRITICAL_INTEGRATIONS),
-        )
+        elif any(
+            domain not in hass.config.components for domain in CRITICAL_INTEGRATIONS
+        ):
+            _LOGGER.warning(
+                "Detected that %s did not load. Activating recovery mode",
+                ",".join(CRITICAL_INTEGRATIONS),
+            )
 
-        old_config = hass.config
-        old_logging = hass.data.get(DATA_LOGGING)
+            old_config = hass.config
+            old_logging = hass.data.get(DATA_LOGGING)
 
-        recovery_mode = True
-        await stop_hass(hass)
-        hass = await create_hass()
+            recovery_mode = True
+            await stop_hass(hass)
+            hass = await create_hass()
 
-        if old_logging:
-            hass.data[DATA_LOGGING] = old_logging
-        hass.config.debug = old_config.debug
-        hass.config.skip_pip = old_config.skip_pip
-        hass.config.skip_pip_packages = old_config.skip_pip_packages
-        hass.config.internal_url = old_config.internal_url
-        hass.config.external_url = old_config.external_url
-        # Setup loader cache after the config dir has been set
-        loader.async_setup(hass)
+            if old_logging:
+                hass.data[DATA_LOGGING] = old_logging
+            hass.config.debug = old_config.debug
+            hass.config.skip_pip = old_config.skip_pip
+            hass.config.skip_pip_packages = old_config.skip_pip_packages
+            hass.config.internal_url = old_config.internal_url
+            hass.config.external_url = old_config.external_url
+            # Setup loader cache after the config dir has been set
+            loader.async_setup(hass)
 
     if recovery_mode:
         _LOGGER.info("Starting in recovery mode")
@@ -900,6 +897,10 @@ async def _async_set_up_integrations(
     # Initialize recorder
     if "recorder" in domains_to_setup:
         recorder.async_initialize_recorder(hass)
+
+    # Initialize backup
+    if "backup" in domains_to_setup:
+        backup.async_initialize_backup(hass)
 
     stage_0_and_1_domains: list[tuple[str, set[str], int | None]] = [
         *(
