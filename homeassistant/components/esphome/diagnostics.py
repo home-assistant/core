@@ -13,9 +13,7 @@ from . import CONF_NOISE_PSK
 from .dashboard import async_get_dashboard
 from .entry_data import ESPHomeConfigEntry
 
-CONF_MAC_ADDRESS = "mac_address"
-
-REDACT_KEYS = {CONF_NOISE_PSK, CONF_PASSWORD, CONF_MAC_ADDRESS}
+REDACT_KEYS = {CONF_NOISE_PSK, CONF_PASSWORD, "mac_address", "bluetooth_mac_address"}
 
 
 async def async_get_config_entry_diagnostics(
