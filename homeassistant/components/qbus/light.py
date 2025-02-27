@@ -2,13 +2,14 @@
 
 from typing import Any
 
+from qbusmqttapi.discovery import QbusMqttOutput
+from qbusmqttapi.state import QbusMqttAnalogState, StateType
+
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.components.mqtt import ReceiveMessage
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.color import brightness_to_value, value_to_brightness
-from qbusmqttapi.discovery import QbusMqttOutput
-from qbusmqttapi.state import QbusMqttAnalogState, StateType
 
 from .coordinator import QbusConfigEntry
 from .entity import QbusEntity, add_new_outputs
