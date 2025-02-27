@@ -111,6 +111,13 @@
       }
     },
     "select": {
+      "motor_rotation": {
+        "name": "Motor rotation",
+        "state": {
+          "normal": "Normal",
+          "reverse": "Reverse"
+        }
+      },
       "repeater_mode": {
         "name": "enOcean Repeater Mode",
         "state": {

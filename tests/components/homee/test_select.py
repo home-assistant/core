@@ -69,7 +69,7 @@ async def test_select_services(
         blocking=True,
     )
 
-    mock_homee.set_value.assert_called_once_with(1, 4, expected)
+    mock_homee.set_value.assert_called_once_with(1, 5, expected)
 
 
 async def test_select_service_error(

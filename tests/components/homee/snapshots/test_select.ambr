@@ -35,7 +35,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'repeater_mode',
-    'unique_id': '00055511EECC-1-1',
+    'unique_id': '00055511EECC-1-2',
     'unit_of_measurement': None,
   })
 # ---
@@ -55,6 +55,62 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
+  })
+# ---
+# name: test_select_snapshot[select.test_select_none-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'normal',
+        'reverse',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_select_none',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'motor_rotation',
+    'unique_id': '00055511EECC-1-1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_snapshot[select.test_select_none-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Select None',
+      'options': list([
+        'normal',
+        'reverse',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_select_none',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'reverse',
   })
 # ---
 # name: test_select_snapshot[select.test_select_restore_state_after_power_loss-entry]
@@ -92,7 +148,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'restore_last_known_state',
-    'unique_id': '00055511EECC-1-2',
+    'unique_id': '00055511EECC-1-3',
     'unit_of_measurement': None,
   })
 # ---
@@ -156,7 +212,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'wind_monitoring_state',
-    'unique_id': '00055511EECC-1-4',
+    'unique_id': '00055511EECC-1-5',
     'unit_of_measurement': None,
   })
 # ---
@@ -221,7 +277,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': 'switch_type',
-    'unique_id': '00055511EECC-1-3',
+    'unique_id': '00055511EECC-1-4',
     'unit_of_measurement': None,
   })
 # ---

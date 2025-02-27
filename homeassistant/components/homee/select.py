@@ -12,6 +12,11 @@ from . import HomeeConfigEntry
 from .entity import HomeeEntity
 
 SELECT_DESCRIPTIONS: dict[AttributeType, SelectEntityDescription] = {
+    AttributeType.MOTOR_ROTATION: SelectEntityDescription(
+        key="motor_rotation",
+        options=["normal", "reverse"],
+        entity_category=EntityCategory.CONFIG,
+    ),
     AttributeType.REPEATER_MODE: SelectEntityDescription(
         key="repeater_mode",
         options=["off", "level1", "level2"],

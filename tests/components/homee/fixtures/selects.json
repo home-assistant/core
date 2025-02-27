@@ -23,6 +23,27 @@
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
+      "maximum": 1,
+      "current_value": 1.0,
+      "target_value": 1.0,
+      "last_value": 1.0,
+      "unit": "n/a",
+      "step_value": 1.0,
+      "editable": 1,
+      "type": 324,
+      "state": 1,
+      "last_changed": 1618041432,
+      "changed_by": 1,
+      "changed_by_id": 0,
+      "based_on": 1,
+      "data": "",
+      "name": ""
+    },
+    {
+      "id": 2,
+      "node_id": 1,
+      "instance": 0,
+      "minimum": 0,
       "maximum": 2,
       "current_value": 0.0,
       "target_value": 0.0,
@@ -40,7 +61,7 @@
       "name": ""
     },
     {
-      "id": 2,
+      "id": 3,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -61,7 +82,7 @@
       "name": ""
     },
     {
-      "id": 3,
+      "id": 4,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -82,7 +103,7 @@
       "name": ""
     },
     {
-      "id": 4,
+      "id": 5,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
