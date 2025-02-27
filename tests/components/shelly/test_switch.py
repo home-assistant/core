@@ -420,17 +420,22 @@ async def test_wall_display_relay_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Wall Display in relay mode."""
-    climate_entity_id = "climate.test_name"
+    climate_entity_id = "climate.test_name_thermostat_0"
     switch_entity_id = "switch.test_switch_0"
+
+    config_entry = await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert hass.states.get(climate_entity_id) is not None
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
 
     new_status = deepcopy(mock_rpc_device.status)
     new_status["sys"]["relay_in_thermostat"] = False
     new_status.pop("thermostat:0")
+    new_status.pop("cover:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
-    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
-    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
 
-    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # the climate entity should be removed
     assert hass.states.get(climate_entity_id) is None
