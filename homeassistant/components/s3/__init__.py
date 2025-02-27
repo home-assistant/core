@@ -9,9 +9,16 @@ from aiobotocore.client import AioBaseClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
-from ._api import get_client
-from .const import DATA_BACKUP_AGENT_LISTENERS
+from ._api import (
+    CannotConnectError,
+    InvalidBucketNameError,
+    InvalidCredentialsError,
+    InvalidEndpointURLError,
+    get_client,
+)
+from .const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 
 type S3ConfigEntry = ConfigEntry[AioBaseClient]
 
@@ -22,8 +29,30 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
     """Set up S3 from a config entry."""
 
-    client = await get_client(cast(dict, entry.data)).__aenter__()
-    entry.runtime_data = client
+    try:
+        client = await get_client(cast(dict, entry.data)).__aenter__()
+    except InvalidCredentialsError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_credentials",
+        ) from err
+    except InvalidBucketNameError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_bucket_name",
+        ) from err
+    except InvalidEndpointURLError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_endpoint_url",
+        ) from err
+    except CannotConnectError as err:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
+    else:
+        entry.runtime_data = client
 
     # Notify backup listeners
     def notify_backup_listeners() -> None:
