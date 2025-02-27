@@ -26,7 +26,7 @@ NoException = nullcontext()
 )
 async def test_turn_on_off(
     hass: HomeAssistant,
-    config_entry_with_device: MockConfigEntry,
+    on_off_config_entry: MockConfigEntry,
     api_response: bool,
     expectation,
     platform: str,

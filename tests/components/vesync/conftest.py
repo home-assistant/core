@@ -163,29 +163,8 @@ def humidifier_300s_fixture():
     )
 
 
-@pytest.fixture(name="humidifier_config_entry")
-async def humidifier_config_entry(
-    hass: HomeAssistant, requests_mock: requests_mock.Mocker, config
-) -> MockConfigEntry:
-    """Create a mock VeSync config entry for `Humidifier 200s`."""
-    entry = MockConfigEntry(
-        title="VeSync",
-        domain=DOMAIN,
-        data=config[DOMAIN],
-    )
-    entry.add_to_hass(hass)
-
-    device_name = "Humidifier 200s"
-    mock_multiple_device_responses(requests_mock, [device_name])
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    return entry
-
-
-# A config entry that will take platform as a parameter and convert to a device from the ON_OFF_TESTS dictionary
-@pytest.fixture(name="config_entry_with_device")
-async def config_entry_with_device(
+@pytest.fixture(name="on_off_config_entry")
+async def on_off_config_entry(
     hass: HomeAssistant,
     requests_mock: requests_mock.Mocker,
     config,
