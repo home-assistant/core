@@ -9,7 +9,7 @@ import logging
 from typing import cast
 import urllib.parse
 
-from soco.data_structures import DidlObject
+from soco.data_structures import DidlContainer, DidlObject
 from soco.ms_data_structures import MusicServiceItem
 from soco.music_library import MusicLibrary
 
@@ -393,6 +393,14 @@ def library_payload(media_library: MusicLibrary, get_thumbnail_url=None) -> Brow
     for item in media_library.browse():
         with suppress(UnknownMediaType):
             children.append(item_payload(item, get_thumbnail_url))
+
+    didl_item = DidlContainer(
+        title="Folders",
+        # This is ignored. Sonos gets the title from the item_id
+        parent_id="",  # Ditto
+        item_id="S:",
+    )
+    children.append(item_payload(didl_item, get_thumbnail_url))
 
     return BrowseMedia(
         title="Music Library",
