@@ -94,6 +94,39 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         )
 
     @property
+    def current_temperature(self) -> float:
+        """Return the current temperature."""
+
+        return cast(
+            float,
+            self.executor.select_state(
+                OverkizState.IO_MIDDLE_WATER_TEMPERATURE,
+                OverkizState.MODBUSLINK_MIDDLE_WATER_TEMPERATURE,
+            ),
+        )
+
+    @property
+    def target_temperature(self) -> float:
+        """Return the temperature corresponding to the PRESET."""
+
+        return cast(
+            float,
+            self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE),
+        )
+
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new temperature."""
+
+        temperature = kwargs.get(ATTR_TEMPERATURE)
+        await self.executor.async_execute_command(
+            OverkizCommand.SET_TARGET_TEMPERATURE, temperature, refresh_afterwards=False
+        )
+        await self.executor.async_execute_command(
+            OverkizCommand.REFRESH_TARGET_TEMPERATURE, refresh_afterwards=False
+        )
+        await self.coordinator.async_refresh()
+
+    @property
     def is_state_eco(self) -> bool:
         """Return true if eco mode is on."""
 
@@ -138,6 +171,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             "antifreeze",  # TODO: pyoverkiz PR
             OverkizCommandParam.AWAY,
             OverkizCommandParam.FROSTPROTECTION,
+        ) or (
+            cast(int, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION))
+            > 0
         )
 
     @property
@@ -150,38 +186,17 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         )
 
     @property
-    def current_temperature(self) -> float:
-        """Return the current temperature."""
-
-        return cast(
-            float,
-            self.executor.select_state(
-                OverkizState.IO_MIDDLE_WATER_TEMPERATURE,
-                OverkizState.MODBUSLINK_MIDDLE_WATER_TEMPERATURE,
-            ),
-        )
-
-    @property
-    def target_temperature(self) -> float:
-        """Return the temperature corresponding to the PRESET."""
-
-        return cast(
-            float,
-            self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE),
-        )
-
-    @property
     def current_operation(self) -> str | None:
         """Return current operation."""
 
         if self.is_away_mode_on:
             return STATE_OFF
 
-        if self.is_boost_mode_on:
-            return STATE_ELECTRIC
-
         if self.is_off_mode:
             return STATE_OFF
+
+        if self.is_boost_mode_on:
+            return STATE_ELECTRIC
 
         if self.is_state_eco:
             return STATE_ECO
@@ -200,14 +215,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         return (
             cast(int, self.executor.select_state(OverkizState.CORE_BOOST_MODE_DURATION))
             > 0
-        )
-
-    async def async_set_temperature(self, **kwargs: Any) -> None:
-        """Set new temperature."""
-
-        temperature = kwargs.get(ATTR_TEMPERATURE)
-        await self.executor.async_execute_command(
-            OverkizCommand.SET_TARGET_TEMPERATURE, temperature
         )
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
@@ -259,11 +266,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         elif operation_mode == STATE_HEAT_PUMP:
             """
             DHWModeState.manualEcoInactive
-            OperatingModeState.manual
-            OperatingModeState.normal
-            OperatingModeState.on
-            OperatingModeState.prog
-            OperatingModeState.program
             """
             if self.is_boost_mode_on:
                 await self.async_turn_boost_mode_off(refresh_afterwards=False)
