@@ -156,7 +156,7 @@ class HomeConnectCoordinator(
             f"home_connect-events_listener_task-{self.config_entry.entry_id}",
         )
 
-    async def _event_listener(self) -> None:
+    async def _event_listener(self) -> None:  # noqa: C901
         """Match event with listener for event type."""
         while True:
             try:
@@ -270,7 +270,25 @@ class HomeConnectCoordinator(
             # if there was a non-breaking error, we continue listening
             # but we need to refresh the data to get the possible changes
             # that happened while the event stream was interrupted
+            old_appliances = self.data.keys()
+            await self._async_setup()
             await self.async_refresh()
+
+            for ha_id in old_appliances - self.data.keys():
+                device = self.device_registry.async_get_device(
+                    identifiers={(DOMAIN, ha_id)}
+                )
+                if device:
+                    self.device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+            # Trigger to delete the possible depaired device entities
+            # from known_entities variable at common.py
+            for listener, context in self._special_listeners.values():
+                assert isinstance(context, tuple)
+                if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED in context:
+                    listener()
 
     @callback
     def _call_event_listener(self, event_message: EventMessage) -> None:
@@ -337,7 +355,9 @@ class HomeConnectCoordinator(
                 translation_placeholders=get_dict_from_home_connect_error(error),
             ) from error
 
-        self.data = {}
+        if not self.data:
+            self.data = {}
+
         for appliance in appliances.homeappliances:
             self.device_registry.async_get_or_create(
                 config_entry_id=self.config_entry.entry_id,
@@ -346,15 +366,18 @@ class HomeConnectCoordinator(
                 name=appliance.name,
                 model=appliance.vib,
             )
-            self.data[appliance.ha_id] = HomeConnectApplianceData(
-                commands=set(),
-                events={},
-                info=appliance,
-                options={},
-                programs=[],
-                settings={},
-                status={},
-            )
+            if appliance.ha_id not in self.data:
+                self.data[appliance.ha_id] = HomeConnectApplianceData(
+                    commands=set(),
+                    events={},
+                    info=appliance,
+                    options={},
+                    programs=[],
+                    settings={},
+                    status={},
+                )
+            else:
+                self.data[appliance.ha_id].info.connected = appliance.connected
 
     async def _get_appliance_data(
         self,
