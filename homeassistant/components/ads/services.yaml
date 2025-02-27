@@ -2,13 +2,16 @@
 
 write_data_by_name:
   fields:
+    adshub:
+      example: "HUB1"
+      selector:
+        text:
     adsvar:
-      required: true
       example: ".global_var"
       selector:
         text:
     adstype:
-      required: true
+      example: "bool"
       selector:
         select:
           options:
@@ -18,9 +21,18 @@ write_data_by_name:
             - "int"
             - "udint"
             - "uint"
+            - "sint"
+            - "usint"
+            - "word"
+            - "dword"
+            - "lreal"
+            - "real"
+            - "string"
+            - "time"
+            - "date"
+            - "dt"
+            - "tod"
     value:
-      required: true
+      example: "100"
       selector:
-        number:
-          min: 0
-          max: 10000
+        text:

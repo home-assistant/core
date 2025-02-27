@@ -9,25 +9,21 @@ from homeassistant.components.select import (
     PLATFORM_SCHEMA as SELECT_PLATFORM_SCHEMA,
     SelectEntity,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ADS_VAR, DATA_ADS
+from .const import CONF_ADS_HUB, CONF_ADS_HUB_DEFAULT, DOMAIN, AdsSelectKeys
 from .entity import AdsEntity
 from .hub import AdsHub
 
-DEFAULT_NAME = "ADS select"
-
-CONF_OPTIONS = "options"
-
 PLATFORM_SCHEMA = SELECT_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
-        vol.Required(CONF_OPTIONS): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(CONF_ADS_HUB, default=CONF_ADS_HUB_DEFAULT): cv.string,
+        vol.Required(AdsSelectKeys.VAR): cv.string,
+        vol.Optional(AdsSelectKeys.NAME, default=AdsSelectKeys.DEFAULT_NAME): cv.string,
+        vol.Required(AdsSelectKeys.OPTIONS): vol.All(cv.ensure_list, [cv.string]),
     }
 )
 
@@ -39,14 +35,17 @@ def setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up an ADS select device."""
-    ads_hub = hass.data[DATA_ADS]
 
-    ads_var: str = config[CONF_ADS_VAR]
-    name: str = config[CONF_NAME]
-    options: list[str] = config[CONF_OPTIONS]
+    hub_name: str = config[CONF_ADS_HUB]
+    hub_key = f"{DOMAIN}_{hub_name}"
+    ads_hub = hass.data.get(hub_key)
+    if not ads_hub:
+        return
 
+    ads_var: str = config[AdsSelectKeys.VAR]
+    name: str = config[AdsSelectKeys.NAME]
+    options: list[str] = config[AdsSelectKeys.OPTIONS]
     entity = AdsSelect(ads_hub, ads_var, name, options)
-
     add_entities([entity])
 
 

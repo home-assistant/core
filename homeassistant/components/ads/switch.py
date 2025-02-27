@@ -9,25 +9,45 @@ import voluptuous as vol
 
 from homeassistant.components.switch import (
     PLATFORM_SCHEMA as SWITCH_PLATFORM_SCHEMA,
+    SwitchDeviceClass,
     SwitchEntity,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_ADS_VAR, DATA_ADS, STATE_KEY_STATE
+from .const import (
+    CONF_ADS_FIELDS,
+    CONF_ADS_HUB,
+    CONF_ADS_HUB_DEFAULT,
+    CONF_ADS_SYMBOLS,
+    CONF_ADS_TEMPLATE,
+    DOMAIN,
+    STATE_KEY_STATE,
+    AdsDiscoveryKeys,
+    AdsSwitchKeys,
+)
 from .entity import AdsEntity
-
-DEFAULT_NAME = "ADS Switch"
 
 PLATFORM_SCHEMA = SWITCH_PLATFORM_SCHEMA.extend(
     {
-        vol.Required(CONF_ADS_VAR): cv.string,
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
+        vol.Optional(CONF_ADS_HUB, default=CONF_ADS_HUB_DEFAULT): cv.string,
+        vol.Required(AdsSwitchKeys.VAR): cv.string,
+        vol.Optional(AdsSwitchKeys.NAME, default=AdsSwitchKeys.DEFAULT_NAME): cv.string,
+        vol.Optional(AdsSwitchKeys.DEVICE_CLASS): cv.string,
     }
 )
+
+
+def _int_to_switch_device_class(value: int) -> SwitchDeviceClass | None:
+    """Map integer values to SwitchDeviceClass enums."""
+    mapping = {
+        0: None,
+        1: SwitchDeviceClass.SWITCH,
+        2: SwitchDeviceClass.OUTLET,
+    }
+    return mapping.get(value)
 
 
 def setup_platform(
@@ -36,21 +56,86 @@ def setup_platform(
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up switch platform for ADS."""
-    ads_hub = hass.data[DATA_ADS]
+    """Set up the switch platform for ADS."""
 
-    name: str = config[CONF_NAME]
-    ads_var: str = config[CONF_ADS_VAR]
+    if discovery_info is not None:
+        _hub_name = discovery_info.get(CONF_ADS_HUB)
+        _hub_key = f"{DOMAIN}_{_hub_name}"
+        _ads_hub = hass.data.get(_hub_key)
+        if not _ads_hub:
+            return
 
-    add_entities([AdsSwitch(ads_hub, name, ads_var)])
+        _entities = []
+        _symbols = discovery_info.get(CONF_ADS_SYMBOLS, [])
+        _template = discovery_info.get(CONF_ADS_TEMPLATE, {})
+        _fields = _template.get(CONF_ADS_FIELDS, {})
+
+        for _symbol in _symbols:
+            _path = _symbol.get(AdsDiscoveryKeys.ADSPATH)
+            _name = _symbol.get(AdsDiscoveryKeys.NAME)
+            _device_type = _symbol.get(AdsDiscoveryKeys.DEVICE_TYPE)
+            if not _name or not _device_type:
+                continue
+
+            _ads_var = _path + "." + _fields.get(AdsSwitchKeys.VAR)
+            _device_class = _int_to_switch_device_class(_device_type)
+
+            _entities.append(
+                AdsSwitch(
+                    ads_hub=_ads_hub,
+                    name=_name,
+                    ads_var=_ads_var,
+                    device_class=_device_class,
+                )
+            )
+
+        add_entities(_entities)
+        return
+
+    hub_name: str = config[CONF_ADS_HUB]
+    hub_key = f"{DOMAIN}_{hub_name}"
+    ads_hub = hass.data.get(hub_key)
+    if not ads_hub:
+        return
+
+    ads_var: str = config[AdsSwitchKeys.VAR]
+    name: str = config[AdsSwitchKeys.NAME]
+    device_class: str | None = config.get(AdsSwitchKeys.DEVICE_CLASS)
+
+    add_entities(
+        [
+            AdsSwitch(
+                ads_hub=ads_hub,
+                name=name,
+                ads_var=ads_var,
+                device_class=device_class,
+            )
+        ]
+    )
 
 
 class AdsSwitch(AdsEntity, SwitchEntity):
     """Representation of an ADS switch device."""
 
+    def __init__(
+        self, ads_hub, name: str, ads_var: str, device_class: str | None
+    ) -> None:
+        """Initialize AdsSwitch entity."""
+        super().__init__(ads_hub, name, ads_var)
+        if device_class is not None:
+            try:
+                self._attr_device_class = SwitchDeviceClass(device_class)
+            except ValueError:
+                self._attr_device_class = None
+        else:
+            self._attr_device_class = None
+
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
-        await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
+        if self._ads_var is not None:
+            await self.async_initialize_device(
+                self._ads_var, pyads.PLCTYPE_BOOL, STATE_KEY_STATE
+            )
 
     @property
     def is_on(self) -> bool:

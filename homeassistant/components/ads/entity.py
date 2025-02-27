@@ -7,7 +7,7 @@ from typing import Any
 
 from homeassistant.helpers.entity import Entity
 
-from .const import STATE_KEY_STATE
+from .const import CONF_ADS_HUB, CONF_ADS_HUB_DEFAULT, CONF_ADS_TIMEOUT, STATE_KEY_STATE
 from .hub import AdsHub
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,12 @@ class AdsEntity(Entity):
         self._ads_hub = ads_hub
         self._ads_var = ads_var
         self._event: asyncio.Event | None = None
-        self._attr_unique_id = ads_var
+        hub_name = self._ads_hub.connection_params.get(CONF_ADS_HUB)
+        self._attr_unique_id = (
+            f"{hub_name}_{ads_var}"
+            if hub_name != CONF_ADS_HUB_DEFAULT
+            else f"{ads_var}"
+        )
         self._attr_name = name
 
     async def async_initialize_device(
@@ -59,12 +64,13 @@ class AdsEntity(Entity):
             self._ads_hub.add_device_notification, ads_var, plctype, update
         )
         try:
-            async with timeout(10):
+            time = self._ads_hub.connection_params.get(CONF_ADS_TIMEOUT)
+            async with timeout(time):
                 await self._event.wait()
         except TimeoutError:
-            _LOGGER.debug("Variable %s: Timeout during first update", ads_var)
+            _LOGGER.error("Variable %s: Timeout during first update", ads_var)
 
     @property
     def available(self) -> bool:
-        """Return False if state has not been updated yet."""
-        return self._state_dict[STATE_KEY_STATE] is not None
+        """Return True if any state in _state_dict is not None."""
+        return any(value is not None for value in self._state_dict.values())
