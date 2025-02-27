@@ -356,16 +356,6 @@ class HomeConnectCoordinator(
                 status={},
             )
 
-    async def refresh_and_trigger_connected_event(self) -> None:
-        """Refresh data and trigger the appliance connected event to trigger all the platforms to search new entities."""
-        await self.async_refresh()
-        for listener, context in list(self._special_listeners.values()) + list(
-            self._listeners.values()
-        ):
-            assert isinstance(context, tuple)
-            if EventKey.BSH_COMMON_APPLIANCE_DEPAIRED not in context:
-                listener()
-
     async def _get_appliance_data(
         self,
         appliance: HomeAppliance,
