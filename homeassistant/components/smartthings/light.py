@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 
-from pysmartthings import Attribute, Capability, Command, SmartThings
+from pysmartthings import Attribute, Capability, Command, DeviceEvent, SmartThings
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -68,6 +68,8 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
     # implemented within each device-type handler. This value is the
     # highest kelvin found supported across 20+ handlers.
     _attr_max_color_temp_kelvin = 9000  # 111 mireds
+
+    _last_color_mode: Capability | str | None = None
 
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize a SmartThingsLight."""
@@ -195,6 +197,12 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
             argument=[level, duration],
         )
 
+    def _update_handler(self, event: DeviceEvent) -> None:
+        """Handle device updates."""
+        if event.capability in (Capability.COLOR_CONTROL, Capability.COLOR_TEMPERATURE):
+            self._last_color_mode = event.capability
+        super()._update_handler(event)
+
     @property
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
@@ -203,9 +211,11 @@ class SmartThingsLight(SmartThingsEntity, LightEntity):
             return list(self._attr_supported_color_modes)[0]
 
         # The light supports hs + color temp, determine which one it is
-        if self._attr_hs_color and self._attr_hs_color[1]:
+        if self._last_color_mode is Capability.COLOR_CONTROL:
             return ColorMode.HS
-        return ColorMode.COLOR_TEMP
+        if self._last_color_mode is Capability.COLOR_TEMPERATURE:
+            return ColorMode.COLOR_TEMP
+        return ColorMode.ONOFF
 
     @property
     def is_on(self) -> bool:

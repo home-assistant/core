@@ -228,6 +228,15 @@ async def test_updating_brightness(
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
     await setup_integration(hass, mock_config_entry)
 
+    await trigger_update(
+        hass,
+        devices,
+        "cb958955-b015-498c-9e62-fc0c51abd054",
+        Capability.COLOR_CONTROL,
+        Attribute.HUE,
+        40,
+    )
+
     assert hass.states.get("light.standing_light").attributes[ATTR_BRIGHTNESS] == 178
 
     await trigger_update(
@@ -252,8 +261,17 @@ async def test_updating_hs(
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
     await setup_integration(hass, mock_config_entry)
 
+    await trigger_update(
+        hass,
+        devices,
+        "cb958955-b015-498c-9e62-fc0c51abd054",
+        Capability.COLOR_CONTROL,
+        Attribute.HUE,
+        40,
+    )
+
     assert hass.states.get("light.standing_light").attributes[ATTR_HS_COLOR] == (
-        218.906,
+        144.0,
         60,
     )
 
@@ -280,8 +298,16 @@ async def test_updating_color_temp(
 ) -> None:
     """Test color temperature update."""
     set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
-    set_attribute_value(devices, Capability.COLOR_CONTROL, Attribute.SATURATION, 0)
     await setup_integration(hass, mock_config_entry)
+
+    await trigger_update(
+        hass,
+        devices,
+        "cb958955-b015-498c-9e62-fc0c51abd054",
+        Capability.COLOR_TEMPERATURE,
+        Attribute.COLOR_TEMPERATURE,
+        3000,
+    )
 
     assert (
         hass.states.get("light.standing_light").attributes[ATTR_COLOR_MODE]
@@ -304,4 +330,49 @@ async def test_updating_color_temp(
     assert (
         hass.states.get("light.standing_light").attributes[ATTR_COLOR_TEMP_KELVIN]
         == 2000
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
+async def test_color_modes(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test color mode changes."""
+    set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
+    set_attribute_value(devices, Capability.COLOR_CONTROL, Attribute.SATURATION, 50)
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("light.standing_light").attributes[ATTR_COLOR_MODE]
+        is ColorMode.ONOFF
+    )
+
+    await trigger_update(
+        hass,
+        devices,
+        "cb958955-b015-498c-9e62-fc0c51abd054",
+        Capability.COLOR_TEMPERATURE,
+        Attribute.COLOR_TEMPERATURE,
+        2000,
+    )
+
+    assert (
+        hass.states.get("light.standing_light").attributes[ATTR_COLOR_MODE]
+        is ColorMode.COLOR_TEMP
+    )
+
+    await trigger_update(
+        hass,
+        devices,
+        "cb958955-b015-498c-9e62-fc0c51abd054",
+        Capability.COLOR_CONTROL,
+        Attribute.HUE,
+        20,
+    )
+
+    assert (
+        hass.states.get("light.standing_light").attributes[ATTR_COLOR_MODE]
+        is ColorMode.HS
     )
