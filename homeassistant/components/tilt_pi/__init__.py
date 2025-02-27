@@ -1,11 +1,11 @@
 """The Tilt Pi integration."""
 
-from __future__ import annotations
-
-from homeassistant.const import Platform
+from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .api import TiltPiClient
 from .const import DOMAIN
 from .coordinator import TiltPiConfigEntry, TiltPiDataUpdateCoordinator
 
@@ -14,7 +14,17 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: TiltPiConfigEntry) -> bool:
     """Set up Tilt Pi from a config entry."""
-    coordinator = TiltPiDataUpdateCoordinator(hass, entry)
+    session = async_get_clientsession(hass)
+    client = TiltPiClient(
+        host=entry.data[CONF_HOST],
+        port=entry.data[CONF_PORT],
+        session=session,
+    )
+    coordinator = TiltPiDataUpdateCoordinator(
+        hass=hass,
+        config_entry=entry,
+        client=client,
+    )
 
     try:
         await coordinator.async_config_entry_first_refresh()

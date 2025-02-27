@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
+from .api import TiltPiClient, TiltPiError
 from .const import DOMAIN
 
 USER_DATA_SCHEMA = vol.Schema(
@@ -43,15 +44,17 @@ class TiltPiConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
 
         errors = {}
-
         try:
             session = async_get_clientsession(self.hass)
-            async with session.get(
-                f"http://{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/macid/all",
-                timeout=aiohttp.ClientTimeout(10),
-            ) as resp:
-                resp.raise_for_status()
-                await resp.json()
+            client = TiltPiClient(
+                host=user_input[CONF_HOST],
+                port=user_input[CONF_PORT],
+                session=session,
+            )
+            try:
+                await client.get_hydrometers()
+            except TiltPiError:
+                errors["base"] = "cannot_connect"
 
             return self.async_create_entry(
                 title=user_input[CONF_NAME],

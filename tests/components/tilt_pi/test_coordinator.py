@@ -1,44 +1,45 @@
 """Tests for the Tilt Pi coordinator."""
 
-import aiohttp
+from unittest.mock import MagicMock
+
 import pytest
 
+from homeassistant.components.tilt_pi.api import (
+    TiltPiConnectionError,
+    TiltPiConnectionTimeoutError,
+)
 from homeassistant.components.tilt_pi.coordinator import TiltPiDataUpdateCoordinator
-from homeassistant.components.tilt_pi.model import TiltColor
+from homeassistant.components.tilt_pi.model import TiltColor, TiltHydrometerData
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .conftest import TEST_HOST, TEST_PORT
-
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 
 
 async def test_coordinator_async_update_data(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
+    mock_tiltpi_client: MagicMock,
 ) -> None:
     """Test coordinator update with valid data."""
-    aioclient_mock.get(
-        f"http://{TEST_HOST}:{TEST_PORT}/macid/all",
-        json=[
-            {
-                "mac": "00:1A:2B:3C:4D:5E",
-                "Color": "BLACK",
-                "SG": 1.010,
-                "Temp": "55.0",
-            },
-            {
-                "mac": "00:1s:99:f1:d2:4f",
-                "Color": "YELLOW",
-                "SG": 1.015,
-                "Temp": "68.0",
-            },
-        ],
-    )
+    mock_tiltpi_client.get_hydrometers.return_value = [
+        TiltHydrometerData(
+            mac_id="00:1A:2B:3C:4D:5E",
+            color=TiltColor.BLACK,
+            temperature=55.0,
+            gravity=1.010,
+        ),
+        TiltHydrometerData(
+            mac_id="00:1s:99:f1:d2:4f",
+            color=TiltColor.YELLOW,
+            temperature=68.0,
+            gravity=1.015,
+        ),
+    ]
 
-    coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
+    coordinator = TiltPiDataUpdateCoordinator(
+        hass, mock_config_entry, mock_tiltpi_client
+    )
     data = await coordinator._async_update_data()
 
     assert len(data) == 2
@@ -56,16 +57,15 @@ async def test_coordinator_async_update_data(
 
 async def test_coordinator_async_update_data_empty_response(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
+    mock_tiltpi_client: MagicMock,
 ) -> None:
-    """Test coordinator update with valid data."""
-    aioclient_mock.get(
-        f"http://{TEST_HOST}:{TEST_PORT}/macid/all",
-        json=[],
-    )
+    """Test coordinator update with empty data."""
+    mock_tiltpi_client.get_hydrometers.return_value = []
 
-    coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
+    coordinator = TiltPiDataUpdateCoordinator(
+        hass, mock_config_entry, mock_tiltpi_client
+    )
     data = await coordinator._async_update_data()
 
     assert len(data) == 0
@@ -73,31 +73,31 @@ async def test_coordinator_async_update_data_empty_response(
 
 async def test_coordinator_async_update_data_connection_error(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
+    mock_tiltpi_client: MagicMock,
 ) -> None:
     """Test coordinator handling connection error."""
-    aioclient_mock.get(
-        f"http://{TEST_HOST}:{TEST_PORT}/macid/all",
-        exc=aiohttp.ClientError,
-    )
+    mock_tiltpi_client.get_hydrometers.side_effect = TiltPiConnectionError("Test error")
 
-    coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
+    coordinator = TiltPiDataUpdateCoordinator(
+        hass, mock_config_entry, mock_tiltpi_client
+    )
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
 
 async def test_coordinator_async_update_data_timeout_error(
     hass: HomeAssistant,
-    aioclient_mock: AiohttpClientMocker,
     mock_config_entry: MockConfigEntry,
+    mock_tiltpi_client: MagicMock,
 ) -> None:
-    """Test coordinator handling connection error."""
-    aioclient_mock.get(
-        f"http://{TEST_HOST}:{TEST_PORT}/macid/all",
-        exc=TimeoutError,
+    """Test coordinator handling timeout error."""
+    mock_tiltpi_client.get_hydrometers.side_effect = TiltPiConnectionTimeoutError(
+        "Timeout"
     )
 
-    coordinator = TiltPiDataUpdateCoordinator(hass, mock_config_entry)
+    coordinator = TiltPiDataUpdateCoordinator(
+        hass, mock_config_entry, mock_tiltpi_client
+    )
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()

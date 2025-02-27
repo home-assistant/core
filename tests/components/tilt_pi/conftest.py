@@ -1,9 +1,11 @@
 """Common fixtures for the Tilt Pi tests."""
 
 from types import MappingProxyType
+from unittest.mock import MagicMock
 
 import pytest
 
+from homeassistant.components.tilt_pi.api import TiltPiClient
 from homeassistant.components.tilt_pi.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT
 
@@ -49,3 +51,9 @@ def tiltpi_api_all_response() -> list[dict[str, any]]:
             "SG": "1.052",
         }
     ]
+
+
+@pytest.fixture
+def mock_tiltpi_client() -> MagicMock:
+    """Mock TiltPi client."""
+    return MagicMock(spec=TiltPiClient)
