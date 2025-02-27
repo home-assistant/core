@@ -194,6 +194,18 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_SOURCE_DEVICE_ID: user_input[CONF_SOURCE_DEVICE_ID],
         }
         self._abort_if_unique_id_configured(updates=data)
+        for entry in self._async_current_entries(include_ignore=False):
+            # If the mac address needs to be corrected, migrate
+            # the config entry to the new mac address
+            if (
+                entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID)
+                == user_input[CONF_SOURCE_CONFIG_ENTRY_ID]
+                and entry.unique_id != source
+            ):
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=source, data={**entry.data, **data}
+                )
+                return self.async_abort(reason="already_configured")
         manager = get_manager()
         scanner = manager.async_scanner_by_source(source)
         assert scanner is not None
