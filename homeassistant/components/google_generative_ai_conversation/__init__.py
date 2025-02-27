@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from google import genai
+from google import genai  # type: ignore[attr-defined]
 from google.genai.errors import APIError, ClientError
 from google.genai.types import GenerateContentConfig, HttpOptions
 from requests.exceptions import Timeout
