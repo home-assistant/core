@@ -534,7 +534,7 @@ bimmer-connected[china]==0.17.2
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.7.1
+bleak-esphome==2.8.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.9.0
@@ -1882,7 +1882,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==1.2.0
+pysmartthings==2.0.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
