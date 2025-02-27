@@ -951,12 +951,20 @@ async def async_setup_entry(
     """Add sensors for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsSensor(entry_data.client, device, description, capability, attribute)
+        SmartThingsSensor(
+            entry_data.client,
+            device,
+            description,
+            Capability(capability),
+            Attribute(attribute),
+        )
         for device in entry_data.devices.values()
         for capability, attributes in device.status[MAIN].items()
         if capability in CAPABILITY_TO_SENSORS
         for attribute in attributes
-        for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
+        for description in CAPABILITY_TO_SENSORS[Capability(capability)].get(
+            Attribute(attribute), []
+        )
         if not description.capability_ignore_list
         or not any(
             all(capability in device.status[MAIN] for capability in capability_list)
