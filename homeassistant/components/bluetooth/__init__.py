@@ -318,6 +318,7 @@ async def async_update_device(
     # so if the address has been corrected, make
     # sure the device entry reflects the correct
     # address
+    _LOGGER.warning("Update devices: %s", details)
     for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
         for conn_type, conn_value in device.connections:
             if conn_type == dr.CONNECTION_BLUETOOTH and conn_value != address:

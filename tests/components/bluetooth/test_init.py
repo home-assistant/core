@@ -3304,18 +3304,13 @@ async def test_fix_incorrect_mac_remote_scanner_config_entry(
 
     new_scanner = FakeRemoteScanner("AA:BB:CC:DD:EE:AA", "esp32", connector, True)
     assert new_scanner.source == "AA:BB:CC:DD:EE:AA"
-    new_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_SOURCE: new_scanner.source,
-            CONF_SOURCE_DOMAIN: "test",
-            CONF_SOURCE_MODEL: "test",
-            CONF_SOURCE_CONFIG_ENTRY_ID: source_entry.entry_id,
-        },
-        unique_id=scanner.source,
+    hass.config_entries.async_update_entry(
+        entry,
+        data={**entry.data, CONF_SOURCE: new_scanner.source},
+        unique_id=new_scanner.source,
     )
-    new_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(new_entry.entry_id)
+
+    await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert hass.config_entries.async_entry_for_domain_unique_id(
         "bluetooth", new_scanner.source

@@ -205,6 +205,7 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.async_update_entry(
                     entry, unique_id=source, data={**entry.data, **data}
                 )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
                 return self.async_abort(reason="already_configured")
         manager = get_manager()
         scanner = manager.async_scanner_by_source(source)
