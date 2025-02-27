@@ -506,6 +506,8 @@ class HomeConnectCoordinator(
                 ).options
                 or []
             }
+        except TooManyRequestsError:
+            raise
         except HomeConnectError as error:
             _LOGGER.debug(
                 "Error fetching options for %s: %s",

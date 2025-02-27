@@ -310,7 +310,13 @@ async def test_client_error(
 
 @pytest.mark.parametrize(
     "raising_exception_method",
-    ["get_settings", "get_status", "get_all_programs", "get_available_commands"],
+    [
+        "get_settings",
+        "get_status",
+        "get_all_programs",
+        "get_available_commands",
+        "get_available_program",
+    ],
 )
 async def test_client_rate_limit_error(
     raising_exception_method: str,
