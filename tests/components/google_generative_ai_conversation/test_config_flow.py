@@ -1,10 +1,9 @@
 """Test the Google Generative AI Conversation config flow."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
-from google.api_core.exceptions import ClientError, DeadlineExceeded
-from google.rpc.error_details_pb2 import ErrorInfo  # pylint: disable=no-name-in-module
 import pytest
+from requests.exceptions import Timeout
 
 from homeassistant import config_entries
 from homeassistant.components.google_generative_ai_conversation.config_flow import (
@@ -33,6 +32,8 @@ from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import CLIENT_ERROR_500, CLIENT_ERROR_API_KEY_INVALID
+
 from tests.common import MockConfigEntry
 
 
@@ -41,30 +42,37 @@ def mock_models():
     """Mock the model list API."""
     model_20_flash = Mock(
         display_name="Gemini 2.0 Flash",
-        supported_generation_methods=["generateContent"],
+        supported_actions=["generateContent"],
     )
     model_20_flash.name = "models/gemini-2.0-flash"
 
     model_15_flash = Mock(
         display_name="Gemini 1.5 Flash",
-        supported_generation_methods=["generateContent"],
+        supported_actions=["generateContent"],
     )
     model_15_flash.name = "models/gemini-1.5-flash-latest"
 
     model_15_pro = Mock(
         display_name="Gemini 1.5 Pro",
-        supported_generation_methods=["generateContent"],
+        supported_actions=["generateContent"],
     )
     model_15_pro.name = "models/gemini-1.5-pro-latest"
 
     model_10_pro = Mock(
         display_name="Gemini 1.0 Pro",
-        supported_generation_methods=["generateContent"],
+        supported_actions=["generateContent"],
     )
     model_10_pro.name = "models/gemini-pro"
+
+    async def models_pager():
+        yield model_20_flash
+        yield model_15_flash
+        yield model_15_pro
+        yield model_10_pro
+
     with patch(
-        "homeassistant.components.google_generative_ai_conversation.config_flow.genai.list_models",
-        return_value=iter([model_20_flash, model_15_flash, model_15_pro, model_10_pro]),
+        "google.genai.models.AsyncModels.list",
+        return_value=models_pager(),
     ):
         yield
 
@@ -86,7 +94,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "google.ai.generativelanguage_v1beta.ModelServiceAsyncClient.list_models",
+            "google.genai.models.AsyncModels.list",
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",
@@ -170,7 +178,11 @@ async def test_options_switching(
     expected_options,
 ) -> None:
     """Test the options form."""
-    hass.config_entries.async_update_entry(mock_config_entry, options=current_options)
+    with patch("google.genai.models.AsyncModels.get"):
+        hass.config_entries.async_update_entry(
+            mock_config_entry, options=current_options
+        )
+        await hass.async_block_till_done()
     options_flow = await hass.config_entries.options.async_init(
         mock_config_entry.entry_id
     )
@@ -195,17 +207,15 @@ async def test_options_switching(
     ("side_effect", "error"),
     [
         (
-            ClientError("some error"),
+            CLIENT_ERROR_500,
             "cannot_connect",
         ),
         (
-            DeadlineExceeded("deadline exceeded"),
+            Timeout("deadline exceeded"),
             "cannot_connect",
         ),
         (
-            ClientError(
-                "invalid api key", error_info=ErrorInfo(reason="API_KEY_INVALID")
-            ),
+            CLIENT_ERROR_API_KEY_INVALID,
             "invalid_auth",
         ),
         (Exception, "unknown"),
@@ -217,12 +227,7 @@ async def test_form_errors(hass: HomeAssistant, side_effect, error) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_client = AsyncMock()
-    mock_client.list_models.side_effect = side_effect
-    with patch(
-        "google.ai.generativelanguage_v1beta.ModelServiceAsyncClient",
-        return_value=mock_client,
-    ):
+    with patch("google.genai.models.AsyncModels.list", side_effect=side_effect):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -259,7 +264,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "google.ai.generativelanguage_v1beta.ModelServiceAsyncClient.list_models",
+            "google.genai.models.AsyncModels.list",
         ),
         patch(
             "homeassistant.components.google_generative_ai_conversation.async_setup_entry",

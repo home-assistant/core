@@ -32,17 +32,23 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
     config_entry: IOmeterConfigEntry
     client: IOmeterClient
 
-    def __init__(self, hass: HomeAssistant, client: IOmeterClient) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: IOmeterConfigEntry,
+        client: IOmeterClient,
+    ) -> None:
         """Initialize coordinator."""
 
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
         self.client = client
-        self.identifier = self.config_entry.entry_id
+        self.identifier = config_entry.entry_id
 
     async def _async_update_data(self) -> IOmeterData:
         """Update data async."""
