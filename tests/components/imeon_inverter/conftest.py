@@ -19,6 +19,13 @@ TEST_USER_INPUT = {
 
 TEST_SERIAL = "111111111111111"
 
+TEST_ERROR = [
+    (TimeoutError, "cannot_connect"),
+    (ValueError("Host invalid"), "invalid_host"),
+    (ValueError("Route invalid"), "invalid_route"),
+    (ValueError, "unknown"),
+]
+
 
 @pytest.fixture(autouse=True)
 def mock_imeon_inverter() -> Generator[MagicMock]:
