@@ -27,6 +27,7 @@ from .const import (
     DOMAIN,
     EXPANDABLE_MEDIA_TYPES,
     LIBRARY_TITLES_MAPPING,
+    MEDIA_TYPE_FOLDER,
     MEDIA_TYPES_TO_SONOS,
     PLAYABLE_MEDIA_TYPES,
     SONOS_ALBUM,
@@ -103,6 +104,22 @@ def get_thumbnail_url_full(
 def media_source_filter(item: BrowseMedia) -> bool:
     """Filter media sources."""
     return item.media_content_type.startswith("audio/")
+
+
+def _get_title(search_type: str, id_string: str) -> str:
+    """Extract a suitable title from the contents id string."""
+    try:
+        if search_type == MEDIA_TYPE_FOLDER:
+            # Format is S://path/folder1/folder2
+            # If just S: this will be in the mappings; otherwise use the last folder in path.
+            title = LIBRARY_TITLES_MAPPING.get(
+                id_string, urllib.parse.unquote(id_string.split("/")[-1])
+            )
+        else:
+            title = urllib.parse.unquote(id_string.split("/")[1])
+    except IndexError:
+        title = LIBRARY_TITLES_MAPPING[id_string]
+    return title
 
 
 async def async_browse_media(
@@ -238,12 +255,9 @@ def build_item_response(
         thumbnail = get_thumbnail_url(search_type, payload["idstring"])
 
     if not title:
-        try:
-            title = urllib.parse.unquote(payload["idstring"].split("/")[1])
-            if title == "":
-                title = urllib.parse.unquote(payload["idstring"].split("/")[-1])
-        except IndexError:
-            title = LIBRARY_TITLES_MAPPING[payload["idstring"]]
+        title = _get_title(
+            search_type=payload["search_type"], id_string=payload["idstring"]
+        )
 
     try:
         media_class = SONOS_TO_MEDIA_CLASSES[
@@ -293,7 +307,7 @@ def item_payload(item: DidlObject, get_thumbnail_url=None) -> BrowseMedia:
         media_class=media_class,
         media_content_id=content_id,
         media_content_type=SONOS_TO_MEDIA_TYPES[media_type],
-        can_play=can_play(item.item_class),
+        can_play=can_play(item.item_class, item_id=content_id),
         can_expand=can_expand(item),
     )
 
@@ -506,12 +520,18 @@ def get_media_type(item: DidlObject) -> str:
     return SONOS_TYPES_MAPPING.get(item.item_id.split("/")[0], item.item_class)
 
 
-def can_play(item: DidlObject) -> bool:
+def can_play(item_class: str, item_id: str | None = None) -> bool:
     """Test if playable.
 
     Used by async_browse_media.
     """
-    return SONOS_TO_MEDIA_TYPES.get(item) in PLAYABLE_MEDIA_TYPES
+    # Folders are playable once we reach the sub_folder level.
+    # Format is S://server_address/folder/sub_folder/...
+    if item_id and item_class == "object.container" and item_id.startswith("S:"):
+        if item_id.count("/") > 3:
+            return True
+        return False
+    return SONOS_TO_MEDIA_TYPES.get(item_class) in PLAYABLE_MEDIA_TYPES
 
 
 def can_expand(item: DidlObject) -> bool:

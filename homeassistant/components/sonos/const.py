@@ -143,7 +143,6 @@ PLAYABLE_MEDIA_TYPES = [
     MediaType.GENRE,
     MediaType.PLAYLIST,
     MediaType.TRACK,
-    MEDIA_TYPE_FOLDER,
 ]
 
 SONOS_CHECK_ACTIVITY = "sonos_check_activity"

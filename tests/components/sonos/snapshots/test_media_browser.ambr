@@ -71,6 +71,16 @@
       'thumbnail': None,
       'title': 'Playlists',
     }),
+    dict({
+      'can_expand': True,
+      'can_play': False,
+      'children_media_class': None,
+      'media_class': 'directory',
+      'media_content_id': 'S:',
+      'media_content_type': 'folder',
+      'thumbnail': None,
+      'title': 'Folders',
+    }),
   ])
 # ---
 # name: test_browse_media_library_albums
