@@ -37,23 +37,8 @@ def inels_discovery(mqtt: InelsMqtt) -> list[Device]:
     try:
         i_disc = InelsDiscovery(mqtt)
         devices: list[Device] = i_disc.discovery()
-    except (
-        MQTTException,
-        TimeoutError,
-        OSError,
-        RuntimeError,
-        ValueError,
-        TypeError,
-        AttributeError,
-        KeyError,
-    ) as exc:
+    except (MQTTException, ValueError, TimeoutError) as exc:
         LOGGER.error("Discovery error %s, reason %s", exc.__class__.__name__, exc)
-        mqtt.close()
-        raise ConfigEntryNotReady from exc
-    except Exception as exc:
-        LOGGER.error(
-            "Discovery unexpected error %s, reason %s", exc.__class__.__name__, exc
-        )
         mqtt.close()
         raise ConfigEntryNotReady from exc
     else:
