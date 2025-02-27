@@ -41,7 +41,7 @@ async def async_setup_entry(
     """Add covers for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsCover(entry_data.client, device, capability)
+        SmartThingsCover(entry_data.client, device, Capability(capability))
         for device in entry_data.devices.values()
         for capability in device.status[MAIN]
         if capability in CAPABILITIES

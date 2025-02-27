@@ -4,7 +4,14 @@ from __future__ import annotations
 
 from typing import Any, cast
 
-from pysmartthings import Attribute, Capability, Command, DeviceEvent, SmartThings
+from pysmartthings import (
+    Attribute,
+    Capability,
+    Command,
+    DeviceEvent,
+    SmartThings,
+    Status,
+)
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
@@ -25,7 +32,7 @@ class SmartThingsEntity(Entity):
         """Initialize the instance."""
         self.client = client
         self.capabilities = capabilities
-        self._internal_state = {
+        self._internal_state: dict[Capability | str, dict[Attribute | str, Status]] = {
             capability: device.status[MAIN][capability]
             for capability in capabilities
             if capability in device.status[MAIN]
@@ -58,7 +65,7 @@ class SmartThingsEntity(Entity):
         await super().async_added_to_hass()
         for capability in self._internal_state:
             self.async_on_remove(
-                self.client.add_device_event_listener(
+                self.client.add_device_capability_event_listener(
                     self.device.device.device_id,
                     MAIN,
                     capability,
