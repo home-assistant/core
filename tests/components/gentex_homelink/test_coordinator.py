@@ -109,23 +109,35 @@ async def test_get_state_updates(
         logging.info("Initial sync")
         await hass.async_block_till_done(wait_background_tasks=True)
         states = hass.states.async_all()
-        logging.info(states)
-        assert (state != STATE_UNAVAILABLE for state in states)
-        buttons_off = [s.state == "off" for s in states]
-        assert all(buttons_off)
 
-        logging.info(
-            "Fetch data again. Buttons should be off because the request has the same id"
-        )
+        assert (state != STATE_UNAVAILABLE for state in states)
+        buttons_unknown = [s.state == "unknown" for s in states]
+        assert all(buttons_unknown)
+
+        logging.info("Fire first event. Buttons should be on")
         freezer.tick(5)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        states = hass.states.async_all()
+
+        assert (state != STATE_UNAVAILABLE for state in states), (
+            "Some button became unavailable"
+        )
+        buttons_pressed = [s.attributes["event_type"] == "Pressed" for s in states]
+        assert all(buttons_pressed), "At least one button was not pressed"
+        logging.info(
+            "Fetch data again. Buttons should be off because the request has the same id and more than 10s has elapsed"
+        )
+        freezer.tick(11)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         states = hass.states.async_all()
         assert (state != STATE_UNAVAILABLE for state in states), (
             "Some button is still unavailable"
         )
-        buttons_off = [s.state == "off" for s in states]
 
+        buttons_off = [s.attributes["event_type"] == "Pressed" for s in states]
+        assert all(buttons_off), "Some button was not Off"
         logging.info(
             "Fetch data again. Buttons should be on because the request has a different timestamp and id"
         )
@@ -133,11 +145,12 @@ async def test_get_state_updates(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
         states = hass.states.async_all()
+
         assert (state != STATE_UNAVAILABLE for state in states), (
             "Some button became unavailable"
         )
-        buttons_on = [s.state == "on" for s in states]
-        assert all(buttons_on), "At least one button failed to turn on"
+        buttons_pressed = [s.attributes["event_type"] == "Pressed" for s in states]
+        assert all(buttons_pressed), "At least one button was not pressed"
 
         logging.info(
             "Fetch data again. Buttons should be off because the id is the same"
@@ -145,11 +158,12 @@ async def test_get_state_updates(
         freezer.tick(15)
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
+
         states = hass.states.async_all()
         assert (state != STATE_UNAVAILABLE for state in states), (
             "Some button became unavailable"
         )
-        buttons_off = [s.state == "off" for s in states]
+        buttons_off = [s.attributes["event_type"] == "Off" for s in states]
         assert all(buttons_off), (
             "At least one button failed to turn off after the designated time"
         )
