@@ -494,6 +494,42 @@ async def test_escape_decode() -> None:
             {"type": "STRING", "enum": ["a", "b", "c"]},
         ),
         (
+            {"type": "string", "format": "enum", "enum": ["a", "b", "c"]},
+            {"type": "STRING", "format": "enum", "enum": ["a", "b", "c"]},
+        ),
+        (
+            {"type": "string", "format": "date-time"},
+            {"type": "STRING", "format": "date-time"},
+        ),
+        (
+            {"type": "string", "format": "byte"},
+            {"type": "STRING"},
+        ),
+        (
+            {"type": "number", "format": "float"},
+            {"type": "NUMBER", "format": "float"},
+        ),
+        (
+            {"type": "number", "format": "double"},
+            {"type": "NUMBER", "format": "double"},
+        ),
+        (
+            {"type": "number", "format": "hex"},
+            {"type": "NUMBER"},
+        ),
+        (
+            {"type": "integer", "format": "int32"},
+            {"type": "INTEGER", "format": "int32"},
+        ),
+        (
+            {"type": "integer", "format": "int64"},
+            {"type": "INTEGER", "format": "int64"},
+        ),
+        (
+            {"type": "integer", "format": "int8"},
+            {"type": "INTEGER"},
+        ),
+        (
             {"type": "integer", "enum": [1, 2, 3]},
             {"type": "STRING", "enum": ["1", "2", "3"]},
         ),
@@ -515,11 +551,11 @@ async def test_escape_decode() -> None:
                 ]
             },
         ),
-        ({"type": "string", "format": "lower"}, {"format": "lower", "type": "STRING"}),
-        ({"type": "boolean", "format": "bool"}, {"format": "bool", "type": "BOOLEAN"}),
+        ({"type": "string", "format": "lower"}, {"type": "STRING"}),
+        ({"type": "boolean", "format": "bool"}, {"type": "BOOLEAN"}),
         (
             {"type": "number", "format": "percent"},
-            {"type": "NUMBER", "format": "percent"},
+            {"type": "NUMBER"},
         ),
         (
             {
