@@ -82,30 +82,37 @@
       "name": ""
     },
     {
-      "id": 4,
+      "id": 34,
       "node_id": 1,
-      "instance": 0,
+      "instance": 1,
       "minimum": 0,
       "maximum": 100,
-      "current_value": 100.0,
-      "target_value": 100.0,
-      "last_value": 100.0,
+      "current_value": 2.0,
+      "target_value": 2.0,
+      "last_value": 2.0,
       "unit": "%",
       "step_value": 1.0,
       "editable": 0,
-      "type": 8,
+      "type": 11,
       "state": 1,
-      "last_changed": 1709982926,
+      "last_changed": 1739320320,
       "changed_by": 1,
       "changed_by_id": 0,
       "based_on": 1,
       "data": "",
-      "name": ""
+      "name": "",
+      "options": {
+        "history": {
+          "day": 1,
+          "week": 26,
+          "month": 6
+        }
+      }
     },
     {
       "id": 5,
       "node_id": 1,
-      "instance": 1,
+      "instance": 2,
       "minimum": 0,
       "maximum": 65000,
       "current_value": 175.0,
@@ -126,7 +133,7 @@
     {
       "id": 6,
       "node_id": 1,
-      "instance": 2,
+      "instance": 3,
       "minimum": 1,
       "maximum": 100,
       "current_value": 7.0,
@@ -191,27 +198,6 @@
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
-      "maximum": 100,
-      "current_value": 70.0,
-      "target_value": 0.0,
-      "last_value": 0.0,
-      "unit": "%",
-      "step_value": 1.0,
-      "editable": 0,
-      "type": 18,
-      "state": 1,
-      "last_changed": 1711796633,
-      "changed_by": 1,
-      "changed_by_id": 0,
-      "based_on": 1,
-      "data": "",
-      "name": ""
-    },
-    {
-      "id": 10,
-      "node_id": 1,
-      "instance": 0,
-      "minimum": 0,
       "maximum": 500,
       "current_value": 500.0,
       "target_value": 500.0,
@@ -229,7 +215,7 @@
       "name": ""
     },
     {
-      "id": 11,
+      "id": 10,
       "node_id": 1,
       "instance": 0,
       "minimum": -40,
@@ -250,7 +236,7 @@
       "name": ""
     },
     {
-      "id": 12,
+      "id": 11,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -271,7 +257,7 @@
       "name": ""
     },
     {
-      "id": 13,
+      "id": 12,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -292,7 +278,7 @@
       "name": ""
     },
     {
-      "id": 14,
+      "id": 13,
       "node_id": 1,
       "instance": 0,
       "minimum": -64,
@@ -313,7 +299,7 @@
       "name": ""
     },
     {
-      "id": 15,
+      "id": 14,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -334,7 +320,7 @@
       "name": ""
     },
     {
-      "id": 16,
+      "id": 15,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -355,7 +341,7 @@
       "name": ""
     },
     {
-      "id": 17,
+      "id": 16,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -376,7 +362,7 @@
       "name": ""
     },
     {
-      "id": 18,
+      "id": 17,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -397,7 +383,7 @@
       "name": ""
     },
     {
-      "id": 19,
+      "id": 18,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -418,7 +404,7 @@
       "name": ""
     },
     {
-      "id": 20,
+      "id": 19,
       "node_id": 1,
       "instance": 0,
       "minimum": -64,
@@ -439,7 +425,7 @@
       "name": ""
     },
     {
-      "id": 21,
+      "id": 20,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -460,7 +446,7 @@
       "name": ""
     },
     {
-      "id": 22,
+      "id": 21,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -481,7 +467,7 @@
       "name": ""
     },
     {
-      "id": 23,
+      "id": 22,
       "node_id": 1,
       "instance": 0,
       "minimum": -50,
@@ -502,7 +488,7 @@
       "name": ""
     },
     {
-      "id": 24,
+      "id": 23,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -523,7 +509,7 @@
       "name": ""
     },
     {
-      "id": 25,
+      "id": 24,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -544,7 +530,7 @@
       "name": ""
     },
     {
-      "id": 26,
+      "id": 25,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -565,7 +551,7 @@
       "name": ""
     },
     {
-      "id": 27,
+      "id": 26,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -586,7 +572,7 @@
       "name": ""
     },
     {
-      "id": 28,
+      "id": 27,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -607,7 +593,7 @@
       "name": ""
     },
     {
-      "id": 29,
+      "id": 28,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -628,7 +614,7 @@
       "name": ""
     },
     {
-      "id": 30,
+      "id": 29,
       "node_id": 1,
       "instance": 1,
       "minimum": 0,
@@ -649,7 +635,7 @@
       "name": ""
     },
     {
-      "id": 31,
+      "id": 30,
       "node_id": 1,
       "instance": 2,
       "minimum": 0,
@@ -670,7 +656,7 @@
       "name": ""
     },
     {
-      "id": 32,
+      "id": 31,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -691,7 +677,7 @@
       "name": ""
     },
     {
-      "id": 33,
+      "id": 32,
       "node_id": 1,
       "instance": 0,
       "minimum": 0,
@@ -710,34 +696,6 @@
       "based_on": 1,
       "data": "",
       "name": ""
-    },
-    {
-      "id": 34,
-      "node_id": 1,
-      "instance": 0,
-      "minimum": 0,
-      "maximum": 100,
-      "current_value": 2.0,
-      "target_value": 2.0,
-      "last_value": 2.0,
-      "unit": "%",
-      "step_value": 1.0,
-      "editable": 0,
-      "type": 11,
-      "state": 1,
-      "last_changed": 1739320320,
-      "changed_by": 1,
-      "changed_by_id": 0,
-      "based_on": 1,
-      "data": "",
-      "name": "",
-      "options": {
-        "history": {
-          "day": 1,
-          "week": 26,
-          "month": 6
-        }
-      }
     }
   ]
 }

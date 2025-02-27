@@ -37,7 +37,7 @@ async def test_up_down_values(
 
     assert hass.states.get("sensor.test_multisensor_state").state == OPEN_CLOSE_MAP[0]
 
-    attribute = mock_homee.nodes[0].attributes[27]
+    attribute = mock_homee.nodes[0].attributes[26]
     for i in range(1, 5):
         await async_update_attribute_value(hass, attribute, i)
         assert (
@@ -69,7 +69,7 @@ async def test_window_position(
         == WINDOW_MAP[0]
     )
 
-    attribute = mock_homee.nodes[0].attributes[32]
+    attribute = mock_homee.nodes[0].attributes[31]
     for i in range(1, 3):
         await async_update_attribute_value(hass, attribute, i)
         assert (
@@ -97,16 +97,22 @@ async def test_brightness_sensor(
     mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
     await setup_integration(hass, mock_config_entry)
 
+    # Sensor with Homee unit %
     sensor_state = hass.states.get("sensor.test_multisensor_illuminance_1")
-    assert sensor_state.state == "175.0"
+    assert sensor_state.state == "1000.0"
     assert sensor_state.attributes["unit_of_measurement"] == LIGHT_LUX
     assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 1"
 
-    # Sensor with Homee unit klx
     sensor_state = hass.states.get("sensor.test_multisensor_illuminance_2")
-    assert sensor_state.state == "7000.0"
+    assert sensor_state.state == "175.0"
     assert sensor_state.attributes["unit_of_measurement"] == LIGHT_LUX
     assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 2"
+
+    # Sensor with Homee unit klx
+    sensor_state = hass.states.get("sensor.test_multisensor_illuminance_3")
+    assert sensor_state.state == "7000.0"
+    assert sensor_state.attributes["unit_of_measurement"] == LIGHT_LUX
+    assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 3"
 
 
 async def test_sensor_snapshot(

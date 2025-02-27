@@ -79,7 +79,7 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=get_brightness_value,
-        native_unit_of_measurement_fn=lambda unit: "lx",
+        native_unit_of_measurement_fn=lambda unit: HOMEE_UNIT_TO_HA_UNIT["lx"],
     ),
     AttributeType.CURRENT: HomeeSensorEntityDescription(
         key="current",
@@ -89,11 +89,6 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     AttributeType.CURRENT_ENERGY_USE: HomeeSensorEntityDescription(
         key="power",
         device_class=SensorDeviceClass.POWER,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
-    AttributeType.CURRENT_VALVE_POSITION: HomeeSensorEntityDescription(
-        key="valve_position",
-        entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     AttributeType.DAWN: HomeeSensorEntityDescription(
