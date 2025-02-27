@@ -98,14 +98,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: MammotionConfigEntry) ->
                 await mammotion.login_and_initiate_cloud(account, password)
             else:
                 await mammotion.initiate_cloud_connection(account, cloud_client)
-            store_cloud_credentials(hass, entry, cloud_client)
         except ClientConnectorError as err:
             raise ConfigEntryNotReady(err)
         except EXPIRED_CREDENTIAL_EXCEPTIONS as exc:
             LOGGER.debug(exc)
             await mammotion.login_and_initiate_cloud(account, password, True)
 
+
+
         if mqtt_client := mammotion.mqtt_list.get(account):
+            store_cloud_credentials(hass, entry, mqtt_client.cloud_client)
             for (
                 device
             ) in mqtt_client.cloud_client.devices_by_account_response.data.data:
@@ -244,11 +246,13 @@ async def check_and_restore_cloud(
 
     if isinstance(mammotion_data, dict):
         mammotion_data = Response[LoginResponseData].from_dict(mammotion_data)
-
-    cloud_client.set_http(MammotionHTTP(response=mammotion_data))
+        mammotion_http = MammotionHTTP()
+        mammotion_http.response = mammotion_data
+        mammotion_http.login_info = mammotion_data.data
+        cloud_client.set_http(mammotion_http)
 
     await hass.async_add_executor_job(cloud_client.check_or_refresh_session)
-
+    print("restore cloud")
     return cloud_client
 
 
