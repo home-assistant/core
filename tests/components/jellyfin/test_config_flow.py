@@ -1,6 +1,6 @@
 """Test the jellyfin config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from voluptuous.error import Invalid
@@ -481,3 +481,119 @@ async def test_setting_codec(
     )
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert config_entry.options[CONF_AUDIO_CODEC] == codec
+
+
+async def test_reconfigure_successful(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: MagicMock
+) -> None:
+    """Test successful reconfigure flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result0 = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result0["type"] == FlowResultType.FORM
+    assert result0["step_id"] == "init"
+
+    result1 = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result1["type"] is FlowResultType.FORM
+    assert result1["step_id"] == "reconfigure"
+
+    # NOTE: There is likely a better way to test a successful reconfigure where
+    # the validate input is run and its components are mocked.
+    # I don't understand why test_reauth and test_form work when they call
+    # validate input, but here if we remove the patch, it causes an error in
+    # the connection_manager where it fails to connect
+    with patch(
+        "homeassistant.components.jellyfin.config_flow.validate_input",
+        return_value=(None, None),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result1["flow_id"],
+            {
+                CONF_URL: "http://new_url:8096",
+                CONF_USERNAME: "new_user",
+                CONF_PASSWORD: "new_password",
+            },
+        )
+    await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "new_user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new_password"
+    assert mock_config_entry.data[CONF_URL] == "http://new_url:8096"
+
+
+async def test_reconfigure_flow_exception_cannot_connect(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: MagicMock
+) -> None:
+    """Test reconfigure flow connection failure."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
+        hass, "auth-connect-address-failure.json"
+    )
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass, "auth-login.json"
+    )
+
+    # Force the new client to use our mock. I do not know if this is
+    # the correct way to to run this test, or if there is a better way.
+    with patch(
+        "homeassistant.components.jellyfin.config_flow.create_client",
+        return_value=mock_client,
+    ):
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: "http://invalid_new_url:8096",
+                CONF_USERNAME: "new_user",
+                CONF_PASSWORD: "new_password",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"] == {"base": "cannot_connect"}
+
+
+async def test_reconfigure_flow_exception_invalid_credentials(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_client: MagicMock
+) -> None:
+    """Test reconfigure flow authentication failure ."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_client.auth.connect_to_address.return_value = await async_load_json_fixture(
+        hass, "auth-connect-address.json"
+    )
+    mock_client.auth.login.return_value = await async_load_json_fixture(
+        hass, "auth-login-failure.json"
+    )
+    # Force the new client to use our mock. I do not know if this is
+    # the correct way to to run this test, or if there is a better way.
+    with patch(
+        "homeassistant.components.jellyfin.config_flow.create_client",
+        return_value=mock_client,
+    ):
+        result = await mock_config_entry.start_reconfigure_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_URL: "http://new_url:8096",
+                CONF_USERNAME: "new_user",
+                CONF_PASSWORD: "invalid_new_password",
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert result2["type"] is FlowResultType.FORM
+        assert result2["errors"] == {"base": "invalid_auth"}
