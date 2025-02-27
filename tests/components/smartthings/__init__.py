@@ -68,7 +68,7 @@ async def trigger_update(
         value,
         data,
     )
-    for call in mock.add_device_capability_event_listener.call_args_list:
+    for call in mock.add_device_event_listener.call_args_list:
         if call[0][0] == device_id:
             call[0][3](event)
     for call in mock.add_device_capability_event_listener.call_args_list:
