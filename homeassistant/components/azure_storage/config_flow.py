@@ -121,7 +121,6 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -159,4 +158,3 @@ class AzureStorageConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
- 
