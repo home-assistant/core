@@ -85,7 +85,7 @@
       "dishwasher_job_state": {
         "name": "Job state",
         "state": {
-          "airwash": "Airwash",
+          "air_wash": "Air wash",
           "cooling": "Cooling",
           "drying": "Drying",
           "finish": "Finish",
@@ -104,10 +104,32 @@
         "name": "Dryer mode"
       },
       "dryer_machine_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]"
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
+        "state": {
+          "pause": "[%key:common::state::paused%]",
+          "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "stop": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::stop%]"
+        }
       },
       "dryer_job_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]"
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
+        "state": {
+          "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
+          "delay_wash": "[%key:component::smartthings::entity::sensor::washer_job_state::state::delay_wash%]",
+          "drying": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::drying%]",
+          "finished": "[%key:component::smartthings::entity::sensor::oven_job_state::state::finished%]",
+          "none": "[%key:component::smartthings::entity::sensor::washer_job_state::state::none%]",
+          "refreshing": "Refreshing",
+          "weight_sensing": "[%key:component::smartthings::entity::sensor::washer_job_state::state::weight_sensing%]",
+          "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]",
+          "dehumidifying": "Dehumidifying",
+          "ai_drying": "AI drying",
+          "sanitizing": "Sanitizing",
+          "internal_care": "Internal care",
+          "freeze_protection": "Freeze protection",
+          "continuous_dehumidifying": "Continuous dehumidifying",
+          "thawing_frozen_inside": "Thawing frozen inside"
+        }
       },
       "equivalent_carbon_dioxide": {
         "name": "Equivalent carbon dioxide"
@@ -278,13 +300,24 @@
         }
       },
       "robot_cleaner_turbo_mode": {
-        "name": "Turbo mode"
+        "name": "Turbo mode",
+        "state": {
+          "on": "[%key:common::state::on%]",
+          "off": "[%key:common::state::off%]",
+          "silence": "Silent",
+          "extra_silence": "Extra silent"
+        }
       },
       "link_quality": {
         "name": "Link quality"
       },
       "smoke_detector": {
-        "name": "Smoke detector"
+        "name": "Smoke detector",
+        "state": {
+          "detected": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::detected%]",
+          "clear": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::clear%]",
+          "tested": "[%key:component::smartthings::entity::sensor::carbon_monoxide_detector::state::tested%]"
+        }
       },
       "thermostat_cooling_setpoint": {
         "name": "Cooling set point"
@@ -326,10 +359,33 @@
         "name": "Washer mode"
       },
       "washer_machine_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]"
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::name%]",
+        "state": {
+          "pause": "[%key:common::state::paused%]",
+          "run": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::run%]",
+          "stop": "[%key:component::smartthings::entity::sensor::dishwasher_machine_state::state::stop%]"
+        }
       },
       "washer_job_state": {
-        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]"
+        "name": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::name%]",
+        "state": {
+          "air_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::air_wash%]",
+          "ai_rinse": "AI rinse",
+          "ai_spin": "AI spin",
+          "ai_wash": "AI wash",
+          "cooling": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::cooling%]",
+          "delay_wash": "Delay wash",
+          "drying": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::drying%]",
+          "finish": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::finish%]",
+          "none": "None",
+          "pre_wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::pre_wash%]",
+          "rinse": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::rinse%]",
+          "spin": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::spin%]",
+          "wash": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wash%]",
+          "weight_sensing": "Weight sensing",
+          "wrinkle_prevent": "[%key:component::smartthings::entity::sensor::dishwasher_job_state::state::wrinkle_prevent%]",
+          "freeze_protection": "Freeze protection"
+        }
       }
     }
   }
