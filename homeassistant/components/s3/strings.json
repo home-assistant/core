@@ -16,14 +16,27 @@
       }
     },
     "error": {
-      "cannot_connect": "Can not connect to endpoint",
-      "invalid_bucket_name": "Invalid bucket name",
-      "invalid_credentials": "Provided combination of Access Key ID and Secret Access Key is not working to access the Bucket of given name.",
-      "invalid_endpoint_url": "Invalid endpoint URL"
+      "cannot_connect": "[%key:component::s3::exceptions::cannot_connect::message%]",
+      "invalid_bucket_name": "[%key:component::s3::exceptions::invalid_bucket_name::message%]",
+      "invalid_credentials": "[%key:component::s3::exceptions::invalid_credentials::message%]",
+      "invalid_endpoint_url": "[%key:component::s3::exceptions::invalid_endpoint_url::message%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     }
   },
-  "exceptions": {}
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Can not connect to endpoint"
+    },
+    "invalid_bucket_name": {
+      "message": "Invalid bucket name"
+    },
+    "invalid_credentials": {
+      "message": "Bucket cannot be accessed using provided combination of Access Key ID and Secret Access Key."
+    },
+    "invalid_endpoint_url": {
+      "message": "Invalid endpoint URL"
+    }
+  }
 }
