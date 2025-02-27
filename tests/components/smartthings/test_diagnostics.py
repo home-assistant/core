@@ -34,6 +34,8 @@ async def test_device(
         identifiers={(DOMAIN, "96a5ef74-5832-a84b-f1f7-ca799957065d")}
     )
 
+    mock_smartthings.get_device_status.reset_mock()
+
     with patch("homeassistant.components.smartthings.diagnostics.EVENT_WAIT_TIME", 0.1):
         diag = await get_diagnostics_for_device(
             hass, hass_client, mock_config_entry, device
@@ -41,4 +43,7 @@ async def test_device(
 
     assert diag == snapshot(
         exclude=props("last_changed", "last_reported", "last_updated")
+    )
+    mock_smartthings.get_device_status.assert_called_once_with(
+        "96a5ef74-5832-a84b-f1f7-ca799957065d"
     )
