@@ -10,6 +10,7 @@ from homeassistant.components.google_generative_ai_conversation.config_flow impo
     RECOMMENDED_OPTIONS,
 )
 from homeassistant.components.google_generative_ai_conversation.const import (
+    CONF_API_VERSION,
     CONF_CHAT_MODEL,
     CONF_DANGEROUS_BLOCK_THRESHOLD,
     CONF_HARASSMENT_BLOCK_THRESHOLD,
@@ -22,6 +23,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_TOP_K,
     CONF_TOP_P,
     DOMAIN,
+    RECOMMENDED_API_VERSION,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
@@ -143,6 +145,7 @@ async def test_form(hass: HomeAssistant) -> None:
                 CONF_HATE_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_SEXUAL_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
                 CONF_DANGEROUS_BLOCK_THRESHOLD: RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                CONF_API_VERSION: RECOMMENDED_API_VERSION,
             },
         ),
         (
@@ -154,6 +157,7 @@ async def test_form(hass: HomeAssistant) -> None:
                 CONF_TOP_P: RECOMMENDED_TOP_P,
                 CONF_TOP_K: RECOMMENDED_TOP_K,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_API_VERSION: "v1beta",
             },
             {
                 CONF_RECOMMENDED: True,

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from google import genai  # type: ignore[attr-defined]
+from google import genai
 from google.genai.errors import APIError, ClientError
+from google.genai.types import GenerateContentConfig, HttpOptions
 from requests.exceptions import Timeout
 import voluptuous as vol
 
@@ -31,6 +32,7 @@ from .const import (
     CONF_CHAT_MODEL,
     CONF_PROMPT,
     DOMAIN,
+    RECOMMENDED_API_VERSION,
     RECOMMENDED_CHAT_MODEL,
     TIMEOUT_MILLIS,
 )
@@ -88,8 +90,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await hass.async_add_executor_job(append_files_to_prompt)
 
         try:
+            config = GenerateContentConfig(
+                http_options=HttpOptions(api_version=RECOMMENDED_API_VERSION)
+            )
             response = await client.aio.models.generate_content(
-                model=RECOMMENDED_CHAT_MODEL, contents=prompt_parts
+                model=RECOMMENDED_CHAT_MODEL, contents=prompt_parts, config=config
             )
         except (
             APIError,
@@ -97,9 +102,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         ) as err:
             raise HomeAssistantError(f"Error generating content: {err}") from err
 
-        if response.prompt_feedback:
+        if (
+            response.prompt_feedback
+            or response.candidates is None
+            or response.candidates[0].content is None
+            or response.candidates[0].content.parts is None
+        ):
             raise HomeAssistantError(
-                f"Error generating content due to content violations, reason: {response.prompt_feedback.block_reason_message}"
+                f"Error generating content due to content violations, reason: {response.prompt_feedback.block_reason_message if response.prompt_feedback else 'Unknown'}"
             )
 
         if not response.candidates[0].content.parts:

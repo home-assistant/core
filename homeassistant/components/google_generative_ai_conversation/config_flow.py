@@ -7,7 +7,7 @@ import logging
 from types import MappingProxyType
 from typing import Any
 
-from google import genai  # type: ignore[attr-defined]
+from google import genai
 from google.genai.errors import APIError, ClientError
 from requests.exceptions import Timeout
 import voluptuous as vol
@@ -33,6 +33,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_API_VERSION,
     CONF_CHAT_MODEL,
     CONF_DANGEROUS_BLOCK_THRESHOLD,
     CONF_HARASSMENT_BLOCK_THRESHOLD,
@@ -45,6 +46,7 @@ from .const import (
     CONF_TOP_K,
     CONF_TOP_P,
     DOMAIN,
+    RECOMMENDED_API_VERSION,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
@@ -79,6 +81,7 @@ async def validate_input(data: dict[str, Any]) -> None:
         config={
             "http_options": {
                 "timeout": TIMEOUT_MILLIS,
+                "api_version": RECOMMENDED_API_VERSION,
             },
             "query_base": True,
         }
@@ -244,7 +247,15 @@ async def google_generative_ai_config_option_schema(
     if options.get(CONF_RECOMMENDED):
         return schema
 
-    api_models_pager = await genai_client.aio.models.list(config={"query_base": True})
+    api_models_pager = await genai_client.aio.models.list(
+        config={
+            "http_options": {
+                "timeout": TIMEOUT_MILLIS,
+                "api_version": options.get(CONF_API_VERSION, RECOMMENDED_API_VERSION),
+            },
+            "query_base": True,
+        }
+    )
     api_models = [api_model async for api_model in api_models_pager]
     models = [
         SelectOptionDict(
@@ -341,6 +352,25 @@ async def google_generative_ai_config_option_schema(
                 },
                 default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
             ): harm_block_thresholds_selector,
+            vol.Optional(
+                CONF_API_VERSION,
+                description={"suggested_value": options.get(CONF_API_VERSION)},
+                default=RECOMMENDED_API_VERSION,
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    mode=SelectSelectorMode.DROPDOWN,
+                    options=[
+                        SelectOptionDict(
+                            label="V1",
+                            value="v1",
+                        ),
+                        SelectOptionDict(
+                            label="V1Beta",
+                            value="v1beta",
+                        ),
+                    ],
+                )
+            ),
         }
     )
     return schema

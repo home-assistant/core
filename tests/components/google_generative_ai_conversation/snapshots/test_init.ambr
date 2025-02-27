@@ -6,6 +6,7 @@
       tuple(
       ),
       dict({
+        'config': GenerateContentConfig(http_options=HttpOptions(base_url=None, api_version='v1', headers=None, timeout=None), system_instruction=None, temperature=None, top_p=None, top_k=None, candidate_count=None, max_output_tokens=None, stop_sequences=None, response_logprobs=None, logprobs=None, presence_penalty=None, frequency_penalty=None, seed=None, response_mime_type=None, response_schema=None, routing_config=None, safety_settings=None, tools=None, tool_config=None, labels=None, cached_content=None, response_modalities=None, media_resolution=None, speech_config=None, audio_timestamp=None, automatic_function_calling=None, thinking_config=None),
         'contents': list([
           'Describe this image from my doorbell camera',
           b'some file',
@@ -23,6 +24,7 @@
       tuple(
       ),
       dict({
+        'config': GenerateContentConfig(http_options=HttpOptions(base_url=None, api_version='v1', headers=None, timeout=None), system_instruction=None, temperature=None, top_p=None, top_k=None, candidate_count=None, max_output_tokens=None, stop_sequences=None, response_logprobs=None, logprobs=None, presence_penalty=None, frequency_penalty=None, seed=None, response_mime_type=None, response_schema=None, routing_config=None, safety_settings=None, tools=None, tool_config=None, labels=None, cached_content=None, response_modalities=None, media_resolution=None, speech_config=None, audio_timestamp=None, automatic_function_calling=None, thinking_config=None),
         'contents': list([
           'Write an opening speech for a Home Assistant release party',
         ]),

@@ -13,6 +13,7 @@ from google.genai.types import (
     FunctionDeclaration,
     GenerateContentConfig,
     HarmCategory,
+    HttpOptions,
     Part,
     SafetySetting,
     Schema,
@@ -29,6 +30,7 @@ from homeassistant.helpers import chat_session, device_registry as dr, intent, l
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    CONF_API_VERSION,
     CONF_CHAT_MODEL,
     CONF_DANGEROUS_BLOCK_THRESHOLD,
     CONF_HARASSMENT_BLOCK_THRESHOLD,
@@ -41,6 +43,7 @@ from .const import (
     CONF_TOP_P,
     DOMAIN,
     LOGGER,
+    RECOMMENDED_API_VERSION,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_HARM_BLOCK_THRESHOLD,
     RECOMMENDED_MAX_TOKENS,
@@ -388,6 +391,11 @@ class GoogleGenerativeAIConversationEntity(
             system_instruction=prompt if supports_system_instruction else None,
             automatic_function_calling=AutomaticFunctionCallingConfig(
                 disable=True, maximum_remote_calls=None
+            ),
+            http_options=HttpOptions(
+                api_version=self.entry.options.get(
+                    CONF_API_VERSION, RECOMMENDED_API_VERSION
+                ),
             ),
         )
 
