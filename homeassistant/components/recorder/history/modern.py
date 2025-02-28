@@ -640,7 +640,9 @@ def _get_start_time_state_for_entities_stmt(
         )
         stmt = (
             _stmt_and_join_attributes_for_start_state(
-                no_attributes, include_last_changed, False
+                no_attributes=no_attributes,
+                include_last_changed=include_last_changed,
+                include_last_reported=False,
             )
             .join(
                 most_recent_states_for_entities_by_date,
@@ -667,7 +669,9 @@ def _get_start_time_state_for_entities_stmt(
         # before a specific point in time for all entities.
         stmt = (
             _stmt_and_join_attributes_for_start_state(
-                no_attributes, include_last_changed, False
+                no_attributes=no_attributes,
+                include_last_changed=include_last_changed,
+                include_last_reported=False,
             )
             .select_from(StatesMeta)
             .join(
