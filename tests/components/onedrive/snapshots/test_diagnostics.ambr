@@ -2,9 +2,10 @@
 # name: test_diagnostics
   dict({
     'config': dict({
-      'delete_permanently': False,
+      'auth_implementation': 'onedrive',
       'folder_id': 'my_folder_id',
       'folder_name': 'name',
+      'token': '**REDACTED**',
     }),
     'drive': dict({
       'drive_type': 'personal',
