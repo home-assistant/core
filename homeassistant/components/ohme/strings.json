@@ -74,7 +74,7 @@
         "state": {
           "unplugged": "Unplugged",
           "plugged_in": "Plugged in",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "paused": "[%key:common::state::paused%]",
           "pending_approval": "Pending approval",
           "finished": "Finished charging"
