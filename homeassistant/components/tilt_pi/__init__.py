@@ -20,6 +20,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: TiltPiConfigEntry) -> bo
         port=entry.data[CONF_PORT],
         session=session,
     )
+
+    try:
+        await client.get_hydrometers()
+    except Exception as e:
+        raise ConfigEntryNotReady(f"Cannot connect to Tilt Pi: {e}") from e
+
     coordinator = TiltPiDataUpdateCoordinator(
         hass=hass,
         config_entry=entry,
