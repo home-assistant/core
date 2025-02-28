@@ -9,6 +9,8 @@ import pytest
 
 from homeassistant.components.gentex_homelink import async_setup_entry
 from homeassistant.components.gentex_homelink.const import (
+    EVENT_OFF,
+    EVENT_PRESSED,
     EVENT_TIMEOUT,
     POLLING_INTERVAL,
 )
@@ -127,7 +129,7 @@ async def test_get_state_updates(
         assert (state != STATE_UNAVAILABLE for state in states), (
             "Some button became unavailable"
         )
-        buttons_pressed = [s.attributes["event_type"] == "Pressed" for s in states]
+        buttons_pressed = [s.attributes["event_type"] == EVENT_PRESSED for s in states]
         assert all(buttons_pressed), "At least one button was not pressed"
         logging.info(
             "Fetch data again. Buttons should be off because the request has the same id and more than 10s has elapsed"
@@ -140,7 +142,7 @@ async def test_get_state_updates(
             "Some button is still unavailable"
         )
 
-        buttons_off = [s.attributes["event_type"] == "Pressed" for s in states]
+        buttons_off = [s.attributes["event_type"] == EVENT_PRESSED for s in states]
         assert all(buttons_off), "Some button was not Off"
         logging.info(
             "Fetch data again. Buttons should be on because the request has a different timestamp and id"
@@ -154,7 +156,7 @@ async def test_get_state_updates(
         assert (state != STATE_UNAVAILABLE for state in states), (
             "Some button became unavailable"
         )
-        buttons_pressed = [s.attributes["event_type"] == "Pressed" for s in states]
+        buttons_pressed = [s.attributes["event_type"] == EVENT_PRESSED for s in states]
         assert all(buttons_pressed), "At least one button was not pressed"
 
         logging.info(
@@ -168,7 +170,7 @@ async def test_get_state_updates(
         assert (state != STATE_UNAVAILABLE for state in states), (
             "Some button became unavailable"
         )
-        buttons_off = [s.attributes["event_type"] == "Off" for s in states]
+        buttons_off = [s.attributes["event_type"] == EVENT_OFF for s in states]
         assert all(buttons_off), (
             "At least one button failed to turn off after the designated time"
         )
