@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_ON
 from homeassistant.core import Event, EventStateChangedData, HassJob, HomeAssistant
-from homeassistant.exceptions import ServiceNotFound
+from homeassistant.exceptions import ServiceNotFound, ServiceValidationError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.event import (
     async_track_point_in_time,
@@ -200,7 +200,9 @@ class AlertEntity(Entity):
             self._ack = True
             self.async_write_ha_state()
         else:
-            LOGGER.warning("Alert Acknowledgement Blocked: %s", self._attr_name)
+            raise ServiceValidationError(
+                "Cannot acknowledge alert with can_acknowledge set to False"
+            )
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Async toggle alert."""
