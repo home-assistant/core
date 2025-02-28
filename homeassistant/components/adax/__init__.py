@@ -8,7 +8,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import AdaxCoordinator
+from .const import CONNECTION_TYPE, LOCAL
+from .coordinator import AdaxCloudCoordinator, AdaxLocalCoordinator
 
 PLATFORMS = [Platform.CLIMATE]
 SCAN_INTERVAL = datetime.timedelta(seconds=60)
@@ -16,7 +17,16 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Adax from a config entry."""
-    entry.coordinator = AdaxCoordinator(hass, entry, update_interval=SCAN_INTERVAL)
+
+    if entry.data.get(CONNECTION_TYPE) == LOCAL:
+        entry.coordinator = AdaxLocalCoordinator(
+            hass, entry, update_interval=SCAN_INTERVAL
+        )
+    else:
+        entry.coordinator = AdaxCloudCoordinator(
+            hass, entry, update_interval=SCAN_INTERVAL
+        )
+
     await entry.coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
