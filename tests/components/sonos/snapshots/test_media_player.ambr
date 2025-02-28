@@ -81,3 +81,21 @@
     ]),
   })
 # ---
+# name: test_play_media_library_folder
+  list([
+    MockMusicServiceItem(
+      album_art_uri=None,
+      item_class='object.container',
+      item_id='S://192.168.1.1/music/elton%20john/Greatest%20Hits',
+      parent_id='S://192.168.1.1/music/elton%20john',
+      title=None,
+    ),
+    MockMusicServiceItem(
+      album_art_uri=None,
+      item_class='object.container',
+      item_id='S://192.168.1.1/music/elton%20john/Good%20Bye%20Yellow%20Brick%20Road',
+      parent_id='S://192.168.1.1/music/elton%20john',
+      title=None,
+    ),
+  ])
+# ---

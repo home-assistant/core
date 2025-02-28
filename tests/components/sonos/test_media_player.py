@@ -239,6 +239,7 @@ async def test_play_media_library_folder(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
     async_autosetup_sonos,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test playing media library folder."""
     soco_mock = soco_factory.mock_list.get("192.168.42.2")
@@ -256,16 +257,7 @@ async def test_play_media_library_folder(
     assert soco_mock.clear_queue.call_count == 1
     assert soco_mock.add_multiple_to_queue.call_count == 1
     items = soco_mock.add_multiple_to_queue.call_args_list[0].args[0]
-    assert items[0].item_class == "object.container"
-    assert items[0].item_id == "S://192.168.1.1/music/elton%20john/Greatest%20Hits"
-    assert items[0].parent_id == "S://192.168.1.1/music/elton%20john"
-    assert items[1].item_class == "object.container"
-    assert (
-        items[1].item_id
-        == "S://192.168.1.1/music/elton%20john/Good%20Bye%20Yellow%20Brick%20Road"
-    )
-    assert items[1].parent_id == "S://192.168.1.1/music/elton%20john"
-
+    assert items == snapshot
     assert (
         soco_mock.add_multiple_to_queue.call_args_list[0].kwargs["timeout"]
         == LONG_SERVICE_TIMEOUT
