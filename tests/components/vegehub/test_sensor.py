@@ -9,52 +9,28 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
-from .conftest import TEST_API_KEY, TEST_WEBHOOK_ID
+from .conftest import TEST_SIMPLE_MAC, TEST_WEBHOOK_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.typing import ClientSessionGenerator
 
-TEST_DATA = {
-    "api_key": TEST_API_KEY,
+UPDATE_DATA = {
+    "api_key": "",
+    "mac": TEST_SIMPLE_MAC,
     "error_code": 0,
     "sensors": [
-        {
-            "slot": 1,
-            "samples": [
-                {"t": "2025-01-01 12:00:00", "v": 1.0},
-                {"t": "2025-01-01 12:00:05", "v": 1.1},
-                {"t": "2025-01-01 12:00:10", "v": 1.2},
-            ],
-        },
-        {
-            "slot": 2,
-            "samples": [
-                {"t": "2025-01-01 12:00:00", "v": 2.0},
-                {"t": "2025-01-01 12:00:05", "v": 2.1},
-                {"t": "2025-01-01 12:00:10", "v": 2.2},
-            ],
-        },
-        {
-            "slot": 3,
-            "samples": [
-                {"t": "2025-01-01 12:00:00", "v": 3.0},
-                {"t": "2025-01-01 12:00:05", "v": 3.1},
-                {"t": "2025-01-01 12:00:10", "v": 3.2},
-            ],
-        },
-        {
-            "slot": 4,
-            "samples": [
-                {"t": "2025-01-01 12:00:00", "v": 4.0},
-                {"t": "2025-01-01 12:00:05", "v": 4.1},
-                {"t": "2025-01-01 12:00:10", "v": 4.2},
-            ],
-        },
+        {"slot": 1, "samples": [{"v": 1.5, "t": "2025-01-15T16:51:23Z"}]},
+        {"slot": 2, "samples": [{"v": 1.45599997, "t": "2025-01-15T16:51:23Z"}]},
+        {"slot": 3, "samples": [{"v": 1.330000043, "t": "2025-01-15T16:51:23Z"}]},
+        {"slot": 4, "samples": [{"v": 0.075999998, "t": "2025-01-15T16:51:23Z"}]},
+        {"slot": 5, "samples": [{"v": 9.314800262, "t": "2025-01-15T16:51:23Z"}]},
     ],
+    "send_time": 1736959883,
+    "wifi_str": -27,
 }
 
 
-async def test_entities(
+async def test_sensor_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     hass_client_no_auth: ClientSessionGenerator,
@@ -77,7 +53,7 @@ async def test_entities(
         assert webhook_info["handler"], "Webhook handler is not set"
 
         client = await hass_client_no_auth()
-        resp = await client.post(f"/api/webhook/{TEST_WEBHOOK_ID}", json=TEST_DATA)
+        resp = await client.post(f"/api/webhook/{TEST_WEBHOOK_ID}", json=UPDATE_DATA)
 
         # Wait for remaining tasks to complete.
         await hass.async_block_till_done()

@@ -21,7 +21,6 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry, load_fixture
 
 TEST_IP = "192.168.0.100"
-TEST_API_KEY = "1234567890ABCD"
 TEST_UNIQUE_ID = "aabbccddeeff"
 TEST_SERVER = "http://example.com"
 TEST_MAC = "A1:B2:C3:D4:E5:F6"
