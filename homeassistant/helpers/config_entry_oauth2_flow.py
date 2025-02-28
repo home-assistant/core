@@ -134,7 +134,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         hass: HomeAssistant,
         domain: str,
         client_id: str,
-        client_secret: str,
+        client_secret: str | None,
         authorize_url: str,
         token_url: str,
     ) -> None:
@@ -166,6 +166,11 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         """Extra data that needs to be appended to the authorize url."""
         return {}
 
+    @property
+    def extra_token_redeem_data(self) -> dict:
+        """Extra data that needs to be included in the token redeem request."""
+        return {}
+
     async def async_generate_authorize_url(self, flow_id: str) -> str:
         """Generate a url for the user to authorize."""
         redirect_uri = self.redirect_uri
@@ -186,13 +191,12 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
-        return await self._token_request(
-            {
-                "grant_type": "authorization_code",
-                "code": external_data["code"],
-                "redirect_uri": external_data["state"]["redirect_uri"],
-            }
-        )
+        request_data = {
+            "grant_type": "authorization_code",
+            "code": external_data["code"],
+            "redirect_uri": external_data["state"]["redirect_uri"],
+        }.update(self.extra_token_redeem_data)
+        return await self._token_request(request_data)
 
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh tokens."""
