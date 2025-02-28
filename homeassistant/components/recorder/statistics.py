@@ -2027,70 +2027,75 @@ def get_latest_short_term_statistics_with_session(
     )
 
 
-def _generate_statistics_at_time_stmt(
+def _generate_statistics_at_time_stmt_group_by(
     table: type[StatisticsBase],
     metadata_ids: set[int],
     start_time_ts: float,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
-    slow_dependent_subquery: bool,
 ) -> StatementLambdaElement:
     """Create the statement for finding the statistics for a given time."""
-
+    # Simple group-by for MySQL, must use less
+    # than 1000 metadata_ids in the IN clause for MySQL
+    # or it will optimize poorly. Callers are responsible
+    # for ensuring that the number of metadata_ids is less
+    # than 1000.
     stmt = _generate_select_columns_for_types_stmt(table, types)
-    if slow_dependent_subquery:
-        # Simple group-by for MySQL, must use less
-        # than 1000 metadata_ids in the IN clause for MySQL
-        # or it will optimize poorly. Callers are responsible
-        # for ensuring that the number of metadata_ids is less
-        # than 1000.
-        most_recent_statistic_ids = (
-            select(
-                func.max(table.start_ts).label("max_start_ts"),
-                table.metadata_id.label("max_metadata_id"),
-            )
-            .filter(table.start_ts < start_time_ts)
-            .filter(table.metadata_id.in_(metadata_ids))
-            .group_by(table.metadata_id)
-            .subquery()
+    most_recent_statistic_ids = (
+        select(
+            func.max(table.start_ts).label("max_start_ts"),
+            table.metadata_id.label("max_metadata_id"),
         )
-        stmt += lambda q: q.join(
-            most_recent_statistic_ids,
+        .filter(table.start_ts < start_time_ts)
+        .filter(table.metadata_id.in_(metadata_ids))
+        .group_by(table.metadata_id)
+        .subquery()
+    )
+    stmt += lambda q: q.join(
+        most_recent_statistic_ids,
+        and_(
+            table.start_ts == most_recent_statistic_ids.c.max_start_ts,
+            table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
+        ),
+    )
+    return stmt
+
+
+def _generate_statistics_at_time_stmt_dependent_sub_query(
+    table: type[StatisticsBase],
+    metadata_ids: set[int],
+    start_time_ts: float,
+    types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]],
+) -> StatementLambdaElement:
+    """Create the statement for finding the statistics for a given time."""
+    # This query is the result of significant research in
+    # https://github.com/home-assistant/core/issues/132865
+    # A reverse index scan with a limit 1 is the fastest way to get the
+    # last start_time_ts before a specific point in time for all supported
+    # databases. Since all databases support this query as a join
+    # condition we can use it as a subquery to get the last start_time_ts
+    # before a specific point in time for all entities.
+    return _generate_select_columns_for_types_stmt(table, types) + (
+        lambda q: q.select_from(StatisticsMeta)
+        .join(
+            table,
             and_(
-                table.start_ts == most_recent_statistic_ids.c.max_start_ts,
-                table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
+                table.start_ts
+                == (
+                    select(table.start_ts)
+                    .where(
+                        (StatisticsMeta.id == table.metadata_id)
+                        & (table.start_ts < start_time_ts)
+                    )
+                    .order_by(table.start_ts.desc())
+                    .limit(1)
+                )
+                .scalar_subquery()
+                .correlate(StatisticsMeta),
+                table.metadata_id == StatisticsMeta.id,
             ),
         )
-    else:
-        # This query is the result of significant research in
-        # https://github.com/home-assistant/core/issues/132865
-        # A reverse index scan with a limit 1 is the fastest way to get the
-        # last start_time_ts before a specific point in time for all supported
-        # databases. Since all databases support this query as a join
-        # condition we can use it as a subquery to get the last start_time_ts
-        # before a specific point in time for all entities.
-        stmt += (
-            lambda q: q.select_from(StatisticsMeta)
-            .join(
-                table,
-                and_(
-                    table.start_ts
-                    == (
-                        select(table.start_ts)
-                        .where(
-                            (StatisticsMeta.id == table.metadata_id)
-                            & (table.start_ts < start_time_ts)
-                        )
-                        .order_by(table.start_ts.desc())
-                        .limit(1)
-                    )
-                    .scalar_subquery()
-                    .correlate(StatisticsMeta),
-                    table.metadata_id == StatisticsMeta.id,
-                ),
-            )
-            .where(table.metadata_id.in_(metadata_ids))
-        )
-    return stmt
+        .where(table.metadata_id.in_(metadata_ids))
+    )
 
 
 def _statistics_at_time(
@@ -2103,29 +2108,31 @@ def _statistics_at_time(
 ) -> Sequence[Row] | None:
     """Return last known statistics, earlier than start_time, for the metadata_ids."""
     start_time_ts = start_time.timestamp()
-    rows: list[Row] = []
     if TYPE_CHECKING:
         assert instance.database_engine is not None
-    if (
-        slow_dependent_subquery
-        := instance.database_engine.optimizer.slow_dependent_subquery
+    if not instance.database_engine.optimizer.slow_dependent_subquery:
+        stmt = _generate_statistics_at_time_stmt_dependent_sub_query(
+            table=table,
+            metadata_ids=metadata_ids,
+            start_time_ts=start_time_ts,
+            types=types,
+        )
+        return cast(list[Row], execute_stmt_lambda_element(session, stmt))
+    rows: list[Row] = []
+    # https://github.com/home-assistant/core/issues/132865
+    # If we include the start time state we need to limit the
+    # number of metadata_ids we query for at a time to avoid
+    # hitting limits in the MySQL optimizer that prevent
+    # the start time state query from using an index-only optimization
+    # to find the start time state.
+    for metadata_ids_chunk in chunked_or_all(
+        metadata_ids, MAX_IDS_FOR_INDEXED_GROUP_BY
     ):
-        # https://github.com/home-assistant/core/issues/132865
-        # If we include the start time state we need to limit the
-        # number of metadata_ids we query for at a time to avoid
-        # hitting limits in the MySQL optimizer that prevent
-        # the start time state query from using an index-only optimization
-        # to find the start time state.
-        iter_metadata_ids = chunked_or_all(metadata_ids, MAX_IDS_FOR_INDEXED_GROUP_BY)
-    else:
-        iter_metadata_ids = (metadata_ids,)
-    for metadata_ids_chunk in iter_metadata_ids:
-        stmt = _generate_statistics_at_time_stmt(
-            table,
-            metadata_ids_chunk,
-            start_time_ts,
-            types,
-            slow_dependent_subquery,
+        stmt = _generate_statistics_at_time_stmt_group_by(
+            table=table,
+            metadata_ids=metadata_ids_chunk,
+            start_time_ts=start_time_ts,
+            types=types,
         )
         row_chunk = cast(list[Row], execute_stmt_lambda_element(session, stmt))
         if rows:
