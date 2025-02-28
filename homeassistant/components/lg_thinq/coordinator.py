@@ -9,19 +9,14 @@ from typing import TYPE_CHECKING, Any
 from thinqconnect import ThinQAPIException
 from thinqconnect.integration import HABridge
 
-from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, UnitOfTemperature
+from homeassistant.const import EVENT_CORE_CONFIG_UPDATE
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
     from . import ThinqConfigEntry
 
-from .const import DOMAIN
-
-UNIT_CONVERSION_MAP: dict[str, str] = {
-    UnitOfTemperature.FAHRENHEIT: "F",
-    UnitOfTemperature.CELSIUS: "C",
-}
+from .const import DOMAIN, REVERSE_DEVICE_UNIT_TO_HA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -92,7 +87,7 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _update_preferred_temperature_unit(self) -> None:
         """Update preferred temperature unit."""
         self.api.set_preferred_temperature_unit(
-            UNIT_CONVERSION_MAP.get(self.hass.config.units.temperature_unit)
+            REVERSE_DEVICE_UNIT_TO_HA.get(self.hass.config.units.temperature_unit)
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
