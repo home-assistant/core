@@ -25,7 +25,12 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import FIRMWARE, NABU_CASA_FIRMWARE_RELEASES_URL, RADIO_DEVICE
+from .const import (
+    FIRMWARE,
+    FIRMWARE_VERSION,
+    NABU_CASA_FIRMWARE_RELEASES_URL,
+    RADIO_DEVICE,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -153,5 +158,6 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             data={
                 **self._config_entry.data,
                 FIRMWARE: firmware_info.firmware_type,
+                FIRMWARE_VERSION: firmware_info.firmware_version,
             },
         )
