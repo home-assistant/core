@@ -153,7 +153,7 @@ async def test_save_preferences(
             {
                 "stat_consumption": "some_device_usage",
                 "name": "My Device",
-                "parent_stat": "sensor.some_other_device",
+                "included_in_stat": "sensor.some_other_device",
             }
         ],
     }

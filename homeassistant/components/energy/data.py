@@ -140,7 +140,7 @@ class DeviceConsumption(TypedDict):
     name: str | None
 
     # An optional statistic_id identifying a device that includes this device's consumption in its total
-    parent_stat: str | None
+    included_in_stat: str | None
 
 
 class EnergyPreferences(TypedDict):
@@ -294,7 +294,7 @@ DEVICE_CONSUMPTION_SCHEMA = vol.Schema(
     {
         vol.Required("stat_consumption"): str,
         vol.Optional("name"): str,
-        vol.Optional("parent_stat"): str,
+        vol.Optional("included_in_stat"): str,
     }
 )
 
