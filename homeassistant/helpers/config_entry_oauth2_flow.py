@@ -11,10 +11,14 @@ from __future__ import annotations
 from abc import ABC, ABCMeta, abstractmethod
 import asyncio
 from asyncio import Lock
+import base64
 from collections.abc import Awaitable, Callable
+import hashlib
 from http import HTTPStatus
 from json import JSONDecodeError
 import logging
+import os
+import re
 import secrets
 import time
 from typing import Any, cast
@@ -134,7 +138,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
         hass: HomeAssistant,
         domain: str,
         client_id: str,
-        client_secret: str | None,
+        client_secret: str,
         authorize_url: str,
         token_url: str,
     ) -> None:
@@ -195,7 +199,8 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             "grant_type": "authorization_code",
             "code": external_data["code"],
             "redirect_uri": external_data["state"]["redirect_uri"],
-        }.update(self.extra_token_redeem_data)
+        }
+        request_data.update(self.extra_token_redeem_data)
         return await self._token_request(request_data)
 
     async def _async_refresh_token(self, token: dict) -> dict:
@@ -215,7 +220,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
         data["client_id"] = self.client_id
 
-        if self.client_secret is not None:
+        if self.client_secret:
             data["client_secret"] = self.client_secret
 
         _LOGGER.debug("Sending token request to %s", self.token_url)
@@ -235,6 +240,80 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
             )
         resp.raise_for_status()
         return cast(dict, await resp.json())
+
+
+class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
+    """Local OAuth2 implementation with PKCE."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        client_id: str,
+        authorize_url: str,
+        token_url: str,
+        client_secret: str = "",
+        code_verifier_length: int = 100,
+    ) -> None:
+        """Initialize local auth implementation."""
+        super().__init__(
+            hass,
+            domain,
+            client_id,
+            client_secret,
+            authorize_url,
+            token_url,
+        )
+
+        # Generate code verifier
+        self.code_verifier = LocalOAuth2ImplementationWithPkce.generate_code_verifier(
+            code_verifier_length
+        )
+
+    @property
+    def code_challenge_data(self) -> dict:
+        """Return the generated code challenge and method."""
+        return {
+            "code_challenge": LocalOAuth2ImplementationWithPkce.compute_code_challenge(
+                self.code_verifier
+            ),
+            "code_challenge_method": "S256",
+        }
+
+    @property
+    def extra_authorize_data(self) -> dict:
+        """Extra data that needs to be appended to the authorize url."""
+        return self.code_challenge_data
+
+    @property
+    def code_verifier_data(self) -> dict:
+        """Return the code verifier."""
+        return {"code_verifier": self.code_verifier}
+
+    @property
+    def extra_token_redeem_data(self) -> dict:
+        """Extra data that needs to be included in the token redeem request."""
+        return self.code_verifier_data
+
+    @staticmethod
+    def generate_code_verifier(length: int = 100) -> str:
+        """Generate a code verifier."""
+        code_verifier = base64.urlsafe_b64encode(os.urandom(length + 20)).decode(
+            "utf-8"
+        )
+        code_verifier = re.sub("[^a-zA-Z0-9]+", "", code_verifier)
+        return code_verifier[:length]
+
+    @staticmethod
+    def compute_code_challenge(code_verifier: str) -> str:
+        """Compute the code challenge."""
+        return (
+            base64.urlsafe_b64encode(
+                hashlib.sha256(code_verifier.encode("utf-8")).digest()
+            )
+            .decode("utf-8")
+            .rstrip("=")
+        )
 
 
 class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
