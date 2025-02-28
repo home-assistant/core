@@ -20,6 +20,7 @@ from ..number import BOOST_MODE_DURATION_DELAY as MODE_DELAY, OPERATING_MODE_DEL
 
 DEFAULT_MIN_TEMP: float = 50.0
 DEFAULT_MAX_TEMP: float = 62.0
+MAX_BOOST_MODE_DURATION: int = 7
 
 
 class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeaterEntity):
@@ -280,7 +281,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         """Turn boost mode on."""
         await self.executor.async_execute_command(
             OverkizCommand.SET_BOOST_MODE_DURATION,
-            7,
+            MAX_BOOST_MODE_DURATION,
             refresh_afterwards=refresh_afterwards,
         )
         await asyncio.sleep(MODE_DELAY)  # wait one second to not overload the device
