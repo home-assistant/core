@@ -664,18 +664,21 @@ class SpeechManager:
 
     async def async_clear_cache(self) -> None:
         """Read file cache and delete files."""
-        self.mem_cache = {}
+        self.mem_cache.clear()
 
-        def remove_files() -> None:
+        def remove_files(files: list[str]) -> None:
             """Remove files from filesystem."""
-            for filename in self.file_cache.values():
+            for filename in files:
                 try:
                     os.remove(os.path.join(self.cache_dir, filename))
                 except OSError as err:
                     _LOGGER.warning("Can't remove cache file '%s': %s", filename, err)
 
-        await self.hass.async_add_executor_job(remove_files)
-        self.file_cache = {}
+        task = self.hass.async_add_executor_job(
+            remove_files, list(self.file_cache.values())
+        )
+        self.file_cache.clear()
+        await task
 
     @callback
     def async_register_legacy_engine(
