@@ -53,14 +53,14 @@ async def test_removing_stale_devices(
     assert not device_registry.async_get_device({(DOMAIN, "aaa-bbb-ccc")})
 
 
-async def test_hub(
+async def test_hub_via_device(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     mock_smartthings: AsyncMock,
 ) -> None:
-    """Test removing stale devices."""
+    """Test hub with child devices."""
     mock_smartthings.get_devices.return_value = DeviceResponse.from_json(
         load_fixture("devices/hub.json", DOMAIN)
     ).items
