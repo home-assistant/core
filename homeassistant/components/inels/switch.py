@@ -33,15 +33,21 @@ relay_overflow = InelsSwitchAlert(key="overflow", message="Relay overflow in %s 
 class InelsSwitchType:
     """Inels switch property description."""
 
-    name: str = "Relay"
-    icon: str = ICON_SWITCH
+    name: str = ""
+    icon: str = ""
     alerts: list[InelsSwitchAlert] | None = None
 
 
+SWITCH_TYPES = [
+    ("bit", {}),
+    ("simple_relay", {}),
+    ("relay", {"alerts": [relay_overflow]}),
+]
+
+
 INELS_SWITCH_TYPES: dict[str, InelsSwitchType] = {
-    "bit": InelsSwitchType(),
-    "simple_relay": InelsSwitchType(),
-    "relay": InelsSwitchType(alerts=[relay_overflow]),
+    key: InelsSwitchType(name=key, icon=ICON_SWITCH, **properties)
+    for key, properties in SWITCH_TYPES
 }
 
 
