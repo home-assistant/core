@@ -28,17 +28,20 @@ from homeassistant.helpers.dispatcher import (
 from homeassistant.helpers.entity import Entity
 
 from .const import DISCOVERY_TOPIC, DOMAIN, LOGGER
+from .device_sensor import PGLabDeviceSensor
 
 if TYPE_CHECKING:
     from . import PGLABConfigEntry
 
 # Supported platforms.
 PLATFORMS = [
+    Platform.SENSOR,
     Platform.SWITCH,
 ]
 
 # Used to create a new component entity.
 CREATE_NEW_ENTITY = {
+    Platform.SENSOR: "pglab_create_new_entity_sensor",
     Platform.SWITCH: "pglab_create_new_entity_switch",
 }
 
@@ -74,6 +77,7 @@ class DiscoverDeviceInfo:
         # When the hash string changes the devices entities must be rebuilt.
         self._hash = pglab_device.hash
         self._entities: list[tuple[str, str]] = []
+        self._sensors = PGLabDeviceSensor(pglab_device)
 
     def add_entity(self, entity: Entity) -> None:
         """Add an entity."""
@@ -92,6 +96,20 @@ class DiscoverDeviceInfo:
     def entities(self) -> list[tuple[str, str]]:
         """Return array of entities available."""
         return self._entities
+
+    @property
+    def sensors(self) -> PGLabDeviceSensor:
+        """Return the PGLab device sensor."""
+        return self._sensors
+
+
+async def createDiscoverDeviceInfo(pglab_device: PyPGLabDevice) -> DiscoverDeviceInfo:
+    """Create a new DiscoverDeviceInfo instance."""
+    discovery_info = DiscoverDeviceInfo(pglab_device)
+
+    # Subscribe to sensor state changes.
+    await discovery_info.sensors.subscribe_topics()
+    return discovery_info
 
 
 @dataclass
@@ -223,7 +241,7 @@ class PGLabDiscovery:
                 self.__clean_discovered_device(hass, pglab_device.id)
 
             # Add a new device.
-            discovery_info = DiscoverDeviceInfo(pglab_device)
+            discovery_info = await createDiscoverDeviceInfo(pglab_device)
             self._discovered[pglab_device.id] = discovery_info
 
             # Create all new relay entities.
@@ -232,6 +250,14 @@ class PGLabDiscovery:
                 async_dispatcher_send(
                     hass, CREATE_NEW_ENTITY[Platform.SWITCH], pglab_device, r
                 )
+
+            # Create all new sensor entities.
+            async_dispatcher_send(
+                hass,
+                CREATE_NEW_ENTITY[Platform.SENSOR],
+                pglab_device,
+                discovery_info.sensors,
+            )
 
         topics = {
             "discovery_topic": {
