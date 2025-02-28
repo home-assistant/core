@@ -12,7 +12,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, config as config_util, loader, runner
+from homeassistant import bootstrap, config as config_util, core, loader, runner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     BASE_PLATFORMS,
@@ -787,6 +787,9 @@ async def test_setup_hass_recovery_mode(
 ) -> None:
     """Test it works."""
     with (
+        patch(
+            "homeassistant.core.HomeAssistant", wraps=core.HomeAssistant
+        ) as mock_hass,
         patch("homeassistant.components.browser.setup") as browser_setup,
         patch(
             "homeassistant.config_entries.ConfigEntries.async_domains",
@@ -804,6 +807,8 @@ async def test_setup_hass_recovery_mode(
                 recovery_mode=True,
             ),
         )
+
+    mock_hass.assert_called_once()
 
     assert "recovery_mode" in hass.config.components
     assert len(mock_mount_local_lib_path.mock_calls) == 0
@@ -1523,3 +1528,46 @@ def test_should_rollover_is_always_false() -> None:
         ).shouldRollover(Mock())
         is False
     )
+
+
+async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> None:
+    """Verify stage 0 not load base platforms before recorder.
+
+    If a stage 0 integration has a base platform in its dependencies and
+    it loads before the recorder, it may load integrations that expect
+    the recorder to be loaded. We need to ensure that no stage 0 integration
+    has a base platform in its dependencies that loads before the recorder.
+    """
+    integrations_before_recorder: set[str] = set()
+    for _, integrations, _ in bootstrap.STAGE_0_INTEGRATIONS:
+        integrations_before_recorder |= integrations
+        if "recorder" in integrations:
+            break
+
+    integrations_or_execs = await loader.async_get_integrations(
+        hass, integrations_before_recorder
+    )
+    integrations: list[Integration] = []
+    resolve_deps_tasks: list[asyncio.Task[bool]] = []
+    for integration in integrations_or_execs.values():
+        assert not isinstance(integrations_or_execs, Exception)
+        integrations.append(integration)
+        resolve_deps_tasks.append(integration.resolve_dependencies())
+
+    await asyncio.gather(*resolve_deps_tasks)
+    base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
+    for integration in integrations:
+        domain_with_base_platforms_deps = BASE_PLATFORMS.intersection(
+            integration.all_dependencies
+        )
+        assert not domain_with_base_platforms_deps, (
+            f"{integration.domain} has base platforms in dependencies: "
+            f"{domain_with_base_platforms_deps}"
+        )
+        integration_top_level_files = base_platform_py_files.intersection(
+            integration._top_level_files
+        )
+        assert not integration_top_level_files, (
+            f"{integration.domain} has base platform files in top level files: "
+            f"{integration_top_level_files}"
+        )

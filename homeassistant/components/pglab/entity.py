@@ -43,12 +43,20 @@ class PGLabEntity(Entity):
             connections={(CONNECTION_NETWORK_MAC, device.mac)},
         )
 
-    async def async_added_to_hass(self) -> None:
-        """Update the device discovery info."""
-
+    async def subscribe_to_update(self):
+        """Subscribe to the entity updates."""
         self._entity.set_on_state_callback(self.state_updated)
         await self._entity.subscribe_topics()
 
+    async def unsubscribe_to_update(self):
+        """Unsubscribe to the entity updates."""
+        await self._entity.unsubscribe_topics()
+        self._entity.set_on_state_callback(None)
+
+    async def async_added_to_hass(self) -> None:
+        """Update the device discovery info."""
+
+        await self.subscribe_to_update()
         await super().async_added_to_hass()
 
         # Inform PGLab discovery instance that a new entity is available.
@@ -60,9 +68,7 @@ class PGLabEntity(Entity):
         """Unsubscribe when removed."""
 
         await super().async_will_remove_from_hass()
-
-        await self._entity.unsubscribe_topics()
-        self._entity.set_on_state_callback(None)
+        await self.unsubscribe_to_update()
 
     @callback
     def state_updated(self, payload: str) -> None:

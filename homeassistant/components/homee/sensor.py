@@ -157,7 +157,7 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
     AttributeType.RAIN_FALL_TODAY: HomeeSensorEntityDescription(
         key="rainfall_day",
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.MEASUREMENT,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     AttributeType.RELATIVE_HUMIDITY: HomeeSensorEntityDescription(
         key="humidity",

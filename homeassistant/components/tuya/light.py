@@ -261,20 +261,6 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Camera - Low power consumption camera
-    # Undocumented, see https://github.com/home-assistant/core/issues/132844
-    "dghsxj": (
-        TuyaLightEntityDescription(
-            key=DPCode.FLOODLIGHT_SWITCH,
-            brightness=DPCode.FLOODLIGHT_LIGHTNESS,
-            name="Floodlight",
-        ),
-        TuyaLightEntityDescription(
-            key=DPCode.BASIC_INDICATOR,
-            name="Indicator light",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
     # Smart Gardening system
     # https://developer.tuya.com/en/docs/iot/categorysz?id=Kaiuz4e6h7up0
     "sz": (
@@ -405,6 +391,10 @@ LIGHTS["cz"] = LIGHTS["kg"]
 # Power Socket (duplicate of `kg`)
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 LIGHTS["pc"] = LIGHTS["kg"]
+
+# Smart Camera - Low power consumption camera (duplicate of `sp`)
+# Undocumented, see https://github.com/home-assistant/core/issues/132844
+LIGHTS["dghsxj"] = LIGHTS["sp"]
 
 # Dimmer (duplicate of `tgq`)
 # https://developer.tuya.com/en/docs/iot/tgq?id=Kaof8ke9il4k4
