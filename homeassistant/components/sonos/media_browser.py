@@ -407,7 +407,7 @@ def library_payload(media_library: MusicLibrary, get_thumbnail_url=None) -> Brow
         with suppress(UnknownMediaType):
             children.append(item_payload(item, get_thumbnail_url))
 
-    # Create container for root of browsing music library folders.
+    # Add entry for Folders at the top level of the music library.
     didl_item = DidlContainer(title="Folders", parent_id="", item_id="S:")
     children.append(item_payload(didl_item, get_thumbnail_url))
 
