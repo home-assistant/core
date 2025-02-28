@@ -59,6 +59,7 @@ INTENT_GET_CURRENT_DATE = "HassGetCurrentDate"
 INTENT_GET_CURRENT_TIME = "HassGetCurrentTime"
 INTENT_RESPOND = "HassRespond"
 INTENT_BROADCAST = "HassBroadcast"
+INTENT_GET_TEMPERATURE = "HassClimateGetTemperature"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
