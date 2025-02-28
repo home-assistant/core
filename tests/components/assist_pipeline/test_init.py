@@ -43,11 +43,19 @@ from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
 @pytest.fixture(autouse=True)
-def mock_ulid() -> Generator[Mock]:
-    """Mock the ulid of chat sessions."""
-    with patch("homeassistant.helpers.chat_session.ulid_now") as mock_ulid_now:
-        mock_ulid_now.return_value = "mock-ulid"
+def mock_chat_session_id() -> Generator[Mock]:
+    """Mock the conversation ID of chat sessions."""
+    with patch(
+        "homeassistant.helpers.chat_session.ulid_now", return_value="mock-ulid"
+    ) as mock_ulid_now:
         yield mock_ulid_now
+
+
+@pytest.fixture(autouse=True)
+def mock_tts_token() -> Generator[None]:
+    """Mock the TTS token for URLs."""
+    with patch("secrets.token_urlsafe", return_value="mocked-token"):
+        yield
 
 
 def process_events(events: list[assist_pipeline.PipelineEvent]) -> list[dict]:
@@ -797,10 +805,16 @@ async def test_tts_audio_output(
     await pipeline_input.validate()
 
     # Verify TTS audio settings
-    assert pipeline_input.run.tts_options is not None
-    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
-    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_SAMPLE_RATE) == 16000
-    assert pipeline_input.run.tts_options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS) == 1
+    assert pipeline_input.run.tts_stream.options is not None
+    assert pipeline_input.run.tts_stream.options.get(tts.ATTR_PREFERRED_FORMAT) == "wav"
+    assert (
+        pipeline_input.run.tts_stream.options.get(tts.ATTR_PREFERRED_SAMPLE_RATE)
+        == 16000
+    )
+    assert (
+        pipeline_input.run.tts_stream.options.get(tts.ATTR_PREFERRED_SAMPLE_CHANNELS)
+        == 1
+    )
 
     with patch.object(mock_tts_provider, "get_tts_audio") as mock_get_tts_audio:
         await pipeline_input.execute()
@@ -809,9 +823,7 @@ async def test_tts_audio_output(
             if event.type == assist_pipeline.PipelineEventType.TTS_END:
                 # We must fetch the media URL to trigger the TTS
                 assert event.data
-                media_id = event.data["tts_output"]["media_id"]
-                resolved = await media_source.async_resolve_media(hass, media_id, None)
-                await client.get(resolved.url)
+                await client.get(event.data["tts_output"]["url"])
 
         # Ensure that no unsupported options were passed in
         assert mock_get_tts_audio.called
@@ -875,9 +887,7 @@ async def test_tts_wav_preferred_format(
             if event.type == assist_pipeline.PipelineEventType.TTS_END:
                 # We must fetch the media URL to trigger the TTS
                 assert event.data
-                media_id = event.data["tts_output"]["media_id"]
-                resolved = await media_source.async_resolve_media(hass, media_id, None)
-                await client.get(resolved.url)
+                await client.get(event.data["tts_output"]["url"])
 
         assert mock_get_tts_audio.called
         options = mock_get_tts_audio.call_args_list[0].kwargs["options"]
@@ -949,9 +959,7 @@ async def test_tts_dict_preferred_format(
             if event.type == assist_pipeline.PipelineEventType.TTS_END:
                 # We must fetch the media URL to trigger the TTS
                 assert event.data
-                media_id = event.data["tts_output"]["media_id"]
-                resolved = await media_source.async_resolve_media(hass, media_id, None)
-                await client.get(resolved.url)
+                await client.get(event.data["tts_output"]["url"])
 
         assert mock_get_tts_audio.called
         options = mock_get_tts_audio.call_args_list[0].kwargs["options"]
