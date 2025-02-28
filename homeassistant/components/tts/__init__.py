@@ -843,6 +843,8 @@ class SpeechManager:
             """Handle error."""
             if not (err := future.exception()):
                 return
+            # Truncate message so we don't flood the logs. Cutting off at 32 chars
+            # but since we add 3 dots to truncated message, we cut off at 35.
             trunc_msg = message if len(message) < 35 else f"{message[0:32]}…"
             _LOGGER.error("Error generating audio for %s: %s", trunc_msg, err)
             self.mem_cache.pop(cache_key, None)
