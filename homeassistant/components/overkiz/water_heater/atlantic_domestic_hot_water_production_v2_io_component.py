@@ -16,7 +16,6 @@ from homeassistant.components.water_heater import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 
 from ..entity import OverkizEntity
-from ..number import BOOST_MODE_DURATION_DELAY as MODE_DELAY, OPERATING_MODE_DELAY
 
 DEFAULT_MIN_TEMP: float = 50.0
 DEFAULT_MAX_TEMP: float = 62.0
@@ -86,7 +85,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         await self.executor.async_execute_command(
             OverkizCommand.SET_TARGET_TEMPERATURE, temperature, refresh_afterwards=False
         )
-        await asyncio.sleep(MODE_DELAY)  # wait 1 second to have the new temperature in
 
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_TARGET_TEMPERATURE, refresh_afterwards=False
@@ -239,16 +237,15 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
                 OverkizCommandParam.ABSENCE: OverkizCommandParam.ON,
             },
-            refresh_afterwards=refresh_afterwards,
+            refresh_afterwards=False,
         )
-        await asyncio.sleep(
-            OPERATING_MODE_DELAY
-        )  # wait 3 seconds to have the new duration in
 
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_AWAY_MODE_DURATION,
-            refresh_afterwards=refresh_afterwards,
+            refresh_afterwards=False,
         )
+        if refresh_afterwards:
+            await self.coordinator.async_refresh()
 
     async def async_turn_away_mode_off(self, refresh_afterwards: bool = True) -> None:
         """Turn away mode off."""
@@ -259,39 +256,36 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
                 OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
             },
-            refresh_afterwards=refresh_afterwards,
+            refresh_afterwards=False,
         )
-        await asyncio.sleep(
-            OPERATING_MODE_DELAY
-        )  # wait 3 seconds to have the new duration in
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_AWAY_MODE_DURATION,
-            refresh_afterwards=refresh_afterwards,
+            refresh_afterwards=False,
         )
+        if refresh_afterwards:
+            await self.coordinator.async_refresh()
 
     async def async_turn_boost_mode_on(self, refresh_afterwards: bool = True) -> None:
         """Turn boost mode on."""
         await self.executor.async_execute_command(
             OverkizCommand.SET_BOOST_MODE_DURATION,
             MAX_BOOST_MODE_DURATION,
-            refresh_afterwards=refresh_afterwards,
+            refresh_afterwards=False,
         )
-        await asyncio.sleep(MODE_DELAY)  # wait one second to not overload the device
         await self.executor.async_execute_command(
             OverkizCommand.SET_CURRENT_OPERATING_MODE,
             {
                 OverkizCommandParam.RELAUNCH: OverkizCommandParam.ON,
                 OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
             },
-            refresh_afterwards=refresh_afterwards,
+            refresh_afterwards=False,
         )
-        await asyncio.sleep(
-            OPERATING_MODE_DELAY
-        )  # wait 3 seconds to have the new duration in
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_BOOST_MODE_DURATION,
-            refresh_afterwards=refresh_afterwards,
+            refresh_afterwards=False,
         )
+        if refresh_afterwards:
+            await self.coordinator.async_refresh()
 
     async def async_turn_boost_mode_off(self, refresh_afterwards: bool = True) -> None:
         """Turn boost mode off."""
@@ -302,10 +296,11 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 OverkizCommandParam.RELAUNCH: OverkizCommandParam.OFF,
                 OverkizCommandParam.ABSENCE: OverkizCommandParam.OFF,
             },
-            refresh_afterwards=refresh_afterwards,
+            refresh_afterwards=False,
         )
-        await asyncio.sleep(OPERATING_MODE_DELAY)  # wait to have the new duration in
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_BOOST_MODE_DURATION,
-            refresh_afterwards=refresh_afterwards,
+            refresh_afterwards=False,
         )
+        if refresh_afterwards:
+            await self.coordinator.async_refresh()
