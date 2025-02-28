@@ -86,8 +86,8 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Arlo',
+    'model': 'VMC4041PB',
     'model_id': None,
     'name': '2nd Floor Hallway',
     'name_by_user': None,
@@ -108,7 +108,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'WoCurtain3-WoCurtain3',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -119,8 +119,8 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'WonderLabs Company',
+    'model': 'WoCurtain3',
     'model_id': None,
     'name': 'Curtain 1A',
     'name_by_user': None,
@@ -471,7 +471,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '250206213001',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -482,15 +482,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'ecobee',
+    'model': 'aresSmart-ecobee3_remote_sensor',
     'model_id': None,
     'name': 'Child Bedroom',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '250206213001',
     'via_device_id': None,
   })
 # ---
@@ -504,7 +504,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '250206151734',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -515,15 +515,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'ecobee',
+    'model': 'aresSmart-thermostat',
     'model_id': None,
     'name': 'Main Floor',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '250206151734',
     'via_device_id': None,
   })
 # ---
@@ -603,7 +603,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'LTG002',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -614,15 +614,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Signify Netherlands B.V.',
+    'model': 'Hue ambiance spot',
     'model_id': None,
     'name': 'Bathroom spot',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '1.122.2',
     'via_device_id': None,
   })
 # ---
@@ -636,7 +636,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'LCA001',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -647,15 +647,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Signify Netherlands B.V.',
+    'model': 'Hue color lamp',
     'model_id': None,
     'name': 'Standing light',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '1.122.2',
     'via_device_id': None,
   })
 # ---
@@ -735,7 +735,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'SKY40147',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -746,15 +746,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Sensibo',
+    'model': 'skyplus',
     'model_id': None,
     'name': 'Office',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'SKY40147',
     'via_device_id': None,
   })
 # ---
