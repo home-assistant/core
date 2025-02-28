@@ -17,7 +17,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class BoschAlarmCoordinator(DataUpdateCoordinator[Panel]):
+class BoschAlarmCoordinator(DataUpdateCoordinator):
     """Bosch alarm coordinator."""
 
     def __init__(
