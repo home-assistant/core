@@ -152,7 +152,8 @@ class BaseFirmwareUpdateEntity(
             )
         ):
             self._latest_manifest = hardware_extra_data.firmware_manifest
-            self._update_attributes()
+
+        self._update_attributes()
 
     @property
     def extra_restore_state_data(self) -> FirmwareUpdateExtraStoredData:
@@ -212,22 +213,27 @@ class BaseFirmwareUpdateEntity(
                 self._current_firmware_info.firmware_version
             )
 
+        self._latest_firmware = None
+        self._attr_latest_version = None
+        self._attr_release_summary = None
+        self._attr_release_url = None
+
         if (
             self._latest_manifest is None
             or self.entity_description.fw_type is None
             or self.entity_description.version_key is None
         ):
-            self._latest_firmware = None
-            self._attr_latest_version = None
-            self._attr_release_summary = None
-            self._attr_release_url = None
-        else:
+            return
+
+        try:
             self._latest_firmware = next(
                 f
                 for f in self._latest_manifest.firmwares
                 if f.filename.startswith(self.entity_description.fw_type)
             )
-
+        except StopIteration:
+            pass
+        else:
             version = cast(
                 str, self._latest_firmware.metadata[self.entity_description.version_key]
             )
