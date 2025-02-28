@@ -612,88 +612,97 @@ def get_last_state_changes(
         )
 
 
-def _get_start_time_state_for_entities_stmt(
+def _get_start_time_state_for_entities_stmt_dependent_sub_query(
     epoch_time: float,
     metadata_ids: list[int],
     no_attributes: bool,
     include_last_changed: bool,
-    slow_dependent_subquery: bool,
 ) -> Select:
     """Baked query to get states for specific entities."""
-    if slow_dependent_subquery:
-        # Simple group-by for MySQL, must use less
-        # than 1000 metadata_ids in the IN clause for MySQL
-        # or it will optimize poorly. Callers are responsible
-        # for ensuring that the number of metadata_ids is less
-        # than 1000.
-        most_recent_states_for_entities_by_date = (
-            select(
-                States.metadata_id.label("max_metadata_id"),
-                func.max(States.last_updated_ts).label("max_last_updated"),
-            )
-            .filter(
-                (States.last_updated_ts < epoch_time)
-                & States.metadata_id.in_(metadata_ids)
-            )
-            .group_by(States.metadata_id)
-            .subquery()
+    # Engine has a fast dependent subquery optimizer
+    # This query is the result of significant research in
+    # https://github.com/home-assistant/core/issues/132865
+    # A reverse index scan with a limit 1 is the fastest way to get the
+    # last state change before a specific point in time for all supported
+    # databases. Since all databases support this query as a join
+    # condition we can use it as a subquery to get the last state change
+    # before a specific point in time for all entities.
+    stmt = (
+        _stmt_and_join_attributes_for_start_state(
+            no_attributes=no_attributes,
+            include_last_changed=include_last_changed,
+            include_last_reported=False,
         )
-        stmt = (
-            _stmt_and_join_attributes_for_start_state(
-                no_attributes=no_attributes,
-                include_last_changed=include_last_changed,
-                include_last_reported=False,
-            )
-            .join(
-                most_recent_states_for_entities_by_date,
-                and_(
-                    States.metadata_id
-                    == most_recent_states_for_entities_by_date.c.max_metadata_id,
-                    States.last_updated_ts
-                    == most_recent_states_for_entities_by_date.c.max_last_updated,
-                ),
-            )
-            .filter(
-                (States.last_updated_ts < epoch_time)
-                & States.metadata_id.in_(metadata_ids)
-            )
-        )
-    else:
-        # Engine has a fast dependent subquery optimizer
-        # This query is the result of significant research in
-        # https://github.com/home-assistant/core/issues/132865
-        # A reverse index scan with a limit 1 is the fastest way to get the
-        # last state change before a specific point in time for all supported
-        # databases. Since all databases support this query as a join
-        # condition we can use it as a subquery to get the last state change
-        # before a specific point in time for all entities.
-        stmt = (
-            _stmt_and_join_attributes_for_start_state(
-                no_attributes=no_attributes,
-                include_last_changed=include_last_changed,
-                include_last_reported=False,
-            )
-            .select_from(StatesMeta)
-            .join(
-                States,
-                and_(
-                    States.last_updated_ts
-                    == (
-                        select(States.last_updated_ts)
-                        .where(
-                            (StatesMeta.metadata_id == States.metadata_id)
-                            & (States.last_updated_ts < epoch_time)
-                        )
-                        .order_by(States.last_updated_ts.desc())
-                        .limit(1)
+        .select_from(StatesMeta)
+        .join(
+            States,
+            and_(
+                States.last_updated_ts
+                == (
+                    select(States.last_updated_ts)
+                    .where(
+                        (StatesMeta.metadata_id == States.metadata_id)
+                        & (States.last_updated_ts < epoch_time)
                     )
-                    .scalar_subquery()
-                    .correlate(StatesMeta),
-                    States.metadata_id == StatesMeta.metadata_id,
-                ),
-            )
-            .where(StatesMeta.metadata_id.in_(metadata_ids))
+                    .order_by(States.last_updated_ts.desc())
+                    .limit(1)
+                )
+                .scalar_subquery()
+                .correlate(StatesMeta),
+                States.metadata_id == StatesMeta.metadata_id,
+            ),
         )
+        .where(StatesMeta.metadata_id.in_(metadata_ids))
+    )
+    if no_attributes:
+        return stmt
+    return stmt.outerjoin(
+        StateAttributes, (States.attributes_id == StateAttributes.attributes_id)
+    )
+
+
+def _get_start_time_state_for_entities_stmt_group_by(
+    epoch_time: float,
+    metadata_ids: list[int],
+    no_attributes: bool,
+    include_last_changed: bool,
+) -> Select:
+    """Baked query to get states for specific entities."""
+    # Simple group-by for MySQL, must use less
+    # than 1000 metadata_ids in the IN clause for MySQL
+    # or it will optimize poorly. Callers are responsible
+    # for ensuring that the number of metadata_ids is less
+    # than 1000.
+    most_recent_states_for_entities_by_date = (
+        select(
+            States.metadata_id.label("max_metadata_id"),
+            func.max(States.last_updated_ts).label("max_last_updated"),
+        )
+        .filter(
+            (States.last_updated_ts < epoch_time) & States.metadata_id.in_(metadata_ids)
+        )
+        .group_by(States.metadata_id)
+        .subquery()
+    )
+    stmt = (
+        _stmt_and_join_attributes_for_start_state(
+            no_attributes=no_attributes,
+            include_last_changed=include_last_changed,
+            include_last_reported=False,
+        )
+        .join(
+            most_recent_states_for_entities_by_date,
+            and_(
+                States.metadata_id
+                == most_recent_states_for_entities_by_date.c.max_metadata_id,
+                States.last_updated_ts
+                == most_recent_states_for_entities_by_date.c.max_last_updated,
+            ),
+        )
+        .filter(
+            (States.last_updated_ts < epoch_time) & States.metadata_id.in_(metadata_ids)
+        )
+    )
     if no_attributes:
         return stmt
     return stmt.outerjoin(
@@ -736,12 +745,19 @@ def _get_start_time_state_stmt(
         )
     # We have more than one entity to look at so we need to do a query on states
     # since the last recorder run started.
-    return _get_start_time_state_for_entities_stmt(
+    if slow_dependent_subquery:
+        return _get_start_time_state_for_entities_stmt_group_by(
+            epoch_time,
+            metadata_ids,
+            no_attributes,
+            include_last_changed,
+        )
+
+    return _get_start_time_state_for_entities_stmt_dependent_sub_query(
         epoch_time,
         metadata_ids,
         no_attributes,
         include_last_changed,
-        slow_dependent_subquery,
     )
 
 
