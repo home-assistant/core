@@ -464,7 +464,7 @@ def setup_connection_for_dialect(
     """Execute statements needed for dialect connection."""
     version: AwesomeVersion | None = None
     slow_range_in_select = False
-    slow_dependant_subquery = False
+    slow_dependent_subquery = False
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
             old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
@@ -537,7 +537,7 @@ def setup_connection_for_dialect(
             else:
                 # MySQL
                 # https://github.com/home-assistant/core/issues/137178
-                slow_dependant_subquery = True
+                slow_dependent_subquery = True
 
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
@@ -569,7 +569,7 @@ def setup_connection_for_dialect(
         version=version,
         optimizer=DatabaseOptimizer(
             slow_range_in_select=slow_range_in_select,
-            slow_dependant_subquery=slow_dependant_subquery,
+            slow_dependent_subquery=slow_dependent_subquery,
         ),
         max_bind_vars=DEFAULT_MAX_BIND_VARS,
     )
