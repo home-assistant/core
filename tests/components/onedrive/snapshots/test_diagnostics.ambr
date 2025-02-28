@@ -13,8 +13,8 @@
       'owner': dict({
         'application': None,
         'user': dict({
-          'display_name': 'John Doe',
-          'email': 'john@doe.com',
+          'display_name': '**REDACTED**',
+          'email': '**REDACTED**',
           'id': 'id',
         }),
       }),
