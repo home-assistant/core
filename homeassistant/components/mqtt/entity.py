@@ -137,7 +137,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "extra_state_attributes",
     "force_update",
     "icon",
-    "name",
+    "friendly_name",
     "should_poll",
     "state",
     "supported_features",
@@ -1185,6 +1185,33 @@ def device_info_from_specifications(
     return info
 
 
+@callback
+def ensure_via_device_exists(
+    hass: HomeAssistant, device_info: DeviceInfo | None, config_entry: ConfigEntry
+) -> None:
+    """Ensure the via device is in the device registry."""
+    if (
+        device_info is None
+        or CONF_VIA_DEVICE not in device_info
+        or (device_registry := dr.async_get(hass)).async_get_device(
+            identifiers={device_info["via_device"]}
+        )
+    ):
+        return
+
+    # Ensure the via device exists in the device registry
+    _LOGGER.debug(
+        "Device identifier %s via_device reference from device_info %s "
+        "not found in the Device Registry, creating new entry",
+        device_info["via_device"],
+        device_info,
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={device_info["via_device"]},
+    )
+
+
 class MqttEntityDeviceInfo(Entity):
     """Mixin used for mqtt platforms that support the device registry."""
 
@@ -1203,6 +1230,7 @@ class MqttEntityDeviceInfo(Entity):
         device_info = self.device_info
 
         if device_info is not None:
+            ensure_via_device_exists(self.hass, device_info, self._config_entry)
             device_registry.async_get_or_create(
                 config_entry_id=config_entry_id, **device_info
             )
@@ -1256,6 +1284,7 @@ class MqttEntity(
             self, hass, discovery_data, self.discovery_update
         )
         MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
+        ensure_via_device_exists(self.hass, self.device_info, self._config_entry)
 
     def _init_entity_id(self) -> None:
         """Set entity_id from object_id if defined in config."""
@@ -1489,6 +1518,8 @@ def update_device(
     device_registry = dr.async_get(hass)
     config_entry_id = config_entry.entry_id
     device_info = device_info_from_specifications(config[CONF_DEVICE])
+
+    ensure_via_device_exists(hass, device_info, config_entry)
 
     if config_entry_id is not None and device_info is not None:
         update_device_info = cast(dict[str, Any], device_info)

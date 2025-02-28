@@ -16,7 +16,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import DEGREE, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import EcovacsConfigEntry
 from .entity import (
@@ -83,7 +83,7 @@ ENTITY_DESCRIPTIONS: tuple[EcovacsNumberEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: EcovacsConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add entities for passed config_entry in HA."""
     controller = config_entry.runtime_data
@@ -95,7 +95,7 @@ async def async_setup_entry(
 
 
 class EcovacsNumberEntity(
-    EcovacsDescriptionEntity[CapabilitySet[EventT, int]],
+    EcovacsDescriptionEntity[CapabilitySet[EventT, [int]]],
     NumberEntity,
 ):
     """Ecovacs number entity."""

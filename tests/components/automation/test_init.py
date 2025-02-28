@@ -50,10 +50,8 @@ from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
     _async_stop_scripts_at_shutdown,
 )
-from homeassistant.helpers.trigger import TriggerActionType, TriggerData, TriggerInfo
 from homeassistant.setup import async_setup_component
-from homeassistant.util import yaml
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from tests.common import (
     MockConfigEntry,
@@ -62,8 +60,6 @@ from tests.common import (
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
-    help_test_all,
-    import_and_test_deprecated_constant,
     mock_restore_cache,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
@@ -1379,7 +1375,9 @@ async def test_reload_automation_when_blueprint_changes(
 
         # Reload the automations without any change, but with updated blueprint
         blueprint_path = automation.async_get_blueprints(hass).blueprint_folder
-        blueprint_config = yaml.load_yaml(blueprint_path / "test_event_service.yaml")
+        blueprint_config = yaml_util.load_yaml(
+            blueprint_path / "test_event_service.yaml"
+        )
         blueprint_config["actions"] = [blueprint_config["actions"]]
         blueprint_config["actions"].append(blueprint_config["actions"][-1])
 
@@ -1390,7 +1388,7 @@ async def test_reload_automation_when_blueprint_changes(
                 return_value=config,
             ),
             patch(
-                "homeassistant.components.blueprint.models.yaml.load_yaml_dict",
+                "homeassistant.components.blueprint.models.yaml_util.load_yaml_dict",
                 autospec=True,
                 return_value=blueprint_config,
             ),
@@ -2694,7 +2692,7 @@ async def test_blueprint_automation_fails_substitution(
     """Test blueprint automation with bad inputs."""
     with patch(
         "homeassistant.components.blueprint.models.BlueprintInputs.async_substitute",
-        side_effect=yaml.UndefinedSubstitution("blah"),
+        side_effect=yaml_util.UndefinedSubstitution("blah"),
     ):
         assert await async_setup_component(
             hass,
@@ -3151,30 +3149,6 @@ async def test_websocket_config(
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
-
-
-def test_all() -> None:
-    """Test module.__all__ is correctly set."""
-    help_test_all(automation)
-
-
-@pytest.mark.parametrize(
-    ("constant_name", "replacement"),
-    [
-        ("AutomationActionType", TriggerActionType),
-        ("AutomationTriggerData", TriggerData),
-        ("AutomationTriggerInfo", TriggerInfo),
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    constant_name: str,
-    replacement: Any,
-) -> None:
-    """Test deprecated automation constants."""
-    import_and_test_deprecated_constant(
-        caplog, automation, constant_name, replacement.__name__, replacement, "2025.1"
-    )
 
 
 async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> None:

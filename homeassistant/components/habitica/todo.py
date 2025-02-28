@@ -2,11 +2,19 @@
 
 from __future__ import annotations
 
-import datetime
 from enum import StrEnum
+import logging
 from typing import TYPE_CHECKING
+from uuid import UUID
 
-from aiohttp import ClientResponseError
+from aiohttp import ClientError
+from habiticalib import (
+    Direction,
+    HabiticaException,
+    Task,
+    TaskType,
+    TooManyRequestsError,
+)
 
 from homeassistant.components import persistent_notification
 from homeassistant.components.todo import (
@@ -16,16 +24,17 @@ from homeassistant.components.todo import (
     TodoListEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from .const import ASSETS_URL, DOMAIN
-from .coordinator import HabiticaDataUpdateCoordinator
+from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry, HabiticaTaskType
 from .util import next_due_date
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -42,7 +51,7 @@ class HabiticaTodoList(StrEnum):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HabiticaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor from a config entry created in the integrations UI."""
     coordinator = config_entry.runtime_data
@@ -70,8 +79,15 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
         """Delete Habitica tasks."""
         if len(uids) > 1 and self.entity_description.key is HabiticaTodoList.TODOS:
             try:
-                await self.coordinator.api.tasks.clearCompletedTodos.post()
-            except ClientResponseError as e:
+                await self.coordinator.habitica.delete_completed_todos()
+            except TooManyRequestsError as e:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_rate_limit_exception",
+                    translation_placeholders={"retry_after": str(e.retry_after)},
+                ) from e
+            except (HabiticaException, ClientError) as e:
+                _LOGGER.debug(str(e))
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="delete_completed_todos_failed",
@@ -79,8 +95,15 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
         else:
             for task_id in uids:
                 try:
-                    await self.coordinator.api.tasks[task_id].delete()
-                except ClientResponseError as e:
+                    await self.coordinator.habitica.delete_task(UUID(task_id))
+                except TooManyRequestsError as e:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="setup_rate_limit_exception",
+                        translation_placeholders={"retry_after": str(e.retry_after)},
+                    ) from e
+                except (HabiticaException, ClientError) as e:
+                    _LOGGER.debug(str(e))
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
                         translation_key=f"delete_{self.entity_description.key}_failed",
@@ -94,38 +117,37 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
         """Move an item in the To-do list."""
         if TYPE_CHECKING:
             assert self.todo_items
+        tasks_order = (
+            self.coordinator.data.user.tasksOrder.todos
+            if self.entity_description.key is HabiticaTodoList.TODOS
+            else self.coordinator.data.user.tasksOrder.dailys
+        )
 
         if previous_uid:
-            pos = (
-                self.todo_items.index(
-                    next(item for item in self.todo_items if item.uid == previous_uid)
-                )
-                + 1
-            )
+            pos = tasks_order.index(UUID(previous_uid))
+            if pos < tasks_order.index(UUID(uid)):
+                pos += 1
+
         else:
             pos = 0
 
         try:
-            await self.coordinator.api.tasks[uid].move.to[str(pos)].post()
-
-        except ClientResponseError as e:
+            tasks_order[:] = (
+                await self.coordinator.habitica.reorder_task(UUID(uid), pos)
+            ).data
+        except TooManyRequestsError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
+            ) from e
+        except (HabiticaException, ClientError) as e:
+            _LOGGER.debug(str(e))
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=f"move_{self.entity_description.key}_item_failed",
                 translation_placeholders={"pos": str(pos)},
             ) from e
-        else:
-            # move tasks in the coordinator until we have fresh data
-            tasks = self.coordinator.data.tasks
-            new_pos = (
-                tasks.index(next(task for task in tasks if task["id"] == previous_uid))
-                + 1
-                if previous_uid
-                else 0
-            )
-            old_pos = tasks.index(next(task for task in tasks if task["id"] == uid))
-            tasks.insert(new_pos, tasks.pop(old_pos))
-            await self.coordinator.async_request_refresh()
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update a Habitica todo."""
@@ -138,14 +160,17 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
         if TYPE_CHECKING:
             assert item.uid
             assert current_item
+            assert item.summary
+
+        task = Task(
+            text=item.summary,
+            notes=item.description or "",
+        )
 
         if (
             self.entity_description.key is HabiticaTodoList.TODOS
-            and item.due is not None
         ):  # Only todos support a due date.
-            date = item.due.isoformat()
-        else:
-            date = None
+            task["date"] = item.due
 
         if (
             item.summary != current_item.summary
@@ -153,13 +178,16 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
             or item.due != current_item.due
         ):
             try:
-                await self.coordinator.api.tasks[item.uid].put(
-                    text=item.summary,
-                    notes=item.description or "",
-                    date=date,
-                )
+                await self.coordinator.habitica.update_task(UUID(item.uid), task)
                 refresh_required = True
-            except ClientResponseError as e:
+            except TooManyRequestsError as e:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="setup_rate_limit_exception",
+                    translation_placeholders={"retry_after": str(e.retry_after)},
+                ) from e
+            except (HabiticaException, ClientError) as e:
+                _LOGGER.debug(str(e))
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key=f"update_{self.entity_description.key}_item_failed",
@@ -172,32 +200,39 @@ class BaseHabiticaListEntity(HabiticaBase, TodoListEntity):
                 current_item.status is TodoItemStatus.NEEDS_ACTION
                 and item.status == TodoItemStatus.COMPLETED
             ):
-                score_result = (
-                    await self.coordinator.api.tasks[item.uid].score["up"].post()
+                score_result = await self.coordinator.habitica.update_score(
+                    UUID(item.uid), Direction.UP
                 )
                 refresh_required = True
             elif (
                 current_item.status is TodoItemStatus.COMPLETED
                 and item.status == TodoItemStatus.NEEDS_ACTION
             ):
-                score_result = (
-                    await self.coordinator.api.tasks[item.uid].score["down"].post()
+                score_result = await self.coordinator.habitica.update_score(
+                    UUID(item.uid), Direction.DOWN
                 )
                 refresh_required = True
             else:
                 score_result = None
-
-        except ClientResponseError as e:
+        except TooManyRequestsError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
+            ) from e
+        except (HabiticaException, ClientError) as e:
+            _LOGGER.debug(str(e))
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=f"score_{self.entity_description.key}_item_failed",
                 translation_placeholders={"name": item.summary or ""},
             ) from e
 
-        if score_result and (drop := score_result.get("_tmp", {}).get("drop", False)):
+        if score_result and score_result.data.tmp.drop.key:
+            drop = score_result.data.tmp.drop
             msg = (
-                f"![{drop["key"]}]({ASSETS_URL}Pet_{drop["type"]}_{drop["key"]}.png)\n"
-                f"{drop["dialog"]}"
+                f"![{drop.key}]({ASSETS_URL}Pet_{drop.Type}_{drop.key}.png)\n"
+                f"{drop.dialog}"
             )
             persistent_notification.async_create(
                 self.hass, message=msg, title="Habitica"
@@ -226,41 +261,55 @@ class HabiticaTodosListEntity(BaseHabiticaListEntity):
     def todo_items(self) -> list[TodoItem]:
         """Return the todo items."""
 
-        return [
+        tasks = [
             *(
                 TodoItem(
-                    uid=task["id"],
-                    summary=task["text"],
-                    description=task["notes"],
-                    due=(
-                        dt_util.as_local(
-                            datetime.datetime.fromisoformat(task["date"])
-                        ).date()
-                        if task.get("date")
-                        else None
-                    ),
+                    uid=str(task.id),
+                    summary=task.text,
+                    description=task.notes,
+                    due=dt_util.as_local(task.date).date() if task.date else None,
                     status=(
                         TodoItemStatus.NEEDS_ACTION
-                        if not task["completed"]
+                        if not task.completed
                         else TodoItemStatus.COMPLETED
                     ),
                 )
                 for task in self.coordinator.data.tasks
-                if task["type"] == HabiticaTaskType.TODO
+                if task.Type is TaskType.TODO
             ),
         ]
+        return sorted(
+            tasks,
+            key=lambda task: (
+                float("inf")
+                if (uid := UUID(task.uid))
+                not in (tasks_order := self.coordinator.data.user.tasksOrder.todos)
+                else tasks_order.index(uid)
+            ),
+        )
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Create a Habitica todo."""
-
+        if TYPE_CHECKING:
+            assert item.summary
+            assert item.description
         try:
-            await self.coordinator.api.tasks.user.post(
-                text=item.summary,
-                type=HabiticaTaskType.TODO,
-                notes=item.description,
-                date=item.due.isoformat() if item.due else None,
+            await self.coordinator.habitica.create_task(
+                Task(
+                    text=item.summary,
+                    type=TaskType.TODO,
+                    notes=item.description,
+                    date=item.due,
+                )
             )
-        except ClientResponseError as e:
+        except TooManyRequestsError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
+            ) from e
+        except (HabiticaException, ClientError) as e:
+            _LOGGER.debug(str(e))
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key=f"create_{self.entity_description.key}_item_failed",
@@ -295,23 +344,32 @@ class HabiticaDailiesListEntity(BaseHabiticaListEntity):
         that have been completed but forgotten to mark as completed before resetting the dailies.
         Changes of the date input field in Home Assistant will be ignored.
         """
+        if TYPE_CHECKING:
+            assert self.coordinator.data.user.lastCron
 
-        last_cron = self.coordinator.data.user["lastCron"]
-
-        return [
+        tasks = [
             *(
                 TodoItem(
-                    uid=task["id"],
-                    summary=task["text"],
-                    description=task["notes"],
-                    due=next_due_date(task, last_cron),
+                    uid=str(task.id),
+                    summary=task.text,
+                    description=task.notes,
+                    due=next_due_date(task, self.coordinator.data.user.lastCron),
                     status=(
                         TodoItemStatus.COMPLETED
-                        if task["completed"]
+                        if task.completed
                         else TodoItemStatus.NEEDS_ACTION
                     ),
                 )
                 for task in self.coordinator.data.tasks
-                if task["type"] == HabiticaTaskType.DAILY
+                if task.Type is TaskType.DAILY
             )
         ]
+        return sorted(
+            tasks,
+            key=lambda task: (
+                float("inf")
+                if (uid := UUID(task.uid))
+                not in (tasks_order := self.coordinator.data.user.tasksOrder.dailys)
+                else tasks_order.index(uid)
+            ),
+        )

@@ -40,6 +40,9 @@
         "title": "[%key:component::rainbird::config::step::user::title%]",
         "data": {
           "duration": "Default irrigation time in minutes"
+        },
+        "data_description": {
+          "duration": "The default duration the sprinkler will run when turned on."
         }
       }
     }

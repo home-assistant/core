@@ -41,7 +41,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
@@ -54,12 +54,12 @@ from .common import (
 )
 
 from tests.common import MockPlatform, mock_platform
-from tests.typing import RecorderInstanceGenerator, WebSocketGenerator
+from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
 
 
 @pytest.fixture
 async def mock_recorder_before_hass(
-    async_test_recorder: RecorderInstanceGenerator,
+    async_test_recorder: RecorderInstanceContextManager,
 ) -> None:
     """Set up recorder."""
 
@@ -337,12 +337,12 @@ def mock_from_stats():
     counter = 0
     real_from_stats = StatisticsShortTerm.from_stats
 
-    def from_stats(metadata_id, stats):
+    def from_stats(metadata_id, stats, now_timestamp):
         nonlocal counter
         if counter == 0 and metadata_id == 2:
             counter += 1
             return None
-        return real_from_stats(metadata_id, stats)
+        return real_from_stats(metadata_id, stats, now_timestamp)
 
     with patch(
         "homeassistant.components.recorder.statistics.StatisticsShortTerm.from_stats",

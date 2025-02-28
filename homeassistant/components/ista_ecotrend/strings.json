@@ -38,7 +38,8 @@
   "entity": {
     "sensor": {
       "heating": {
-        "name": "Heating"
+        "name": "Heating",
+        "unit_of_measurement": "units"
       },
       "heating_cost": {
         "name": "Heating cost"

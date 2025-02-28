@@ -8,6 +8,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -31,7 +32,7 @@
     'supported_features': 0,
     'translation_key': 'bw_pages',
     'unique_id': '0123456789_bw_counter',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_b_w_pages-state]
@@ -39,6 +40,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW B/W pages',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_b_w_pages',
@@ -57,6 +59,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -107,6 +110,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -130,7 +134,7 @@
     'supported_features': 0,
     'translation_key': 'black_drum_page_counter',
     'unique_id': '0123456789_black_drum_counter',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_black_drum_page_counter-state]
@@ -138,6 +142,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Black drum page counter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_black_drum_page_counter',
@@ -156,6 +161,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -206,6 +212,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -229,7 +236,7 @@
     'supported_features': 0,
     'translation_key': 'black_drum_remaining_pages',
     'unique_id': '0123456789_black_drum_remaining_pages',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_black_drum_remaining_pages-state]
@@ -237,6 +244,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Black drum remaining pages',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_black_drum_remaining_pages',
@@ -255,6 +263,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -305,6 +314,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -328,7 +338,7 @@
     'supported_features': 0,
     'translation_key': 'color_pages',
     'unique_id': '0123456789_color_counter',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_color_pages-state]
@@ -336,6 +346,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Color pages',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_color_pages',
@@ -354,6 +365,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -377,7 +389,7 @@
     'supported_features': 0,
     'translation_key': 'cyan_drum_page_counter',
     'unique_id': '0123456789_cyan_drum_counter',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_cyan_drum_page_counter-state]
@@ -385,6 +397,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Cyan drum page counter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_cyan_drum_page_counter',
@@ -403,6 +416,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -453,6 +467,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -476,7 +491,7 @@
     'supported_features': 0,
     'translation_key': 'cyan_drum_remaining_pages',
     'unique_id': '0123456789_cyan_drum_remaining_pages',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_cyan_drum_remaining_pages-state]
@@ -484,6 +499,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Cyan drum remaining pages',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_cyan_drum_remaining_pages',
@@ -502,6 +518,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -552,6 +569,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -575,7 +593,7 @@
     'supported_features': 0,
     'translation_key': 'drum_page_counter',
     'unique_id': '0123456789_drum_counter',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_drum_page_counter-state]
@@ -583,6 +601,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Drum page counter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_drum_page_counter',
@@ -601,6 +620,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -651,6 +671,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -674,7 +695,7 @@
     'supported_features': 0,
     'translation_key': 'drum_remaining_pages',
     'unique_id': '0123456789_drum_remaining_pages',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_drum_remaining_pages-state]
@@ -682,6 +703,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Drum remaining pages',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_drum_remaining_pages',
@@ -700,6 +722,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -723,7 +746,7 @@
     'supported_features': 0,
     'translation_key': 'duplex_unit_page_counter',
     'unique_id': '0123456789_duplex_unit_pages_counter',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_duplex_unit_page_counter-state]
@@ -731,6 +754,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Duplex unit page counter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_duplex_unit_page_counter',
@@ -749,6 +773,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -797,6 +822,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -846,6 +872,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -869,7 +896,7 @@
     'supported_features': 0,
     'translation_key': 'magenta_drum_page_counter',
     'unique_id': '0123456789_magenta_drum_counter',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_magenta_drum_page_counter-state]
@@ -877,6 +904,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Magenta drum page counter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_magenta_drum_page_counter',
@@ -895,6 +923,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -945,6 +974,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -968,7 +998,7 @@
     'supported_features': 0,
     'translation_key': 'magenta_drum_remaining_pages',
     'unique_id': '0123456789_magenta_drum_remaining_pages',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_magenta_drum_remaining_pages-state]
@@ -976,6 +1006,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Magenta drum remaining pages',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_magenta_drum_remaining_pages',
@@ -994,6 +1025,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1044,6 +1076,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1067,7 +1100,7 @@
     'supported_features': 0,
     'translation_key': 'page_counter',
     'unique_id': '0123456789_page_counter',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_page_counter-state]
@@ -1075,6 +1108,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Page counter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_page_counter',
@@ -1093,6 +1127,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1141,6 +1176,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1189,6 +1225,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1212,7 +1249,7 @@
     'supported_features': 0,
     'translation_key': 'yellow_drum_page_counter',
     'unique_id': '0123456789_yellow_drum_counter',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_yellow_drum_page_counter-state]
@@ -1220,6 +1257,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Yellow drum page counter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_yellow_drum_page_counter',
@@ -1238,6 +1276,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1288,6 +1327,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1311,7 +1351,7 @@
     'supported_features': 0,
     'translation_key': 'yellow_drum_remaining_pages',
     'unique_id': '0123456789_yellow_drum_remaining_pages',
-    'unit_of_measurement': None,
+    'unit_of_measurement': 'pages',
   })
 # ---
 # name: test_sensors[sensor.hl_l2340dw_yellow_drum_remaining_pages-state]
@@ -1319,6 +1359,7 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'HL-L2340DW Yellow drum remaining pages',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'pages',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.hl_l2340dw_yellow_drum_remaining_pages',
@@ -1337,6 +1378,7 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,

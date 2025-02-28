@@ -21,7 +21,7 @@ from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_RETURN_TO_BASE,
     SERVICE_START,
-    STATE_CLEANING,
+    VacuumActivity,
     VacuumEntityFeature,
 )
 from homeassistant.const import (
@@ -213,7 +213,7 @@ class Vacuum(Switch):
     @callback
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_state = new_state.state in (STATE_CLEANING, STATE_ON)
+        current_state = new_state.state in (VacuumActivity.CLEANING, STATE_ON)
         _LOGGER.debug("%s: Set current state to %s", self.entity_id, current_state)
         self.char_on.set_value(current_state)
 

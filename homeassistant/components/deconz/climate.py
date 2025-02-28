@@ -28,11 +28,11 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import DeconzConfigEntry
 from .const import ATTR_LOCKED, ATTR_OFFSET, ATTR_VALVE
 from .entity import DeconzDevice
 from .hub import DeconzHub
@@ -76,11 +76,11 @@ DECONZ_TO_PRESET_MODE = {value: key for key, value in PRESET_MODE_TO_DECONZ.item
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DeconzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ climate devices."""
-    hub = DeconzHub.get_hub(hass, config_entry)
+    hub = config_entry.runtime_data
     hub.entities[CLIMATE_DOMAIN] = set()
 
     @callback
@@ -101,7 +101,6 @@ class DeconzThermostat(DeconzDevice[Thermostat], ClimateEntity):
     TYPE = CLIMATE_DOMAIN
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(self, device: Thermostat, hub: DeconzHub) -> None:
         """Set up thermostat device."""

@@ -51,7 +51,7 @@ async def test_exclude_attributes(
         camera_id=doorbell.id,
     )
 
-    new_camera = doorbell.copy()
+    new_camera = doorbell.model_copy()
     new_camera.is_motion_detected = True
     new_camera.last_motion_event_id = event.id
 

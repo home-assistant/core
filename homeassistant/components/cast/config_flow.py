@@ -6,7 +6,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components import onboarding, zeroconf
+from homeassistant.components import onboarding
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_UUID
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import CONF_IGNORE_CEC, CONF_KNOWN_HOSTS, DOMAIN
 
@@ -50,7 +51,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_config()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         await self.async_set_unique_id(DOMAIN)

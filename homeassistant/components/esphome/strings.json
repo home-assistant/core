@@ -54,7 +54,8 @@
     "step": {
       "init": {
         "data": {
-          "allow_service_calls": "Allow the device to perform Home Assistant actions."
+          "allow_service_calls": "Allow the device to perform Home Assistant actions.",
+          "subscribe_logs": "Subscribe to logs from the device. When enabled, the device will send logs to Home Assistant and you can view them in the logs panel."
         }
       }
     }
@@ -83,6 +84,12 @@
           "default": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::default%]",
           "aggressive": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::aggressive%]",
           "relaxed": "[%key:component::assist_pipeline::entity::select::vad_sensitivity::state::relaxed%]"
+        }
+      },
+      "wake_word": {
+        "name": "Wake word",
+        "state": {
+          "okay_nabu": "Okay Nabu"
         }
       }
     },

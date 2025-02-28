@@ -41,6 +41,7 @@ from homeassistant.util import dt as dt_util
 from .common import EMPTY_8_6_JPEG, STREAM_SOURCE, mock_turbo_jpeg
 
 from tests.common import (
+    MockEntityPlatform,
     async_fire_time_changed,
     help_test_all,
     import_and_test_deprecated_constant_enum,
@@ -300,13 +301,24 @@ async def test_snapshot_service_not_allowed_path(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera")
-async def test_snapshot_service_os_error(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    ("target", "side_effect"),
+    [
+        ("homeassistant.components.camera.os.makedirs", OSError),
+        (
+            "homeassistant.components.demo.camera.DemoCamera.async_camera_image",
+            TimeoutError,
+        ),
+    ],
+)
+async def test_snapshot_service_error(
+    hass: HomeAssistant, target: str, side_effect: Exception
 ) -> None:
-    """Test snapshot service with os error."""
+    """Test snapshot service with error."""
     with (
         patch.object(hass.config, "is_allowed_path", return_value=True),
-        patch("homeassistant.components.camera.os.makedirs", side_effect=OSError),
+        patch(target, side_effect=side_effect),
+        pytest.raises(HomeAssistantError),
     ):
         await hass.services.async_call(
             camera.DOMAIN,
@@ -317,8 +329,6 @@ async def test_snapshot_service_os_error(
             },
             blocking=True,
         )
-
-    assert "Can't write image to file:" in caplog.text
 
 
 @pytest.mark.usefixtures("mock_camera", "mock_stream")
@@ -802,30 +812,11 @@ async def test_use_stream_for_stills(
 
 @pytest.mark.parametrize(
     "module",
-    [camera, camera.const],
+    [camera],
 )
 def test_all(module: ModuleType) -> None:
     """Test module.__all__ is correctly set."""
     help_test_all(module)
-
-
-@pytest.mark.parametrize(
-    "enum",
-    list(camera.const.StreamType),
-)
-@pytest.mark.parametrize(
-    "module",
-    [camera, camera.const],
-)
-def test_deprecated_stream_type_constants(
-    caplog: pytest.LogCaptureFixture,
-    enum: camera.const.StreamType,
-    module: ModuleType,
-) -> None:
-    """Test deprecated stream type constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, module, enum, "STREAM_TYPE_", "2025.1"
-    )
 
 
 @pytest.mark.parametrize(
@@ -845,21 +836,9 @@ def test_deprecated_state_constants(
     import_and_test_deprecated_constant_enum(caplog, module, enum, "STATE_", "2025.10")
 
 
-@pytest.mark.parametrize(
-    "entity_feature",
-    list(camera.CameraEntityFeature),
-)
-def test_deprecated_support_constants(
-    caplog: pytest.LogCaptureFixture,
-    entity_feature: camera.CameraEntityFeature,
+def test_deprecated_supported_features_ints(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test deprecated support constants."""
-    import_and_test_deprecated_constant_enum(
-        caplog, camera, entity_feature, "SUPPORT_", "2025.1"
-    )
-
-
-def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) -> None:
     """Test deprecated supported features ints."""
 
     class MockCamera(camera.Camera):
@@ -869,6 +848,8 @@ def test_deprecated_supported_features_ints(caplog: pytest.LogCaptureFixture) ->
             return 1
 
     entity = MockCamera()
+    entity.hass = hass
+    entity.platform = MockEntityPlatform(hass)
     assert entity.supported_features_compat is camera.CameraEntityFeature(1)
     assert "MockCamera" in caplog.text
     assert "is using deprecated supported features values" in caplog.text

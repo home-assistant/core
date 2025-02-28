@@ -24,8 +24,13 @@ from homeassistant.components.climate import (
 from homeassistant.components.tesla_fleet.coordinator import VEHICLE_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.exceptions import (
+    HomeAssistantError,
+    ServiceNotSupported,
+    ServiceValidationError,
+)
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import assert_entities, setup_platform
 from .const import (
@@ -391,6 +396,7 @@ async def test_climate_noscope(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Tests with no command scopes."""
+    await async_setup_component(hass, "homeassistant", {})
     await setup_platform(hass, readonly_config_entry, [Platform.CLIMATE])
     entity_id = "climate.test_climate"
 
@@ -405,8 +411,9 @@ async def test_climate_noscope(
         )
 
     with pytest.raises(
-        HomeAssistantError,
-        match="Entity climate.test_climate does not support this service.",
+        ServiceNotSupported,
+        match="Entity climate.test_climate does not "
+        "support action climate.set_temperature",
     ):
         await hass.services.async_call(
             CLIMATE_DOMAIN,

@@ -14,7 +14,7 @@ from homeassistant.core import (
     is_callback,
     is_callback_check_partial,
 )
-import homeassistant.util.logging as logging_util
+from homeassistant.util import logging as logging_util
 
 
 async def test_logging_with_queue_handler() -> None:

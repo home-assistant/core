@@ -553,15 +553,9 @@ class ColorSettingTrait(_Trait):
             response["colorModel"] = "hsv"
 
         if light.color_temp_supported(color_modes):
-            # Max Kelvin is Min Mireds K = 1000000 / mireds
-            # Min Kelvin is Max Mireds K = 1000000 / mireds
             response["colorTemperatureRange"] = {
-                "temperatureMaxK": color_util.color_temperature_mired_to_kelvin(
-                    attrs.get(light.ATTR_MIN_MIREDS)
-                ),
-                "temperatureMinK": color_util.color_temperature_mired_to_kelvin(
-                    attrs.get(light.ATTR_MAX_MIREDS)
-                ),
+                "temperatureMaxK": int(attrs.get(light.ATTR_MAX_COLOR_TEMP_KELVIN)),
+                "temperatureMinK": int(attrs.get(light.ATTR_MIN_COLOR_TEMP_KELVIN)),
             }
 
         return response
@@ -583,7 +577,7 @@ class ColorSettingTrait(_Trait):
                 }
 
         if light.color_temp_supported([color_mode]):
-            temp = self.state.attributes.get(light.ATTR_COLOR_TEMP)
+            temp = self.state.attributes.get(light.ATTR_COLOR_TEMP_KELVIN)
             # Some faulty integrations might put 0 in here, raising exception.
             if temp == 0:
                 _LOGGER.warning(
@@ -592,9 +586,7 @@ class ColorSettingTrait(_Trait):
                     temp,
                 )
             elif temp is not None:
-                color["temperatureK"] = color_util.color_temperature_mired_to_kelvin(
-                    temp
-                )
+                color["temperatureK"] = temp
 
         response = {}
 
@@ -606,11 +598,9 @@ class ColorSettingTrait(_Trait):
     async def execute(self, command, data, params, challenge):
         """Execute a color temperature command."""
         if "temperature" in params["color"]:
-            temp = color_util.color_temperature_kelvin_to_mired(
-                params["color"]["temperature"]
-            )
-            min_temp = self.state.attributes[light.ATTR_MIN_MIREDS]
-            max_temp = self.state.attributes[light.ATTR_MAX_MIREDS]
+            temp = params["color"]["temperature"]
+            max_temp = self.state.attributes[light.ATTR_MAX_COLOR_TEMP_KELVIN]
+            min_temp = self.state.attributes[light.ATTR_MIN_COLOR_TEMP_KELVIN]
 
             if temp < min_temp or temp > max_temp:
                 raise SmartHomeError(
@@ -621,7 +611,10 @@ class ColorSettingTrait(_Trait):
             await self.hass.services.async_call(
                 light.DOMAIN,
                 SERVICE_TURN_ON,
-                {ATTR_ENTITY_ID: self.state.entity_id, light.ATTR_COLOR_TEMP: temp},
+                {
+                    ATTR_ENTITY_ID: self.state.entity_id,
+                    light.ATTR_COLOR_TEMP_KELVIN: temp,
+                },
                 blocking=not self.config.should_report_state,
                 context=data.context,
             )
@@ -729,7 +722,7 @@ class DockTrait(_Trait):
 
     def query_attributes(self) -> dict[str, Any]:
         """Return dock query attributes."""
-        return {"isDocked": self.state.state == vacuum.STATE_DOCKED}
+        return {"isDocked": self.state.state == vacuum.VacuumActivity.DOCKED}
 
     async def execute(self, command, data, params, challenge):
         """Execute a dock command."""
@@ -825,8 +818,8 @@ class EnergyStorageTrait(_Trait):
             "capacityUntilFull": [
                 {"rawValue": 100 - battery_level, "unit": "PERCENTAGE"}
             ],
-            "isCharging": self.state.state == vacuum.STATE_DOCKED,
-            "isPluggedIn": self.state.state == vacuum.STATE_DOCKED,
+            "isCharging": self.state.state == vacuum.VacuumActivity.DOCKED,
+            "isPluggedIn": self.state.state == vacuum.VacuumActivity.DOCKED,
         }
 
     async def execute(self, command, data, params, challenge):
@@ -882,8 +875,8 @@ class StartStopTrait(_Trait):
 
         if domain == vacuum.DOMAIN:
             return {
-                "isRunning": state == vacuum.STATE_CLEANING,
-                "isPaused": state == vacuum.STATE_PAUSED,
+                "isRunning": state == vacuum.VacuumActivity.CLEANING,
+                "isPaused": state == vacuum.VacuumActivity.PAUSED,
             }
 
         if domain in COVER_VALVE_DOMAINS:
