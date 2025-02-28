@@ -173,7 +173,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             cast(str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION))
             == "always"
         ) or (
-            cast(int, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION))
+            int(cast(str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION)))
             > 0
         )
 
