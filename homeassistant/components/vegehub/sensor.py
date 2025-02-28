@@ -57,7 +57,7 @@ class VegeHubSensor(CoordinatorEntity[VegeHubCoordinator], SensorEntity):
         self._attr_available = False
         self._mac_address = config_entry.data[CONF_MAC]
         self._attr_unique_id = (
-            f"{self._mac_address}_{index}_voltage".lower()
+            f"{self._mac_address}_{index}".lower()
         )  # Generate a unique_id using mac and slot
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._mac_address)},
