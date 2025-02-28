@@ -520,7 +520,7 @@ def can_play(item_class: str, item_id: str | None = None) -> bool:
     """
     # Folders are playable once we reach the folder level.
     # Format is S://server_address/share/folder/...
-    if item_id and item_class == "object.container" and item_id.startswith("S:"):
+    if item_id and item_id.startswith("S:") and item_class == "object.container":
         return item_id.count("/") > 3
     return SONOS_TO_MEDIA_TYPES.get(item_class) in PLAYABLE_MEDIA_TYPES
 

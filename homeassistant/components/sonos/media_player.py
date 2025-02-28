@@ -650,7 +650,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 )
                 soco.play_from_queue(0)
         elif media_type == MEDIA_TYPE_DIRECTORY:
-            self._play_media_folder(
+            self._play_media_directory(
                 soco=soco, media_type=media_type, media_id=media_id, enqueue=enqueue
             )
         elif media_type in {MediaType.MUSIC, MediaType.TRACK}:
@@ -717,7 +717,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         enqueue: MediaPlayerEnqueue,
         add_to_queue: Callable,
     ):
-        """Manage adding, replacing, playing items onto the sonos queue."""
+        """Add item or items to queue using a passed in method."""
         _LOGGER.debug(
             "_play_media_queue items [%s] enqueue [%s]",
             items,
@@ -750,14 +750,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         add_to_queue = partial(soco.add_to_queue)
         self._play_media_queue_helper(soco, item, enqueue, add_to_queue)
 
-    def _play_media_folder(
+    def _play_media_directory(
         self,
         soco: SoCo,
         media_type: MediaType | str,
         media_id: str,
         enqueue: MediaPlayerEnqueue,
     ):
-        """Play media from a folder."""
+        """Play a directory from a music library share."""
         search_type = MEDIA_TYPES_TO_SONOS[media_type]
         items = self.media.library.browse_by_idstring(
             search_type, media_id, full_album_art_uri=False
