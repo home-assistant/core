@@ -16,16 +16,18 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
+    CONF_PASSWORD,
     CONF_UNIQUE_ID,
     PRECISION_WHOLE,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import CONNECTION_TYPE, DOMAIN, LOCAL
+from .const import ACCOUNT_ID, CONNECTION_TYPE, DOMAIN, LOCAL
 from .coordinator import AdaxCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,12 +42,13 @@ async def async_setup_entry(
     coordinator: AdaxCoordinator = entry.coordinator
 
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
+        adax_data_handler = Adax(
+            entry.data[ACCOUNT_ID],
+            entry.data[CONF_PASSWORD],
+            websession=async_get_clientsession(hass),
+        )
         async_add_entities(
-            [
-                LocalAdaxDevice(
-                    coordinator.adax_data_handler, entry.data[CONF_UNIQUE_ID]
-                )
-            ],
+            [LocalAdaxDevice(adax_data_handler, entry.data[CONF_UNIQUE_ID])],
             True,
         )
     else:
