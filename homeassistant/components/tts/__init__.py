@@ -836,9 +836,9 @@ class SpeechManager:
 
         task = self.hass.async_create_task(coro, eager_start=False)
 
-        def handle_error(_future: asyncio.Future) -> None:
+        def handle_error(future: asyncio.Future) -> None:
             """Handle error."""
-            if not (err := task.exception()):
+            if not (err := future.exception()):
                 return
             trunc_msg = message if len(message) < 35 else f"{message[0:32]}…"
             _LOGGER.error("Error generating audio for %s: %s", trunc_msg, err)
@@ -975,18 +975,9 @@ class SpeechManager:
 
         self._async_store_to_memcache(cache_key, final_extension, data)
 
-        if cache_to_disk:
-            self.hass.async_create_task(
-                self._async_save_tts_audio(cache_key, filename, data)
-            )
+        if not cache_to_disk:
+            return
 
-    async def _async_save_tts_audio(
-        self, cache_key: str, filename: str, data: bytes
-    ) -> None:
-        """Store voice data to file and file_cache.
-
-        This method is a coroutine.
-        """
         voice_file = os.path.join(self.cache_dir, filename)
 
         def save_speech() -> None:
@@ -994,11 +985,17 @@ class SpeechManager:
             with open(voice_file, "wb") as speech:
                 speech.write(data)
 
-        try:
-            await self.hass.async_add_executor_job(save_speech)
-            self.file_cache[cache_key] = filename
-        except OSError as err:
-            _LOGGER.error("Can't write %s: %s", filename, err)
+        # Don't await, we're going to do this in the background
+        task = self.hass.async_add_executor_job(save_speech)
+
+        def write_done(future: asyncio.Future) -> None:
+            """Write is done task."""
+            if err := future.exception():
+                _LOGGER.error("Can't write %s: %s", filename, err)
+            else:
+                self.file_cache[cache_key] = filename
+
+        task.add_done_callback(write_done)
 
     async def _async_load_file_to_mem(self, cache_key: str) -> None:
         """Load voice from file cache into memory.
