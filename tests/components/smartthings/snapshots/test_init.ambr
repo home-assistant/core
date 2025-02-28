@@ -219,7 +219,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'ARTIK051_KRAC_18K|10193441|60010132001111110200000000000000',
+    'model': 'ARTIK051_KRAC_18K',
     'model_id': None,
     'name': 'AC Office Granit',
     'name_by_user': None,
@@ -252,7 +252,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'ARA-WW-TP1-22-COMMON|10229641|60010523001511014600083200800000',
+    'model': 'ARA-WW-TP1-22-COMMON',
     'model_id': None,
     'name': 'Aire Dormitorio Principal',
     'name_by_user': None,
@@ -285,7 +285,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'TP2X_DA-KS-MICROWAVE-0101X|40436241|50040100011411000200000000000000',
+    'model': 'TP2X_DA-KS-MICROWAVE-0101X',
     'model_id': None,
     'name': 'Microwave',
     'name_by_user': None,
@@ -318,7 +318,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'TP2X_REF_20K|00115641|0004014D011411200103000020000000',
+    'model': 'TP2X_REF_20K',
     'model_id': None,
     'name': 'Refrigerator',
     'name_by_user': None,
@@ -351,7 +351,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'powerbot_7000_17M|50016055|80010404011141000100000000000000',
+    'model': 'powerbot_7000_17M',
     'model_id': None,
     'name': 'Robot vacuum',
     'name_by_user': None,
@@ -384,7 +384,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'DA_DW_A51_20_COMMON|30007242|40010201001311000101000000000000',
+    'model': 'DA_DW_A51_20_COMMON',
     'model_id': None,
     'name': 'Dishwasher',
     'name_by_user': None,
@@ -417,7 +417,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'DA_WM_A51_20_COMMON|20233741|3000000100111100020B000000000000',
+    'model': 'DA_WM_A51_20_COMMON',
     'model_id': None,
     'name': 'Dryer',
     'name_by_user': None,
@@ -450,7 +450,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'DA_WM_TP2_20_COMMON|20233741|2001000100131100022B010000000000',
+    'model': 'DA_WM_TP2_20_COMMON',
     'model_id': None,
     'name': 'Washer',
     'name_by_user': None,
