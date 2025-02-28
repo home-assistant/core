@@ -1029,6 +1029,10 @@
     'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
+      tuple(
+        'mac',
+        'd0:52:a8:72:91:02',
+      ),
     }),
     'disabled_by': None,
     'entry_type': None,
@@ -1044,14 +1048,14 @@
     'labels': set({
     }),
     'manufacturer': None,
-    'model': None,
+    'model': 'V2_HUB',
     'model_id': None,
     'name': 'Home Hub',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '000.055.00005',
     'via_device_id': None,
   })
 # ---

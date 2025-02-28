@@ -103,10 +103,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     for dev in device_status.values():
         for component in dev.device.components:
             if component.id == MAIN and Capability.BRIDGE in component.capabilities:
+                assert dev.device.hub
                 device_registry.async_get_or_create(
                     config_entry_id=entry.entry_id,
                     identifiers={(DOMAIN, dev.device.device_id)},
+                    connections={
+                        (dr.CONNECTION_NETWORK_MAC, dev.device.hub.mac_address)
+                    },
                     name=dev.device.label,
+                    sw_version=dev.device.hub.firmware_version,
+                    model=dev.device.hub.hardware_type,
                 )
     scenes = {
         scene.scene_id: scene
