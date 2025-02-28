@@ -28,6 +28,7 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockEntityPlatform, async_mock_service
@@ -132,12 +133,13 @@ async def test_silence_can_acknowledge_false(hass: HomeAssistant) -> None:
     assert hass.states.get(ENTITY_ID).state == STATE_ON
 
     # Attempt to acknowledge
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )
     await hass.async_block_till_done()
 
     # The state should still be ON because can_acknowledge=False
