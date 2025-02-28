@@ -2039,25 +2039,24 @@ def _generate_statistics_at_time_stmt_group_by(
     # or it will optimize poorly. Callers are responsible
     # for ensuring that the number of metadata_ids is less
     # than 1000.
-    stmt = _generate_select_columns_for_types_stmt(table, types)
-    most_recent_statistic_ids = (
-        select(
-            func.max(table.start_ts).label("max_start_ts"),
-            table.metadata_id.label("max_metadata_id"),
+    return _generate_select_columns_for_types_stmt(table, types) + (
+        lambda q: q.join(
+            most_recent_statistic_ids := (
+                select(
+                    func.max(table.start_ts).label("max_start_ts"),
+                    table.metadata_id.label("max_metadata_id"),
+                )
+                .filter(table.start_ts < start_time_ts)
+                .filter(table.metadata_id.in_(metadata_ids))
+                .group_by(table.metadata_id)
+                .subquery()
+            ),
+            and_(
+                table.start_ts == most_recent_statistic_ids.c.max_start_ts,
+                table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
+            ),
         )
-        .filter(table.start_ts < start_time_ts)
-        .filter(table.metadata_id.in_(metadata_ids))
-        .group_by(table.metadata_id)
-        .subquery()
     )
-    stmt += lambda q: q.join(
-        most_recent_statistic_ids,
-        and_(
-            table.start_ts == most_recent_statistic_ids.c.max_start_ts,
-            table.metadata_id == most_recent_statistic_ids.c.max_metadata_id,
-        ),
-    )
-    return stmt
 
 
 def _generate_statistics_at_time_stmt_dependent_sub_query(
