@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
     intent as climate_intent,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
-from homeassistant.const import ATTR_DEVICE_CLASS, Platform, UnitOfTemperature
+from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
