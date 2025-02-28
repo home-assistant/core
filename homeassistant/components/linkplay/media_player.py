@@ -129,7 +129,6 @@ RETRY_POLL_MAXIMUM = 3
 
 
 async def async_setup_entry(
-async def async_setup_entry(
     hass: HomeAssistant,
     entry: LinkPlayConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
