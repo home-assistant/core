@@ -54,7 +54,7 @@ from . import UnjoinData, media_browser
 from .const import (
     DATA_SONOS,
     DOMAIN as SONOS_DOMAIN,
-    MEDIA_TYPE_FOLDER,
+    MEDIA_TYPE_DIRECTORY,
     MEDIA_TYPES_TO_SONOS,
     MODELS_LINEIN_AND_TV,
     MODELS_LINEIN_ONLY,
@@ -649,7 +649,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     media_id, timeout=LONG_SERVICE_TIMEOUT
                 )
                 soco.play_from_queue(0)
-        elif media_type == MEDIA_TYPE_FOLDER:
+        elif media_type == MEDIA_TYPE_DIRECTORY:
             self._play_media_folder(
                 soco=soco, media_type=media_type, media_id=media_id, enqueue=enqueue
             )

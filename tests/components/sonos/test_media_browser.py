@@ -12,6 +12,7 @@ from homeassistant.components.media_player import (
     MediaClass,
     MediaType,
 )
+from homeassistant.components.sonos.const import MEDIA_TYPE_DIRECTORY
 from homeassistant.components.sonos.media_browser import (
     build_item_response,
     get_thumbnail_url_full,
@@ -211,7 +212,7 @@ async def test_browse_media_library_folders(
             "type": "media_player/browse_media",
             ATTR_ENTITY_ID: "media_player.zone_a",
             ATTR_MEDIA_CONTENT_ID: media_content_id,
-            ATTR_MEDIA_CONTENT_TYPE: "folder",
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_DIRECTORY,
         }
     )
     response = await client.receive_json()
