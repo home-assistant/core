@@ -223,7 +223,6 @@ class SoCoMockFactory:
         my_speaker_info["uid"] = mock_soco.uid
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
         mock_soco.add_to_queue = Mock(return_value=10)
-        mock_soco.add_multiple_to_queue = Mock(return_value=10)
         mock_soco.add_uri_to_queue = Mock(return_value=10)
 
         mock_soco.avTransport = SonosMockService("AVTransport", ip_address)

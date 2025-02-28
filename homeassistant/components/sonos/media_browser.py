@@ -576,9 +576,8 @@ def get_media(
             search_type, search_term=search_term, full_album_art_uri=True
         )
     elif search_type == SONOS_SHARE:
-        # Format is S://server_address/share/folder/...
-        # If just S: this will be in the mappings; otherwise use the last folder in path.
-        # Split the path by '/' and remove the last part
+        # In order to get the MusicServiceItem, we browse the parent folder
+        # an find one that matches on item_id.
         parts = item_id.rstrip("/").split("/")
         parent_folder = "/".join(parts[:-1])
         matches = media_library.browse_by_idstring(
