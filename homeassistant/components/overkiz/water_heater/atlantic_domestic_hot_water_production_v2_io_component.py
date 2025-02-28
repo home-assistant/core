@@ -127,7 +127,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             OverkizCommandParam.NORMAL,
             OverkizCommandParam.ON,
             OverkizCommandParam.PROG,
-            "program",  # TODO: pyoverkiz PR
+            # TODO: pyoverkiz PR https://github.com/iMicknl/python-overkiz-api/pull/1551
+            #  here will be OverkizCommandParam.PROGRAM
+            "program",  # TODO: pyoverkiz PR. here will be OverkizCommandParam.PROGRAM
         )
 
     @property
@@ -136,7 +138,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         return (
             self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
             in (
-                "antifreeze",  # TODO: pyoverkiz PR
+                # TODO: pyoverkiz PR https://github.com/iMicknl/python-overkiz-api/pull/1550
+                #  here will be OverkizCommandParam.ANTIFREEZE
+                "antifreeze",
                 OverkizCommandParam.AWAY,
                 OverkizCommandParam.FROSTPROTECTION,
             )
@@ -245,7 +249,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         )  # wait 3 seconds to have the new duration in
 
         await self.executor.async_execute_command(
-            "refreshAwayModeDuration",  # TODO: pyoverkiz PR
+            # TODO: pyoverkiz PR https://github.com/iMicknl/python-overkiz-api/pull/1549
+            #  here will be OverkizCommand.REFRESH_AWAY_MODE_DURATION
+            "refreshAwayModeDuration",
             refresh_afterwards=refresh_afterwards,
         )
 
@@ -264,7 +270,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             OPERATING_MODE_DELAY
         )  # wait 3 seconds to have the new duration in
         await self.executor.async_execute_command(
-            "refreshAwayModeDuration",  # TODO: pyoverkiz PR
+            # TODO: pyoverkiz PR https://github.com/iMicknl/python-overkiz-api/pull/1549
+            #  here will be OverkizCommand.REFRESH_AWAY_MODE_DURATION
+            "refreshAwayModeDuration",
             refresh_afterwards=refresh_afterwards,
         )
 
