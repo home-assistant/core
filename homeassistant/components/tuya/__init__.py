@@ -51,13 +51,14 @@ if TYPE_CHECKING:
     import paho.mqtt.client as mqtt
 
 
-class CompatManager(Manager):
-    """Compatibility Manager for Tuya.
+class ManagerCompat(Manager):
+    """Extended Manager class from the Tuya device sharing SDK.
 
-    This code can be removed when https://github.com/tuya/tuya-device-sharing-sdk/pull/25
-    is merged. It patches the `tuya_sharing.Manager` class to use the correct
-    `paho.mqtt.client` calls to ensure compatibility with the newer versions
-    of the `paho-mqtt` library.
+    The extension ensures compatibility a paho-mqtt client version >= 2.1.0.
+    It overrides extend refresh_mq method to ensure correct paho.mqtt client calls.
+
+    This code can be removed when a version of tuya-device-sharing with
+    https://github.com/tuya/tuya-device-sharing-sdk/pull/25 is available.
     """
 
     def refresh_mq(self):
@@ -73,14 +74,21 @@ class CompatManager(Manager):
             if hasattr(device, "id") and getattr(device, "set_up", False)
         ]
 
-        sharing_mq = CompatSharingMQ(self.customer_api, home_ids, device)
+        sharing_mq = SharingMQCompat(self.customer_api, home_ids, device)
         sharing_mq.start()
         sharing_mq.add_message_listener(self.on_message)
         self.mq = sharing_mq
 
 
-class CompatSharingMQ(SharingMQ):
-    """Compatibility wrapper for Tuya SharingMQ class."""
+class SharingMQCompat(SharingMQ):
+    """Extended SharingMQ class from the Tuya device sharing SDK.
+
+    The extension ensures compatibility a paho-mqtt client version >= 2.1.0.
+    It overrides _start method to ensure correct paho.mqtt client calls.
+
+    This code can be removed when a version of tuya-device-sharing with
+    https://github.com/tuya/tuya-device-sharing-sdk/pull/25 is available.
+    """
 
     def _start(self, mq_config: SharingMQConfig) -> mqtt.Client:
         """Start the MQTT client."""
@@ -113,7 +121,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TuyaConfigEntry) -> bool
         raise ConfigEntryAuthFailed("Authentication failed. Please re-authenticate.")
 
     token_listener = TokenListener(hass, entry)
-    manager = CompatManager(
+    manager = ManagerCompat(
         TUYA_CLIENT_ID,
         entry.data[CONF_USER_CODE],
         entry.data[CONF_TERMINAL_ID],
