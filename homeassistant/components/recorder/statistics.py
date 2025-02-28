@@ -2040,7 +2040,9 @@ def _generate_statistics_at_time_stmt(
     if slow_dependent_subquery:
         # Simple group-by for MySQL, must use less
         # than 1000 metadata_ids in the IN clause for MySQL
-        # or it will optimize poorly.
+        # or it will optimize poorly. Callers are responsible
+        # for ensuring that the number of metadata_ids is less
+        # than 1000.
         most_recent_statistic_ids = (
             select(
                 func.max(table.start_ts).label("max_start_ts"),
