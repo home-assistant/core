@@ -93,7 +93,7 @@ async def test_switch_availability(
         status_value=entity_config["switch_on_value"],
         gw_available=gw_available,
         device_available=device_available,
-        index="0" if entity_config["device_type"] == "bit" else None,
+        index=0 if entity_config["device_type"] == "bit" else None,
     )
 
     assert switch is not None
@@ -148,9 +148,9 @@ async def test_light_availability_with_alerts(
 @pytest.mark.parametrize(
     ("entity_config", "index"),
     [
-        ("simple_relay", ""),
-        ("relay", ""),
-        ("bit", "0"),
+        ("simple_relay", None),
+        ("relay", None),
+        ("bit", 0),
     ],
     indirect=["entity_config"],
 )
@@ -182,9 +182,9 @@ async def test_switch_turn_on(
 @pytest.mark.parametrize(
     ("entity_config", "index"),
     [
-        ("simple_relay", ""),
-        ("relay", ""),
-        ("bit", "0"),
+        ("simple_relay", None),
+        ("relay", None),
+        ("bit", 0),
     ],
     indirect=["entity_config"],
 )

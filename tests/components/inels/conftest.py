@@ -80,7 +80,7 @@ def setup_entity(hass: HomeAssistant, mock_mqtt):
         device_available: bool = True,
         gw_available: bool = True,
         last_value=None,
-        index: str = "",
+        index: int | None = None,
     ):
         set_mock_mqtt(
             mock_mqtt,
