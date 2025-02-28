@@ -22,11 +22,6 @@ SELECT_DESCRIPTIONS: dict[AttributeType, SelectEntityDescription] = {
         options=["off", "level1", "level2"],
         entity_category=EntityCategory.CONFIG,
     ),
-    AttributeType.RESTORE_LAST_KNOWN_STATE: SelectEntityDescription(
-        key="restore_last_known_state",
-        options=["disabled", "enabled"],
-        entity_category=EntityCategory.CONFIG,
-    ),
     AttributeType.SWITCH_TYPE: SelectEntityDescription(
         key="switch_type",
         options=["0", "1", "2"],

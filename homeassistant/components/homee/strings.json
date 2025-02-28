@@ -133,13 +133,6 @@
           "1": "Rocker switch",
           "2": "Depends on model (see manual)"
         }
-      },
-      "restore_last_known_state": {
-        "name": "Behavior after power loss",
-        "state": {
-          "disabled": "Turned off",
-          "enabled": "Restore last state"
-        }
       }
     },
     "sensor": {
