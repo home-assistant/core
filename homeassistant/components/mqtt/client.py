@@ -15,6 +15,7 @@ import socket
 import ssl
 import time
 from typing import TYPE_CHECKING, Any
+import uuid
 
 import certifi
 
@@ -116,7 +117,7 @@ MAX_UNSUBSCRIBES_PER_CALL = 500
 
 MAX_PACKETS_TO_READ = 500
 
-type SocketType = socket.socket | ssl.SSLSocket | mqtt._WebsocketWrapper | Any  # noqa: SLF001
+type SocketType = socket.socket | ssl.SSLSocket | mqtt.WebsocketWrapper | Any
 
 type SubscribePayloadType = str | bytes | bytearray  # Only bytes if encoding is None
 
@@ -308,13 +309,12 @@ class MqttClientSetup:
         if (client_id := config.get(CONF_CLIENT_ID)) is None:
             # PAHO MQTT relies on the MQTT server to generate random client IDs.
             # However, that feature is not mandatory so we generate our own.
-            client_id = None
+            client_id = mqtt.base62(uuid.uuid4().int, padding=22)
         transport: str = config.get(CONF_TRANSPORT, DEFAULT_TRANSPORT)
         self._client = AsyncMQTTClient(
-            mqtt.CallbackAPIVersion.VERSION1,
             client_id,
             protocol=proto,
-            transport=transport,  # type: ignore[arg-type]
+            transport=transport,
             reconnect_on_failure=False,
         )
         self._client.setup()
@@ -533,7 +533,7 @@ class MQTT:
             try:
                 # Some operating systems do not allow us to set the preferred
                 # buffer size. In that case we try some other size options.
-                sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, new_buffer_size)  # type: ignore[union-attr]
+                sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, new_buffer_size)
             except OSError as err:
                 if new_buffer_size <= MIN_BUFFER_SIZE:
                     _LOGGER.warning(
@@ -1216,9 +1216,7 @@ class MQTT:
         if not future.done():
             future.set_exception(asyncio.TimeoutError)
 
-    async def _async_wait_for_mid_or_raise(
-        self, mid: int | None, result_code: int
-    ) -> None:
+    async def _async_wait_for_mid_or_raise(self, mid: int, result_code: int) -> None:
         """Wait for ACK from broker or raise on error."""
         if result_code != 0:
             # pylint: disable-next=import-outside-toplevel
@@ -1234,8 +1232,6 @@ class MQTT:
 
         # Create the mid event if not created, either _mqtt_handle_mid or
         # _async_wait_for_mid_or_raise may be executed first.
-        if TYPE_CHECKING:
-            assert mid is not None
         future = self._async_get_mid_future(mid)
         loop = self.hass.loop
         timer_handle = loop.call_later(TIMEOUT_ACK, self._async_timeout_mid, future)
@@ -1273,7 +1269,7 @@ def _matcher_for_topic(subscription: str) -> Callable[[str], bool]:
     # pylint: disable-next=import-outside-toplevel
     from paho.mqtt.matcher import MQTTMatcher
 
-    matcher = MQTTMatcher()  # type: ignore[no-untyped-call]
+    matcher = MQTTMatcher()
     matcher[subscription] = True
 
-    return lambda topic: next(matcher.iter_match(topic), False)  # type: ignore[no-untyped-call]
+    return lambda topic: next(matcher.iter_match(topic), False)

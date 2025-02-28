@@ -1352,7 +1352,7 @@ ovoenergy==2.0.0
 p1monitor==3.1.0
 
 # homeassistant.components.mqtt
-paho-mqtt==2.1.0
+paho-mqtt==1.6.1
 
 # homeassistant.components.panasonic_viera
 panasonic-viera==0.4.2
@@ -1565,7 +1565,7 @@ pydroid-ipcam==2.0.0
 pyecoforest==0.4.0
 
 # homeassistant.components.econet
-pyeconet==0.1.28
+pyeconet==0.1.23
 
 # homeassistant.components.ista_ecotrend
 pyecotrend-ista==3.3.1
