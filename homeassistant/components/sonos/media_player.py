@@ -762,6 +762,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         items = self.media.library.browse_by_idstring(
             search_type, media_id, full_album_art_uri=False
         )
+        if len(items) == 0:
+            raise ServiceValidationError(
+                translation_domain=SONOS_DOMAIN,
+                translation_key="invalid_media",
+                translation_placeholders={
+                    "media_id": media_id,
+                },
+            )
         self._play_media_items_queue(soco, items, enqueue)
 
     @soco_error()

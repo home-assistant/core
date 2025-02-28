@@ -28,6 +28,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.sonos.const import (
     DOMAIN as SONOS_DOMAIN,
+    MEDIA_TYPE_DIRECTORY,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
@@ -246,7 +247,7 @@ async def test_play_media_library_folder(
         SERVICE_PLAY_MEDIA,
         {
             ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: "folder",
+            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_DIRECTORY,
             ATTR_MEDIA_CONTENT_ID: "S://192.168.1.1/music/elton%20john",
             ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
         },
@@ -270,6 +271,28 @@ async def test_play_media_library_folder(
         == LONG_SERVICE_TIMEOUT
     )
     assert soco_mock.play_from_queue.call_count == 1
+
+
+async def test_play_media_library_folder_error(
+    hass: HomeAssistant,
+    async_autosetup_sonos,
+) -> None:
+    """Test playing media library folder."""
+    with pytest.raises(
+        ServiceValidationError,
+        match="Could not find media in library: S://192.168.1.1/music/error",
+    ):
+        await hass.services.async_call(
+            MP_DOMAIN,
+            SERVICE_PLAY_MEDIA,
+            {
+                ATTR_ENTITY_ID: "media_player.zone_a",
+                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_DIRECTORY,
+                ATTR_MEDIA_CONTENT_ID: "S://192.168.1.1/music/error",
+                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
+            },
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
