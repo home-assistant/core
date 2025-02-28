@@ -151,7 +151,7 @@ async def test_async_unload_entry(hass: HomeAssistant, default_config) -> None:
     """Test the MQTT client associated with the entry is properly cleaned up."""
 
     mock_mqtt = MagicMock()
-    inels_data = inels.InelsData(mqtt=mock_mqtt)
+    inels_data = inels.InelsData(mqtt=mock_mqtt, devices=[])
 
     config_entry = MockConfigEntry(domain=DOMAIN, data=default_config)
     config_entry.add_to_hass(hass)
