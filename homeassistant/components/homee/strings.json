@@ -121,7 +121,7 @@
       "repeater_mode": {
         "name": "enOcean Repeater Mode",
         "state": {
-          "off": "Off",
+          "off": "[%key:common::state::off%]",
           "level1": "Level 1",
           "level2": "Level 2"
         }
@@ -139,21 +139,6 @@
         "state": {
           "disabled": "Turned off",
           "enabled": "Restore last state"
-        }
-      },
-      "wind_monitoring_state": {
-        "name": "Threshold for wind trigger",
-        "state": {
-          "0": "0 m/s",
-          "1": "2.5 m/s",
-          "2": "5 m/s",
-          "3": "7.5 m/s",
-          "4": "10 m/s",
-          "5": "12.5 m/s",
-          "6": "15 m/s",
-          "7": "17.5 m/s",
-          "8": "20 m/s",
-          "9": "22.5 m/s"
         }
       }
     },

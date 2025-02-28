@@ -36,10 +36,10 @@ async def setup_select(
     ("service", "expected"),
     [
         (SERVICE_SELECT_FIRST, 0),
-        (SERVICE_SELECT_LAST, 9),
-        (SERVICE_SELECT_NEXT, 3),
-        (SERVICE_SELECT_PREVIOUS, 1),
-        (SERVICE_SELECT_OPTION, 7),
+        (SERVICE_SELECT_LAST, 2),
+        (SERVICE_SELECT_NEXT, 2),
+        (SERVICE_SELECT_PREVIOUS, 0),
+        (SERVICE_SELECT_OPTION, 2),
     ],
 )
 async def test_select_services(
@@ -56,11 +56,11 @@ async def test_select_services(
 
     if service == SERVICE_SELECT_OPTION:
         OPTIONS = {
-            ATTR_ENTITY_ID: "select.test_select_threshold_for_wind_trigger",
-            "option": "7",
+            ATTR_ENTITY_ID: "select.test_select_type_of_controlling_switch",
+            "option": "2",
         }
     else:
-        OPTIONS = {ATTR_ENTITY_ID: "select.test_select_threshold_for_wind_trigger"}
+        OPTIONS = {ATTR_ENTITY_ID: "select.test_select_type_of_controlling_switch"}
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -69,7 +69,7 @@ async def test_select_services(
         blocking=True,
     )
 
-    mock_homee.set_value.assert_called_once_with(1, 5, expected)
+    mock_homee.set_value.assert_called_once_with(1, 4, expected)
 
 
 async def test_select_service_error(
@@ -87,7 +87,7 @@ async def test_select_service_error(
             SELECT_DOMAIN,
             SERVICE_SELECT_OPTION,
             {
-                ATTR_ENTITY_ID: "select.test_select_threshold_for_wind_trigger",
+                ATTR_ENTITY_ID: "select.test_select_type_of_controlling_switch",
                 "option": "invalid",
             },
             blocking=True,
