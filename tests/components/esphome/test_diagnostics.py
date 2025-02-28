@@ -49,6 +49,8 @@ async def test_diagnostics_with_bluetooth(
             "connections_limit": 0,
             "scanner": {
                 "connectable": True,
+                "current_mode": None,
+                "requested_mode": None,
                 "discovered_device_timestamps": {},
                 "discovered_devices_and_advertisement_data": [],
                 "last_detection": ANY,
@@ -79,6 +81,7 @@ async def test_diagnostics_with_bluetooth(
             "pref_disable_new_entities": False,
             "pref_disable_polling": False,
             "source": "user",
+            "subentries": [],
             "title": "Mock Title",
             "unique_id": "11:22:33:44:55:aa",
             "version": 1,
@@ -86,6 +89,7 @@ async def test_diagnostics_with_bluetooth(
         "storage_data": {
             "api_version": {"major": 99, "minor": 99},
             "device_info": {
+                "bluetooth_mac_address": "**REDACTED**",
                 "bluetooth_proxy_feature_flags": 63,
                 "compilation_time": "",
                 "esphome_version": "1.0.0",

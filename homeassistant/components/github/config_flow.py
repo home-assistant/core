@@ -23,11 +23,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_ACCESS_TOKEN
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import (
     SERVER_SOFTWARE,
     async_get_clientsession,
 )
-import homeassistant.helpers.config_validation as cv
 
 from .const import CLIENT_ID, CONF_REPOSITORIES, DEFAULT_REPOSITORIES, DOMAIN, LOGGER
 

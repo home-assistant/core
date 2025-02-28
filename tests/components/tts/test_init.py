@@ -23,7 +23,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     DEFAULT_LANG,
@@ -44,7 +44,6 @@ from tests.common import (
     mock_integration,
     mock_platform,
     mock_restore_cache,
-    reset_translation_cache,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -1987,6 +1986,3 @@ async def test_default_engine_prefer_cloud_entity(
     provider_engine = tts.async_resolve_engine(hass, "test")
     assert provider_engine == "test"
     assert tts.async_default_engine(hass) == "tts.cloud_tts_entity"
-
-    # Reset the `cloud` translations cache to avoid flaky translation checks
-    reset_translation_cache(hass, ["cloud"])

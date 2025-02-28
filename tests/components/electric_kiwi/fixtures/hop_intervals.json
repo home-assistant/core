@@ -1,249 +1,250 @@
 {
   "data": {
-    "hop_duration": "60",
     "type": "hop_intervals",
+    "hop_duration": "60",
     "intervals": {
       "1": {
-        "active": 1,
+        "start_time": "12:00 AM",
         "end_time": "1:00 AM",
-        "start_time": "12:00 AM"
+        "active": 1
       },
       "2": {
-        "active": 1,
+        "start_time": "12:30 AM",
         "end_time": "1:30 AM",
-        "start_time": "12:30 AM"
+        "active": 1
       },
       "3": {
-        "active": 1,
+        "start_time": "1:00 AM",
         "end_time": "2:00 AM",
-        "start_time": "1:00 AM"
+        "active": 1
       },
       "4": {
-        "active": 1,
+        "start_time": "1:30 AM",
         "end_time": "2:30 AM",
-        "start_time": "1:30 AM"
+        "active": 1
       },
       "5": {
-        "active": 1,
+        "start_time": "2:00 AM",
         "end_time": "3:00 AM",
-        "start_time": "2:00 AM"
+        "active": 1
       },
       "6": {
-        "active": 1,
+        "start_time": "2:30 AM",
         "end_time": "3:30 AM",
-        "start_time": "2:30 AM"
+        "active": 1
       },
       "7": {
-        "active": 1,
+        "start_time": "3:00 AM",
         "end_time": "4:00 AM",
-        "start_time": "3:00 AM"
+        "active": 1
       },
       "8": {
-        "active": 1,
+        "start_time": "3:30 AM",
         "end_time": "4:30 AM",
-        "start_time": "3:30 AM"
+        "active": 1
       },
       "9": {
-        "active": 1,
+        "start_time": "4:00 AM",
         "end_time": "5:00 AM",
-        "start_time": "4:00 AM"
+        "active": 1
       },
       "10": {
-        "active": 1,
+        "start_time": "4:30 AM",
         "end_time": "5:30 AM",
-        "start_time": "4:30 AM"
+        "active": 1
       },
       "11": {
-        "active": 1,
+        "start_time": "5:00 AM",
         "end_time": "6:00 AM",
-        "start_time": "5:00 AM"
+        "active": 1
       },
       "12": {
-        "active": 1,
+        "start_time": "5:30 AM",
         "end_time": "6:30 AM",
-        "start_time": "5:30 AM"
+        "active": 1
       },
       "13": {
-        "active": 1,
+        "start_time": "6:00 AM",
         "end_time": "7:00 AM",
-        "start_time": "6:00 AM"
+        "active": 1
       },
       "14": {
-        "active": 1,
+        "start_time": "6:30 AM",
         "end_time": "7:30 AM",
-        "start_time": "6:30 AM"
+        "active": 0
       },
       "15": {
-        "active": 1,
+        "start_time": "7:00 AM",
         "end_time": "8:00 AM",
-        "start_time": "7:00 AM"
+        "active": 0
       },
       "16": {
-        "active": 1,
+        "start_time": "7:30 AM",
         "end_time": "8:30 AM",
-        "start_time": "7:30 AM"
+        "active": 0
       },
       "17": {
-        "active": 1,
+        "start_time": "8:00 AM",
         "end_time": "9:00 AM",
-        "start_time": "8:00 AM"
+        "active": 0
       },
       "18": {
-        "active": 1,
+        "start_time": "8:30 AM",
         "end_time": "9:30 AM",
-        "start_time": "8:30 AM"
+        "active": 0
       },
       "19": {
-        "active": 1,
+        "start_time": "9:00 AM",
         "end_time": "10:00 AM",
-        "start_time": "9:00 AM"
+        "active": 1
       },
       "20": {
-        "active": 1,
+        "start_time": "9:30 AM",
         "end_time": "10:30 AM",
-        "start_time": "9:30 AM"
+        "active": 1
       },
       "21": {
-        "active": 1,
+        "start_time": "10:00 AM",
         "end_time": "11:00 AM",
-        "start_time": "10:00 AM"
+        "active": 1
       },
       "22": {
-        "active": 1,
+        "start_time": "10:30 AM",
         "end_time": "11:30 AM",
-        "start_time": "10:30 AM"
+        "active": 1
       },
       "23": {
-        "active": 1,
+        "start_time": "11:00 AM",
         "end_time": "12:00 PM",
-        "start_time": "11:00 AM"
+        "active": 1
       },
       "24": {
-        "active": 1,
+        "start_time": "11:30 AM",
         "end_time": "12:30 PM",
-        "start_time": "11:30 AM"
+        "active": 1
       },
       "25": {
-        "active": 1,
+        "start_time": "12:00 PM",
         "end_time": "1:00 PM",
-        "start_time": "12:00 PM"
+        "active": 1
       },
       "26": {
-        "active": 1,
+        "start_time": "12:30 PM",
         "end_time": "1:30 PM",
-        "start_time": "12:30 PM"
+        "active": 1
       },
       "27": {
-        "active": 1,
+        "start_time": "1:00 PM",
         "end_time": "2:00 PM",
-        "start_time": "1:00 PM"
+        "active": 1
       },
       "28": {
-        "active": 1,
+        "start_time": "1:30 PM",
         "end_time": "2:30 PM",
-        "start_time": "1:30 PM"
+        "active": 1
       },
       "29": {
-        "active": 1,
+        "start_time": "2:00 PM",
         "end_time": "3:00 PM",
-        "start_time": "2:00 PM"
+        "active": 1
       },
       "30": {
-        "active": 1,
+        "start_time": "2:30 PM",
         "end_time": "3:30 PM",
-        "start_time": "2:30 PM"
+        "active": 1
       },
       "31": {
-        "active": 1,
+        "start_time": "3:00 PM",
         "end_time": "4:00 PM",
-        "start_time": "3:00 PM"
+        "active": 1
       },
       "32": {
-        "active": 1,
+        "start_time": "3:30 PM",
         "end_time": "4:30 PM",
-        "start_time": "3:30 PM"
+        "active": 1
       },
       "33": {
-        "active": 1,
+        "start_time": "4:00 PM",
         "end_time": "5:00 PM",
-        "start_time": "4:00 PM"
+        "active": 1
       },
       "34": {
-        "active": 1,
+        "start_time": "4:30 PM",
         "end_time": "5:30 PM",
-        "start_time": "4:30 PM"
+        "active": 0
       },
       "35": {
-        "active": 1,
+        "start_time": "5:00 PM",
         "end_time": "6:00 PM",
-        "start_time": "5:00 PM"
+        "active": 0
       },
       "36": {
-        "active": 1,
+        "start_time": "5:30 PM",
         "end_time": "6:30 PM",
-        "start_time": "5:30 PM"
+        "active": 0
       },
       "37": {
-        "active": 1,
+        "start_time": "6:00 PM",
         "end_time": "7:00 PM",
-        "start_time": "6:00 PM"
+        "active": 0
       },
       "38": {
-        "active": 1,
+        "start_time": "6:30 PM",
         "end_time": "7:30 PM",
-        "start_time": "6:30 PM"
+        "active": 0
       },
       "39": {
-        "active": 1,
+        "start_time": "7:00 PM",
         "end_time": "8:00 PM",
-        "start_time": "7:00 PM"
+        "active": 0
       },
       "40": {
-        "active": 1,
+        "start_time": "7:30 PM",
         "end_time": "8:30 PM",
-        "start_time": "7:30 PM"
+        "active": 0
       },
       "41": {
-        "active": 1,
+        "start_time": "8:00 PM",
         "end_time": "9:00 PM",
-        "start_time": "8:00 PM"
+        "active": 0
       },
       "42": {
-        "active": 1,
+        "start_time": "8:30 PM",
         "end_time": "9:30 PM",
-        "start_time": "8:30 PM"
+        "active": 0
       },
       "43": {
-        "active": 1,
+        "start_time": "9:00 PM",
         "end_time": "10:00 PM",
-        "start_time": "9:00 PM"
+        "active": 1
       },
       "44": {
-        "active": 1,
+        "start_time": "9:30 PM",
         "end_time": "10:30 PM",
-        "start_time": "9:30 PM"
+        "active": 1
       },
       "45": {
-        "active": 1,
-        "end_time": "11:00 AM",
-        "start_time": "10:00 PM"
+        "start_time": "10:00 PM",
+        "end_time": "11:00 PM",
+        "active": 1
       },
       "46": {
-        "active": 1,
+        "start_time": "10:30 PM",
         "end_time": "11:30 PM",
-        "start_time": "10:30 PM"
+        "active": 1
       },
       "47": {
-        "active": 1,
+        "start_time": "11:00 PM",
         "end_time": "12:00 AM",
-        "start_time": "11:00 PM"
+        "active": 1
       },
       "48": {
-        "active": 1,
+        "start_time": "11:30 PM",
         "end_time": "12:30 AM",
-        "start_time": "11:30 PM"
+        "active": 0
       }
-    }
+    },
+    "service_type": "electricity"
   },
   "status": 1
 }

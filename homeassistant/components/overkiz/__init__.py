@@ -39,7 +39,6 @@ from .const import (
     LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
     PLATFORMS,
-    UPDATE_INTERVAL,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
     UPDATE_INTERVAL_LOCAL,
 )
@@ -104,13 +103,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
+        entry,
         LOGGER,
-        name="device events",
         client=client,
         devices=setup.devices,
         places=setup.root_place,
-        update_interval=UPDATE_INTERVAL,
-        config_entry_id=entry.entry_id,
     )
 
     await coordinator.async_config_entry_first_refresh()

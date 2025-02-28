@@ -17,8 +17,8 @@ from homeassistant.components.websocket_api import ActiveConnection, messages
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.helpers.json import json_bytes
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
-import homeassistant.util.dt as dt_util
 
 from .const import DOMAIN
 from .helpers import (

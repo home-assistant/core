@@ -24,8 +24,8 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -101,6 +101,9 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _from_stations: list[StationInfoModel]
     _to_stations: list[StationInfoModel]
+    _time: str | None
+    _days: list
+    _product: str | None
     _data: dict[str, Any]
 
     @staticmethod
@@ -243,8 +246,10 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the select station step."""
         if user_input is not None:
             api_key: str = self._data[CONF_API_KEY]
-            train_from: str = user_input[CONF_FROM]
-            train_to: str = user_input[CONF_TO]
+            train_from: str = (
+                user_input.get(CONF_FROM) or self._from_stations[0].signature
+            )
+            train_to: str = user_input.get(CONF_TO) or self._to_stations[0].signature
             train_time: str | None = self._data.get(CONF_TIME)
             train_days: list = self._data[CONF_WEEKDAY]
             filter_product: str | None = self._data[CONF_FILTER_PRODUCT]

@@ -134,7 +134,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         unique_id for said entry. When a new (zeroconf) service or device is
         discovered, the identifier is first used to look up if it belongs to an
         existing config entry. If that's the case, the unique_id from that entry is
-        re-used, otherwise the newly discovered identifier is used instead.
+        reused, otherwise the newly discovered identifier is used instead.
         """
         assert self.atv
         all_identifiers = set(self.atv.all_identifiers)
