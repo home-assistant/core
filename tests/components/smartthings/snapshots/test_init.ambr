@@ -1022,7 +1022,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_hub
+# name: test_hub_via_device
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
