@@ -191,10 +191,6 @@ class BaseFirmwareUpdateEntity(
         self._update_attributes()
         self.async_write_ha_state()
 
-    def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
-        """Update the config entry after new firmware has been installed."""
-        raise NotImplementedError
-
     def _update_attributes(self) -> None:
         """Recompute the attributes of the entity."""
 
@@ -327,7 +323,6 @@ class BaseFirmwareUpdateEntity(
                         "Failed to probe the firmware after flashing"
                     )
 
-                self._update_config_entry_after_install(firmware_info)
                 self._firmware_info_callback(firmware_info)
             finally:
                 self._attr_in_progress = False

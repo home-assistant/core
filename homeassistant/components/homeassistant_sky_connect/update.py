@@ -20,7 +20,7 @@ from homeassistant.components.homeassistant_hardware.util import (
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -145,7 +145,11 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             f"{self._config_entry.data['serial_number']}_{self.entity_description.key}"
         )
 
-    def _update_config_entry_after_install(self, firmware_info: FirmwareInfo) -> None:
+    @callback
+    def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
+        """Handle updated firmware info being pushed by an integration."""
+        super()._firmware_info_callback(firmware_info)
+
         self.hass.config_entries.async_update_entry(
             self._config_entry,
             data={
