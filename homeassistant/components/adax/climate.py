@@ -15,19 +15,20 @@ from homeassistant.components.climate import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_IP_ADDRESS,
-    CONF_PASSWORD,
-    CONF_TOKEN,
     CONF_UNIQUE_ID,
     PRECISION_WHOLE,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ACCOUNT_ID, CONNECTION_TYPE, DOMAIN, LOCAL
+from .const import CONNECTION_TYPE, DOMAIN, LOCAL
+from .coordinator import AdaxCoordinator
+
+import logging
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -36,33 +37,24 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Adax thermostat with config flow."""
+    coordinator: AdaxCoordinator = entry.coordinator
+
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
-        adax_data_handler = AdaxLocal(
-            entry.data[CONF_IP_ADDRESS],
-            entry.data[CONF_TOKEN],
-            websession=async_get_clientsession(hass, verify_ssl=False),
-        )
         async_add_entities(
-            [LocalAdaxDevice(adax_data_handler, entry.data[CONF_UNIQUE_ID])], True
+            [LocalAdaxDevice(coordinator.adax_data_handler, entry.data[CONF_UNIQUE_ID])], True
         )
-        return
-
-    adax_data_handler = Adax(
-        entry.data[ACCOUNT_ID],
-        entry.data[CONF_PASSWORD],
-        websession=async_get_clientsession(hass),
-    )
-
-    async_add_entities(
-        (
-            AdaxDevice(room, adax_data_handler)
-            for room in await adax_data_handler.get_rooms()
-        ),
-        True,
-    )
+    else:
+        async_add_entities(
+            (
+                AdaxDevice(room, coordinator)
+                for room in coordinator.get_rooms()
+            ),
+            True,
+        )
 
 
-class AdaxDevice(ClimateEntity):
+# class AdaxDevice(ClimateEntity):
+class AdaxDevice(CoordinatorEntity[AdaxCoordinator], ClimateEntity):
     """Representation of a heater."""
 
     _attr_hvac_modes = [HVACMode.HEAT, HVACMode.OFF]
@@ -77,10 +69,17 @@ class AdaxDevice(ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _enable_turn_on_off_backwards_compatibility = False
 
-    def __init__(self, heater_data: dict[str, Any], adax_data_handler: Adax) -> None:
+    def __init__(
+        self,
+        room: dict[str, Any],
+        coordinator: AdaxCoordinator
+    ) -> None:
         """Initialize the heater."""
+        super().__init__(coordinator=coordinator)
+        self._adax_data_handler: Adax = coordinator.adax_data_handler
+        _LOGGER.warning("R: %s", room)
+        heater_data = room
         self._device_id = heater_data["id"]
-        self._adax_data_handler = adax_data_handler
 
         self._attr_unique_id = f"{heater_data['homeId']}_{heater_data['id']}"
         self._attr_device_info = DeviceInfo(
@@ -117,19 +116,26 @@ class AdaxDevice(ClimateEntity):
 
     async def async_update(self) -> None:
         """Get the latest data."""
-        for room in await self._adax_data_handler.get_rooms():
-            if room["id"] != self._device_id:
-                continue
-            self._attr_name = room["name"]
-            self._attr_current_temperature = room.get("temperature")
-            self._attr_target_temperature = room.get("targetTemperature")
-            if room["heatingEnabled"]:
-                self._attr_hvac_mode = HVACMode.HEAT
-                self._attr_icon = "mdi:radiator"
-            else:
-                self._attr_hvac_mode = HVACMode.OFF
-                self._attr_icon = "mdi:radiator-off"
+        room = self.coordinator.get_room(self._device_id)
+        _LOGGER.info("Get device info: %s", room)
+        if not room:
             return
+        self._attr_name = room["name"]
+        self._attr_current_temperature = room.get("temperature")
+        self._attr_target_temperature = room.get("targetTemperature")
+        if room["heatingEnabled"]:
+            self._attr_hvac_mode = HVACMode.HEAT
+            self._attr_icon = "mdi:radiator"
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
+            self._attr_icon = "mdi:radiator-off"
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        room = self.coordinator.get_room(self._device_id)
+        _LOGGER.info("Handle coordinator update: %s", room)
+        super()._handle_coordinator_update()
 
 
 class LocalAdaxDevice(ClimateEntity):

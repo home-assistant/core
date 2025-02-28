@@ -1,16 +1,25 @@
 """The Adax integration."""
-
 from __future__ import annotations
 
+import datetime
+
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import CONF_SCAN_INTERVAL, Platform
 from homeassistant.core import HomeAssistant
+
+from .coordinator import AdaxCoordinator
 
 PLATFORMS = [Platform.CLIMATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Adax from a config entry."""
+    update_interval = datetime.timedelta(
+        seconds=entry.data.get(CONF_SCAN_INTERVAL, 60 * 5)
+    )
+    entry.coordinator = AdaxCoordinator(hass, entry, update_interval=update_interval)
+    await entry.coordinator.async_config_entry_first_refresh()
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
