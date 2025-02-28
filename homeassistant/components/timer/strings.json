@@ -64,8 +64,8 @@
         }
       }
     },
-    "atleast": {
-      "name": "Atleast",
+    "at_least": {
+      "name": "At least",
       "description": "Increases the remaining time if it's less than the given duration.",
       "fields": {
         "duration": {
@@ -74,8 +74,8 @@
         }
       }
     },
-    "atmost": {
-      "name": "Atmost",
+    "at_most": {
+      "name": "At most",
       "description": "Decreases the remaining time if it's more than the given duration.",
       "fields": {
         "duration": {

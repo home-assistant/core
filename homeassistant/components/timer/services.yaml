@@ -37,7 +37,7 @@ change:
       selector:
         text:
 
-atleast:
+at_least:
   target:
     entity:
       domain: timer
@@ -49,7 +49,7 @@ atleast:
       selector:
         text:
 
-atmost:
+at_most:
   target:
     entity:
       domain: timer

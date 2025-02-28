@@ -60,8 +60,8 @@ SERVICE_START = "start"
 SERVICE_PAUSE = "pause"
 SERVICE_CANCEL = "cancel"
 SERVICE_CHANGE = "change"
-SERVICE_ATLEAST = "atleast"
-SERVICE_ATMOST = "atmost"
+SERVICE_ATLEAST = "at_least"
+SERVICE_ATMOST = "at_most"
 SERVICE_FINISH = "finish"
 
 STORAGE_KEY = DOMAIN
@@ -171,12 +171,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     component.async_register_entity_service(
         SERVICE_ATLEAST,
         {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
-        "async_atleast",
+        "async_at_least",
     )
     component.async_register_entity_service(
         SERVICE_ATMOST,
         {vol.Optional(ATTR_DURATION, default=DEFAULT_DURATION): cv.time_period},
-        "async_atmost",
+        "async_at_most",
     )
 
     return True
@@ -370,7 +370,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         )
 
     @callback
-    def async_atleast(self, duration: timedelta) -> None:
+    def async_at_least(self, duration: timedelta) -> None:
         """Increase the remaining time to >= duration"""
         if self._state == STATUS_PAUSED:
             # On a paused timer, just update the remaining time (if
@@ -394,7 +394,7 @@ class Timer(collection.CollectionEntity, RestoreEntity):
         self.async_start(duration)
 
     @callback
-    def async_atmost(self, duration: timedelta) -> None:
+    def async_at_most(self, duration: timedelta) -> None:
         """Decrease the remaining time to <= duration"""
         if self._state == STATUS_IDLE:
             # The timer is already finished
