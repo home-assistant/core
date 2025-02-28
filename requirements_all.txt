@@ -3046,7 +3046,7 @@ waterfurnace==1.1.0
 watergate-local-api==2024.4.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.0.6
+weatherflow4py==1.3.1
 
 # homeassistant.components.cisco_webex_teams
 webexpythonsdk==2.0.1
