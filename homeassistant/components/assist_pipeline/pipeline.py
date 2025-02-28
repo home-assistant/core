@@ -1103,12 +1103,16 @@ class PipelineRun:
                 ) & conversation.ConversationEntityFeature.CONTROL:
                     intent_filter = _async_local_fallback_intent_filter
 
-                # Try local intents first, if preferred.
-                elif self.pipeline.prefer_local_intents and (
-                    intent_response := await conversation.async_handle_intents(
-                        self.hass,
-                        user_input,
-                        intent_filter=intent_filter,
+                # Try local intents
+                if (
+                    intent_response is None
+                    and self.pipeline.prefer_local_intents
+                    and (
+                        intent_response := await conversation.async_handle_intents(
+                            self.hass,
+                            user_input,
+                            intent_filter=intent_filter,
+                        )
                     )
                 ):
                     # Local intent matched
