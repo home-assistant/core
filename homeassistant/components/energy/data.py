@@ -139,7 +139,8 @@ class DeviceConsumption(TypedDict):
     # An optional custom name for display in energy graphs
     name: str | None
 
-    # An optional statistic_id identifying a device that includes this device's consumption in its total
+    # An optional statistic_id identifying a device
+    # that includes this device's consumption in its total
     included_in_stat: str | None
 
 
