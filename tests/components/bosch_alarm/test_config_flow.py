@@ -1,7 +1,7 @@
 """Tests for the bosch_alarm config flow."""
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 
@@ -87,17 +87,16 @@ async def test_form_exceptions(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {}
-    with (
-        patch("bosch_alarm_mode2.panel.Panel.connect", side_effect=exception),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {CONF_HOST: "1.1.1.1", CONF_PORT: 7700},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"] == {"base": message}
+    bosch_alarm_test_data.side_effect = exception
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "1.1.1.1", CONF_PORT: 7700},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": message}
 
+    bosch_alarm_test_data.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_HOST: "1.1.1.1", CONF_PORT: 7700},
@@ -152,17 +151,17 @@ async def test_form_exceptions_user(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"] == {}
+    bosch_alarm_test_data.side_effect = exception
 
-    with (
-        patch("bosch_alarm_mode2.panel.Panel.connect", side_effect=exception),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            bosch_alarm_test_data.config,
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "auth"
-        assert result["errors"] == {"base": message}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        bosch_alarm_test_data.config,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"] == {"base": message}
+
+    bosch_alarm_test_data.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

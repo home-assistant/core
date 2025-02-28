@@ -19,6 +19,7 @@ class MockBoschAlarmConfig:
 
     model: str
     config: dict
+    side_effect: Exception
 
 
 @pytest.fixture
@@ -57,16 +58,19 @@ def bosch_alarm_test_data_fixture(
     data_b5512: dict,
 ) -> Generator[MockBoschAlarmConfig]:
     """Define a fixture to set up Bosch Alarm."""
+    if request.param == "Solution 3000":
+        config = MockBoschAlarmConfig(request.param, data_solution_3000, None)
+    if request.param == "AMAX 3000":
+        config = MockBoschAlarmConfig(request.param, data_amax_3000, None)
+    if request.param == "B5512 (US1B)":
+        config = MockBoschAlarmConfig(request.param, data_b5512, None)
 
     async def connect(self, load_selector):
+        if config.side_effect:
+            raise config.side_effect
         self.model = request.param
 
     with (
         patch("bosch_alarm_mode2.panel.Panel.connect", connect),
     ):
-        if request.param == "Solution 3000":
-            yield MockBoschAlarmConfig(request.param, data_solution_3000)
-        if request.param == "AMAX 3000":
-            yield MockBoschAlarmConfig(request.param, data_amax_3000)
-        if request.param == "B5512 (US1B)":
-            yield MockBoschAlarmConfig(request.param, data_b5512)
+        yield config
