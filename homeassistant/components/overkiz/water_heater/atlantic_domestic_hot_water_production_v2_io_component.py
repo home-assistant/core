@@ -14,8 +14,6 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntityFeature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
-
-from .. import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 from ..number import BOOST_MODE_DURATION_DELAY as MODE_DELAY, OPERATING_MODE_DELAY
 
