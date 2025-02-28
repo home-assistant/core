@@ -20,11 +20,7 @@ async def test_setup_with_hassio(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the setup of the integration with hassio enabled."""
-    assert await setup_backup_integration(
-        hass=hass,
-        with_hassio=True,
-        configuration={DOMAIN: {}},
-    )
+    await setup_backup_integration(hass=hass, with_hassio=True)
     manager = hass.data[DATA_MANAGER]
     assert not manager.backup_agents
 
@@ -59,6 +55,7 @@ async def test_create_service(
     )
 
 
+@pytest.mark.usefixtures("supervisor_client")
 async def test_create_service_with_hassio(hass: HomeAssistant) -> None:
     """Test action backup.create does not exist with hassio."""
     await setup_backup_integration(hass, with_hassio=True)

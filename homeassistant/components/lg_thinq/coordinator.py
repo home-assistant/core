@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from thinqconnect import ThinQAPIException
 from thinqconnect.integration import HABridge
@@ -12,6 +12,9 @@ from thinqconnect.integration import HABridge
 from homeassistant.const import EVENT_CORE_CONFIG_UPDATE, UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from . import ThinqConfigEntry
 
 from .const import DOMAIN
 
@@ -26,11 +29,16 @@ _LOGGER = logging.getLogger(__name__)
 class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """LG Device's Data Update Coordinator."""
 
-    def __init__(self, hass: HomeAssistant, ha_bridge: HABridge) -> None:
+    config_entry: ThinqConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ThinqConfigEntry, ha_bridge: HABridge
+    ) -> None:
         """Initialize data coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"{DOMAIN}_{ha_bridge.device.device_id}",
         )
 
@@ -112,10 +120,10 @@ class DeviceDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
 
 async def async_setup_device_coordinator(
-    hass: HomeAssistant, ha_bridge: HABridge
+    hass: HomeAssistant, config_entry: ThinqConfigEntry, ha_bridge: HABridge
 ) -> DeviceDataUpdateCoordinator:
     """Create DeviceDataUpdateCoordinator and device_api per device."""
-    coordinator = DeviceDataUpdateCoordinator(hass, ha_bridge)
+    coordinator = DeviceDataUpdateCoordinator(hass, config_entry, ha_bridge)
     await coordinator.async_refresh()
 
     _LOGGER.debug(

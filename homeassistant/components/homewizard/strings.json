@@ -78,6 +78,9 @@
       "wifi_strength": {
         "name": "Wi-Fi strength"
       },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
+      },
       "total_energy_import_kwh": {
         "name": "Energy import"
       },
