@@ -67,8 +67,8 @@ class HomeeSelect(HomeeEntity, SelectEntity):
         """Initialize a Homee select entity."""
         super().__init__(attribute, entry)
         self.entity_description = description
-        if description.options:
-            self._attr_options = description.options
+        assert description.options is not None
+        self._attr_options = description.options
         self._attr_translation_key = description.key
 
     @property

@@ -1,4 +1,60 @@
 # serializer version: 1
+# name: test_select_snapshot[select.test_select_behavior_after_power_loss-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disabled',
+        'enabled',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.test_select_behavior_after_power_loss',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Behavior after power loss',
+    'platform': 'homee',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'restore_last_known_state',
+    'unique_id': '00055511EECC-1-3',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_select_snapshot[select.test_select_behavior_after_power_loss-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test Select Behavior after power loss',
+      'options': list([
+        'disabled',
+        'enabled',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.test_select_behavior_after_power_loss',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
 # name: test_select_snapshot[select.test_select_enocean_repeater_mode-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
@@ -111,62 +167,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'reverse',
-  })
-# ---
-# name: test_select_snapshot[select.test_select_restore_state_after_power_loss-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'disabled',
-        'enabled',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.test_select_restore_state_after_power_loss',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Restore state after power loss',
-    'platform': 'homee',
-    'previous_unique_id': None,
-    'supported_features': 0,
-    'translation_key': 'restore_last_known_state',
-    'unique_id': '00055511EECC-1-3',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_select_snapshot[select.test_select_restore_state_after_power_loss-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Select Restore state after power loss',
-      'options': list([
-        'disabled',
-        'enabled',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.test_select_restore_state_after_power_loss',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'disabled',
   })
 # ---
 # name: test_select_snapshot[select.test_select_threshold_for_wind_trigger-entry]
