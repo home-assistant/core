@@ -89,11 +89,9 @@ class AdaxDevice(CoordinatorEntity[AdaxCoordinator], ClimateEntity):
             name=cast(str | None, self.name),
             manufacturer="Adax",
         )
-        _LOGGER.info("INIT Climate %s", heater_data)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
-        _LOGGER.info("%s set HVAC mode -> %s", self._device_id, hvac_mode)
         if hvac_mode == HVACMode.HEAT:
             temperature = max(self.min_temp, self.target_temperature or self.min_temp)
             await self._adax_data_handler.set_room_target_temperature(
@@ -111,7 +109,6 @@ class AdaxDevice(CoordinatorEntity[AdaxCoordinator], ClimateEntity):
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
             return
-        _LOGGER.info("%s set temp -> %s", self._device_id, temperature)
         await self._adax_data_handler.set_room_target_temperature(
             self._device_id, temperature, True
         )
@@ -123,11 +120,7 @@ class AdaxDevice(CoordinatorEntity[AdaxCoordinator], ClimateEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # Use cached data
-        room = self.coordinator.get_room(self._device_id)
-        _LOGGER.info("Handle coordinator update: %s", room)
-
-        if room:
+        if room := self.coordinator.get_room(self._device_id):
             self._attr_name = room["name"]
             self._attr_current_temperature = room.get("temperature")
             self._attr_target_temperature = room.get("targetTemperature")

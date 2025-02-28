@@ -49,7 +49,6 @@ class AdaxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Get a specific room from the loaded Adax data."""
         rooms = self.rooms or []
         for room in filter(lambda r: r['id'] == room_id, rooms):
-            _LOGGER.info("Get Room: %s", room)
             return room
         return None
 
@@ -60,13 +59,9 @@ class AdaxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch data from the Adax."""
         try:
-            _LOGGER.info("Getting data from Adax")
             self.rooms = await self.adax_data_handler.get_rooms()
         except Exception as err:
-            _LOGGER.fatal(
-                "Exception when getting data. Err: %s", err
-            )
+            _LOGGER.fatal("Exception when getting data. Err: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         else:
-            _LOGGER.info("ROOMS: %s", self.rooms)
             return self.rooms
