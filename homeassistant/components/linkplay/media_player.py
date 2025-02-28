@@ -127,6 +127,7 @@ SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
 
 RETRY_POLL_MAXIMUM = 3
 
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LinkPlayConfigEntry,
