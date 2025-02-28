@@ -9,7 +9,6 @@ from homeassistant.components.water_heater import (
     STATE_ECO,
     STATE_ELECTRIC,
     STATE_HEAT_PUMP,
-    STATE_OFF,
     STATE_PERFORMANCE,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
@@ -61,7 +60,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     )
     _attr_operation_list = [
         STATE_ECO,
-        STATE_OFF,
         STATE_PERFORMANCE,
         STATE_HEAT_PUMP,
         STATE_ELECTRIC,
@@ -180,23 +178,8 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         )
 
     @property
-    def is_off_mode(self) -> bool:
-        """Return true if the mode is off."""
-
-        return (
-            self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
-            == OverkizCommandParam.OFF
-        )
-
-    @property
     def current_operation(self) -> str | None:
         """Return current operation."""
-
-        if self.is_away_mode_on:
-            return STATE_OFF
-
-        if self.is_off_mode:
-            return STATE_OFF
 
         if self.is_boost_mode_on:
             return STATE_ELECTRIC
@@ -223,18 +206,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
 
-        if operation_mode == STATE_OFF:
-            if self.is_boost_mode_on:
-                await self.async_turn_boost_mode_off(refresh_afterwards=False)
-            if self.is_away_mode_on:
-                await self.async_turn_away_mode_off(refresh_afterwards=False)
-            await self.executor.async_execute_command(
-                OverkizCommand.SET_CURRENT_OPERATING_MODE,
-                OverkizCommandParam.OFF,
-                refresh_afterwards=False,
-            )
-            await self.coordinator.async_refresh()
-        elif operation_mode == STATE_ECO:
+        if operation_mode == STATE_ECO:
             """
             DHWModeState.manualEcoActive
             OperatingModeState.eco
