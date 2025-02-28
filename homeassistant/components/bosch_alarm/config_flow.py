@@ -86,7 +86,8 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             try:
                 # Use load_selector = 0 to fetch the panel model without authentication.
