@@ -17,8 +17,6 @@ import hashlib
 from http import HTTPStatus
 from json import JSONDecodeError
 import logging
-import os
-import re
 import secrets
 import time
 from typing import Any, cast
@@ -253,7 +251,7 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         authorize_url: str,
         token_url: str,
         client_secret: str = "",
-        code_verifier_length: int = 100,
+        code_verifier_length: int = 128,
     ) -> None:
         """Initialize local auth implementation."""
         super().__init__(
@@ -296,24 +294,23 @@ class LocalOAuth2ImplementationWithPkce(LocalOAuth2Implementation):
         return self.code_verifier_data
 
     @staticmethod
-    def generate_code_verifier(length: int = 100) -> str:
+    def generate_code_verifier(code_verifier_length: int = 128) -> str:
         """Generate a code verifier."""
-        code_verifier = base64.urlsafe_b64encode(os.urandom(length + 20)).decode(
-            "utf-8"
-        )
-        code_verifier = re.sub("[^a-zA-Z0-9]+", "", code_verifier)
-        return code_verifier[:length]
+        if not 43 <= code_verifier_length <= 128:
+            msg = "Parameter `code_verifier_length` must verify `43 <= code_verifier_length <= 128`."
+            raise ValueError(msg)
+        return secrets.token_urlsafe(96)[:code_verifier_length]
 
     @staticmethod
     def compute_code_challenge(code_verifier: str) -> str:
         """Compute the code challenge."""
-        return (
-            base64.urlsafe_b64encode(
-                hashlib.sha256(code_verifier.encode("utf-8")).digest()
-            )
-            .decode("utf-8")
-            .rstrip("=")
-        )
+        if not 43 <= len(code_verifier) <= 128:
+            msg = "Parameter `code_verifier` must verify `43 <= len(code_verifier) <= 128`."
+            raise ValueError(msg)
+
+        hashed = hashlib.sha256(code_verifier.encode("ascii")).digest()
+        encoded = base64.urlsafe_b64encode(hashed)
+        return encoded.decode("ascii").replace("=", "")
 
 
 class AbstractOAuth2FlowHandler(config_entries.ConfigFlow, metaclass=ABCMeta):
