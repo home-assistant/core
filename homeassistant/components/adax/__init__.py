@@ -18,16 +18,14 @@ SCAN_INTERVAL = datetime.timedelta(seconds=60)
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Adax from a config entry."""
 
+    coordinator: AdaxCloudCoordinator | AdaxLocalCoordinator
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
-        entry.coordinator = AdaxLocalCoordinator(
-            hass, entry, update_interval=SCAN_INTERVAL
-        )
+        coordinator = AdaxLocalCoordinator(hass, entry, update_interval=SCAN_INTERVAL)
     else:
-        entry.coordinator = AdaxCloudCoordinator(
-            hass, entry, update_interval=SCAN_INTERVAL
-        )
+        coordinator = AdaxCloudCoordinator(hass, entry, update_interval=SCAN_INTERVAL)
 
-    await entry.coordinator.async_config_entry_first_refresh()
+    hass.data[entry.entry_id] = coordinator
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

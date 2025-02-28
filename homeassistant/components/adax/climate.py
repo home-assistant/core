@@ -34,17 +34,15 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Adax thermostat with config flow."""
+    coordinator = hass.data[entry.entry_id]
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
         async_add_entities(
-            [LocalAdaxDevice(entry.coordinator, entry.data[CONF_UNIQUE_ID])],
+            [LocalAdaxDevice(coordinator, entry.data[CONF_UNIQUE_ID])],
             True,
         )
     else:
         async_add_entities(
-            (
-                AdaxDevice(room, entry.coordinator)
-                for room in entry.coordinator.get_rooms()
-            ),
+            (AdaxDevice(room, coordinator) for room in coordinator.get_rooms()),
             True,
         )
 

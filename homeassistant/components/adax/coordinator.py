@@ -67,7 +67,7 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for updating data to and from Adax (local)."""
 
-    status: dict[str, Any] | None
+    status: dict[str, Any]
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, update_interval: timedelta
@@ -88,7 +88,7 @@ class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
 
-    def get_status(self) -> dict[str, Any] | None:
+    def get_status(self) -> dict[str, Any]:
         """Get status for the Adax device."""
         return self.status
 
