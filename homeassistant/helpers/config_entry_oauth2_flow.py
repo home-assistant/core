@@ -191,7 +191,7 @@ class LocalOAuth2Implementation(AbstractOAuth2Implementation):
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
-        request_data = {
+        request_data: dict = {
             "grant_type": "authorization_code",
             "code": external_data["code"],
             "redirect_uri": external_data["state"]["redirect_uri"],
