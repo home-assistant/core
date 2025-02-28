@@ -28,7 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockMqttReasonCode
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 ADD_ON_DISCOVERY_INFO = {
@@ -143,16 +143,16 @@ def mock_try_connection_success() -> Generator[MqttMockPahoClient]:
 
     def loop_start():
         """Simulate connect on loop start."""
-        mock_client().on_connect(mock_client, None, None, 0)
+        mock_client().on_connect(mock_client, None, None, MockMqttReasonCode(), None)
 
     def _subscribe(topic, qos=0):
         mid = get_mid()
-        mock_client().on_subscribe(mock_client, 0, mid)
+        mock_client().on_subscribe(mock_client, 0, mid, [MockMqttReasonCode()], None)
         return (0, mid)
 
     def _unsubscribe(topic):
         mid = get_mid()
-        mock_client().on_unsubscribe(mock_client, 0, mid)
+        mock_client().on_unsubscribe(mock_client, 0, mid, [MockMqttReasonCode()], None)
         return (0, mid)
 
     with patch(

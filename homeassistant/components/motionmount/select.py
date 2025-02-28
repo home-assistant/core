@@ -17,6 +17,7 @@ from .entity import MotionMountEntity
 
 _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
