@@ -1,7 +1,7 @@
 """Tests for the bosch_alarm config flow."""
 
 import asyncio
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -27,7 +27,9 @@ from tests.common import MockConfigEntry
     indirect=["bosch_alarm_test_data"],
 )
 async def test_form_user(
-    hass: HomeAssistant, bosch_alarm_test_data: MockBoschAlarmConfig
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    bosch_alarm_test_data: MockBoschAlarmConfig,
 ) -> None:
     """Test the config flow for bosch_alarm."""
     result = await hass.config_entries.flow.async_init(
@@ -56,6 +58,9 @@ async def test_form_user(
         **bosch_alarm_test_data.config,
     }
 
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 @pytest.mark.usefixtures("bosch_alarm_test_data")
 @pytest.mark.parametrize(
@@ -68,7 +73,11 @@ async def test_form_user(
     indirect=["bosch_alarm_test_data"],
 )
 async def test_form_exceptions(
-    hass: HomeAssistant, exception: Exception, message: str
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    bosch_alarm_test_data: MockBoschAlarmConfig,
+    exception: Exception,
+    message: str,
 ) -> None:
     """Test we handle exceptions correctly."""
 
@@ -97,6 +106,15 @@ async def test_form_exceptions(
     assert result["step_id"] == "auth"
     assert result["errors"] == {}
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        bosch_alarm_test_data.config,
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 @pytest.mark.usefixtures("bosch_alarm_test_data")
 @pytest.mark.parametrize(
@@ -113,9 +131,10 @@ async def test_form_exceptions(
 )
 async def test_form_exceptions_user(
     hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    bosch_alarm_test_data: MockBoschAlarmConfig,
     exception: Exception,
     message: str,
-    bosch_alarm_test_data: MockBoschAlarmConfig,
 ) -> None:
     """Test we handle exceptions correctly."""
 
@@ -151,6 +170,9 @@ async def test_form_exceptions_user(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 1
+
 
 @pytest.mark.parametrize(
     "bosch_alarm_test_data",
@@ -163,7 +185,9 @@ async def test_form_exceptions_user(
 )
 @pytest.mark.usefixtures("bosch_alarm_test_data")
 async def test_entry_already_configured(
-    hass: HomeAssistant, bosch_alarm_test_data: MockBoschAlarmConfig
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    bosch_alarm_test_data: MockBoschAlarmConfig,
 ) -> None:
     """Test if configuring an entity twice results in an error."""
     entry = MockConfigEntry(
@@ -190,3 +214,6 @@ async def test_entry_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+    await hass.async_block_till_done()
+    assert len(mock_setup_entry.mock_calls) == 0
