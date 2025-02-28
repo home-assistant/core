@@ -1435,7 +1435,7 @@ async def async_get_integrations(
                 results[domain] = exc
                 # We don't use set_exception because
                 # we expect there will be cases where
-                # the a future exception is never retrieved
+                # the future exception is never retrieved
                 future.set_result(exc)
 
     return results
