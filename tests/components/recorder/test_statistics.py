@@ -19,7 +19,8 @@ from homeassistant.components.recorder.statistics import (
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     PlatformCompiledStatistics,
     _generate_max_mean_min_statistic_in_sub_period_stmt,
-    _generate_statistics_at_time_stmt,
+    _generate_statistics_at_time_stmt_dependent_sub_query,
+    _generate_statistics_at_time_stmt_group_by,
     _generate_statistics_during_period_stmt,
     async_add_external_statistics,
     async_import_statistics,
@@ -67,7 +68,7 @@ def multiple_start_time_chunk_sizes(
     Force the statistics query to use different chunk sizes for start time query.
 
     In effect this forces _statistics_at_time
-    to call _generate_statistics_at_time_stmt multiple times.
+    to call _generate_statistics_at_time_stmt_group_by multiple times.
     """
     with patch(
         "homeassistant.components.recorder.statistics.MAX_IDS_FOR_INDEXED_GROUP_BY",
@@ -2145,22 +2146,37 @@ def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt() -> N
     assert cache_key_1 != cache_key_3
 
 
-@pytest.mark.parametrize("slow_dependent_subquery", [True, False])
-def test_cache_key_for_generate_statistics_at_time_stmt(
-    slow_dependent_subquery: bool,
-) -> None:
+def test_cache_key_for_generate_statistics_at_time_stmt_group_by() -> None:
     """Test cache key for _generate_statistics_at_time_stmt."""
-    stmt = _generate_statistics_at_time_stmt(
-        StatisticsShortTerm, {0}, 0.0, set(), slow_dependent_subquery
+    stmt = _generate_statistics_at_time_stmt_group_by(
+        StatisticsShortTerm, {0}, 0.0, set()
     )
     cache_key_1 = stmt._generate_cache_key()
-    stmt2 = _generate_statistics_at_time_stmt(
-        StatisticsShortTerm, {0}, 0.0, set(), slow_dependent_subquery
+    stmt2 = _generate_statistics_at_time_stmt_group_by(
+        StatisticsShortTerm, {0}, 0.0, set()
     )
     cache_key_2 = stmt2._generate_cache_key()
     assert cache_key_1 == cache_key_2
-    stmt3 = _generate_statistics_at_time_stmt(
-        StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}, slow_dependent_subquery
+    stmt3 = _generate_statistics_at_time_stmt_group_by(
+        StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}
+    )
+    cache_key_3 = stmt3._generate_cache_key()
+    assert cache_key_1 != cache_key_3
+
+
+def test_cache_key_for_generate_statistics_at_time_stmt_dependent_sub_query() -> None:
+    """Test cache key for _generate_statistics_at_time_stmt."""
+    stmt = _generate_statistics_at_time_stmt_dependent_sub_query(
+        StatisticsShortTerm, {0}, 0.0, set()
+    )
+    cache_key_1 = stmt._generate_cache_key()
+    stmt2 = _generate_statistics_at_time_stmt_dependent_sub_query(
+        StatisticsShortTerm, {0}, 0.0, set()
+    )
+    cache_key_2 = stmt2._generate_cache_key()
+    assert cache_key_1 == cache_key_2
+    stmt3 = _generate_statistics_at_time_stmt_dependent_sub_query(
+        StatisticsShortTerm, {0}, 0.0, {"sum", "mean"}
     )
     cache_key_3 = stmt3._generate_cache_key()
     assert cache_key_1 != cache_key_3
