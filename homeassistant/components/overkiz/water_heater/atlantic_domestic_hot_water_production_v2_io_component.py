@@ -19,35 +19,6 @@ from .. import OverkizDataUpdateCoordinator
 from ..entity import OverkizEntity
 from ..number import BOOST_MODE_DURATION_DELAY as MODE_DELAY, OPERATING_MODE_DELAY
 
-"""
-HA state to device attribute
-
-STATE_ECO
-DHWModeState.manualEcoActive
-OperatingModeState.eco
-
-STATE_PERFORMANCE
-DHWModeState.autoMode
-OperatingModeState.auto
-
-STATE_HEAT_PUMP
-DHWModeState.manualEcoInactive
-OperatingModeState.manual
-OperatingModeState.normal
-OperatingModeState.on
-OperatingModeState.prog
-OperatingModeState.program
-
-AWAY_MODE
-OperatingModeState.antifreeze
-OperatingModeState.away
-OperatingModeState.frostprotection
-
-OFF
-OperatingModeState.off
-"""
-
-
 DEFAULT_MIN_TEMP: float = 50.0
 DEFAULT_MAX_TEMP: float = 62.0
 
@@ -78,6 +49,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
+
         min_temp = self.device.states[OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE]
         if min_temp:
             return cast(float, min_temp.value_as_float)
@@ -86,6 +58,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
+
         max_temp = self.device.states[OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE]
         if max_temp:
             return cast(float, max_temp.value_as_float)
@@ -221,10 +194,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         """Set new operation mode."""
 
         if operation_mode == STATE_ECO:
-            """
-            DHWModeState.manualEcoActive
-            OperatingModeState.eco
-            """
             if self.is_boost_mode_on:
                 await self.async_turn_boost_mode_off(refresh_afterwards=False)
             if self.is_away_mode_on:
@@ -237,10 +206,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             )
             await self.coordinator.async_refresh()
         elif operation_mode == STATE_PERFORMANCE:
-            """
-            DHWModeState.autoMode
-            OperatingModeState.auto
-            """
             if self.is_boost_mode_on:
                 await self.async_turn_boost_mode_off(refresh_afterwards=False)
             if self.is_away_mode_on:
@@ -253,15 +218,11 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             )
             await self.coordinator.async_refresh()
         elif operation_mode == STATE_HEAT_PUMP:
-            """
-            DHWModeState.manualEcoInactive
-            """
             if self.is_boost_mode_on:
                 await self.async_turn_boost_mode_off(refresh_afterwards=False)
             if self.is_away_mode_on:
                 await self.async_turn_away_mode_off(refresh_afterwards=False)
 
-            # TODO: choose one
             await self.executor.async_execute_command(
                 OverkizCommand.SET_DHW_MODE,
                 OverkizCommandParam.MANUAL_ECO_INACTIVE,
