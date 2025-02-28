@@ -174,7 +174,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
             self._update_properties()
         except LinkPlayRequestException:
             self._retry_count += 1
-            if self._retry_count >= RETRY_POLL_MAXIMUM :
+            if self._retry_count >= RETRY_POLL_MAXIMUM:
                 self._attr_available = False
 
     @exception_wrap
