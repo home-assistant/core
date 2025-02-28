@@ -195,9 +195,12 @@ class AlertEntity(Entity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Async Acknowledge alert."""
-        LOGGER.debug("Acknowledged Alert: %s", self._attr_name)
-        self._ack = True
-        self.async_write_ha_state()
+        if self._can_ack:
+            LOGGER.debug("Acknowledged Alert: %s", self._attr_name)
+            self._ack = True
+            self.async_write_ha_state()
+        else:
+            LOGGER.debug("Alert Acknowledgement Blocked: %s", self._attr_name)
 
     async def async_toggle(self, **kwargs: Any) -> None:
         """Async toggle alert."""
