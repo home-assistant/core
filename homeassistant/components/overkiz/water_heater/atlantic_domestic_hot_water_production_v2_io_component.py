@@ -40,12 +40,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         STATE_ELECTRIC,
     ]
 
-    def __init__(
-        self, device_url: str, coordinator: OverkizDataUpdateCoordinator
-    ) -> None:
-        """Init method."""
-        super().__init__(device_url, coordinator)
-
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
@@ -236,7 +230,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 await self.async_turn_boost_mode_on(refresh_afterwards=False)
             await self.coordinator.async_refresh()
 
-    async def async_turn_away_mode_on(self, refresh_afterwards=True) -> None:
+    async def async_turn_away_mode_on(self, refresh_afterwards: bool = True) -> None:
         """Turn away mode on."""
 
         await self.executor.async_execute_command(
@@ -256,7 +250,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             refresh_afterwards=refresh_afterwards,
         )
 
-    async def async_turn_away_mode_off(self, refresh_afterwards=True) -> None:
+    async def async_turn_away_mode_off(self, refresh_afterwards: bool = True) -> None:
         """Turn away mode off."""
 
         await self.executor.async_execute_command(
@@ -275,7 +269,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             refresh_afterwards=refresh_afterwards,
         )
 
-    async def async_turn_boost_mode_on(self, refresh_afterwards=True) -> None:
+    async def async_turn_boost_mode_on(self, refresh_afterwards: bool = True) -> None:
         """Turn boost mode on."""
         await self.executor.async_execute_command(
             OverkizCommand.SET_BOOST_MODE_DURATION,
@@ -299,7 +293,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             refresh_afterwards=refresh_afterwards,
         )
 
-    async def async_turn_boost_mode_off(self, refresh_afterwards=True) -> None:
+    async def async_turn_boost_mode_off(self, refresh_afterwards: bool = True) -> None:
         """Turn boost mode off."""
 
         await self.executor.async_execute_command(
