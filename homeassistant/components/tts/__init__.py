@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 import hashlib
@@ -401,33 +401,27 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
 class ResultStream:
     """Class that will stream the result when available."""
 
+    # Streaming/conversion properties
     url: str
     extension: str
     content_type: str
+
+    # TTS properties
     engine: str
     use_file_cache: bool
     language: str
     options: dict
 
-    _hass: HomeAssistant
     _manager: SpeechManager
-    _result_cache_key: asyncio.Future[str] = field(default_factory=asyncio.Future)
+
+    @cached_property
+    def _result_cache_key(self) -> asyncio.Future[str]:
+        """Get the future that returns the cache key."""
+        return asyncio.Future()
 
     @callback
-    def async_set_message(self, message: str) -> None:
-        """Set message to be generated."""
-        cache_key = self._manager.async_cache_message_in_memory(
-            message=message,
-            language=self.language,
-            options=self.options,
-            engine=self.engine,
-            use_file_cache=self.use_file_cache,
-        )
-        self._result_cache_key.set_result(cache_key)
-
-    @callback
-    def async_set_cache_key(self, cache_key: str) -> None:
-        """Set message to be generated."""
+    def async_set_message_cache_key(self, cache_key: str) -> None:
+        """Set cache key for message to be streamed."""
         self._result_cache_key.set_result(cache_key)
 
     async def async_get_result(self) -> bytes:
@@ -764,7 +758,6 @@ class SpeechManager:
             engine=engine,
             language=language,
             options=options,
-            _hass=self.hass,
             _manager=self,
         )
         self.token_to_stream[token] = result_stream
@@ -772,21 +765,15 @@ class SpeechManager:
         if message is None:
             return result_stream
 
-        cache_key = self._async_generate_cache_key(
-            message=message,
-            options=options,
-            language=language,
+        cache_key = self._async_ensure_cached_in_memory(
             engine=engine,
-        )
-        self._async_ensure_cached_in_memory(
             engine_instance=engine_instance,
             message=message,
-            cache_key=cache_key,
             use_file_cache=use_file_cache,
             language=language,
             options=options,
         )
-        result_stream.async_set_cache_key(cache_key)
+        result_stream.async_set_message_cache_key(cache_key)
 
         return result_stream
 
@@ -804,7 +791,32 @@ class SpeechManager:
             raise HomeAssistantError(f"Provider {engine} not found")
 
         language, options = self.process_options(engine_instance, language, options)
+        if use_file_cache is None:
+            use_file_cache = self.use_file_cache
 
+        return self._async_ensure_cached_in_memory(
+            engine=engine,
+            engine_instance=engine_instance,
+            message=message,
+            use_file_cache=use_file_cache,
+            language=language,
+            options=options,
+        )
+
+    @callback
+    def _async_ensure_cached_in_memory(
+        self,
+        engine: str,
+        engine_instance: TextToSpeechEntity | Provider,
+        message: str,
+        use_file_cache: bool,
+        language: str,
+        options: dict,
+    ) -> str:
+        """Ensure a message is cached.
+
+        Requires options, language to be processed.
+        """
         cache_key = self._async_generate_cache_key(
             message=message,
             options=options,
@@ -812,34 +824,9 @@ class SpeechManager:
             engine=engine,
         )
 
-        if use_file_cache is None:
-            use_file_cache = self.use_file_cache
-
-        self._async_ensure_cached_in_memory(
-            engine_instance=engine_instance,
-            message=message,
-            cache_key=cache_key,
-            use_file_cache=use_file_cache,
-            language=language,
-            options=options,
-        )
-
-        return cache_key
-
-    @callback
-    def _async_ensure_cached_in_memory(
-        self,
-        engine_instance: TextToSpeechEntity | Provider,
-        message: str,
-        cache_key: str,
-        use_file_cache: bool,
-        language: str,
-        options: dict,
-    ) -> None:
-        """Ensure a message is cached."""
         # Is speech already in memory
         if cache_key in self.mem_cache:
-            return
+            return cache_key
 
         # Is file store in file cache
         if use_file_cache and cache_key in self.file_cache:
@@ -851,12 +838,13 @@ class SpeechManager:
                 ),
                 "last_used": monotonic(),
             }
-            return
+            return cache_key
 
         # Load speech from engine into memory
         self._async_start_generate_tts_audio(
             engine_instance, cache_key, message, use_file_cache, language, options
         )
+        return cache_key
 
     @callback
     def _async_generate_cache_key(
@@ -1075,16 +1063,6 @@ class SpeechManager:
         }
         self.memcache_cleanup.schedule()
 
-    async def async_get_tts_from_token(self, token: str) -> tuple[str | None, bytes]:
-        """Get the file content from a token.
-
-        This method is a coroutine.
-        """
-        if stream_result := self.token_to_stream.get(token):
-            return stream_result.content_type, await stream_result.async_get_result()
-
-        raise HomeAssistantError("Unknown token received")
-
     @staticmethod
     def write_tags(
         filename: str,
@@ -1171,9 +1149,9 @@ class TextToSpeechUrlView(HomeAssistantView):
     url = "/api/tts_get_url"
     name = "api:tts:geturl"
 
-    def __init__(self, tts: SpeechManager) -> None:
+    def __init__(self, manager: SpeechManager) -> None:
         """Initialize a tts view."""
-        self.tts = tts
+        self.manager = manager
 
     async def post(self, request: web.Request) -> web.Response:
         """Generate speech and provide url."""
@@ -1195,7 +1173,7 @@ class TextToSpeechUrlView(HomeAssistantView):
         options = data.get(ATTR_OPTIONS)
 
         try:
-            stream = self.tts.async_create_result_stream(
+            stream = self.manager.async_create_result_stream(
                 engine,
                 message,
                 use_file_cache=use_file_cache,
@@ -1206,7 +1184,7 @@ class TextToSpeechUrlView(HomeAssistantView):
             _LOGGER.error("Error on init tts: %s", err)
             return self.json({"error": err}, HTTPStatus.BAD_REQUEST)
 
-        base = get_url(self.tts.hass)
+        base = get_url(self.manager.hass)
         url = base + stream.url
 
         return self.json({"url": url, "path": stream.url})
@@ -1219,19 +1197,24 @@ class TextToSpeechView(HomeAssistantView):
     url = "/api/tts_proxy/{token}"
     name = "api:tts_speech"
 
-    def __init__(self, tts: SpeechManager) -> None:
+    def __init__(self, manager: SpeechManager) -> None:
         """Initialize a tts view."""
-        self.tts = tts
+        self.manager = manager
 
     async def get(self, request: web.Request, token: str) -> web.Response:
         """Start a get request."""
-        try:
-            content, data = await self.tts.async_get_tts_from_token(token)
-        except HomeAssistantError as err:
-            _LOGGER.error("Error getting TTS audio: %s", err)
+        stream = self.manager.token_to_stream.get(token)
+
+        if stream is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        return web.Response(body=data, content_type=content)
+        try:
+            data = await stream.async_get_result()
+        except HomeAssistantError as err:
+            _LOGGER.error("Error on get tts: %s", err)
+            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+
+        return web.Response(body=data, content_type=stream.content_type)
 
 
 @websocket_api.websocket_command(
