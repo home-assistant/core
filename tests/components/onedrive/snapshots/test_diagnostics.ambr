@@ -1,0 +1,30 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'config': dict({
+      'delete_permanently': False,
+      'folder_id': 'my_folder_id',
+      'folder_name': 'name',
+    }),
+    'drive': dict({
+      'drive_type': 'personal',
+      'id': 'mock_drive_id',
+      'name': 'My Drive',
+      'owner': dict({
+        'application': None,
+        'user': dict({
+          'display_name': 'John Doe',
+          'email': 'john@doe.com',
+          'id': 'id',
+        }),
+      }),
+      'quota': dict({
+        'deleted': 5,
+        'remaining': 805306368,
+        'state': 'nearing',
+        'total': 5368709120,
+        'used': 4250000000,
+      }),
+    }),
+  })
+# ---
