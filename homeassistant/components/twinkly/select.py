@@ -29,7 +29,7 @@ async def async_setup_entry(
 class TwinklyModeSelect(TwinklyEntity, SelectEntity):
     """Twinkly Mode Selection."""
 
-    _attr_name = "Mode"
+    _attr_translation_key = "mode"
     _attr_options = TWINKLY_MODES
 
     def __init__(self, coordinator: TwinklyCoordinator) -> None:

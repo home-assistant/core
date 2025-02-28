@@ -25,6 +25,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
+    DOMAIN,
     MAX_TEMP,
     MIN_TEMP,
     PRESET_TO_VENTILATION_MODE_MAP,
@@ -79,10 +80,6 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.device.serial_number
 
-    async def async_update(self) -> None:
-        """Refresh unit state."""
-        await self.device.update()
-
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
@@ -114,7 +111,13 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
             else:
                 await self.device.set_air_temp_setpoint_home(temperature)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise HomeAssistantError from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                },
+            ) from exc
         finally:
             await self.coordinator.async_refresh()
 
@@ -133,7 +136,13 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
         try:
             await self.device.set_ventilation_mode(ventilation_mode)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise HomeAssistantError from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_preset_mode",
+                translation_placeholders={
+                    "preset": str(ventilation_mode),
+                },
+            ) from exc
         finally:
             await self.coordinator.async_refresh()
 
@@ -153,6 +162,12 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
             else:
                 await self.device.set_ventilation_mode(VENTILATION_MODE_HOME)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise HomeAssistantError from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_hvac_mode",
+                translation_placeholders={
+                    "mode": str(hvac_mode),
+                },
+            ) from exc
         finally:
             await self.coordinator.async_refresh()

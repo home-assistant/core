@@ -19,6 +19,7 @@ from voluptuous.humanize import humanize_error
 
 from homeassistant.const import Platform
 from homeassistant.helpers import config_validation as cv
+from script.util import sort_manifest as util_sort_manifest
 
 from .model import Config, Integration, ScaledQualityScaleTiers
 
@@ -376,20 +377,20 @@ def validate_manifest(integration: Integration, core_components_dir: Path) -> No
         validate_version(integration)
 
 
-_SORT_KEYS = {"domain": ".domain", "name": ".name"}
-
-
-def _sort_manifest_keys(key: str) -> str:
-    return _SORT_KEYS.get(key, key)
-
-
 def sort_manifest(integration: Integration, config: Config) -> bool:
     """Sort manifest."""
-    keys = list(integration.manifest.keys())
-    if (keys_sorted := sorted(keys, key=_sort_manifest_keys)) != keys:
-        manifest = {key: integration.manifest[key] for key in keys_sorted}
+    if integration.manifest_path is None:
+        integration.add_error(
+            "manifest",
+            "Manifest path not set, unable to sort manifest keys",
+        )
+        return False
+
+    if util_sort_manifest(integration.manifest):
         if config.action == "generate":
-            integration.manifest_path.write_text(json.dumps(manifest, indent=2))
+            integration.manifest_path.write_text(
+                json.dumps(integration.manifest, indent=2) + "\n"
+            )
             text = "have been sorted"
         else:
             text = "are not sorted correctly"

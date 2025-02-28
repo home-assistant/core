@@ -103,6 +103,7 @@ homeassistant.components.auth.*
 homeassistant.components.automation.*
 homeassistant.components.awair.*
 homeassistant.components.axis.*
+homeassistant.components.azure_storage.*
 homeassistant.components.backup.*
 homeassistant.components.baf.*
 homeassistant.components.bang_olufsen.*
@@ -234,6 +235,7 @@ homeassistant.components.here_travel_time.*
 homeassistant.components.history.*
 homeassistant.components.history_stats.*
 homeassistant.components.holiday.*
+homeassistant.components.home_connect.*
 homeassistant.components.homeassistant.*
 homeassistant.components.homeassistant_alerts.*
 homeassistant.components.homeassistant_green.*
@@ -406,6 +408,7 @@ homeassistant.components.raspberry_pi.*
 homeassistant.components.rdw.*
 homeassistant.components.recollect_waste.*
 homeassistant.components.recorder.*
+homeassistant.components.remember_the_milk.*
 homeassistant.components.remote.*
 homeassistant.components.renault.*
 homeassistant.components.reolink.*
@@ -437,6 +440,7 @@ homeassistant.components.select.*
 homeassistant.components.sensibo.*
 homeassistant.components.sensirion_ble.*
 homeassistant.components.sensor.*
+homeassistant.components.sensorpush_cloud.*
 homeassistant.components.sensoterra.*
 homeassistant.components.senz.*
 homeassistant.components.sfr_box.*
