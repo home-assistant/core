@@ -37,13 +37,14 @@ CONNECTED_INELS_VALUE = b"on\n"
 DISCONNECTED_INELS_VALUE = b"off\n"
 
 
-def get_entity_id(entity_config: dict, index: str = "") -> str:
+def get_entity_id(entity_config: dict, index: int) -> str:
     """Construct the entity_id based on the entity_config."""
-    base_id = f"{entity_config['entity_type']}.{MAC_ADDRESS}_{entity_config['unique_id']}_{entity_config['device_type']}"
-    return f"{base_id}{index}" if index else base_id
+    unique_id = entity_config["unique_id"].lower()
+    base_id = f"{entity_config['entity_type']}.{MAC_ADDRESS}_{unique_id}_{entity_config['device_type']}"
+    return f"{base_id}{f'_{index:03}'}" if index is not None else base_id
 
 
-def get_entity(hass: HomeAssistant, entity_config: dict, index: str = "") -> Entity:
+def get_entity(hass: HomeAssistant, entity_config: dict, index: int) -> Entity:
     """Return instance of the entity."""
     entity_id = get_entity_id(entity_config, index)
     return hass.states.get(entity_id)
