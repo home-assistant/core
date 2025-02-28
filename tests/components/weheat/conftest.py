@@ -130,6 +130,8 @@ def mock_weheat_heat_pump_instance() -> MagicMock:
     mock_heat_pump_instance.indoor_unit_gas_boiler_state = False
     mock_heat_pump_instance.indoor_unit_electric_heater_state = True
 
+    mock_heat_pump_instance.async_get_status = AsyncMock()
+
     return mock_heat_pump_instance
 
 
@@ -139,8 +141,12 @@ def mock_weheat_heat_pump(mock_weheat_heat_pump_instance) -> Generator[AsyncMock
     with (
         patch(
             "homeassistant.components.weheat.coordinator.HeatPump",
-        ) as mock_heat_pump,
+        ) as coordinator_mock_heat_pump,
+        patch(
+            "homeassistant.components.weheat.config_flow.HeatPump",
+        ) as config_mock_heat_pump,
     ):
-        mock_heat_pump.return_value = mock_weheat_heat_pump_instance
+        coordinator_mock_heat_pump.return_value = mock_weheat_heat_pump_instance
+        config_mock_heat_pump.return_value = mock_weheat_heat_pump_instance
 
         yield mock_weheat_heat_pump_instance
