@@ -120,7 +120,6 @@ from .common import (  # noqa: E402, isort:skip
     CLIENT_ID,
     INSTANCES,
     MockConfigEntry,
-    MockMqttReasonCode,
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
@@ -972,23 +971,17 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
         def _async_fire_mqtt_message(topic, payload, qos, retain):
             async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
             mid = get_mid()
-            hass.loop.call_soon(
-                mock_client.on_publish, Mock(), 0, mid, MockMqttReasonCode(), None
-            )
+            hass.loop.call_soon(mock_client.on_publish, 0, 0, mid)
             return FakeInfo(mid)
 
         def _subscribe(topic, qos=0):
             mid = get_mid()
-            hass.loop.call_soon(
-                mock_client.on_subscribe, Mock(), 0, mid, [MockMqttReasonCode()], None
-            )
+            hass.loop.call_soon(mock_client.on_subscribe, 0, 0, mid)
             return (0, mid)
 
         def _unsubscribe(topic):
             mid = get_mid()
-            hass.loop.call_soon(
-                mock_client.on_unsubscribe, Mock(), 0, mid, [MockMqttReasonCode()], None
-            )
+            hass.loop.call_soon(mock_client.on_unsubscribe, 0, 0, mid)
             return (0, mid)
 
         def _connect(*args, **kwargs):
@@ -997,7 +990,7 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
             # the behavior.
             mock_client.reconnect()
             hass.loop.call_soon_threadsafe(
-                mock_client.on_connect, mock_client, None, 0, MockMqttReasonCode()
+                mock_client.on_connect, mock_client, None, 0, 0, 0
             )
             mock_client.on_socket_open(
                 mock_client, None, Mock(fileno=Mock(return_value=-1))
@@ -1074,7 +1067,7 @@ async def _mqtt_mock_entry(
 
         # connected set to True to get a more realistic behavior when subscribing
         mock_mqtt_instance.connected = True
-        mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, MockMqttReasonCode())
+        mqtt_client_mock.on_connect(mqtt_client_mock, None, 0, 0, 0)
 
         async_dispatcher_send(hass, mqtt.MQTT_CONNECTION_STATE, True)
         await hass.async_block_till_done()
