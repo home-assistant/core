@@ -581,7 +581,10 @@ async def mock_bluetooth_entry(
         return await _mock_generic_device_entry(
             hass,
             mock_client,
-            {"bluetooth_proxy_feature_flags": bluetooth_proxy_feature_flags},
+            {
+                "bluetooth_mac_address": "AA:BB:CC:DD:EE:FC",
+                "bluetooth_proxy_feature_flags": bluetooth_proxy_feature_flags,
+            },
             ([], []),
             [],
         )
