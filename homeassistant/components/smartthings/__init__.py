@@ -21,13 +21,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
-from .const import CONF_INSTALLED_APP_ID, CONF_LOCATION_ID, MAIN, OLD_DATA
+from .const import CONF_INSTALLED_APP_ID, CONF_LOCATION_ID, DOMAIN, MAIN, OLD_DATA
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -122,6 +123,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    device_registry = dr.async_get(hass)
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    for device_entry in device_entries:
+        device_id = next(
+            identifier[1]
+            for identifier in device_entry.identifiers
+            if identifier[0] == DOMAIN
+        )
+        if device_id in entry.runtime_data.devices:
+            continue
+        device_registry.async_update_device(
+            device_entry.id, remove_config_entry_id=entry.entry_id
+        )
 
     return True
 

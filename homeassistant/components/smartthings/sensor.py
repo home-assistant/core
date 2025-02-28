@@ -461,7 +461,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="media_input_source",
                 device_class=SensorDeviceClass.ENUM,
                 options_attribute=Attribute.SUPPORTED_INPUT_SOURCES,
-                value_fn=lambda value: value.lower(),
+                value_fn=lambda value: value.lower() if value else None,
             )
         ]
     },
@@ -580,6 +580,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energy"] / 1000,
+                suggested_display_precision=2,
                 except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
@@ -589,15 +590,17 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfPower.WATT,
                 value_fn=lambda value: value["power"],
                 extra_state_attributes_fn=power_attributes,
+                suggested_display_precision=2,
                 except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="deltaEnergy_meter",
                 translation_key="energy_difference",
-                state_class=SensorStateClass.TOTAL_INCREASING,
+                state_class=SensorStateClass.TOTAL,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["deltaEnergy"] / 1000,
+                suggested_display_precision=2,
                 except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
@@ -607,6 +610,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["powerEnergy"] / 1000,
+                suggested_display_precision=2,
                 except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
@@ -616,6 +620,7 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energySaved"] / 1000,
+                suggested_display_precision=2,
                 except_if_state_none=True,
             ),
         ]
