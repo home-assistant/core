@@ -817,12 +817,11 @@ class SpeechManager:
 
         Requires options, language to be processed.
         """
-        cache_key = self._async_generate_cache_key(
-            message=message,
-            options=options,
-            language=language,
-            engine=engine,
-        )
+        options_key = _hash_options(options) if options else "-"
+        msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
+        cache_key = KEY_PATTERN.format(
+            msg_hash, language.replace("_", "-"), options_key, engine
+        ).lower()
 
         # Is speech already in memory
         if cache_key in self.mem_cache:
@@ -854,21 +853,6 @@ class SpeechManager:
             "last_used": monotonic(),
         }
         return cache_key
-
-    @callback
-    def _async_generate_cache_key(
-        self,
-        message: str,
-        language: str,
-        options: dict,
-        engine: str,
-    ) -> str:
-        """Generate a cache key for a message."""
-        options_key = _hash_options(options) if options else "-"
-        msg_hash = hashlib.sha1(bytes(message, "utf-8")).hexdigest()
-        return KEY_PATTERN.format(
-            msg_hash, language.replace("_", "-"), options_key, engine
-        ).lower()
 
     async def async_get_tts_audio(self, cache_key: str) -> tuple[str, bytes]:
         """Fetch TTS audio."""
