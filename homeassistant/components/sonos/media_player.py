@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
 import datetime
 from functools import partial
 import logging
@@ -710,45 +709,32 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 },
             )
 
-    def _play_media_queue_helper(
+    def _play_media_queue(
         self,
         soco: SoCo,
-        items: list[MusicServiceItem] | MusicServiceItem,
+        item: MusicServiceItem,
         enqueue: MediaPlayerEnqueue,
-        add_to_queue: Callable,
     ):
         """Add item or items to queue using a passed in method."""
         _LOGGER.debug(
             "_play_media_queue items [%s] enqueue [%s]",
-            items,
+            item,
             enqueue,
         )
         if enqueue == MediaPlayerEnqueue.REPLACE:
             soco.clear_queue()
 
         if enqueue in (MediaPlayerEnqueue.ADD, MediaPlayerEnqueue.REPLACE):
-            add_to_queue(items, timeout=LONG_SERVICE_TIMEOUT)
+            soco.add_to_queue(item, timeout=LONG_SERVICE_TIMEOUT)
             if enqueue == MediaPlayerEnqueue.REPLACE:
                 soco.play_from_queue(0)
         else:
             pos = (self.media.queue_position or 0) + 1
-            new_pos = add_to_queue(items, timeout=LONG_SERVICE_TIMEOUT, position=pos)
+            new_pos = soco.add_to_queue(
+                item, timeout=LONG_SERVICE_TIMEOUT, position=pos
+            )
             if enqueue == MediaPlayerEnqueue.PLAY:
                 soco.play_from_queue(new_pos - 1)
-
-    def _play_media_items_queue(
-        self, soco: SoCo, items: list[MusicServiceItem], enqueue: MediaPlayerEnqueue
-    ):
-        """Manage adding, replacing, playing multiple music service items on the queue."""
-        add_to_queue = partial(soco.add_multiple_to_queue)
-        self._play_media_queue_helper(soco, items, enqueue, add_to_queue)
-
-    def _play_media_queue(
-        self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
-    ):
-        """Manage adding, replacing, playing a single music service item on the queue."""
-        add_to_queue = partial(soco.add_to_queue)
-        self._play_media_queue_helper(soco, item, enqueue, add_to_queue)
 
     def _play_media_directory(
         self,
@@ -758,11 +744,8 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         enqueue: MediaPlayerEnqueue,
     ):
         """Play a directory from a music library share."""
-        search_type = MEDIA_TYPES_TO_SONOS[media_type]
-        items = self.media.library.browse_by_idstring(
-            search_type, media_id, full_album_art_uri=False
-        )
-        if len(items) == 0:
+        item = media_browser.get_media(self.media.library, media_id, media_type)
+        if not item:
             raise ServiceValidationError(
                 translation_domain=SONOS_DOMAIN,
                 translation_key="invalid_media",
@@ -770,7 +753,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                     "media_id": media_id,
                 },
             )
-        self._play_media_items_queue(soco, items, enqueue)
+        self._play_media_queue(soco, item, enqueue)
 
     @soco_error()
     def set_sleep_timer(self, sleep_time: int) -> None:

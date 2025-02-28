@@ -183,6 +183,19 @@ async def test_entity_basic(
                 "play_pos": 0,
             },
         ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/elton%20john",
+            MediaPlayerEnqueue.REPLACE,
+            {
+                "title": None,
+                "item_id": "S://192.168.1.1/music/elton%20john",
+                "clear_queue": 1,
+                "position": None,
+                "play": 1,
+                "play_pos": 0,
+            },
+        ),
     ],
 )
 async def test_play_media_library(
@@ -235,58 +248,6 @@ async def test_play_media_library(
         )
 
 
-async def test_play_media_library_folder(
-    hass: HomeAssistant,
-    soco_factory: SoCoMockFactory,
-    async_autosetup_sonos,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test playing media library folder."""
-    soco_mock = soco_factory.mock_list.get("192.168.42.2")
-    await hass.services.async_call(
-        MP_DOMAIN,
-        SERVICE_PLAY_MEDIA,
-        {
-            ATTR_ENTITY_ID: "media_player.zone_a",
-            ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_DIRECTORY,
-            ATTR_MEDIA_CONTENT_ID: "S://192.168.1.1/music/elton%20john",
-            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
-        },
-        blocking=True,
-    )
-    assert soco_mock.clear_queue.call_count == 1
-    assert soco_mock.add_multiple_to_queue.call_count == 1
-    items = soco_mock.add_multiple_to_queue.call_args_list[0].args[0]
-    assert items == snapshot
-    assert (
-        soco_mock.add_multiple_to_queue.call_args_list[0].kwargs["timeout"]
-        == LONG_SERVICE_TIMEOUT
-    )
-    assert soco_mock.play_from_queue.call_count == 1
-
-
-async def test_play_media_library_folder_error(
-    hass: HomeAssistant,
-    async_autosetup_sonos,
-) -> None:
-    """Test playing media library folder."""
-    with pytest.raises(
-        ServiceValidationError,
-        match="Could not find media in library: S://192.168.1.1/music/error",
-    ):
-        await hass.services.async_call(
-            MP_DOMAIN,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: "media_player.zone_a",
-                ATTR_MEDIA_CONTENT_TYPE: MEDIA_TYPE_DIRECTORY,
-                ATTR_MEDIA_CONTENT_ID: "S://192.168.1.1/music/error",
-                ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
-            },
-            blocking=True,
-        )
-
-
 @pytest.mark.parametrize(
     ("media_content_type", "media_content_id", "message"),
     [
@@ -299,6 +260,11 @@ async def test_play_media_library_folder_error(
             "UnknownContent",
             "A:ALBUM/UnknowAlbum",
             "Sonos does not support media content type: UnknownContent",
+        ),
+        (
+            MEDIA_TYPE_DIRECTORY,
+            "S://192.168.1.1/music/error",
+            "Could not find media in library: S://192.168.1.1/music/error",
         ),
     ],
 )

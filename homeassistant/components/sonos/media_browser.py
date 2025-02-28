@@ -32,6 +32,7 @@ from .const import (
     SONOS_ALBUM,
     SONOS_ALBUM_ARTIST,
     SONOS_GENRE,
+    SONOS_SHARE,
     SONOS_TO_MEDIA_CLASSES,
     SONOS_TO_MEDIA_TYPES,
     SONOS_TRACKS,
@@ -574,6 +575,20 @@ def get_media(
         matches = media_library.get_music_library_information(
             search_type, search_term=search_term, full_album_art_uri=True
         )
+    elif search_type == SONOS_SHARE:
+        # Format is S://server_address/share/folder/...
+        # If just S: this will be in the mappings; otherwise use the last folder in path.
+        # Split the path by '/' and remove the last part
+        parts = item_id.rstrip("/").split("/")
+        parent_folder = "/".join(parts[:-1])
+        matches = media_library.browse_by_idstring(
+            search_type, parent_folder, full_album_art_uri=True
+        )
+        result = next(
+            (item for item in matches if (item_id == item.item_id)),
+            None,
+        )
+        matches = [result]
     else:
         # When requesting media by album_artist, composer, genre use the browse interface
         # to navigate the hierarchy. This occurs when invoked from media browser or service
