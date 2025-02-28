@@ -27,7 +27,11 @@ class SmartThingsEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, client: SmartThings, device: FullDevice, capabilities: set[Capability]
+        self,
+        client: SmartThings,
+        device: FullDevice,
+        capabilities: set[Capability],
+        rooms: dict[str, str],
     ) -> None:
         """Initialize the instance."""
         self.client = client
@@ -43,6 +47,7 @@ class SmartThingsEntity(Entity):
             configuration_url="https://account.smartthings.com",
             identifiers={(DOMAIN, device.device.device_id)},
             name=device.device.label,
+            suggested_area=rooms.get("roomId"),
         )
         if device.device.parent_device_id:
             self._attr_device_info["via_device"] = (

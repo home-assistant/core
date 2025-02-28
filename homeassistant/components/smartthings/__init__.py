@@ -39,6 +39,7 @@ class SmartThingsData:
 
     devices: dict[str, FullDevice]
     scenes: dict[str, Scene]
+    rooms: dict[str, str]
     client: SmartThings
 
 
@@ -92,6 +93,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     device_status: dict[str, FullDevice] = {}
     try:
+        rooms = await client.get_rooms(location_id=entry.data[CONF_LOCATION_ID])
         devices = await client.get_devices()
         for device in devices:
             status = process_status(await client.get_device_status(device.device_id))
@@ -127,6 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
         },
         client=client,
         scenes=scenes,
+        rooms={room.room_id: room.name for room in rooms},
     )
 
     entry.async_create_background_task(
