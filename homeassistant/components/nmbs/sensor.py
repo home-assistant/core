@@ -346,7 +346,7 @@ class NMBSSensor(SensorEntity):
             "vehicle_id": self._attrs.departure.vehicle,
         }
 
-        if canceled != 1:
+        if not canceled:
             attrs["departure"] = f"In {departure} minutes"
             attrs["departure_minutes"] = departure
             attrs["canceled"] = False
