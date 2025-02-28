@@ -58,6 +58,15 @@ class SmartThingsEntity(Entity):
                     "sw_version": ocf.firmware_version,
                 }
             )
+        if (viper := device.device.viper) is not None:
+            self._attr_device_info.update(
+                {
+                    "manufacturer": viper.manufacturer_name,
+                    "model": viper.model_name,
+                    "hw_version": viper.hardware_version,
+                    "sw_version": viper.software_version,
+                }
+            )
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates."""
