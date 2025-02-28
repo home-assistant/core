@@ -44,6 +44,11 @@ class SmartThingsEntity(Entity):
             identifiers={(DOMAIN, device.device.device_id)},
             name=device.device.label,
         )
+        if device.device.parent_device_id:
+            self._attr_device_info["via_device"] = (
+                DOMAIN,
+                device.device.parent_device_id,
+            )
         if (ocf := device.device.ocf) is not None:
             self._attr_device_info.update(
                 {
