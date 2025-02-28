@@ -230,6 +230,7 @@ class MockESPHomeDevice:
         )
         self.on_log_message: Callable[[SubscribeLogsResponse], None]
         self.device_info = device_info
+        self.current_log_level = LogLevel.LOG_LEVEL_NONE
 
     def set_state_callback(self, state_callback: Callable[[EntityState], None]) -> None:
         """Set the state callback."""
@@ -432,9 +433,11 @@ async def _mock_generic_device_entry(
 
     def _subscribe_logs(
         on_log_message: Callable[[SubscribeLogsResponse], None], log_level: LogLevel
-    ) -> None:
+    ) -> Callable[[], None]:
         """Subscribe to log messages."""
         mock_device.set_on_log_message(on_log_message)
+        mock_device.current_log_level = log_level
+        return lambda: None
 
     def _subscribe_voice_assistant(
         *,
@@ -578,7 +581,10 @@ async def mock_bluetooth_entry(
         return await _mock_generic_device_entry(
             hass,
             mock_client,
-            {"bluetooth_proxy_feature_flags": bluetooth_proxy_feature_flags},
+            {
+                "bluetooth_mac_address": "AA:BB:CC:DD:EE:FC",
+                "bluetooth_proxy_feature_flags": bluetooth_proxy_feature_flags,
+            },
             ([], []),
             [],
         )
