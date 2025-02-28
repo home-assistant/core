@@ -41,10 +41,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics:
-    status: exempt
-    comment: |
-      There is no data to diagnose.
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: |

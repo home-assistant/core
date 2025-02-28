@@ -243,7 +243,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.3.0
+aioesphomeapi==29.3.1
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -264,7 +264,7 @@ aioharmony==0.4.1
 aiohasupervisor==0.3.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.15.0
+aiohomeconnect==0.15.1
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.7
@@ -404,7 +404,7 @@ aiotedee==0.2.20
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==82
+aiounifi==83
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.1
@@ -1152,7 +1152,7 @@ hole==0.8.0
 holidays==0.67
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250227.0
+home-assistant-frontend==20250228.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.2.26
@@ -1957,7 +1957,7 @@ pyevilgenius==2.0.0
 pyezviz==0.2.1.2
 
 # homeassistant.components.fibaro
-pyfibaro==0.8.0
+pyfibaro==0.8.2
 
 # homeassistant.components.fido
 pyfido==2.1.2
@@ -2199,7 +2199,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.16.0
+pyoverkiz==1.16.1
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2310,7 +2310,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.0.0
+pysmartthings==2.2.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -3046,7 +3046,7 @@ waterfurnace==1.1.0
 watergate-local-api==2024.4.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.0.6
+weatherflow4py==1.3.1
 
 # homeassistant.components.cisco_webex_teams
 webexpythonsdk==2.0.1
@@ -3131,7 +3131,7 @@ youless-api==2.2.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.01.26
+yt-dlp[default]==2025.02.19
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.2
