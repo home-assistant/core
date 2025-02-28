@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Generator
+from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from dataclasses import replace
 from io import StringIO
 import json
@@ -34,6 +35,7 @@ from homeassistant.components.backup import (
 from homeassistant.components.backup.agent import BackupAgentError
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
+    BackupManager,
     BackupManagerError,
     BackupManagerState,
     CreateBackupStage,
@@ -45,7 +47,7 @@ from homeassistant.components.backup.manager import (
     WrittenBackup,
 )
 from homeassistant.components.backup.util import password_to_key
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
@@ -657,6 +659,49 @@ async def test_initiate_backup(
     tar_file_path = str(mocked_tarfile.call_args_list[0][0][0])
     backup_directory = hass.config.path(backup_directory)
     assert tar_file_path == f"{backup_directory}/{expected_filename}"
+
+
+RAISES_HASS_NOT_RUNNING = pytest.raises(
+    HomeAssistantError, match="Home Assistant is not running"
+)
+
+
+@pytest.mark.parametrize(
+    ("core_state", "expected_result", "initiate_backup_calls"),
+    [
+        (CoreState.final_write, RAISES_HASS_NOT_RUNNING, 0),
+        (CoreState.not_running, RAISES_HASS_NOT_RUNNING, 0),
+        (CoreState.running, does_not_raise(), 1),
+        (CoreState.starting, RAISES_HASS_NOT_RUNNING, 0),
+        (CoreState.stopped, RAISES_HASS_NOT_RUNNING, 0),
+        (CoreState.stopping, RAISES_HASS_NOT_RUNNING, 0),
+    ],
+)
+async def test_async_pre_backup_core_state(
+    hass: HomeAssistant,
+    core_state: CoreState,
+    expected_result: AbstractContextManager,
+    initiate_backup_calls: int,
+) -> None:
+    """Test pre backup in different core states."""
+    await setup_backup_integration(hass)
+    manager = hass.data[DATA_MANAGER]
+    hass.set_state(core_state)
+    with (  # pylint: disable=confusing-with-statement
+        patch.object(BackupManager, "_async_initiate_backup") as initiate_backup_mock,
+        expected_result,
+    ):
+        await manager.async_initiate_backup(
+            agent_ids=["backup.local"],
+            include_addons=[],
+            include_all_addons=False,
+            include_database=False,
+            include_folders=[],
+            include_homeassistant=True,
+            name=None,
+            password=None,
+        )
+    assert len(initiate_backup_mock.mock_calls) == initiate_backup_calls
 
 
 @pytest.mark.usefixtures("mock_backup_generation")
