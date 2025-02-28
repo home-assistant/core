@@ -12,7 +12,12 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_HS_COLOR,
+    ATTR_MAX_COLOR_TEMP_KELVIN,
+    ATTR_MIN_COLOR_TEMP_KELVIN,
+    ATTR_RGB_COLOR,
+    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_TRANSITION,
+    ATTR_XY_COLOR,
     DOMAIN as LIGHT_DOMAIN,
     ColorMode,
 )
@@ -25,7 +30,7 @@ from homeassistant.const import (
     STATE_ON,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
 from . import (
@@ -35,7 +40,7 @@ from . import (
     trigger_update,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 
 async def test_all_entities(
@@ -346,7 +351,7 @@ async def test_color_modes(
 
     assert (
         hass.states.get("light.standing_light").attributes[ATTR_COLOR_MODE]
-        is ColorMode.ONOFF
+        is ColorMode.HS
     )
 
     await trigger_update(
@@ -375,4 +380,36 @@ async def test_color_modes(
     assert (
         hass.states.get("light.standing_light").attributes[ATTR_COLOR_MODE]
         is ColorMode.HS
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["hue_rgbw_color_bulb"])
+async def test_color_mode_after_startup(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test color mode after startup."""
+    set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
+
+    RESTORE_DATA = {
+        ATTR_BRIGHTNESS: 178,
+        ATTR_COLOR_MODE: ColorMode.COLOR_TEMP,
+        ATTR_COLOR_TEMP_KELVIN: 3000,
+        ATTR_HS_COLOR: (144.0, 60),
+        ATTR_MAX_COLOR_TEMP_KELVIN: 9000,
+        ATTR_MIN_COLOR_TEMP_KELVIN: 2000,
+        ATTR_RGB_COLOR: (255, 128, 0),
+        ATTR_SUPPORTED_COLOR_MODES: [ColorMode.COLOR_TEMP, ColorMode.HS],
+        ATTR_XY_COLOR: (0.61, 0.35),
+    }
+
+    mock_restore_cache_with_extra_data(
+        hass, ((State("light.standing_light", STATE_ON), RESTORE_DATA),)
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("light.standing_light").attributes[ATTR_COLOR_MODE]
+        is ColorMode.COLOR_TEMP
     )
