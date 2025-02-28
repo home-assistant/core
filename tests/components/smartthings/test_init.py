@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.smartthings.const import DOMAIN
@@ -29,3 +30,23 @@ async def test_devices(
 
     assert device is not None
     assert device == snapshot
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_removing_stale_devices(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing stale devices."""
+    mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "aaa-bbb-ccc")},
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert not device_registry.async_get_device({(DOMAIN, "aaa-bbb-ccc")})
