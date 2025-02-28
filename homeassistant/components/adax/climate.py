@@ -41,14 +41,16 @@ async def async_setup_entry(
 
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
         async_add_entities(
-            [LocalAdaxDevice(coordinator.adax_data_handler, entry.data[CONF_UNIQUE_ID])], True
+            [
+                LocalAdaxDevice(
+                    coordinator.adax_data_handler, entry.data[CONF_UNIQUE_ID]
+                )
+            ],
+            True,
         )
     else:
         async_add_entities(
-            (
-                AdaxDevice(room, coordinator)
-                for room in coordinator.get_rooms()
-            ),
+            (AdaxDevice(room, coordinator) for room in coordinator.get_rooms()),
             True,
         )
 
@@ -71,9 +73,7 @@ class AdaxDevice(CoordinatorEntity[AdaxCoordinator], ClimateEntity):
     _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
-        self,
-        heater_data: dict[str, Any],
-        coordinator: AdaxCoordinator
+        self, heater_data: dict[str, Any], coordinator: AdaxCoordinator
     ) -> None:
         """Initialize the heater."""
         super().__init__(coordinator=coordinator)

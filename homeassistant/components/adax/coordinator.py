@@ -24,13 +24,12 @@ class AdaxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     rooms: list[dict[str, Any]]
 
     def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: ConfigEntry,
-        update_interval: timedelta
+        self, hass: HomeAssistant, entry: ConfigEntry, update_interval: timedelta
     ) -> None:
         """Initialize the Adax coordinator."""
-        super().__init__(hass, logger=_LOGGER, name="Adax", update_interval=update_interval)
+        super().__init__(
+            hass, logger=_LOGGER, name="Adax", update_interval=update_interval
+        )
 
         if entry.data.get(CONNECTION_TYPE) == LOCAL:
             self.adax_data_handler = AdaxLocal(
@@ -48,12 +47,12 @@ class AdaxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def get_room(self, room_id: int) -> dict[str, Any]:
         """Get a specific room from the loaded Adax data."""
         rooms = self.rooms or []
-        for room in filter(lambda r: r['id'] == room_id, rooms):
+        for room in filter(lambda r: r["id"] == room_id, rooms):
             return room
         return None
 
     def get_rooms(self) -> list[dict[str, Any]]:
-        """Gets all rooms for the account."""
+        """Get all rooms for the account."""
         return self.rooms or []
 
     async def _async_update_data(self) -> list[dict[str, Any]]:
