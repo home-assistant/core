@@ -15,11 +15,8 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     CONF_MAC,
     CONF_WEBHOOK_ID,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
-
-from . import init_integration
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -89,10 +86,10 @@ def fixture_mocked_hub(mock_vegehub: MagicMock) -> MagicMock:
     return mock_vegehub
 
 
-@pytest.fixture
-async def vegehub_config_entry(hass: HomeAssistant):
+@pytest.fixture(name="mocked_config_entry")
+async def fixture_mocked_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a mock VegeHub config entry."""
-    config_entry = MockConfigEntry(
+    return MockConfigEntry(
         domain="vegehub",
         data={
             CONF_MAC: TEST_SIMPLE_MAC,
@@ -102,10 +99,6 @@ async def vegehub_config_entry(hass: HomeAssistant):
             CONF_WEBHOOK_ID: TEST_WEBHOOK_ID,
         },
         unique_id=TEST_SIMPLE_MAC,
+        title="VegeHub",
+        entry_id="12345",
     )
-    config_entry.add_to_hass(hass)
-
-    with patch("homeassistant.components.vegehub.PLATFORMS", [Platform.SENSOR]):
-        await init_integration(hass, config_entry)
-
-    return config_entry
