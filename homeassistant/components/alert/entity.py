@@ -197,7 +197,7 @@ class AlertEntity(Entity):
         """Async Acknowledge alert."""
         if not self._can_ack:
             raise ServiceValidationError(
-                "Cannot acknowledge alert with can_acknowledge set to False"
+                "This alert cannot be acknowledged"
             )
         self._ack = True
         self.async_write_ha_state()
