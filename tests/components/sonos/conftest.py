@@ -21,6 +21,7 @@ from soco.events_base import Event as SonosEvent
 from homeassistant.components import ssdp
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.sonos import DOMAIN
+from homeassistant.components.sonos.const import SONOS_SHARE
 from homeassistant.const import CONF_HOSTS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_UDN, SsdpServiceInfo
@@ -222,6 +223,7 @@ class SoCoMockFactory:
         my_speaker_info["uid"] = mock_soco.uid
         mock_soco.get_speaker_info = Mock(return_value=my_speaker_info)
         mock_soco.add_to_queue = Mock(return_value=10)
+        mock_soco.add_multiple_to_queue = Mock(return_value=10)
         mock_soco.add_uri_to_queue = Mock(return_value=10)
 
         mock_soco.avTransport = SonosMockService("AVTransport", ip_address)
@@ -501,6 +503,45 @@ def mock_browse_by_idstring(
         return list_from_json_fixture("music_library_tracks.json")
     if search_type == "albums" and idstring == "A:ALBUM":
         return list_from_json_fixture("music_library_albums.json")
+    if search_type == SONOS_SHARE and idstring == "S:":
+        return [
+            MockMusicServiceItem(
+                None,
+                "S://192.168.1.1/music",
+                "S:",
+                "object.container",
+            )
+        ]
+    if search_type == SONOS_SHARE and idstring == "S://192.168.1.1/music":
+        return [
+            MockMusicServiceItem(
+                None,
+                "S://192.168.1.1/music/beatles",
+                "S://192.168.1.1/music",
+                "object.container",
+            ),
+            MockMusicServiceItem(
+                None,
+                "S://192.168.1.1/music/elton%20john",
+                "S://192.168.1.1/music",
+                "object.container",
+            ),
+        ]
+    if search_type == SONOS_SHARE and idstring == "S://192.168.1.1/music/elton%20john":
+        return [
+            MockMusicServiceItem(
+                None,
+                "S://192.168.1.1/music/elton%20john/Greatest%20Hits",
+                "S://192.168.1.1/music/elton%20john",
+                "object.container",
+            ),
+            MockMusicServiceItem(
+                None,
+                "S://192.168.1.1/music/elton%20john/Good%20Bye%20Yellow%20Brick%20Road",
+                "S://192.168.1.1/music/elton%20john",
+                "object.container",
+            ),
+        ]
     return []
 
 

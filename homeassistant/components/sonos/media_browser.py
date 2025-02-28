@@ -27,7 +27,6 @@ from .const import (
     DOMAIN,
     EXPANDABLE_MEDIA_TYPES,
     LIBRARY_TITLES_MAPPING,
-    MEDIA_TYPE_FOLDER,
     MEDIA_TYPES_TO_SONOS,
     PLAYABLE_MEDIA_TYPES,
     SONOS_ALBUM,
@@ -106,10 +105,10 @@ def media_source_filter(item: BrowseMedia) -> bool:
     return item.media_content_type.startswith("audio/")
 
 
-def _get_title(search_type: str, id_string: str) -> str:
+def _get_title(id_string: str) -> str:
     """Extract a suitable title from the content id string."""
     try:
-        if search_type == MEDIA_TYPE_FOLDER:
+        if id_string.startswith("S:"):
             # Format is S://server/share/folder
             # If just S: this will be in the mappings; otherwise use the last folder in path.
             title = LIBRARY_TITLES_MAPPING.get(
@@ -255,9 +254,7 @@ def build_item_response(
         thumbnail = get_thumbnail_url(search_type, payload["idstring"])
 
     if not title:
-        title = _get_title(
-            search_type=payload["search_type"], id_string=payload["idstring"]
-        )
+        title = _get_title(id_string=payload["idstring"])
 
     try:
         media_class = SONOS_TO_MEDIA_CLASSES[
@@ -302,7 +299,7 @@ def item_payload(item: DidlObject, get_thumbnail_url=None) -> BrowseMedia:
         thumbnail = get_thumbnail_url(media_class, content_id, item=item)
 
     return BrowseMedia(
-        title=item.title,
+        title=_get_title(item.item_id) if item.title is None else item.title,
         thumbnail=thumbnail,
         media_class=media_class,
         media_content_id=content_id,

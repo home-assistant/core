@@ -207,7 +207,10 @@ async def test_play_media_library(
         blocking=True,
     )
     assert sock_mock.clear_queue.call_count == test_result["clear_queue"]
-    assert sock_mock.add_to_queue.call_count == 1
+    assert sock_mock.add_to_queue.call_count == test_result.get("add_to_queue", 1)
+    assert sock_mock.add_multiple_to_queue.call_count == test_result.get(
+        "add_multiple_to_queue", 0
+    )
     assert (
         sock_mock.add_to_queue.call_args_list[0].args[0].title == test_result["title"]
     )
@@ -232,6 +235,44 @@ async def test_play_media_library(
             sock_mock.play_from_queue.call_args_list[0].args[0]
             == test_result["play_pos"]
         )
+
+
+async def test_play_media_library_folder(
+    hass: HomeAssistant,
+    soco_factory: SoCoMockFactory,
+    async_autosetup_sonos,
+) -> None:
+    """Test playing media library folder."""
+    soco_mock = soco_factory.mock_list.get("192.168.42.2")
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "folder",
+            ATTR_MEDIA_CONTENT_ID: "S://192.168.1.1/music/elton%20john",
+            ATTR_MEDIA_ENQUEUE: MediaPlayerEnqueue.REPLACE,
+        },
+        blocking=True,
+    )
+    assert soco_mock.clear_queue.call_count == 1
+    assert soco_mock.add_multiple_to_queue.call_count == 1
+    items = soco_mock.add_multiple_to_queue.call_args_list[0].args[0]
+    assert items[0].item_class == "object.container"
+    assert items[0].item_id == "S://192.168.1.1/music/elton%20john/Greatest%20Hits"
+    assert items[0].parent_id == "S://192.168.1.1/music/elton%20john"
+    assert items[1].item_class == "object.container"
+    assert (
+        items[1].item_id
+        == "S://192.168.1.1/music/elton%20john/Good%20Bye%20Yellow%20Brick%20Road"
+    )
+    assert items[1].parent_id == "S://192.168.1.1/music/elton%20john"
+
+    assert (
+        soco_mock.add_multiple_to_queue.call_args_list[0].kwargs["timeout"]
+        == LONG_SERVICE_TIMEOUT
+    )
+    assert soco_mock.play_from_queue.call_count == 1
 
 
 @pytest.mark.parametrize(
