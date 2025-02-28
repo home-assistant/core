@@ -623,7 +623,9 @@ def _get_start_time_state_for_entities_stmt(
     if slow_dependent_subquery:
         # Simple group-by for MySQL, must use less
         # than 1000 metadata_ids in the IN clause for MySQL
-        # or it will optimize poorly.
+        # or it will optimize poorly. Callers are responsible
+        # for ensuring that the number of metadata_ids is less
+        # than 1000.
         most_recent_states_for_entities_by_date = (
             select(
                 States.metadata_id.label("max_metadata_id"),
