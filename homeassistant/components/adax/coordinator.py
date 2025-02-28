@@ -18,7 +18,7 @@ from .const import ACCOUNT_ID, CLOUD, CONNECTION_TYPE, LOCAL
 _LOGGER = logging.getLogger(__name__)
 
 
-class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AdaxCloudCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Coordinator for updating data to and from Adax (cloud)."""
 
     rooms: list[dict[str, Any]]
@@ -42,7 +42,7 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             websession=async_get_clientsession(hass),
         )
 
-    def get_room(self, room_id: int) -> dict[str, Any]:
+    def get_room(self, room_id: int) -> dict[str, Any] | None:
         """Get a specific room from the loaded Adax data."""
         rooms = self.rooms or []
         for room in filter(lambda r: r["id"] == room_id, rooms):
@@ -58,7 +58,7 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             self.rooms = await self.adax_data_handler.get_rooms()
         except Exception as err:
-            _LOGGER.fatal("Exception when getting data. Err: %s", err)
+            _LOGGER.error("Exception when getting data. Err: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         else:
             return self.rooms
@@ -67,7 +67,7 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for updating data to and from Adax (local)."""
 
-    rooms: list[dict[str, Any]]
+    status: dict[str, Any] | None
 
     def __init__(
         self, hass: HomeAssistant, entry: ConfigEntry, update_interval: timedelta
@@ -88,7 +88,7 @@ class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
 
-    def get_status(self) -> dict[str, Any]:
+    def get_status(self) -> dict[str, Any] | None:
         """Get status for the Adax device."""
         return self.status
 
@@ -97,7 +97,7 @@ class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             self.status = await self.adax_data_handler.get_status()
         except Exception as err:
-            _LOGGER.fatal("Exception when getting data. Err: %s", err)
+            _LOGGER.error("Exception when getting data. Err: %s", err)
             raise UpdateFailed(f"Error communicating with API: {err}") from err
         else:
             return self.status
