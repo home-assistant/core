@@ -2147,7 +2147,7 @@ def test_cache_key_for_generate_max_mean_min_statistic_in_sub_period_stmt() -> N
 
 
 def test_cache_key_for_generate_statistics_at_time_stmt_group_by() -> None:
-    """Test cache key for _generate_statistics_at_time_stmt."""
+    """Test cache key for _generate_statistics_at_time_stmt_group_by."""
     stmt = _generate_statistics_at_time_stmt_group_by(
         StatisticsShortTerm, {0}, 0.0, set()
     )
@@ -2165,7 +2165,7 @@ def test_cache_key_for_generate_statistics_at_time_stmt_group_by() -> None:
 
 
 def test_cache_key_for_generate_statistics_at_time_stmt_dependent_sub_query() -> None:
-    """Test cache key for _generate_statistics_at_time_stmt."""
+    """Test cache key for _generate_statistics_at_time_stmt_dependent_sub_query."""
     stmt = _generate_statistics_at_time_stmt_dependent_sub_query(
         StatisticsShortTerm, {0}, 0.0, set()
     )
