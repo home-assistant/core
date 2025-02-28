@@ -48,6 +48,10 @@ OperatingModeState.off
 """
 
 
+DEFAULT_MIN_TEMP: float = 50.0
+DEFAULT_MAX_TEMP: float = 62.0
+
+
 class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeaterEntity):
     """Representation of AtlanticDomesticHotWaterProductionV2IOComponent (io)."""
 
@@ -74,22 +78,18 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        return cast(
-            float,
-            self.executor.select_state(
-                OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
-            ),
-        )
+        min_temp = self.device.states[OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE]
+        if min_temp:
+            return cast(float, min_temp.value_as_float)
+        return DEFAULT_MIN_TEMP
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        return cast(
-            float,
-            self.executor.select_state(
-                OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
-            ),
-        )
+        max_temp = self.device.states[OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE]
+        if max_temp:
+            return cast(float, max_temp.value_as_float)
+        return DEFAULT_MAX_TEMP
 
     @property
     def current_temperature(self) -> float:
@@ -119,9 +119,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         await self.executor.async_execute_command(
             OverkizCommand.SET_TARGET_TEMPERATURE, temperature, refresh_afterwards=False
         )
-        await asyncio.sleep(
-            MODE_DELAY
-        )  # wait 3 seconds to have the new duration in
+        await asyncio.sleep(MODE_DELAY)  # wait 1 second to have the new temperature in
 
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_TARGET_TEMPERATURE, refresh_afterwards=False
@@ -169,16 +167,28 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     @property
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
-        return self.executor.select_state(OverkizState.CORE_OPERATING_MODE) in (
-            "antifreeze",  # TODO: pyoverkiz PR
-            OverkizCommandParam.AWAY,
-            OverkizCommandParam.FROSTPROTECTION,
-        ) or (
-            cast(str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION))
-            == "always"
-        ) or (
-            int(cast(str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION)))
-            > 0
+        return (
+            self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
+            in (
+                "antifreeze",  # TODO: pyoverkiz PR
+                OverkizCommandParam.AWAY,
+                OverkizCommandParam.FROSTPROTECTION,
+            )
+            or (
+                cast(
+                    str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION)
+                )
+                == "always"
+            )
+            or (
+                int(
+                    cast(
+                        str,
+                        self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION),
+                    )
+                )
+                > 0
+            )
         )
 
     @property
