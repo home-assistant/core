@@ -137,6 +137,18 @@ async def async_setup_entry(
         mass.subscribe(handle_player_removed, EventType.PLAYER_REMOVED)
     )
 
+    # check if any playerconfigs have been removed while we were disconnected
+    all_player_configs = await mass.config.get_player_configs()
+    player_ids = {player.player_id for player in all_player_configs}
+    dev_reg = dr.async_get(hass)
+    dev_entries = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+    for device in dev_entries:
+        for identifier in device.identifiers:
+            if identifier[0] == DOMAIN and identifier[1] not in player_ids:
+                dev_reg.async_update_device(
+                    device.id, remove_config_entry_id=entry.entry_id
+                )
+
     return True
 
 
