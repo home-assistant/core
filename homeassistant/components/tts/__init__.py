@@ -208,7 +208,7 @@ async def async_get_media_source_audio(
     cache_key = manager.async_cache_message_in_memory(
         **media_source_id_to_kwargs(media_source_id)
     )
-    return await hass.data[DATA_TTS_MANAGER].async_get_tts_audio(cache_key)
+    return await manager.async_get_tts_audio(cache_key)
 
 
 @callback
