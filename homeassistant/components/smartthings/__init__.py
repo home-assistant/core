@@ -99,6 +99,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
     except SmartThingsAuthenticationFailedError as err:
         raise ConfigEntryAuthFailed from err
 
+    device_registry = dr.async_get(hass)
+    for dev in device_status.values():
+        for component in dev.device.components:
+            if component.id == MAIN and Capability.BRIDGE in component.capabilities:
+                device_registry.async_get_or_create(
+                    config_entry_id=entry.entry_id,
+                    identifiers={(DOMAIN, dev.device.device_id)},
+                    name=dev.device.label,
+                )
     scenes = {
         scene.scene_id: scene
         for scene in await client.get_scenes(location_id=entry.data[CONF_LOCATION_ID])
@@ -124,7 +133,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    device_registry = dr.async_get(hass)
     device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     for device_entry in device_entries:
         device_id = next(
@@ -132,7 +140,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             for identifier in device_entry.identifiers
             if identifier[0] == DOMAIN
         )
-        if device_id in entry.runtime_data.devices:
+        if device_id in device_status:
             continue
         device_registry.async_update_device(
             device_entry.id, remove_config_entry_id=entry.entry_id
