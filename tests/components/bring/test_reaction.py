@@ -19,7 +19,8 @@ from homeassistant.components.bring.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -52,9 +53,9 @@ async def test_send_reaction(
         DOMAIN,
         SERVICE_ACTIVITY_STREAM_REACTION,
         service_data={
+            ATTR_ENTITY_ID: "event.einkauf_activities",
             ATTR_REACTION: reaction,
         },
-        target={ATTR_ENTITY_ID: "event.einkauf_activities"},
         blocking=True,
     )
 
@@ -89,9 +90,71 @@ async def test_send_reaction_exception(
             DOMAIN,
             SERVICE_ACTIVITY_STREAM_REACTION,
             service_data={
+                ATTR_ENTITY_ID: "event.einkauf_activities",
                 ATTR_REACTION: "HEART",
             },
-            target={ATTR_ENTITY_ID: "event.einkauf_activities"},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("mock_bring_client")
+async def test_send_reaction_config_entry_not_loaded(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+) -> None:
+    """Test send activity stream reaction config entry not loaded exception."""
+
+    bring_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(bring_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(bring_config_entry.entry_id)
+
+    assert bring_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="The account associated with this Bring! list is either not loaded or disabled in Home Assistant",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ACTIVITY_STREAM_REACTION,
+            service_data={
+                ATTR_ENTITY_ID: "event.einkauf_activities",
+                ATTR_REACTION: "HEART",
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("mock_bring_client")
+async def test_send_reaction_unknown_entity(
+    hass: HomeAssistant,
+    bring_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test send activity stream reaction unknown entity exception."""
+
+    bring_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(bring_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert bring_config_entry.state is ConfigEntryState.LOADED
+
+    entity_registry.async_update_entity(
+        "event.einkauf_activities", disabled_by=er.RegistryEntryDisabler.USER
+    )
+    with pytest.raises(
+        ServiceValidationError,
+        match="Failed to send reaction for Bring! Unknown entity event.einkauf_activities",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_ACTIVITY_STREAM_REACTION,
+            service_data={
+                ATTR_ENTITY_ID: "event.einkauf_activities",
+                ATTR_REACTION: "HEART",
+            },
             blocking=True,
         )
 
@@ -120,8 +183,8 @@ async def test_send_reaction_not_found(
             DOMAIN,
             SERVICE_ACTIVITY_STREAM_REACTION,
             service_data={
+                ATTR_ENTITY_ID: "event.einkauf_activities",
                 ATTR_REACTION: "HEART",
             },
-            target={ATTR_ENTITY_ID: "event.einkauf_activities"},
             blocking=True,
         )

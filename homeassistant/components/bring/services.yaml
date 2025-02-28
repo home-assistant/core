@@ -22,11 +22,14 @@ send_message:
       selector:
         text:
 send_reaction:
-  target:
-    entity:
-      domain: event
-      integration: bring
   fields:
+    entity_id:
+      required: true
+      selector:
+        entity:
+          filter:
+            - integration: bring
+              domain: event
     reaction:
       required: true
       selector:
