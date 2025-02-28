@@ -15,7 +15,7 @@ def authenticate(username, password, uuid):
         "username": username,
         "password": password,
         "oem_id": "1",  # Required as per cURL request
-        "ha_uuid": uuid,  # UUID is always passed
+        "ha_instance_id": uuid,  # UUID is always passed
     }
 
     try:
@@ -46,15 +46,17 @@ def authenticate(username, password, uuid):
         return {"success": False, "error": "API connection failed"}
 
 
-def signup(username, email, password):
+def signup(username, email, password, uuid):
     """Sends signup request to Ezlo API and returns the response."""
     _LOGGER.info("Sending signup request to Ezlo API...")
+    _LOGGER.info(f"Sending login request with UUID: {uuid}")
 
     payload = {
         "username": username,
         "password": password,
         "email": email,
-        "uuid": "ad58a0a0-3517-11ed-890c-31443f0b6e4c",
+        "uuid": "ad58a0a0-3517-11ed-890c-31443f0b6e4c",  # Required as per cURL request
+        "ha_instance_id": uuid,
     }
 
     try:

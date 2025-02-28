@@ -94,7 +94,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         return await self.async_step_init()
 
     async def async_step_login(self, user_input=None):
-        """Handles login authentication form with HA instance UUID or empty ID if missing."""
+        """Handles login authentication form with HA instance id, pass empty if id missing."""
         errors = {}
 
         if user_input is not None:
@@ -103,12 +103,12 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
 
             system_uuid = await self.hass.helpers.instance_id.async_get()
             _LOGGER.info(
-                f"Retrieved system UUID from instance_id.async_get: {system_uuid}"
+                f"Retrieved system id from instance_id.async_get: {system_uuid}"
             )
 
             if not system_uuid:
                 system_uuid = ""
-                _LOGGER.warning("Home Assistant UUID missing!")
+                _LOGGER.warning("Home Assistant instance id missing!")
 
             auth_response = await self.hass.async_add_executor_job(
                 authenticate, username, password, system_uuid
@@ -160,7 +160,7 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
         return self.async_abort(reason="logged_out")
 
     async def async_step_signup(self, user_input=None):
-        """Handles signup form."""
+        """Handles signup form with HA instance id, pass empty if id missing."""
         errors = {}
 
         if user_input is not None:
@@ -168,9 +168,18 @@ class EzloOptionsFlowHandler(config_entries.OptionsFlow):
             email = user_input["email"]
             password = user_input["password"]
 
+            system_uuid = await self.hass.helpers.instance_id.async_get()
+            _LOGGER.info(
+                f"Retrieved system id from instance_id.async_get: {system_uuid}"
+            )
+
+            if not system_uuid:
+                system_uuid = ""
+                _LOGGER.warning("Home Assistant instance id missing!")
+
             # Call signup API
             signup_response = await self.hass.async_add_executor_job(
-                signup, username, email, password
+                signup, username, email, password, system_uuid
             )
 
             if signup_response.get("success"):
