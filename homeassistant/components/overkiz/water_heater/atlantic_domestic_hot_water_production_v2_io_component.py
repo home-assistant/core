@@ -119,6 +119,10 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         await self.executor.async_execute_command(
             OverkizCommand.SET_TARGET_TEMPERATURE, temperature, refresh_afterwards=False
         )
+        await asyncio.sleep(
+            MODE_DELAY
+        )  # wait 3 seconds to have the new duration in
+
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_TARGET_TEMPERATURE, refresh_afterwards=False
         )
