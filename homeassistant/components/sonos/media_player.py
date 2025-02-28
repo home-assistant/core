@@ -710,15 +710,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             )
 
     def _play_media_queue(
-        self,
-        soco: SoCo,
-        item: MusicServiceItem,
-        enqueue: MediaPlayerEnqueue,
+        self, soco: SoCo, item: MusicServiceItem, enqueue: MediaPlayerEnqueue
     ):
-        """Add item or items to queue using a passed in method."""
+        """Manage adding, replacing, playing items onto the sonos queue."""
         _LOGGER.debug(
-            "_play_media_queue items [%s] enqueue [%s]",
-            item,
+            "_play_media_queue item_id [%s] title [%s] enqueue [%s]",
+            item.item_id,
+            item.title,
             enqueue,
         )
         if enqueue == MediaPlayerEnqueue.REPLACE:
@@ -731,7 +729,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         else:
             pos = (self.media.queue_position or 0) + 1
             new_pos = soco.add_to_queue(
-                item, timeout=LONG_SERVICE_TIMEOUT, position=pos
+                item, position=pos, timeout=LONG_SERVICE_TIMEOUT
             )
             if enqueue == MediaPlayerEnqueue.PLAY:
                 soco.play_from_queue(new_pos - 1)
