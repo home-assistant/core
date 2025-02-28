@@ -16,13 +16,13 @@ from systembridgeconnector.websocket_client import WebSocketClient
 from systembridgemodels.modules import GetData, Module
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DATA_WAIT_TIMEOUT, DOMAIN
 
@@ -179,7 +179,7 @@ class SystemBridgeConfigFlow(
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         properties = discovery_info.properties

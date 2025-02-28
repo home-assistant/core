@@ -66,8 +66,8 @@ rules:
   entity-category: done
   entity-disabled-by-default: done
   discovery:
-    status: todo
-    comment: mDNS should be possible - https://owfs.org/index_php_page_avahi-discovery.html
+    status: done
+    comment: hassio and mDNS/zeroconf discovery implemented
   stale-devices:
     status: done
     comment: >

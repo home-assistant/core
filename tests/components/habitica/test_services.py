@@ -5,16 +5,21 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
-from habiticalib import Direction, Skill
+from aiohttp import ClientError
+from habiticalib import Direction, HabiticaTaskResponse, Skill, Task
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.habitica.const import (
+    ATTR_ALIAS,
     ATTR_CONFIG_ENTRY,
+    ATTR_COST,
     ATTR_DIRECTION,
     ATTR_ITEM,
     ATTR_KEYWORD,
+    ATTR_NOTES,
     ATTR_PRIORITY,
+    ATTR_REMOVE_TAG,
     ATTR_SKILL,
     ATTR_TAG,
     ATTR_TARGET,
@@ -32,7 +37,9 @@ from homeassistant.components.habitica.const import (
     SERVICE_SCORE_REWARD,
     SERVICE_START_QUEST,
     SERVICE_TRANSFORMATION,
+    SERVICE_UPDATE_REWARD,
 )
+from homeassistant.components.todo import ATTR_RENAME
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -44,10 +51,10 @@ from .conftest import (
     ERROR_TOO_MANY_REQUESTS,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
-REQUEST_EXCEPTION_MSG = "Unable to connect to Habitica, try again later"
-RATE_LIMIT_EXCEPTION_MSG = "Rate limit exceeded, try again later"
+REQUEST_EXCEPTION_MSG = "Unable to connect to Habitica: reason"
+RATE_LIMIT_EXCEPTION_MSG = "Rate limit exceeded, try again in 5 seconds"
 
 
 @pytest.fixture(autouse=True)
@@ -235,6 +242,15 @@ async def test_cast_skill(
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
         ),
+        (
+            {
+                ATTR_TASK: "Rechnungen bezahlen",
+                ATTR_SKILL: "smash",
+            },
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
+        ),
     ],
 )
 async def test_cast_skill_exceptions(
@@ -359,6 +375,11 @@ async def test_handle_quests(
             ERROR_BAD_REQUEST,
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
         ),
     ],
 )
@@ -519,6 +540,15 @@ async def test_score_task(
             ERROR_BAD_REQUEST,
             HomeAssistantError,
             REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            {
+                ATTR_TASK: "e97659e0-2c42-4599-a7bb-00282adc410d",
+                ATTR_DIRECTION: "up",
+            },
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
         ),
         (
             {
@@ -722,7 +752,7 @@ async def test_transformation(
             ERROR_BAD_REQUEST,
             None,
             HomeAssistantError,
-            "Unable to connect to Habitica, try again later",
+            REQUEST_EXCEPTION_MSG,
         ),
         (
             {
@@ -752,7 +782,27 @@ async def test_transformation(
             None,
             ERROR_BAD_REQUEST,
             HomeAssistantError,
-            "Unable to connect to Habitica, try again later",
+            REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            {
+                ATTR_TARGET: "test-partymember-username",
+                ATTR_ITEM: "spooky_sparkles",
+            },
+            None,
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
+        ),
+        (
+            {
+                ATTR_TARGET: "test-partymember-username",
+                ATTR_ITEM: "spooky_sparkles",
+            },
+            ClientError,
+            None,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
         ),
     ],
 )
@@ -845,3 +895,261 @@ async def test_get_tasks(
     )
 
     assert response == snapshot
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_exception", "exception_msg"),
+    [
+        (
+            ERROR_TOO_MANY_REQUESTS,
+            HomeAssistantError,
+            RATE_LIMIT_EXCEPTION_MSG,
+        ),
+        (
+            ERROR_BAD_REQUEST,
+            HomeAssistantError,
+            REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("habitica")
+async def test_update_task_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    exception: Exception,
+    expected_exception: Exception,
+    exception_msg: str,
+) -> None:
+    """Test Habitica task action exceptions."""
+    task_id = "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"
+
+    habitica.update_task.side_effect = exception
+    with pytest.raises(expected_exception, match=exception_msg):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_REWARD,
+            service_data={
+                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                ATTR_TASK: task_id,
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("habitica")
+async def test_task_not_found(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+) -> None:
+    """Test Habitica task not found exceptions."""
+    task_id = "7f902bbc-eb3d-4a8f-82cf-4e2025d69af1"
+
+    with pytest.raises(
+        ServiceValidationError,
+        match="Unable to complete action, could not find the task '7f902bbc-eb3d-4a8f-82cf-4e2025d69af1'",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_REWARD,
+            service_data={
+                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                ATTR_TASK: task_id,
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_data", "call_args"),
+    [
+        (
+            {
+                ATTR_COST: 100,
+            },
+            Task(value=100),
+        ),
+        (
+            {
+                ATTR_RENAME: "RENAME",
+            },
+            Task(text="RENAME"),
+        ),
+        (
+            {
+                ATTR_NOTES: "NOTES",
+            },
+            Task(notes="NOTES"),
+        ),
+        (
+            {
+                ATTR_ALIAS: "ALIAS",
+            },
+            Task(alias="ALIAS"),
+        ),
+    ],
+)
+async def test_update_reward(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+    call_args: Task,
+) -> None:
+    """Test Habitica update_reward action."""
+    task_id = "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"
+
+    habitica.update_task.return_value = HabiticaTaskResponse.from_json(
+        load_fixture("task.json", DOMAIN)
+    )
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_REWARD,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            ATTR_TASK: task_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+    habitica.update_task.assert_awaited_with(UUID(task_id), call_args)
+
+
+async def test_tags(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+) -> None:
+    """Test adding tags to a task."""
+    task_id = "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_REWARD,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            ATTR_TASK: task_id,
+            ATTR_TAG: ["Schule"],
+        },
+        return_response=True,
+        blocking=True,
+    )
+
+    call_args = habitica.update_task.call_args[0]
+    assert call_args[0] == UUID(task_id)
+    assert set(call_args[1]["tags"]) == {
+        UUID("2ac458af-0833-4f3f-bf04-98a0c33ef60b"),
+        UUID("3450351f-1323-4c7e-9fd2-0cdff25b3ce0"),
+        UUID("b2780f82-b3b5-49a3-a677-48f2c8c7e3bb"),
+    }
+
+
+async def test_create_new_tag(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+) -> None:
+    """Test adding a non-existent tag and create it as new."""
+    task_id = "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_REWARD,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            ATTR_TASK: task_id,
+            ATTR_TAG: ["Home Assistant"],
+        },
+        return_response=True,
+        blocking=True,
+    )
+
+    habitica.create_tag.assert_awaited_with("Home Assistant")
+
+    call_args = habitica.update_task.call_args[0]
+    assert call_args[0] == UUID(task_id)
+    assert set(call_args[1]["tags"]) == {
+        UUID("8bc0afbf-ab8e-49a4-982d-67a40557ed1a"),
+        UUID("3450351f-1323-4c7e-9fd2-0cdff25b3ce0"),
+        UUID("b2780f82-b3b5-49a3-a677-48f2c8c7e3bb"),
+    }
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_exception", "exception_msg"),
+    [
+        (
+            ERROR_TOO_MANY_REQUESTS,
+            HomeAssistantError,
+            RATE_LIMIT_EXCEPTION_MSG,
+        ),
+        (
+            ERROR_BAD_REQUEST,
+            HomeAssistantError,
+            REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
+        ),
+    ],
+)
+async def test_create_new_tag_exception(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    exception: Exception,
+    expected_exception: Exception,
+    exception_msg: str,
+) -> None:
+    """Test create new tag exception."""
+    task_id = "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"
+
+    habitica.create_tag.side_effect = exception
+    with pytest.raises(expected_exception, match=exception_msg):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_UPDATE_REWARD,
+            service_data={
+                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                ATTR_TASK: task_id,
+                ATTR_TAG: ["Home Assistant"],
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+
+async def test_remove_tags(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+) -> None:
+    """Test removing tags from a task."""
+    task_id = "5e2ea1df-f6e6-4ba3-bccb-97c5ec63e99b"
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_REWARD,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            ATTR_TASK: task_id,
+            ATTR_REMOVE_TAG: ["Kreativität"],
+        },
+        return_response=True,
+        blocking=True,
+    )
+
+    call_args = habitica.update_task.call_args[0]
+    assert call_args[0] == UUID(task_id)
+    assert set(call_args[1]["tags"]) == {UUID("b2780f82-b3b5-49a3-a677-48f2c8c7e3bb")}

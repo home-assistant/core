@@ -9,12 +9,13 @@ from typing import Final, cast
 from kasa import Device, Feature
 
 from homeassistant.components.number import (
+    DOMAIN as NUMBER_DOMAIN,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TPLinkConfigEntry
 from .entity import (
@@ -64,6 +65,14 @@ NUMBER_DESCRIPTIONS: Final = (
         key="tilt_step",
         mode=NumberMode.BOX,
     ),
+    TPLinkNumberEntityDescription(
+        key="power_protection_threshold",
+        mode=NumberMode.SLIDER,
+    ),
+    TPLinkNumberEntityDescription(
+        key="clean_count",
+        mode=NumberMode.SLIDER,
+    ),
 )
 
 NUMBER_DESCRIPTIONS_MAP = {desc.key: desc for desc in NUMBER_DESCRIPTIONS}
@@ -72,24 +81,32 @@ NUMBER_DESCRIPTIONS_MAP = {desc.key: desc for desc in NUMBER_DESCRIPTIONS}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up number entities."""
     data = config_entry.runtime_data
     parent_coordinator = data.parent_coordinator
-    children_coordinators = data.children_coordinators
     device = parent_coordinator.device
-    entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
-        hass=hass,
-        device=device,
-        coordinator=parent_coordinator,
-        feature_type=Feature.Type.Number,
-        entity_class=TPLinkNumberEntity,
-        descriptions=NUMBER_DESCRIPTIONS_MAP,
-        child_coordinators=children_coordinators,
-    )
+    known_child_device_ids: set[str] = set()
+    first_check = True
 
-    async_add_entities(entities)
+    def _check_device() -> None:
+        entities = CoordinatedTPLinkFeatureEntity.entities_for_device_and_its_children(
+            hass=hass,
+            device=device,
+            coordinator=parent_coordinator,
+            feature_type=Feature.Type.Number,
+            entity_class=TPLinkNumberEntity,
+            descriptions=NUMBER_DESCRIPTIONS_MAP,
+            platform_domain=NUMBER_DOMAIN,
+            known_child_device_ids=known_child_device_ids,
+            first_check=first_check,
+        )
+        async_add_entities(entities)
+
+    _check_device()
+    first_check = False
+    config_entry.async_on_unload(parent_coordinator.async_add_listener(_check_device))
 
 
 class TPLinkNumberEntity(CoordinatedTPLinkFeatureEntity, NumberEntity):

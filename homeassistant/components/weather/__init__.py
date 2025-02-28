@@ -8,10 +8,19 @@ from contextlib import suppress
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Any, Final, Generic, Literal, Required, TypedDict, cast, final
+from typing import (
+    Any,
+    Final,
+    Generic,
+    Literal,
+    Required,
+    TypedDict,
+    TypeVar,
+    cast,
+    final,
+)
 
-from propcache import cached_property
-from typing_extensions import TypeVar
+from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry

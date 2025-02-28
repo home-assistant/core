@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[sensor.buttoncounter-entry]
+# name: test_entities[sensor.input_buttoncounter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -8,13 +8,14 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.buttoncounter',
-    'has_entity_name': False,
+    'entity_id': 'sensor.input_buttoncounter',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -34,23 +35,23 @@
     'unit_of_measurement': 'W',
   })
 # ---
-# name: test_entities[sensor.buttoncounter-state]
+# name: test_entities[sensor.input_buttoncounter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'ButtonCounter',
+      'friendly_name': 'Input ButtonCounter',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'W',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.buttoncounter',
+    'entity_id': 'sensor.input_buttoncounter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
   })
 # ---
-# name: test_entities[sensor.buttoncounter_counter-entry]
+# name: test_entities[sensor.input_buttoncounter_counter-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -59,13 +60,14 @@
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.buttoncounter_counter',
-    'has_entity_name': False,
+    'entity_id': 'sensor.input_buttoncounter_counter',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -85,24 +87,24 @@
     'unit_of_measurement': 'kWh',
   })
 # ---
-# name: test_entities[sensor.buttoncounter_counter-state]
+# name: test_entities[sensor.input_buttoncounter_counter-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'ButtonCounter-counter',
+      'friendly_name': 'Input ButtonCounter-counter',
       'icon': 'mdi:counter',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       'unit_of_measurement': 'kWh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.buttoncounter_counter',
+    'entity_id': 'sensor.input_buttoncounter_counter',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100.0',
   })
 # ---
-# name: test_entities[sensor.lightsensor-entry]
+# name: test_entities[sensor.input_lightsensor-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -111,13 +113,14 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.lightsensor',
-    'has_entity_name': False,
+    'entity_id': 'sensor.input_lightsensor',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -137,22 +140,22 @@
     'unit_of_measurement': 'illuminance',
   })
 # ---
-# name: test_entities[sensor.lightsensor-state]
+# name: test_entities[sensor.input_lightsensor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LightSensor',
+      'friendly_name': 'Input LightSensor',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'illuminance',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.lightsensor',
+    'entity_id': 'sensor.input_lightsensor',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '250.0',
   })
 # ---
-# name: test_entities[sensor.sensornumber-entry]
+# name: test_entities[sensor.input_sensornumber-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -161,13 +164,14 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.sensornumber',
-    'has_entity_name': False,
+    'entity_id': 'sensor.input_sensornumber',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -187,22 +191,22 @@
     'unit_of_measurement': 'm',
   })
 # ---
-# name: test_entities[sensor.sensornumber-state]
+# name: test_entities[sensor.input_sensornumber-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SensorNumber',
+      'friendly_name': 'Input SensorNumber',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'm',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.sensornumber',
+    'entity_id': 'sensor.input_sensornumber',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '10.0',
   })
 # ---
-# name: test_entities[sensor.temperature-entry]
+# name: test_entities[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -211,13 +215,14 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.temperature',
-    'has_entity_name': False,
+    'entity_id': 'sensor.living_room_temperature',
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
@@ -237,16 +242,16 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_entities[sensor.temperature-state]
+# name: test_entities[sensor.living_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
-      'friendly_name': 'Temperature',
+      'friendly_name': 'Living room Temperature',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.temperature',
+    'entity_id': 'sensor.living_room_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

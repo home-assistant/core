@@ -2,18 +2,16 @@
 
 import logging
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from .const import CONF_HAS_PWD
-from .coordinator import SolarLogCoordinator
+from .coordinator import SolarlogConfigEntry, SolarLogCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
-type SolarlogConfigEntry = ConfigEntry[SolarLogCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SolarlogConfigEntry) -> bool:

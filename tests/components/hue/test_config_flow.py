@@ -9,12 +9,15 @@ import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries
-from homeassistant.components import zeroconf
 from homeassistant.components.hue import config_flow, const
 from homeassistant.components.hue.errors import CannotConnect
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.service_info.zeroconf import (
+    ATTR_PROPERTIES_ID,
+    ZeroconfServiceInfo,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker, ClientError
@@ -424,13 +427,13 @@ async def test_bridge_homekit(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("0.0.0.0"),
             ip_addresses=[ip_address("0.0.0.0")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+            properties={ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
             type="mock_type",
         ),
     )
@@ -474,13 +477,13 @@ async def test_bridge_homekit_already_configured(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_HOMEKIT},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("0.0.0.0"),
             ip_addresses=[ip_address("0.0.0.0")],
             hostname="mock_hostname",
             name="mock_name",
             port=None,
-            properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+            properties={ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
             type="mock_type",
         ),
     )
@@ -578,7 +581,7 @@ async def test_bridge_zeroconf(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.217"),
             ip_addresses=[ip_address("192.168.1.217")],
             port=443,
@@ -614,7 +617,7 @@ async def test_bridge_zeroconf_already_exists(
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("192.168.1.217"),
             ip_addresses=[ip_address("192.168.1.217")],
             port=443,
@@ -639,7 +642,7 @@ async def test_bridge_zeroconf_ipv6(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("fd00::eeb5:faff:fe84:b17d"),
             ip_addresses=[ip_address("fd00::eeb5:faff:fe84:b17d")],
             port=443,
@@ -687,7 +690,7 @@ async def test_bridge_connection_failed(
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("1.2.3.4"),
                 ip_addresses=[ip_address("1.2.3.4")],
                 port=443,
@@ -708,13 +711,13 @@ async def test_bridge_connection_failed(
         result = await hass.config_entries.flow.async_init(
             const.DOMAIN,
             context={"source": config_entries.SOURCE_HOMEKIT},
-            data=zeroconf.ZeroconfServiceInfo(
+            data=ZeroconfServiceInfo(
                 ip_address=ip_address("0.0.0.0"),
                 ip_addresses=[ip_address("0.0.0.0")],
                 hostname="mock_hostname",
                 name="mock_name",
                 port=None,
-                properties={zeroconf.ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
+                properties={ATTR_PROPERTIES_ID: "aa:bb:cc:dd:ee:ff"},
                 type="mock_type",
             ),
         )

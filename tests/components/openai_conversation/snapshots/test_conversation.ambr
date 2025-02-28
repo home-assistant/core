@@ -1,34 +1,50 @@
 # serializer version: 1
-# name: test_unknown_hass_api
-  dict({
-    'conversation_id': None,
-    'response': IntentResponse(
-      card=dict({
-      }),
-      error_code=<IntentResponseErrorCode.UNKNOWN: 'unknown'>,
-      failed_results=list([
-      ]),
-      intent=None,
-      intent_targets=list([
-      ]),
-      language='en',
-      matched_states=list([
-      ]),
-      reprompt=dict({
-      }),
-      response_type=<IntentResponseType.ERROR: 'error'>,
-      speech=dict({
-        'plain': dict({
-          'extra_data': None,
-          'speech': 'Error preparing LLM API',
+# name: test_function_call
+  list([
+    dict({
+      'content': 'Please call the test function',
+      'role': 'user',
+    }),
+    dict({
+      'agent_id': 'conversation.openai',
+      'content': None,
+      'role': 'assistant',
+      'tool_calls': list([
+        dict({
+          'id': 'call_call_1',
+          'tool_args': dict({
+            'param1': 'call1',
+          }),
+          'tool_name': 'test_tool',
         }),
-      }),
-      speech_slots=dict({
-      }),
-      success_results=list([
+        dict({
+          'id': 'call_call_2',
+          'tool_args': dict({
+            'param1': 'call2',
+          }),
+          'tool_name': 'test_tool',
+        }),
       ]),
-      unmatched_states=list([
-      ]),
-    ),
-  })
+    }),
+    dict({
+      'agent_id': 'conversation.openai',
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_1',
+      'tool_name': 'test_tool',
+      'tool_result': 'value1',
+    }),
+    dict({
+      'agent_id': 'conversation.openai',
+      'role': 'tool_result',
+      'tool_call_id': 'call_call_2',
+      'tool_name': 'test_tool',
+      'tool_result': 'value2',
+    }),
+    dict({
+      'agent_id': 'conversation.openai',
+      'content': 'Cool',
+      'role': 'assistant',
+      'tool_calls': None,
+    }),
+  ])
 # ---

@@ -209,19 +209,22 @@ def mock_fibaro_client() -> Generator[Mock]:
     info_mock.hc_name = TEST_NAME
     info_mock.current_version = TEST_VERSION
     info_mock.platform = TEST_MODEL
+    info_mock.manufacturer_name = "Fibaro"
+    info_mock.model_name = "Home Center 2"
+    info_mock.mac_address = "00:22:4d:b7:13:24"
 
     with patch(
         "homeassistant.components.fibaro.FibaroClient", autospec=True
     ) as fibaro_client_mock:
         client = fibaro_client_mock.return_value
-        client.set_authentication.return_value = None
-        client.connect.return_value = True
+        client.connect_with_credentials.return_value = info_mock
         client.read_info.return_value = info_mock
         client.read_rooms.return_value = []
         client.read_scenes.return_value = []
         client.read_devices.return_value = []
         client.register_update_handler.return_value = None
         client.unregister_update_handler.return_value = None
+        client.frontend_url.return_value = TEST_URL.removesuffix("/api/")
         yield client
 
 

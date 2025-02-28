@@ -23,7 +23,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.typing import ConfigType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .test_common import (
     help_custom_config,
@@ -1409,6 +1409,7 @@ async def test_reloadable(
     await help_test_reloadable(hass, mqtt_client_mock, domain, config)
 
 
+@pytest.mark.usefixtures("mock_temp_dir")
 @pytest.mark.parametrize(
     "hass_config",
     [

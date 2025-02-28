@@ -17,8 +17,8 @@ from homeassistant.const import (
     UnitOfPower,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudData
 from .const import DOMAIN
@@ -139,7 +139,7 @@ SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up SwitchBot Cloud entry."""
     data: SwitchbotCloudData = hass.data[DOMAIN][config.entry_id]
@@ -166,10 +166,8 @@ class SwitchBotCloudSensor(SwitchBotCloudEntity, SensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_attributes(self) -> None:
+        """Set attributes from coordinator data."""
         if not self.coordinator.data:
             return
         self._attr_native_value = self.coordinator.data.get(self.entity_description.key)
-        self.async_write_ha_state()

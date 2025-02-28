@@ -21,7 +21,7 @@ from homeassistant.components.light import (
     brightness_supported,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     BLOCK_MAX_TRANSITION_TIME_MS,
@@ -53,7 +53,7 @@ from .utils import (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up lights for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -66,7 +66,7 @@ async def async_setup_entry(
 def async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for block device."""
     coordinator = config_entry.runtime_data.block
@@ -96,7 +96,7 @@ def async_setup_block_entry(
 def async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
     coordinator = config_entry.runtime_data.rpc
