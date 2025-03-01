@@ -86,8 +86,8 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Arlo',
+    'model': 'VMC4041PB',
     'model_id': None,
     'name': '2nd Floor Hallway',
     'name_by_user': None,
@@ -108,7 +108,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'WoCurtain3-WoCurtain3',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -119,8 +119,8 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'WonderLabs Company',
+    'model': 'WoCurtain3',
     'model_id': None,
     'name': 'Curtain 1A',
     'name_by_user': None,
@@ -219,7 +219,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'ARTIK051_KRAC_18K|10193441|60010132001111110200000000000000',
+    'model': 'ARTIK051_KRAC_18K',
     'model_id': None,
     'name': 'AC Office Granit',
     'name_by_user': None,
@@ -252,7 +252,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'ARA-WW-TP1-22-COMMON|10229641|60010523001511014600083200800000',
+    'model': 'ARA-WW-TP1-22-COMMON',
     'model_id': None,
     'name': 'Aire Dormitorio Principal',
     'name_by_user': None,
@@ -285,7 +285,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'TP2X_DA-KS-MICROWAVE-0101X|40436241|50040100011411000200000000000000',
+    'model': 'TP2X_DA-KS-MICROWAVE-0101X',
     'model_id': None,
     'name': 'Microwave',
     'name_by_user': None,
@@ -318,7 +318,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'TP2X_REF_20K|00115641|0004014D011411200103000020000000',
+    'model': 'TP2X_REF_20K',
     'model_id': None,
     'name': 'Refrigerator',
     'name_by_user': None,
@@ -351,7 +351,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'powerbot_7000_17M|50016055|80010404011141000100000000000000',
+    'model': 'powerbot_7000_17M',
     'model_id': None,
     'name': 'Robot vacuum',
     'name_by_user': None,
@@ -384,7 +384,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'DA_DW_A51_20_COMMON|30007242|40010201001311000101000000000000',
+    'model': 'DA_DW_A51_20_COMMON',
     'model_id': None,
     'name': 'Dishwasher',
     'name_by_user': None,
@@ -417,7 +417,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'DA_WM_A51_20_COMMON|20233741|3000000100111100020B000000000000',
+    'model': 'DA_WM_A51_20_COMMON',
     'model_id': None,
     'name': 'Dryer',
     'name_by_user': None,
@@ -450,7 +450,7 @@
     'labels': set({
     }),
     'manufacturer': 'Samsung Electronics',
-    'model': 'DA_WM_TP2_20_COMMON|20233741|2001000100131100022B010000000000',
+    'model': 'DA_WM_TP2_20_COMMON',
     'model_id': None,
     'name': 'Washer',
     'name_by_user': None,
@@ -471,7 +471,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '250206213001',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -482,15 +482,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'ecobee',
+    'model': 'aresSmart-ecobee3_remote_sensor',
     'model_id': None,
     'name': 'Child Bedroom',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '250206213001',
     'via_device_id': None,
   })
 # ---
@@ -504,7 +504,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '250206151734',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -515,15 +515,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'ecobee',
+    'model': 'aresSmart-thermostat',
     'model_id': None,
     'name': 'Main Floor',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '250206151734',
     'via_device_id': None,
   })
 # ---
@@ -603,7 +603,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'LTG002',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -614,15 +614,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Signify Netherlands B.V.',
+    'model': 'Hue ambiance spot',
     'model_id': None,
     'name': 'Bathroom spot',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '1.122.2',
     'via_device_id': None,
   })
 # ---
@@ -636,7 +636,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'LCA001',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -647,15 +647,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Signify Netherlands B.V.',
+    'model': 'Hue color lamp',
     'model_id': None,
     'name': 'Standing light',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': '1.122.2',
     'via_device_id': None,
   })
 # ---
@@ -735,7 +735,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': 'SKY40147',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -746,15 +746,15 @@
     'is_new': False,
     'labels': set({
     }),
-    'manufacturer': None,
-    'model': None,
+    'manufacturer': 'Sensibo',
+    'model': 'skyplus',
     'model_id': None,
     'name': 'Office',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
     'suggested_area': None,
-    'sw_version': None,
+    'sw_version': 'SKY40147',
     'via_device_id': None,
   })
 # ---
@@ -1019,6 +1019,43 @@
     'serial_number': None,
     'suggested_area': None,
     'sw_version': None,
+    'via_device_id': None,
+  })
+# ---
+# name: test_hub_via_device
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'd0:52:a8:72:91:02',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'smartthings',
+        '074fa784-8be8-4c70-8e22-6f5ed6f81b7e',
+      ),
+    }),
+    'is_new': False,
+    'labels': set({
+    }),
+    'manufacturer': None,
+    'model': 'V2_HUB',
+    'model_id': None,
+    'name': 'Home Hub',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'suggested_area': None,
+    'sw_version': '000.055.00005',
     'via_device_id': None,
   })
 # ---

@@ -705,12 +705,7 @@ required-version = ">=0.9.1"
 [tool.ruff.lint]
 select = [
     "A001", # Variable {name} is shadowing a Python builtin
-    "ASYNC210", # Async functions should not call blocking HTTP methods
-    "ASYNC220", # Async functions should not create subprocesses with blocking methods
-    "ASYNC221", # Async functions should not run processes with blocking methods
-    "ASYNC222", # Async functions should not wait on processes with blocking methods
-    "ASYNC230", # Async functions should not open files with blocking methods like open
-    "ASYNC251", # Async functions should not call time.sleep
+    "ASYNC", # flake8-async
     "B002", # Python does not support the unary prefix increment
     "B005", # Using .strip() with multi-character strings is misleading
     "B007", # Loop control variable {name} not used within loop body
@@ -810,6 +805,8 @@ select = [
 ]
 
 ignore = [
+    "ASYNC109", # Async function definition with a `timeout` parameter Use `asyncio.timeout` instead
+    "ASYNC110", # Use `asyncio.Event` instead of awaiting `asyncio.sleep` in a `while` loop
     "D202", # No blank lines allowed after function docstring
     "D203", # 1 blank line required before class docstring
     "D213", # Multi-line docstring summary should start at the second line

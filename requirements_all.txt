@@ -84,7 +84,7 @@ PyQRCode==1.2.1
 PyRMVtransport==0.3.3
 
 # homeassistant.components.switchbot
-PySwitchbot==0.56.0
+PySwitchbot==0.56.1
 
 # homeassistant.components.switchmate
 PySwitchmate==0.5.1
@@ -404,7 +404,7 @@ aiotedee==0.2.20
 aiotractive==0.6.0
 
 # homeassistant.components.unifi
-aiounifi==82
+aiounifi==83
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.1
@@ -603,7 +603,7 @@ bizkaibus==0.1.1
 
 # homeassistant.components.eq3btsmart
 # homeassistant.components.esphome
-bleak-esphome==2.8.0
+bleak-esphome==2.9.0
 
 # homeassistant.components.bluetooth
 bleak-retry-connector==3.9.0
@@ -1155,7 +1155,7 @@ hole==0.8.0
 holidays==0.67
 
 # homeassistant.components.frontend
-home-assistant-frontend==20250227.0
+home-assistant-frontend==20250228.0
 
 # homeassistant.components.conversation
 home-assistant-intents==2025.2.26
@@ -2202,7 +2202,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.16.0
+pyoverkiz==1.16.1
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2313,7 +2313,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.0.1
+pysmartthings==2.3.0
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -3049,7 +3049,7 @@ waterfurnace==1.1.0
 watergate-local-api==2024.4.1
 
 # homeassistant.components.weatherflow_cloud
-weatherflow4py==1.0.6
+weatherflow4py==1.3.1
 
 # homeassistant.components.cisco_webex_teams
 webexpythonsdk==2.0.1
@@ -3134,7 +3134,7 @@ youless-api==2.2.0
 youtubeaio==1.1.5
 
 # homeassistant.components.media_extractor
-yt-dlp[default]==2025.01.26
+yt-dlp[default]==2025.02.19
 
 # homeassistant.components.zabbix
 zabbix-utils==2.0.2
