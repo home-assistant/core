@@ -253,9 +253,7 @@ async def async_setup_entry(
 
         entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
         nonlocal added_devices
-        new_devices, remove_devices, added_devices = coordinator.get_devices(
-            added_devices
-        )
+        new_devices, _, new_added_devices = coordinator.get_devices(added_devices)
 
         if new_devices:
             entities.extend(
@@ -277,6 +275,7 @@ async def async_setup_entry(
                 )
             )
             async_add_entities(entities)
+            added_devices = new_added_devices
 
     entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
     _add_remove_devices()

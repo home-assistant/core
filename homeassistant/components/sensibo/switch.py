@@ -89,7 +89,7 @@ async def async_setup_entry(
     def _add_remove_devices() -> None:
         """Handle additions of devices and sensors."""
         nonlocal added_devices
-        new_devices, _, added_devices = coordinator.get_devices(added_devices)
+        new_devices, _, new_added_devices = coordinator.get_devices(added_devices)
 
         if new_devices:
             async_add_entities(
@@ -100,6 +100,7 @@ async def async_setup_entry(
                     device_data.model, DEVICE_SWITCH_TYPES
                 )
             )
+            added_devices = new_added_devices
 
     entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
     _add_remove_devices()
