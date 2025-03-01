@@ -86,6 +86,7 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
             name=cast(str | None, self.name),
             manufacturer="Adax",
         )
+        self._apply_data(heater_data)
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
@@ -120,23 +121,20 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if room := self.coordinator.get_room(self._device_id):
-            self._attr_name = room["name"]
-            _LOGGER.info(
-                "CALLBACK: %s Temp:%s Targ:%s",
-                room["name"],
-                room["temperature"],
-                room["targetTemperature"],
-            )
-            self._attr_current_temperature = room.get("temperature")
-            self._attr_target_temperature = room.get("targetTemperature")
-            if room["heatingEnabled"]:
-                self._attr_hvac_mode = HVACMode.HEAT
-                self._attr_icon = "mdi:radiator"
-            else:
-                self._attr_hvac_mode = HVACMode.OFF
-                self._attr_icon = "mdi:radiator-off"
-
+            self._apply_data(room)
         super()._handle_coordinator_update()
+
+    def _apply_data(self, room: dict[str, Any]) -> None:
+        """Update the appropriate attributues based on recieved data."""
+        self._attr_name = room["name"]
+        self._attr_current_temperature = room.get("temperature")
+        self._attr_target_temperature = room.get("targetTemperature")
+        if room["heatingEnabled"]:
+            self._attr_hvac_mode = HVACMode.HEAT
+            self._attr_icon = "mdi:radiator"
+        else:
+            self._attr_hvac_mode = HVACMode.OFF
+            self._attr_icon = "mdi:radiator-off"
 
 
 class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
