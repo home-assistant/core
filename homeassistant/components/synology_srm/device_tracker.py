@@ -1,147 +1,117 @@
-"""Device tracker for Synology SRM routers."""
+"""Support for Synology SRM routers as device tracker."""
 
 from __future__ import annotations
 
-import logging
-
-import synology_srm
-import voluptuous as vol
+from typing import Any
 
 from homeassistant.components.device_tracker import (
-    DOMAIN as DEVICE_TRACKER_DOMAIN,
-    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    DeviceScanner,
+    DOMAIN as DEVICE_TRACKER,
+    ScannerEntity,
 )
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_USERNAME = "admin"
-DEFAULT_PORT = 8001
-DEFAULT_SSL = True
-DEFAULT_VERIFY_SSL = False
-
-PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
+from .coordinator import (
+    Device,
+    SynologySRMConfigEntry,
+    SynologySRMDataUpdateCoordinator,
 )
 
-ATTRIBUTE_ALIAS = {
-    "band": None,
-    "connection": None,
-    "current_rate": None,
-    "dev_type": None,
-    "hostname": None,
-    "ip6_addr": None,
-    "ip_addr": None,
-    "is_baned": "is_banned",
-    "is_beamforming_on": None,
-    "is_guest": None,
-    "is_high_qos": None,
-    "is_low_qos": None,
-    "is_manual_dev_type": None,
-    "is_manual_hostname": None,
-    "is_online": None,
-    "is_parental_controled": "is_parental_controlled",
-    "is_qos": None,
-    "is_wireless": None,
-    "mac": None,
-    "max_rate": None,
-    "mesh_node_id": None,
-    "rate_quality": None,
-    "signalstrength": "signal_strength",
-    "transferRXRate": "transfer_rx_rate",
-    "transferTXRate": "transfer_tx_rate",
-}
 
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: SynologySRMConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up device tracker for Synology SRM component."""
+    coordinator = config_entry.runtime_data
 
-def get_scanner(
-    hass: HomeAssistant, config: ConfigType
-) -> SynologySrmDeviceScanner | None:
-    """Validate the configuration and return Synology SRM scanner."""
-    scanner = SynologySrmDeviceScanner(config[DEVICE_TRACKER_DOMAIN])
+    tracked: dict[str, SynologySRMDataUpdateCoordinatorTracker] = {}
 
-    return scanner if scanner.success_init else None
+    registry = er.async_get(hass)
 
-
-class SynologySrmDeviceScanner(DeviceScanner):
-    """Scanner for devices connected to a Synology SRM router."""
-
-    def __init__(self, config):
-        """Initialize the scanner."""
-
-        self.client = synology_srm.Client(
-            host=config[CONF_HOST],
-            port=config[CONF_PORT],
-            username=config[CONF_USERNAME],
-            password=config[CONF_PASSWORD],
-            https=config[CONF_SSL],
-        )
-
-        if not config[CONF_VERIFY_SSL]:
-            self.client.http.disable_https_verify()
-
-        self.devices = []
-        self.success_init = self._update_info()
-
-    def scan_devices(self):
-        """Scan for new devices and return a list with found device IDs."""
-        self._update_info()
-
-        return [device["mac"] for device in self.devices]
-
-    def get_extra_attributes(self, device) -> dict:
-        """Get the extra attributes of a device."""
-        device = next(
-            (result for result in self.devices if result["mac"] == device), None
-        )
-        filtered_attributes: dict[str, str] = {}
-        if not device:
-            return filtered_attributes
-        for attribute, alias in ATTRIBUTE_ALIAS.items():
-            if (value := device.get(attribute)) is None:
+    # Restore clients that is not a part of active clients list.
+    for entity in registry.entities.get_entries_for_config_entry_id(
+        config_entry.entry_id
+    ):
+        if entity.domain == DEVICE_TRACKER:
+            if (
+                entity.unique_id in coordinator.api_client.devices
+                or entity.unique_id not in coordinator.api_client.all_devices
+            ):
                 continue
-            attr = alias or attribute
-            filtered_attributes[attr] = value
-        return filtered_attributes
+            coordinator.api_client.restore_device(entity.unique_id)
 
-    def get_device_name(self, device):
-        """Return the name of the given device or None if we don't know."""
-        filter_named = [
-            result["hostname"] for result in self.devices if result["mac"] == device
-        ]
+    @callback
+    def update_hub() -> None:
+        """Update the status of the device."""
+        update_items(coordinator, async_add_entities, tracked)
 
-        if filter_named:
-            return filter_named[0]
+    config_entry.async_on_unload(coordinator.async_add_listener(update_hub))
 
-        return None
+    update_hub()
 
-    def _update_info(self):
-        """Check the router for connected devices."""
-        _LOGGER.debug("Scanning for connected devices")
 
-        try:
-            self.devices = self.client.core.get_network_nsm_device({"is_online": True})
-        except synology_srm.http.SynologyException as ex:
-            _LOGGER.error("Error with the Synology SRM: %s", ex)
-            return False
+@callback
+def update_items(
+    coordinator: SynologySRMDataUpdateCoordinator,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    tracked: dict[str, SynologySRMDataUpdateCoordinatorTracker],
+) -> None:
+    """Update tracked device state from the hub."""
+    new_tracked: list[SynologySRMDataUpdateCoordinatorTracker] = []
+    for mac, device in coordinator.api_client.devices.items():
+        if mac not in tracked:
+            tracked[mac] = SynologySRMDataUpdateCoordinatorTracker(device, coordinator)
+            new_tracked.append(tracked[mac])
 
-        _LOGGER.debug("Found %d device(s) connected to the router", len(self.devices))
+    async_add_entities(new_tracked)
 
-        return True
+
+class SynologySRMDataUpdateCoordinatorTracker(
+    CoordinatorEntity[SynologySRMDataUpdateCoordinator], ScannerEntity
+):
+    """Representation of network device."""
+
+    def __init__(
+        self, device: Device, coordinator: SynologySRMDataUpdateCoordinator
+    ) -> None:
+        """Initialize the tracked device."""
+        super().__init__(coordinator)
+        self.device = device
+        self._attr_name = device.name
+        self._attr_unique_id = device.mac
+
+    @property
+    def is_connected(self) -> bool:
+        """Return true if the client is connected to the network."""
+        if (
+            self.device.last_seen
+            and (dt_util.utcnow() - self.device.last_seen)
+            < self.coordinator.option_detection_time
+        ):
+            return True
+        return False
+
+    @property
+    def hostname(self) -> str:
+        """Return the hostname of the client."""
+        return self.device.name
+
+    @property
+    def mac_address(self) -> str:
+        """Return the mac address of the client."""
+        return self.device.mac
+
+    @property
+    def ip_address(self) -> str | None:
+        """Return the mac address of the client."""
+        return self.device.ip_address
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the device state attributes."""
+        return self.device.attrs if self.is_connected else None

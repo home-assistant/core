@@ -1511,7 +1511,8 @@ build.json @home-assistant/supervisor
 /tests/components/syncthru/ @nielstron
 /homeassistant/components/synology_dsm/ @hacf-fr @Quentame @mib1185
 /tests/components/synology_dsm/ @hacf-fr @Quentame @mib1185
-/homeassistant/components/synology_srm/ @aerialls
+/homeassistant/components/synology_srm/ @aerialls @noriega3
+/tests/components/synology_srm/ @aerialls @noriega3
 /homeassistant/components/system_bridge/ @timmo001
 /tests/components/system_bridge/ @timmo001
 /homeassistant/components/systemmonitor/ @gjohansson-ST
