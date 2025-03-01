@@ -51,7 +51,7 @@ class BoschAlarmCoordinator(DataUpdateCoordinator[Panel]):
         self.last_update_success = self.panel.connection_status()
         self.async_update_listeners()
 
-    async def _async_setup(self):
+    async def _async_setup(self) -> None:
         try:
             await self.panel.connect()
         except (PermissionError, ValueError) as err:
