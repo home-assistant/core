@@ -351,7 +351,8 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
         self._attr_hvac_modes = self._determine_hvac_modes()
         self._attr_preset_modes = self._determine_preset_modes()
-        self._attr_swing_modes = self._determine_swing_modes()
+        if self.supports_capability(Capability.FAN_OSCILLATION_MODE):
+            self._attr_swing_modes = self._determine_swing_modes()
         self._attr_supported_features = self._determine_supported_features()
 
     def _determine_supported_features(self) -> ClimateEntityFeature:
