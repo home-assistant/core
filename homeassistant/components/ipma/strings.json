@@ -31,6 +31,15 @@
       },
       "uv_index": {
         "name": "UV index"
+      },
+      "weather_alert": {
+        "name": "Weather Alert",
+        "state": {
+          "red": "Red",
+          "yellow": "Yellow",
+          "orange": "Orange",
+          "green": "Green"
+        }
       }
     }
   }

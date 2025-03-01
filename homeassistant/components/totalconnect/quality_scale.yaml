@@ -1,11 +1,11 @@
 rules:
   # Bronze
-  config-flow: todo
+  config-flow: done
   test-before-configure: done
   unique-config-entry: done
   config-flow-test-coverage: todo
-  runtime-data: todo
-  test-before-setup: todo
+  runtime-data: done
+  test-before-setup: done
   appropriate-polling: done
   entity-unique-id: done
   has-entity-name: done
@@ -15,7 +15,7 @@ rules:
   common-modules: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
+  docs-removal-instructions: done
   docs-actions: done
   brands: done
 
@@ -47,13 +47,11 @@ rules:
   discovery-update-info: todo
   repair-issues: todo
   docs-use-cases: done
-
-  # stopped here....
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-data-update: todo
-  docs-known-limitations: todo
-  docs-troubleshooting: todo
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-data-update: done
+  docs-known-limitations: done
+  docs-troubleshooting: done
   docs-examples: done
 
   # Platinum

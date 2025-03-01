@@ -13,6 +13,8 @@ from cookidoo_api import (
     CookidooException,
     CookidooIngredientItem,
     CookidooRequestException,
+    CookidooSubscription,
+    CookidooUserInfo,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -34,12 +36,14 @@ class CookidooData:
 
     ingredient_items: list[CookidooIngredientItem]
     additional_items: list[CookidooAdditionalItem]
+    subscription: CookidooSubscription | None
 
 
 class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
     """A Cookidoo Data Update Coordinator."""
 
     config_entry: CookidooConfigEntry
+    user: CookidooUserInfo
 
     def __init__(
         self, hass: HomeAssistant, cookidoo: Cookidoo, entry: CookidooConfigEntry
@@ -57,13 +61,14 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
     async def _async_setup(self) -> None:
         try:
             await self.cookidoo.login()
+            self.user = await self.cookidoo.get_user_info()
         except CookidooRequestException as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_request_exception",
             ) from e
         except CookidooAuthException as e:
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="setup_authentication_exception",
                 translation_placeholders={
@@ -75,6 +80,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
         try:
             ingredient_items = await self.cookidoo.get_ingredient_items()
             additional_items = await self.cookidoo.get_additional_items()
+            subscription = await self.cookidoo.get_active_subscription()
         except CookidooAuthException:
             try:
                 await self.cookidoo.refresh_token()
@@ -97,5 +103,7 @@ class CookidooDataUpdateCoordinator(DataUpdateCoordinator[CookidooData]):
             ) from e
 
         return CookidooData(
-            ingredient_items=ingredient_items, additional_items=additional_items
+            ingredient_items=ingredient_items,
+            additional_items=additional_items,
+            subscription=subscription,
         )

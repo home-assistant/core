@@ -17,11 +17,10 @@ from homeassistant.components.sensor import (
 from homeassistant.const import STATE_IDLE, UnitOfDataRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TransmissionConfigEntry
 from .const import (
     DOMAIN,
     STATE_ATTR_TORRENT_INFO,
@@ -30,7 +29,7 @@ from .const import (
     STATE_UP_DOWN,
     SUPPORTED_ORDER_MODES,
 )
-from .coordinator import TransmissionDataUpdateCoordinator
+from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 
 MODES: dict[str, list[str] | None] = {
     "started_torrents": ["downloading"],
@@ -130,7 +129,7 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TransmissionConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Transmission sensors."""
 

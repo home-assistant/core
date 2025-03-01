@@ -883,7 +883,7 @@
                     "parameterUnit": "",
                     "writable": false,
                     "timestamp": "2024-02-08T19:13:05+00:00",
-                    "value": 30,
+                    "value": 31,
                     "strVal": "Heating",
                     "smartHomeCategories": [],
                     "minValue": null,
@@ -1151,6 +1151,23 @@
                     "stepValue": 1,
                     "enumValues": [],
                     "scaleValue": "1",
+                    "zoneId": null
+                  },
+                  {
+                    "category": "F730 CU 3x400V",
+                    "parameterId": "47398",
+                    "parameterName": "Room sensor set point value heating climate system 1",
+                    "parameterUnit": "°C",
+                    "writable": true,
+                    "timestamp": "2024-12-11T13:23:12+00:00",
+                    "value": 14.5,
+                    "strVal": "14.5°C",
+                    "smartHomeCategories": [],
+                    "minValue": 50.0,
+                    "maxValue": 350.0,
+                    "stepValue": 5.0,
+                    "enumValues": [],
+                    "scaleValue": "0.1",
                     "zoneId": null
                   }
                 ]
@@ -2028,7 +2045,7 @@
                     "parameterUnit": "",
                     "writable": false,
                     "timestamp": "2024-02-08T19:13:05+00:00",
-                    "value": 30,
+                    "value": 31,
                     "strVal": "Heating",
                     "smartHomeCategories": [],
                     "minValue": null,
@@ -2296,6 +2313,23 @@
                     "stepValue": 1,
                     "enumValues": [],
                     "scaleValue": "1",
+                    "zoneId": null
+                  },
+                  {
+                    "category": "F730 CU 3x400V",
+                    "parameterId": "47398",
+                    "parameterName": "Room sensor set point value heating climate system 1",
+                    "parameterUnit": "°C",
+                    "writable": true,
+                    "timestamp": "2024-12-11T13:23:12+00:00",
+                    "value": 14.5,
+                    "strVal": "14.5°C",
+                    "smartHomeCategories": [],
+                    "minValue": 50.0,
+                    "maxValue": 350.0,
+                    "stepValue": 5.0,
+                    "enumValues": [],
+                    "scaleValue": "0.1",
                     "zoneId": null
                   }
                 ]

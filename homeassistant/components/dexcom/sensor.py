@@ -2,20 +2,15 @@
 
 from __future__ import annotations
 
-from pydexcom import GlucoseReading
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_USERNAME, UnitOfBloodGlucoseConcentration
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import DexcomConfigEntry, DexcomCoordinator
 
 TRENDS = {
     1: "rising_quickly",
@@ -30,11 +25,11 @@ TRENDS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DexcomConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Dexcom sensors."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     username = config_entry.data[CONF_USERNAME]
     async_add_entities(
         [
@@ -44,16 +39,14 @@ async def async_setup_entry(
     )
 
 
-class DexcomSensorEntity(
-    CoordinatorEntity[DataUpdateCoordinator[GlucoseReading]], SensorEntity
-):
+class DexcomSensorEntity(CoordinatorEntity[DexcomCoordinator], SensorEntity):
     """Base Dexcom sensor entity."""
 
     _attr_has_entity_name = True
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[GlucoseReading],
+        coordinator: DexcomCoordinator,
         username: str,
         entry_id: str,
         key: str,
@@ -78,7 +71,7 @@ class DexcomGlucoseValueSensor(DexcomSensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: DexcomCoordinator,
         username: str,
         entry_id: str,
     ) -> None:
@@ -101,7 +94,7 @@ class DexcomGlucoseTrendSensor(DexcomSensorEntity):
     _attr_options = list(TRENDS.values())
 
     def __init__(
-        self, coordinator: DataUpdateCoordinator, username: str, entry_id: str
+        self, coordinator: DexcomCoordinator, username: str, entry_id: str
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, username, entry_id, "trend")

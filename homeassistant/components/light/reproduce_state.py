@@ -18,9 +18,9 @@ from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.util import color as color_util
 
 from . import (
+    _DEPRECATED_ATTR_COLOR_TEMP,
     ATTR_BRIGHTNESS,
     ATTR_COLOR_MODE,
-    ATTR_COLOR_TEMP,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
@@ -41,7 +41,7 @@ ATTR_GROUP = [ATTR_BRIGHTNESS, ATTR_EFFECT]
 
 COLOR_GROUP = [
     ATTR_HS_COLOR,
-    ATTR_COLOR_TEMP,
+    _DEPRECATED_ATTR_COLOR_TEMP.value,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
@@ -129,7 +129,12 @@ async def _async_reproduce_state(
                 if (cm_attr_state := state.attributes.get(cm_attr.state_attr)) is None:
                     if (
                         color_mode != ColorMode.COLOR_TEMP
-                        or (mireds := state.attributes.get(ATTR_COLOR_TEMP)) is None
+                        or (
+                            mireds := state.attributes.get(
+                                _DEPRECATED_ATTR_COLOR_TEMP.value
+                            )
+                        )
+                        is None
                     ):
                         _LOGGER.warning(
                             "Color mode %s specified but attribute %s missing for: %s",

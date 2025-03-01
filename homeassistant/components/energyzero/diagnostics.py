@@ -7,8 +7,7 @@ from typing import Any
 
 from homeassistant.core import HomeAssistant
 
-from . import EnergyZeroConfigEntry
-from .coordinator import EnergyZeroData
+from .coordinator import EnergyZeroConfigEntry, EnergyZeroData
 
 
 def get_gas_price(data: EnergyZeroData, hours: int) -> float | None:

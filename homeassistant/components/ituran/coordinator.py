@@ -7,7 +7,7 @@ from pyituran.exceptions import IturanApiError, IturanAuthError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -54,7 +54,7 @@ class IturanDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Vehicle]]):
                 translation_domain=DOMAIN, translation_key="api_error"
             ) from e
         except IturanAuthError as e:
-            raise ConfigEntryError(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN, translation_key="auth_error"
             ) from e
 

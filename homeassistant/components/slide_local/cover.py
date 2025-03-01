@@ -8,11 +8,10 @@ from typing import Any
 from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
 from homeassistant.const import STATE_CLOSED, STATE_CLOSING, STATE_OPENING
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SlideConfigEntry
 from .const import CONF_INVERT_POSITION, DEFAULT_OFFSET
-from .coordinator import SlideCoordinator
+from .coordinator import SlideConfigEntry, SlideCoordinator
 from .entity import SlideEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -23,7 +22,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SlideConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up cover(s) for Slide platform."""
 
@@ -54,7 +53,7 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
         super().__init__(coordinator)
 
         self._attr_name = None
-        self._invert = entry.options[CONF_INVERT_POSITION]
+        self.invert = entry.options[CONF_INVERT_POSITION]
         self._attr_unique_id = coordinator.data["mac"]
 
     @property
@@ -79,7 +78,7 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
         if pos is not None:
             if (1 - pos) <= DEFAULT_OFFSET or pos <= DEFAULT_OFFSET:
                 pos = round(pos)
-            if not self._invert:
+            if not self.invert:
                 pos = 1 - pos
             pos = int(pos * 100)
         return pos
@@ -101,7 +100,7 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION] / 100
-        if not self._invert:
+        if not self.invert:
             position = 1 - position
 
         if self.coordinator.data["pos"] is not None:

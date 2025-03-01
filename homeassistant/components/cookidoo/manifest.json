@@ -6,6 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/cookidoo",
   "integration_type": "service",
   "iot_class": "cloud_polling",
-  "quality_scale": "bronze",
-  "requirements": ["cookidoo-api==0.10.0"]
+  "loggers": ["cookidoo_api"],
+  "quality_scale": "silver",
+  "requirements": ["cookidoo-api==0.12.2"]
 }
