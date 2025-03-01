@@ -7,17 +7,18 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import BoschAlarmCoordinator
+from .const import DOMAIN
+from .coordinator import BoschAlarmConfigEntry, BoschAlarmCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant | None,
-    config_entry: ConfigEntry,
+    config_entry: BoschAlarmConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up control panels for each area."""
@@ -27,10 +28,8 @@ async def async_setup_entry(
         AreaAlarmControlPanel(
             coordinator,
             area_id,
-            area,
-            f"{coordinator.unique_id}_area_{area_id}",
         )
-        for (area_id, area) in coordinator.panel.areas.items()
+        for area_id in coordinator.panel.areas
     )
 
 
@@ -41,15 +40,25 @@ class AreaAlarmControlPanel(
 
     _attr_has_entity_name = True
 
-    def __init__(self, coordinator, area_id, area, unique_id) -> None:
+    def __init__(
+        self,
+        coordinator: BoschAlarmCoordinator,
+        area_id: int,
+    ) -> None:
         """Initialise a Bosch Alarm control panel entity."""
-        super().__init__(coordinator)
-        self.name = area.name
+        super().__init__(coordinator, area_id)
+        self._area = coordinator.panel.areas[area_id]
         self._area_id = area_id
-        self._area = area
-        self._attr_unique_id = unique_id
+        self._attr_name = self._area.name
+        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_area_{area_id}"
         self._attr_should_poll = False
-        self._attr_device_info = coordinator.device_info
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            name=f"Bosch {coordinator.panel.model}",
+            manufacturer="Bosch Security Systems",
+            model=coordinator.panel.model,
+            sw_version=coordinator.panel.firmware_version,
+        )
         self._attr_supported_features = (
             AlarmControlPanelEntityFeature.ARM_HOME
             | AlarmControlPanelEntityFeature.ARM_AWAY
@@ -74,15 +83,15 @@ class AreaAlarmControlPanel(
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Disarm this panel."""
-        await self.coordinator.area_disarm(self._area_id)
+        await self.coordinator.panel.area_disarm(self._area_id)
 
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
-        await self.coordinator.area_arm_part(self._area_id)
+        await self.coordinator.panel.area_arm_part(self._area_id)
 
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
-        await self.coordinator.area_arm_all(self._area_id)
+        await self.coordinator.panel.area_arm_all(self._area_id)
 
     async def async_added_to_hass(self) -> None:
         """Run when entity attached to hass."""
