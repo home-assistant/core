@@ -32,11 +32,11 @@ def aidot_init_fixture():
     """Aidot and entry setup."""
     with (
         patch(
-            "homeassistant.components.aidot.coordinator.Discover.fetch_devices_info",
+            "homeassistant.components.aidot.coordinator.AidotClient.start_discover",
             new=AsyncMock(),
         ),
         patch(
-            "homeassistant.components.aidot.__init__.AidotCoordinator.async_config_entry_first_refresh",
+            "homeassistant.components.aidot.__init__.AidotDeviceManagerCoordinator.async_config_entry_first_refresh",
             new=AsyncMock(),
         ),
     ):
@@ -93,6 +93,7 @@ async def test_async_unload_entry(hass: HomeAssistant) -> None:
     mock_entry.domain = DOMAIN
     mock_entry.data = TEST_DEFAULT
     mock_entry.entry_id = "test"
+    mock_entry.runtime_data = Mock()
 
     hass.data = MagicMock()
     with patch.object(
@@ -108,6 +109,7 @@ async def test_async_unload_entry_fails(hass: HomeAssistant) -> None:
     mock_entry.domain = DOMAIN
     mock_entry.data = TEST_DEFAULT
     mock_entry.entry_id = "test"
+    mock_entry.runtime_data = Mock()
 
     mock_data = {}
     hass.data = MagicMock()

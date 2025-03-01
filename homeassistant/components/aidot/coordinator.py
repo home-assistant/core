@@ -1,6 +1,5 @@
 """Coordinator for Aidot."""
 
-from collections.abc import Callable
 import logging
 from typing import Any
 
@@ -9,36 +8,90 @@ from aidot.const import (
     CONF_ACCESS_TOKEN,
     CONF_AES_KEY,
     CONF_DEVICE_LIST,
+    CONF_ID,
     CONF_LOGIN_INFO,
     CONF_TYPE,
 )
-from aidot.discover import Discover
-from aidot.exceptions import AidotAuthFailed, AidotOSError, AidotUserOrPassIncorrect
+from aidot.device_client import DeviceClient, DeviceInformation, DeviceStatusData
+from aidot.exceptions import AidotAuthFailed, AidotNotLogin, AidotUserOrPassIncorrect
 
 from homeassistant.components.sensor import timedelta
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
 
-type AidotConfigEntry = ConfigEntry[AidotCoordinator]
+type AidotConfigEntry = ConfigEntry[AidotDeviceManagerCoordinator]
 _LOGGER = logging.getLogger(__name__)
 
 
-class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceStatusData]):
+    """Class to manage Aidot data."""
+
+    device: dict[str, Any]
+    ip_address: str
+    device_client: DeviceClient
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: AidotConfigEntry,
+        device_client: DeviceClient,
+    ) -> None:
+        """Initialize coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=timedelta(seconds=1),
+        )
+        self.device_client = device_client
+        # self.hass.loop.create_task(device_client.ping_task())
+        self.identifier = config_entry.entry_id
+
+    async def _async_setup(self) -> None:
+        """Set up the coordinator.
+
+        Can be overwritten by integrations to load data or resources
+        only once during the first refresh.
+        """
+        try:
+            await self.device_client.async_login()
+        except AidotUserOrPassIncorrect as error:
+            raise ConfigEntryError from error
+
+    async def _async_update_data(self) -> DeviceStatusData:
+        """Update data async."""
+        try:
+            status = await self.device_client.read_status()
+        except AidotNotLogin:
+            await self.device_client.async_login()
+            return DeviceStatusData()
+        return status
+
+    @property
+    def device_info(self) -> DeviceInformation:
+        """Device information."""
+        return self.device_client.info
+
+
+class AidotDeviceManagerCoordinator(
+    DataUpdateCoordinator[dict[str, AidotDeviceUpdateCoordinator]]
+):
     """Class to manage fetching Aidot data."""
 
-    config_entry: ConfigEntry
+    config_entry: AidotConfigEntry
     client: AidotClient
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: AidotConfigEntry,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -52,6 +105,7 @@ class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             session=async_get_clientsession(hass),
             token=config_entry.data[CONF_LOGIN_INFO],
         )
+        self.client.start_discover()
         self.client.set_token_fresh_cb(self.token_fresh_cb)
         self.identifier = config_entry.entry_id
 
@@ -69,21 +123,35 @@ class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data async."""
         try:
-            device_list = await self.client.async_get_all_device()
+            data = await self.client.async_get_all_device()
         except AidotAuthFailed as error:
             self.token_fresh_cb()
             raise ConfigEntryError from error
-        return device_list
 
-    def filter_light_list(self) -> list[dict[str, Any]]:
-        """Filter light."""
-        return [
-            device
-            for device in self.data[CONF_DEVICE_LIST]
-            if device[CONF_TYPE] == Platform.LIGHT
-            and CONF_AES_KEY in device
-            and device[CONF_AES_KEY][0] is not None
-        ]
+        current_coordinators: dict[str, AidotDeviceUpdateCoordinator] = self.data
+        if current_coordinators is None:
+            current_coordinators = {}
+        final_coordinators: dict[str, AidotDeviceUpdateCoordinator] = {}
+        for device in data.get(CONF_DEVICE_LIST):
+            if (
+                device[CONF_TYPE] == Platform.LIGHT
+                and CONF_AES_KEY in device
+                and device[CONF_AES_KEY][0] is not None
+            ):
+                dev_id = device.get(CONF_ID)
+                update_coordinator = current_coordinators.get(dev_id)
+                device_client = self.client.get_device_client(device)
+                if update_coordinator is None:
+                    update_coordinator = AidotDeviceUpdateCoordinator(
+                        self.hass, self.config_entry, device_client
+                    )
+                    await update_coordinator.async_config_entry_first_refresh()
+                final_coordinators[dev_id] = update_coordinator
+        return final_coordinators
+
+    def cleanup(self) -> None:
+        """Perform cleanup actions."""
+        self.client.cleanup()
 
     def token_fresh_cb(self) -> None:
         """Update token."""
@@ -95,83 +163,6 @@ class AidotDeviceUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Async auto login."""
         if self.client.login_info.get(CONF_ACCESS_TOKEN) is None:
             try:
-                login_info = await self.client.async_post_login()
-                if login_info is not None:
-                    self.token_fresh_cb()
+                await self.client.async_post_login()
             except AidotUserOrPassIncorrect as error:
                 raise AidotUserOrPassIncorrect from error
-
-
-class AidotDeviceDiscoverCoordinator(DataUpdateCoordinator[dict[str, str]]):
-    """Class to manage discover device ip."""
-
-    config_entry: ConfigEntry
-    discover: Discover
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-    ) -> None:
-        """Initialize coordinator."""
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=DOMAIN,
-            update_interval=timedelta(seconds=5),
-        )
-        self.identifier = config_entry.entry_id
-        self.discover = Discover(config_entry.data[CONF_LOGIN_INFO])
-
-    async def _async_update_data(self) -> dict[str, str]:
-        """Update data async."""
-        try:
-            data = await self.discover.fetch_devices_info()
-        except AidotOSError as error:
-            raise UpdateFailed(f"Error Found Device with Aidot: {error}") from error
-        return data
-
-    @callback
-    def async_add_listener(
-        self, update_callback: Callable, context: Any = None
-    ) -> Callable:
-        """Wrap standard function to prune cached callback database and add cleanup."""
-        release = super().async_add_listener(update_callback, context)
-
-        @callback
-        def release_update():
-            release()
-            self._cleanup(context)
-
-        return release_update
-
-    def _cleanup(self, context: Any):
-        """Perform cleanup actions when a listener is removed."""
-        self.discover.close()
-
-
-class AidotCoordinator:
-    """Class to manage Aidot data."""
-
-    discover_coordinator: AidotDeviceDiscoverCoordinator
-    update_coordinator: AidotDeviceUpdateCoordinator
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: AidotConfigEntry,
-    ) -> None:
-        """Initialize coordinator."""
-
-        self.discover_coordinator = AidotDeviceDiscoverCoordinator(hass, config_entry)
-        self.update_coordinator = AidotDeviceUpdateCoordinator(hass, config_entry)
-
-    async def async_config_entry_first_refresh(self) -> None:
-        """Discover device ip and fetch device list."""
-        await self.discover_coordinator.async_config_entry_first_refresh()
-        await self.update_coordinator.async_config_entry_first_refresh()
-
-    def filter_light_list(self) -> list[dict[str, Any]]:
-        """Filter light."""
-        return self.update_coordinator.filter_light_list()
