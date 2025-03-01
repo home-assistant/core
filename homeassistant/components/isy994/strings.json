@@ -58,7 +58,7 @@
   "services": {
     "send_raw_node_command": {
       "name": "Send raw node command",
-      "description": "[%key:component::isy994::options::step::init::description%]",
+      "description": "Sends a “raw” (e.g., DON, DOF) ISY REST device command to a node using its Home Assistant entity ID. This is useful for devices that aren’t fully supported in Home Assistant yet, such as controls for many NodeServer nodes.",
       "fields": {
         "command": {
           "name": "Command",

@@ -35,6 +35,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from .const import ASSETS_URL, DOMAIN
 from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
@@ -105,6 +106,20 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.DISPLAY_NAME,
         translation_key=HabiticaSensorEntity.DISPLAY_NAME,
         value_fn=lambda user, _: user.profile.name,
+        attributes_fn=lambda user, _: {
+            "blurb": user.profile.blurb,
+            "joined": (
+                dt_util.as_local(joined).date()
+                if (joined := user.auth.timestamps.created)
+                else None
+            ),
+            "last_login": (
+                dt_util.as_local(last).date()
+                if (last := user.auth.timestamps.loggedin)
+                else None
+            ),
+            "total_logins": user.loginIncentives,
+        },
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.HEALTH,
@@ -392,6 +407,11 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
             _class := self.coordinator.data.user.stats.Class
         ):
             return SVG_CLASS[_class]
+
+        if self.entity_description.key is HabiticaSensorEntity.DISPLAY_NAME and (
+            img_url := self.coordinator.data.user.profile.imageUrl
+        ):
+            return img_url
 
         if entity_picture := self.entity_description.entity_picture:
             return (

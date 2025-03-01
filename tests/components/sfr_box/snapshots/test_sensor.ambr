@@ -486,7 +486,7 @@
       'capabilities': dict({
         'options': list([
           'no_defect',
-          'of_frame',
+          'loss_of_frame',
           'loss_of_signal',
           'loss_of_power',
           'loss_of_signal_quality',
@@ -755,7 +755,7 @@
         'friendly_name': 'SFR Box DSL line status',
         'options': list([
           'no_defect',
-          'of_frame',
+          'loss_of_frame',
           'loss_of_signal',
           'loss_of_power',
           'loss_of_signal_quality',

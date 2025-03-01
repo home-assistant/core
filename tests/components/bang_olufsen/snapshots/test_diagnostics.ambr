@@ -1,6 +1,22 @@
 # serializer version: 1
 # name: test_async_get_config_entry_diagnostics
   dict({
+    'PlayPause_event': dict({
+      'attributes': dict({
+        'device_class': 'button',
+        'event_type': None,
+        'event_types': list([
+          'short_press_release',
+          'long_press_timeout',
+          'long_press_release',
+          'very_long_press_timeout',
+          'very_long_press_release',
+        ]),
+        'friendly_name': 'Living room Balance Play / Pause',
+      }),
+      'entity_id': 'event.beosound_balance_11111111_play_pause',
+      'state': 'unknown',
+    }),
     'config_entry': dict({
       'data': dict({
         'host': '192.168.0.1',

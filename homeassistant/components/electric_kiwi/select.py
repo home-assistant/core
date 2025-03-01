@@ -13,6 +13,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import ATTRIBUTION
 from .coordinator import ElectricKiwiConfigEntry, ElectricKiwiHOPDataCoordinator
 
+PARALLEL_UPDATES = 1
+
 _LOGGER = logging.getLogger(__name__)
 ATTR_EK_HOP_SELECT = "hop_select"
 

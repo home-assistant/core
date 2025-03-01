@@ -1,6 +1,5 @@
 """Test config entries API."""
 
-from collections import OrderedDict
 from collections.abc import Generator
 from http import HTTPStatus
 from typing import Any
@@ -401,19 +400,17 @@ async def test_available_flows(
 ############################
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.config.error.Should be unique."],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can initialize a flow."""
     mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
@@ -493,13 +490,14 @@ async def test_initialize_flow_unauth(
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
-                data_schema=schema,
+                data_schema=vol.Schema(schema),
                 description_placeholders={"url": "https://example.com"},
                 errors={"username": "Should be unique."},
             )
@@ -512,10 +510,7 @@ async def test_initialize_flow_unauth(
     assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.config.abort.bla"],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_abort(hass: HomeAssistant, client: TestClient) -> None:
     """Test a flow that aborts."""
     mock_platform(hass, "test.config_flow", None)
@@ -540,7 +535,7 @@ async def test_abort(hass: HomeAssistant, client: TestClient) -> None:
     }
 
 
-@pytest.mark.usefixtures("enable_custom_integrations", "freezer")
+@pytest.mark.usefixtures("freezer")
 async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
     """Test a flow that creates an account."""
     mock_platform(hass, "test.config_flow", None)
@@ -604,7 +599,7 @@ async def test_create_account(hass: HomeAssistant, client: TestClient) -> None:
     }
 
 
-@pytest.mark.usefixtures("enable_custom_integrations", "freezer")
+@pytest.mark.usefixtures("freezer")
 async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can finish a two step flow."""
     mock_integration(
@@ -825,19 +820,17 @@ async def test_get_progress_index_unauth(
     assert response["error"]["code"] == "unauthorized"
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.config.error.Should be unique."],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> None:
     """Test we can query the API for same result as we get from init a flow."""
     mock_platform(hass, "test.config_flow", None)
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
@@ -861,10 +854,7 @@ async def test_get_progress_flow(hass: HomeAssistant, client: TestClient) -> Non
     assert data == data2
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.config.error.Should be unique."],
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_get_progress_flow_unauth(
     hass: HomeAssistant, client: TestClient, hass_admin_user: MockUser
 ) -> None:
@@ -873,9 +863,10 @@ async def test_get_progress_flow_unauth(
 
     class TestFlow(core_ce.ConfigFlow):
         async def async_step_user(self, user_input=None):
-            schema = OrderedDict()
-            schema[vol.Required("username")] = str
-            schema[vol.Required("password")] = str
+            schema = {
+                vol.Required("username"): str,
+                vol.Required("password"): str,
+            }
 
             return self.async_show_form(
                 step_id="user",
@@ -907,11 +898,9 @@ async def test_options_flow(hass: HomeAssistant, client: TestClient) -> None:
         def async_get_options_flow(config_entry):
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
                 async def async_step_init(self, user_input=None):
-                    schema = OrderedDict()
-                    schema[vol.Required("enabled")] = bool
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=vol.Schema(schema),
+                        data_schema=vol.Schema({vol.Required("enabled"): bool}),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -972,11 +961,9 @@ async def test_options_flow_unauth(
         def async_get_options_flow(config_entry):
             class OptionsFlowHandler(data_entry_flow.FlowHandler):
                 async def async_step_init(self, user_input=None):
-                    schema = OrderedDict()
-                    schema[vol.Required("enabled")] = bool
                     return self.async_show_form(
                         step_id="user",
-                        data_schema=schema,
+                        data_schema=vol.Schema({vol.Required("enabled"): bool}),
                         description_placeholders={"enabled": "Set to true to be true"},
                     )
 
@@ -1150,11 +1137,9 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
                 raise NotImplementedError
 
             async def async_step_user(self, user_input=None):
-                schema = {}
-                schema[vol.Required("enabled")] = bool
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=schema,
+                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
@@ -1195,7 +1180,7 @@ async def test_subentry_flow(hass: HomeAssistant, client) -> None:
 
 
 async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
-    """Test we can start a subentry reconfigure flow."""
+    """Test we can start and finish a subentry reconfigure flow."""
 
     class TestFlow(core_ce.ConfigFlow):
         class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
@@ -1206,11 +1191,17 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
                 raise NotImplementedError
 
             async def async_step_reconfigure(self, user_input=None):
-                schema = {}
-                schema[vol.Required("enabled")] = bool
+                if user_input is not None:
+                    return self.async_update_and_abort(
+                        self._get_reconfigure_entry(),
+                        self._get_reconfigure_subentry(),
+                        title="Test Entry",
+                        data={"test": "blah"},
+                    )
+
                 return self.async_show_form(
                     step_id="reconfigure",
-                    data_schema=schema,
+                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
@@ -1248,7 +1239,7 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
-    data.pop("flow_id")
+    flow_id = data.pop("flow_id")
     assert data == {
         "type": "form",
         "handler": ["test1", "test"],
@@ -1258,6 +1249,87 @@ async def test_subentry_reconfigure_flow(hass: HomeAssistant, client) -> None:
         "errors": None,
         "last_step": None,
         "preview": None,
+    }
+
+    with mock_config_flow("test", TestFlow):
+        resp = await client.post(
+            f"/api/config/config_entries/subentries/flow/{flow_id}",
+            json={"enabled": True},
+        )
+    assert resp.status == HTTPStatus.OK
+
+    entries = hass.config_entries.async_entries("test")
+    assert len(entries) == 1
+
+    data = await resp.json()
+    data.pop("flow_id")
+    assert data == {
+        "handler": ["test1", "test"],
+        "reason": "reconfigure_successful",
+        "type": "abort",
+        "description_placeholders": None,
+    }
+
+    entry = hass.config_entries.async_entries()[0]
+    assert entry.subentries == {
+        "mock_id": core_ce.ConfigSubentry(
+            data={"test": "blah"},
+            subentry_id="mock_id",
+            subentry_type="test",
+            title="Test Entry",
+            unique_id=None,
+        ),
+    }
+
+
+async def test_subentry_does_not_support_reconfigure(
+    hass: HomeAssistant, client: TestClient
+) -> None:
+    """Test a subentry flow that does not support reconfigure step."""
+
+    class TestFlow(core_ce.ConfigFlow):
+        class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
+            async def async_step_init(self, user_input=None):
+                raise NotImplementedError
+
+            async def async_step_user(self, user_input=None):
+                raise NotImplementedError
+
+        @classmethod
+        @callback
+        def async_get_supported_subentry_types(
+            cls, config_entry: core_ce.ConfigEntry
+        ) -> dict[str, type[core_ce.ConfigSubentryFlow]]:
+            return {"test": TestFlow.SubentryFlowHandler}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.config_flow", None)
+    MockConfigEntry(
+        domain="test",
+        entry_id="test1",
+        source="bla",
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Title",
+                unique_id=None,
+            )
+        ],
+    ).add_to_hass(hass)
+    entry = hass.config_entries.async_entries()[0]
+
+    with mock_config_flow("test", TestFlow):
+        url = "/api/config/config_entries/subentries/flow"
+        resp = await client.post(
+            url, json={"handler": [entry.entry_id, "test"], "subentry_id": "mock_id"}
+        )
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    response = await resp.json()
+    assert response == {
+        "message": "Handler SubentryFlowHandler doesn't support step reconfigure"
     }
 
 
@@ -1277,11 +1349,9 @@ async def test_subentry_flow_unauth(
     class TestFlow(core_ce.ConfigFlow):
         class SubentryFlowHandler(core_ce.ConfigSubentryFlow):
             async def async_step_init(self, user_input=None):
-                schema = {}
-                schema[vol.Required("enabled")] = bool
                 return self.async_show_form(
                     step_id="user",
-                    data_schema=schema,
+                    data_schema=vol.Schema({vol.Required("enabled"): bool}),
                     description_placeholders={"enabled": "Set to true to be true"},
                 )
 
@@ -2788,11 +2858,8 @@ async def test_flow_with_multiple_schema_errors_base(
         }
 
 
-@pytest.mark.parametrize(
-    "ignore_translations",
-    ["component.test.config.abort.reconfigure_successful"],
-)
-@pytest.mark.usefixtures("enable_custom_integrations", "freezer")
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
+@pytest.mark.usefixtures("freezer")
 async def test_supports_reconfigure(
     hass: HomeAssistant,
     client: TestClient,
@@ -2868,7 +2935,6 @@ async def test_supports_reconfigure(
     }
 
 
-@pytest.mark.usefixtures("enable_custom_integrations")
 async def test_does_not_support_reconfigure(
     hass: HomeAssistant, client: TestClient
 ) -> None:
@@ -2894,11 +2960,8 @@ async def test_does_not_support_reconfigure(
         )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
-    response = await resp.text()
-    assert (
-        response
-        == '{"message":"Handler ConfigEntriesFlowManager doesn\'t support step reconfigure"}'
-    )
+    response = await resp.json()
+    assert response == {"message": "Handler TestFlow doesn't support step reconfigure"}
 
 
 async def test_list_subentries(

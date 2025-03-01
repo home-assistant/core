@@ -1101,7 +1101,7 @@
     'state': '0.175296',
   })
 # ---
-# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_entires-entry]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_entries-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -1116,7 +1116,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.my_nc_url_local_cache_number_of_entires',
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_entries',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1128,7 +1128,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Cache number of entires',
+    'original_name': 'Cache number of entries',
     'platform': 'nextcloud',
     'previous_unique_id': None,
     'supported_features': 0,
@@ -1137,14 +1137,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_entires-state]
+# name: test_async_setup_entry[sensor.my_nc_url_local_cache_number_of_entries-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'my.nc_url.local Cache number of entires',
+      'friendly_name': 'my.nc_url.local Cache number of entries',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.my_nc_url_local_cache_number_of_entires',
+    'entity_id': 'sensor.my_nc_url_local_cache_number_of_entries',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
