@@ -32,4 +32,5 @@ class BackupManagerEntity(CoordinatorEntity[BackupDataUpdateCoordinator]):
             sw_version=HA_VERSION,
             name="Backup",
             entry_type=DeviceEntryType.SERVICE,
+            configuration_url="homeassistant://config/backup",
         )
