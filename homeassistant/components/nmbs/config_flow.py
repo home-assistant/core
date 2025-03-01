@@ -23,6 +23,7 @@ from .const import (
     CONF_STATION_LIVE,
     CONF_STATION_TO,
     DOMAIN,
+    async_find_station_with_fallback,
 )
 
 
@@ -122,25 +123,20 @@ class NMBSConfigFlow(ConfigFlow, domain=DOMAIN):
         except CannotConnect:
             return self.async_abort(reason="api_unavailable")
 
-        station_from = None
-        station_to = None
-        station_live = None
-        for station in self.stations:
-            if user_input[CONF_STATION_FROM] in (
-                station["standardname"],
-                station["name"],
-            ):
-                station_from = station
-            if user_input[CONF_STATION_TO] in (
-                station["standardname"],
-                station["name"],
-            ):
-                station_to = station
-            if CONF_STATION_LIVE in user_input and user_input[CONF_STATION_LIVE] in (
-                station["standardname"],
-                station["name"],
-            ):
-                station_live = station
+        # Find stations with fallback
+        station_from = await async_find_station_with_fallback(
+            self.hass, user_input[CONF_STATION_FROM], self.api_client
+        )
+        station_to = await async_find_station_with_fallback(
+            self.hass, user_input[CONF_STATION_TO], self.api_client
+        )
+        station_live = (
+            await async_find_station_with_fallback(
+                self.hass, user_input[CONF_STATION_LIVE], self.api_client
+            )
+            if CONF_STATION_LIVE in user_input
+            else None
+        )
 
         if station_from is None or station_to is None:
             return self.async_abort(reason="invalid_station")
