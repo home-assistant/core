@@ -204,9 +204,10 @@ update_habit:
       selector:
         select:
           options:
-            - "up"
-            - "down"
-          translation_key: "up_down"
+            - value: up
+              label: "➕"
+            - value: down
+              label: "➖"
           multiple: true
           mode: list
     priority:

@@ -858,12 +858,6 @@
         "hard": "Hard"
       }
     },
-    "up_down": {
-      "options": {
-        "up": "➕ Positive",
-        "down": "➖ Negative"
-      }
-    },
     "frequency": {
       "options": {
         "daily": "Daily",
