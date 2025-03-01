@@ -80,7 +80,6 @@ DOMAIN_STORAGE_BASE: Final = {
 }
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_NULL)
 async def test_auth_tokens_null(
     hass: HomeAssistant,
@@ -111,7 +110,6 @@ async def test_auth_tokens_null(
     )
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_same(
     hass: HomeAssistant,
@@ -142,7 +140,6 @@ async def test_auth_tokens_same(
     )
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_past(
     hass: HomeAssistant,
@@ -179,7 +176,6 @@ async def test_auth_tokens_past(
     )
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 @pytest.mark.parametrize("idx", TEST_STORAGE_DATA)
 async def test_auth_tokens_diff(
     hass: HomeAssistant,

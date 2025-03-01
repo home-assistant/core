@@ -6,7 +6,6 @@ from unittest.mock import patch
 
 import evohomeasync2 as ec2
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 
 from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.components.evohome.coordinator import EvoDataUpdateCoordinator
@@ -17,7 +16,6 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from tests.common import async_fire_time_changed
 
 
-@pytest.mark.parametrize("install", ["minimal"])
 async def test_setup_platform(
     hass: HomeAssistant,
     config: dict[str, str],

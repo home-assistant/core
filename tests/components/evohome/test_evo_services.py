@@ -7,7 +7,6 @@ from unittest.mock import patch
 
 from evohomeasync2 import EvohomeClient
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 
 from homeassistant.components.evohome.const import (
     ATTR_DURATION,
@@ -20,7 +19,6 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
 
 
-@pytest.mark.parametrize("install", ["default"])
 async def test_refresh_system(
     hass: HomeAssistant,
     evohome: EvohomeClient,
@@ -39,7 +37,6 @@ async def test_refresh_system(
         mock_fcn.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize("install", ["default"])
 async def test_reset_system(
     hass: HomeAssistant,
     ctl_id: str,
@@ -58,7 +55,6 @@ async def test_reset_system(
         mock_fcn.assert_awaited_once_with("AutoWithReset", until=None)
 
 
-@pytest.mark.parametrize("install", ["default"])
 async def test_set_system_mode(
     hass: HomeAssistant,
     ctl_id: str,
@@ -114,7 +110,6 @@ async def test_set_system_mode(
         )
 
 
-@pytest.mark.parametrize("install", ["default"])
 async def test_clear_zone_override(
     hass: HomeAssistant,
     zone_id: str,
@@ -135,7 +130,6 @@ async def test_clear_zone_override(
         mock_fcn.assert_awaited_once_with()
 
 
-@pytest.mark.parametrize("install", ["default"])
 async def test_set_zone_override(
     hass: HomeAssistant,
     zone_id: str,

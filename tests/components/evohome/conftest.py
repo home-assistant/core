@@ -241,6 +241,12 @@ async def setup_evohome(
         yield mock_client
 
 
+@pytest.fixture  # can instead: @pytest.mark.parametrize("install", ["default"])
+def install() -> str:
+    "Return a default/minimal installation."
+    return _DEFAULT_INSTALL
+
+
 @pytest.fixture
 async def evohome(
     hass: HomeAssistant,

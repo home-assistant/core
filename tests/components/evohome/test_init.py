@@ -247,20 +247,18 @@ async def test_setup(
     assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
 
 
-@pytest.mark.parametrize("install", ["default"])
 async def test_load_unload_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
-    install: str,
 ) -> None:
     """Test load and unload entry."""
 
     with (
         patch(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",
-            mock_post_request(install),
+            mock_post_request(),
         ),
-        patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
+        patch("evohome.auth.AbstractAuth._make_request", mock_make_request()),
     ):
         config_entry.add_to_hass(hass)
 
