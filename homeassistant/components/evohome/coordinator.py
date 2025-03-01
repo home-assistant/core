@@ -31,7 +31,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .config_flow import SZ_TOKEN_DATA
-from .storage import TokenDataT, TokenManager
+from .storage import EvoTokenDataT, TokenManager
 
 
 class EvoDataUpdateCoordinator(DataUpdateCoordinator):
@@ -259,14 +259,14 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         return self.loc.status
 
-    async def _load_token_data(self, client_id: str) -> TokenDataT | None:
+    async def _load_token_data(self, client_id: str) -> EvoTokenDataT | None:
         """Return token data from the config entry (user credentials are validated)."""
 
         if client_id != self.config_entry.data[CONF_USERNAME]:
             return None
         return self.config_entry.data.get(SZ_TOKEN_DATA)
 
-    async def _save_token_data(self, client_id: str, token_data: TokenDataT) -> None:
+    async def _save_token_data(self, client_id: str, token_data: EvoTokenDataT) -> None:
         """Save the token data to the config entry, so it can be used later."""
 
         if client_id == self.config_entry.data[CONF_USERNAME]:

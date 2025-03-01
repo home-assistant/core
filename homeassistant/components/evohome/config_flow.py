@@ -19,6 +19,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
@@ -37,7 +38,7 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VER,
 )
-from .storage import TokenDataT, TokenManager
+from .storage import EvoTokenDataT, TokenManager
 
 STEP_LOCATION_SCHEMA = vol.Schema(
     {
@@ -56,8 +57,31 @@ SZ_TOKEN_DATA: Final = "token_data"
 _LOGGER = logging.getLogger(__name__.rsplit(".", 1)[0])
 
 
+class EvoConfigDataT(TypedDict):
+    """Evohome's configuration dict as stored in a config entry."""
+
+    username: str
+    password: NotRequired[str]
+    location_idx: NotRequired[int]
+    token_data: NotRequired[EvoTokenDataT]
+
+
+class EvoOptionDataT(TypedDict):
+    """Evohome's options dict as stored in a config entry."""
+
+    scan_interval: int
+    high_precision: NotRequired[bool]
+
+
+class EvoRuntimeDataT(TypedDict):
+    """Evohome's runtime data dict as stored in a config entry."""
+
+    coordinator: str
+    token_manager: TokenManager
+
+
 class EvoConfigFileDictT(TypedDict):
-    """The Evohome configuration.yaml data (under evohome:)."""
+    """Evohome's config dict as stored in configuration.yaml (after CONFIG_SCHEMA)."""
 
     username: str
     password: str
@@ -65,21 +89,15 @@ class EvoConfigFileDictT(TypedDict):
     scan_interval: timedelta
 
 
-class EvoRuntimeDataT(TypedDict):
-    """The Evohome runtime data."""
-
-    coordinator: str
-    password: str
-    token_manager: NotRequired[int]
-
-
 class _TokenStoreT(TypedDict):
+    """Evohome's token cache as stored in local storage (to be deprecated)."""
+
     username: str
     refresh_token: str
     access_token: str
-    access_token_expires: str  # dt.isoformat()  # TZ-aware
+    access_token_expires: str  # dt.isoformat(), TZ-aware
     session_id: NotRequired[str]
-    session_id_expires: NotRequired[str]  # dt.isoformat()  # TZ-aware
+    session_id_expires: NotRequired[str]  # dt.isoformat(), TZ-aware
 
 
 class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -91,7 +109,7 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize a config flow handler for Evohome."""
 
-        self._config: dict[str, Any] = {}
+        self._config: EvoConfigDataT = {}  # type: ignore[typeddict-item]
         self._option: dict[str, Any] = DEFAULT_OPTIONS
 
     async def async_step_import(self, config: EvoConfigFileDictT) -> ConfigFlowResult:
@@ -100,13 +118,17 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         Will abort if the unique_id (username) is already configured.
         """
 
-        # for import, do not validate the user credentials/location index here
+        # for import, assume the user credentials/location index are valid
         await self.async_set_unique_id(config[CONF_USERNAME].lower())
-        self._abort_if_unique_id_configured()  # is this required?
+        self._abort_if_unique_id_configured()
 
-        self._config = {k: v for k, v in config.items() if k != CONF_SCAN_INTERVAL}
+        self._config = {
+            CONF_USERNAME: config[CONF_USERNAME],
+            CONF_PASSWORD: config[CONF_PASSWORD],
+            CONF_LOCATION_IDX: config[CONF_LOCATION_IDX],
+        }
 
-        # leverage any cached tokens by moving them to the config entry
+        # leverage any cached tokens by moving them into the config entry
         store: Store[_TokenStoreT] = Store(self.hass, STORAGE_VER, STORAGE_KEY)
         cache: _TokenStoreT | None = await store.async_load()
 
@@ -145,12 +167,11 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._config.update(user_input)
-
             await self.async_set_unique_id(self._config[CONF_USERNAME].lower())
-            # self._abort_if_unique_id_configured()  # is this required?
 
             try:
+                # self._abort_if_unique_id_configured()  # not required
+
                 self._token_manager = await self._test_credentials(
                     self._config[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
@@ -161,6 +182,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = str(err)
 
             else:
+                self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+
                 return self.async_create_entry(
                     title="Evohome", data=self._config, options=self._option
                 )
@@ -183,15 +206,20 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            self._config.update(user_input)
+            # store username now, as needed in our _save_token_data callback
+            self._config[CONF_USERNAME] = user_input[CONF_USERNAME]
 
             await self.async_set_unique_id(self._config[CONF_USERNAME].lower())
-            self._abort_if_unique_id_configured()
 
             try:
+                self._abort_if_unique_id_configured()
+
                 self._token_manager = await self._test_credentials(
-                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                    self._config[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
+
+            except AbortFlow as err:
+                errors["base"] = str(err)
 
             except (ConfigEntryAuthFailed, ConfigEntryNotReady) as err:
                 if str(err) not in ("rate_exceeded", "cannot_connect", "invalid_auth"):
@@ -199,6 +227,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = str(err)
 
             else:
+                self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+
                 return await self.async_step_location()
 
         data_schema = vol.Schema(
@@ -215,7 +245,10 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _test_credentials(self, username: str, password: str) -> TokenManager:
-        """Validate the user credentials (that authentication is successful)."""
+        """Validate the user credentials (that authentication is successful).
+
+        Requires self._config[CONF_USERNAME] for the _save_token_data callback.
+        """
 
         token_manager = TokenManager(
             username,
@@ -261,7 +294,7 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = str(err)
 
             else:
-                self._config.update(user_input)
+                self._config.update(user_input)  # type: ignore[typeddict-item]
                 return self.async_create_entry(
                     title="Evohome", data=self._config, options=self._option
                 )
@@ -303,11 +336,11 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Define the options flow for Evohome."""
         return EvoOptionsFlowHandler(config_entry)
 
-    async def _load_token_data(self, client_id: str) -> TokenDataT | None:
+    async def _load_token_data(self, client_id: str) -> EvoTokenDataT | None:
         """Return token data as from an empty cache."""
         return None  # will force user credentials to be validated
 
-    async def _save_token_data(self, client_id: str, token_data: TokenDataT) -> None:
+    async def _save_token_data(self, client_id: str, token_data: EvoTokenDataT) -> None:
         """Save the token data to the config entry, so it can be used later."""
 
         if client_id == self._config[CONF_USERNAME]:

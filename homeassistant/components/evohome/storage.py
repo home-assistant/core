@@ -20,7 +20,7 @@ from evohomeasync2.schemas.typedefs import EvoAuthTokensDictT as AccessTokenEntr
 SZ_CLIENT_ID: Final = "client_id"
 
 
-class TokenDataT(AccessTokenEntryT):
+class EvoTokenDataT(AccessTokenEntryT):
     """The token data as stored in the cache."""
 
     session_id: NotRequired[str]  # only if high-precision temperatures
@@ -30,7 +30,7 @@ class TokenDataT(AccessTokenEntryT):
 _ACCESS_TOKEN_KEYS = AccessTokenEntryT.__annotations__.keys()
 _SESSION_ID_KEYS = SessionIdEntryT.__annotations__.keys()
 
-_NULL_TOKEN_DATA: Final[TokenDataT] = {
+_NULL_TOKEN_DATA: Final[EvoTokenDataT] = {
     SZ_ACCESS_TOKEN: "",
     SZ_ACCESS_TOKEN_EXPIRES: datetime.min.replace(tzinfo=UTC).isoformat(),
     SZ_REFRESH_TOKEN: "",
@@ -50,8 +50,8 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
         secret: str,
         websession: aiohttp.ClientSession,
         /,
-        cache_loader: Callable[[str], Awaitable[TokenDataT | None]],
-        cache_saver: Callable[[str, TokenDataT], Awaitable[None]],
+        cache_loader: Callable[[str], Awaitable[EvoTokenDataT | None]],
+        cache_saver: Callable[[str, EvoTokenDataT], Awaitable[None]],
         *,
         logger: logging.Logger | None = None,
     ) -> None:
@@ -138,7 +138,7 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
     async def _save_cache_to_entry(self) -> None:
         """Save the access token (and session id, if any) to the config entry."""
 
-        token_data: TokenDataT = self._export_access_token()  # type: ignore[assignment]
+        token_data: EvoTokenDataT = self._export_access_token()  # type: ignore[assignment]
 
         if self.session_id:
             token_data |= self._export_session_id()
