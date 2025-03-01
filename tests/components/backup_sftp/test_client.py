@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import asyncssh
 import pytest
 
-from homeassistant.components.backup.models import AgentBackup
+from homeassistant.components.backup import AgentBackup
 
 # Import the classes and functions under test.
 from homeassistant.components.backup_sftp import SFTPConfigEntryData
@@ -109,7 +109,7 @@ class Mocks:
 
 
 @pytest.fixture
-async def mock_connect(async_cm_mock_generator: Callable[..., MagicMock]):
+async def mock_connect(async_cm_mock_generator: Callable[..., MagicMock]) -> Mocks:
     """Mock return value for `asyncssh.connect`."""
     connect = AsyncMock()
 
@@ -135,7 +135,7 @@ async def mock_connect(async_cm_mock_generator: Callable[..., MagicMock]):
 )
 async def test_client_aenter_fail_oserror(
     config_entry: MockConfigEntry, hass: HomeAssistant, mock_connect: Mocks
-):
+) -> None:
     """Test exceptions in `__aenter__` method of `BackupAgentClient` class.
 
     Should raise:
@@ -150,10 +150,10 @@ async def test_client_aenter_fail_oserror(
     mock_connect.connect.side_effect = OSError("Error message")
     with (
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
+        pytest.raises(HomeAssistantError),
     ):
-        client = BackupAgentClient(config_entry, hass)
-        with pytest.raises(HomeAssistantError):
-            await client.__aenter__()
+        async with BackupAgentClient(config_entry, hass):
+            pass
 
     mock_connect.connect.side_effect = None
     mock_connect.start_sftp_client = AsyncMock(
@@ -161,16 +161,17 @@ async def test_client_aenter_fail_oserror(
     )
     with (
         patch("homeassistant.components.backup_sftp.client.connect", mock_connect()),
+        pytest.raises(RuntimeError) as exc,
     ):
-        client = BackupAgentClient(config_entry, hass)
-        with pytest.raises(RuntimeError) as exc:
-            await client.__aenter__()
-        assert "Failed to create SFTP client." in str(exc)
+        async with BackupAgentClient(config_entry, hass):
+            pass
+
+    assert "Failed to create SFTP client." in str(exc)
 
 
 async def test_client_not_initialized(
     hass: HomeAssistant, config_entry: MockConfigEntry
-):
+) -> None:
     """Test `_initialized` method of `BackupAgentClient`.
 
     Make sure exceptions are raised when instance is not initialized
@@ -200,7 +201,7 @@ async def test_client_not_initialized(
 )
 async def test_async_list_backups(
     config_entry: MockConfigEntry, hass: HomeAssistant, mock_connect: Mocks
-):
+) -> None:
     """Test `async_list_backups` method of `BackupAgentClient` class."""
 
     cfg = SFTPConfigEntryData(**config_entry.data)
@@ -231,7 +232,7 @@ async def test_async_list_backups_err(
     hass: HomeAssistant,
     mock_connect: Mocks,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test `async_list_backups` method of `BackupAgentClient` class when error during metadata load occurs."""
 
     cfg = SFTPConfigEntryData(**config_entry.data)
@@ -254,7 +255,7 @@ async def test_async_list_backups_err(
 )
 async def test_load_metadata(
     config_entry: MockConfigEntry, hass: HomeAssistant, mock_connect: Mocks
-):
+) -> None:
     """Test `_load_metadata` method of `BackupAgentClient` class."""
 
     cfg = SFTPConfigEntryData(**config_entry.data)
@@ -289,7 +290,7 @@ async def test_load_metadata(
 )
 async def test_async_delete_backup(
     config_entry: MockConfigEntry, hass: HomeAssistant, mock_connect: Mocks
-):
+) -> None:
     """Test `async_delete_backup` method of `BackupAgentClient` class."""
 
     cfg = SFTPConfigEntryData(**config_entry.data)
@@ -330,7 +331,7 @@ async def test_async_upload_backup(
     hass: HomeAssistant,
     mock_connect: Mocks,
     caplog: pytest.LogCaptureFixture,
-):
+) -> None:
     """Test `async_upload_backup` method of `BackupAgentClient` class."""
 
     cfg = SFTPConfigEntryData(**config_entry.data)
@@ -359,7 +360,7 @@ async def test_async_upload_backup(
 )
 async def test_iter_file(
     config_entry: MockConfigEntry, hass: HomeAssistant, mock_connect: Mocks
-):
+) -> None:
     """Test `iter_file` method of `BackupAgentClient` class."""
 
     cfg = SFTPConfigEntryData(**config_entry.data)

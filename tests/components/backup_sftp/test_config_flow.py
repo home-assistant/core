@@ -212,7 +212,7 @@ async def test_reauth(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
-async def test_config_entry_error(hass: HomeAssistant):
+async def test_config_entry_error(hass: HomeAssistant) -> None:
     """Test config flow with raised `ConfigEntryError`."""
 
     result = await hass.config_entries.flow.async_init(
