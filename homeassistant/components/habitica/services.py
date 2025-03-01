@@ -61,6 +61,7 @@ from .const import (
     SERVICE_API_CALL,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_CREATE_REWARD,
     SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
@@ -112,18 +113,29 @@ SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
     }
 )
 
-SERVICE_UPDATE_TASK_SCHEMA = vol.Schema(
+BASE_TASK_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
-        vol.Required(ATTR_TASK): cv.string,
         vol.Optional(ATTR_RENAME): cv.string,
         vol.Optional(ATTR_NOTES): cv.string,
         vol.Optional(ATTR_TAG): vol.All(cv.ensure_list, [str]),
-        vol.Optional(ATTR_REMOVE_TAG): vol.All(cv.ensure_list, [str]),
         vol.Optional(ATTR_ALIAS): vol.All(
             cv.string, cv.matches_regex("^[a-zA-Z0-9-_]*$")
         ),
-        vol.Optional(ATTR_COST): vol.Coerce(float),
+        vol.Optional(ATTR_COST): vol.All(vol.Coerce(float), vol.Range(0)),
+    }
+)
+
+SERVICE_UPDATE_TASK_SCHEMA = BASE_TASK_SCHEMA.extend(
+    {
+        vol.Required(ATTR_TASK): cv.string,
+        vol.Optional(ATTR_REMOVE_TAG): vol.All(cv.ensure_list, [str]),
+    }
+)
+
+SERVICE_CREATE_TASK_SCHEMA = BASE_TASK_SCHEMA.extend(
+    {
+        vol.Required(ATTR_NAME): cv.string,
     }
 )
 
@@ -539,33 +551,36 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         return result
 
-    async def update_task(call: ServiceCall) -> ServiceResponse:
-        """Update task action."""
+    async def create_or_update_task(call: ServiceCall) -> ServiceResponse:
+        """Create or update task action."""
         entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
         coordinator = entry.runtime_data
         await coordinator.async_refresh()
+        is_update = call.service == SERVICE_UPDATE_REWARD
+        current_task = None
 
-        try:
-            current_task = next(
-                task
-                for task in coordinator.data.tasks
-                if call.data[ATTR_TASK] in (str(task.id), task.alias, task.text)
-                and task.Type is TaskType.REWARD
-            )
-        except StopIteration as e:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="task_not_found",
-                translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
-            ) from e
+        if is_update:
+            try:
+                current_task = next(
+                    task
+                    for task in coordinator.data.tasks
+                    if call.data[ATTR_TASK] in (str(task.id), task.alias, task.text)
+                    and task.Type is TaskType.REWARD
+                )
+            except StopIteration as e:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="task_not_found",
+                    translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
+                ) from e
 
-        task_id = current_task.id
-        if TYPE_CHECKING:
-            assert task_id
         data = Task()
 
-        if rename := call.data.get(ATTR_RENAME):
-            data["text"] = rename
+        if not is_update:
+            data["type"] = TaskType.REWARD
+
+        if (text := call.data.get(ATTR_RENAME)) or (text := call.data.get(ATTR_NAME)):
+            data["text"] = text
 
         if (notes := call.data.get(ATTR_NOTES)) is not None:
             data["notes"] = notes
@@ -574,7 +589,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         remove_tags = cast(list[str], call.data.get(ATTR_REMOVE_TAG))
 
         if tags or remove_tags:
-            update_tags = set(current_task.tags)
+            update_tags = set(current_task.tags) if current_task else set()
             user_tags = {
                 tag.name.lower(): tag.id
                 for tag in coordinator.data.user.tags
@@ -634,7 +649,13 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             data["value"] = cost
 
         try:
-            response = await coordinator.habitica.update_task(task_id, data)
+            if is_update:
+                if TYPE_CHECKING:
+                    assert current_task
+                    assert current_task.id
+                response = await coordinator.habitica.update_task(current_task.id, data)
+            else:
+                response = await coordinator.habitica.create_task(data)
         except TooManyRequestsError as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -659,8 +680,15 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
     hass.services.async_register(
         DOMAIN,
         SERVICE_UPDATE_REWARD,
-        update_task,
+        create_or_update_task,
         schema=SERVICE_UPDATE_TASK_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CREATE_REWARD,
+        create_or_update_task,
+        schema=SERVICE_CREATE_TASK_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )
     hass.services.async_register(
