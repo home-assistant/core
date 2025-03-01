@@ -2869,12 +2869,13 @@ temperusb==1.6.1
 # homeassistant.components.tensorflow
 # tensorflow==2.5.0
 
-# homeassistant.components.teslemetry
-tesla-fleet-api==0.9.11
-
 # homeassistant.components.tesla_fleet
+# homeassistant.components.teslemetry
 # homeassistant.components.tessie
 tesla-fleet-api==0.9.12
+
+# homeassistant.components.tesla_bluetooth
+tesla-fleet-api==1.0.8
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
