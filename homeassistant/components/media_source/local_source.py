@@ -236,7 +236,13 @@ class LocalMediaView(http.HomeAssistantView):
     async def head(
         self, request: web.Request, source_dir_id: str, location: str
     ) -> None:
-        """Handle a HEAD request."""
+        """Handle a HEAD request.
+
+        This is sent by some DLNA renderers, like Samsung ones, prior to sending
+        the GET request.
+
+        Check whether the location exists and return its path.
+        """
         await self._validate_media_path(source_dir_id, location)
 
     async def get(

@@ -1186,7 +1186,13 @@ class TextToSpeechView(HomeAssistantView):
         self.manager = manager
 
     async def head(self, request: web.Request, token: str) -> web.StreamResponse:
-        """On a HEAD request, check whether stream exists and return its content type."""
+        """Start a HEAD request.
+
+        This is sent by some DLNA renderers, like Samsung ones, prior to sending
+        the GET request.
+
+        Check whether the token (file) exists and return its content type.
+        """
         stream = self.manager.token_to_stream.get(token)
 
         if stream is None:
