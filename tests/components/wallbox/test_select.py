@@ -13,7 +13,12 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from . import authorisation_response, setup_integration
+from . import (
+    authorisation_response,
+    setup_integration,
+    setup_integration_ecosmart_eco_mode,
+    setup_integration_ecosmart_full_solar,
+)
 from .const import MOCK_SELECT_ENTITY_ID
 
 from tests.common import MockConfigEntry
@@ -58,6 +63,82 @@ async def test_wallbox_select_class(
             {
                 ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
                 ATTR_OPTION: EcoSmartMode.FULL_SOLAR,
+            },
+            blocking=True,
+        )
+
+
+async def test_wallbox_select_ecosmart_eco_mode_class(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox select eco mode."""
+    await setup_integration_ecosmart_eco_mode(hass, entry)
+
+    state = hass.states.get(MOCK_SELECT_ENTITY_ID)
+    assert state
+    assert state.state == EcoSmartMode.ECO_MODE
+
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
+            status_code=200,
+        )
+        mock_request.put(
+            "https://api.wall-box.com/v4/chargers/12345/eco-smart",
+            json={CHARGER_STATUS_ID_KEY: 193},
+            status_code=200,
+        )
+
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                ATTR_OPTION: EcoSmartMode.FULL_SOLAR,
+            },
+            blocking=True,
+        )
+
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                ATTR_OPTION: EcoSmartMode.OFF,
+            },
+            blocking=True,
+        )
+
+
+async def test_wallbox_select_ecosmart_full_solar_class(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> None:
+    """Test wallbox select eco mode."""
+    await setup_integration_ecosmart_full_solar(hass, entry)
+
+    state = hass.states.get(MOCK_SELECT_ENTITY_ID)
+    assert state
+    assert state.state == EcoSmartMode.FULL_SOLAR
+
+    with requests_mock.Mocker() as mock_request:
+        mock_request.get(
+            "https://user-api.wall-box.com/users/signin",
+            json=authorisation_response,
+            status_code=200,
+        )
+        mock_request.put(
+            "https://api.wall-box.com/v4/chargers/12345/eco-smart",
+            json={CHARGER_STATUS_ID_KEY: 193},
+            status_code=200,
+        )
+
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                ATTR_OPTION: EcoSmartMode.ECO_MODE,
             },
             blocking=True,
         )
