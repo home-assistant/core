@@ -143,6 +143,8 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 cast(
                     str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION)
                 )
+                # TODO: OverkizCommandParam.ALWAYS
+                #  after https://github.com/iMicknl/python-overkiz-api/pull/1552
                 == "always"
             )
             or (
