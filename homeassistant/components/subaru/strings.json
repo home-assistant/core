@@ -106,7 +106,7 @@
       "fields": {
         "door": {
           "name": "Door",
-          "description": "One of the following: 'all', 'driver', 'tailgate'."
+          "description": "Which door(s) to open."
         }
       }
     }
