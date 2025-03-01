@@ -79,13 +79,13 @@ __all__ = [
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
     "Provider",
+    "ResultStream",
     "SampleFormat",
     "TextToSpeechEntity",
     "TtsAudioType",
     "Voice",
     "async_default_engine",
     "async_get_media_source_audio",
-    "async_support_options",
     "generate_media_source_id",
 ]
 
@@ -167,22 +167,19 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
     return async_default_engine(hass)
 
 
-async def async_support_options(
+@callback
+def async_create_stream(
     hass: HomeAssistant,
     engine: str,
     language: str | None = None,
     options: dict | None = None,
-) -> bool:
-    """Return if an engine supports options."""
-    if (engine_instance := get_engine_instance(hass, engine)) is None:
-        raise HomeAssistantError(f"Provider {engine} not found")
-
-    try:
-        hass.data[DATA_TTS_MANAGER].process_options(engine_instance, language, options)
-    except HomeAssistantError:
-        return False
-
-    return True
+) -> ResultStream:
+    """Create a streaming URL where the rendered TTS can be retrieved."""
+    return hass.data[DATA_TTS_MANAGER].async_create_result_stream(
+        engine=engine,
+        language=language,
+        options=options,
+    )
 
 
 async def async_get_media_source_audio(
@@ -405,6 +402,18 @@ class ResultStream:
     @callback
     def async_set_message_cache_key(self, cache_key: str) -> None:
         """Set cache key for message to be streamed."""
+        self._result_cache_key.set_result(cache_key)
+
+    @callback
+    def async_set_message(self, message: str) -> None:
+        """Set message to be generated."""
+        cache_key = self._manager.async_cache_message_in_memory(
+            engine=self.engine,
+            message=message,
+            use_file_cache=self.use_file_cache,
+            language=self.language,
+            options=self.options,
+        )
         self._result_cache_key.set_result(cache_key)
 
     async def async_stream_result(self) -> AsyncGenerator[bytes]:

@@ -7,8 +7,9 @@ from dataclasses import dataclass
 from typing import Any, cast
 
 from aioshelly.block_device import Block
-from aioshelly.const import MODEL_2, MODEL_25, MODEL_WALL_DISPLAY, RPC_GENERATIONS
+from aioshelly.const import MODEL_2, MODEL_25, RPC_GENERATIONS
 
+from homeassistant.components.climate import DOMAIN as CLIMATE_PLATFORM
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_PLATFORM,
     SwitchEntity,
@@ -27,7 +28,6 @@ from .entity import (
     RpcEntityDescription,
     ShellyBlockEntity,
     ShellyRpcAttributeEntity,
-    ShellyRpcEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
     async_setup_entry_rpc,
@@ -36,12 +36,9 @@ from .utils import (
     async_remove_orphaned_entities,
     async_remove_shelly_entity,
     get_device_entry_gen,
-    get_rpc_key_ids,
     get_virtual_component_ids,
     is_block_channel_type_light,
-    is_rpc_channel_type_light,
-    is_rpc_thermostat_internal_actuator,
-    is_rpc_thermostat_mode,
+    is_rpc_exclude_from_relay,
 )
 
 
@@ -66,6 +63,18 @@ class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     method_off: str
     method_params_fn: Callable[[int | None, bool], dict]
 
+
+RPC_RELAY_SWITCHES = {
+    "switch": RpcSwitchDescription(
+        key="switch",
+        sub_key="output",
+        removal_condition=is_rpc_exclude_from_relay,
+        is_on=lambda status: bool(status["output"]),
+        method_on="Switch.Set",
+        method_off="Switch.Set",
+        method_params_fn=lambda id, value: {"id": id, "on": value},
+    ),
+}
 
 RPC_SWITCHES = {
     "boolean": RpcSwitchDescription(
@@ -162,32 +171,10 @@ def async_setup_rpc_entry(
     """Set up entities for RPC device."""
     coordinator = config_entry.runtime_data.rpc
     assert coordinator
-    switch_key_ids = get_rpc_key_ids(coordinator.device.status, "switch")
 
-    switch_ids = []
-    for id_ in switch_key_ids:
-        if is_rpc_channel_type_light(coordinator.device.config, id_):
-            continue
-
-        if coordinator.model == MODEL_WALL_DISPLAY:
-            # There are three configuration scenarios for WallDisplay:
-            # - relay mode (no thermostat)
-            # - thermostat mode using the internal relay as an actuator
-            # - thermostat mode using an external (from another device) relay as
-            #   an actuator
-            if not is_rpc_thermostat_mode(id_, coordinator.device.status):
-                # The device is not in thermostat mode, we need to remove a climate
-                # entity
-                unique_id = f"{coordinator.mac}-thermostat:{id_}"
-                async_remove_shelly_entity(hass, "climate", unique_id)
-            elif is_rpc_thermostat_internal_actuator(coordinator.device.status):
-                # The internal relay is an actuator, skip this ID so as not to create
-                # a switch entity
-                continue
-
-        switch_ids.append(id_)
-        unique_id = f"{coordinator.mac}-switch:{id_}"
-        async_remove_shelly_entity(hass, "light", unique_id)
+    async_setup_entry_rpc(
+        hass, config_entry, async_add_entities, RPC_RELAY_SWITCHES, RpcRelaySwitch
+    )
 
     async_setup_entry_rpc(
         hass, config_entry, async_add_entities, RPC_SWITCHES, RpcSwitch
@@ -218,10 +205,16 @@ def async_setup_rpc_entry(
         "script",
     )
 
-    if not switch_ids:
-        return
-
-    async_add_entities(RpcRelaySwitch(coordinator, id_) for id_ in switch_ids)
+    # if the climate is removed, from the device configuration, we need
+    # to remove orphaned entities
+    async_remove_orphaned_entities(
+        hass,
+        config_entry.entry_id,
+        coordinator.mac,
+        CLIMATE_PLATFORM,
+        coordinator.device.status,
+        "thermostat",
+    )
 
 
 class BlockSleepingMotionSwitch(
@@ -305,28 +298,6 @@ class BlockRelaySwitch(ShellyBlockEntity, SwitchEntity):
         super()._update_callback()
 
 
-class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
-    """Entity that controls a relay on RPC based Shelly devices."""
-
-    def __init__(self, coordinator: ShellyRpcCoordinator, id_: int) -> None:
-        """Initialize relay switch."""
-        super().__init__(coordinator, f"switch:{id_}")
-        self._id = id_
-
-    @property
-    def is_on(self) -> bool:
-        """If switch is on."""
-        return bool(self.status["output"])
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on relay."""
-        await self.call_rpc("Switch.Set", {"id": self._id, "on": True})
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off relay."""
-        await self.call_rpc("Switch.Set", {"id": self._id, "on": False})
-
-
 class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     """Entity that controls a switch on RPC based Shelly devices."""
 
@@ -351,3 +322,21 @@ class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
             self.entity_description.method_off,
             self.entity_description.method_params_fn(self._id, False),
         )
+
+
+class RpcRelaySwitch(RpcSwitch):
+    """Entity that controls a switch on RPC based Shelly devices."""
+
+    # False to avoid double naming as True is inerithed from base class
+    _attr_has_entity_name = False
+
+    def __init__(
+        self,
+        coordinator: ShellyRpcCoordinator,
+        key: str,
+        attribute: str,
+        description: RpcEntityDescription,
+    ) -> None:
+        """Initialize the switch."""
+        super().__init__(coordinator, key, attribute, description)
+        self._attr_unique_id: str = f"{coordinator.mac}-{key}"

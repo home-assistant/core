@@ -8,6 +8,10 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
   })
 # ---
 # name: test_audio_pipeline.1
@@ -92,6 +96,10 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
 # ---
@@ -190,6 +198,10 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/test_token.mp3',
+    }),
   })
 # ---
 # name: test_audio_pipeline_with_enhancements.1
@@ -274,6 +286,10 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
 # ---
@@ -381,6 +397,10 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
 # ---
@@ -585,6 +605,10 @@
       'stt_binary_handler_id': None,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_pipeline_empty_tts_output.1
@@ -634,6 +658,10 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_stt_cooldown_different_ids.1
@@ -644,6 +672,10 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---
@@ -656,6 +688,10 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_stt_cooldown_same_id.1
@@ -667,6 +703,10 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_stt_stream_failed
@@ -677,6 +717,10 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---
@@ -798,28 +842,6 @@
     'message': 'Timeout running pipeline',
   })
 # ---
-# name: test_tts_failed
-  dict({
-    'conversation_id': 'mock-ulid',
-    'language': 'en',
-    'pipeline': <ANY>,
-    'runner_data': dict({
-      'stt_binary_handler_id': None,
-      'timeout': 300,
-    }),
-  })
-# ---
-# name: test_tts_failed.1
-  dict({
-    'engine': 'test',
-    'language': 'en-US',
-    'tts_input': 'Lights are on.',
-    'voice': 'james_earl_jones',
-  })
-# ---
-# name: test_tts_failed.2
-  None
-# ---
 # name: test_wake_word_cooldown_different_entities
   dict({
     'conversation_id': 'mock-ulid',
@@ -828,6 +850,10 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---
@@ -839,6 +865,10 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---
@@ -892,6 +922,10 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_wake_word_cooldown_different_ids.1
@@ -902,6 +936,10 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---
@@ -958,6 +996,10 @@
       'stt_binary_handler_id': 1,
       'timeout': 300,
     }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
+    }),
   })
 # ---
 # name: test_wake_word_cooldown_same_id.1
@@ -968,6 +1010,10 @@
     'runner_data': dict({
       'stt_binary_handler_id': 1,
       'timeout': 300,
+    }),
+    'tts_output': dict({
+      'mime_type': 'audio/mpeg',
+      'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
 # ---

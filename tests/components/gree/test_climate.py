@@ -52,6 +52,7 @@ from homeassistant.components.gree.const import (
     DISCOVERY_SCAN_INTERVAL,
     FAN_MEDIUM_HIGH,
     FAN_MEDIUM_LOW,
+    MAX_EXPECTED_RESPONSE_TIME_INTERVAL,
     UPDATE_INTERVAL,
 )
 from homeassistant.const import (
@@ -346,7 +347,7 @@ async def test_unresponsive_device(
     await async_setup_gree(hass)
 
     async def run_update():
-        freezer.tick(timedelta(seconds=UPDATE_INTERVAL))
+        freezer.tick(timedelta(seconds=MAX_EXPECTED_RESPONSE_TIME_INTERVAL))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 

@@ -627,3 +627,14 @@ async def get_rpc_script_event_types(device: RpcDevice, id: int) -> list[str]:
     code_response = await device.script_getcode(id)
     matches = SHELLY_EMIT_EVENT_PATTERN.finditer(code_response["data"])
     return sorted([*{str(event_type.group(1)) for event_type in matches}])
+
+
+def is_rpc_exclude_from_relay(
+    settings: dict[str, Any], status: dict[str, Any], channel: str
+) -> bool:
+    """Return true if rpc channel should be excludeed from switch platform."""
+    ch = int(channel.split(":")[1])
+    if is_rpc_thermostat_internal_actuator(status):
+        return True
+
+    return is_rpc_channel_type_light(settings, ch)

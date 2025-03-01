@@ -1376,29 +1376,6 @@ def test_resolve_engine(hass: HomeAssistant, setup: str, engine_id: str) -> None
         assert tts.async_resolve_engine(hass, None) is None
 
 
-@pytest.mark.parametrize(
-    ("setup", "engine_id"),
-    [
-        ("mock_setup", "test"),
-        ("mock_config_entry_setup", "tts.test"),
-    ],
-    indirect=["setup"],
-)
-async def test_support_options(hass: HomeAssistant, setup: str, engine_id: str) -> None:
-    """Test supporting options."""
-    assert await tts.async_support_options(hass, engine_id, "en_US") is True
-    assert await tts.async_support_options(hass, engine_id, "nl") is False
-    assert (
-        await tts.async_support_options(
-            hass, engine_id, "en_US", {"invalid_option": "yo"}
-        )
-        is False
-    )
-
-    with pytest.raises(HomeAssistantError):
-        await tts.async_support_options(hass, "non-existing")
-
-
 async def test_legacy_fetching_in_async(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:

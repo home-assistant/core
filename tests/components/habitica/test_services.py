@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 from aiohttp import ClientError
-from habiticalib import Direction, HabiticaTaskResponse, Skill, Task
+from habiticalib import Direction, HabiticaTaskResponse, Skill, Task, TaskType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -30,6 +30,7 @@ from homeassistant.components.habitica.const import (
     SERVICE_ACCEPT_QUEST,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_CREATE_REWARD,
     SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
@@ -41,6 +42,7 @@ from homeassistant.components.habitica.const import (
 )
 from homeassistant.components.todo import ATTR_RENAME
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -943,6 +945,51 @@ async def test_update_task_exceptions(
         )
 
 
+@pytest.mark.parametrize(
+    ("exception", "expected_exception", "exception_msg"),
+    [
+        (
+            ERROR_TOO_MANY_REQUESTS,
+            HomeAssistantError,
+            RATE_LIMIT_EXCEPTION_MSG,
+        ),
+        (
+            ERROR_BAD_REQUEST,
+            HomeAssistantError,
+            REQUEST_EXCEPTION_MSG,
+        ),
+        (
+            ClientError,
+            HomeAssistantError,
+            "Unable to connect to Habitica: ",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("habitica")
+async def test_create_task_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    exception: Exception,
+    expected_exception: Exception,
+    exception_msg: str,
+) -> None:
+    """Test Habitica task create action exceptions."""
+
+    habitica.create_task.side_effect = exception
+    with pytest.raises(expected_exception, match=exception_msg):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CREATE_REWARD,
+            service_data={
+                ATTR_CONFIG_ENTRY: config_entry.entry_id,
+                ATTR_NAME: "TITLE",
+            },
+            return_response=True,
+            blocking=True,
+        )
+
+
 @pytest.mark.usefixtures("habitica")
 async def test_task_not_found(
     hass: HomeAssistant,
@@ -1022,6 +1069,60 @@ async def test_update_reward(
         blocking=True,
     )
     habitica.update_task.assert_awaited_with(UUID(task_id), call_args)
+
+
+@pytest.mark.parametrize(
+    ("service_data", "call_args"),
+    [
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_COST: 100,
+            },
+            Task(type=TaskType.REWARD, text="TITLE", value=100),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+            },
+            Task(type=TaskType.REWARD, text="TITLE"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_NOTES: "NOTES",
+            },
+            Task(type=TaskType.REWARD, text="TITLE", notes="NOTES"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_ALIAS: "ALIAS",
+            },
+            Task(type=TaskType.REWARD, text="TITLE", alias="ALIAS"),
+        ),
+    ],
+)
+async def test_create_reward(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    habitica: AsyncMock,
+    service_data: dict[str, Any],
+    call_args: Task,
+) -> None:
+    """Test Habitica create_reward action."""
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CREATE_REWARD,
+        service_data={
+            ATTR_CONFIG_ENTRY: config_entry.entry_id,
+            **service_data,
+        },
+        return_response=True,
+        blocking=True,
+    )
+    habitica.create_task.assert_awaited_with(call_args)
 
 
 async def test_tags(

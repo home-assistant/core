@@ -8,6 +8,7 @@ from pysmartthings.models import (
     DeviceResponse,
     DeviceStatus,
     LocationResponse,
+    RoomResponse,
     SceneResponse,
 )
 import pytest
@@ -77,6 +78,9 @@ def mock_smartthings() -> Generator[AsyncMock]:
         ).items
         client.get_locations.return_value = LocationResponse.from_json(
             load_fixture("locations.json", DOMAIN)
+        ).items
+        client.get_rooms.return_value = RoomResponse.from_json(
+            load_fixture("rooms.json", DOMAIN)
         ).items
         yield client
 

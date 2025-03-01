@@ -14,8 +14,6 @@ SCOPES = [
     "x:scenes:*",
     "r:rules:*",
     "w:rules:*",
-    "r:installedapps",
-    "w:installedapps",
     "sse",
 ]
 
