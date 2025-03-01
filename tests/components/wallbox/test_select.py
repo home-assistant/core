@@ -62,6 +62,16 @@ async def test_wallbox_select_class(
             blocking=True,
         )
 
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                ATTR_OPTION: EcoSmartMode.OFF,
+            },
+            blocking=True,
+        )
+
 
 async def test_wallbox_select_class_connection_error(
     hass: HomeAssistant, entry: MockConfigEntry
@@ -104,6 +114,17 @@ async def test_wallbox_select_class_connection_error(
                 blocking=True,
             )
 
+        with pytest.raises(ConnectionError):
+            await hass.services.async_call(
+                SELECT_DOMAIN,
+                SERVICE_SELECT_OPTION,
+                {
+                    ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                    ATTR_OPTION: EcoSmartMode.OFF,
+                },
+                blocking=True,
+            )
+
 
 async def test_wallbox_select_class_authentication_error(
     hass: HomeAssistant, entry: MockConfigEntry
@@ -142,6 +163,17 @@ async def test_wallbox_select_class_authentication_error(
                 {
                     ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
                     ATTR_OPTION: EcoSmartMode.FULL_SOLAR,
+                },
+                blocking=True,
+            )
+
+        with pytest.raises(ConfigEntryAuthFailed):
+            await hass.services.async_call(
+                SELECT_DOMAIN,
+                SERVICE_SELECT_OPTION,
+                {
+                    ATTR_ENTITY_ID: MOCK_SELECT_ENTITY_ID,
+                    ATTR_OPTION: EcoSmartMode.OFF,
                 },
                 blocking=True,
             )
