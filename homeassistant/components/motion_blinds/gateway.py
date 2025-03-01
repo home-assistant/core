@@ -46,7 +46,7 @@ class ConnectMotionGateway:
         self,
         host: str,
         key: str,
-        blind_type_list: dict[str, int],
+        blind_type_list: dict[str, int] | None = None,
     ) -> bool:
         """Connect to the Motion Gateway."""
         _LOGGER.debug("Initializing with host %s (key %s)", host, key[:3])
