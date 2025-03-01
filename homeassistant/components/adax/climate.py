@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any, cast
 
 from adax import Adax
@@ -28,8 +27,6 @@ from . import AdaxConfigEntry
 from .const import CONNECTION_TYPE, DOMAIN, LOCAL
 from .coordinator import AdaxCloudCoordinator, AdaxLocalCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -46,7 +43,6 @@ async def async_setup_entry(
     else:
         coordinator: AdaxCloudCoordinator = entry.runtime_data
         rooms = coordinator.get_rooms()
-        _LOGGER.info("Setup entries: %s", rooms)
         async_add_entities(
             (AdaxDevice(room, coordinator) for room in rooms),
             True,

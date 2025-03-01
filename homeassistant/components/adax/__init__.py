@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import logging
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -12,8 +10,6 @@ from .const import CONNECTION_TYPE, LOCAL
 from .coordinator import AdaxCloudCoordinator, AdaxLocalCoordinator
 
 PLATFORMS = [Platform.CLIMATE]
-
-_LOGGER = logging.getLogger(__name__)
 
 type AdaxConfigEntry = ConfigEntry[AdaxCloudCoordinator | AdaxLocalCoordinator]
 
@@ -26,12 +22,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: AdaxConfigEntry) -> bool
         coordinator = AdaxCloudCoordinator(hass, entry)
 
     entry.runtime_data = coordinator
-    _LOGGER.info("Init Adax, coordinator: %s", coordinator)
     await coordinator.async_config_entry_first_refresh()
-    _LOGGER.info("First refresh complete: %s", coordinator.get_rooms())
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    _LOGGER.info("Setup complete")
     return True
 
 
