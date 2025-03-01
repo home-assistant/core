@@ -7,6 +7,8 @@ from unittest.mock import patch
 
 from evohomeasync2 import EvohomeClient
 from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.evohome.const import (
     ATTR_DURATION,
@@ -15,8 +17,14 @@ from homeassistant.components.evohome.const import (
     DOMAIN,
     EvoService,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant
+
+from .conftest import mock_make_request, mock_post_request, setup_evohome
+from .const import TEST_INSTALLS
+
+from tests.common import MockConfigEntry
 
 
 async def test_refresh_system(
@@ -169,3 +177,59 @@ async def test_set_zone_override(
         mock_fcn.assert_awaited_once_with(
             19.5, until=datetime(2024, 7, 10, 14, 15, tzinfo=UTC)
         )
+
+
+@pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
+async def test_setup(
+    hass: HomeAssistant,
+    config: dict[str, str],
+    install: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test services after setup of evohome.
+
+    Registered services vary by the type of system.
+    """
+
+    assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
+
+    async for _ in setup_evohome(hass, config, install=install):
+        pass
+
+    assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
+
+
+@pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
+async def test_load_unload_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    install: str,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test load and unload config entry.
+
+    Registered services vary by the type of system.
+    """
+
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
+        ),
+        patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
+    ):
+        config_entry.add_to_hass(hass)
+
+        assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
+
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.LOADED
+
+        assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
+
+        await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+        assert config_entry.state == ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
+
+        assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot

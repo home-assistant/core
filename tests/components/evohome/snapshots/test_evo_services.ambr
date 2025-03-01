@@ -1,0 +1,91 @@
+# serializer version: 1
+# name: test_load_unload_entry[botched]
+  dict_keys([])
+# ---
+# name: test_load_unload_entry[botched].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'reset_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[botched].2
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'reset_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[default]
+  dict_keys([])
+# ---
+# name: test_load_unload_entry[default].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'reset_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[default].2
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'reset_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[h032585]
+  dict_keys([])
+# ---
+# name: test_load_unload_entry[h032585].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[h032585].2
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[h099625]
+  dict_keys([])
+# ---
+# name: test_load_unload_entry[h099625].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[h099625].2
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[minimal]
+  dict_keys([])
+# ---
+# name: test_load_unload_entry[minimal].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'reset_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[minimal].2
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'reset_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[sys_004]
+  dict_keys([])
+# ---
+# name: test_load_unload_entry[sys_004].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---
+# name: test_load_unload_entry[sys_004].2
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---
+# name: test_setup[botched]
+  dict_keys([])
+# ---
+# name: test_setup[botched].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'reset_system', 'set_system_mode'])
+# ---
+# name: test_setup[default]
+  dict_keys([])
+# ---
+# name: test_setup[default].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'reset_system', 'set_system_mode'])
+# ---
+# name: test_setup[h032585]
+  dict_keys([])
+# ---
+# name: test_setup[h032585].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---
+# name: test_setup[h099625]
+  dict_keys([])
+# ---
+# name: test_setup[h099625].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---
+# name: test_setup[minimal]
+  dict_keys([])
+# ---
+# name: test_setup[minimal].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'reset_system', 'set_system_mode'])
+# ---
+# name: test_setup[sys_004]
+  dict_keys([])
+# ---
+# name: test_setup[sys_004].1
+  dict_keys(['clear_zone_override', 'set_zone_override', 'refresh_system', 'set_system_mode'])
+# ---

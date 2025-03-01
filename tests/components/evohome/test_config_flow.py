@@ -94,13 +94,14 @@ async def test_step_user_errors(
 async def test_step_location_errors(
     hass: HomeAssistant,
     config: EvoConfigFileDictT,
+    install: str,
     error_key: str,
 ) -> None:
     """Test failure during step_location."""
 
     with patch(
         "evohomeasync2.auth.CredentialsManagerBase._post_request",
-        mock_post_request(),
+        mock_post_request(install),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -138,12 +139,13 @@ async def test_step_location_errors(
 async def test_step_location_bad_index(
     hass: HomeAssistant,
     config: EvoConfigFileDictT,
+    install: str,
 ) -> None:
     """Test failure during step_location."""
 
     with patch(
         "evohomeasync2.auth.CredentialsManagerBase._post_request",
-        mock_post_request(),
+        mock_post_request(install),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -162,7 +164,7 @@ async def test_step_location_bad_index(
 
     with patch(
         "evohome.auth.AbstractAuth._make_request",
-        mock_make_request("minimal"),
+        mock_make_request(install),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -181,6 +183,7 @@ async def test_step_location_bad_index(
 async def test_config_flow(
     hass: HomeAssistant,
     config: EvoConfigFileDictT,
+    install: str,
 ) -> None:
     """Test a successful config flow."""
 
@@ -197,7 +200,7 @@ async def test_config_flow(
 
     with patch(
         "evohomeasync2.auth.CredentialsManagerBase._post_request",
-        mock_post_request(),
+        mock_post_request(install),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -212,7 +215,7 @@ async def test_config_flow(
     with (
         patch(
             "evohome.auth.AbstractAuth._make_request",
-            mock_make_request("minimal"),
+            mock_make_request(install),
         ),
         patch(
             "homeassistant.components.evohome.async_setup_entry", return_value=True
@@ -286,6 +289,7 @@ async def test_config_flow(
 async def test_import_flow(
     hass: HomeAssistant,
     config: EvoConfigFileDictT,
+    install: str,
 ) -> None:
     """Test a successful import flow."""
 
@@ -294,11 +298,11 @@ async def test_import_flow(
     with (
         patch(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",
-            mock_post_request(),
+            mock_post_request(install),
         ),
         patch(
             "evohome.auth.AbstractAuth._make_request",
-            mock_make_request("minimal"),
+            mock_make_request(install),
         ),
         patch(
             "homeassistant.components.evohome.async_setup_entry",

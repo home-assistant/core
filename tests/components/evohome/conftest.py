@@ -82,7 +82,7 @@ def zone_schedule_fixture(install: str, zon_id: str | None = None) -> JsonObject
         return load_json_object_fixture("default/schedule_zone.json", DOMAIN)
 
 
-def mock_post_request(install: str = _DEFAULT_INSTALL) -> Callable:
+def mock_post_request(install: str) -> Callable:
     """Return a HTTP POST method that acts for a specified installation.
 
     Used to validate user credentials and return the access token / session ID.
@@ -110,7 +110,7 @@ def mock_post_request(install: str = _DEFAULT_INSTALL) -> Callable:
     return post_request
 
 
-def mock_make_request(install: str = _DEFAULT_INSTALL) -> Callable:
+def mock_make_request(install: str) -> Callable:
     """Return a HTTP request method that acts for a specified installation.
 
     Used to process a given request to return the corresponding JSON.
@@ -186,7 +186,7 @@ def config_entry_fixture(config: EvoConfigFileDictT) -> MockConfigEntry:
 async def setup_evohome(
     hass: HomeAssistant,
     config: dict[str, str],
-    install: str = "default",
+    install: str = _DEFAULT_INSTALL,
 ) -> AsyncGenerator[MagicMock]:
     """Set up the evohome integration and return its client.
 

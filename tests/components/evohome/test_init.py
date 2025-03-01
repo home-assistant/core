@@ -7,10 +7,8 @@ import logging
 from unittest.mock import Mock, patch
 
 import aiohttp
-import evohomeasync2 as ec2
 from evohomeasync2 import exceptions as exc
 import pytest
-from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.evohome.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -18,7 +16,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
 from .conftest import mock_make_request, mock_post_request
-from .const import TEST_INSTALLS
 
 from tests.common import MockConfigEntry
 
@@ -143,6 +140,9 @@ async def test_authentication_failure_import(
         await hass.async_block_till_done()  # wait for async_setup_entry()
 
     assert result is True  # because credentials are not tested during import
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert config_entry.state == ConfigEntryState.SETUP_ERROR
 
     assert caplog.record_tuples == AUTHENTICATION_TESTS[exception]
 
@@ -179,6 +179,7 @@ async def test_authentication_failure_config(
 async def test_client_request_failure_import(
     hass: HomeAssistant,
     config: dict[str, str],
+    install: str,
     exception: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -190,7 +191,7 @@ async def test_client_request_failure_import(
     with (
         patch(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",
-            mock_post_request("default"),
+            mock_post_request(install),
         ),
         patch("evohome.auth.AbstractAuth._request", side_effect=exception),
         caplog.at_level(logging.WARNING),
@@ -199,6 +200,9 @@ async def test_client_request_failure_import(
         await hass.async_block_till_done()  # wait for async_setup_entry()
 
     assert result is True  # because credentials are not tested during import
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert config_entry.state == ConfigEntryState.SETUP_ERROR
 
     assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
 
@@ -207,6 +211,7 @@ async def test_client_request_failure_import(
 async def test_client_request_failure_config(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    install: str,
     exception: Exception,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -220,7 +225,7 @@ async def test_client_request_failure_config(
     with (
         patch(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",
-            mock_post_request("default"),
+            mock_post_request(install),
         ),
         patch("evohome.auth.AbstractAuth._request", side_effect=exception),
         caplog.at_level(logging.WARNING),
@@ -233,39 +238,56 @@ async def test_client_request_failure_config(
     assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
 
 
-@pytest.mark.parametrize("install", [*TEST_INSTALLS, "botched"])
 async def test_setup(
     hass: HomeAssistant,
-    evohome: ec2.EvohomeClient,
-    snapshot: SnapshotAssertion,
+    config: dict[str, str],
+    install: str,
 ) -> None:
-    """Test services after setup of evohome.
+    """Test setup of evohome and unload config entry."""
 
-    Registered services vary by the type of system.
-    """
+    with (
+        patch(
+            "evohomeasync2.auth.CredentialsManagerBase._post_request",
+            mock_post_request(install),
+        ),
+        patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
+    ):
+        result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        await hass.async_block_till_done()  # wait for async_setup_entry()
 
-    assert hass.services.async_services_for_domain(DOMAIN).keys() == snapshot
+    assert result is True  # because credentials are not tested during import
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
 
 
 async def test_load_unload_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    install: str,
 ) -> None:
-    """Test load and unload entry."""
+    """Test load and unload config entry."""
+
+    config_entry.add_to_hass(hass)
 
     with (
         patch(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",
-            mock_post_request(),
+            mock_post_request(install),
         ),
-        patch("evohome.auth.AbstractAuth._make_request", mock_make_request()),
+        patch("evohome.auth.AbstractAuth._make_request", mock_make_request(install)),
     ):
-        config_entry.add_to_hass(hass)
-
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.LOADED
 
-        await hass.config_entries.async_unload(config_entry.entry_id)
-        await hass.async_block_till_done()
-        assert config_entry.state == ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED  # type: ignore[comparison-overlap]
