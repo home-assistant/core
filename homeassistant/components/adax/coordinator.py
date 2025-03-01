@@ -1,6 +1,5 @@
 """DataUpdateCoordinator for the Adax component."""
 
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -13,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from .const import ACCOUNT_ID, CLOUD, CONNECTION_TYPE, LOCAL
+from .const import ACCOUNT_ID, CLOUD, CONNECTION_TYPE, LOCAL, SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -21,16 +20,14 @@ _LOGGER = logging.getLogger(__name__)
 class AdaxCloudCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
     """Coordinator for updating data to and from Adax (cloud)."""
 
-    def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, update_interval: timedelta
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Adax coordinator used for Cloud mode."""
         super().__init__(
             hass,
             config_entry=entry,
             logger=_LOGGER,
             name="AdaxCloud",
-            update_interval=update_interval,
+            update_interval=SCAN_INTERVAL,
         )
 
         if entry.data.get(CONNECTION_TYPE) != CLOUD:
@@ -63,16 +60,14 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Coordinator for updating data to and from Adax (local)."""
 
-    def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, update_interval: timedelta
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the Adax coordinator used for Local mode."""
         super().__init__(
             hass,
             config_entry=entry,
             logger=_LOGGER,
             name="AdaxLocal",
-            update_interval=update_interval,
+            update_interval=SCAN_INTERVAL,
         )
 
         if entry.data.get(CONNECTION_TYPE) != LOCAL:

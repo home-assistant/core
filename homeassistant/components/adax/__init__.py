@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import datetime
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -13,7 +12,6 @@ from .const import CONNECTION_TYPE, LOCAL
 from .coordinator import AdaxCloudCoordinator, AdaxLocalCoordinator
 
 PLATFORMS = [Platform.CLIMATE]
-SCAN_INTERVAL = datetime.timedelta(seconds=60)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,9 +21,9 @@ type AdaxConfigEntry = ConfigEntry[AdaxCloudCoordinator | AdaxLocalCoordinator]
 async def async_setup_entry(hass: HomeAssistant, entry: AdaxConfigEntry) -> bool:
     """Set up Adax from a config entry."""
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
-        coordinator = AdaxLocalCoordinator(hass, entry, update_interval=SCAN_INTERVAL)
+        coordinator = AdaxLocalCoordinator(hass, entry)
     else:
-        coordinator = AdaxCloudCoordinator(hass, entry, update_interval=SCAN_INTERVAL)
+        coordinator = AdaxCloudCoordinator(hass, entry)
 
     entry.runtime_data = coordinator
     _LOGGER.info("Init Adax, coordinator: %s", coordinator)
