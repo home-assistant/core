@@ -1635,7 +1635,7 @@ class ConfigEntriesFlowManager(
             # reconfigure to allow the user to change settings.
             # In case of non user visible flows, the integration should optionally
             # update the existing entry before aborting.
-            # see https://developers.home-assistant.io/blog/2025/01/16/config-flow-unique-id/
+            # see https://developers.home-assistant.io/blog/2025/03/01/config-flow-unique-id/
             report_usage(
                 "creates a config entry when another entry with the same unique ID "
                 "exists",
