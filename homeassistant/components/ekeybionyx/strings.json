@@ -14,7 +14,7 @@
         "description": "Please select a system in which you want to set up the webhooks"
       },
       "webhooks": {
-        "description": "Please name your Webhooks. Leaving them empty will delete them.",
+        "description": "Please name your webhooks. Leaving them empty will delete them.",
         "data": {
           "webhook1": "Webhook 1",
           "webhook2": "Webhook 2",
@@ -49,8 +49,8 @@
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "no_availible_webhooks": "There are no availible webhooks in the ekey Bionyx plattform. Please delete some and try again.",
       "no_own_systems": "Your account does not have admin access to any systems",
-      "webhook_deletion_requested": "Please go to the ekey Bionyx App and confirm the deletion of the webhooks. Afterwards set the integration up again.",
-      "cannot_connect": "Connection to ekey Bionyx failed. Please check your internet connection and try again."
+      "webhook_deletion_requested": "Please go to the ekey Bionyx app and confirm the deletion of the webhooks. Afterwards set the integration up again.",
+      "cannot_connect": "Connection to ekey Bionyx failed. Please check your Internet connection and try again."
     },
     "create_entry": {
       "default": "[%key:common::config_flow::create_entry::authenticated%]"
