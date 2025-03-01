@@ -16,7 +16,7 @@ from homeassistant.helpers.update_coordinator import UpdateFailed
 from tests.common import async_fire_time_changed
 
 
-async def test_setup_platform(
+async def test_update_interval(
     hass: HomeAssistant,
     config: dict[str, str],
     evohome: ec2.EvohomeClient,
