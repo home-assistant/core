@@ -201,7 +201,7 @@ aiobafi6==0.9.0
 aiobotocore==2.13.1
 
 # homeassistant.components.comelit
-aiocomelit==0.10.1
+aiocomelit==0.11.1
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
@@ -738,7 +738,7 @@ energyzero==2.1.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.7.2
+env-canada==0.8.0
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1204,7 +1204,7 @@ monzopy==1.4.2
 mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.25
+motionblinds==0.6.26
 
 # homeassistant.components.motionblinds_ble
 motionblindsble==0.1.3
@@ -2444,7 +2444,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.7.0
+wallbox==0.8.0
 
 # homeassistant.components.folder_watcher
 watchdog==6.0.0
