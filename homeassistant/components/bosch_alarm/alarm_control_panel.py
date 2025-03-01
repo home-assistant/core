@@ -97,11 +97,7 @@ class AreaAlarmControlPanel(
         """Run when entity attached to hass."""
         await super().async_added_to_hass()
         self._area.status_observer.attach(self.schedule_update_ha_state)
-        self._area.alarm_observer.attach(self.schedule_update_ha_state)
-        self._area.ready_observer.attach(self.schedule_update_ha_state)
 
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity removed from hass."""
         self._area.status_observer.detach(self.schedule_update_ha_state)
-        self._area.alarm_observer.detach(self.schedule_update_ha_state)
-        self._area.ready_observer.detach(self.schedule_update_ha_state)
