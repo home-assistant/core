@@ -74,7 +74,7 @@ async def try_connect(data: dict[str, Any], load_selector: int = 0):
     return (panel.model, panel.serial_number)
 
 
-class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BoschAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch Alarm."""
 
     def __init__(self) -> None:
