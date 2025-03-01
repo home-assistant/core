@@ -10,8 +10,7 @@ from typing import Any
 from bosch_alarm_mode2 import Panel
 import voluptuous as vol
 
-from homeassistant import config_entries
-from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_CODE,
     CONF_HOST,
@@ -74,7 +73,7 @@ async def try_connect(data: dict[str, Any], load_selector: int = 0):
     return (panel.model, panel.serial_number)
 
 
-class BoschAlarmConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+class BoschAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Bosch Alarm."""
 
     def __init__(self) -> None:
