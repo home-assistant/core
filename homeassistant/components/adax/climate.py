@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any, cast
 
 from adax import Adax
@@ -12,7 +13,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     CONF_UNIQUE_ID,
@@ -21,28 +21,34 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from . import AdaxConfigEntry
 from .const import CONNECTION_TYPE, DOMAIN, LOCAL
 from .coordinator import AdaxCloudCoordinator, AdaxLocalCoordinator
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    entry: AdaxConfigEntry,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Adax thermostat with config flow."""
-    coordinator = hass.data[entry.entry_id]
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
+        coordinator: AdaxLocalCoordinator = entry.runtime_data
         async_add_entities(
             [LocalAdaxDevice(coordinator, entry.data[CONF_UNIQUE_ID])],
             True,
         )
     else:
+        coordinator: AdaxCloudCoordinator = entry.runtime_data
+        rooms = coordinator.get_rooms()
+        _LOGGER.info("Setup entries: %s", rooms)
         async_add_entities(
-            (AdaxDevice(room, coordinator) for room in coordinator.get_rooms()),
+            (AdaxDevice(room, coordinator) for room in rooms),
             True,
         )
 
@@ -113,6 +119,12 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
         """Handle updated data from the coordinator."""
         if room := self.coordinator.get_room(self._device_id):
             self._attr_name = room["name"]
+            _LOGGER.info(
+                "CALLBACK: %s Temp:%s Targ:%s",
+                room["name"],
+                room["temperature"],
+                room["targetTemperature"],
+            )
             self._attr_current_temperature = room.get("temperature")
             self._attr_target_temperature = room.get("targetTemperature")
             if room["heatingEnabled"]:
