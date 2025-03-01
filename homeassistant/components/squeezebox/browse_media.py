@@ -139,7 +139,7 @@ class BrowseItemResponse:
     can_expand: bool
     can_play: bool
     title: str
-    id: str = ""
+    id: str
 
 
 def _add_new_command_to_browse_data(
@@ -223,19 +223,21 @@ def _get_item_thumbnail(
     internal_request: bool,
 ) -> str | None:
     """Construct path to thumbnail image."""
-    _item_thumbnail: str | None = None
+    item_thumbnail: str | None = None
     if artwork_track_id := item.get("artwork_track_id"):
         if internal_request:
-            _item_thumbnail = player.generate_image_url_from_track_id(artwork_track_id)
+            item_thumbnail = player.generate_image_url_from_track_id(artwork_track_id)
         elif item_type is not None:
-            _item_thumbnail = entity.get_browse_image_url(
+            item_thumbnail = entity.get_browse_image_url(
                 item_type, item.get("id", ""), artwork_track_id
             )
+        else:
+            item_thumbnail = item.get("image_url")
     elif search_type in ["Apps", "Radios"]:
-        _item_thumbnail = player.generate_image_url(item["icon"])
+        item_thumbnail = player.generate_image_url(item["icon"])
     else:
-        _item_thumbnail = item.get("image_url")  # will not be proxied by HA
-    return _item_thumbnail
+        item_thumbnail = item.get("image_url")  # will not be proxied by HA
+    return item_thumbnail
 
 
 async def build_item_response(
