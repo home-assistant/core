@@ -169,7 +169,7 @@ def config_entry_fixture(config: EvoConfigFileDictT) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         entry_id="uuid",
-        unique_id="1234",
+        unique_id=config[CONF_USERNAME],
         data={k: v for k, v in config.items() if k != CONF_SCAN_INTERVAL},
         options=options,
     )
