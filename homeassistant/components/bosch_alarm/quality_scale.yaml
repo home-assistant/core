@@ -9,7 +9,9 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  action-setup: exempt
+  comment: |
+      No custom actions defined
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
