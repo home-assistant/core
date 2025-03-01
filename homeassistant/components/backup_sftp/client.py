@@ -292,9 +292,9 @@ class BackupAgentClient:
 
         for file in await self.sftp.listdir():
             LOGGER.debug(
-                "Checking if file: `%s` is tar file ...",
-                file,
+                "Checking if file: `%s/%s` is metadata file ...",
                 self.cfg.runtime_data.backup_location,
+                file,
             )
             if file.endswith("_hass_backup_metadata.json"):
                 LOGGER.debug("Found metadata file: `%s`.", file)
