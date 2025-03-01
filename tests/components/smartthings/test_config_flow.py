@@ -57,7 +57,7 @@ async def test_full_flow(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+r:installedapps+w:installedapps+sse"
+        "x:scenes:*+r:rules:*+w:rules:*+sse"
     )
 
     client = await hass_client_no_auth()
@@ -75,8 +75,7 @@ async def test_full_flow(
             "expires_in": 82806,
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
-            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps sse",
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
             "access_tier": 0,
             "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
         },
@@ -93,8 +92,7 @@ async def test_full_flow(
         "expires_in": 82806,
         "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
         "r:locations:* w:locations:* x:locations:* "
-        "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-        "r:installedapps w:installedapps sse",
+        "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
         "access_tier": 0,
         "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
     }
@@ -130,7 +128,7 @@ async def test_not_enough_scopes(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+r:installedapps+w:installedapps+sse"
+        "x:scenes:*+r:rules:*+w:rules:*+sse"
     )
 
     client = await hass_client_no_auth()
@@ -192,7 +190,7 @@ async def test_duplicate_entry(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+r:installedapps+w:installedapps+sse"
+        "x:scenes:*+r:rules:*+w:rules:*+sse"
     )
 
     client = await hass_client_no_auth()
@@ -210,8 +208,7 @@ async def test_duplicate_entry(
             "expires_in": 82806,
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
-            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps sse",
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
             "access_tier": 0,
             "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
         },
@@ -261,8 +258,7 @@ async def test_reauthentication(
             "expires_in": 82806,
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
-            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps sse",
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
             "access_tier": 0,
             "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
         },
@@ -280,8 +276,7 @@ async def test_reauthentication(
         "expires_in": 82806,
         "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
         "r:locations:* w:locations:* x:locations:* "
-        "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-        "r:installedapps w:installedapps sse",
+        "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
         "access_tier": 0,
         "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
     }
@@ -377,8 +372,7 @@ async def test_reauth_account_mismatch(
             "expires_in": 82806,
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
-            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps sse",
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
             "access_tier": 0,
             "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
         },
@@ -429,8 +423,7 @@ async def test_migration(
             "expires_in": 82806,
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
-            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps sse",
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
             "access_tier": 0,
             "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
         },
@@ -461,8 +454,7 @@ async def test_migration(
             "expires_in": 82806,
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
-            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps sse",
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
             "access_tier": 0,
             "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
         },
@@ -516,8 +508,7 @@ async def test_migration_wrong_location(
             "expires_in": 82806,
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
-            "r:scenes:* x:scenes:* r:rules:* w:rules:* "
-            "r:installedapps w:installedapps sse",
+            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
             "access_tier": 0,
             "installed_app_id": "123123123-2be1-4e40-b257-e4ef59083324",
         },
