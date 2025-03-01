@@ -116,6 +116,7 @@ RULE_URL = (
 )
 
 INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
+    "rointe",
     "abode",
     "accuweather",
     "acer_projector",
