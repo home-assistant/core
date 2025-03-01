@@ -64,7 +64,7 @@ class SFTPBackupAgent(BackupAgent):
         try:
             backup = await self.async_get_backup(backup_id)
             LOGGER.debug(
-                "Establishing SFTP connection to remote host in order to download backup ..."
+                "Establishing SFTP connection to remote host in order to download backup"
             )
             async with BackupAgentClient(self._entry, self._hass) as client:
                 return await client.iter_file(backup)
@@ -90,10 +90,10 @@ class SFTPBackupAgent(BackupAgent):
 
         try:
             LOGGER.debug(
-                "Establishing SFTP connection to remote host in order to upload backup ..."
+                "Establishing SFTP connection to remote host in order to upload backup"
             )
             async with BackupAgentClient(self._entry, self._hass) as client:
-                LOGGER.debug("Uploading backup: %s ...", backup.backup_id)
+                LOGGER.debug("Uploading backup: %s", backup.backup_id)
                 await client.async_upload_backup(iterator, backup)
         except Exception as e:
             raise BackupAgentError(
@@ -112,7 +112,7 @@ class SFTPBackupAgent(BackupAgent):
         try:
             backup = await self.async_get_backup(backup_id)
             LOGGER.debug(
-                "Establishing SFTP connection to remote host in order to delete backup ..."
+                "Establishing SFTP connection to remote host in order to delete backup"
             )
             async with BackupAgentClient(self._entry, self._hass) as client:
                 await client.async_delete_backup(backup)
@@ -135,7 +135,7 @@ class SFTPBackupAgent(BackupAgent):
         except Exception as e:
             LOGGER.exception(e)
             LOGGER.error(
-                "Listing backups failed. Please review previous exception traceback."
+                "Listing backups failed. Please review previous exception traceback"
             )
             raise BackupAgentError(f"Failed to list backups: {e}") from e
 

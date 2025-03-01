@@ -15,8 +15,7 @@ from asyncssh import (
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 
-from homeassistant.components.backup import suggested_filename
-from homeassistant.components.backup.models import AgentBackup
+from homeassistant.components.backup import AgentBackup, suggested_filename
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
@@ -49,13 +48,13 @@ class AsyncFileIterator:
         self._client: BackupAgentClient | None = None
         self._fileobj: SFTPClientFile | None = None
         self._initialized: bool = False
-        LOGGER.debug("Opening file: %s in Async File Iterator ...", file_path)
+        LOGGER.debug("Opening file: %s in Async File Iterator", file_path)
 
     async def _initialize(self) -> None:
         """Load file object."""
-        self._client = await BackupAgentClient(self.cfg, self.hass).__aenter__()
+        self._client = await BackupAgentClient(self.cfg, self.hass).__aenter__()  # pylint: disable=unnecessary-dunder-call
         self._fileobj = await self._client.sftp.open(self.file_path, "rb")
-        await self._fileobj.__aenter__()
+        await self._fileobj.__aenter__()  # pylint: disable=unnecessary-dunder-call
 
         self._initialized = True
 
@@ -118,7 +117,7 @@ class BackupAgentClient:
         except (OSError, PermissionDenied) as e:
             LOGGER.exception(e)
             LOGGER.error(
-                "Failure while attempting to establish SSH connection. Re-auth might be required."
+                "Failure while attempting to establish SSH connection. Re-auth might be required"
             )
             self.cfg.async_start_reauth(self.hass)
             raise HomeAssistantError(e) from e
@@ -131,10 +130,10 @@ class BackupAgentClient:
         except (SFTPNoSuchFile, SFTPPermissionDenied) as e:
             LOGGER.exception(e)
             LOGGER.error(
-                "Failed to create SFTP client. Re-configuring integration might be required."
+                "Failed to create SFTP client. Re-configuring integration might be required"
             )
             raise RuntimeError(
-                "Failed to create SFTP client. Re-configuring integration might be required."
+                "Failed to create SFTP client. Re-configuring integration might be required"
             ) from e
 
         return self
@@ -217,7 +216,7 @@ class BackupAgentClient:
 
         for file in await self.list_backup_location():
             LOGGER.debug(
-                "Evaluating metadata file at remote location: %s@%s:%s ...",
+                "Evaluating metadata file at remote location: %s@%s:%s",
                 self.cfg.runtime_data.username,
                 self.cfg.runtime_data.host,
                 file,
@@ -232,7 +231,7 @@ class BackupAgentClient:
             except Exception as e:  # noqa: BLE001
                 LOGGER.exception(e)
                 LOGGER.error(
-                    "Failed to load backup metadata from file: %s. Ignoring.", file
+                    "Failed to load backup metadata from file: %s. Ignoring", file
                 )
                 continue
 
@@ -252,7 +251,7 @@ class BackupAgentClient:
             async for b in iterator:
                 await f.write(b)
 
-        LOGGER.debug("Writing backup metadata ...")
+        LOGGER.debug("Writing backup metadata")
         metadata: dict[str, str] = {
             "file_path": file_path,
             "metadata": backup.as_dict(),
@@ -292,11 +291,11 @@ class BackupAgentClient:
 
         for file in await self.sftp.listdir():
             LOGGER.debug(
-                "Checking if file: `%s/%s` is metadata file ...",
+                "Checking if file: `%s/%s` is metadata file",
                 self.cfg.runtime_data.backup_location,
                 file,
             )
             if file.endswith("_hass_backup_metadata.json"):
-                LOGGER.debug("Found metadata file: `%s`.", file)
+                LOGGER.debug("Found metadata file: `%s`", file)
                 files.append(f"{self.cfg.runtime_data.backup_location}/{file}")
         return files
