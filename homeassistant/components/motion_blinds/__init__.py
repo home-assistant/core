@@ -83,7 +83,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Connect to motion gateway
     multicast = hass.data[DOMAIN][KEY_MULTICAST_LISTENER]
     connect_gateway_class = ConnectMotionGateway(hass, multicast)
-    if not await connect_gateway_class.async_connect_gateway(host, key, blind_type_list):
+    if not await connect_gateway_class.async_connect_gateway(
+        host, key, blind_type_list
+    ):
         raise ConfigEntryNotReady
     motion_gateway = connect_gateway_class.gateway_device
     api_lock = asyncio.Lock()
