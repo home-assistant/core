@@ -159,7 +159,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up OpenWeatherMap sensor entities based on a config entry."""
     domain_data = config_entry.runtime_data
-    name = domain_data.name
     coordinator = domain_data.coordinator
 
     if domain_data.mode == OWM_MODE_FREE_FORECAST:
@@ -172,8 +171,7 @@ async def async_setup_entry(
     else:
         async_add_entities(
             OpenWeatherMapSensor(
-                name,
-                f"{config_entry.unique_id}-{description.key}",
+                config_entry,
                 description,
                 coordinator,
             )
@@ -186,11 +184,11 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
 
     _attr_should_poll = False
     _attr_attribution = ATTRIBUTION
+    _attr_has_entity_name = True
 
     def __init__(
         self,
-        name: str,
-        unique_id: str,
+        config_entry: OpenweathermapConfigEntry,
         description: SensorEntityDescription,
         coordinator: DataUpdateCoordinator,
     ) -> None:
@@ -198,12 +196,10 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         self.entity_description = description
         self._coordinator = coordinator
 
-        self._attr_name = f"{name} {description.name}"
-        self._attr_unique_id = unique_id
-        split_unique_id = unique_id.split("-")
+        self._attr_unique_id = f"{config_entry.unique_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, f"{split_unique_id[0]}-{split_unique_id[1]}")},
+            identifiers={(DOMAIN, str(config_entry.unique_id))},
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
         )
