@@ -27,11 +27,16 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import CoreState, HomeAssistant, ServiceCall, State
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockEntityPlatform, async_mock_service
+from tests.common import (
+    MockEntityPlatform,
+    async_mock_service,
+    mock_component,
+    mock_restore_cache,
+)
 
 NAME = "alert_test"
 DONE_MESSAGE = "alert_gone"
@@ -375,3 +380,39 @@ async def test_done_message_state_tracker_reset_on_cancel(hass: HomeAssistant) -
     await entity.end_alerting()
     await hass.async_block_till_done()
     assert entity._send_done_message is False
+
+
+async def test_restore_state(hass: HomeAssistant) -> None:
+    """Ensure states are restored on startup."""
+    mock_restore_cache(
+        hass,
+        (
+            State(f"{DOMAIN}.is_on", STATE_ON),
+            State(f"{DOMAIN}.is_idle", STATE_IDLE),
+        ),
+    )
+
+    hass.set_state(CoreState.starting)
+    mock_component(hass, "recorder")
+
+    hass.states.async_set(TEST_CONFIG[DOMAIN][NAME][CONF_ENTITY_ID], STATE_ON)
+    await hass.async_block_till_done()
+
+    await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: {
+                "is_on": TEST_CONFIG[DOMAIN][NAME],
+                "is_idle": TEST_CONFIG[DOMAIN][NAME],
+            }
+        },
+    )
+
+    state = hass.states.get(f"{DOMAIN}.is_on")
+    assert state
+    assert state.state == STATE_ON
+
+    state = hass.states.get(f"{DOMAIN}.is_idle")
+    assert state
+    assert state.state == STATE_IDLE
