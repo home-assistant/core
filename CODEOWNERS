@@ -1550,6 +1550,8 @@ build.json @home-assistant/supervisor
 /tests/components/tile/ @bachya
 /homeassistant/components/tilt_ble/ @apt-itude
 /tests/components/tilt_ble/ @apt-itude
+/homeassistant/components/tilt_pi/ @michaelheyman
+/tests/components/tilt_pi/ @michaelheyman
 /homeassistant/components/time/ @home-assistant/core
 /tests/components/time/ @home-assistant/core
 /homeassistant/components/time_date/ @fabaff

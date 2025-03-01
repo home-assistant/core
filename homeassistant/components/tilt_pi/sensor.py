@@ -19,6 +19,9 @@ from .coordinator import TiltPiConfigEntry, TiltPiDataUpdateCoordinator
 from .entity import TiltEntity
 from .model import TiltHydrometerData
 
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
+
 ATTR_TEMPERATURE = "temperature"
 ATTR_GRAVITY = "gravity"
 
@@ -43,7 +46,6 @@ SENSOR_TYPES: Final[list[TiltEntityDescription]] = [
         key=ATTR_GRAVITY,
         name="Gravity",
         native_unit_of_measurement="SG",
-        # device_class=SensorDeviceClass.,
         icon="mdi:water",
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda data: data.gravity,
