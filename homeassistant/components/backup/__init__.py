@@ -26,6 +26,7 @@ from .http import async_register_http_views
 from .manager import (
     BackupManager,
     BackupManagerError,
+    BackupPlatformEvent,
     BackupPlatformProtocol,
     BackupReaderWriter,
     BackupReaderWriterError,
@@ -56,6 +57,7 @@ __all__ = [
     "BackupConfig",
     "BackupManagerError",
     "BackupNotFound",
+    "BackupPlatformEvent",
     "BackupPlatformProtocol",
     "BackupReaderWriter",
     "BackupReaderWriterError",

@@ -352,9 +352,9 @@ class BackupManager:
         self._backup_event_subscriptions = hass.data[
             DATA_BACKUP
         ].backup_event_subscriptions
-        self._backup_platform_event_subscriptions: list[
-            Callable[[BackupPlatformEvent], None]
-        ] = []
+        self._backup_platform_event_subscriptions = hass.data[
+            DATA_BACKUP
+        ].backup_platform_event_subscriptions
 
     async def async_setup(self) -> None:
         """Set up the backup manager."""
@@ -1310,32 +1310,6 @@ class BackupManager:
             self.last_non_idle_event = event
         for subscription in self._backup_event_subscriptions:
             subscription(event)
-
-    @callback
-    def async_subscribe_events(
-        self,
-        on_event: Callable[[ManagerStateEvent], None],
-    ) -> Callable[[], None]:
-        """Subscribe events."""
-
-        def remove_subscription() -> None:
-            self._backup_event_subscriptions.remove(on_event)
-
-        self._backup_event_subscriptions.append(on_event)
-        return remove_subscription
-
-    @callback
-    def async_subscribe_platform_events(
-        self,
-        on_event: Callable[[BackupPlatformEvent], None],
-    ) -> Callable[[], None]:
-        """Subscribe to platform events."""
-
-        def remove_subscription() -> None:
-            self._backup_platform_event_subscriptions.remove(on_event)
-
-        self._backup_platform_event_subscriptions.append(on_event)
-        return remove_subscription
 
     def _update_issue_backup_failed(self) -> None:
         """Update issue registry when a backup fails."""
