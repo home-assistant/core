@@ -21,7 +21,7 @@ from .manager import BackupManagerState
 
 @dataclass(kw_only=True, frozen=True)
 class BackupSensorEntityDescription(SensorEntityDescription):
-    """Description for Acaia sensor entities with dynamic units."""
+    """Description for Home Assistant Backup sensor entities."""
 
     value_fn: Callable[[BackupCoordinatorData], str | datetime | None]
 
