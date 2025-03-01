@@ -84,11 +84,6 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
         device_class=SensorDeviceClass.POWER,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    AttributeType.CURRENT_VALVE_POSITION: HomeeSensorEntityDescription(
-        key="valve_position",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-    ),
     AttributeType.DAWN: HomeeSensorEntityDescription(
         key="dawn",
         device_class=SensorDeviceClass.ILLUMINANCE,

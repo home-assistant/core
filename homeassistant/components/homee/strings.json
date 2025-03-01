@@ -221,9 +221,6 @@
       "uv": {
         "name": "Ultraviolet"
       },
-      "valve_position": {
-        "name": "Valve position"
-      },
       "voltage_instance": {
         "name": "Voltage {instance}"
       },
