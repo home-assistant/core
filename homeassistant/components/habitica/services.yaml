@@ -140,3 +140,43 @@ get_tasks:
           required: false
           selector:
             text:
+update_reward:
+  fields:
+    config_entry: *config_entry
+    task: *task
+    rename:
+      selector:
+        text:
+    notes:
+      required: false
+      selector:
+        text:
+          multiline: true
+    cost:
+      required: false
+      selector:
+        number:
+          min: 0
+          step: 0.01
+          unit_of_measurement: "🪙"
+          mode: box
+    tag_options:
+      collapsed: true
+      fields:
+        tag:
+          required: false
+          selector:
+            text:
+              multiple: true
+        remove_tag:
+          required: false
+          selector:
+            text:
+              multiple: true
+    developer_options:
+      collapsed: true
+      fields:
+        alias:
+          required: false
+          selector:
+            text:

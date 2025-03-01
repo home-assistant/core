@@ -18,6 +18,8 @@ from .coordinator import (
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
 
+PARALLEL_UPDATES = 1
+
 
 class HomeConnectCommandButtonEntityDescription(ButtonEntityDescription):
     """Describes Home Connect button entity."""
