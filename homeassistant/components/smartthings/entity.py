@@ -30,8 +30,8 @@ class SmartThingsEntity(Entity):
         self,
         client: SmartThings,
         device: FullDevice,
-        capabilities: set[Capability],
         rooms: dict[str, str],
+        capabilities: set[Capability],
     ) -> None:
         """Initialize the instance."""
         self.client = client
@@ -47,7 +47,9 @@ class SmartThingsEntity(Entity):
             configuration_url="https://account.smartthings.com",
             identifiers={(DOMAIN, device.device.device_id)},
             name=device.device.label,
-            suggested_area=rooms.get("roomId"),
+            suggested_area=(
+                rooms.get(device.device.room_id) if device.device.room_id else None
+            ),
         )
         if device.device.parent_device_id:
             self._attr_device_info["via_device"] = (
