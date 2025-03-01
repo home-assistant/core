@@ -100,7 +100,7 @@ async def test_step_location_errors(
 
     with patch(
         "evohomeasync2.auth.CredentialsManagerBase._post_request",
-        mock_post_request("minimal"),
+        mock_post_request(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -143,7 +143,7 @@ async def test_step_location_bad_index(
 
     with patch(
         "evohomeasync2.auth.CredentialsManagerBase._post_request",
-        mock_post_request("minimal"),
+        mock_post_request(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -197,7 +197,7 @@ async def test_config_flow(
 
     with patch(
         "evohomeasync2.auth.CredentialsManagerBase._post_request",
-        mock_post_request("minimal"),
+        mock_post_request(),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -294,7 +294,7 @@ async def test_import_flow(
     with (
         patch(
             "evohomeasync2.auth.CredentialsManagerBase._post_request",
-            mock_post_request("minimal"),
+            mock_post_request(),
         ),
         patch(
             "evohome.auth.AbstractAuth._make_request",

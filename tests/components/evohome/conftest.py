@@ -42,6 +42,8 @@ from tests.common import (
     load_json_object_fixture,
 )
 
+_DEFAULT_INSTALL = "default"
+
 
 def user_account_config_fixture(install: str) -> JsonObjectType:
     """Load JSON for the config of a user's account."""
@@ -80,13 +82,16 @@ def zone_schedule_fixture(install: str, zon_id: str | None = None) -> JsonObject
         return load_json_object_fixture("default/schedule_zone.json", DOMAIN)
 
 
-def mock_post_request(install: str) -> Callable:
-    """Obtain an access token via a POST to the vendor's web API."""
+def mock_post_request(install: str = _DEFAULT_INSTALL) -> Callable:
+    """Return a HTTP POST method that acts for a specified installation.
+
+    Used to validate user credentials and return the access token / session ID.
+    """
 
     async def post_request(
         self: AbstractTokenManager, url: str, /, **kwargs: Any
     ) -> JsonArrayType | JsonObjectType:
-        """Obtain an access token via a POST to the vendor's web API."""
+        """Validate user credentials and return the access token / session ID."""
 
         if "Token" in url:
             return {
@@ -105,20 +110,23 @@ def mock_post_request(install: str) -> Callable:
     return post_request
 
 
-def mock_make_request(install: str) -> Callable:
-    """Return a get method for a specified installation."""
+def mock_make_request(install: str = _DEFAULT_INSTALL) -> Callable:
+    """Return a HTTP request method that acts for a specified installation.
+
+    Used to process a given request to return the corresponding JSON.
+    """
 
     async def make_request(
         self: Auth, method: HTTPMethod, url: str, **kwargs: Any
     ) -> JsonArrayType | JsonObjectType:
-        """Return the JSON for a HTTP get of a given URL."""
+        """Process a given request to return the corresponding JSON."""
 
         if method != HTTPMethod.GET:
             pytest.fail(f"Unmocked method: {method} {url}")
 
         await self._headers()
 
-        # assume a valid GET, and return the JSON for that web API
+        # assume GET is valid, and return the JSON for that web API
         if url == "accountInfo":  # /v0/accountInfo
             return {}  # will throw a KeyError -> BadApiResponseError
 
