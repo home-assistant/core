@@ -12,6 +12,9 @@ from homeassistant.components.wallbox.const import (
     CHARGER_CURRENCY_KEY,
     CHARGER_CURRENT_VERSION_KEY,
     CHARGER_DATA_KEY,
+    CHARGER_ECO_SMART_KEY,
+    CHARGER_ECO_SMART_MODE_KEY,
+    CHARGER_ECO_SMART_STATUS_KEY,
     CHARGER_ENERGY_PRICE_KEY,
     CHARGER_FEATURES_KEY,
     CHARGER_LOCKED_UNLOCKED_KEY,
@@ -50,6 +53,10 @@ test_response = {
         CHARGER_CURRENCY_KEY: {"code": "EUR/kWh"},
         CHARGER_MAX_ICP_CURRENT_KEY: 20,
         CHARGER_PLAN_KEY: {CHARGER_FEATURES_KEY: [CHARGER_POWER_BOOST_KEY]},
+        CHARGER_ECO_SMART_KEY: {
+            CHARGER_ECO_SMART_STATUS_KEY: False,
+            CHARGER_ECO_SMART_MODE_KEY: 0,
+        },
     },
 }
 
@@ -71,6 +78,10 @@ test_response_bidir = {
         CHARGER_CURRENCY_KEY: {"code": "EUR/kWh"},
         CHARGER_MAX_ICP_CURRENT_KEY: 20,
         CHARGER_PLAN_KEY: {CHARGER_FEATURES_KEY: [CHARGER_POWER_BOOST_KEY]},
+        CHARGER_ECO_SMART_KEY: {
+            CHARGER_ECO_SMART_STATUS_KEY: False,
+            CHARGER_ECO_SMART_MODE_KEY: 0,
+        },
     },
 }
 
