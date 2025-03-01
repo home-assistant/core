@@ -222,6 +222,40 @@
           "description": "Command to call."
         }
       }
+    },
+    "display_control": {
+      "name": "Display Control",
+      "description": "Change display settings and power state.",
+      "fields": {
+        "bridge": {
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]"
+        },
+        "monitor_id": {
+          "name": "Monitor ID",
+          "description": "Target monitor to change settings, ID starts from 0."
+        },
+        "setting": {
+          "name": "Display Setting",
+          "description": "The display setting to be changed."
+        },
+        "value": {
+          "name": "Value",
+          "description": "Target value."
+        }
+      }
+    }
+  },
+  "selector": {
+    "display_setting_keys": {
+      "options": {
+        "brightness": "Brightness",
+        "contrast": "Contrast",
+        "volume": "Volume",
+        "power_state": "Power State",
+        "input_source": "Input Source",
+        "sdr_white_level": "SDR White Level"
+      }
     }
   }
 }
