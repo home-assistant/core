@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import timedelta
+from http import HTTPStatus
 import logging
 from typing import Any, Final, NotRequired, TypedDict
 
@@ -36,13 +38,6 @@ from .const import (
     STORAGE_VER,
 )
 from .storage import TokenDataT, TokenManager
-
-STEP_USER_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_USERNAME): str,  # an email address
-        vol.Required(CONF_PASSWORD): str,
-    }
-)
 
 STEP_LOCATION_SCHEMA = vol.Schema(
     {
@@ -130,81 +125,93 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             title="Evohome", data=self._config, options=self._option
         )
 
-    async def async_reauth(
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle the reauth step after a ConfigEntryAuthFailed."""
+
+        self._config = {
+            CONF_USERNAME: entry_data[CONF_USERNAME],
+            CONF_LOCATION_IDX: entry_data[CONF_LOCATION_IDX],
+        }
+
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the reauth step (username/password) when BadUserCredentials raised."""
+        """Handle the reauth step (username/password)."""
 
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # before testing the credentials (i.e. for load/save callbacks)
             self._config.update(user_input)
 
-            self._token_manager = await self._test_credentials(
-                user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
-            )
+            await self.async_set_unique_id(self._config[CONF_USERNAME].lower())
+            # self._abort_if_unique_id_configured()  # is this required?
 
-            return self.async_create_entry(title="Evohome", data=self._config)
+            try:
+                self._token_manager = await self._test_credentials(
+                    self._config[CONF_USERNAME], user_input[CONF_PASSWORD]
+                )
+
+            except (ConfigEntryAuthFailed, ConfigEntryNotReady) as err:
+                if str(err) not in ("api_exceeded", "cannot_connect", "invalid_auth"):
+                    raise
+                errors["base"] = str(err)
+
+            else:
+                return self.async_create_entry(
+                    title="Evohome", data=self._config, options=self._option
+                )
+
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_PASSWORD): str,
+            }
+        )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
+            step_id="reauth_confirm", data_schema=data_schema, errors=errors
         )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle the initial step (username/password)."""
+        """Handle the user step (username/password)."""
 
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # before testing the credentials (i.e. for load/save callbacks)
             self._config.update(user_input)
+
+            await self.async_set_unique_id(self._config[CONF_USERNAME].lower())
+            self._abort_if_unique_id_configured()
 
             try:
                 self._token_manager = await self._test_credentials(
                     user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
 
-            except ConfigEntryAuthFailed:  # ec2.BadUserCredentialsError
-                errors["base"] = "invalid_auth"
-
-            except ConfigEntryNotReady:  # ec2.ApiRequestFailedError:
-                errors["base"] = "cannot_connect"
+            except (ConfigEntryAuthFailed, ConfigEntryNotReady) as err:
+                if str(err) not in ("rate_exceeded", "cannot_connect", "invalid_auth"):
+                    raise
+                errors["base"] = str(err)
 
             else:
-                self._config.update(user_input)
                 return await self.async_step_location()
 
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
+        data_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_USERNAME, default=self._config.get(CONF_USERNAME)
+                ): str,
+                vol.Required(CONF_PASSWORD): str,
+            }
         )
 
-    async def async_step_location(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the second/final step (location index)."""
-
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            try:
-                self._client = await self._test_location_idx(
-                    self._token_manager, user_input[CONF_LOCATION_IDX]
-                )
-
-            except (IndexError, ec2.ApiRequestFailedError):
-                errors["base"] = "cannot_connect"
-
-            else:
-                self._config.update(user_input)
-                return self.async_create_entry(
-                    title="Evohome", data=self._config, options=self._option
-                )
-
         return self.async_show_form(
-            step_id="location", data_schema=STEP_LOCATION_SCHEMA, errors=errors
+            step_id="user", data_schema=data_schema, errors=errors
         )
 
     async def _test_credentials(self, username: str, password: str) -> TokenManager:
@@ -220,21 +227,48 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         # fetch a new access token from the vendor (i.e. not from the cache)
-        assert not token_manager.refresh_token
-
         try:
             await token_manager.get_access_token()
 
         except ec2.BadUserCredentialsError as err:
-            raise ConfigEntryAuthFailed(str(err)) from err
+            _LOGGER.warning("Invalid credentials: %s", err)
+            raise ConfigEntryAuthFailed("invalid_auth") from err
 
         except ec2.AuthenticationFailedError as err:
-            raise ConfigEntryNotReady(str(err)) from err
-
-        await self.async_set_unique_id(username.lower())
-        self._abort_if_unique_id_configured()  # is this required?
+            _LOGGER.warning("Authentication failed: %s", err)
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS:
+                raise ConfigEntryNotReady("rate_exceeded") from err
+            raise ConfigEntryNotReady("cannot_connect") from err
 
         return token_manager
+
+    async def async_step_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the second/final step (location index)."""
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                self._client = await self._test_location_idx(
+                    self._token_manager, user_input[CONF_LOCATION_IDX]
+                )
+
+            except (ConfigEntryAuthFailed, ConfigEntryNotReady) as err:
+                if str(err) not in ("bad_location", "cannot_connect"):
+                    raise
+                errors["base"] = str(err)
+
+            else:
+                self._config.update(user_input)
+                return self.async_create_entry(
+                    title="Evohome", data=self._config, options=self._option
+                )
+
+        return self.async_show_form(
+            step_id="location", data_schema=STEP_LOCATION_SCHEMA, errors=errors
+        )
 
     async def _test_location_idx(
         self, token_manager: TokenManager, location_idx: int
@@ -247,19 +281,19 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             await client.update(dont_update_status=True)  # ? raise ec2.EvohomeError:
 
         except ec2.ApiRequestFailedError as err:
-            raise ConfigEntryNotReady(str(err)) from err
+            _LOGGER.warning("Request failed: %s", err)
+            raise ConfigEntryNotReady("cannot_connect") from err
 
         try:
             client.locations[location_idx]
 
         except IndexError as err:
-            raise ConfigEntryAuthFailed(
-                f"""
-                    Config error: 'location_idx' = {location_idx},
-                    but the valid range is 0-{len(client.locations) - 1}.
-                    Unable to continue. Fix any configuration errors and restart HA
-                """
-            ) from err
+            msg = f"""
+                Config error: 'location_idx' = {location_idx},
+                but the valid range is 0-{len(client.locations) - 1}.
+            """
+            _LOGGER.warning(msg)
+            raise ConfigEntryNotReady("bad_location") from err
 
         return client
 
