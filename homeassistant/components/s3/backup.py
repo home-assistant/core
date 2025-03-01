@@ -5,6 +5,8 @@ import json
 import logging
 from typing import Any
 
+from aiobotocore.client import AioBaseClient
+
 from homeassistant.components.backup import AgentBackup, BackupAgent, suggested_filename
 from homeassistant.core import HomeAssistant, callback
 
@@ -67,9 +69,9 @@ class S3BackupAgent(BackupAgent):
     def __init__(self, hass: HomeAssistant, entry: S3ConfigEntry) -> None:
         """Initialize the S3 agent."""
         super().__init__()
-        self._client = entry.runtime_data
-        self._bucket = entry.data[CONF_BUCKET]
-        self.name = entry.title
+        self._client: AioBaseClient = entry.runtime_data
+        self._bucket: str = entry.data[CONF_BUCKET]
+        self.name: str = entry.title
         self.unique_id = entry.entry_id
 
     async def async_download_backup(
@@ -146,8 +148,12 @@ class S3BackupAgent(BackupAgent):
         :param backup_id: The ID of the backup that was returned in async_list_backups.
         """
         _LOGGER.debug("Deleting backup with ID %s", backup_id)
-        _, obj = await self._get_backup(backup_id)
-        await self._client.delete_object(Bucket=self._bucket, Key=obj["Key"])
+        try:
+            _, obj = await self._get_backup(backup_id)
+        except ValueError:
+            return
+        else:
+            await self._client.delete_object(Bucket=self._bucket, Key=obj["Key"])
 
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
