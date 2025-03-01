@@ -42,9 +42,8 @@ async def async_setup_entry(
         )
     else:
         coordinator: AdaxCloudCoordinator = entry.runtime_data
-        rooms = coordinator.get_rooms()
         async_add_entities(
-            (AdaxDevice(room, coordinator) for room in rooms),
+            (AdaxDevice(room, coordinator) for room in coordinator.data),
             True,
         )
 
@@ -180,7 +179,7 @@ class LocalAdaxDevice(CoordinatorEntity[AdaxLocalCoordinator], ClimateEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        if data := self.coordinator.get_status():
+        if data := self.coordinator.data:
             self._attr_current_temperature = data["current_temperature"]
             self._attr_available = self._attr_current_temperature is not None
             if (target_temp := data["target_temperature"]) == 0:

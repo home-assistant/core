@@ -43,18 +43,13 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
 
     def get_room(self, room_id: int) -> dict[str, Any] | None:
         """Get a specific room from the loaded Adax data."""
-        rooms = self.data or []
-        for room in filter(lambda r: r["id"] == room_id, rooms):
+        for room in filter(lambda r: r["id"] == room_id, self.data):
             return room
         return None
 
-    def get_rooms(self) -> list[dict[str, Any]]:
-        """Get all rooms for the account."""
-        return self.data or []
-
     async def _async_update_data(self) -> list[dict[str, Any]]:
         """Fetch data from the Adax."""
-        return await self.adax_data_handler.get_rooms()
+        return await self.adax_data_handler.get_rooms() or []
 
 
 class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -80,10 +75,6 @@ class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             entry.data[CONF_TOKEN],
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
-
-    def get_status(self) -> dict[str, Any]:
-        """Get status for the Adax device."""
-        return self.data
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from the Adax."""
