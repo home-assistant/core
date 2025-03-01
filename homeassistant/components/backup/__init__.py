@@ -2,8 +2,7 @@
 
 from homeassistant.config_entries import SOURCE_SYSTEM
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv, discovery_flow
 from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.hassio import is_hassio
@@ -159,15 +158,3 @@ async def async_setup_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bo
 async def async_unload_entry(hass: HomeAssistant, entry: BackupConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-@callback
-def async_get_manager(hass: HomeAssistant) -> BackupManager:
-    """Get the backup manager instance.
-
-    Raises HomeAssistantError if the backup integration is not available.
-    """
-    if DATA_MANAGER not in hass.data:
-        raise HomeAssistantError("Backup integration is not available")
-
-    return hass.data[DATA_MANAGER]
