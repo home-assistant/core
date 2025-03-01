@@ -37,6 +37,7 @@ from .const import (
     MINIMUM_SCAN_INTERVAL_LEGACY,
     STORAGE_KEY,
     STORAGE_VER,
+    SZ_TOKEN_DATA,
 )
 from .storage import EvoTokenDataT, TokenManager
 
@@ -50,8 +51,6 @@ DEFAULT_OPTIONS: Final = {
     CONF_HIGH_PRECISION: DEFAULT_HIGH_PRECISION,
     CONF_SCAN_INTERVAL: DEFAULT_SCAN_INTERVAL,
 }
-
-SZ_TOKEN_DATA: Final = "token_data"
 
 
 _LOGGER = logging.getLogger(__name__.rsplit(".", 1)[0])

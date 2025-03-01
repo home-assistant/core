@@ -29,6 +29,8 @@ ATTR_DURATION: Final = "duration"
 ATTR_PERIOD: Final = "period"
 ATTR_SETPOINT: Final = "setpoint"
 
+SZ_TOKEN_DATA: Final = "token_data"
+
 
 @unique
 class EvoService(StrEnum):
