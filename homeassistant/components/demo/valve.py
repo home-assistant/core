@@ -8,7 +8,7 @@ from typing import Any
 from homeassistant.components.valve import ValveEntity, ValveEntityFeature, ValveState
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 OPEN_CLOSE_DELAY = 2  # Used to give a realistic open/close experience in frontend
 
@@ -16,7 +16,7 @@ OPEN_CLOSE_DELAY = 2  # Used to give a realistic open/close experience in fronte
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Demo config entry."""
     async_add_entities(
