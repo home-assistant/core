@@ -122,12 +122,6 @@ class BackupManagerState(StrEnum):
     RESTORE_BACKUP = "restore_backup"
 
 
-class BackupPlatformState(StrEnum):
-    """Backup platform type."""
-
-    LOADED = "loaded"
-
-
 class CreateBackupStage(StrEnum):
     """Create backup stage enum."""
 
@@ -237,7 +231,6 @@ class BackupPlatformEvent:
     """Backup platform class."""
 
     domain: str
-    state: BackupPlatformState
 
 
 class BackupPlatformProtocol(Protocol):
@@ -463,9 +456,7 @@ class BackupManager:
         LOGGER.debug("%s platforms loaded in total", len(self.platforms))
         LOGGER.debug("%s agents loaded in total", len(self.backup_agents))
         LOGGER.debug("%s local agents loaded in total", len(self.local_backup_agents))
-        event = BackupPlatformEvent(
-            domain=integration_domain, state=BackupPlatformState.LOADED
-        )
+        event = BackupPlatformEvent(domain=integration_domain)
         for subscription in self._backup_platform_event_subscriptions:
             subscription(event)
 
