@@ -149,6 +149,7 @@ async def test_setup_entry(
     hass: HomeAssistant,
 ) -> None:
     """Test setup backup config entry."""
+    await setup_backup_integration(hass, with_hassio=False)
     entry = MockConfigEntry(domain=DOMAIN, source=SOURCE_SYSTEM)
     entry.add_to_hass(hass)
 
