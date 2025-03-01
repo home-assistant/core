@@ -86,6 +86,19 @@ def async_cm_mock() -> AsyncMock:
 
 
 @pytest.fixture
+def async_cm_mock_generator() -> callable:
+    """Return function that generates AsyncMock context manager."""
+
+    def _generator():
+        mocked_client = MagicMock()
+        mocked_client.return_value.__aenter__ = AsyncMock(return_value=mocked_client)
+        mocked_client.return_value.__aexit__ = AsyncMock(return_value=None)
+        return mocked_client
+
+    return _generator
+
+
+@pytest.fixture
 def fake_connect(async_cm_mock):
     "Prepare a fake `asyncssh.connect` cm to simulate a successful connection."
     mck = AsyncMock()

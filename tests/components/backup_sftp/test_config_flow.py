@@ -220,22 +220,28 @@ async def test_config_entry_error(hass: HomeAssistant):
     )
     assert result["step_id"] == "user"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], USER_INPUT)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], USER_INPUT
+    )
     assert "errors" in result and result["errors"]["base"] == "config_entry_error"
     assert (
-        "description_placeholders" in result and
-        "error_message" in result["description_placeholders"] and
-        "Private key file not found in provided path:" in result["description_placeholders"]["error_message"]
+        "description_placeholders" in result
+        and "error_message" in result["description_placeholders"]
+        and "Private key file not found in provided path:"
+        in result["description_placeholders"]["error_message"]
     )
 
     user_input = USER_INPUT.copy()
     user_input[CONF_PASSWORD] = ""
     user_input[CONF_PRIVATE_KEY_FILE] = ""
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], user_input)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
     assert "errors" in result and result["errors"]["base"] == "config_entry_error"
     assert (
-        "description_placeholders" in result and
-        "error_message" in result["description_placeholders"] and
-        "Please configure password or private key" in result["description_placeholders"]["error_message"]
+        "description_placeholders" in result
+        and "error_message" in result["description_placeholders"]
+        and "Please configure password or private key"
+        in result["description_placeholders"]["error_message"]
     )

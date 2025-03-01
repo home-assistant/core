@@ -208,7 +208,15 @@ async def test_agents_download_fail(
     )
     assert resp.status == 500
     content = await resp.content.read()
-    assert "Failed to download backup" in content.decode()
+    assert "Unexpected error while initiating download of backup" in content.decode()
+
+    async_cm_mock.iter_file = MagicMock(side_effect=FileNotFoundError("Error message."))
+    resp = await client.get(
+        f"/api/backup/download/{TEST_AGENT_BACKUP.backup_id}?agent_id={DOMAIN}.{TEST_AGENT_ID}"
+    )
+    assert resp.status == 500
+    content = await resp.content.read()
+    assert "Unable to initiate download of backup" in content.decode()
 
 
 @patch("homeassistant.components.backup_sftp.backup.BackupAgentClient")
@@ -363,6 +371,21 @@ async def test_agents_delete_fail(
     assert response["result"] == {
         "agent_errors": {
             f"{DOMAIN}.{TEST_AGENT_ID}": "Failed to delete backup id: test-backup: Does not exist."
+        }
+    }
+
+    # Test for unexpected exception
+    async_cm_mock.async_delete_backup.side_effect = RuntimeError("Error Message.")
+    await client.send_json_auto_id(
+        {
+            "type": "backup/delete",
+            "backup_id": TEST_AGENT_BACKUP.backup_id,
+        }
+    )
+    response = await client.receive_json()
+    assert response["result"] == {
+        "agent_errors": {
+            f"{DOMAIN}.{TEST_AGENT_ID}": "Unexpected error while removing backup: test-backup: Error Message."
         }
     }
 
