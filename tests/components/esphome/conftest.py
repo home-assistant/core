@@ -30,6 +30,7 @@ from zeroconf import Zeroconf
 from homeassistant.components.esphome import dashboard
 from homeassistant.components.esphome.const import (
     CONF_ALLOW_SERVICE_CALLS,
+    CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
     CONF_NOISE_PSK,
     DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS,
@@ -578,12 +579,29 @@ async def mock_bluetooth_entry(
     async def _mock_bluetooth_entry(
         bluetooth_proxy_feature_flags: BluetoothProxyFeature,
     ) -> MockESPHomeDevice:
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_HOST: "test.local",
+                CONF_PORT: 6053,
+                CONF_PASSWORD: "",
+                CONF_BLUETOOTH_MAC_ADDRESS: "AA:BB:CC:DD:EE:FC",
+            },
+            options={
+                CONF_ALLOW_SERVICE_CALLS: DEFAULT_NEW_CONFIG_ALLOW_ALLOW_SERVICE_CALLS
+            },
+        )
+        entry.add_to_hass(hass)
         return await _mock_generic_device_entry(
             hass,
             mock_client,
-            {"bluetooth_proxy_feature_flags": bluetooth_proxy_feature_flags},
+            {
+                "bluetooth_mac_address": "AA:BB:CC:DD:EE:FC",
+                "bluetooth_proxy_feature_flags": bluetooth_proxy_feature_flags,
+            },
             ([], []),
             [],
+            entry=entry,
         )
 
     return _mock_bluetooth_entry

@@ -1525,6 +1525,15 @@ def floor_areas(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
     return [entry.id for entry in entries if entry.id]
 
 
+def floor_entities(hass: HomeAssistant, floor_id_or_name: str) -> Iterable[str]:
+    """Return entity_ids for a given floor ID or name."""
+    return [
+        entity_id
+        for area_id in floor_areas(hass, floor_id_or_name)
+        for entity_id in area_entities(hass, area_id)
+    ]
+
+
 def areas(hass: HomeAssistant) -> Iterable[str | None]:
     """Return all areas."""
     return list(area_registry.async_get(hass).areas)
@@ -3047,6 +3056,9 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
 
         self.globals["floor_areas"] = hassfunction(floor_areas)
         self.filters["floor_areas"] = self.globals["floor_areas"]
+
+        self.globals["floor_entities"] = hassfunction(floor_entities)
+        self.filters["floor_entities"] = self.globals["floor_entities"]
 
         self.globals["integration_entities"] = hassfunction(integration_entities)
         self.filters["integration_entities"] = self.globals["integration_entities"]
