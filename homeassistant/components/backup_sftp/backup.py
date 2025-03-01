@@ -69,7 +69,9 @@ class SFTPBackupAgent(BackupAgent):
             async with BackupAgentClient(self._entry, self._hass) as client:
                 return await client.iter_file(backup)
         except (AssertionError, FileNotFoundError) as e:
-            raise BackupAgentError(f"Unable to initiate download of backup id: {backup_id}. {e}") from e
+            raise BackupAgentError(
+                f"Unable to initiate download of backup id: {backup_id}. {e}"
+            ) from e
         except Exception as e:
             raise BackupAgentError(
                 f"Unexpected error while initiating download of backup id: {backup_id}. {e}"
