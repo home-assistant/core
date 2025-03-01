@@ -256,6 +256,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "coinbase",
     "color_extractor",
     "comed_hourly_pricing",
+    "comelit",
     "comfoconnect",
     "command_line",
     "compensation",
