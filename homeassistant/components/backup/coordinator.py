@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -52,8 +53,10 @@ class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
             name=DOMAIN,
             update_interval=None,
         )
-        async_subscribe_events(hass, self._on_event)
-        async_subscribe_platform_events(hass, self._on_event)
+        self.unsubscribe: list[Callable[[], None]] = [
+            async_subscribe_events(hass, self._on_event),
+            async_subscribe_platform_events(hass, self._on_event),
+        ]
 
         self.backup_manager = backup_manager
 
@@ -70,3 +73,8 @@ class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
             self.backup_manager.config.data.last_completed_automatic_backup,
             self.backup_manager.config.data.schedule.next_automatic_backup,
         )
+
+    async def async_unsubscribe(self) -> None:
+        """Unsubscribe from events."""
+        for unsub in self.unsubscribe:
+            unsub()
