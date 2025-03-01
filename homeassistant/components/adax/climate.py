@@ -100,7 +100,9 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
             )
         else:
             return
-        await self._adax_data_handler.update()
+
+        # Request data refresh from source to verify that update was successful
+        await self.coordinator.async_request_refresh()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
