@@ -224,6 +224,12 @@
         "tag_options": "mdi:tag",
         "developer_options": "mdi:test-tube"
       }
+    },
+    "create_reward": {
+      "service": "mdi:treasure-chest-outline",
+      "sections": {
+        "developer_options": "mdi:test-tube"
+      }
     }
   }
 }

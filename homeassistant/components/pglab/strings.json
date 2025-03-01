@@ -19,6 +19,17 @@
       "relay": {
         "name": "Relay {relay_id}"
       }
+    },
+    "sensor": {
+      "temperature": {
+        "name": "Temperature"
+      },
+      "runtime": {
+        "name": "Run time"
+      },
+      "mpu_voltage": {
+        "name": "MPU voltage"
+      }
     }
   }
 }

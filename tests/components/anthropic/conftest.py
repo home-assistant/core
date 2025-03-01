@@ -1,7 +1,7 @@
 """Tests helpers."""
 
 from collections.abc import AsyncGenerator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -43,9 +43,7 @@ async def mock_init_component(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> AsyncGenerator[None]:
     """Initialize integration."""
-    with patch(
-        "anthropic.resources.messages.AsyncMessages.create", new_callable=AsyncMock
-    ):
+    with patch("anthropic.resources.models.AsyncModels.retrieve"):
         assert await async_setup_component(hass, "anthropic", {})
         await hass.async_block_till_done()
         yield

@@ -56,6 +56,7 @@ SERVICE_SCORE_REWARD = "score_reward"
 SERVICE_TRANSFORMATION = "transformation"
 
 SERVICE_UPDATE_REWARD = "update_reward"
+SERVICE_CREATE_REWARD = "create_reward"
 
 DEVELOPER_ID = "4c4ca53f-c059-4ffa-966e-9d29dd405daf"
 X_CLIENT = f"{DEVELOPER_ID} - {APPLICATION_NAME} {__version__}"
