@@ -22,7 +22,7 @@
       }
     },
     "extract_media_url": {
-      "name": "Get Media URL",
+      "name": "Get media URL",
       "description": "Extract media URL from a service.",
       "fields": {
         "url": {
