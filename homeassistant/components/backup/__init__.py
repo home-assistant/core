@@ -5,6 +5,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers.backup import DATA_BACKUP
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.typing import ConfigType
 
@@ -18,6 +19,7 @@ from .agent import (
     BackupAgentPlatformProtocol,
     LocalBackupAgent,
 )
+from .config import BackupConfig, CreateBackupParametersDict
 from .const import DATA_MANAGER, DOMAIN
 from .coordinator import BackupConfigEntry, BackupDataUpdateCoordinator
 from .http import async_register_http_views
@@ -34,6 +36,7 @@ from .manager import (
     IdleEvent,
     IncorrectPasswordError,
     ManagerBackup,
+    ManagerStateEvent,
     NewBackup,
     RestoreBackupEvent,
     RestoreBackupStage,
@@ -50,12 +53,14 @@ __all__ = [
     "BackupAgent",
     "BackupAgentError",
     "BackupAgentPlatformProtocol",
+    "BackupConfig",
     "BackupManagerError",
     "BackupNotFound",
     "BackupPlatformProtocol",
     "BackupReaderWriter",
     "BackupReaderWriterError",
     "CreateBackupEvent",
+    "CreateBackupParametersDict",
     "CreateBackupStage",
     "CreateBackupState",
     "Folder",
@@ -63,12 +68,12 @@ __all__ = [
     "IncorrectPasswordError",
     "LocalBackupAgent",
     "ManagerBackup",
+    "ManagerStateEvent",
     "NewBackup",
     "RestoreBackupEvent",
     "RestoreBackupStage",
     "RestoreBackupState",
     "WrittenBackup",
-    "async_get_manager",
     "suggested_filename",
     "suggested_filename_from_name_date",
 ]
@@ -93,7 +98,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     backup_manager = BackupManager(hass, reader_writer)
     hass.data[DATA_MANAGER] = backup_manager
-    await backup_manager.async_setup()
+    try:
+        await backup_manager.async_setup()
+    except Exception as err:
+        hass.data[DATA_BACKUP].manager_ready.set_exception(err)
+        raise
+    else:
+        hass.data[DATA_BACKUP].manager_ready.set_result(None)
 
     async_register_websocket_handlers(hass, with_hassio)
 

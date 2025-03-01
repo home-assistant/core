@@ -45,6 +45,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
+          'continue_conversation': False,
           'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
@@ -137,6 +138,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
+          'continue_conversation': False,
           'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
@@ -229,6 +231,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
+          'continue_conversation': False,
           'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
@@ -345,6 +348,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
+          'continue_conversation': False,
           'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
@@ -432,7 +436,7 @@
   list([
     dict({
       'data': dict({
-        'conversation_id': 'mock-conversation-id',
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -440,7 +444,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': 'mock-conversation-id',
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test input',
@@ -452,6 +456,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
+          'continue_conversation': False,
           'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
@@ -484,7 +489,7 @@
   list([
     dict({
       'data': dict({
-        'conversation_id': 'mock-conversation-id',
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -492,7 +497,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': 'mock-conversation-id',
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test input',
@@ -504,6 +509,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
+          'continue_conversation': False,
           'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
@@ -536,7 +542,7 @@
   list([
     dict({
       'data': dict({
-        'conversation_id': 'mock-conversation-id',
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
       }),
@@ -544,7 +550,7 @@
     }),
     dict({
       'data': dict({
-        'conversation_id': 'mock-conversation-id',
+        'conversation_id': 'mock-ulid',
         'device_id': None,
         'engine': 'conversation.home_assistant',
         'intent_input': 'test input',
@@ -556,6 +562,7 @@
     dict({
       'data': dict({
         'intent_output': dict({
+          'continue_conversation': False,
           'conversation_id': <ANY>,
           'response': dict({
             'card': dict({
@@ -588,7 +595,7 @@
   list([
     dict({
       'data': dict({
-        'conversation_id': 'mock-conversation-id',
+        'conversation_id': 'mock-ulid',
         'language': 'en',
         'pipeline': <ANY>,
       }),

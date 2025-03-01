@@ -40,7 +40,7 @@ class TellstickDevice(Entity):
         self._attr_name = tellcore_device.name
         self._attr_unique_id = tellcore_device.id
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
             async_dispatcher_connect(
@@ -146,6 +146,6 @@ class TellstickDevice(Entity):
             except TelldusError as err:
                 _LOGGER.error(err)
 
-    def update(self):
+    def update(self) -> None:
         """Poll the current state of the device."""
         self._update_from_tellcore()

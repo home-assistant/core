@@ -28,6 +28,7 @@ APPLICATION_CREDENTIALS = [
     "onedrive",
     "point",
     "senz",
+    "smartthings",
     "spotify",
     "tesla_fleet",
     "twitch",

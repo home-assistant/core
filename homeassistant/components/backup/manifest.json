@@ -7,6 +7,6 @@
   "documentation": "https://www.home-assistant.io/integrations/backup",
   "iot_class": "calculated",
   "quality_scale": "internal",
-  "requirements": ["cronsim==2.6", "securetar==2025.1.4"],
+  "requirements": ["cronsim==2.6", "securetar==2025.2.1"],
   "single_config_entry": true
 }
