@@ -231,11 +231,10 @@ def _get_item_thumbnail(
             item_thumbnail = entity.get_browse_image_url(
                 item_type, item.get("id", ""), artwork_track_id
             )
-        else:
-            item_thumbnail = item.get("image_url")
+
     elif search_type in ["Apps", "Radios"]:
         item_thumbnail = player.generate_image_url(item["icon"])
-    else:
+    if item_thumbnail is None:
         item_thumbnail = item.get("image_url")  # will not be proxied by HA
     return item_thumbnail
 
