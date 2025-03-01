@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any, cast
+from uuid import UUID
 
 from aiohttp import ClientError
 from habiticalib import (
@@ -13,10 +14,15 @@ from habiticalib import (
     NotAuthorizedError,
     NotFoundError,
     Skill,
+    Task,
+    TaskData,
+    TaskPriority,
+    TaskType,
     TooManyRequestsError,
 )
 import voluptuous as vol
 
+from homeassistant.components.todo import ATTR_RENAME
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_NAME, CONF_NAME
 from homeassistant.core import (
@@ -31,15 +37,23 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import (
+    ATTR_ALIAS,
     ATTR_ARGS,
     ATTR_CONFIG_ENTRY,
+    ATTR_COST,
     ATTR_DATA,
     ATTR_DIRECTION,
     ATTR_ITEM,
+    ATTR_KEYWORD,
+    ATTR_NOTES,
     ATTR_PATH,
+    ATTR_PRIORITY,
+    ATTR_REMOVE_TAG,
     ATTR_SKILL,
+    ATTR_TAG,
     ATTR_TARGET,
     ATTR_TASK,
+    ATTR_TYPE,
     DOMAIN,
     EVENT_API_CALL_SUCCESS,
     SERVICE_ABORT_QUEST,
@@ -47,14 +61,16 @@ from .const import (
     SERVICE_API_CALL,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
     SERVICE_SCORE_HABIT,
     SERVICE_SCORE_REWARD,
     SERVICE_START_QUEST,
     SERVICE_TRANSFORMATION,
+    SERVICE_UPDATE_REWARD,
 )
-from .types import HabiticaConfigEntry
+from .coordinator import HabiticaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,7 +85,7 @@ SERVICE_API_CALL_SCHEMA = vol.Schema(
 
 SERVICE_CAST_SKILL_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Required(ATTR_SKILL): cv.string,
         vol.Optional(ATTR_TASK): cv.string,
     }
@@ -77,12 +93,12 @@ SERVICE_CAST_SKILL_SCHEMA = vol.Schema(
 
 SERVICE_MANAGE_QUEST_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
     }
 )
 SERVICE_SCORE_TASK_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Required(ATTR_TASK): cv.string,
         vol.Optional(ATTR_DIRECTION): cv.string,
     }
@@ -90,9 +106,39 @@ SERVICE_SCORE_TASK_SCHEMA = vol.Schema(
 
 SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
         vol.Required(ATTR_ITEM): cv.string,
         vol.Required(ATTR_TARGET): cv.string,
+    }
+)
+
+SERVICE_UPDATE_TASK_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Required(ATTR_TASK): cv.string,
+        vol.Optional(ATTR_RENAME): cv.string,
+        vol.Optional(ATTR_NOTES): cv.string,
+        vol.Optional(ATTR_TAG): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_REMOVE_TAG): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_ALIAS): vol.All(
+            cv.string, cv.matches_regex("^[a-zA-Z0-9-_]*$")
+        ),
+        vol.Optional(ATTR_COST): vol.Coerce(float),
+    }
+)
+
+SERVICE_GET_TASKS_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        vol.Optional(ATTR_TYPE): vol.All(
+            cv.ensure_list, [vol.All(vol.Upper, vol.In({x.name for x in TaskType}))]
+        ),
+        vol.Optional(ATTR_PRIORITY): vol.All(
+            cv.ensure_list, [vol.All(vol.Upper, vol.In({x.name for x in TaskPriority}))]
+        ),
+        vol.Optional(ATTR_TASK): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_TAG): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_KEYWORD): cv.string,
     }
 )
 
@@ -201,6 +247,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
             ) from e
         except NotAuthorizedError as e:
             raise ServiceValidationError(
@@ -220,10 +267,17 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 translation_key="skill_not_found",
                 translation_placeholders={"skill": call.data[ATTR_SKILL]},
             ) from e
-        except (HabiticaException, ClientError) as e:
+        except HabiticaException as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e.error.message)},
+            ) from e
+        except ClientError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
             ) from e
         else:
             await coordinator.async_request_refresh()
@@ -251,6 +305,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
             ) from e
         except NotAuthorizedError as e:
             raise ServiceValidationError(
@@ -260,9 +315,17 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             raise ServiceValidationError(
                 translation_domain=DOMAIN, translation_key="quest_not_found"
             ) from e
-        except (HabiticaException, ClientError) as e:
+        except HabiticaException as e:
             raise HomeAssistantError(
-                translation_domain=DOMAIN, translation_key="service_call_exception"
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e.error.message)},
+            ) from e
+        except ClientError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
             ) from e
         else:
             return asdict(response.data)
@@ -312,6 +375,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
             ) from e
         except NotAuthorizedError as e:
             if task_value is not None:
@@ -326,11 +390,19 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+                translation_placeholders={"reason": e.error.message},
             ) from e
-        except (HabiticaException, ClientError) as e:
+        except HabiticaException as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e.error.message)},
+            ) from e
+        except ClientError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
             ) from e
         else:
             await coordinator.async_request_refresh()
@@ -359,10 +431,17 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     translation_domain=DOMAIN,
                     translation_key="party_not_found",
                 ) from e
-            except (ClientError, HabiticaException) as e:
+            except HabiticaException as e:
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="service_call_exception",
+                    translation_placeholders={"reason": str(e.error.message)},
+                ) from e
+            except ClientError as e:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="service_call_exception",
+                    translation_placeholders={"reason": str(e)},
                 ) from e
             try:
                 target_id = next(
@@ -388,6 +467,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
             ) from e
         except NotAuthorizedError as e:
             raise ServiceValidationError(
@@ -395,14 +475,194 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 translation_key="item_not_found",
                 translation_placeholders={"item": call.data[ATTR_ITEM]},
             ) from e
-        except (HabiticaException, ClientError) as e:
+        except HabiticaException as e:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e.error.message)},
+            ) from e
+        except ClientError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
             ) from e
         else:
             return asdict(response.data)
 
+    async def get_tasks(call: ServiceCall) -> ServiceResponse:
+        """Get tasks action."""
+
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
+        coordinator = entry.runtime_data
+        response: list[TaskData] = coordinator.data.tasks
+
+        if types := {TaskType[x] for x in call.data.get(ATTR_TYPE, [])}:
+            response = [task for task in response if task.Type in types]
+
+        if priority := {TaskPriority[x] for x in call.data.get(ATTR_PRIORITY, [])}:
+            response = [task for task in response if task.priority in priority]
+
+        if tasks := call.data.get(ATTR_TASK):
+            response = [
+                task
+                for task in response
+                if str(task.id) in tasks or task.alias in tasks or task.text in tasks
+            ]
+
+        if tags := call.data.get(ATTR_TAG):
+            tag_ids = {
+                tag.id
+                for tag in coordinator.data.user.tags
+                if (tag.name and tag.name.lower())
+                in (tag.lower() for tag in tags)  # Case-insensitive matching
+                and tag.id
+            }
+
+            response = [
+                task
+                for task in response
+                if any(tag_id in task.tags for tag_id in tag_ids if task.tags)
+            ]
+        if keyword := call.data.get(ATTR_KEYWORD):
+            keyword = keyword.lower()
+            response = [
+                task
+                for task in response
+                if (task.text and keyword in task.text.lower())
+                or (task.notes and keyword in task.notes.lower())
+                or any(keyword in item.text.lower() for item in task.checklist)
+            ]
+        result: dict[str, Any] = {
+            "tasks": [task.to_dict(omit_none=False) for task in response]
+        }
+
+        return result
+
+    async def update_task(call: ServiceCall) -> ServiceResponse:
+        """Update task action."""
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
+        coordinator = entry.runtime_data
+        await coordinator.async_refresh()
+
+        try:
+            current_task = next(
+                task
+                for task in coordinator.data.tasks
+                if call.data[ATTR_TASK] in (str(task.id), task.alias, task.text)
+                and task.Type is TaskType.REWARD
+            )
+        except StopIteration as e:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="task_not_found",
+                translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
+            ) from e
+
+        task_id = current_task.id
+        if TYPE_CHECKING:
+            assert task_id
+        data = Task()
+
+        if rename := call.data.get(ATTR_RENAME):
+            data["text"] = rename
+
+        if (notes := call.data.get(ATTR_NOTES)) is not None:
+            data["notes"] = notes
+
+        tags = cast(list[str], call.data.get(ATTR_TAG))
+        remove_tags = cast(list[str], call.data.get(ATTR_REMOVE_TAG))
+
+        if tags or remove_tags:
+            update_tags = set(current_task.tags)
+            user_tags = {
+                tag.name.lower(): tag.id
+                for tag in coordinator.data.user.tags
+                if tag.id and tag.name
+            }
+
+            if tags:
+                # Creates new tag if it doesn't exist
+                async def create_tag(tag_name: str) -> UUID:
+                    tag_id = (await coordinator.habitica.create_tag(tag_name)).data.id
+                    if TYPE_CHECKING:
+                        assert tag_id
+                    return tag_id
+
+                try:
+                    update_tags.update(
+                        {
+                            user_tags.get(tag_name.lower())
+                            or (await create_tag(tag_name))
+                            for tag_name in tags
+                        }
+                    )
+                except TooManyRequestsError as e:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="setup_rate_limit_exception",
+                        translation_placeholders={"retry_after": str(e.retry_after)},
+                    ) from e
+                except HabiticaException as e:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="service_call_exception",
+                        translation_placeholders={"reason": str(e.error.message)},
+                    ) from e
+                except ClientError as e:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="service_call_exception",
+                        translation_placeholders={"reason": str(e)},
+                    ) from e
+
+            if remove_tags:
+                update_tags.difference_update(
+                    {
+                        user_tags[tag_name.lower()]
+                        for tag_name in remove_tags
+                        if tag_name.lower() in user_tags
+                    }
+                )
+
+            data["tags"] = list(update_tags)
+
+        if (alias := call.data.get(ATTR_ALIAS)) is not None:
+            data["alias"] = alias
+
+        if (cost := call.data.get(ATTR_COST)) is not None:
+            data["value"] = cost
+
+        try:
+            response = await coordinator.habitica.update_task(task_id, data)
+        except TooManyRequestsError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
+            ) from e
+        except HabiticaException as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e.error.message)},
+            ) from e
+        except ClientError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
+            ) from e
+        else:
+            return response.data.to_dict(omit_none=True)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UPDATE_REWARD,
+        update_task,
+        schema=SERVICE_UPDATE_TASK_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
     hass.services.async_register(
         DOMAIN,
         SERVICE_API_CALL,
@@ -438,5 +698,12 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         SERVICE_TRANSFORMATION,
         transformation,
         schema=SERVICE_TRANSFORMATION_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_TASKS,
+        get_tasks,
+        schema=SERVICE_GET_TASKS_SCHEMA,
         supports_response=SupportsResponse.ONLY,
     )

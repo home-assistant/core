@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 import subprocess
-from typing import Any, cast
+from typing import Any
 
 from homeassistant.components.notify import BaseNotificationService
 from homeassistant.const import CONF_COMMAND
@@ -26,7 +26,6 @@ def get_service(
     if not discovery_info:
         return None
 
-    discovery_info = cast(DiscoveryInfoType, discovery_info)
     notify_config = discovery_info
     command: str = notify_config[CONF_COMMAND]
     timeout: int = notify_config[CONF_COMMAND_TIMEOUT]

@@ -1176,7 +1176,7 @@ async def test_light_ui_create(
     create_ui_entity: KnxEntityGenerator,
 ) -> None:
     """Test creating a light."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     await create_ui_entity(
         platform=Platform.LIGHT,
         entity_data={"name": "test"},
@@ -1213,7 +1213,7 @@ async def test_light_ui_color_temp(
     raw_ct: tuple[int, ...],
 ) -> None:
     """Test creating a color-temp light."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     await create_ui_entity(
         platform=Platform.LIGHT,
         entity_data={"name": "test"},
@@ -1250,7 +1250,7 @@ async def test_light_ui_multi_mode(
     create_ui_entity: KnxEntityGenerator,
 ) -> None:
     """Test creating a light with multiple color modes."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     await create_ui_entity(
         platform=Platform.LIGHT,
         entity_data={"name": "test"},
@@ -1335,13 +1335,11 @@ async def test_light_ui_multi_mode(
 
 
 async def test_light_ui_load(
-    hass: HomeAssistant,
     knx: KNXTestKit,
-    load_config_store: None,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test loading a light from storage."""
-    await knx.setup_integration({})
+    await knx.setup_integration(config_store_fixture="config_store_light_switch.json")
 
     await knx.assert_read("1/0/21", response=True, ignore_order=True)
     # unrelated switch in config store

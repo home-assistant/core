@@ -4,6 +4,7 @@ import datetime
 import logging
 from unittest.mock import AsyncMock
 
+from aiohttp import ClientError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
@@ -85,11 +86,12 @@ async def test_service_call(
 
 @pytest.mark.parametrize(
     ("exception"),
-    [
-        ERROR_BAD_REQUEST,
-        ERROR_TOO_MANY_REQUESTS,
+    [ERROR_BAD_REQUEST, ERROR_TOO_MANY_REQUESTS, ClientError],
+    ids=[
+        "BadRequestError",
+        "TooManyRequestsError",
+        "ClientError",
     ],
-    ids=["BadRequestError", "TooManyRequestsError"],
 )
 async def test_config_entry_not_ready(
     hass: HomeAssistant,
@@ -131,14 +133,16 @@ async def test_config_entry_auth_failed(
     assert flow["context"].get("entry_id") == config_entry.entry_id
 
 
+@pytest.mark.parametrize("exception", [ERROR_NOT_FOUND, ClientError])
 async def test_coordinator_update_failed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     habitica: AsyncMock,
+    exception: Exception,
 ) -> None:
     """Test coordinator update failed."""
 
-    habitica.get_tasks.side_effect = ERROR_NOT_FOUND
+    habitica.get_tasks.side_effect = exception
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

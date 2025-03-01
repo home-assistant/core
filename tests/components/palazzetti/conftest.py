@@ -79,7 +79,12 @@ def mock_palazzetti_client() -> Generator[AsyncMock]:
         mock_client.target_temperature_max = 50
         mock_client.pellet_quantity = 1248
         mock_client.pellet_level = 0
+        mock_client.has_second_fan = True
+        mock_client.has_second_fan = False
         mock_client.fan_speed = 3
+        mock_client.current_fan_speed.return_value = 3
+        mock_client.min_fan_speed.return_value = 0
+        mock_client.max_fan_speed.return_value = 5
         mock_client.connect.return_value = True
         mock_client.update_state.return_value = True
         mock_client.set_on.return_value = True

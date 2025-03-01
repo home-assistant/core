@@ -3,7 +3,8 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
-    'configuration_url': None,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://overseerr.test',
     'connections': set({
     }),
     'disabled_by': None,

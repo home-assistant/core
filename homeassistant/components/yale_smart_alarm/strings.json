@@ -92,7 +92,7 @@
       "message": "Could not set lock, check system ready for lock"
     },
     "could_not_trigger_panic": {
-      "message": "Could not trigger panic button for entity id {entity_id}: {error}"
+      "message": "Could not trigger panic button for entity ID {entity_id}: {error}"
     }
   }
 }

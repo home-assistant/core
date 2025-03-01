@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -15,7 +16,7 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.entity_registry import RegistryEntry
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -29,7 +30,7 @@ from .entity import (
     ShellyRpcEntity,
     ShellySleepingBlockAttributeEntity,
     async_setup_entry_attribute_entities,
-    async_setup_rpc_attribute_entities,
+    async_setup_entry_rpc,
 )
 from .utils import (
     async_remove_orphaned_entities,
@@ -60,24 +61,38 @@ MOTION_SWITCH = BlockSwitchDescription(
 class RpcSwitchDescription(RpcEntityDescription, SwitchEntityDescription):
     """Class to describe a RPC virtual switch."""
 
+    is_on: Callable[[dict[str, Any]], bool]
+    method_on: str
+    method_off: str
+    method_params_fn: Callable[[int | None, bool], dict]
 
-RPC_VIRTUAL_SWITCH = RpcSwitchDescription(
-    key="boolean",
-    sub_key="value",
-)
 
-RPC_SCRIPT_SWITCH = RpcSwitchDescription(
-    key="script",
-    sub_key="running",
-    entity_registry_enabled_default=False,
-    entity_category=EntityCategory.CONFIG,
-)
+RPC_SWITCHES = {
+    "boolean": RpcSwitchDescription(
+        key="boolean",
+        sub_key="value",
+        is_on=lambda status: bool(status["value"]),
+        method_on="Boolean.Set",
+        method_off="Boolean.Set",
+        method_params_fn=lambda id, value: {"id": id, "value": value},
+    ),
+    "script": RpcSwitchDescription(
+        key="script",
+        sub_key="running",
+        is_on=lambda status: bool(status["running"]),
+        method_on="Script.Start",
+        method_off="Script.Stop",
+        method_params_fn=lambda id, _: {"id": id},
+        entity_registry_enabled_default=False,
+        entity_category=EntityCategory.CONFIG,
+    ),
+}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -90,7 +105,7 @@ async def async_setup_entry(
 def async_setup_block_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for block device."""
     coordinator = config_entry.runtime_data.block
@@ -120,9 +135,8 @@ def async_setup_block_entry(
     relay_blocks = []
     assert coordinator.device.blocks
     for block in coordinator.device.blocks:
-        if (
-            block.type != "relay"
-            or block.channel is not None
+        if block.type != "relay" or (
+            block.channel is not None
             and is_block_channel_type_light(
                 coordinator.device.settings, int(block.channel)
             )
@@ -143,7 +157,7 @@ def async_setup_block_entry(
 def async_setup_rpc_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entities for RPC device."""
     coordinator = config_entry.runtime_data.rpc
@@ -175,20 +189,8 @@ def async_setup_rpc_entry(
         unique_id = f"{coordinator.mac}-switch:{id_}"
         async_remove_shelly_entity(hass, "light", unique_id)
 
-    async_setup_rpc_attribute_entities(
-        hass,
-        config_entry,
-        async_add_entities,
-        {"boolean": RPC_VIRTUAL_SWITCH},
-        RpcVirtualSwitch,
-    )
-
-    async_setup_rpc_attribute_entities(
-        hass,
-        config_entry,
-        async_add_entities,
-        {"script": RPC_SCRIPT_SWITCH},
-        RpcScriptSwitch,
+    async_setup_entry_rpc(
+        hass, config_entry, async_add_entities, RPC_SWITCHES, RpcSwitch
     )
 
     # the user can remove virtual components from the device configuration, so we need
@@ -325,8 +327,8 @@ class RpcRelaySwitch(ShellyRpcEntity, SwitchEntity):
         await self.call_rpc("Switch.Set", {"id": self._id, "on": False})
 
 
-class RpcVirtualSwitch(ShellyRpcAttributeEntity, SwitchEntity):
-    """Entity that controls a virtual boolean component on RPC based Shelly devices."""
+class RpcSwitch(ShellyRpcAttributeEntity, SwitchEntity):
+    """Entity that controls a switch on RPC based Shelly devices."""
 
     entity_description: RpcSwitchDescription
     _attr_has_entity_name = True
@@ -334,32 +336,18 @@ class RpcVirtualSwitch(ShellyRpcAttributeEntity, SwitchEntity):
     @property
     def is_on(self) -> bool:
         """If switch is on."""
-        return bool(self.attribute_value)
+        return self.entity_description.is_on(self.status)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on relay."""
-        await self.call_rpc("Boolean.Set", {"id": self._id, "value": True})
+        await self.call_rpc(
+            self.entity_description.method_on,
+            self.entity_description.method_params_fn(self._id, True),
+        )
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off relay."""
-        await self.call_rpc("Boolean.Set", {"id": self._id, "value": False})
-
-
-class RpcScriptSwitch(ShellyRpcAttributeEntity, SwitchEntity):
-    """Entity that controls a script component on RPC based Shelly devices."""
-
-    entity_description: RpcSwitchDescription
-    _attr_has_entity_name = True
-
-    @property
-    def is_on(self) -> bool:
-        """If switch is on."""
-        return bool(self.status["running"])
-
-    async def async_turn_on(self, **kwargs: Any) -> None:
-        """Turn on relay."""
-        await self.call_rpc("Script.Start", {"id": self._id})
-
-    async def async_turn_off(self, **kwargs: Any) -> None:
-        """Turn off relay."""
-        await self.call_rpc("Script.Stop", {"id": self._id})
+        await self.call_rpc(
+            self.entity_description.method_off,
+            self.entity_description.method_params_fn(self._id, False),
+        )

@@ -9,7 +9,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import YaleConfigEntry
 from .coordinator import YaleDataUpdateCoordinator
@@ -44,7 +44,9 @@ SENSOR_TYPES = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: YaleConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: YaleConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Yale binary sensor entry."""
 
@@ -86,7 +88,7 @@ class YaleDoorBatterySensor(YaleEntity, BinarySensorEntity):
     ) -> None:
         """Initiate Yale door battery Sensor."""
         super().__init__(coordinator, data)
-        self._attr_unique_id = f"{data["address"]}-battery"
+        self._attr_unique_id = f"{data['address']}-battery"
 
     @property
     def is_on(self) -> bool:

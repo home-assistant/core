@@ -92,13 +92,13 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._attr_source_list = []
         self._time_remaining = 0
         self._attr_media_duration = 0
-        self._pianobar: pexpect.spawn | None = None
+        self._pianobar: pexpect.spawn[str] | None = None
 
     def turn_on(self) -> None:
         """Turn the media player on."""
         if self.state != MediaPlayerState.OFF:
             return
-        self._pianobar = pexpect.spawn("pianobar")
+        self._pianobar = pexpect.spawn("pianobar", encoding="utf-8")
         _LOGGER.debug("Started pianobar subprocess")
         mode = self._pianobar.expect(
             ["Receiving new playlist", "Select station:", "Email:"]
@@ -135,8 +135,9 @@ class PandoraMediaPlayer(MediaPlayerEntity):
             self._pianobar.terminate()
         except pexpect.exceptions.TIMEOUT:
             # kill the process group
-            os.killpg(os.getpgid(self._pianobar.pid), signal.SIGTERM)
-            _LOGGER.debug("Killed Pianobar subprocess")
+            if (pid := self._pianobar.pid) is not None:
+                os.killpg(os.getpgid(pid), signal.SIGTERM)
+                _LOGGER.debug("Killed Pianobar subprocess")
         self._pianobar = None
         self._attr_state = MediaPlayerState.OFF
         self.schedule_update_ha_state()
@@ -209,7 +210,7 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         try:
             match_idx = self._pianobar.expect(
                 [
-                    rb"(\d\d):(\d\d)/(\d\d):(\d\d)",
+                    r"(\d\d):(\d\d)/(\d\d):(\d\d)",
                     "No song playing",
                     "Select station",
                     "Receiving new playlist",
@@ -222,21 +223,20 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         self._log_match()
         if match_idx == 1:
             # idle.
-            response = None
-        elif match_idx == 2:
+            return None
+        if match_idx == 2:
             # stuck on a station selection dialog. Clear it.
             _LOGGER.warning("On unexpected station list page")
             self._pianobar.sendcontrol("m")  # press enter
             self._pianobar.sendcontrol("m")  # do it again b/c an 'i' got in
             self.update_playing_status()
-            response = None
-        elif match_idx == 3:
+            return None
+        if match_idx == 3:
             _LOGGER.debug("Received new playlist list")
             self.update_playing_status()
-            response = None
-        else:
-            response = self._pianobar.before.decode("utf-8")
-        return response
+            return None
+
+        return self._pianobar.before
 
     def _update_current_station(self, response: str) -> None:
         """Update current station."""
@@ -307,10 +307,10 @@ class PandoraMediaPlayer(MediaPlayerEntity):
         """List defined Pandora stations."""
         assert self._pianobar is not None
         self._send_station_list_command()
-        station_lines = self._pianobar.before.decode("utf-8")
+        station_lines = self._pianobar.before or ""
         _LOGGER.debug("Getting stations: %s", station_lines)
         self._attr_source_list = []
-        for line in station_lines.split("\r\n"):
+        for line in station_lines.splitlines():
             if match := re.search(r"\d+\).....(.+)", line):
                 station = match.group(1).strip()
                 _LOGGER.debug("Found station %s", station)

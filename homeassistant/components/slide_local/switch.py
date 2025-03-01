@@ -15,11 +15,10 @@ from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import SlideConfigEntry
 from .const import DOMAIN
-from .coordinator import SlideCoordinator
+from .coordinator import SlideConfigEntry, SlideCoordinator
 from .entity import SlideEntity
 
 PARALLEL_UPDATES = 1
@@ -28,7 +27,7 @@ PARALLEL_UPDATES = 1
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SlideConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switch for Slide platform."""
 
@@ -47,7 +46,7 @@ class SlideSwitch(SlideEntity, SwitchEntity):
     def __init__(self, coordinator: SlideCoordinator) -> None:
         """Initialize the slide switch."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.data["mac"]}-touchgo"
+        self._attr_unique_id = f"{coordinator.data['mac']}-touchgo"
 
     @property
     def is_on(self) -> bool:

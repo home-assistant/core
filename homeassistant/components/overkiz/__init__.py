@@ -39,8 +39,8 @@ from .const import (
     LOGGER,
     OVERKIZ_DEVICE_TO_PLATFORM,
     PLATFORMS,
-    UPDATE_INTERVAL,
     UPDATE_INTERVAL_ALL_ASSUMED_STATE,
+    UPDATE_INTERVAL_LOCAL,
 )
 from .coordinator import OverkizDataUpdateCoordinator
 
@@ -103,26 +103,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
+        entry,
         LOGGER,
-        name="device events",
         client=client,
         devices=setup.devices,
         places=setup.root_place,
-        update_interval=UPDATE_INTERVAL,
-        config_entry_id=entry.entry_id,
     )
 
     await coordinator.async_config_entry_first_refresh()
 
     if coordinator.is_stateless:
         LOGGER.debug(
-            (
-                "All devices have an assumed state. Update interval has been reduced"
-                " to: %s"
-            ),
+            "All devices have an assumed state. Update interval has been reduced to: %s",
             UPDATE_INTERVAL_ALL_ASSUMED_STATE,
         )
-        coordinator.update_interval = UPDATE_INTERVAL_ALL_ASSUMED_STATE
+        coordinator.set_update_interval(UPDATE_INTERVAL_ALL_ASSUMED_STATE)
+
+    if api_type == APIType.LOCAL:
+        LOGGER.debug(
+            "Devices connect via Local API. Update interval has been reduced to: %s",
+            UPDATE_INTERVAL_LOCAL,
+        )
+        coordinator.set_update_interval(UPDATE_INTERVAL_LOCAL)
 
     platforms: defaultdict[Platform, list[Device]] = defaultdict(list)
 

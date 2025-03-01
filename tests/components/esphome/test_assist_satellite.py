@@ -25,7 +25,7 @@ from aioesphomeapi import (
 )
 import pytest
 
-from homeassistant.components import assist_satellite, tts
+from homeassistant.components import assist_satellite, conversation, tts
 from homeassistant.components.assist_pipeline import PipelineEvent, PipelineEventType
 from homeassistant.components.assist_satellite import (
     AssistSatelliteConfiguration,
@@ -48,8 +48,11 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, intent as intent_helper
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    intent as intent_helper,
+)
 from homeassistant.helpers.entity_component import EntityComponent
 
 from .conftest import MockESPHomeDevice
@@ -282,12 +285,21 @@ async def test_pipeline_api_audio(
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.INTENT_END,
-                data={"intent_output": {"conversation_id": conversation_id}},
+                data={
+                    "intent_output": conversation.ConversationResult(
+                        response=intent_helper.IntentResponse("en"),
+                        conversation_id=conversation_id,
+                        continue_conversation=True,
+                    ).as_dict()
+                },
             )
         )
         assert mock_client.send_voice_assistant_event.call_args_list[-1].args == (
             VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END,
-            {"conversation_id": conversation_id},
+            {
+                "conversation_id": conversation_id,
+                "continue_conversation": True,
+            },
         )
 
         # TTS
@@ -481,7 +493,12 @@ async def test_pipeline_udp_audio(
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.INTENT_END,
-                data={"intent_output": {"conversation_id": conversation_id}},
+                data={
+                    "intent_output": conversation.ConversationResult(
+                        response=intent_helper.IntentResponse("en"),
+                        conversation_id=conversation_id,
+                    ).as_dict()
+                },
             )
         )
 
@@ -687,7 +704,12 @@ async def test_pipeline_media_player(
         event_callback(
             PipelineEvent(
                 type=PipelineEventType.INTENT_END,
-                data={"intent_output": {"conversation_id": conversation_id}},
+                data={
+                    "intent_output": conversation.ConversationResult(
+                        response=intent_helper.IntentResponse("en"),
+                        conversation_id=conversation_id,
+                    ).as_dict()
+                },
             )
         )
 
