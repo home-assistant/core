@@ -115,7 +115,9 @@ class ComelitSerialBridge(ComelitBaseCoordinator):
         self.api = ComeliteSerialBridgeApi(host, port, pin)
         super().__init__(hass, entry, BRIDGE, host)
 
-    async def _async_update_system_data(self) -> dict[str, Any]:
+    async def _async_update_system_data(
+        self,
+    ) -> dict[str, dict[int, ComelitSerialBridgeObject]]:
         """Specific method for updating data."""
         return await self.api.get_all_devices()
 
@@ -138,6 +140,8 @@ class ComelitVedoSystem(ComelitBaseCoordinator):
         self.api = ComelitVedoApi(host, port, pin)
         super().__init__(hass, entry, VEDO, host)
 
-    async def _async_update_system_data(self) -> dict[str, Any]:
+    async def _async_update_system_data(
+        self,
+    ) -> dict[str, dict[int, ComelitVedoAreaObject | ComelitVedoZoneObject]]:
         """Specific method for updating data."""
         return await self.api.get_all_areas_and_zones()

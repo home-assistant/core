@@ -122,7 +122,7 @@ class ComelitBridgeSensorEntity(CoordinatorEntity[ComelitSerialBridge], SensorEn
         return cast(
             StateType,
             getattr(
-                self.coordinator.data[OTHER][self._device.index],
+                self._device,
                 self.entity_description.key,
             ),
         )
@@ -152,21 +152,14 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
         self.entity_description = description
 
     @property
-    def _zone_object(self) -> ComelitVedoZoneObject:
-        """Zone object."""
-        return cast(
-            ComelitVedoZoneObject, self.coordinator.data[ALARM_ZONES][self._zone.index]
-        )
-
-    @property
     def available(self) -> bool:
         """Sensor availability."""
-        return self._zone_object.human_status != AlarmZoneState.UNAVAILABLE
+        return self._zone.human_status != AlarmZoneState.UNAVAILABLE
 
     @property
     def native_value(self) -> StateType:
         """Sensor value."""
-        if (status := self._zone_object.human_status) == AlarmZoneState.UNKNOWN:
+        if (status := self._zone.human_status) == AlarmZoneState.UNKNOWN:
             return None
 
         return cast(StateType, status.value)

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, cast
 
@@ -17,6 +18,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -40,6 +42,17 @@ class ClimaComelitCommand(StrEnum):
     MANUAL = "man"
     SET = "set"
     AUTO = "auto"
+
+
+@dataclass
+class ClimaObject:
+    """Clima object properties."""
+
+    current_temperature: float
+    mode: str
+    active: bool
+    automatic: bool
+    target_temperature: float
 
 
 API_STATUS: dict[str, dict[str, Any]] = {
@@ -115,51 +128,46 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         self._attr_device_info = coordinator.platform_device_info(device, device.type)
 
     @property
-    def _clima(self) -> list[Any]:
+    def _clima(self) -> ClimaObject:
         """Return clima device data."""
+        if not isinstance(self._device.val, list):
+            raise HomeAssistantError("Invalid clima data")
+
         # CLIMATE has a 2 item tuple:
         # - first  for Clima
         # - second for Humidifier
-        return cast(list, self.coordinator.data[CLIMATE][self._device.index].val[0])
+        values = self._device.val[0]
 
-    @property
-    def _api_mode(self) -> str:
-        """Return device mode."""
-        # Values from API: "O", "L", "U"
-        return cast(str, self._clima[2])
-
-    @property
-    def _api_active(self) -> bool:
-        "Return device active/idle."
-        return cast(bool, self._clima[1])
-
-    @property
-    def _api_automatic(self) -> bool:
-        """Return device in automatic/manual mode."""
-        return cast(bool, self._clima[3] == ClimaComelitMode.AUTO)
+        return ClimaObject(
+            current_temperature=values[0] / 10,
+            mode=values[2],  # Values from API: "O", "L", "U"
+            active=values[1],
+            automatic=(values[3] == ClimaComelitMode.AUTO),
+            target_temperature=values[4] / 10,
+        )
 
     @property
     def target_temperature(self) -> float:
         """Set target temperature."""
-        return cast(float, self._clima[4] / 10)
+        return self._clima.target_temperature
 
     @property
     def current_temperature(self) -> float:
         """Return current temperature."""
-        return cast(float, self._clima[0] / 10)
+        return self._clima.current_temperature
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """HVAC current mode."""
 
-        if self._api_mode == ClimaComelitMode.OFF:
+        if self._clima.mode == ClimaComelitMode.OFF:
             return HVACMode.OFF
 
-        if self._api_automatic:
+        if self._clima.automatic:
             return HVACMode.AUTO
 
-        if self._api_mode in API_STATUS:
-            return cast(HVACMode, API_STATUS[self._api_mode]["hvac_mode"])
+        if self._clima.mode in API_STATUS:
+            return cast(HVACMode, API_STATUS[self._clima.mode]["hvac_mode"])
 
         return None
 
@@ -167,14 +175,14 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     def hvac_action(self) -> HVACAction | None:
         """HVAC current action."""
 
-        if self._api_mode == ClimaComelitMode.OFF:
+        if self._clima.mode == ClimaComelitMode.OFF:
             return HVACAction.OFF
 
-        if not self._api_active:
+        if not self._clima.active:
             return HVACAction.IDLE
 
-        if self._api_mode in API_STATUS:
-            return cast(HVACAction, API_STATUS[self._api_mode]["hvac_action"])
+        if self._clima.mode in API_STATUS:
+            return cast(HVACAction, API_STATUS[self._clima.mode]["hvac_action"])
 
         return None
 
