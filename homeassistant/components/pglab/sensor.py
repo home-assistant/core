@@ -62,11 +62,13 @@ async def async_setup_entry(
     ) -> None:
         """Discover and add a PG LAB Sensor."""
         pglab_discovery = config_entry.runtime_data
-        for description in SENSOR_INFO:
-            pglab_sensor = PGLabSensor(
-                pglab_discovery, pglab_device, pglab_device_sensor, description
-            )
-            async_add_entities([pglab_sensor])
+
+        sensors: list[PGLabSensor] = [
+            PGLabSensor(pglab_discovery, pglab_device, pglab_device_sensor, description)
+            for description in SENSOR_INFO
+        ]
+
+        async_add_entities(sensors)
 
     # Register the callback to create the sensor entity when discovered.
     pglab_discovery = config_entry.runtime_data
