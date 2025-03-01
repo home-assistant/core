@@ -48,7 +48,7 @@ TRIGGERED_SENSOR_TYPES = {
     DeviceTypes.MOTION: BinarySensorDeviceClass.MOTION,
     DeviceTypes.MOTION_V2: BinarySensorDeviceClass.MOTION,
     DeviceTypes.SIREN: BinarySensorDeviceClass.SAFETY,
-    DeviceTypes.OUTDOOR_ALARM_SECURITY_BELL_BOX:  BinarySensorDeviceClass.SAFETY,
+    DeviceTypes.OUTDOOR_ALARM_SECURITY_BELL_BOX: BinarySensorDeviceClass.SAFETY,
     DeviceTypes.SMOKE: BinarySensorDeviceClass.SMOKE,
     # Although this sensor can technically apply to both smoke and carbon, we use the
     # SMOKE device class for simplicity:
