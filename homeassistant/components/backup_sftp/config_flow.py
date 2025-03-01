@@ -6,7 +6,7 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-from asyncssh import SSHClientConnectionOptions, connect
+from asyncssh import KeyImportError, SSHClientConnectionOptions, connect
 from asyncssh.misc import PermissionDenied
 from asyncssh.sftp import SFTPNoSuchFile, SFTPPermissionDenied
 import voluptuous as vol
@@ -116,6 +116,7 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 # Raises:
                 # - OSError, if host or port are not correct.
+                # - asyncssh.KeyImportError, if private key is not valid format.
                 # - asyncssh.misc.PermissionDenied, if credentials are not correct.
                 # - asyncssh.sftp.SFTPNoSuchFile, if directory does not exist.
                 # - asyncssh.sftp.SFTPPermissionDenied, if we don't have access to said directory
@@ -162,11 +163,9 @@ class SFTPFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "sftp_no_such_file"
             except SFTPPermissionDenied:
                 errors["base"] = "sftp_permission_denied"
-            except ConfigEntryError as e:
+            except (ConfigEntryError, KeyImportError) as e:
                 placeholders["error_message"] = str(e)
                 errors["base"] = "config_entry_error"
-                LOGGER.error("Placeholders: %s", placeholders)
-                LOGGER.error("Base: %s", errors)
             except Exception as e:  # noqa: BLE001
                 LOGGER.exception(e)
                 placeholders["error_message"] = str(e)
