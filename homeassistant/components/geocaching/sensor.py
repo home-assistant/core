@@ -15,7 +15,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
+from .const import DOMAIN, PROFILE_ID_SENSOR_FORMAT
 from .coordinator import GeocachingDataUpdateCoordinator
 
 
@@ -26,7 +26,7 @@ class GeocachingSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[GeocachingStatus], str | int | None]
 
 
-SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
+PROFILE_SENSORS: tuple[GeocachingSensorEntityDescription, ...] = (
     GeocachingSensorEntityDescription(
         key="find_count",
         translation_key="find_count",
@@ -69,13 +69,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Geocaching sensor entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: GeocachingDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
     async_add_entities(
-        GeocachingSensor(coordinator, description) for description in SENSORS
+        GeocachingProfileSensor(coordinator, description)
+        for description in PROFILE_SENSORS
     )
 
 
-class GeocachingSensor(
+class GeocachingProfileSensor(
     CoordinatorEntity[GeocachingDataUpdateCoordinator], SensorEntity
 ):
     """Representation of a Sensor."""
@@ -91,9 +92,10 @@ class GeocachingSensor(
         """Initialize the Geocaching sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = (
-            f"{coordinator.data.user.reference_code}_{description.key}"
+        self._attr_unique_id = PROFILE_ID_SENSOR_FORMAT.format(
+            coordinator.data.user.reference_code, description.key
         )
+
         self._attr_device_info = DeviceInfo(
             name=f"Geocaching {coordinator.data.user.username}",
             identifiers={(DOMAIN, cast(str, coordinator.data.user.reference_code))},

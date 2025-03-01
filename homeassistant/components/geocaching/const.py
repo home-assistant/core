@@ -30,3 +30,7 @@ ENVIRONMENT_URLS = {
 ENVIRONMENT = GeocachingApiEnvironment.Production
 
 PLATFORMS = [Platform.SENSOR]
+
+# Sensor ID formats
+PROFILE_ID_SENSOR_FORMAT = DOMAIN + ".{}_{}"
+CACHE_ID_SENSOR_FORMAT = DOMAIN + ".{}_{}"
