@@ -140,8 +140,9 @@ async def test_authentication_failure_import(
         caplog.at_level(logging.WARNING),
     ):
         result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        await hass.async_block_till_done()  # wait for async_setup_entry()
 
-    assert result is False
+    assert result is True  # because credentials are not tested during import
 
     assert caplog.record_tuples == AUTHENTICATION_TESTS[exception]
 
@@ -195,8 +196,9 @@ async def test_client_request_failure_import(
         caplog.at_level(logging.WARNING),
     ):
         result = await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+        await hass.async_block_till_done()  # wait for async_setup_entry()
 
-    assert result is False
+    assert result is True  # because credentials are not tested during import
 
     assert caplog.record_tuples == CLIENT_REQUEST_TESTS[exception]
 
