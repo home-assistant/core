@@ -1,8 +1,9 @@
 """Support for Comelit."""
 
 from abc import abstractmethod
+from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any
+from typing import Any, cast
 
 from aiocomelit import (
     ComeliteSerialBridgeApi,
@@ -13,7 +14,7 @@ from aiocomelit import (
     exceptions,
 )
 from aiocomelit.api import ComelitCommonApi
-from aiocomelit.const import BRIDGE, VEDO
+from aiocomelit.const import ALARM_ZONES, BRIDGE, VEDO
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -102,6 +103,7 @@ class ComelitSerialBridge(ComelitBaseCoordinator):
 
     _hw_version = "20003101"
     api: ComeliteSerialBridgeApi
+    data: dict[str, dict[int, ComelitSerialBridgeObject]]
 
     def __init__(
         self,
@@ -121,12 +123,17 @@ class ComelitSerialBridge(ComelitBaseCoordinator):
         """Specific method for updating data."""
         return await self.api.get_all_devices()
 
+    def select_device(self, _type: str, index: int) -> ComelitSerialBridgeObject:
+        """Return selected device."""
+        return self.data[_type][index]
+
 
 class ComelitVedoSystem(ComelitBaseCoordinator):
     """Queries Comelit VEDO system."""
 
     _hw_version = "VEDO IP"
     api: ComelitVedoApi
+    data: dict[str, Mapping[int, ComelitVedoAreaObject | ComelitVedoZoneObject]]
 
     def __init__(
         self,
@@ -142,6 +149,10 @@ class ComelitVedoSystem(ComelitBaseCoordinator):
 
     async def _async_update_system_data(
         self,
-    ) -> dict[str, dict[int, ComelitVedoAreaObject | ComelitVedoZoneObject]]:
+    ) -> dict[str, Mapping[int, ComelitVedoAreaObject | ComelitVedoZoneObject]]:
         """Specific method for updating data."""
         return await self.api.get_all_areas_and_zones()
+
+    def select_zone(self, index: int) -> ComelitVedoZoneObject:
+        """Return selected zone."""
+        return cast(ComelitVedoZoneObject, self.data[ALARM_ZONES][index])

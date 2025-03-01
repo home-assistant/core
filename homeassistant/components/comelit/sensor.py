@@ -88,6 +88,7 @@ async def async_setup_vedo_entry(
                 coordinator, device, config_entry.entry_id, sensor_desc
             )
             for sensor_desc in SENSOR_VEDO_TYPES
+            if isinstance(device, ComelitVedoZoneObject)
         )
     async_add_entities(entities)
 
@@ -142,7 +143,7 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
     ) -> None:
         """Init sensor entity."""
         self._api = coordinator.api
-        self._zone = zone
+        self._zone_index = zone.index
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
@@ -152,14 +153,19 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
         self.entity_description = description
 
     @property
+    def _zone_object(self) -> ComelitVedoZoneObject:
+        """Zone object."""
+        return self.coordinator.select_zone(self._zone_index)
+
+    @property
     def available(self) -> bool:
         """Sensor availability."""
-        return self._zone.human_status != AlarmZoneState.UNAVAILABLE
+        return self._zone_object.human_status != AlarmZoneState.UNAVAILABLE
 
     @property
     def native_value(self) -> StateType:
         """Sensor value."""
-        if (status := self._zone.human_status) == AlarmZoneState.UNKNOWN:
+        if (status := self._zone_object.human_status) == AlarmZoneState.UNKNOWN:
             return None
 
         return cast(StateType, status.value)

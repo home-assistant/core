@@ -130,13 +130,14 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     @property
     def _clima(self) -> ClimaObject:
         """Return clima device data."""
-        if not isinstance(self._device.val, list):
-            raise HomeAssistantError("Invalid clima data")
-
         # CLIMATE has a 2 item tuple:
         # - first  for Clima
         # - second for Humidifier
-        values = self._device.val[0]
+        device = self.coordinator.data[CLIMATE][self._device.index]
+        if not isinstance(device.val, list):
+            raise HomeAssistantError("Invalid clima data")
+
+        values = device.val[0]
 
         return ClimaObject(
             current_temperature=values[0] / 10,

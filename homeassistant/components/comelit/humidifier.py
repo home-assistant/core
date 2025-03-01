@@ -137,13 +137,14 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
     @property
     def _humidifier(self) -> HumidifierObject:
         """Return humidifier device data."""
-        if not isinstance(self._device.val, list):
-            raise HomeAssistantError("Invalid humidifier data")
-
         # CLIMATE has a 2 item tuple:
         # - first  for Clima
         # - second for Humidifier
-        values = self._device.val[1]
+        device = self.coordinator.data[CLIMATE][self._device.index]
+        if not isinstance(device.val, list):
+            raise HomeAssistantError("Invalid humidifier data")
+
+        values = device.val[1]
 
         return HumidifierObject(
             current_humidity=values[0] / 10,
