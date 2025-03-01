@@ -10,8 +10,7 @@ from zwave_js_server.model.node import Node
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.device_registry as dr
-import homeassistant.helpers.issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from tests.components.repairs import (
     async_process_repairs_platforms,
@@ -181,7 +180,7 @@ async def test_device_config_file_changed_ignore_step(
 
 
 @pytest.mark.parametrize(
-    "ignore_translations",
+    "ignore_missing_translations",
     ["component.zwave_js.issues.invalid_issue.title"],
 )
 async def test_invalid_issue(

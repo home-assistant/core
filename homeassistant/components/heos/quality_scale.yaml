@@ -1,13 +1,11 @@
 rules:
   # Bronze
-  action-setup:
-    status: todo
-    comment: Future enhancement to move custom actions for login/out into an options flow.
+  action-setup: done
   appropriate-polling:
     status: done
     comment: Integration is a local push integration
   brands: done
-  common-modules: todo
+  common-modules: done
   config-flow-test-coverage: done
   config-flow:
     status: done
@@ -16,12 +14,8 @@ rules:
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions: todo
-  entity-event-setup:
-    status: todo
-    comment: |
-      Simplify by using async_on_remove instead of keeping track of listeners to remove
-      later in async_will_remove_from_hass.
+  docs-removal-instructions: done
+  entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -29,71 +23,43 @@ rules:
   test-before-setup: done
   unique-config-entry: done
   # Silver
-  action-exceptions:
-    status: todo
-    comment: Actions currently only log and instead should raise exceptions.
+  action-exceptions: done
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: done
-    comment: |
-      The integration doesn't provide any additional configuration parameters.
+  docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: todo
-    comment: |
-      The integration currently spams the logs until reconnected
-  parallel-updates:
-    status: todo
-    comment: Needs to be set to 0. The underlying library handles parallel updates.
-  reauthentication-flow:
-    status: exempt
-    comment: |
-      This integration doesn't require re-authentication.
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
   test-coverage:
-    status: todo
-    comment: |
-      1. Integration has >95% coverage, however tests need to be updated to not patch internals.
-      2. test_async_setup_entry_connect_failure and test_async_setup_entry_player_failure -> Instead of
-         calling async_setup_entry directly, rather use hass.config_entries.async_setup and then assert
-         the config_entry.state is what we expect.
-      3. test_unload_entry -> We should use hass.config_entries.async_unload and assert the entry state
-      4. Recommend using snapshot in test_state_attributes.
-      5. Find a way to avoid using internal dispatcher in test_updates_from_connection_event.
+    status: done
+    comment: 99% test coverage
   # Gold
-  devices:
-    status: todo
-    comment: |
-      The integraiton creates devices, but needs to stringify the id for the device identifier and
-      also migrate the device.
-  diagnostics: todo
-  discovery-update-info:
-    status: todo
-    comment: Explore if this is possible.
+  devices: done
+  diagnostics: done
+  discovery-update-info: done
   discovery: done
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting:
-    status: todo
-    comment: Has some troublehsooting setps, but needs to be improved
+  docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
-  stale-devices: todo
+  repair-issues: done
+  stale-devices: done
   # Platinum
   async-dependency: done
   inject-websession:
     status: done
     comment: The integration does not use websession
-  strict-typing: todo
+  strict-typing: done

@@ -5,9 +5,15 @@ from urllib.parse import urlparse
 
 import pywilight
 
-from homeassistant.components import ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_MANUFACTURER,
+    ATTR_UPNP_MODEL_NAME,
+    ATTR_UPNP_MODEL_NUMBER,
+    ATTR_UPNP_SERIAL,
+    SsdpServiceInfo,
+)
 
 from .const import DOMAIN
 
@@ -53,25 +59,25 @@ class WiLightFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(title=self._title, data=data)
 
     async def async_step_ssdp(
-        self, discovery_info: ssdp.SsdpServiceInfo
+        self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a discovered WiLight."""
         # Filter out basic information
         if (
             not discovery_info.ssdp_location
-            or ssdp.ATTR_UPNP_MANUFACTURER not in discovery_info.upnp
-            or ssdp.ATTR_UPNP_SERIAL not in discovery_info.upnp
-            or ssdp.ATTR_UPNP_MODEL_NAME not in discovery_info.upnp
-            or ssdp.ATTR_UPNP_MODEL_NUMBER not in discovery_info.upnp
+            or ATTR_UPNP_MANUFACTURER not in discovery_info.upnp
+            or ATTR_UPNP_SERIAL not in discovery_info.upnp
+            or ATTR_UPNP_MODEL_NAME not in discovery_info.upnp
+            or ATTR_UPNP_MODEL_NUMBER not in discovery_info.upnp
         ):
             return self.async_abort(reason="not_wilight_device")
         # Filter out non-WiLight devices
-        if discovery_info.upnp[ssdp.ATTR_UPNP_MANUFACTURER] != WILIGHT_MANUFACTURER:
+        if discovery_info.upnp[ATTR_UPNP_MANUFACTURER] != WILIGHT_MANUFACTURER:
             return self.async_abort(reason="not_wilight_device")
 
         host = urlparse(discovery_info.ssdp_location).hostname
-        serial_number = discovery_info.upnp[ssdp.ATTR_UPNP_SERIAL]
-        model_name = discovery_info.upnp[ssdp.ATTR_UPNP_MODEL_NAME]
+        serial_number = discovery_info.upnp[ATTR_UPNP_SERIAL]
+        model_name = discovery_info.upnp[ATTR_UPNP_MODEL_NAME]
 
         if not self._wilight_update(host, serial_number, model_name):
             return self.async_abort(reason="not_wilight_device")

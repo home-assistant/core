@@ -7,7 +7,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.helpers import selector
-from homeassistant.util import yaml
+from homeassistant.util import yaml as yaml_util
 
 FAKE_UUID = "a266a680b608c32770e6c45bfe6b8411"
 
@@ -77,7 +77,7 @@ def _test_selector(
         "selector": {selector_type: selector_instance.config}
     }
     # Test serialized selector can be dumped to YAML
-    yaml.dump(selector_instance.serialize())
+    yaml_util.dump(selector_instance.serialize())
 
 
 @pytest.mark.parametrize(

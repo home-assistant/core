@@ -14,14 +14,12 @@ from synology_dsm.exceptions import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .common import SynoApi, raise_config_entry_auth_error
 from .const import (
-    DEFAULT_SCAN_INTERVAL,
     SIGNAL_CAMERA_SOURCE_CHANGED,
     SYNOLOGY_AUTH_FAILED_EXCEPTIONS,
     SYNOLOGY_CONNECTION_EXCEPTIONS,
@@ -59,6 +57,8 @@ def async_re_login_on_expired[_T: SynologyDSMUpdateCoordinator[Any], **_P, _R](
 class SynologyDSMUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """DataUpdateCoordinator base class for synology_dsm."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -68,10 +68,10 @@ class SynologyDSMUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     ) -> None:
         """Initialize synology_dsm DataUpdateCoordinator."""
         self.api = api
-        self.entry = entry
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=f"{entry.title} {self.__class__.__name__}",
             update_interval=update_interval,
         )
@@ -120,14 +120,7 @@ class SynologyDSMCentralUpdateCoordinator(SynologyDSMUpdateCoordinator[None]):
         api: SynoApi,
     ) -> None:
         """Initialize DataUpdateCoordinator for central device."""
-        super().__init__(
-            hass,
-            entry,
-            api,
-            timedelta(
-                minutes=entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-            ),
-        )
+        super().__init__(hass, entry, api, timedelta(minutes=15))
 
     @async_re_login_on_expired
     async def _async_update_data(self) -> None:
@@ -174,7 +167,7 @@ class SynologyDSMCameraUpdateCoordinator(
             ):
                 async_dispatcher_send(
                     self.hass,
-                    f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{self.entry.entry_id}_{cam_id}",
+                    f"{SIGNAL_CAMERA_SOURCE_CHANGED}_{self.config_entry.entry_id}_{cam_id}",
                     cam_data_new.live_view.rtsp,
                 )
 

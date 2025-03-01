@@ -20,6 +20,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import DEFAULT_NAME, DOMAIN
 
@@ -30,7 +31,7 @@ def _format_id(value: str | int) -> str:
     return f"{value or 0:04X}"
 
 
-def _generate_unique_id(info: ListPortInfo | usb.UsbServiceInfo) -> str:
+def _generate_unique_id(info: ListPortInfo | UsbServiceInfo) -> str:
     """Generate unique id from usb attributes."""
     return (
         f"{_format_id(info.vid)}:{_format_id(info.pid)}_{info.serial_number}"
@@ -98,9 +99,7 @@ class RainforestRavenConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(step_id="meters", data_schema=schema, errors=errors)
 
-    async def async_step_usb(
-        self, discovery_info: usb.UsbServiceInfo
-    ) -> ConfigFlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB Discovery."""
         device = discovery_info.device
         dev_path = await self.hass.async_add_executor_job(usb.get_serial_by_id, device)

@@ -22,7 +22,30 @@
     "error": {
       "unauthorized_error": "The credentials are incorrect.",
       "network_error": "The Mastodon instance was not found.",
-      "unknown": "Unknown error occured when connecting to the Mastodon instance."
+      "unknown": "Unknown error occurred when connecting to the Mastodon instance."
+    }
+  },
+  "exceptions": {
+    "not_loaded": {
+      "message": "{target} is not loaded."
+    },
+    "integration_not_found": {
+      "message": "Integration \"{target}\" not found in registry."
+    },
+    "unable_to_send_message": {
+      "message": "Unable to send message."
+    },
+    "unable_to_upload_image": {
+      "message": "Unable to upload image {media_path}."
+    },
+    "not_whitelisted_directory": {
+      "message": "{media} is not a whitelisted directory."
+    }
+  },
+  "issues": {
+    "deprecated_notify_action": {
+      "title": "Deprecated Notify action used for Mastodon",
+      "description": "The Notify action for Mastodon is deprecated.\n\nUse the `mastodon.post` action instead."
     }
   },
   "entity": {
@@ -38,6 +61,52 @@
       "posts": {
         "name": "Posts",
         "unit_of_measurement": "posts"
+      }
+    }
+  },
+  "services": {
+    "post": {
+      "name": "Post",
+      "description": "Posts a status on your Mastodon account.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Mastodon account",
+          "description": "Select the Mastodon account to post to."
+        },
+        "status": {
+          "name": "Status",
+          "description": "The status to post."
+        },
+        "visibility": {
+          "name": "Visibility",
+          "description": "The visibility of the post (default: account setting)."
+        },
+        "content_warning": {
+          "name": "Content warning",
+          "description": "A content warning will be shown before the status text is shown (default: no content warning)."
+        },
+        "media": {
+          "name": "Media",
+          "description": "Attach an image or video to the post."
+        },
+        "media_description": {
+          "name": "Media description",
+          "description": "If an image or video is attached, will add a description for this media for people with visual impairments."
+        },
+        "media_warning": {
+          "name": "Media warning",
+          "description": "If an image or video is attached, will mark the media as sensitive (default: no media warning)."
+        }
+      }
+    }
+  },
+  "selector": {
+    "post_visibility": {
+      "options": {
+        "public": "Public - Visible to everyone",
+        "unlisted": "Unlisted - Public but not shown in public timelines",
+        "private": "Private - Followers only",
+        "direct": "Direct - Mentioned accounts only"
       }
     }
   }

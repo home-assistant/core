@@ -2,25 +2,48 @@
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any
 
 from mastodon import Mastodon
 from mastodon.Mastodon import MastodonError
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import LOGGER
 
 
+@dataclass
+class MastodonData:
+    """Mastodon data type."""
+
+    client: Mastodon
+    instance: dict
+    account: dict
+    coordinator: MastodonCoordinator
+
+
+type MastodonConfigEntry = ConfigEntry[MastodonData]
+
+
 class MastodonCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Mastodon data."""
 
-    def __init__(self, hass: HomeAssistant, client: Mastodon) -> None:
+    config_entry: MastodonConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: MastodonConfigEntry, client: Mastodon
+    ) -> None:
         """Initialize coordinator."""
         super().__init__(
-            hass, logger=LOGGER, name="Mastodon", update_interval=timedelta(hours=1)
+            hass,
+            logger=LOGGER,
+            config_entry=config_entry,
+            name="Mastodon",
+            update_interval=timedelta(hours=1),
         )
         self.client = client
 

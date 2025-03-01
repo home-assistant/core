@@ -408,7 +408,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         if self._fixed_color_mode:
             return self._fixed_color_mode
 
-        # The light supports both hs/xy and white with adjustabe color_temperature
+        # The light supports both hs/xy and white with adjustable color_temperature
         mode = self._color_mode
         if mode in ("xy", "hs"):
             return ColorMode.HS

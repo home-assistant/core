@@ -1,5 +1,7 @@
 """Support for EcoNet products."""
 
+from pyeconet.equipment import Equipment
+
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -8,18 +10,18 @@ from homeassistant.helpers.entity import Entity
 from .const import DOMAIN, PUSH_UPDATE
 
 
-class EcoNetEntity(Entity):
+class EcoNetEntity[_EquipmentT: Equipment = Equipment](Entity):
     """Define a base EcoNet entity."""
 
     _attr_should_poll = False
 
-    def __init__(self, econet):
+    def __init__(self, econet: _EquipmentT) -> None:
         """Initialize."""
         self._econet = econet
         self._attr_name = econet.device_name
         self._attr_unique_id = f"{econet.device_id}_{econet.device_name}"
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
         await super().async_added_to_hass()
         self.async_on_remove(
@@ -27,12 +29,12 @@ class EcoNetEntity(Entity):
         )
 
     @callback
-    def on_update_received(self):
+    def on_update_received(self) -> None:
         """Update was pushed from the ecoent API."""
         self.async_write_ha_state()
 
     @property
-    def available(self):
+    def available(self) -> bool:
         """Return if the device is online or not."""
         return self._econet.connected
 

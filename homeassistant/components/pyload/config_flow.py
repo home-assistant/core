@@ -7,8 +7,7 @@ import logging
 from typing import Any
 
 from aiohttp import CookieJar
-from pyloadapi.api import PyLoadAPI
-from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
+from pyloadapi import CannotConnect, InvalidAuth, ParserError, PyLoadAPI
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -22,15 +21,15 @@ from homeassistant.const import (
     CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
-from .const import DEFAULT_HOST, DEFAULT_NAME, DEFAULT_PORT, DOMAIN
+from .const import DEFAULT_NAME, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +82,7 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Non
     )
 
     url = (
-        f"{"https" if user_input[CONF_SSL] else "http"}://"
+        f"{'https' if user_input[CONF_SSL] else 'http'}://"
         f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}/"
     )
     pyload = PyLoadAPI(
@@ -120,7 +119,7 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                title = user_input.pop(CONF_NAME, DEFAULT_NAME)
+                title = DEFAULT_NAME
                 return self.async_create_entry(title=title, data=user_input)
 
         return self.async_show_form(
@@ -130,25 +129,6 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
-
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import config from yaml."""
-
-        config = {
-            CONF_NAME: import_data.get(CONF_NAME),
-            CONF_HOST: import_data.get(CONF_HOST, DEFAULT_HOST),
-            CONF_PASSWORD: import_data.get(CONF_PASSWORD, ""),
-            CONF_PORT: import_data.get(CONF_PORT, DEFAULT_PORT),
-            CONF_SSL: import_data.get(CONF_SSL, False),
-            CONF_USERNAME: import_data.get(CONF_USERNAME, ""),
-            CONF_VERIFY_SSL: False,
-        }
-
-        result = await self.async_step_user(config)
-
-        if errors := result.get("errors"):
-            return self.async_abort(reason=errors["base"])
-        return result
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

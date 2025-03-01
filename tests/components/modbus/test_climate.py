@@ -24,6 +24,8 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -54,6 +56,9 @@ from homeassistant.components.modbus.const import (
     CONF_HVAC_MODE_OFF,
     CONF_HVAC_MODE_REGISTER,
     CONF_HVAC_MODE_VALUES,
+    CONF_HVAC_OFF_VALUE,
+    CONF_HVAC_ON_VALUE,
+    CONF_HVAC_ONOFF_COIL,
     CONF_HVAC_ONOFF_REGISTER,
     CONF_MAX_TEMP,
     CONF_MIN_TEMP,
@@ -369,6 +374,109 @@ async def test_config_hvac_onoff_register(hass: HomeAssistant, mock_modbus) -> N
             CONF_CLIMATES: [
                 {
                     CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_REGISTER: 11,
+                }
+            ],
+        },
+    ],
+)
+async def test_config_hvac_onoff_coil(hass: HomeAssistant, mock_modbus) -> None:
+    """Run configuration test for On/Off coil."""
+    state = hass.states.get(ENTITY_ID)
+    assert HVACMode.OFF in state.attributes[ATTR_HVAC_MODES]
+    assert HVACMode.AUTO in state.attributes[ATTR_HVAC_MODES]
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_REGISTER: 11,
+                    CONF_HVAC_ON_VALUE: 0xAA,
+                    CONF_HVAC_OFF_VALUE: 0xFF,
+                }
+            ],
+        },
+    ],
+)
+async def test_hvac_onoff_values(hass: HomeAssistant, mock_modbus) -> None:
+    """Run configuration test for On/Off register values."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_modbus.write_register.assert_called_with(11, value=0xAA, slave=10)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_modbus.write_register.assert_called_with(11, value=0xFF, slave=10)
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
+                    CONF_TARGET_TEMP: 117,
+                    CONF_ADDRESS: 117,
+                    CONF_SLAVE: 10,
+                    CONF_HVAC_ONOFF_COIL: 11,
+                }
+            ],
+        },
+    ],
+)
+async def test_hvac_onoff_coil(hass: HomeAssistant, mock_modbus) -> None:
+    """Run configuration test for On/Off coil values."""
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_modbus.write_coil.assert_called_with(11, value=1, slave=10)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    mock_modbus.write_coil.assert_called_with(11, value=0, slave=10)
+
+
+@pytest.mark.parametrize(
+    "do_config",
+    [
+        {
+            CONF_CLIMATES: [
+                {
+                    CONF_NAME: TEST_ENTITY_NAME,
                     CONF_SLAVE: 1,
                     CONF_TARGET_TEMP: 117,
                     CONF_ADDRESS: 117,
@@ -515,6 +623,126 @@ async def test_service_climate_update(
     )
     await hass.async_block_till_done()
     assert hass.states.get(ENTITY_ID).state == result
+
+
+@pytest.mark.parametrize(
+    ("do_config", "result", "register_words", "coil_value"),
+    [
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: [130, 131, 132, 133, 134, 135, 136],
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 1,
+                                CONF_HVAC_MODE_DRY: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_COIL: 11,
+                    },
+                ]
+            },
+            HVACMode.COOL,
+            [0x00],
+            [0x01],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 119,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 1,
+                                CONF_HVAC_MODE_DRY: 2,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_COIL: 11,
+                    },
+                ]
+            },
+            HVACMode.HEAT,
+            [0x01],
+            [0x01],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_MODE_REGISTER: {
+                            CONF_ADDRESS: 118,
+                            CONF_HVAC_MODE_VALUES: {
+                                CONF_HVAC_MODE_COOL: 0,
+                                CONF_HVAC_MODE_HEAT: 2,
+                                CONF_HVAC_MODE_DRY: 3,
+                            },
+                        },
+                        CONF_HVAC_ONOFF_COIL: 11,
+                    },
+                ]
+            },
+            HVACMode.OFF,
+            [0x00],
+            [0x00],
+        ),
+        (
+            {
+                CONF_CLIMATES: [
+                    {
+                        CONF_NAME: TEST_ENTITY_NAME,
+                        CONF_TARGET_TEMP: 120,
+                        CONF_ADDRESS: 117,
+                        CONF_SLAVE: 10,
+                        CONF_SCAN_INTERVAL: 0,
+                        CONF_DATA_TYPE: DataType.INT32,
+                        CONF_HVAC_ONOFF_COIL: 11,
+                    },
+                ]
+            },
+            "unavailable",
+            [0x00],
+            None,
+        ),
+    ],
+)
+async def test_hvac_onoff_coil_update(
+    hass: HomeAssistant, mock_modbus_ha, result, register_words, coil_value
+) -> None:
+    """Test climate update based on On/Off coil values."""
+    mock_modbus_ha.read_holding_registers.return_value = ReadResult(register_words)
+    mock_modbus_ha.read_coils.return_value = ReadResult(coil_value)
+
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == result
 
 
 @pytest.mark.parametrize(

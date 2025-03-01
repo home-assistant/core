@@ -178,9 +178,26 @@ def async_register_scanner(
     hass: HomeAssistant,
     scanner: BaseHaScanner,
     connection_slots: int | None = None,
+    source_domain: str | None = None,
+    source_model: str | None = None,
+    source_config_entry_id: str | None = None,
+    source_device_id: str | None = None,
 ) -> CALLBACK_TYPE:
     """Register a BleakScanner."""
-    return _get_manager(hass).async_register_scanner(scanner, connection_slots)
+    return _get_manager(hass).async_register_hass_scanner(
+        scanner,
+        connection_slots,
+        source_domain,
+        source_model,
+        source_config_entry_id,
+        source_device_id,
+    )
+
+
+@hass_callback
+def async_remove_scanner(hass: HomeAssistant, source: str) -> None:
+    """Permanently remove a BleakScanner by source address."""
+    return _get_manager(hass).async_remove_scanner(source)
 
 
 @hass_callback
