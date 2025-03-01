@@ -213,7 +213,7 @@ class HomematicipHAP:
 
             try:
                 await self.home.get_current_state_async()
-                hmip_events = await self.home.enable_events()
+                hmip_events = self.home.enable_events()
                 tries = 0
                 await hmip_events
             except HmipConnectionError:
@@ -244,7 +244,7 @@ class HomematicipHAP:
         self._ws_close_requested = True
         if self._retry_task is not None:
             self._retry_task.cancel()
-        self.home.disable_events()
+        await self.home.disable_events_async()
         _LOGGER.debug("Closed connection to HomematicIP cloud server")
         await self.hass.config_entries.async_unload_platforms(
             self.config_entry, PLATFORMS
