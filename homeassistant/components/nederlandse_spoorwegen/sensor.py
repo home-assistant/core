@@ -241,7 +241,6 @@ class NSDepartureSensor(SensorEntity):
             )
         else:
             trip_time = datetime.now().strftime("%d-%m-%Y %H:%M")
-            _LOGGER.debug(trip_time)
 
         try:
             self._trips = self._nsapi.get_trips(
