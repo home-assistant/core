@@ -12,7 +12,6 @@ from pyephember.pyephember import (
     zone_current_temperature,
     zone_is_active,
     zone_is_boost_active,
-    zone_is_hot_water,
     zone_mode,
     zone_name,
     zone_target_temperature,
@@ -66,12 +65,24 @@ def setup_platform(
     """Set up the ephember thermostat."""
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    ember = EphEmber
+    homes = []
 
     try:
         ember = EphEmber(username, password)
-        zones = ember.get_zones()
-        for zone in zones:
-            add_entities([EphEmberThermostat(ember, zone)])
+    except RuntimeError:
+        _LOGGER.error("Cannot login to EphEmber")
+
+    try:
+        homes = ember.get_zones()
+    except RuntimeError:
+        _LOGGER.error("Fail to get zones")
+        return
+
+    try:
+        for home in homes:
+            for zone in home["zones"]:
+                add_entities([EphEmberThermostat(ember, zone)])
     except RuntimeError:
         _LOGGER.error("Cannot connect to EphEmber")
         return
@@ -90,7 +101,12 @@ class EphEmberThermostat(ClimateEntity):
         self._ember = ember
         self._zone_name = zone_name(zone)
         self._zone = zone
-        self._hot_water = zone_is_hot_water(zone)
+
+        # hot water = true, is immersive device without target temperature.
+        if zone["deviceType"] != 773:
+            self._hot_water = False
+        else:
+            self._hot_water = True
 
         self._attr_name = self._zone_name
 
@@ -133,7 +149,7 @@ class EphEmberThermostat(ClimateEntity):
         """Set the operation mode."""
         mode = self.map_mode_hass_eph(hvac_mode)
         if mode is not None:
-            self._ember.set_mode_by_name(self._zone_name, mode)
+            self._ember.set_zone_mode(self._zone["zoneid"], mode)
         else:
             _LOGGER.error("Invalid operation mode provided %s", hvac_mode)
 
@@ -188,7 +204,7 @@ class EphEmberThermostat(ClimateEntity):
 
     def update(self) -> None:
         """Get the latest data."""
-        self._zone = self._ember.get_zone(self._zone_name)
+        self._zone = self._ember.get_zone(self._zone["zoneid"])
 
     @staticmethod
     def map_mode_hass_eph(operation_mode):
