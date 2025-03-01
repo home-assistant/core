@@ -8,6 +8,8 @@ from typing import Final
 
 from geocachingapi.models import GeocachingApiEnvironment
 
+from homeassistant.const import Platform
+
 from .models import GeocachingOAuthApiUrls
 
 DOMAIN: Final = "geocaching"
@@ -26,3 +28,5 @@ ENVIRONMENT_URLS = {
 }
 
 ENVIRONMENT = GeocachingApiEnvironment.Production
+
+PLATFORMS = [Platform.SENSOR]
