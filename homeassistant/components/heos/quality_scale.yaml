@@ -38,9 +38,7 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: todo
-    comment: Explore if this is possible.
+  discovery-update-info: done
   discovery: done
   docs-data-update: done
   docs-examples: done
@@ -57,7 +55,7 @@ rules:
   exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
-  repair-issues: todo
+  repair-issues: done
   stale-devices: done
   # Platinum
   async-dependency: done

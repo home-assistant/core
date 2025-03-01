@@ -3,7 +3,7 @@
 from unittest.mock import patch
 
 import pytest
-from python_picnic_api.session import PicnicAuthError
+from python_picnic_api2.session import PicnicAuthError
 import requests
 
 from homeassistant import config_entries

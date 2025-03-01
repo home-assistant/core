@@ -17,6 +17,7 @@ from homeassistant.components.backup import (
 )
 from homeassistant.components.google_drive import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from .conftest import CONFIG_ENTRY_TITLE, TEST_AGENT_ID
@@ -63,7 +64,8 @@ async def setup_integration(
     config_entry: MockConfigEntry,
     mock_api: MagicMock,
 ) -> None:
-    """Set up Google Drive integration."""
+    """Set up Google Drive and backup integrations."""
+    async_initialize_backup(hass)
     config_entry.add_to_hass(hass)
     assert await async_setup_component(hass, BACKUP_DOMAIN, {BACKUP_DOMAIN: {}})
     mock_api.list_files = AsyncMock(

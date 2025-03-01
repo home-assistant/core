@@ -509,65 +509,6 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             entity_category=EntityCategory.CONFIG,
         ),
     ),
-    # Smart Camera - Low power consumption camera
-    # Undocumented, see https://github.com/home-assistant/core/issues/132844
-    "dghsxj": (
-        SwitchEntityDescription(
-            key=DPCode.WIRELESS_BATTERYLOCK,
-            translation_key="battery_lock",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.CRY_DETECTION_SWITCH,
-            translation_key="cry_detection",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.DECIBEL_SWITCH,
-            translation_key="sound_detection",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.RECORD_SWITCH,
-            translation_key="video_recording",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.MOTION_RECORD,
-            translation_key="motion_recording",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.BASIC_PRIVATE,
-            translation_key="privacy_mode",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.BASIC_FLIP,
-            translation_key="flip",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.BASIC_OSD,
-            translation_key="time_watermark",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.BASIC_WDR,
-            translation_key="wide_dynamic_range",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.MOTION_TRACKING,
-            translation_key="motion_tracking",
-            entity_category=EntityCategory.CONFIG,
-        ),
-        SwitchEntityDescription(
-            key=DPCode.MOTION_SWITCH,
-            translation_key="motion_alarm",
-            entity_category=EntityCategory.CONFIG,
-        ),
-    ),
     # Smart Gardening system
     # https://developer.tuya.com/en/docs/iot/categorysz?id=Kaiuz4e6h7up0
     "sz": (
@@ -793,6 +734,10 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
 # Socket (duplicate of `pc`)
 # https://developer.tuya.com/en/docs/iot/s?id=K9gf7o5prgf7s
 SWITCHES["cz"] = SWITCHES["pc"]
+
+# Smart Camera - Low power consumption camera (duplicate of `sp`)
+# Undocumented, see https://github.com/home-assistant/core/issues/132844
+SWITCHES["dghsxj"] = SWITCHES["sp"]
 
 
 async def async_setup_entry(
