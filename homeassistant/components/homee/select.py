@@ -27,6 +27,11 @@ SELECT_DESCRIPTIONS: dict[AttributeType, SelectEntityDescription] = {
         options=["0", "1", "2"],
         entity_category=EntityCategory.CONFIG,
     ),
+    AttributeType.WIND_MONITORING_STATE: SelectEntityDescription(
+        key="wind_monitoring_state",
+        options=["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"],
+        entity_category=EntityCategory.CONFIG,
+    ),
 }
 
 
