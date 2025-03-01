@@ -156,3 +156,7 @@ class ComelitVedoSystem(ComelitBaseCoordinator):
     def select_zone(self, index: int) -> ComelitVedoZoneObject:
         """Return selected zone."""
         return cast(ComelitVedoZoneObject, self.data[ALARM_ZONES][index])
+
+    def select_area(self, index: int) -> ComelitVedoAreaObject:
+        """Return selected zone."""
+        return cast(ComelitVedoAreaObject, self.data[ALARM_ZONES][index])

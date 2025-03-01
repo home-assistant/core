@@ -57,6 +57,7 @@ async def async_setup_entry(
     async_add_entities(
         ComelitAlarmEntity(coordinator, device, config_entry.entry_id)
         for device in coordinator.data[ALARM_AREAS].values()
+        if isinstance(device, ComelitVedoAreaObject)
     )
 
 
@@ -80,7 +81,7 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
     ) -> None:
         """Initialize the alarm panel."""
         self._api = coordinator.api
-        self._area = area
+        self._area_index = area.index
         super().__init__(coordinator)
         # Use config_entry.entry_id as base for unique_id
         # because no serial number or mac is available
@@ -88,6 +89,11 @@ class ComelitAlarmEntity(CoordinatorEntity[ComelitVedoSystem], AlarmControlPanel
         self._attr_device_info = coordinator.platform_device_info(area, "area")
         if area.p2:
             self._attr_supported_features |= AlarmControlPanelEntityFeature.ARM_NIGHT
+
+    @property
+    def _area(self) -> ComelitVedoAreaObject:
+        """Return area object."""
+        return self.coordinator.select_area(self._area_index)
 
     @property
     def available(self) -> bool:
