@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock
 
+from pysmartthings import DeviceResponse, DeviceStatus
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -11,7 +12,7 @@ from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_fixture
 
 
 async def test_devices(
@@ -50,3 +51,34 @@ async def test_removing_stale_devices(
     await hass.async_block_till_done()
 
     assert not device_registry.async_get_device({(DOMAIN, "aaa-bbb-ccc")})
+
+
+async def test_hub_via_device(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_smartthings: AsyncMock,
+) -> None:
+    """Test hub with child devices."""
+    mock_smartthings.get_devices.return_value = DeviceResponse.from_json(
+        load_fixture("devices/hub.json", DOMAIN)
+    ).items
+    mock_smartthings.get_device_status.side_effect = [
+        DeviceStatus.from_json(
+            load_fixture(f"device_status/{fixture}.json", DOMAIN)
+        ).components
+        for fixture in ("hub", "multipurpose_sensor")
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    hub_device = device_registry.async_get_device(
+        {(DOMAIN, "074fa784-8be8-4c70-8e22-6f5ed6f81b7e")}
+    )
+    assert hub_device == snapshot
+    assert (
+        device_registry.async_get_device(
+            {(DOMAIN, "374ba6fa-5a08-4ea2-969c-1fa43d86e21f")}
+        ).via_device_id
+        == hub_device.id
+    )
