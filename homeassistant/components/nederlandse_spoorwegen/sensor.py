@@ -165,13 +165,13 @@ class NSDepartureSensor(SensorEntity):
         # Planned departure attributes
         if self._first_trip.departure_time_planned is not None:
             attributes["departure_time_planned"] = (
-                self._first_trip.departure_time_planned.strftime("%H:%M:%S")
+                self._first_trip.departure_time_planned.strftime("%H:%M")
             )
 
         # Actual departure attributes
         if self._first_trip.departure_time_actual is not None:
             attributes["departure_time_actual"] = (
-                self._first_trip.departure_time_actual.strftime("%H:%M:%S")
+                self._first_trip.departure_time_actual.strftime("%H:%M")
             )
 
         # Delay departure attributes
@@ -186,13 +186,13 @@ class NSDepartureSensor(SensorEntity):
         # Planned arrival attributes
         if self._first_trip.arrival_time_planned is not None:
             attributes["arrival_time_planned"] = (
-                self._first_trip.arrival_time_planned.strftime("%H:%M:%S")
+                self._first_trip.arrival_time_planned.strftime("%H:%M")
             )
 
         # Actual arrival attributes
         if self._first_trip.arrival_time_actual is not None:
             attributes["arrival_time_actual"] = (
-                self._first_trip.arrival_time_actual.strftime("%H:%M:%S")
+                self._first_trip.arrival_time_actual.strftime("%H:%M")
             )
 
         # Delay arrival attributes
@@ -205,12 +205,10 @@ class NSDepartureSensor(SensorEntity):
 
         # Next attributes
         if self._next_trip.departure_time_actual is not None:
-            attributes["next"] = self._next_trip.departure_time_actual.strftime(
-                "%H:%M:%S"
-            )
+            attributes["next"] = self._next_trip.departure_time_actual.strftime("%H:%M")
         elif self._next_trip.departure_time_planned is not None:
             attributes["next"] = self._next_trip.departure_time_planned.strftime(
-                "%H:%M:%S"
+                "%H:%M"
             )
         else:
             attributes["next"] = None
@@ -267,7 +265,7 @@ class NSDepartureSensor(SensorEntity):
                 if len(filtered_times) > 0:
                     sorted_times = sorted(filtered_times, key=lambda x: x[1])
                     self._first_trip = self._trips[sorted_times[0][0]]
-                    self._state = sorted_times[0][1].strftime("%H:%M:%S")
+                    self._state = sorted_times[0][1].strftime("%H:%M")
                 else:
                     self._first_trip = None
                     self._state = None
