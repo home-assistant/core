@@ -218,8 +218,8 @@ class MqttLightJson(MqttEntity, LightEntity, RestoreEntity):
             else:
                 self._attr_color_mode = ColorMode.UNKNOWN
         elif config.get(CONF_BRIGHTNESS):
-            # Brightness is supported and no colore_modes are set,
-            # set brightness as supported color mode.
+            # Brightness is supported and no supported_color_modes are set,
+            # so set brightness as the supported color mode.
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def _update_color(self, values: dict[str, Any]) -> None:
