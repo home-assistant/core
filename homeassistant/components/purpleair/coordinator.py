@@ -46,6 +46,9 @@ SENSOR_FIELDS_TO_RETRIEVE = [
 UPDATE_INTERVAL = timedelta(minutes=2)
 
 
+type PurpleAirConfigEntry = ConfigEntry[PurpleAirDataUpdateCoordinator]
+
+
 class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
     """Define a PurpleAir-specific coordinator."""
 
