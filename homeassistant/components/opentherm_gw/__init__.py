@@ -88,23 +88,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     hass.data[DATA_OPENTHERM_GW][DATA_GATEWAYS][config_entry.data[CONF_ID]] = gateway
 
     # Migration can be removed in 2025.4.0
-    dev_reg = dr.async_get(hass)
-    if (
-        migrate_device := dev_reg.async_get_device(
-            {(DOMAIN, config_entry.data[CONF_ID])}
-        )
-    ) is not None:
-        dev_reg.async_update_device(
-            migrate_device.id,
-            new_identifiers={
-                (
-                    DOMAIN,
-                    f"{config_entry.data[CONF_ID]}-{OpenThermDeviceIdentifier.GATEWAY}",
-                )
-            },
-        )
-
-    # Migration can be removed in 2025.4.0
     ent_reg = er.async_get(hass)
     if (
         entity_id := ent_reg.async_get_entity_id(
