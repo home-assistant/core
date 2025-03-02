@@ -213,6 +213,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 OverkizCommand.REFRESH_TARGET_TEMPERATURE, refresh_afterwards=False
             )
             await self.coordinator.async_refresh()
+
         elif operation_mode == STATE_PERFORMANCE:
             if self.is_boost_mode_on:
                 await self.async_turn_boost_mode_off(refresh_afterwards=False)
@@ -225,6 +226,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 refresh_afterwards=False,
             )
             await self.coordinator.async_refresh()
+
         elif operation_mode == STATE_HEAT_PUMP:
             if self.is_boost_mode_on:
                 await self.async_turn_boost_mode_off(refresh_afterwards=False)
@@ -237,6 +239,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 refresh_afterwards=False,
             )
             await self.coordinator.async_refresh()
+
         elif operation_mode == STATE_ELECTRIC:
             if self.is_away_mode_on:
                 await self.async_turn_away_mode_off(refresh_afterwards=False)
