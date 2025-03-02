@@ -23,9 +23,6 @@ from homeassistant.components.assist_pipeline import (
     vad,
 )
 from homeassistant.components.media_player import async_process_play_media_url
-from homeassistant.components.tts import (
-    generate_media_source_id as tts_generate_media_source_id,
-)
 from homeassistant.core import Context, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, entity
@@ -484,6 +481,9 @@ class AssistSatelliteEntity(entity.Entity):
             pipeline_id = self._resolve_pipeline()
             pipeline = async_get_pipeline(self.hass, pipeline_id)
 
+            if pipeline.tts_engine is None:
+                raise HomeAssistantError("Pipeline has no TTS engine configured")
+
             tts_options: dict[str, Any] = {}
             if pipeline.tts_voice is not None:
                 tts_options[tts.ATTR_VOICE] = pipeline.tts_voice
@@ -491,14 +491,15 @@ class AssistSatelliteEntity(entity.Entity):
             if self.tts_options is not None:
                 tts_options.update(self.tts_options)
 
-            media_id = tts_generate_media_source_id(
+            stream = tts.async_create_stream(
                 self.hass,
-                message,
                 engine=pipeline.tts_engine,
                 language=pipeline.tts_language,
                 options=tts_options,
             )
-            original_media_id = media_id
+            stream.async_set_message(message)
+            media_id = stream.url
+            original_media_id = stream.media_source_id
 
         if media_source.is_media_source_id(media_id):
             if not media_id_source:
