@@ -8,7 +8,9 @@
     dict({
       'agent_id': 'conversation.openai',
       'content': None,
+      'metadata': None,
       'role': 'assistant',
+      'thinking': None,
       'tool_calls': list([
         dict({
           'id': 'call_call_1',
@@ -43,7 +45,9 @@
     dict({
       'agent_id': 'conversation.openai',
       'content': 'Cool',
+      'metadata': None,
       'role': 'assistant',
+      'thinking': None,
       'tool_calls': None,
     }),
   ])
