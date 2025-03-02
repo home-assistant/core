@@ -114,6 +114,7 @@ async def test_template_state_text(hass: HomeAssistant) -> None:
         AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
         AlarmControlPanelState.ARMING,
         AlarmControlPanelState.DISARMED,
+        AlarmControlPanelState.DISARMING,
         AlarmControlPanelState.PENDING,
         AlarmControlPanelState.TRIGGERED,
     ):
