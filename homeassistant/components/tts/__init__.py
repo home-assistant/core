@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import AsyncGenerator
 from dataclasses import dataclass
 from datetime import datetime
-from functools import partial
 import hashlib
 from http import HTTPStatus
 import io
@@ -18,7 +17,7 @@ import secrets
 import subprocess
 import tempfile
 from time import monotonic
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, TypedDict
 
 from aiohttp import web
 import mutagen
@@ -28,22 +27,8 @@ import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
-from homeassistant.components.media_player import (
-    ATTR_MEDIA_ANNOUNCE,
-    ATTR_MEDIA_CONTENT_ID,
-    ATTR_MEDIA_CONTENT_TYPE,
-    DOMAIN as DOMAIN_MP,
-    SERVICE_PLAY_MEDIA,
-    MediaType,
-)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    EVENT_HOMEASSISTANT_STOP,
-    PLATFORM_FORMAT,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, PLATFORM_FORMAT
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -58,9 +43,8 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.network import get_url
-from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, ConfigType
-from homeassistant.util import dt as dt_util, language as language_util
+from homeassistant.util import language as language_util
 
 from .const import (
     ATTR_CACHE,
@@ -78,6 +62,7 @@ from .const import (
     DOMAIN,
     TtsAudioType,
 )
+from .entity import TextToSpeechEntity
 from .helper import get_engine_instance
 from .legacy import PLATFORM_SCHEMA, PLATFORM_SCHEMA_BASE, Provider, async_setup_legacy
 from .media_source import generate_media_source_id, media_source_id_to_kwargs
@@ -94,12 +79,13 @@ __all__ = [
     "PLATFORM_SCHEMA",
     "PLATFORM_SCHEMA_BASE",
     "Provider",
+    "ResultStream",
     "SampleFormat",
+    "TextToSpeechEntity",
     "TtsAudioType",
     "Voice",
     "async_default_engine",
     "async_get_media_source_audio",
-    "async_support_options",
     "generate_media_source_id",
 ]
 
@@ -181,22 +167,19 @@ def async_resolve_engine(hass: HomeAssistant, engine: str | None) -> str | None:
     return async_default_engine(hass)
 
 
-async def async_support_options(
+@callback
+def async_create_stream(
     hass: HomeAssistant,
     engine: str,
     language: str | None = None,
     options: dict | None = None,
-) -> bool:
-    """Return if an engine supports options."""
-    if (engine_instance := get_engine_instance(hass, engine)) is None:
-        raise HomeAssistantError(f"Provider {engine} not found")
-
-    try:
-        hass.data[DATA_TTS_MANAGER].process_options(engine_instance, language, options)
-    except HomeAssistantError:
-        return False
-
-    return True
+) -> ResultStream:
+    """Create a streaming URL where the rendered TTS can be retrieved."""
+    return hass.data[DATA_TTS_MANAGER].async_create_result_stream(
+        engine=engine,
+        language=language,
+        options=options,
+    )
 
 
 async def async_get_media_source_audio(
@@ -389,20 +372,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
-CACHED_PROPERTIES_WITH_ATTR_ = {
-    "default_language",
-    "default_options",
-    "supported_languages",
-    "supported_options",
-}
-
-
 @dataclass
 class ResultStream:
     """Class that will stream the result when available."""
 
     # Streaming/conversion properties
-    url: str
+    token: str
     extension: str
     content_type: str
 
@@ -415,6 +390,11 @@ class ResultStream:
     _manager: SpeechManager
 
     @cached_property
+    def url(self) -> str:
+        """Get the URL to stream the result."""
+        return f"/api/tts_proxy/{self.token}"
+
+    @cached_property
     def _result_cache_key(self) -> asyncio.Future[str]:
         """Get the future that returns the cache key."""
         return asyncio.Future()
@@ -424,139 +404,23 @@ class ResultStream:
         """Set cache key for message to be streamed."""
         self._result_cache_key.set_result(cache_key)
 
-    async def async_get_result(self) -> bytes:
+    @callback
+    def async_set_message(self, message: str) -> None:
+        """Set message to be generated."""
+        cache_key = self._manager.async_cache_message_in_memory(
+            engine=self.engine,
+            message=message,
+            use_file_cache=self.use_file_cache,
+            language=self.language,
+            options=self.options,
+        )
+        self._result_cache_key.set_result(cache_key)
+
+    async def async_stream_result(self) -> AsyncGenerator[bytes]:
         """Get the stream of this result."""
         cache_key = await self._result_cache_key
         _extension, data = await self._manager.async_get_tts_audio(cache_key)
-        return data
-
-
-class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
-    """Represent a single TTS engine."""
-
-    _attr_should_poll = False
-    __last_tts_loaded: str | None = None
-
-    _attr_default_language: str
-    _attr_default_options: Mapping[str, Any] | None = None
-    _attr_supported_languages: list[str]
-    _attr_supported_options: list[str] | None = None
-
-    @property
-    @final
-    def state(self) -> str | None:
-        """Return the state of the entity."""
-        if self.__last_tts_loaded is None:
-            return None
-        return self.__last_tts_loaded
-
-    @cached_property
-    def supported_languages(self) -> list[str]:
-        """Return a list of supported languages."""
-        return self._attr_supported_languages
-
-    @cached_property
-    def default_language(self) -> str:
-        """Return the default language."""
-        return self._attr_default_language
-
-    @cached_property
-    def supported_options(self) -> list[str] | None:
-        """Return a list of supported options like voice, emotions."""
-        return self._attr_supported_options
-
-    @cached_property
-    def default_options(self) -> Mapping[str, Any] | None:
-        """Return a mapping with the default options."""
-        return self._attr_default_options
-
-    @callback
-    def async_get_supported_voices(self, language: str) -> list[Voice] | None:
-        """Return a list of supported voices for a language."""
-        return None
-
-    async def async_internal_added_to_hass(self) -> None:
-        """Call when the entity is added to hass."""
-        await super().async_internal_added_to_hass()
-        try:
-            _ = self.default_language
-        except AttributeError as err:
-            raise AttributeError(
-                "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
-            ) from err
-        try:
-            _ = self.supported_languages
-        except AttributeError as err:
-            raise AttributeError(
-                "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
-            ) from err
-        state = await self.async_get_last_state()
-        if (
-            state is not None
-            and state.state is not None
-            and state.state not in (STATE_UNAVAILABLE, STATE_UNKNOWN)
-        ):
-            self.__last_tts_loaded = state.state
-
-    async def async_speak(
-        self,
-        media_player_entity_id: list[str],
-        message: str,
-        cache: bool,
-        language: str | None = None,
-        options: dict | None = None,
-    ) -> None:
-        """Speak via a Media Player."""
-        await self.hass.services.async_call(
-            DOMAIN_MP,
-            SERVICE_PLAY_MEDIA,
-            {
-                ATTR_ENTITY_ID: media_player_entity_id,
-                ATTR_MEDIA_CONTENT_ID: generate_media_source_id(
-                    self.hass,
-                    message=message,
-                    engine=self.entity_id,
-                    language=language,
-                    options=options,
-                    cache=cache,
-                ),
-                ATTR_MEDIA_CONTENT_TYPE: MediaType.MUSIC,
-                ATTR_MEDIA_ANNOUNCE: True,
-            },
-            blocking=True,
-            context=self._context,
-        )
-
-    @final
-    async def internal_async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
-    ) -> TtsAudioType:
-        """Process an audio stream to TTS service.
-
-        Only streaming content is allowed!
-        """
-        self.__last_tts_loaded = dt_util.utcnow().isoformat()
-        self.async_write_ha_state()
-        return await self.async_get_tts_audio(
-            message=message, language=language, options=options
-        )
-
-    def get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
-    ) -> TtsAudioType:
-        """Load tts audio file from the engine."""
-        raise NotImplementedError
-
-    async def async_get_tts_audio(
-        self, message: str, language: str, options: dict[str, Any]
-    ) -> TtsAudioType:
-        """Load tts audio file from the engine.
-
-        Return a tuple of file extension and data as bytes.
-        """
-        return await self.hass.async_add_executor_job(
-            partial(self.get_tts_audio, message, language, options=options)
-        )
+        yield data
 
 
 def _hash_options(options: dict) -> str:
@@ -754,7 +618,7 @@ class SpeechManager:
         token = f"{secrets.token_urlsafe(16)}.{extension}"
         content, _ = mimetypes.guess_type(token)
         result_stream = ResultStream(
-            url=f"/api/tts_proxy/{token}",
+            token=token,
             extension=extension,
             content_type=content or "audio/mpeg",
             use_file_cache=use_file_cache,
@@ -1178,20 +1042,32 @@ class TextToSpeechView(HomeAssistantView):
         """Initialize a tts view."""
         self.manager = manager
 
-    async def get(self, request: web.Request, token: str) -> web.Response:
+    async def get(self, request: web.Request, token: str) -> web.StreamResponse:
         """Start a get request."""
         stream = self.manager.token_to_stream.get(token)
 
         if stream is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
+        response: web.StreamResponse | None = None
         try:
-            data = await stream.async_get_result()
-        except HomeAssistantError as err:
-            _LOGGER.error("Error on get tts: %s", err)
+            async for data in stream.async_stream_result():
+                if response is None:
+                    response = web.StreamResponse()
+                    response.content_type = stream.content_type
+                    await response.prepare(request)
+
+                await response.write(data)
+        # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.error("Error streaming tts: %s", err)
+
+        # Empty result or exception happened
+        if response is None:
             return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
 
-        return web.Response(body=data, content_type=stream.content_type)
+        await response.write_eof()
+        return response
 
 
 @websocket_api.websocket_command(
