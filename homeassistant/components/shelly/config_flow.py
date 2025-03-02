@@ -7,12 +7,7 @@ from typing import Any, Final, cast
 
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
-from aioshelly.const import (
-    BLOCK_GENERATIONS,
-    DEFAULT_HTTP_PORT,
-    MODEL_WALL_DISPLAY,
-    RPC_GENERATIONS,
-)
+from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
