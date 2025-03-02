@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from unittest.mock import MagicMock
+import weakref
 
 from freezegun.api import FrozenDateTimeFactory
 from homewizard_energy.errors import DisabledError, UnauthorizedError
@@ -25,6 +26,9 @@ async def test_load_unload_v1(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
+    weak_ref = weakref.ref(mock_config_entry.runtime_data)
+    assert weak_ref() is not None
+
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert len(mock_homewizardenergy.combined.mock_calls) == 1
 
@@ -32,6 +36,7 @@ async def test_load_unload_v1(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    assert weak_ref() is None
 
 
 async def test_load_unload_v2(

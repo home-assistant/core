@@ -89,7 +89,7 @@ async def _async_import(hass: HomeAssistant, config: ConfigType) -> None:
 async def async_setup_entry(hass: HomeAssistant, entry: SmartyConfigEntry) -> bool:
     """Set up the Smarty environment from a config entry."""
 
-    coordinator = SmartyCoordinator(hass)
+    coordinator = SmartyCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 

@@ -84,8 +84,8 @@ async def test_options_flow_live_tv_in_apps(
     hass: HomeAssistant, client, apps, inputs
 ) -> None:
     """Test options config flow Live TV found in apps."""
-    client.apps = apps
-    client.inputs = inputs
+    client.tv_state.apps = apps
+    client.tv_state.inputs = inputs
     entry = await setup_webostv(hass)
 
     result = await hass.config_entries.options.async_init(entry.entry_id)
@@ -411,7 +411,7 @@ async def test_reconfigure_wrong_device(hass: HomeAssistant, client) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
-    client.hello_info = {"deviceUUID": "wrong_uuid"}
+    client.tv_info.hello = {"deviceUUID": "wrong_uuid"}
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={CONF_HOST: "new_host"},

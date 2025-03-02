@@ -6,11 +6,11 @@ from urllib.error import HTTPError
 
 import pytest
 
-from homeassistant.components.lutron.const import DOMAIN
+from homeassistant.components.lutron.const import CONF_DEFAULT_DIMMER_LEVEL, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from tests.common import MockConfigEntry
 
@@ -146,3 +146,41 @@ MOCK_DATA_IMPORT = {
     CONF_USERNAME: "lutron",
     CONF_PASSWORD: "integration",
 }
+
+
+async def test_options_flow(hass: HomeAssistant) -> None:
+    """Test options flow."""
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_DATA_STEP,
+        unique_id="12345678901",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    # Try to set an out of range dimmer level (260)
+    out_of_range_level = 260
+
+    # The voluptuous validation will raise an exception before the handler processes it
+    with pytest.raises(InvalidData):
+        await hass.config_entries.options.async_configure(
+            result["flow_id"],
+            user_input={CONF_DEFAULT_DIMMER_LEVEL: out_of_range_level},
+        )
+
+    # Now try with a valid value
+    valid_level = 100
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_DEFAULT_DIMMER_LEVEL: valid_level},
+    )
+
+    # Verify that the flow finishes successfully with the valid value
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_DEFAULT_DIMMER_LEVEL: valid_level}

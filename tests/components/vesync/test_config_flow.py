@@ -48,3 +48,59 @@ async def test_config_flow_user_input(hass: HomeAssistant) -> None:
         assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["data"][CONF_USERNAME] == "user"
         assert result["data"][CONF_PASSWORD] == "pass"
+
+
+async def test_reauth_flow(hass: HomeAssistant) -> None:
+    """Test a successful reauth flow."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reauth_flow(hass)
+
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+    with patch("pyvesync.vesync.VeSync.login", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_entry.data == {
+        CONF_USERNAME: "new-username",
+        CONF_PASSWORD: "new-password",
+    }
+
+
+async def test_reauth_flow_invalid_auth(hass: HomeAssistant) -> None:
+    """Test an authorization error reauth flow."""
+
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test-username",
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reauth_flow(hass)
+    assert result["step_id"] == "reauth_confirm"
+    assert result["type"] is FlowResultType.FORM
+
+    with patch("pyvesync.vesync.VeSync.login", return_value=False):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    with patch("pyvesync.vesync.VeSync.login", return_value=True):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_USERNAME: "new-username", CONF_PASSWORD: "new-password"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

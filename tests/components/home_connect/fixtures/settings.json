@@ -68,9 +68,16 @@
           "type": "Double"
         },
         {
-          "key": "BSH.Common.Setting.ColorTemperature",
+          "key": "Cooking.Hood.Setting.ColorTemperature",
           "value": "Cooking.Hood.EnumType.ColorTemperature.warmToNeutral",
-          "type": "BSH.Common.EnumType.ColorTemperature"
+          "type": "BSH.Common.EnumType.ColorTemperature",
+          "constraints": {
+            "allowedvalues": [
+              "Cooking.Hood.EnumType.ColorTemperature.warm",
+              "Cooking.Hood.EnumType.ColorTemperature.neutral",
+              "Cooking.Hood.EnumType.ColorTemperature.cold"
+            ]
+          }
         },
         {
           "key": "BSH.Common.Setting.AmbientLightEnabled",
@@ -124,6 +131,11 @@
           "key": "BSH.Common.Setting.ChildLock",
           "value": false,
           "type": "Boolean"
+        },
+        {
+          "key": "LaundryCare.Washer.Setting.IDos2BaseLevel",
+          "value": 0,
+          "type": "Integer"
         }
       ]
     }

@@ -11,6 +11,6 @@
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/vesync",
   "iot_class": "cloud_polling",
-  "loggers": ["pyvesync"],
-  "requirements": ["pyvesync==2.1.17"]
+  "loggers": ["pyvesync.vesync"],
+  "requirements": ["pyvesync==2.1.18"]
 }

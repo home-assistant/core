@@ -21,11 +21,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import EheimDigitalConfigEntry
 from .const import HEATER_BIO_MODE, HEATER_PRESET_TO_HEATER_MODE, HEATER_SMART_MODE
-from .coordinator import EheimDigitalUpdateCoordinator
+from .coordinator import EheimDigitalConfigEntry, EheimDigitalUpdateCoordinator
 from .entity import EheimDigitalEntity
 
 # Coordinator is used to centralize the data updates
@@ -35,18 +34,16 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EheimDigitalConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the callbacks for the coordinator so climate entities can be added as devices are found."""
     coordinator = entry.runtime_data
 
     def async_setup_device_entities(
-        device_address: str | dict[str, EheimDigitalDevice],
+        device_address: dict[str, EheimDigitalDevice],
     ) -> None:
         """Set up the climate entities for one or multiple devices."""
         entities: list[EheimDigitalHeaterClimate] = []
-        if isinstance(device_address, str):
-            device_address = {device_address: coordinator.hub.devices[device_address]}
         for device in device_address.values():
             if isinstance(device, EheimDigitalHeater):
                 entities.append(EheimDigitalHeaterClimate(coordinator, device))

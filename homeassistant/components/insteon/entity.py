@@ -109,7 +109,7 @@ class InsteonEntity(Entity):
         )
         self.async_write_ha_state()
 
-    async def async_added_to_hass(self):
+    async def async_added_to_hass(self) -> None:
         """Register INSTEON update events."""
         _LOGGER.debug(
             "Tracking updates for device %s group %d name %s",
@@ -137,7 +137,7 @@ class InsteonEntity(Entity):
             )
         )
 
-    async def async_will_remove_from_hass(self):
+    async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe to INSTEON update events."""
         _LOGGER.debug(
             "Remove tracking updates for device %s group %d name %s",

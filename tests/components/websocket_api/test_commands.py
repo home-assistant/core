@@ -540,6 +540,7 @@ async def test_call_service_schema_validation_error(
     assert len(calls) == 0
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_call_service_error(
     hass: HomeAssistant, websocket_client: MockHAClientWebSocket
 ) -> None:
@@ -2390,9 +2391,7 @@ async def test_execute_script(
         ),
     ],
 )
-@pytest.mark.parametrize(
-    "ignore_translations", ["component.test.exceptions.test_error.message"]
-)
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 async def test_execute_script_err_localization(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,

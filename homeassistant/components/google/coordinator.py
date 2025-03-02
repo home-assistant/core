@@ -52,6 +52,7 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         sync: CalendarEventSyncManager,
         name: str,
     ) -> None:
@@ -59,6 +60,7 @@ class CalendarSyncUpdateCoordinator(DataUpdateCoordinator[Timeline]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=name,
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
@@ -111,6 +113,7 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         calendar_service: GoogleCalendarService,
         name: str,
         calendar_id: str,
@@ -120,6 +123,7 @@ class CalendarQueryUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=name,
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )

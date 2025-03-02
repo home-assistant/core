@@ -28,7 +28,7 @@
         "name": "Activity",
         "state": {
           "available": "Available",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "unavailable": "Unavailable",
           "error": "Error",
           "offline": "Offline"

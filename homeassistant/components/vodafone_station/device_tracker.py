@@ -6,7 +6,7 @@ from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import _LOGGER, DOMAIN
@@ -14,7 +14,9 @@ from .coordinator import VodafoneStationDeviceInfo, VodafoneStationRouter
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for Vodafone Station component."""
 
@@ -40,7 +42,7 @@ async def async_setup_entry(
 @callback
 def async_add_new_tracked_entities(
     coordinator: VodafoneStationRouter,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     tracked: set[str],
 ) -> None:
     """Add new tracker entities from the router."""

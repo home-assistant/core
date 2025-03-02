@@ -45,6 +45,8 @@ from .errors import CannotConnect, LoginError
 
 _LOGGER = logging.getLogger(__name__)
 
+type MikrotikConfigEntry = ConfigEntry[MikrotikDataUpdateCoordinator]
+
 
 class MikrotikData:
     """Handle all communication with the Mikrotik API."""
@@ -246,17 +248,21 @@ class MikrotikData:
 class MikrotikDataUpdateCoordinator(DataUpdateCoordinator[None]):
     """Mikrotik Hub Object."""
 
+    config_entry: MikrotikConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: librouteros.Api
+        self,
+        hass: HomeAssistant,
+        config_entry: MikrotikConfigEntry,
+        api: librouteros.Api,
     ) -> None:
         """Initialize the Mikrotik Client."""
-        self.hass = hass
-        self.config_entry: ConfigEntry = config_entry
-        self._mk_data = MikrotikData(self.hass, self.config_entry, api)
+        self._mk_data = MikrotikData(hass, config_entry, api)
         super().__init__(
-            self.hass,
+            hass,
             _LOGGER,
-            name=f"{DOMAIN} - {self.host}",
+            config_entry=config_entry,
+            name=f"{DOMAIN} - {config_entry.data[CONF_HOST]}",
             update_interval=timedelta(seconds=10),
         )
 

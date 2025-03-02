@@ -220,7 +220,7 @@ async def handle_info(
         # Update subscription of all finished tasks
         for result in done:
             domain, key = pending_lookup[result]
-            event_msg = {
+            event_msg: dict[str, Any] = {
                 "type": "update",
                 "domain": domain,
                 "key": key,

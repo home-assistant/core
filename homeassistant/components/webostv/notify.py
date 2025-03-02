@@ -49,7 +49,7 @@ class LgWebOSNotificationService(BaseNotificationService):
         data = kwargs[ATTR_DATA]
         icon_path = data.get(ATTR_ICON) if data else None
 
-        if not client.is_on:
+        if not client.tv_state.is_on:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_device_off",

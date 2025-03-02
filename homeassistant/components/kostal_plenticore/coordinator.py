@@ -16,6 +16,7 @@ from pykoplenti import (
     ExtendedApiClient,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -162,9 +163,12 @@ class DataUpdateCoordinatorMixin:
 class PlenticoreUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         logger: logging.Logger,
         name: str,
         update_inverval: timedelta,
@@ -174,6 +178,7 @@ class PlenticoreUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         super().__init__(
             hass=hass,
             logger=logger,
+            config_entry=config_entry,
             name=name,
             update_interval=update_inverval,
         )
@@ -240,9 +245,12 @@ class SettingDataUpdateCoordinator(
 class PlenticoreSelectUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     """Base implementation of DataUpdateCoordinator for Plenticore data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         logger: logging.Logger,
         name: str,
         update_inverval: timedelta,
@@ -252,6 +260,7 @@ class PlenticoreSelectUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         super().__init__(
             hass=hass,
             logger=logger,
+            config_entry=config_entry,
             name=name,
             update_interval=update_inverval,
         )

@@ -1,7 +1,6 @@
 {
   "domain": "onboarding",
   "name": "Home Assistant Onboarding",
-  "after_dependencies": ["backup", "hassio"],
   "codeowners": ["@home-assistant/core"],
   "dependencies": ["auth", "http", "person"],
   "documentation": "https://www.home-assistant.io/integrations/onboarding",

@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     client = WAQIClient(session=async_get_clientsession(hass))
     client.authenticate(entry.data[CONF_API_KEY])
 
-    waqi_coordinator = WAQIDataUpdateCoordinator(hass, client)
+    waqi_coordinator = WAQIDataUpdateCoordinator(hass, entry, client)
     await waqi_coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = waqi_coordinator
 

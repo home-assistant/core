@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
 
-from pyloadapi.api import CannotConnect, InvalidAuth, PyLoadAPI
+from pyloadapi import CannotConnect, InvalidAuth, PyLoadAPI
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -16,12 +16,13 @@ from homeassistant.components.switch import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PyLoadConfigEntry
 from .const import DOMAIN
-from .coordinator import PyLoadData
+from .coordinator import PyLoadConfigEntry, PyLoadData
 from .entity import BasePyLoadEntity
+
+PARALLEL_UPDATES = 1
 
 
 class PyLoadSwitch(StrEnum):
@@ -66,7 +67,7 @@ SENSOR_DESCRIPTIONS: tuple[PyLoadSwitchEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PyLoadConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the pyLoad sensors."""
 

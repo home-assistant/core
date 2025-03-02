@@ -5449,12 +5449,11 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     assert ATTR_FRIENDLY_NAME in states[0].attributes
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 @pytest.mark.parametrize(
-    "ignore_translations",
+    "ignore_missing_translations",
     [
         [
-            "component.test.issues..title",
-            "component.test.issues..description",
             "component.sensor.issues..title",
             "component.sensor.issues..description",
         ]

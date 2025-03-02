@@ -9,7 +9,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .const import CONF_STATION, DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN, UPDATE_INTERVAL
 from .coordinator import InvalidAuth, WallboxCoordinator, async_validate_input
 
 PLATFORMS = [Platform.LOCK, Platform.NUMBER, Platform.SENSOR, Platform.SWITCH]
@@ -27,11 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except InvalidAuth as ex:
         raise ConfigEntryAuthFailed from ex
 
-    wallbox_coordinator = WallboxCoordinator(
-        entry.data[CONF_STATION],
-        wallbox,
-        hass,
-    )
+    wallbox_coordinator = WallboxCoordinator(hass, entry, wallbox)
     await wallbox_coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = wallbox_coordinator

@@ -9,7 +9,7 @@ from aiocomelit.const import LIGHT, STATE_OFF, STATE_ON
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import ComelitConfigEntry, ComelitSerialBridge
@@ -18,7 +18,7 @@ from .coordinator import ComelitConfigEntry, ComelitSerialBridge
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ComelitConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Comelit lights."""
 

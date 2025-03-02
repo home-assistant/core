@@ -49,6 +49,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleDriveConfigEntry) 
     except GoogleDriveApiError as err:
         raise ConfigEntryNotReady from err
 
+    def async_notify_backup_listeners() -> None:
+        for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
+            listener()
+
+    entry.async_on_unload(entry.async_on_state_change(async_notify_backup_listeners))
+
     return True
 
 
@@ -56,10 +62,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: GoogleDriveConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    hass.loop.call_soon(_notify_backup_listeners, hass)
     return True
-
-
-def _notify_backup_listeners(hass: HomeAssistant) -> None:
-    for listener in hass.data.get(DATA_BACKUP_AGENT_LISTENERS, []):
-        listener()

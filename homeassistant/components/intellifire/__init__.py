@@ -128,9 +128,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ) from err
 
     # Construct coordinator
-    data_update_coordinator = IntellifireDataUpdateCoordinator(
-        hass=hass, fireplace=fireplace
-    )
+    data_update_coordinator = IntellifireDataUpdateCoordinator(hass, entry, fireplace)
 
     LOGGER.debug("Fireplace to Initialized - Awaiting first refresh")
     await data_update_coordinator.async_config_entry_first_refresh()

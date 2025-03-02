@@ -57,6 +57,7 @@ def mock_client():
         client.target_soc = 50
         client.target_time = (8, 0)
         client.battery = 80
+        client.preconditioning = 15
         client.serial = "chargerid"
         client.ct_connected = True
         client.energy = 1000

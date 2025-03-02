@@ -27,7 +27,7 @@ BUTTON_DESCRIPTION = ButtonEntityDescription(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: entity_platform.AddEntitiesCallback,
+    async_add_entities: entity_platform.AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Obihai sensor entries."""
 

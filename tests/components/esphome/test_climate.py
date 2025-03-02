@@ -407,7 +407,7 @@ async def test_climate_entity_with_inf_value(
             target_temperature=math.inf,
             fan_mode=ClimateFanMode.AUTO,
             swing_mode=ClimateSwingMode.BOTH,
-            current_humidity=20.1,
+            current_humidity=math.inf,
             target_humidity=25.7,
         )
     ]
@@ -422,7 +422,7 @@ async def test_climate_entity_with_inf_value(
     assert state is not None
     assert state.state == HVACMode.AUTO
     attributes = state.attributes
-    assert attributes[ATTR_CURRENT_HUMIDITY] == 20
+    assert ATTR_CURRENT_HUMIDITY not in attributes
     assert attributes[ATTR_HUMIDITY] == 26
     assert attributes[ATTR_MAX_HUMIDITY] == 30
     assert attributes[ATTR_MIN_HUMIDITY] == 10

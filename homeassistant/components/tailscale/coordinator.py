@@ -19,18 +19,22 @@ class TailscaleDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
 
     config_entry: ConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize the Tailscale coordinator."""
-        self.config_entry = entry
-
         session = async_get_clientsession(hass)
         self.tailscale = Tailscale(
             session=session,
-            api_key=entry.data[CONF_API_KEY],
-            tailnet=entry.data[CONF_TAILNET],
+            api_key=config_entry.data[CONF_API_KEY],
+            tailnet=config_entry.data[CONF_TAILNET],
         )
 
-        super().__init__(hass, LOGGER, name=DOMAIN, update_interval=SCAN_INTERVAL)
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=SCAN_INTERVAL,
+        )
 
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch devices from Tailscale."""

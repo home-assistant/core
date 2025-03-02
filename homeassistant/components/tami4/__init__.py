@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     except exceptions.TokenRefreshFailedException as ex:
         raise ConfigEntryNotReady("Error connecting to API") from ex
 
-    coordinator = Tami4EdgeCoordinator(hass, api)
+    coordinator = Tami4EdgeCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {

@@ -6,6 +6,9 @@
       }
     },
     "number": {
+      "preconditioning_duration": {
+        "default": "mdi:fan-clock"
+      },
       "target_percentage": {
         "default": "mdi:battery-heart"
       }
@@ -28,6 +31,9 @@
       },
       "ct_current": {
         "default": "mdi:gauge"
+      },
+      "slot_list": {
+        "default": "mdi:calendar-clock"
       }
     },
     "switch": {

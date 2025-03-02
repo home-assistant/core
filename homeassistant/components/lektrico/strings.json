@@ -86,7 +86,7 @@
         "name": "State",
         "state": {
           "available": "Available",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "connected": "Connected",
           "error": "Error",
           "locked": "Locked",

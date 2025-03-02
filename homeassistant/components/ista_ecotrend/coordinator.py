@@ -18,17 +18,22 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type IstaConfigEntry = ConfigEntry[IstaCoordinator]
+
 
 class IstaCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Ista EcoTrend data update coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: IstaConfigEntry
 
-    def __init__(self, hass: HomeAssistant, ista: PyEcotrendIsta) -> None:
+    def __init__(
+        self, hass: HomeAssistant, config_entry: IstaConfigEntry, ista: PyEcotrendIsta
+    ) -> None:
         """Initialize ista EcoTrend data update coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(days=1),
         )

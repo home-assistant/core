@@ -1854,9 +1854,14 @@ async def help_test_reload_with_config(
 ) -> None:
     """Test reloading with supplied config."""
     new_yaml_config_file = tmp_path / "configuration.yaml"
-    new_yaml_config = yaml.dump(config)
-    new_yaml_config_file.write_text(new_yaml_config)
-    assert new_yaml_config_file.read_text() == new_yaml_config
+
+    def _write_yaml_config() -> None:
+        new_yaml_config = yaml.dump(config)
+        new_yaml_config_file.write_text(new_yaml_config)
+        assert new_yaml_config_file.read_text() == new_yaml_config
+        return new_yaml_config
+
+    await hass.async_add_executor_job(_write_yaml_config)
 
     with patch.object(module_hass_config, "YAML_CONFIG_FILE", new_yaml_config_file):
         await hass.services.async_call(

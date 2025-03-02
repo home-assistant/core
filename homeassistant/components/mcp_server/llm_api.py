@@ -35,13 +35,13 @@ class StatelessAssistAPI(llm.AssistAPI):
         """Return the prompt for the exposed entities."""
         prompt = []
 
-        if exposed_entities:
+        if exposed_entities and exposed_entities["entities"]:
             prompt.append(
                 "An overview of the areas and the devices in this smart home:"
             )
             entities = [
                 {k: v for k, v in entity_info.items() if k in EXPOSED_ENTITY_FIELDS}
-                for entity_info in exposed_entities.values()
+                for entity_info in exposed_entities["entities"].values()
             ]
             prompt.append(yaml_util.dump(list(entities)))
 

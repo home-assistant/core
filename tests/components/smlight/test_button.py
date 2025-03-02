@@ -45,6 +45,7 @@ async def test_buttons(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test creation of button entities."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = MOCK_ROUTER
     await setup_integration(hass, mock_config_entry)
 
@@ -78,6 +79,7 @@ async def test_disabled_by_default_buttons(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test the disabled by default buttons."""
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = MOCK_ROUTER
     await setup_integration(hass, mock_config_entry)
 
@@ -96,7 +98,8 @@ async def test_remove_router_reconnect(
     mock_smlight_client: MagicMock,
 ) -> None:
     """Test removal of orphaned router reconnect button."""
-    save_mock = mock_smlight_client.get_info.return_value
+    save_mock = mock_smlight_client.get_info.side_effect
+    mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = MOCK_ROUTER
     mock_config_entry = await setup_integration(hass, mock_config_entry)
 
@@ -106,7 +109,7 @@ async def test_remove_router_reconnect(
     assert len(entities) == 4
     assert entities[3].unique_id == "aa:bb:cc:dd:ee:ff-reconnect_zigbee_router"
 
-    mock_smlight_client.get_info.return_value = save_mock
+    mock_smlight_client.get_info.side_effect = save_mock
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)

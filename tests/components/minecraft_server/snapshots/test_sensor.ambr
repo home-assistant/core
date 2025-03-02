@@ -2,11 +2,11 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Latency',
+      'friendly_name': 'mc.dummyserver.com:25566 Latency',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_latency',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_latency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -16,11 +16,11 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Players online',
+      'friendly_name': 'mc.dummyserver.com:25566 Players online',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_players_online',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_players_online',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -30,11 +30,11 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Players max',
+      'friendly_name': 'mc.dummyserver.com:25566 Players max',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_players_max',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_players_max',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -44,10 +44,10 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server World message',
+      'friendly_name': 'mc.dummyserver.com:25566 World message',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_world_message',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_world_message',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -57,10 +57,10 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Version',
+      'friendly_name': 'mc.dummyserver.com:25566 Version',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_version',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_version',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -70,10 +70,10 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].5
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Protocol version',
+      'friendly_name': 'mc.dummyserver.com:25566 Protocol version',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_protocol_version',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_protocol_version',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -83,10 +83,10 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].6
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Map name',
+      'friendly_name': 'mc.dummyserver.com:25566 Map name',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_map_name',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_map_name',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -96,10 +96,10 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].7
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Game mode',
+      'friendly_name': 'mc.dummyserver.com:25566 Game mode',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_game_mode',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_game_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -109,10 +109,10 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].8
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Edition',
+      'friendly_name': 'mc.dummyserver.com:25566 Edition',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_edition',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_edition',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -122,11 +122,11 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Latency',
+      'friendly_name': 'mc.dummyserver.com:25566 Latency',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_latency',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_latency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -136,7 +136,7 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Players online',
+      'friendly_name': 'mc.dummyserver.com:25566 Players online',
       'players_list': list([
         'Player 1',
         'Player 2',
@@ -145,7 +145,7 @@
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_players_online',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_players_online',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -155,11 +155,11 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Players max',
+      'friendly_name': 'mc.dummyserver.com:25566 Players max',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_players_max',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_players_max',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -169,10 +169,10 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server World message',
+      'friendly_name': 'mc.dummyserver.com:25566 World message',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_world_message',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_world_message',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -182,10 +182,10 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Version',
+      'friendly_name': 'mc.dummyserver.com:25566 Version',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_version',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_version',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -195,10 +195,10 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].5
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Protocol version',
+      'friendly_name': 'mc.dummyserver.com:25566 Protocol version',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_protocol_version',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_protocol_version',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -208,11 +208,11 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Latency',
+      'friendly_name': 'mc.dummyserver.com:25566 Latency',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_latency',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_latency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -222,11 +222,11 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Players online',
+      'friendly_name': 'mc.dummyserver.com:25566 Players online',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_players_online',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_players_online',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -236,11 +236,11 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Players max',
+      'friendly_name': 'mc.dummyserver.com:25566 Players max',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_players_max',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_players_max',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -250,10 +250,10 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server World message',
+      'friendly_name': 'mc.dummyserver.com:25566 World message',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_world_message',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_world_message',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -263,10 +263,10 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Version',
+      'friendly_name': 'mc.dummyserver.com:25566 Version',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_version',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_version',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -276,10 +276,10 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].5
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Protocol version',
+      'friendly_name': 'mc.dummyserver.com:25566 Protocol version',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_protocol_version',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_protocol_version',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -289,10 +289,10 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].6
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Map name',
+      'friendly_name': 'mc.dummyserver.com:25566 Map name',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_map_name',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_map_name',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -302,10 +302,10 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].7
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Game mode',
+      'friendly_name': 'mc.dummyserver.com:25566 Game mode',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_game_mode',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_game_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -315,10 +315,10 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].8
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Edition',
+      'friendly_name': 'mc.dummyserver.com:25566 Edition',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_edition',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_edition',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -328,11 +328,11 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Latency',
+      'friendly_name': 'mc.dummyserver.com:25566 Latency',
       'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_latency',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_latency',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -342,7 +342,7 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Players online',
+      'friendly_name': 'mc.dummyserver.com:25566 Players online',
       'players_list': list([
         'Player 1',
         'Player 2',
@@ -351,7 +351,7 @@
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_players_online',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_players_online',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -361,11 +361,11 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Players max',
+      'friendly_name': 'mc.dummyserver.com:25566 Players max',
       'unit_of_measurement': 'players',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_players_max',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_players_max',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -375,10 +375,10 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server World message',
+      'friendly_name': 'mc.dummyserver.com:25566 World message',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_world_message',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_world_message',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -388,10 +388,10 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Version',
+      'friendly_name': 'mc.dummyserver.com:25566 Version',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_version',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_version',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -401,10 +401,10 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].5
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Minecraft Server Protocol version',
+      'friendly_name': 'mc.dummyserver.com:25566 Protocol version',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.minecraft_server_protocol_version',
+    'entity_id': 'sensor.mc_dummyserver_com_25566_protocol_version',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

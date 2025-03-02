@@ -13,18 +13,17 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PalazzettiConfigEntry
 from .const import DOMAIN, FAN_AUTO, FAN_HIGH, FAN_MODES
-from .coordinator import PalazzettiDataUpdateCoordinator
+from .coordinator import PalazzettiConfigEntry, PalazzettiDataUpdateCoordinator
 from .entity import PalazzettiEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PalazzettiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Palazzetti climates based on a config entry."""
     async_add_entities([PalazzettiClimateEntity(entry.runtime_data)])

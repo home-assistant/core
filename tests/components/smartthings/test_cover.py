@@ -1,249 +1,192 @@
-"""Test for the SmartThings cover platform.
+"""Test for the SmartThings cover platform."""
 
-The only mocking required is of the underlying SmartThings API object so
-real HTTP calls are not initiated during testing.
-"""
+from unittest.mock import AsyncMock
 
-from pysmartthings import Attribute, Capability
+from pysmartthings import Attribute, Capability, Command, Status
+import pytest
+from syrupy import SnapshotAssertion
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
+)
+from homeassistant.components.smartthings.const import MAIN
+from homeassistant.const import (
+    ATTR_BATTERY_LEVEL,
+    ATTR_ENTITY_ID,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
-    CoverState,
+    STATE_OPEN,
+    STATE_OPENING,
+    Platform,
 )
-from homeassistant.components.smartthings.const import DOMAIN, SIGNAL_SMARTTHINGS_UPDATE
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_BATTERY_LEVEL, ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers import entity_registry as er
 
-from .conftest import setup_platform
+from . import setup_integration, snapshot_smartthings_entities, trigger_update
+
+from tests.common import MockConfigEntry
 
 
-async def test_entity_and_device_attributes(
+async def test_all_entities(
     hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    device_factory,
 ) -> None:
-    """Test the attributes of the entity are correct."""
-    # Arrange
-    device = device_factory(
-        "Garage",
-        [Capability.garage_door_control],
-        {
-            Attribute.door: "open",
-            Attribute.mnmo: "123",
-            Attribute.mnmn: "Generic manufacturer",
-            Attribute.mnhw: "v4.56",
-            Attribute.mnfv: "v7.89",
-        },
+    """Test all entities."""
+    await setup_integration(hass, mock_config_entry)
+
+    snapshot_smartthings_entities(hass, entity_registry, snapshot, Platform.COVER)
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
+@pytest.mark.parametrize(
+    ("action", "command"),
+    [
+        (SERVICE_OPEN_COVER, Command.OPEN),
+        (SERVICE_CLOSE_COVER, Command.CLOSE),
+    ],
+)
+async def test_cover_open_close(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    action: str,
+    command: Command,
+) -> None:
+    """Test cover open and close command."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        action,
+        {ATTR_ENTITY_ID: "cover.curtain_1a"},
+        blocking=True,
     )
-    # Act
-    await setup_platform(hass, COVER_DOMAIN, devices=[device])
-    # Assert
-    entry = entity_registry.async_get("cover.garage")
-    assert entry
-    assert entry.unique_id == device.device_id
-
-    entry = device_registry.async_get_device(identifiers={(DOMAIN, device.device_id)})
-    assert entry
-    assert entry.configuration_url == "https://account.smartthings.com"
-    assert entry.identifiers == {(DOMAIN, device.device_id)}
-    assert entry.name == device.label
-    assert entry.model == "123"
-    assert entry.manufacturer == "Generic manufacturer"
-    assert entry.hw_version == "v4.56"
-    assert entry.sw_version == "v7.89"
+    devices.execute_device_command.assert_called_once_with(
+        "571af102-15db-4030-b76b-245a691f74a5",
+        Capability.WINDOW_SHADE,
+        command,
+        MAIN,
+    )
 
 
-async def test_open(hass: HomeAssistant, device_factory) -> None:
-    """Test the cover opens doors, garages, and shades successfully."""
-    # Arrange
-    devices = {
-        device_factory("Door", [Capability.door_control], {Attribute.door: "closed"}),
-        device_factory(
-            "Garage", [Capability.garage_door_control], {Attribute.door: "closed"}
-        ),
-        device_factory(
-            "Shade", [Capability.window_shade], {Attribute.window_shade: "closed"}
-        ),
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
+async def test_cover_set_position(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test cover set position command."""
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_SET_COVER_POSITION,
+        {ATTR_ENTITY_ID: "cover.curtain_1a", ATTR_POSITION: 25},
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "571af102-15db-4030-b76b-245a691f74a5",
+        Capability.SWITCH_LEVEL,
+        Command.SET_LEVEL,
+        MAIN,
+        argument=25,
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
+async def test_cover_battery(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test battery extra state attribute."""
+    devices.get_device_status.return_value[MAIN][Capability.BATTERY] = {
+        Attribute.BATTERY: Status(50)
     }
-    await setup_platform(hass, COVER_DOMAIN, devices=devices)
-    entity_ids = ["cover.door", "cover.garage", "cover.shade"]
-    # Act
-    await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: entity_ids}, blocking=True
-    )
-    # Assert
-    for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == CoverState.OPENING
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("cover.curtain_1a")
+    assert state
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 50
 
 
-async def test_close(hass: HomeAssistant, device_factory) -> None:
-    """Test the cover closes doors, garages, and shades successfully."""
-    # Arrange
-    devices = {
-        device_factory("Door", [Capability.door_control], {Attribute.door: "open"}),
-        device_factory(
-            "Garage", [Capability.garage_door_control], {Attribute.door: "open"}
-        ),
-        device_factory(
-            "Shade", [Capability.window_shade], {Attribute.window_shade: "open"}
-        ),
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
+async def test_cover_battery_updating(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test battery extra state attribute."""
+    devices.get_device_status.return_value[MAIN][Capability.BATTERY] = {
+        Attribute.BATTERY: Status(50)
     }
-    await setup_platform(hass, COVER_DOMAIN, devices=devices)
-    entity_ids = ["cover.door", "cover.garage", "cover.shade"]
-    # Act
-    await hass.services.async_call(
-        COVER_DOMAIN, SERVICE_CLOSE_COVER, {ATTR_ENTITY_ID: entity_ids}, blocking=True
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("cover.curtain_1a")
+    assert state
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 50
+
+    await trigger_update(
+        hass,
+        devices,
+        "571af102-15db-4030-b76b-245a691f74a5",
+        Capability.BATTERY,
+        Attribute.BATTERY,
+        49,
     )
-    # Assert
-    for entity_id in entity_ids:
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == CoverState.CLOSING
+
+    state = hass.states.get("cover.curtain_1a")
+    assert state
+    assert state.attributes[ATTR_BATTERY_LEVEL] == 49
 
 
-async def test_set_cover_position_switch_level(
-    hass: HomeAssistant, device_factory
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
+async def test_state_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the cover sets to the specific position for legacy devices that use Capability.switch_level."""
-    # Arrange
-    device = device_factory(
-        "Shade",
-        [Capability.window_shade, Capability.battery, Capability.switch_level],
-        {Attribute.window_shade: "opening", Attribute.battery: 95, Attribute.level: 10},
-    )
-    await setup_platform(hass, COVER_DOMAIN, devices=[device])
-    # Act
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_POSITION: 50, "entity_id": "all"},
-        blocking=True,
+    """Test state update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("cover.curtain_1a").state == STATE_OPEN
+
+    await trigger_update(
+        hass,
+        devices,
+        "571af102-15db-4030-b76b-245a691f74a5",
+        Capability.WINDOW_SHADE,
+        Attribute.WINDOW_SHADE,
+        "opening",
     )
 
-    state = hass.states.get("cover.shade")
-    # Result of call does not update state
-    assert state.state == CoverState.OPENING
-    assert state.attributes[ATTR_BATTERY_LEVEL] == 95
-    assert state.attributes[ATTR_CURRENT_POSITION] == 10
-    # Ensure API called
-
-    assert device._api.post_device_command.call_count == 1
+    assert hass.states.get("cover.curtain_1a").state == STATE_OPENING
 
 
-async def test_set_cover_position(hass: HomeAssistant, device_factory) -> None:
-    """Test the cover sets to the specific position."""
-    # Arrange
-    device = device_factory(
-        "Shade",
-        [Capability.window_shade, Capability.battery, Capability.window_shade_level],
-        {
-            Attribute.window_shade: "opening",
-            Attribute.battery: 95,
-            Attribute.shade_level: 10,
-        },
-    )
-    await setup_platform(hass, COVER_DOMAIN, devices=[device])
-    # Act
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {ATTR_POSITION: 50, "entity_id": "all"},
-        blocking=True,
-    )
-
-    state = hass.states.get("cover.shade")
-    # Result of call does not update state
-    assert state.state == CoverState.OPENING
-    assert state.attributes[ATTR_BATTERY_LEVEL] == 95
-    assert state.attributes[ATTR_CURRENT_POSITION] == 10
-    # Ensure API called
-
-    assert device._api.post_device_command.call_count == 1
-
-
-async def test_set_cover_position_unsupported(
-    hass: HomeAssistant, device_factory
+@pytest.mark.parametrize("device_fixture", ["c2c_shade"])
+async def test_position_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test set position does nothing when not supported by device."""
-    # Arrange
-    device = device_factory(
-        "Shade", [Capability.window_shade], {Attribute.window_shade: "opening"}
+    """Test position update."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("cover.curtain_1a").attributes[ATTR_CURRENT_POSITION] == 100
+
+    await trigger_update(
+        hass,
+        devices,
+        "571af102-15db-4030-b76b-245a691f74a5",
+        Capability.SWITCH_LEVEL,
+        Attribute.LEVEL,
+        50,
     )
-    await setup_platform(hass, COVER_DOMAIN, devices=[device])
-    # Act
-    await hass.services.async_call(
-        COVER_DOMAIN,
-        SERVICE_SET_COVER_POSITION,
-        {"entity_id": "all", ATTR_POSITION: 50},
-        blocking=True,
-    )
 
-    state = hass.states.get("cover.shade")
-    assert ATTR_CURRENT_POSITION not in state.attributes
-
-    # Ensure API was not called
-
-    assert device._api.post_device_command.call_count == 0
-
-
-async def test_update_to_open_from_signal(hass: HomeAssistant, device_factory) -> None:
-    """Test the cover updates to open when receiving a signal."""
-    # Arrange
-    device = device_factory(
-        "Garage", [Capability.garage_door_control], {Attribute.door: "opening"}
-    )
-    await setup_platform(hass, COVER_DOMAIN, devices=[device])
-    device.status.update_attribute_value(Attribute.door, "open")
-    assert hass.states.get("cover.garage").state == CoverState.OPENING
-    # Act
-    async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE, [device.device_id])
-    # Assert
-    await hass.async_block_till_done()
-    state = hass.states.get("cover.garage")
-    assert state is not None
-    assert state.state == CoverState.OPEN
-
-
-async def test_update_to_closed_from_signal(
-    hass: HomeAssistant, device_factory
-) -> None:
-    """Test the cover updates to closed when receiving a signal."""
-    # Arrange
-    device = device_factory(
-        "Garage", [Capability.garage_door_control], {Attribute.door: "closing"}
-    )
-    await setup_platform(hass, COVER_DOMAIN, devices=[device])
-    device.status.update_attribute_value(Attribute.door, "closed")
-    assert hass.states.get("cover.garage").state == CoverState.CLOSING
-    # Act
-    async_dispatcher_send(hass, SIGNAL_SMARTTHINGS_UPDATE, [device.device_id])
-    # Assert
-    await hass.async_block_till_done()
-    state = hass.states.get("cover.garage")
-    assert state is not None
-    assert state.state == CoverState.CLOSED
-
-
-async def test_unload_config_entry(hass: HomeAssistant, device_factory) -> None:
-    """Test the lock is removed when the config entry is unloaded."""
-    # Arrange
-    device = device_factory(
-        "Garage", [Capability.garage_door_control], {Attribute.door: "open"}
-    )
-    config_entry = await setup_platform(hass, COVER_DOMAIN, devices=[device])
-    config_entry.mock_state(hass, ConfigEntryState.LOADED)
-    # Act
-    await hass.config_entries.async_forward_entry_unload(config_entry, COVER_DOMAIN)
-    # Assert
-    assert hass.states.get("cover.garage").state == STATE_UNAVAILABLE
+    assert hass.states.get("cover.curtain_1a").attributes[ATTR_CURRENT_POSITION] == 50

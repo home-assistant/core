@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 from .entity import DaikinEntity
@@ -19,7 +19,7 @@ DAIKIN_ATTR_MODE = "mode"
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DaikinConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Daikin climate based on config_entry."""
     daikin_api = entry.runtime_data

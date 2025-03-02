@@ -16,7 +16,7 @@ from homeassistant.components.event import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import GoveeBLEConfigEntry, format_event_dispatcher_name
@@ -90,7 +90,7 @@ class GoveeBluetoothEventEntity(EventEntity):
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GoveeBLEConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a govee ble event."""
     coordinator = entry.runtime_data

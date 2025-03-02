@@ -9,6 +9,7 @@ from homeassistant.components.mastodon.const import (
     ATTR_CONFIG_ENTRY_ID,
     ATTR_CONTENT_WARNING,
     ATTR_MEDIA,
+    ATTR_MEDIA_DESCRIPTION,
     ATTR_STATUS,
     ATTR_VISIBILITY,
     DOMAIN,
@@ -75,6 +76,21 @@ from tests.common import MockConfigEntry
                 "sensitive": None,
             },
         ),
+        (
+            {
+                ATTR_STATUS: "test toot",
+                ATTR_CONTENT_WARNING: "Spoiler",
+                ATTR_MEDIA: "/image.jpg",
+                ATTR_MEDIA_DESCRIPTION: "A test image",
+            },
+            {
+                "status": "test toot",
+                "spoiler_text": "Spoiler",
+                "visibility": None,
+                "media_ids": "1",
+                "sensitive": None,
+            },
+        ),
     ],
 )
 async def test_service_post(
@@ -128,6 +144,7 @@ async def test_service_post(
                 "spoiler_text": "Spoiler",
                 "visibility": None,
                 "media_ids": "1",
+                "media_description": None,
                 "sensitive": None,
             },
         ),

@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from typing import Any
 
-from pylutron import Output
+from pylutron import Lutron, LutronEntity, Output
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,16 +17,17 @@ from homeassistant.components.light import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DOMAIN, LutronData
+from .const import CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
 from .entity import LutronDevice
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Lutron light platform.
 
@@ -37,7 +38,7 @@ async def async_setup_entry(
 
     async_add_entities(
         (
-            LutronLight(area_name, device, entry_data.client)
+            LutronLight(area_name, device, entry_data.client, config_entry)
             for area_name, device in entry_data.lights
         ),
         True,
@@ -64,6 +65,17 @@ class LutronLight(LutronDevice, LightEntity):
     _prev_brightness: int | None = None
     _attr_name = None
 
+    def __init__(
+        self,
+        area_name: str,
+        lutron_device: LutronEntity,
+        controller: Lutron,
+        config_entry: ConfigEntry,
+    ) -> None:
+        """Initialize the device."""
+        super().__init__(area_name, lutron_device, controller)
+        self._config_entry = config_entry
+
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if flash := kwargs.get(ATTR_FLASH):
@@ -72,7 +84,9 @@ class LutronLight(LutronDevice, LightEntity):
             if ATTR_BRIGHTNESS in kwargs and self._lutron_device.is_dimmable:
                 brightness = kwargs[ATTR_BRIGHTNESS]
             elif self._prev_brightness == 0:
-                brightness = 255 / 2
+                brightness = self._config_entry.options.get(
+                    CONF_DEFAULT_DIMMER_LEVEL, DEFAULT_DIMMER_LEVEL
+                )
             else:
                 brightness = self._prev_brightness
             self._prev_brightness = brightness

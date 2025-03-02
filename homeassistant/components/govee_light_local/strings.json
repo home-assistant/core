@@ -9,5 +9,29 @@
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
     }
+  },
+  "entity": {
+    "light": {
+      "govee_light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "none": "None",
+              "sunrise": "Sunrise",
+              "sunset": "Sunset",
+              "movie": "Movie",
+              "dating": "Dating",
+              "romantic": "Romantic",
+              "twinkle": "Twinkle",
+              "candlelight": "Candlelight",
+              "snowflake": "Snowflake",
+              "energetic": "Energetic",
+              "breathe": "Breathe",
+              "crossing": "Crossing"
+            }
+          }
+        }
+      }
+    }
   }
 }
