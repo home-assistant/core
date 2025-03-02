@@ -154,16 +154,8 @@ async def async_enable_server_logging_if_needed(
     LOGGER.info("Enabling zwave-js-server logging")
     if (curr_server_log_level := driver.log_config.level) and (
         LOG_LEVEL_MAP[curr_server_log_level]
-    ) > (lib_log_level := LIB_LOGGER.getEffectiveLevel()):
+    ) > LIB_LOGGER.getEffectiveLevel():
         entry_data = entry.runtime_data
-        LOGGER.warning(
-            (
-                "Server logging is set to %s and is currently less verbose "
-                "than library logging, setting server log level to %s to match"
-            ),
-            curr_server_log_level,
-            logging.getLevelName(lib_log_level),
-        )
         entry_data[DATA_OLD_SERVER_LOG_LEVEL] = curr_server_log_level
         await driver.async_update_log_config(LogConfig(level=LogLevel.DEBUG))
     await driver.client.enable_server_logging()
@@ -343,20 +335,18 @@ def async_get_nodes_from_area_id(
         }
     )
     # Add devices in an area that are Z-Wave JS devices
-    for device in dr.async_entries_for_area(dev_reg, area_id):
-        if next(
-            (
-                config_entry_id
-                for config_entry_id in device.config_entries
-                if cast(
-                    ConfigEntry,
-                    hass.config_entries.async_get_entry(config_entry_id),
-                ).domain
-                == DOMAIN
-            ),
-            None,
-        ):
-            nodes.add(async_get_node_from_device_id(hass, device.id, dev_reg))
+    nodes.update(
+        async_get_node_from_device_id(hass, device.id, dev_reg)
+        for device in dr.async_entries_for_area(dev_reg, area_id)
+        if any(
+            cast(
+                ConfigEntry,
+                hass.config_entries.async_get_entry(config_entry_id),
+            ).domain
+            == DOMAIN
+            for config_entry_id in device.config_entries
+        )
+    )
 
     return nodes
 

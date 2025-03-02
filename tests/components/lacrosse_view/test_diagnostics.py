@@ -26,9 +26,14 @@ async def test_entry_diagnostics(
     )
     config_entry.add_to_hass(hass)
 
+    sensor = TEST_SENSOR.model_copy()
+    status = sensor.data
+    sensor.data = None
+
     with (
         patch("lacrosse_view.LaCrosse.login", return_value=True),
-        patch("lacrosse_view.LaCrosse.get_sensors", return_value=[TEST_SENSOR]),
+        patch("lacrosse_view.LaCrosse.get_devices", return_value=[sensor]),
+        patch("lacrosse_view.LaCrosse.get_sensor_status", return_value=status),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()

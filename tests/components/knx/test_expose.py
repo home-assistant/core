@@ -3,6 +3,7 @@
 from datetime import timedelta
 
 from freezegun import freeze_time
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.knx import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
@@ -14,11 +15,10 @@ from homeassistant.const import (
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
-from tests.common import async_fire_time_changed_exact
+from tests.common import async_fire_time_changed
 
 
 async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -108,6 +108,11 @@ async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.async_block_till_done()
     await knx.assert_telegram_count(0)
 
+    # Ignore "unavailable" state
+    hass.states.async_set(entity_id, "unavailable", {attribute: None})
+    await hass.async_block_till_done()
+    await knx.assert_telegram_count(0)
+
 
 async def test_expose_attribute_with_default(
     hass: HomeAssistant, knx: KNXTestKit
@@ -131,7 +136,7 @@ async def test_expose_attribute_with_default(
     await knx.receive_read("1/1/8")
     await knx.assert_response("1/1/8", (0,))
 
-    # Change state to "on"; no attribute
+    # Change state to "on"; no attribute -> default
     hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (0,))
@@ -145,6 +150,11 @@ async def test_expose_attribute_with_default(
     hass.states.async_set(entity_id, "off", {attribute: 1})
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
+
+    # Use default for "unavailable" state
+    hass.states.async_set(entity_id, "unavailable")
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", (0,))
 
     # Change state and attribute
     hass.states.async_set(entity_id, "on", {attribute: 3})
@@ -206,7 +216,9 @@ async def test_expose_string(hass: HomeAssistant, knx: KNXTestKit) -> None:
     )
 
 
-async def test_expose_cooldown(hass: HomeAssistant, knx: KNXTestKit) -> None:
+async def test_expose_cooldown(
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+) -> None:
     """Test an expose with cooldown."""
     cooldown_time = 2
     entity_id = "fake.entity"
@@ -234,9 +246,8 @@ async def test_expose_cooldown(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
     # Wait for cooldown to pass
-    async_fire_time_changed_exact(
-        hass, dt_util.utcnow() + timedelta(seconds=cooldown_time)
-    )
+    freezer.tick(timedelta(seconds=cooldown_time))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (3,))
 
@@ -289,8 +300,18 @@ async def test_expose_value_template(
     assert "Error rendering value template for KNX expose" in caplog.text
 
 
+@pytest.mark.parametrize(
+    "invalid_attribute",
+    [
+        101.0,
+        "invalid",  # can't cast to float
+    ],
+)
 async def test_expose_conversion_exception(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, knx: KNXTestKit
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    knx: KNXTestKit,
+    invalid_attribute: str,
 ) -> None:
     """Test expose throws exception."""
 
@@ -312,16 +333,17 @@ async def test_expose_conversion_exception(
     await knx.receive_read("1/1/8")
     await knx.assert_response("1/1/8", (3,))
 
+    caplog.clear()
     # Change attribute: Expect no exception
     hass.states.async_set(
         entity_id,
         "on",
-        {attribute: 101},
+        {attribute: invalid_attribute},
     )
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
     assert (
-        'Could not expose fake.entity fake_attribute value "101.0" to KNX:'
+        f'Could not expose fake.entity fake_attribute value "{invalid_attribute}" to KNX:'
         in caplog.text
     )
 

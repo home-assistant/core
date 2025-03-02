@@ -1,190 +1,62 @@
 """Config flow for Minut Point."""
 
-import asyncio
-from collections import OrderedDict
+from collections.abc import Mapping
 import logging
+from typing import Any
 
-from pypoint import PointSession
-import voluptuous as vol
-
-from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
-from homeassistant.core import callback
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.components.webhook import async_generate_id
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
+from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
 from .const import DOMAIN
 
-AUTH_CALLBACK_PATH = "/api/minut"
-AUTH_CALLBACK_NAME = "api:minut"
 
-DATA_FLOW_IMPL = "point_flow_implementation"
+class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
+    """Config flow to handle Minut Point OAuth2 authentication."""
 
-_LOGGER = logging.getLogger(__name__)
+    DOMAIN = DOMAIN
 
+    @property
+    def logger(self) -> logging.Logger:
+        """Return logger."""
+        return logging.getLogger(__name__)
 
-@callback
-def register_flow_implementation(hass, domain, client_id, client_secret):
-    """Register a flow implementation.
+    async def async_step_import(self, data: dict[str, Any]) -> ConfigFlowResult:
+        """Handle import from YAML."""
+        return await self.async_step_user()
 
-    domain: Domain of the component responsible for the implementation.
-    name: Name of the component.
-    client_id: Client id.
-    client_secret: Client secret.
-    """
-    if DATA_FLOW_IMPL not in hass.data:
-        hass.data[DATA_FLOW_IMPL] = OrderedDict()
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
 
-    hass.data[DATA_FLOW_IMPL][domain] = {
-        CONF_CLIENT_ID: client_id,
-        CONF_CLIENT_SECRET: client_secret,
-    }
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(step_id="reauth_confirm")
+        return await self.async_step_user()
 
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
+        """Create an oauth config entry or update existing entry for reauth."""
+        user_id = str(data[CONF_TOKEN]["user_id"])
+        await self.async_set_unique_id(user_id)
+        if self.source != SOURCE_REAUTH:
+            self._abort_if_unique_id_configured()
 
-class PointFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow."""
-
-    VERSION = 1
-
-    def __init__(self) -> None:
-        """Initialize flow."""
-        self.flow_impl = None
-
-    async def async_step_import(self, user_input=None):
-        """Handle external yaml configuration."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
-
-        self.flow_impl = DOMAIN
-
-        return await self.async_step_auth()
-
-    async def async_step_user(self, user_input=None):
-        """Handle a flow start."""
-        flows = self.hass.data.get(DATA_FLOW_IMPL, {})
-
-        if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
-
-        if not flows:
-            _LOGGER.debug("no flows")
-            return self.async_abort(reason="no_flows")
-
-        if len(flows) == 1:
-            self.flow_impl = list(flows)[0]
-            return await self.async_step_auth()
-
-        if user_input is not None:
-            self.flow_impl = user_input["flow_impl"]
-            return await self.async_step_auth()
-
-        return self.async_show_form(
-            step_id="user",
-            data_schema=vol.Schema({vol.Required("flow_impl"): vol.In(list(flows))}),
-        )
-
-    async def async_step_auth(self, user_input=None):
-        """Create an entry for auth."""
-        if self._async_current_entries():
-            return self.async_abort(reason="external_setup")
-
-        errors = {}
-
-        if user_input is not None:
-            errors["base"] = "follow_link"
-
-        try:
-            async with asyncio.timeout(10):
-                url = await self._get_authorization_url()
-        except TimeoutError:
-            return self.async_abort(reason="authorize_url_timeout")
-        except Exception:
-            _LOGGER.exception("Unexpected error generating auth url")
-            return self.async_abort(reason="unknown_authorize_url_generation")
-        return self.async_show_form(
-            step_id="auth",
-            description_placeholders={"authorization_url": url},
-            errors=errors,
-        )
-
-    async def _get_authorization_url(self):
-        """Create Minut Point session and get authorization url."""
-        flow = self.hass.data[DATA_FLOW_IMPL][self.flow_impl]
-        client_id = flow[CONF_CLIENT_ID]
-        client_secret = flow[CONF_CLIENT_SECRET]
-        point_session = PointSession(
-            async_get_clientsession(self.hass),
-            client_id,
-            client_secret,
-        )
-
-        self.hass.http.register_view(MinutAuthCallbackView())
-
-        return point_session.get_authorization_url
-
-    async def async_step_code(self, code=None):
-        """Received code for authentication."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_setup")
-
-        if code is None:
-            return self.async_abort(reason="no_code")
-
-        _LOGGER.debug(
-            "Should close all flows below %s",
-            self._async_in_progress(),
-        )
-        # Remove notification if no other discovery config entries in progress
-
-        return await self._async_create_session(code)
-
-    async def _async_create_session(self, code):
-        """Create point session and entries."""
-
-        flow = self.hass.data[DATA_FLOW_IMPL][DOMAIN]
-        client_id = flow[CONF_CLIENT_ID]
-        client_secret = flow[CONF_CLIENT_SECRET]
-        point_session = PointSession(
-            async_get_clientsession(self.hass),
-            client_id,
-            client_secret,
-        )
-        token = await point_session.get_access_token(code)
-        _LOGGER.debug("Got new token")
-        if not point_session.is_authorized:
-            _LOGGER.error("Authentication Error")
-            return self.async_abort(reason="auth_error")
-
-        _LOGGER.info("Successfully authenticated Point")
-        user_email = (await point_session.user()).get("email") or ""
-
-        return self.async_create_entry(
-            title=user_email,
-            data={
-                "token": token,
-                "refresh_args": {
-                    CONF_CLIENT_ID: client_id,
-                    CONF_CLIENT_SECRET: client_secret,
-                },
-            },
-        )
-
-
-class MinutAuthCallbackView(HomeAssistantView):
-    """Minut Authorization Callback View."""
-
-    requires_auth = False
-    url = AUTH_CALLBACK_PATH
-    name = AUTH_CALLBACK_NAME
-
-    @staticmethod
-    async def get(request):
-        """Receive authorization code."""
-        hass = request.app[KEY_HASS]
-        if "code" in request.query:
-            hass.async_create_task(
-                hass.config_entries.flow.async_init(
-                    DOMAIN, context={"source": "code"}, data=request.query["code"]
-                )
+            return self.async_create_entry(
+                title="Minut Point",
+                data={**data, CONF_WEBHOOK_ID: async_generate_id()},
             )
-        return "OK!"
+
+        reauth_entry = self._get_reauth_entry()
+        if reauth_entry.unique_id is not None:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+
+        logging.debug("user_id: %s", user_id)
+        return self.async_update_reload_and_abort(
+            reauth_entry, data_updates=data, unique_id=user_id
+        )

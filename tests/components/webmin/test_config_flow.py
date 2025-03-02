@@ -74,7 +74,7 @@ async def test_form_user(
         (Exception, "unknown"),
         (
             Fault("5", "Webmin module net does not exist"),
-            "Fault 5: Webmin module net does not exist",
+            "unknown",
         ),
     ],
 )

@@ -1,25 +1,834 @@
 # serializer version: 1
-# name: test_sensor
-  ReadOnlyDict({
-    'device_class': 'pm25',
-    'friendly_name': 'Kitchen PM2.5',
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    'unit_of_measurement': 'µg/m³',
+# name: test_sensor[load_platforms0][sensor.bedroom_filter_last_reset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bedroom_filter_last_reset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Filter last reset',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_last_reset',
+    'unique_id': 'BBZZBBZZ-filter_last_reset',
+    'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor.1
-  ReadOnlyDict({
-    'device_class': 'temperature',
-    'fanlevel': 'low',
-    'friendly_name': 'Hallway Climate React low temperature threshold',
-    'horizontalswing': 'stopped',
-    'light': 'on',
-    'mode': 'heat',
-    'on': True,
-    'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-    'swing': 'stopped',
-    'targettemperature': 21,
-    'temperatureunit': 'c',
+# name: test_sensor[load_platforms0][sensor.bedroom_filter_last_reset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Bedroom Filter last reset',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bedroom_filter_last_reset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2022-04-23T15:58:45+00:00',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.bedroom_pure_aqi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'bad',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bedroom_pure_aqi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Pure AQI',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm25_pure',
+    'unique_id': 'BBZZBBZZ-pm25',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.bedroom_pure_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Bedroom Pure AQI',
+      'options': list([
+        'good',
+        'moderate',
+        'bad',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bedroom_pure_aqi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.bedroom_pure_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.bedroom_pure_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pure sensitivity',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity',
+    'unique_id': 'BBZZBBZZ-pure_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.bedroom_pure_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Bedroom Pure sensitivity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.bedroom_pure_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'n',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_climate_react_high_temperature_threshold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hallway_climate_react_high_temperature_threshold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Climate React high temperature threshold',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_react_high',
+    'unique_id': 'ABC999111-climate_react_high',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_climate_react_high_temperature_threshold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'fanlevel': 'high',
+      'friendly_name': 'Hallway Climate React high temperature threshold',
+      'horizontalswing': 'stopped',
+      'light': 'on',
+      'mode': 'cool',
+      'on': True,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'swing': 'stopped',
+      'targettemperature': 21,
+      'temperatureunit': 'c',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hallway_climate_react_high_temperature_threshold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '27.5',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_climate_react_low_temperature_threshold-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hallway_climate_react_low_temperature_threshold',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Climate React low temperature threshold',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'climate_react_low',
+    'unique_id': 'ABC999111-climate_react_low',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_climate_react_low_temperature_threshold-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'fanlevel': 'low',
+      'friendly_name': 'Hallway Climate React low temperature threshold',
+      'horizontalswing': 'stopped',
+      'light': 'on',
+      'mode': 'heat',
+      'on': True,
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'swing': 'stopped',
+      'targettemperature': 21,
+      'temperatureunit': 'c',
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hallway_climate_react_low_temperature_threshold',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_climate_react_type-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hallway_climate_react_type',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Climate React type',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'smart_type',
+    'unique_id': 'ABC999111-climate_react_type',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_climate_react_type-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Hallway Climate React type',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hallway_climate_react_type',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'temperature',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_filter_last_reset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hallway_filter_last_reset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Filter last reset',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_last_reset',
+    'unique_id': 'ABC999111-filter_last_reset',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_filter_last_reset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Hallway Filter last reset',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hallway_filter_last_reset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2022-03-12T15:24:26+00:00',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_battery_voltage-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hallway_motion_sensor_battery_voltage',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.VOLTAGE: 'voltage'>,
+    'original_icon': None,
+    'original_name': 'Battery voltage',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'battery_voltage',
+    'unique_id': 'AABBCC-battery_voltage',
+    'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_battery_voltage-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'voltage',
+      'friendly_name': 'Hallway Motion Sensor Battery voltage',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hallway_motion_sensor_battery_voltage',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '3000',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_humidity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hallway_motion_sensor_humidity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.HUMIDITY: 'humidity'>,
+    'original_icon': None,
+    'original_name': 'Humidity',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'AABBCC-humidity',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_humidity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'humidity',
+      'friendly_name': 'Hallway Motion Sensor Humidity',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hallway_motion_sensor_humidity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '57',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_rssi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.hallway_motion_sensor_rssi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.SIGNAL_STRENGTH: 'signal_strength'>,
+    'original_icon': None,
+    'original_name': 'RSSI',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'rssi',
+    'unique_id': 'AABBCC-rssi',
+    'unit_of_measurement': 'dBm',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_rssi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'signal_strength',
+      'friendly_name': 'Hallway Motion Sensor RSSI',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': 'dBm',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hallway_motion_sensor_rssi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '-72',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_temperature-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hallway_motion_sensor_temperature',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'AABBCC-temperature',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_motion_sensor_temperature-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Hallway Motion Sensor Temperature',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hallway_motion_sensor_temperature',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '23.9',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_temperature_feels_like-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hallway_temperature_feels_like',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TEMPERATURE: 'temperature'>,
+    'original_icon': None,
+    'original_name': 'Temperature feels like',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'feels_like',
+    'unique_id': 'ABC999111-feels_like',
+    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_temperature_feels_like-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'temperature',
+      'friendly_name': 'Hallway Temperature feels like',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hallway_temperature_feels_like',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '21.2',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_timer_end_time-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.hallway_timer_end_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Timer end time',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'timer_time',
+    'unique_id': 'ABC999111-timer_time',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.hallway_timer_end_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Hallway Timer end time',
+      'id': None,
+      'turn_on': None,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.hallway_timer_end_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.kitchen_filter_last_reset-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kitchen_filter_last_reset',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Filter last reset',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'filter_last_reset',
+    'unique_id': 'AAZZAAZZ-filter_last_reset',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.kitchen_filter_last_reset-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'timestamp',
+      'friendly_name': 'Kitchen Filter last reset',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kitchen_filter_last_reset',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2022-04-23T15:58:45+00:00',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.kitchen_pure_aqi-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'good',
+        'moderate',
+        'bad',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kitchen_pure_aqi',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Pure AQI',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'pm25_pure',
+    'unique_id': 'AAZZAAZZ-pm25',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.kitchen_pure_aqi-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Kitchen Pure AQI',
+      'options': list([
+        'good',
+        'moderate',
+        'bad',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kitchen_pure_aqi',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'good',
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.kitchen_pure_sensitivity-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kitchen_pure_sensitivity',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pure sensitivity',
+    'platform': 'sensibo',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'sensitivity',
+    'unique_id': 'AAZZAAZZ-pure_sensitivity',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor[load_platforms0][sensor.kitchen_pure_sensitivity-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kitchen Pure sensitivity',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kitchen_pure_sensitivity',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'n',
   })
 # ---

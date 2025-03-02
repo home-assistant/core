@@ -12,10 +12,10 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HiveEntity
 from .const import DOMAIN
+from .entity import HiveEntity
 
 PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(seconds=15)
@@ -68,7 +68,9 @@ SENSOR_TYPES: tuple[BinarySensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Hive thermostat based on a config entry."""
 
@@ -113,11 +115,16 @@ class HiveBinarySensorEntity(HiveEntity, BinarySensorEntity):
         await self.hive.session.updateData(self.device)
         self.device = await self.hive.sensor.getSensor(self.device)
         self.attributes = self.device.get("attributes", {})
-        self._attr_is_on = self.device["status"]["state"]
+
         if self.device["hiveType"] != "Connectivity":
-            self._attr_available = self.device["deviceData"].get("online")
+            self._attr_available = (
+                self.device["deviceData"].get("online") and "status" in self.device
+            )
         else:
             self._attr_available = True
+
+        if self._attr_available:
+            self._attr_is_on = self.device["status"].get("state")
 
 
 class HiveSensorEntity(HiveEntity, BinarySensorEntity):

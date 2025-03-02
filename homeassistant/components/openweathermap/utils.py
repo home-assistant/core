@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pyopenweathermap import OWMClient, RequestError
+from pyopenweathermap import RequestError, create_owm_client
 
 from homeassistant.const import CONF_LANGUAGE, CONF_MODE
 
@@ -16,7 +16,7 @@ async def validate_api_key(api_key, mode):
     api_key_valid = None
     errors, description_placeholders = {}, {}
     try:
-        owm_client = OWMClient(api_key, mode)
+        owm_client = create_owm_client(api_key, mode)
         api_key_valid = await owm_client.validate_key()
     except RequestError as error:
         errors["base"] = "cannot_connect"

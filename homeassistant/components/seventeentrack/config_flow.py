@@ -97,38 +97,6 @@ class SeventeenTrackConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import 17Track config from configuration.yaml."""
-
-        client = self._get_client()
-
-        try:
-            login_result = await client.profile.login(
-                import_data[CONF_USERNAME], import_data[CONF_PASSWORD]
-            )
-        except SeventeenTrackError:
-            return self.async_abort(reason="cannot_connect")
-
-        if not login_result:
-            return self.async_abort(reason="invalid_auth")
-
-        account_id = client.profile.account_id
-
-        await self.async_set_unique_id(account_id)
-        self._abort_if_unique_id_configured()
-        return self.async_create_entry(
-            title=import_data[CONF_USERNAME],
-            data=import_data,
-            options={
-                CONF_SHOW_ARCHIVED: import_data.get(
-                    CONF_SHOW_ARCHIVED, DEFAULT_SHOW_ARCHIVED
-                ),
-                CONF_SHOW_DELIVERED: import_data.get(
-                    CONF_SHOW_DELIVERED, DEFAULT_SHOW_DELIVERED
-                ),
-            },
-        )
-
     @callback
     def _get_client(self):
         session = aiohttp_client.async_get_clientsession(self.hass)

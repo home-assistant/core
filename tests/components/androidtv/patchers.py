@@ -1,5 +1,6 @@
 """Define patches used for androidtv tests."""
 
+from typing import Any
 from unittest.mock import patch
 
 from androidtv.adb_manager.adb_manager_async import DeviceAsync
@@ -25,7 +26,7 @@ PROPS_DEV_MAC = "ether ab:cd:ef:gh:ij:kl brd"
 class AdbDeviceTcpAsyncFake:
     """A fake of the `adb_shell.adb_device_async.AdbDeviceTcpAsync` class."""
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize a fake `adb_shell.adb_device_async.AdbDeviceTcpAsync` instance."""
         self.available = False
 

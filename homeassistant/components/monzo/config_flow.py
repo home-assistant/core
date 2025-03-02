@@ -8,7 +8,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_TOKEN
 from homeassistant.helpers import config_entry_oauth2_flow
 
@@ -23,7 +23,6 @@ class MonzoFlowHandler(
     DOMAIN = DOMAIN
 
     oauth_data: dict[str, Any]
-    reauth_entry: ConfigEntry | None = None
 
     @property
     def logger(self) -> logging.Logger:
@@ -35,10 +34,11 @@ class MonzoFlowHandler(
     ) -> ConfigFlowResult:
         """Wait for the user to confirm in-app approval."""
         if user_input is not None:
-            if not self.reauth_entry:
+            if self.source != SOURCE_REAUTH:
                 return self.async_create_entry(title=DOMAIN, data=self.oauth_data)
             return self.async_update_reload_and_abort(
-                self.reauth_entry, data={**self.reauth_entry.data, **self.oauth_data}
+                self._get_reauth_entry(),
+                data_updates=self.oauth_data,
             )
 
         data_schema = vol.Schema({vol.Required("confirm"): bool})
@@ -51,11 +51,11 @@ class MonzoFlowHandler(
         """Create an entry for the flow."""
         self.oauth_data = data
         user_id = data[CONF_TOKEN]["user_id"]
-        if not self.reauth_entry:
-            await self.async_set_unique_id(user_id)
+        await self.async_set_unique_id(user_id)
+        if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()
-        elif self.reauth_entry.unique_id != user_id:
-            return self.async_abort(reason="wrong_account")
+        else:
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
 
         return await self.async_step_await_approval_confirmation()
 
@@ -63,9 +63,6 @@ class MonzoFlowHandler(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Perform reauth upon an API authentication error."""
-        self.reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(

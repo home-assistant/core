@@ -12,26 +12,27 @@
   },
   "entity": {
     "sensor": {
-      "current_flow_rate": { "name": "Water flow rate" },
-      "peak_flow_rate": { "name": "Peak water flow rate today" },
-      "water_used_today": { "name": "Total water used today" },
       "average_water_used": { "name": "Average daily water usage" },
       "capacity_remaining": { "name": "Capacity remaining" },
-      "current_system_pressure": { "name": "Current water pressure" },
-      "high_system_pressure": { "name": "High water pressure today" },
-      "low_system_pressure": { "name": "Low water pressure today" },
-      "inlet_tds": { "name": "Inlet TDS" },
-      "outlet_tds": { "name": "Outlet TDS" },
       "cart1": { "name": "Cartridge 1 life remaining" },
       "cart2": { "name": "Cartridge 2 life remaining" },
-      "cart3": { "name": "Cartridge 3 life remaining" }
+      "cart3": { "name": "Cartridge 3 life remaining" },
+      "current_flow_rate": { "name": "Water flow rate" },
+      "current_system_pressure": { "name": "Current water pressure" },
+      "high_system_pressure": { "name": "High water pressure today" },
+      "inlet_tds": { "name": "Inlet TDS" },
+      "low_system_pressure": { "name": "Low water pressure today" },
+      "outlet_tds": { "name": "Outlet TDS" },
+      "peak_flow_rate": { "name": "Peak water flow rate today" },
+      "water_used_today": { "name": "Total water used today" }
     },
     "binary_sensor": {
+      "alert_sensor": { "name": "Sensor" },
       "leak": { "name": "Leak detected" },
       "pending_notification": { "name": "Notification unread" },
+      "pump": { "name": "Pump status" },
       "reserve_in_use": { "name": "Reserve capacity in use" },
-      "salt": { "name": "Salt low" },
-      "pump": { "name": "Pump status" }
+      "salt": { "name": "Salt low" }
     },
     "select": {
       "protect_mode": {
@@ -44,8 +45,8 @@
       }
     },
     "switch": {
-      "water": { "name": "Water supply" },
-      "bypass": { "name": "Treatment bypass" }
+      "bypass": { "name": "Treatment bypass" },
+      "water": { "name": "Water supply" }
     }
   }
 }

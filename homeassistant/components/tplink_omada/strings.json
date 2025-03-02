@@ -65,6 +65,39 @@
       "poe_delivery": {
         "name": "Port {port_name} PoE Delivery"
       }
+    },
+    "sensor": {
+      "device_status": {
+        "name": "Device status",
+        "state": {
+          "error": "Error",
+          "disconnected": "[%key:common::state::disconnected%]",
+          "connected": "[%key:common::state::connected%]",
+          "pending": "Pending",
+          "heartbeat_missed": "Heartbeat missed",
+          "isolated": "Isolated",
+          "adopt_failed": "Adopt failed",
+          "managed_externally": "Managed externally"
+        }
+      },
+      "cpu_usage": {
+        "name": "CPU usage"
+      },
+      "mem_usage": {
+        "name": "Memory usage"
+      }
+    }
+  },
+  "services": {
+    "reconnect_client": {
+      "name": "Reconnect wireless client",
+      "description": "Tries to get wireless client to reconnect to Omada Network.",
+      "fields": {
+        "mac": {
+          "name": "MAC address",
+          "description": "MAC address of the device."
+        }
+      }
     }
   }
 }

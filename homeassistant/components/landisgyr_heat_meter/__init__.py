@@ -27,7 +27,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     reader = ultraheat_api.UltraheatReader(entry.data[CONF_DEVICE])
     api = ultraheat_api.HeatMeterService(reader)
 
-    coordinator = UltraheatCoordinator(hass, api)
+    coordinator = UltraheatCoordinator(hass, entry, api)
     await coordinator.async_config_entry_first_refresh()
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -73,6 +73,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             hass, config_entry.entry_id, update_entity_unique_id
         )
 
-    _LOGGER.info("Migration to version %s successful", config_entry.version)
+    _LOGGER.debug("Migration to version %s successful", config_entry.version)
 
     return True

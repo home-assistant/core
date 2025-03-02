@@ -17,11 +17,11 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
 from .const import DOMAIN, SERVICE_RESUME, SERVICE_START_WATERING, SERVICE_SUSPEND
-from .coordinator import HydrawiseDataUpdateCoordinator
+from .coordinator import HydrawiseUpdateCoordinators
 from .entity import HydrawiseEntity
 
 
@@ -68,7 +68,7 @@ ZONE_BINARY_SENSORS: tuple[HydrawiseBinarySensorEntityDescription, ...] = (
 )
 
 SCHEMA_START_WATERING: VolDictType = {
-    vol.Optional("duration"): vol.All(vol.Coerce(int), vol.Range(min=0, max=90)),
+    vol.Optional("duration"): vol.All(vol.Coerce(int), vol.Range(min=0, max=1440)),
 }
 SCHEMA_SUSPEND: VolDictType = {
     vol.Required("until"): cv.datetime,
@@ -78,21 +78,19 @@ SCHEMA_SUSPEND: VolDictType = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Hydrawise binary_sensor platform."""
-    coordinator: HydrawiseDataUpdateCoordinator = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators: HydrawiseUpdateCoordinators = hass.data[DOMAIN][config_entry.entry_id]
     entities: list[HydrawiseBinarySensor] = []
-    for controller in coordinator.data.controllers.values():
+    for controller in coordinators.main.data.controllers.values():
         entities.extend(
-            HydrawiseBinarySensor(coordinator, description, controller)
+            HydrawiseBinarySensor(coordinators.main, description, controller)
             for description in CONTROLLER_BINARY_SENSORS
         )
         entities.extend(
             HydrawiseBinarySensor(
-                coordinator,
+                coordinators.main,
                 description,
                 controller,
                 sensor_id=sensor.id,
@@ -103,14 +101,14 @@ async def async_setup_entry(
         )
         entities.extend(
             HydrawiseZoneBinarySensor(
-                coordinator, description, controller, zone_id=zone.id
+                coordinators.main, description, controller, zone_id=zone.id
             )
             for zone in controller.zones
             for description in ZONE_BINARY_SENSORS
         )
     async_add_entities(entities)
     platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(SERVICE_RESUME, {}, "resume")
+    platform.async_register_entity_service(SERVICE_RESUME, None, "resume")
     platform.async_register_entity_service(
         SERVICE_START_WATERING, SCHEMA_START_WATERING, "start_watering"
     )

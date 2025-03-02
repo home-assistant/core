@@ -8,6 +8,8 @@ import glob
 from http.client import HTTPConnection
 import importlib
 import os
+from pathlib import Path
+from ssl import SSLContext
 import sys
 import threading
 import time
@@ -29,7 +31,7 @@ def _check_import_call_allowed(mapped_args: dict[str, Any]) -> bool:
 def _check_file_allowed(mapped_args: dict[str, Any]) -> bool:
     # If the file is in /proc we can ignore it.
     args = mapped_args["args"]
-    path = args[0] if type(args[0]) is str else str(args[0])  # noqa: E721
+    path = args[0] if type(args[0]) is str else str(args[0])
     return path.startswith(ALLOWED_FILE_PREFIXES)
 
 
@@ -46,6 +48,12 @@ def _check_sleep_call_allowed(mapped_args: dict[str, Any]) -> bool:
     with suppress(ValueError):
         return get_current_frame(4).f_code.co_filename.endswith("pydevd.py")
     return False
+
+
+def _check_load_verify_locations_call_allowed(mapped_args: dict[str, Any]) -> bool:
+    # If only cadata is passed, we can ignore it
+    kwargs = mapped_args.get("kwargs")
+    return bool(kwargs and len(kwargs) == 1 and "cadata" in kwargs)
 
 
 @dataclass(slots=True, frozen=True)
@@ -139,6 +147,78 @@ _BLOCKING_CALLS: tuple[BlockingCall, ...] = (
         object=importlib,
         function="import_module",
         check_allowed=_check_import_call_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=SSLContext.load_default_certs,
+        object=SSLContext,
+        function="load_default_certs",
+        check_allowed=None,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=SSLContext.load_verify_locations,
+        object=SSLContext,
+        function="load_verify_locations",
+        check_allowed=_check_load_verify_locations_call_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=SSLContext.load_cert_chain,
+        object=SSLContext,
+        function="load_cert_chain",
+        check_allowed=None,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=Path.open,
+        object=Path,
+        function="open",
+        check_allowed=_check_file_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=Path.read_text,
+        object=Path,
+        function="read_text",
+        check_allowed=_check_file_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=Path.read_bytes,
+        object=Path,
+        function="read_bytes",
+        check_allowed=_check_file_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=Path.write_text,
+        object=Path,
+        function="write_text",
+        check_allowed=_check_file_allowed,
+        strict=False,
+        strict_core=False,
+        skip_for_tests=True,
+    ),
+    BlockingCall(
+        original_func=Path.write_bytes,
+        object=Path,
+        function="write_bytes",
+        check_allowed=_check_file_allowed,
         strict=False,
         strict_core=False,
         skip_for_tests=True,

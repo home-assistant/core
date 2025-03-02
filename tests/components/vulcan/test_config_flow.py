@@ -137,14 +137,13 @@ async def test_config_flow_reauth_success(
     mock_student.return_value = [
         Student.load(load_fixture("fake_student_1.json", "vulcan"))
     ]
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id="0",
         data={"student_id": "0"},
-    ).add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
     )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -176,14 +175,13 @@ async def test_config_flow_reauth_without_matching_entries(
     mock_student.return_value = [
         Student.load(load_fixture("fake_student_1.json", "vulcan"))
     ]
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain=const.DOMAIN,
         unique_id="0",
         data={"student_id": "1"},
-    ).add_to_hass(hass)
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
     )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -206,9 +204,13 @@ async def test_config_flow_reauth_with_errors(
     """Test reauth config flow with errors."""
     mock_keystore.return_value = fake_keystore
     mock_account.return_value = fake_account
-    result = await hass.config_entries.flow.async_init(
-        const.DOMAIN, context={"source": config_entries.SOURCE_REAUTH}
+    entry = MockConfigEntry(
+        domain=const.DOMAIN,
+        unique_id="0",
+        data={"student_id": "0"},
     )
+    entry.add_to_hass(hass)
+    result = await entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
@@ -308,7 +310,7 @@ async def test_multiple_config_entries(
         unique_id="123456",
         data=json.loads(load_fixture("fake_config_entry_data.json", "vulcan")),
     ).add_to_hass(hass)
-    await register.register(hass, "token", "region", "000000")
+    await register.register("token", "region", "000000")
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -701,7 +703,7 @@ async def test_student_already_exists(
         | {"student_id": "0"},
     ).add_to_hass(hass)
 
-    await register.register(hass, "token", "region", "000000")
+    await register.register("token", "region", "000000")
 
     result = await hass.config_entries.flow.async_init(
         const.DOMAIN, context={"source": config_entries.SOURCE_USER}

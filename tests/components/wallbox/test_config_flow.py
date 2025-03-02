@@ -160,13 +160,7 @@ async def test_form_reauth(hass: HomeAssistant, entry: MockConfigEntry) -> None:
             status_code=200,
         )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-        )
+        result = await entry.start_reauth_flow(hass)
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -192,7 +186,15 @@ async def test_form_reauth_invalid(hass: HomeAssistant, entry: MockConfigEntry) 
     with requests_mock.Mocker() as mock_request:
         mock_request.get(
             "https://user-api.wall-box.com/users/signin",
-            text='{"jwt":"fakekeyhere","refresh_token": "refresh_fakekeyhere","user_id":12345,"ttl":145656758,"refresh_token_ttl":145756758,"error":false,"status":200}',
+            json={
+                "jwt": "fakekeyhere",
+                "refresh_token": "refresh_fakekeyhere",
+                "user_id": 12345,
+                "ttl": 145656758,
+                "refresh_token_ttl": 145756758,
+                "error": False,
+                "status": 200,
+            },
             status_code=200,
         )
         mock_request.get(
@@ -201,13 +203,7 @@ async def test_form_reauth_invalid(hass: HomeAssistant, entry: MockConfigEntry) 
             status_code=200,
         )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={
-                "source": config_entries.SOURCE_REAUTH,
-                "entry_id": entry.entry_id,
-            },
-        )
+        result = await entry.start_reauth_flow(hass)
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

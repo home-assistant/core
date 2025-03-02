@@ -1,0 +1,442 @@
+{
+  "success": true,
+  "data": [
+    {
+      "_id": "a380546a-94be-4b8e-8a0b-23e0d5c03303",
+      "auth": {
+        "local": {
+          "username": "test-username"
+        },
+        "timestamps": {
+          "created": "2024-10-19T18:43:39.782Z",
+          "loggedin": "2024-10-31T16:13:35.048Z",
+          "updated": "2024-10-31T16:15:56.552Z"
+        }
+      },
+      "achievements": {
+        "ultimateGearSets": {
+          "healer": false,
+          "wizard": false,
+          "rogue": false,
+          "warrior": false
+        },
+        "streak": 0,
+        "challenges": [],
+        "perfect": 1,
+        "quests": {},
+        "purchasedEquipment": true,
+        "completedTask": true,
+        "partyUp": true
+      },
+      "backer": {},
+      "contributor": {},
+      "flags": {
+        "verifiedUsername": true,
+        "classSelected": true
+      },
+      "items": {
+        "gear": {
+          "owned": {
+            "headAccessory_special_blackHeadband": true,
+            "headAccessory_special_blueHeadband": true,
+            "headAccessory_special_greenHeadband": true,
+            "headAccessory_special_pinkHeadband": true,
+            "headAccessory_special_redHeadband": true,
+            "headAccessory_special_whiteHeadband": true,
+            "headAccessory_special_yellowHeadband": true,
+            "eyewear_special_blackTopFrame": true,
+            "eyewear_special_blueTopFrame": true,
+            "eyewear_special_greenTopFrame": true,
+            "eyewear_special_pinkTopFrame": true,
+            "eyewear_special_redTopFrame": true,
+            "eyewear_special_whiteTopFrame": true,
+            "eyewear_special_yellowTopFrame": true,
+            "eyewear_special_blackHalfMoon": true,
+            "eyewear_special_blueHalfMoon": true,
+            "eyewear_special_greenHalfMoon": true,
+            "eyewear_special_pinkHalfMoon": true,
+            "eyewear_special_redHalfMoon": true,
+            "eyewear_special_whiteHalfMoon": true,
+            "eyewear_special_yellowHalfMoon": true,
+            "armor_special_bardRobes": true,
+            "weapon_special_fall2024Warrior": true,
+            "shield_special_fall2024Warrior": true,
+            "head_special_fall2024Warrior": true,
+            "armor_special_fall2024Warrior": true,
+            "back_mystery_201402": true,
+            "body_mystery_202003": true,
+            "head_special_bardHat": true,
+            "weapon_wizard_0": true
+          },
+          "equipped": {
+            "weapon": "weapon_special_fall2024Warrior",
+            "armor": "armor_special_fall2024Warrior",
+            "head": "head_special_fall2024Warrior",
+            "shield": "shield_special_fall2024Warrior",
+            "back": "back_mystery_201402",
+            "headAccessory": "headAccessory_special_pinkHeadband",
+            "eyewear": "eyewear_special_pinkHalfMoon",
+            "body": "body_mystery_202003"
+          },
+          "costume": {
+            "armor": "armor_base_0",
+            "head": "head_base_0",
+            "shield": "shield_base_0"
+          }
+        },
+        "special": {
+          "snowball": 99,
+          "spookySparkles": 99,
+          "shinySeed": 99,
+          "seafoam": 99,
+          "valentine": 0,
+          "valentineReceived": [],
+          "nye": 0,
+          "nyeReceived": [],
+          "greeting": 0,
+          "greetingReceived": [],
+          "thankyou": 0,
+          "thankyouReceived": [],
+          "birthday": 0,
+          "birthdayReceived": [],
+          "congrats": 0,
+          "congratsReceived": [],
+          "getwell": 0,
+          "getwellReceived": [],
+          "goodluck": 0,
+          "goodluckReceived": []
+        },
+        "pets": {
+          "Rat-Shade": 1,
+          "Gryphatrice-Jubilant": 1
+        },
+        "currentPet": "Gryphatrice-Jubilant",
+        "eggs": {
+          "Cactus": 1,
+          "Fox": 2,
+          "Wolf": 1
+        },
+        "hatchingPotions": {
+          "CottonCandyBlue": 1,
+          "RoyalPurple": 1
+        },
+        "food": {
+          "Meat": 2,
+          "Chocolate": 1,
+          "CottonCandyPink": 1,
+          "Candy_Zombie": 1
+        },
+        "mounts": {
+          "Velociraptor-Base": true,
+          "Gryphon-Gryphatrice": true
+        },
+        "currentMount": "Gryphon-Gryphatrice",
+        "quests": {
+          "dustbunnies": 1,
+          "vice1": 1,
+          "atom1": 1,
+          "moonstone1": 1,
+          "goldenknight1": 1,
+          "basilist": 1
+        },
+        "lastDrop": {
+          "date": "2024-10-31T16:13:34.952Z",
+          "count": 0
+        }
+      },
+      "party": {
+        "quest": {
+          "progress": {
+            "up": 0,
+            "down": 0,
+            "collectedItems": 0,
+            "collect": {}
+          },
+          "RSVPNeeded": false,
+          "key": "dustbunnies"
+        },
+        "order": "level",
+        "orderAscending": "ascending",
+        "_id": "94cd398c-2240-4320-956e-6d345cf2c0de"
+      },
+      "preferences": {
+        "size": "slim",
+        "hair": {
+          "color": "red",
+          "base": 3,
+          "bangs": 1,
+          "beard": 0,
+          "mustache": 0,
+          "flower": 1
+        },
+        "skin": "915533",
+        "shirt": "blue",
+        "chair": "handleless_pink",
+        "costume": false,
+        "sleep": false,
+        "disableClasses": false,
+        "tasks": {
+          "groupByChallenge": false,
+          "confirmScoreNotes": false,
+          "mirrorGroupTasks": [],
+          "activeFilter": {
+            "habit": "all",
+            "daily": "all",
+            "todo": "remaining",
+            "reward": "all"
+          }
+        },
+        "background": "violet"
+      },
+      "profile": {
+        "name": "test-user"
+      },
+      "stats": {
+        "hp": 50,
+        "mp": 150.8,
+        "exp": 127,
+        "gp": 19.08650199252128,
+        "lvl": 99,
+        "class": "wizard",
+        "points": 0,
+        "str": 0,
+        "con": 0,
+        "int": 0,
+        "per": 0,
+        "buffs": {
+          "str": 50,
+          "int": 50,
+          "per": 50,
+          "con": 50,
+          "stealth": 0,
+          "streaks": false,
+          "seafoam": false,
+          "shinySeed": false,
+          "snowball": false,
+          "spookySparkles": false
+        },
+        "training": {
+          "int": 0,
+          "per": 0,
+          "str": 0,
+          "con": 0
+        },
+        "toNextLevel": 3580,
+        "maxHealth": 50,
+        "maxMP": 228
+      },
+      "inbox": {
+        "optOut": false
+      },
+      "loginIncentives": 6,
+      "id": "a380546a-94be-4b8e-8a0b-23e0d5c03303"
+    },
+    {
+      "_id": "ffce870c-3ff3-4fa4-bad1-87612e52b8e7",
+      "auth": {
+        "local": {
+          "username": "test-partymember-username"
+        },
+        "timestamps": {
+          "created": "2024-10-10T15:57:01.106Z",
+          "loggedin": "2024-10-30T19:37:01.970Z",
+          "updated": "2024-10-30T19:38:25.968Z"
+        }
+      },
+      "achievements": {
+        "ultimateGearSets": {
+          "healer": false,
+          "wizard": false,
+          "rogue": false,
+          "warrior": false
+        },
+        "streak": 0,
+        "challenges": [],
+        "perfect": 1,
+        "quests": {},
+        "completedTask": true,
+        "partyUp": true,
+        "snowball": 1,
+        "spookySparkles": 1,
+        "seafoam": 1,
+        "shinySeed": 1
+      },
+      "backer": {},
+      "contributor": {},
+      "flags": {
+        "verifiedUsername": true,
+        "classSelected": false
+      },
+      "items": {
+        "gear": {
+          "equipped": {
+            "armor": "armor_base_0",
+            "head": "head_base_0",
+            "shield": "shield_base_0"
+          },
+          "costume": {
+            "armor": "armor_base_0",
+            "head": "head_base_0",
+            "shield": "shield_base_0"
+          },
+          "owned": {
+            "headAccessory_special_blackHeadband": true,
+            "headAccessory_special_blueHeadband": true,
+            "headAccessory_special_greenHeadband": true,
+            "headAccessory_special_pinkHeadband": true,
+            "headAccessory_special_redHeadband": true,
+            "headAccessory_special_whiteHeadband": true,
+            "headAccessory_special_yellowHeadband": true,
+            "eyewear_special_blackTopFrame": true,
+            "eyewear_special_blueTopFrame": true,
+            "eyewear_special_greenTopFrame": true,
+            "eyewear_special_pinkTopFrame": true,
+            "eyewear_special_redTopFrame": true,
+            "eyewear_special_whiteTopFrame": true,
+            "eyewear_special_yellowTopFrame": true,
+            "eyewear_special_blackHalfMoon": true,
+            "eyewear_special_blueHalfMoon": true,
+            "eyewear_special_greenHalfMoon": true,
+            "eyewear_special_pinkHalfMoon": true,
+            "eyewear_special_redHalfMoon": true,
+            "eyewear_special_whiteHalfMoon": true,
+            "eyewear_special_yellowHalfMoon": true,
+            "armor_special_bardRobes": true
+          }
+        },
+        "special": {
+          "snowball": 0,
+          "spookySparkles": 0,
+          "shinySeed": 0,
+          "seafoam": 0,
+          "valentine": 0,
+          "valentineReceived": [],
+          "nye": 0,
+          "nyeReceived": [],
+          "greeting": 0,
+          "greetingReceived": [],
+          "thankyou": 0,
+          "thankyouReceived": [],
+          "birthday": 0,
+          "birthdayReceived": [],
+          "congrats": 0,
+          "congratsReceived": [],
+          "getwell": 0,
+          "getwellReceived": [],
+          "goodluck": 0,
+          "goodluckReceived": []
+        },
+        "lastDrop": {
+          "count": 0,
+          "date": "2024-10-30T19:37:01.838Z"
+        },
+        "currentPet": "",
+        "currentMount": "",
+        "pets": {},
+        "eggs": {
+          "BearCub": 1,
+          "Cactus": 1
+        },
+        "hatchingPotions": {
+          "Skeleton": 1
+        },
+        "food": {
+          "Candy_Red": 1
+        },
+        "mounts": {},
+        "quests": {
+          "dustbunnies": 1
+        }
+      },
+      "party": {
+        "quest": {
+          "progress": {
+            "up": 0,
+            "down": 0,
+            "collectedItems": 0,
+            "collect": {}
+          },
+          "RSVPNeeded": true,
+          "key": "dustbunnies"
+        },
+        "order": "level",
+        "orderAscending": "ascending",
+        "_id": "94cd398c-2240-4320-956e-6d345cf2c0de"
+      },
+      "preferences": {
+        "size": "slim",
+        "hair": {
+          "color": "red",
+          "base": 3,
+          "bangs": 1,
+          "beard": 0,
+          "mustache": 0,
+          "flower": 1
+        },
+        "skin": "915533",
+        "shirt": "blue",
+        "chair": "none",
+        "costume": false,
+        "sleep": false,
+        "disableClasses": false,
+        "tasks": {
+          "groupByChallenge": false,
+          "confirmScoreNotes": false,
+          "mirrorGroupTasks": [],
+          "activeFilter": {
+            "habit": "all",
+            "daily": "all",
+            "todo": "remaining",
+            "reward": "all"
+          }
+        },
+        "background": "violet"
+      },
+      "profile": {
+        "name": "test-partymember-displayname"
+      },
+      "stats": {
+        "buffs": {
+          "str": 1,
+          "int": 1,
+          "per": 1,
+          "con": 1,
+          "stealth": 0,
+          "streaks": false,
+          "seafoam": false,
+          "shinySeed": true,
+          "snowball": false,
+          "spookySparkles": false
+        },
+        "training": {
+          "int": 0,
+          "per": 0,
+          "str": 0,
+          "con": 0
+        },
+        "hp": 50,
+        "mp": 24,
+        "exp": 24,
+        "gp": 4,
+        "lvl": 1,
+        "class": "warrior",
+        "points": 0,
+        "str": 0,
+        "con": 0,
+        "int": 0,
+        "per": 0,
+        "toNextLevel": 25,
+        "maxHealth": 50,
+        "maxMP": 32
+      },
+      "inbox": {
+        "optOut": false
+      },
+      "loginIncentives": 1,
+      "id": "ffce870c-3ff3-4fa4-bad1-87612e52b8e7"
+    }
+  ],
+  "notifications": [],
+  "userV": 96,
+  "appVersion": "5.29.0"
+}

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from aiolivisi.const import CAPABILITY_CONFIG
+from livisi.const import CAPABILITY_CONFIG
 
 from homeassistant.components.climate import (
     ClimateEntity,
@@ -16,7 +16,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     DOMAIN,
@@ -33,7 +33,7 @@ from .entity import LivisiEntity
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate device."""
     coordinator: LivisiDataUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
@@ -68,7 +68,6 @@ class LivisiClimate(LivisiEntity, ClimateEntity):
     _attr_hvac_mode = HVACMode.HEAT
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

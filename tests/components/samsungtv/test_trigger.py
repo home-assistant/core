@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import automation
-from homeassistant.components.samsungtv import DOMAIN
+from homeassistant.components.samsungtv.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, SERVICE_TURN_ON
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr

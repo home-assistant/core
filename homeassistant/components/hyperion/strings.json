@@ -18,7 +18,7 @@
         }
       },
       "create_token": {
-        "description": "Choose **Submit** below to request a new authentication token. You will be redirected to the Hyperion UI to approve the request. Please verify the shown id is \"{auth_id}\"",
+        "description": "Choose **Submit** below to request a new authentication token. You will be redirected to the Hyperion UI to approve the request. Please verify the shown ID is \"{auth_id}\"",
         "title": "Automatically create new authentication token"
       },
       "create_token_external": {
@@ -40,7 +40,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "auth_new_token_not_granted_error": "Newly created token was not approved on Hyperion UI",
       "auth_new_token_not_work_error": "Failed to authenticate using newly created token",
-      "no_id": "The Hyperion Ambilight instance did not report its id",
+      "no_id": "The Hyperion Ambilight instance did not report its ID",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     }
   },
@@ -52,6 +52,9 @@
           "effect_show_list": "Hyperion effects to show"
         }
       }
+    },
+    "abort": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
     }
   },
   "entity": {

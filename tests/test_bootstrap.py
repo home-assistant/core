@@ -12,8 +12,7 @@ from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
-from homeassistant import bootstrap, loader, runner
-import homeassistant.config as config_util
+from homeassistant import bootstrap, config as config_util, core, loader, runner
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     BASE_PLATFORMS,
@@ -213,7 +212,7 @@ async def test_setup_after_deps_all_present(hass: HomeAssistant) -> None:
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             order.append(domain)
             return True
 
@@ -260,7 +259,7 @@ async def test_setup_after_deps_in_stage_1_ignored(hass: HomeAssistant) -> None:
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             order.append(domain)
             return True
 
@@ -315,7 +314,7 @@ async def test_setup_after_deps_manifests_are_loaded_even_if_not_setup(
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             order.append(domain)
             return True
 
@@ -392,7 +391,7 @@ async def test_setup_frontend_before_recorder(hass: HomeAssistant) -> None:
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             order.append(domain)
             return True
 
@@ -471,7 +470,7 @@ async def test_setup_after_deps_via_platform(hass: HomeAssistant) -> None:
     after_dep_event = asyncio.Event()
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if domain == "after_dep_of_platform_int":
                 await after_dep_event.wait()
 
@@ -520,7 +519,7 @@ async def test_setup_after_deps_not_trigger_load(hass: HomeAssistant) -> None:
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             order.append(domain)
             return True
 
@@ -559,7 +558,7 @@ async def test_setup_after_deps_not_present(hass: HomeAssistant) -> None:
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             order.append(domain)
             return True
 
@@ -788,6 +787,9 @@ async def test_setup_hass_recovery_mode(
 ) -> None:
     """Test it works."""
     with (
+        patch(
+            "homeassistant.core.HomeAssistant", wraps=core.HomeAssistant
+        ) as mock_hass,
         patch("homeassistant.components.browser.setup") as browser_setup,
         patch(
             "homeassistant.config_entries.ConfigEntries.async_domains",
@@ -805,6 +807,8 @@ async def test_setup_hass_recovery_mode(
                 recovery_mode=True,
             ),
         )
+
+    mock_hass.assert_called_once()
 
     assert "recovery_mode" in hass.config.components
     assert len(mock_mount_local_lib_path.mock_calls) == 0
@@ -969,7 +973,7 @@ async def test_empty_integrations_list_is_only_sent_at_the_end_of_bootstrap(
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             order.append(domain)
             await asyncio.sleep(0.05)
 
@@ -1029,7 +1033,7 @@ async def test_warning_logged_on_wrap_up_timeout(
     task: asyncio.Task | None = None
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             nonlocal task
 
             async def _not_marked_background_task():
@@ -1067,7 +1071,7 @@ async def test_tasks_logged_that_block_stage_1(
     """Test we log tasks that delay stage 1 startup."""
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async def _not_marked_background_task():
                 await asyncio.sleep(0.2)
 
@@ -1091,7 +1095,7 @@ async def test_tasks_logged_that_block_stage_1(
         patch.object(bootstrap, "STAGE_1_TIMEOUT", 0),
         patch.object(bootstrap, "COOLDOWN_TIME", 0),
         patch.object(
-            bootstrap, "STAGE_1_INTEGRATIONS", [*original_stage_1, "normal_integration"]
+            bootstrap, "STAGE_1_INTEGRATIONS", {*original_stage_1, "normal_integration"}
         ),
     ):
         await bootstrap._async_set_up_integrations(hass, {"normal_integration": {}})
@@ -1110,7 +1114,7 @@ async def test_tasks_logged_that_block_stage_2(
     done_future = hass.loop.create_future()
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async def _not_marked_background_task():
                 await done_future
 
@@ -1177,7 +1181,7 @@ async def test_bootstrap_is_cancellation_safe(
 @pytest.mark.parametrize("load_registries", [False])
 async def test_bootstrap_empty_integrations(hass: HomeAssistant) -> None:
     """Test setting up an empty integrations does not raise."""
-    await bootstrap.async_setup_multi_components(hass, set(), {})
+    await bootstrap._async_setup_multi_components(hass, set(), {})
     await hass.async_block_till_done()
 
 
@@ -1312,7 +1316,7 @@ async def test_bootstrap_dependencies(
         ),
     ):
         bootstrap.async_set_domains_to_be_loaded(hass, {integration})
-        await bootstrap.async_setup_multi_components(hass, {integration}, {})
+        await bootstrap._async_setup_multi_components(hass, {integration}, {})
         await hass.async_block_till_done()
 
     for assertion in assertions:
@@ -1374,11 +1378,11 @@ async def test_pre_import_no_requirements(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.timeout(20)
-async def test_bootstrap_does_not_preload_stage_1_integrations() -> None:
-    """Test that the bootstrap does not preload stage 1 integrations.
+async def test_bootstrap_does_not_preimport_stage_1_integrations() -> None:
+    """Test that the bootstrap does not preimport stage 1 integrations.
 
     If this test fails it means that stage1 integrations are being
-    loaded too soon and will not get their requirements updated
+    imported too soon and will not get their requirements updated
     before they are loaded at runtime.
     """
 
@@ -1404,7 +1408,7 @@ async def test_cancellation_does_not_leak_upward_from_async_setup(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test setting up an integration that raises asyncio.CancelledError."""
-    await bootstrap.async_setup_multi_components(
+    await bootstrap._async_setup_multi_components(
         hass, {"test_package_raises_cancelled_error"}, {}
     )
     await hass.async_block_till_done()
@@ -1425,12 +1429,12 @@ async def test_cancellation_does_not_leak_upward_from_async_setup_entry(
         domain="test_package_raises_cancelled_error_config_entry", data={}
     )
     entry.add_to_hass(hass)
-    await bootstrap.async_setup_multi_components(
+    await bootstrap._async_setup_multi_components(
         hass, {"test_package_raises_cancelled_error_config_entry"}, {}
     )
     await hass.async_block_till_done()
 
-    await bootstrap.async_setup_multi_components(hass, {"test_package"}, {})
+    await bootstrap._async_setup_multi_components(hass, {"test_package"}, {})
     await hass.async_block_till_done()
     assert (
         "Error setting up entry Mock Title for test_package_raises_cancelled_error_config_entry"
@@ -1452,7 +1456,7 @@ async def test_setup_does_base_platforms_first(hass: HomeAssistant) -> None:
     order = []
 
     def gen_domain_setup(domain):
-        async def async_setup(hass, config):
+        async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             order.append(domain)
             return True
 
@@ -1524,3 +1528,46 @@ def test_should_rollover_is_always_false() -> None:
         ).shouldRollover(Mock())
         is False
     )
+
+
+async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> None:
+    """Verify stage 0 not load base platforms before recorder.
+
+    If a stage 0 integration has a base platform in its dependencies and
+    it loads before the recorder, it may load integrations that expect
+    the recorder to be loaded. We need to ensure that no stage 0 integration
+    has a base platform in its dependencies that loads before the recorder.
+    """
+    integrations_before_recorder: set[str] = set()
+    for _, integrations, _ in bootstrap.STAGE_0_INTEGRATIONS:
+        integrations_before_recorder |= integrations
+        if "recorder" in integrations:
+            break
+
+    integrations_or_execs = await loader.async_get_integrations(
+        hass, integrations_before_recorder
+    )
+    integrations: list[Integration] = []
+    resolve_deps_tasks: list[asyncio.Task[bool]] = []
+    for integration in integrations_or_execs.values():
+        assert not isinstance(integrations_or_execs, Exception)
+        integrations.append(integration)
+        resolve_deps_tasks.append(integration.resolve_dependencies())
+
+    await asyncio.gather(*resolve_deps_tasks)
+    base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
+    for integration in integrations:
+        domain_with_base_platforms_deps = BASE_PLATFORMS.intersection(
+            integration.all_dependencies
+        )
+        assert not domain_with_base_platforms_deps, (
+            f"{integration.domain} has base platforms in dependencies: "
+            f"{domain_with_base_platforms_deps}"
+        )
+        integration_top_level_files = base_platform_py_files.intersection(
+            integration._top_level_files
+        )
+        assert not integration_top_level_files, (
+            f"{integration.domain} has base platform files in top level files: "
+            f"{integration_top_level_files}"
+        )

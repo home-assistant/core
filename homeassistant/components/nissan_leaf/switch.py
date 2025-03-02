@@ -10,8 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import LeafDataStore, LeafEntity
+from . import LeafDataStore
 from .const import DATA_CLIMATE, DATA_LEAF
+from .entity import LeafEntity
 
 _LOGGER = logging.getLogger(__name__)
 

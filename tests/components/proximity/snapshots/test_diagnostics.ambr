@@ -5,19 +5,19 @@
       'entities': dict({
         'device_tracker.test1': dict({
           'dir_of_travel': None,
-          'dist_to_zone': 2218752,
+          'dist_to_zone': 2218742,
           'is_in_ignored_zone': False,
           'name': 'test1',
         }),
         'device_tracker.test2': dict({
           'dir_of_travel': None,
-          'dist_to_zone': 4077309,
+          'dist_to_zone': 4077299,
           'is_in_ignored_zone': False,
           'name': 'test2',
         }),
         'device_tracker.test3': dict({
           'dir_of_travel': None,
-          'dist_to_zone': 4077309,
+          'dist_to_zone': 4077299,
           'is_in_ignored_zone': False,
           'name': 'test3',
         }),
@@ -42,7 +42,7 @@
       }),
       'proximity': dict({
         'dir_of_travel': None,
-        'dist_to_zone': 2218752,
+        'dist_to_zone': 2218742,
         'nearest': 'test1',
       }),
       'tracked_states': dict({
@@ -93,6 +93,8 @@
         'zone': 'zone.home',
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'proximity',
       'minor_version': 1,
       'options': dict({
@@ -100,6 +102,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'home',
       'unique_id': 'proximity_home',
       'version': 1,

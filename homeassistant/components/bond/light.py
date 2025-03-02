@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BondConfigEntry
 from .const import (
@@ -42,7 +42,7 @@ ENTITY_SERVICES = [
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BondConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Bond light devices."""
     data = entry.runtime_data
@@ -52,7 +52,7 @@ async def async_setup_entry(
     for service in ENTITY_SERVICES:
         platform.async_register_entity_service(
             service,
-            {},
+            None,
             f"async_{service}",
         )
 

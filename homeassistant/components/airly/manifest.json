@@ -7,6 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["airly"],
-  "quality_scale": "platinum",
   "requirements": ["airly==1.1.0"]
 }

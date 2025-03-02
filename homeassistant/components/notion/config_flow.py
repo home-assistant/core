@@ -9,7 +9,7 @@ from typing import Any
 from aionotion.errors import InvalidCredentialsError, NotionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
@@ -68,36 +68,29 @@ class NotionFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize."""
-        self._reauth_entry: ConfigEntry | None = None
-
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle re-auth completion."""
-        assert self._reauth_entry
 
+        reauth_entry = self._get_reauth_entry()
         if not user_input:
             return self.async_show_form(
                 step_id="reauth_confirm",
                 data_schema=REAUTH_SCHEMA,
                 description_placeholders={
-                    CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME]
+                    CONF_USERNAME: reauth_entry.data[CONF_USERNAME]
                 },
             )
 
         credentials_validation_result = await async_validate_credentials(
-            self.hass, self._reauth_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
+            self.hass, reauth_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
         )
 
         if credentials_validation_result.errors:
@@ -106,19 +99,16 @@ class NotionFlowHandler(ConfigFlow, domain=DOMAIN):
                 data_schema=REAUTH_SCHEMA,
                 errors=credentials_validation_result.errors,
                 description_placeholders={
-                    CONF_USERNAME: self._reauth_entry.data[CONF_USERNAME]
+                    CONF_USERNAME: reauth_entry.data[CONF_USERNAME]
                 },
             )
 
-        self.hass.config_entries.async_update_entry(
-            self._reauth_entry,
-            data=self._reauth_entry.data
-            | {CONF_REFRESH_TOKEN: credentials_validation_result.refresh_token},
+        return self.async_update_reload_and_abort(
+            reauth_entry,
+            data_updates={
+                CONF_REFRESH_TOKEN: credentials_validation_result.refresh_token
+            },
         )
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-        )
-        return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None

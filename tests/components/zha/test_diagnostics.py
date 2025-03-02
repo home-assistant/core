@@ -3,11 +3,11 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
+from syrupy.filters import props
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import security
 
-from homeassistant.components.diagnostics import REDACTED
-from homeassistant.components.zha.diagnostics import KEYS_TO_REDACT
 from homeassistant.components.zha.helpers import (
     ZHADeviceProxy,
     ZHAGatewayProxy,
@@ -27,14 +27,6 @@ from tests.components.diagnostics import (
 )
 from tests.typing import ClientSessionGenerator
 
-CONFIG_ENTRY_DIAGNOSTICS_KEYS = [
-    "config",
-    "config_entry",
-    "application_state",
-    "versions",
-    "devices",
-]
-
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
@@ -51,6 +43,7 @@ async def test_diagnostics_for_config_entry(
     config_entry: MockConfigEntry,
     setup_zha,
     zigpy_device_mock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for config entry."""
 
@@ -76,35 +69,15 @@ async def test_diagnostics_for_config_entry(
 
     scan = {c: c for c in range(11, 26 + 1)}
 
-    with patch.object(gateway.application_controller, "energy_scan", return_value=scan):
-        diagnostics_data = await get_diagnostics_for_config_entry(
-            hass, hass_client, config_entry
-        )
+    gateway.application_controller.energy_scan.side_effect = None
+    gateway.application_controller.energy_scan.return_value = scan
+    diagnostics_data = await get_diagnostics_for_config_entry(
+        hass, hass_client, config_entry
+    )
 
-    for key in CONFIG_ENTRY_DIAGNOSTICS_KEYS:
-        assert key in diagnostics_data
-        assert diagnostics_data[key] is not None
-
-    # Energy scan results are presented as a percentage. JSON object keys also must be
-    # strings, not integers.
-    assert diagnostics_data["energy_scan"] == {
-        str(k): 100 * v / 255 for k, v in scan.items()
-    }
-
-    assert isinstance(diagnostics_data["devices"], list)
-    assert len(diagnostics_data["devices"]) == 2
-    assert diagnostics_data["devices"] == [
-        {
-            "manufacturer": "Coordinator Manufacturer",
-            "model": "Coordinator Model",
-            "logical_type": "Coordinator",
-        },
-        {
-            "manufacturer": "FakeManufacturer",
-            "model": "FakeModel",
-            "logical_type": "EndDevice",
-        },
-    ]
+    assert diagnostics_data == snapshot(
+        exclude=props("created_at", "modified_at", "entry_id", "versions")
+    )
 
 
 async def test_diagnostics_for_device(
@@ -114,6 +87,7 @@ async def test_diagnostics_for_device(
     config_entry: MockConfigEntry,
     setup_zha,
     zigpy_device_mock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test diagnostics for device."""
     await setup_zha()
@@ -161,11 +135,5 @@ async def test_diagnostics_for_device(
     diagnostics_data = await get_diagnostics_for_device(
         hass, hass_client, config_entry, device
     )
-    assert diagnostics_data
-    device_info: dict = zha_device_proxy.zha_device_info
-    for key in device_info:
-        assert key in diagnostics_data
-        if key not in KEYS_TO_REDACT:
-            assert key in diagnostics_data
-        else:
-            assert diagnostics_data[key] == REDACTED
+
+    assert diagnostics_data == snapshot(exclude=props("device_reg_id", "last_seen"))

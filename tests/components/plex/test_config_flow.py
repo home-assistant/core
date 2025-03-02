@@ -26,7 +26,6 @@ from homeassistant.components.plex.const import (
 )
 from homeassistant.config_entries import (
     SOURCE_INTEGRATION_DISCOVERY,
-    SOURCE_REAUTH,
     SOURCE_USER,
     ConfigEntryState,
 )
@@ -524,7 +523,7 @@ async def test_callback_view(
         assert result["type"] is FlowResultType.EXTERNAL_STEP
 
         client = await hass_client_no_auth()
-        forward_url = f'{config_flow.AUTH_CALLBACK_PATH}?flow_id={result["flow_id"]}'
+        forward_url = f"{config_flow.AUTH_CALLBACK_PATH}?flow_id={result['flow_id']}"
 
         resp = await client.get(forward_url)
         assert resp.status == HTTPStatus.OK
@@ -537,7 +536,7 @@ async def test_manual_config(hass: HomeAssistant, mock_plex_calls) -> None:
     class WrongCertValidaitionException(requests.exceptions.SSLError):
         """Mock the exception showing an unmatched error."""
 
-        def __init__(self):  # pylint: disable=super-init-not-called
+        def __init__(self) -> None:  # pylint: disable=super-init-not-called
             self.__context__ = ssl.SSLCertVerificationError(
                 "some random message that doesn't match"
             )
@@ -744,11 +743,7 @@ async def test_reauth(
     """Test setup and reauthorization of a Plex token."""
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
     flow_id = result["flow_id"]
 
     with (
@@ -795,11 +790,7 @@ async def test_reauth_multiple_servers_available(
 
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH},
-        data=entry.data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     flow_id = result["flow_id"]
 

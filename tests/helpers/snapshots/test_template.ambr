@@ -1,0 +1,337 @@
+# serializer version: 1
+# name: test_merge_response[calendar][a_response]
+  dict({
+    'calendar.local_furry_events': dict({
+      'events': list([
+      ]),
+    }),
+    'calendar.sports': dict({
+      'events': list([
+        dict({
+          'description': '',
+          'end': '2024-02-27T18:00:00-06:00',
+          'start': '2024-02-27T17:00:00-06:00',
+          'summary': 'Basketball vs. Rockets',
+        }),
+      ]),
+    }),
+    'calendar.yap_house_schedules': dict({
+      'events': list([
+        dict({
+          'description': '',
+          'end': '2024-02-26T09:00:00-06:00',
+          'start': '2024-02-26T08:00:00-06:00',
+          'summary': 'Dr. Appt',
+        }),
+        dict({
+          'description': 'something good',
+          'end': '2024-02-28T21:00:00-06:00',
+          'start': '2024-02-28T20:00:00-06:00',
+          'summary': 'Bake a cake',
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_merge_response[calendar][b_rendered]
+  Wrapper([
+    dict({
+      'description': '',
+      'end': '2024-02-27T18:00:00-06:00',
+      'entity_id': 'calendar.sports',
+      'start': '2024-02-27T17:00:00-06:00',
+      'summary': 'Basketball vs. Rockets',
+      'value_key': 'events',
+    }),
+    dict({
+      'description': '',
+      'end': '2024-02-26T09:00:00-06:00',
+      'entity_id': 'calendar.yap_house_schedules',
+      'start': '2024-02-26T08:00:00-06:00',
+      'summary': 'Dr. Appt',
+      'value_key': 'events',
+    }),
+    dict({
+      'description': 'something good',
+      'end': '2024-02-28T21:00:00-06:00',
+      'entity_id': 'calendar.yap_house_schedules',
+      'start': '2024-02-28T20:00:00-06:00',
+      'summary': 'Bake a cake',
+      'value_key': 'events',
+    }),
+  ])
+# ---
+# name: test_merge_response[vacuum][a_response]
+  dict({
+    'vacuum.deebot_n8_plus_1': dict({
+      'header': dict({
+        'ver': '0.0.1',
+      }),
+      'payloadType': 'j',
+      'resp': dict({
+        'body': dict({
+          'msg': 'ok',
+        }),
+      }),
+    }),
+    'vacuum.deebot_n8_plus_2': dict({
+      'header': dict({
+        'ver': '0.0.1',
+      }),
+      'payloadType': 'j',
+      'resp': dict({
+        'body': dict({
+          'msg': 'ok',
+        }),
+      }),
+    }),
+  })
+# ---
+# name: test_merge_response[vacuum][b_rendered]
+  Wrapper([
+    dict({
+      'entity_id': 'vacuum.deebot_n8_plus_1',
+      'header': dict({
+        'ver': '0.0.1',
+      }),
+      'payloadType': 'j',
+      'resp': dict({
+        'body': dict({
+          'msg': 'ok',
+        }),
+      }),
+    }),
+    dict({
+      'entity_id': 'vacuum.deebot_n8_plus_2',
+      'header': dict({
+        'ver': '0.0.1',
+      }),
+      'payloadType': 'j',
+      'resp': dict({
+        'body': dict({
+          'msg': 'ok',
+        }),
+      }),
+    }),
+  ])
+# ---
+# name: test_merge_response[weather][a_response]
+  dict({
+    'weather.forecast_home': dict({
+      'forecast': list([
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2024-03-31T10:00:00+00:00',
+          'humidity': 71,
+          'precipitation': 0,
+          'precipitation_probability': 6.6,
+          'temperature': 10.9,
+          'templow': 6.5,
+          'wind_bearing': 71.8,
+          'wind_gust_speed': 24.1,
+          'wind_speed': 13.7,
+        }),
+        dict({
+          'condition': 'cloudy',
+          'datetime': '2024-04-01T10:00:00+00:00',
+          'humidity': 79,
+          'precipitation': 0,
+          'precipitation_probability': 8,
+          'temperature': 10.2,
+          'templow': 3.4,
+          'wind_bearing': 350.6,
+          'wind_gust_speed': 38.2,
+          'wind_speed': 21.6,
+        }),
+        dict({
+          'condition': 'snowy',
+          'datetime': '2024-04-02T10:00:00+00:00',
+          'humidity': 77,
+          'precipitation': 2.3,
+          'precipitation_probability': 67.4,
+          'temperature': 3,
+          'templow': 0,
+          'wind_bearing': 24.5,
+          'wind_gust_speed': 64.8,
+          'wind_speed': 37.4,
+        }),
+      ]),
+    }),
+    'weather.smhi_home': dict({
+      'forecast': list([
+        dict({
+          'cloud_coverage': 100,
+          'condition': 'cloudy',
+          'datetime': '2024-03-31T16:00:00',
+          'humidity': 87,
+          'precipitation': 0.2,
+          'pressure': 998,
+          'temperature': 10,
+          'templow': 4,
+          'wind_bearing': 79,
+          'wind_gust_speed': 21.6,
+          'wind_speed': 11.88,
+        }),
+        dict({
+          'cloud_coverage': 100,
+          'condition': 'rainy',
+          'datetime': '2024-04-01T12:00:00',
+          'humidity': 88,
+          'precipitation': 2.2,
+          'pressure': 999,
+          'temperature': 6,
+          'templow': 1,
+          'wind_bearing': 17,
+          'wind_gust_speed': 20.52,
+          'wind_speed': 8.64,
+        }),
+        dict({
+          'cloud_coverage': 100,
+          'condition': 'cloudy',
+          'datetime': '2024-04-02T12:00:00',
+          'humidity': 71,
+          'precipitation': 1.3,
+          'pressure': 1003,
+          'temperature': 0,
+          'templow': -3,
+          'wind_bearing': 17,
+          'wind_gust_speed': 57.24,
+          'wind_speed': 30.6,
+        }),
+      ]),
+    }),
+  })
+# ---
+# name: test_merge_response[weather][b_rendered]
+  Wrapper([
+    dict({
+      'cloud_coverage': 100,
+      'condition': 'cloudy',
+      'datetime': '2024-03-31T16:00:00',
+      'entity_id': 'weather.smhi_home',
+      'humidity': 87,
+      'precipitation': 0.2,
+      'pressure': 998,
+      'temperature': 10,
+      'templow': 4,
+      'value_key': 'forecast',
+      'wind_bearing': 79,
+      'wind_gust_speed': 21.6,
+      'wind_speed': 11.88,
+    }),
+    dict({
+      'cloud_coverage': 100,
+      'condition': 'rainy',
+      'datetime': '2024-04-01T12:00:00',
+      'entity_id': 'weather.smhi_home',
+      'humidity': 88,
+      'precipitation': 2.2,
+      'pressure': 999,
+      'temperature': 6,
+      'templow': 1,
+      'value_key': 'forecast',
+      'wind_bearing': 17,
+      'wind_gust_speed': 20.52,
+      'wind_speed': 8.64,
+    }),
+    dict({
+      'cloud_coverage': 100,
+      'condition': 'cloudy',
+      'datetime': '2024-04-02T12:00:00',
+      'entity_id': 'weather.smhi_home',
+      'humidity': 71,
+      'precipitation': 1.3,
+      'pressure': 1003,
+      'temperature': 0,
+      'templow': -3,
+      'value_key': 'forecast',
+      'wind_bearing': 17,
+      'wind_gust_speed': 57.24,
+      'wind_speed': 30.6,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2024-03-31T10:00:00+00:00',
+      'entity_id': 'weather.forecast_home',
+      'humidity': 71,
+      'precipitation': 0,
+      'precipitation_probability': 6.6,
+      'temperature': 10.9,
+      'templow': 6.5,
+      'value_key': 'forecast',
+      'wind_bearing': 71.8,
+      'wind_gust_speed': 24.1,
+      'wind_speed': 13.7,
+    }),
+    dict({
+      'condition': 'cloudy',
+      'datetime': '2024-04-01T10:00:00+00:00',
+      'entity_id': 'weather.forecast_home',
+      'humidity': 79,
+      'precipitation': 0,
+      'precipitation_probability': 8,
+      'temperature': 10.2,
+      'templow': 3.4,
+      'value_key': 'forecast',
+      'wind_bearing': 350.6,
+      'wind_gust_speed': 38.2,
+      'wind_speed': 21.6,
+    }),
+    dict({
+      'condition': 'snowy',
+      'datetime': '2024-04-02T10:00:00+00:00',
+      'entity_id': 'weather.forecast_home',
+      'humidity': 77,
+      'precipitation': 2.3,
+      'precipitation_probability': 67.4,
+      'temperature': 3,
+      'templow': 0,
+      'value_key': 'forecast',
+      'wind_bearing': 24.5,
+      'wind_gust_speed': 64.8,
+      'wind_speed': 37.4,
+    }),
+  ])
+# ---
+# name: test_merge_response[workday][a_response]
+  dict({
+    'binary_sensor.workday': dict({
+      'workday': True,
+    }),
+    'binary_sensor.workday2': dict({
+      'workday': False,
+    }),
+  })
+# ---
+# name: test_merge_response[workday][b_rendered]
+  Wrapper([
+    dict({
+      'entity_id': 'binary_sensor.workday',
+      'workday': True,
+    }),
+    dict({
+      'entity_id': 'binary_sensor.workday2',
+      'workday': False,
+    }),
+  ])
+# ---
+# name: test_merge_response_with_empty_response[a_response]
+  dict({
+    'calendar.local_furry_events': dict({
+      'events': list([
+      ]),
+    }),
+    'calendar.sports': dict({
+      'events': list([
+      ]),
+    }),
+    'calendar.yap_house_schedules': dict({
+      'events': list([
+      ]),
+    }),
+  })
+# ---
+# name: test_merge_response_with_empty_response[b_rendered]
+  Wrapper([
+  ])
+# ---

@@ -43,7 +43,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_send,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     CONF_CAT,
@@ -98,7 +98,7 @@ from .schemas import (
 )
 
 if TYPE_CHECKING:
-    from .insteon_entity import InsteonEntity
+    from .entity import InsteonEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -415,7 +415,7 @@ def async_add_insteon_entities(
     hass: HomeAssistant,
     platform: Platform,
     entity_type: type[InsteonEntity],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
     discovery_info: dict[str, Any],
 ) -> None:
     """Add an Insteon group to a platform."""
@@ -432,7 +432,7 @@ def async_add_insteon_devices(
     hass: HomeAssistant,
     platform: Platform,
     entity_type: type[InsteonEntity],
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add all entities to a platform."""
     for address in devices:
@@ -471,3 +471,18 @@ def get_usb_ports() -> dict[str, str]:
 async def async_get_usb_ports(hass: HomeAssistant) -> dict[str, str]:
     """Return a dict of USB ports and their friendly names."""
     return await hass.async_add_executor_job(get_usb_ports)
+
+
+def compute_device_name(ha_device) -> str:
+    """Return the HA device name."""
+    return ha_device.name_by_user if ha_device.name_by_user else ha_device.name
+
+
+async def async_device_name(dev_registry: dr.DeviceRegistry, address: Address) -> str:
+    """Get the Insteon device name from a device registry id."""
+    ha_device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
+    if not ha_device:
+        if device := devices[address]:
+            return f"{device.description} ({device.model})"
+        return ""
+    return compute_device_name(ha_device)

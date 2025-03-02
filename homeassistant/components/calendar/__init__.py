@@ -16,8 +16,11 @@ from dateutil.rrule import rrulestr
 import voluptuous as vol
 
 from homeassistant.components import frontend, http, websocket_api
-from homeassistant.components.websocket_api import ERR_NOT_FOUND, ERR_NOT_SUPPORTED
-from homeassistant.components.websocket_api.connection import ActiveConnection
+from homeassistant.components.websocket_api import (
+    ERR_NOT_FOUND,
+    ERR_NOT_SUPPORTED,
+    ActiveConnection,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import (
@@ -30,7 +33,7 @@ from homeassistant.core import (
 )
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_point_in_time
 from homeassistant.helpers.template import DATE_STR_FORMAT
@@ -40,6 +43,8 @@ from homeassistant.util.json import JsonValueType
 
 from .const import (
     CONF_EVENT,
+    DATA_COMPONENT,
+    DOMAIN,
     EVENT_DESCRIPTION,
     EVENT_DURATION,
     EVENT_END,
@@ -67,7 +72,6 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-DOMAIN = "calendar"
 ENTITY_ID_FORMAT = DOMAIN + ".{}"
 PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
@@ -282,7 +286,7 @@ SERVICE_GET_EVENTS_SCHEMA: Final = vol.All(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Track states and offer events for calendars."""
-    component = hass.data[DOMAIN] = EntityComponent[CalendarEntity](
+    component = hass.data[DATA_COMPONENT] = EntityComponent[CalendarEntity](
         _LOGGER, DOMAIN, hass, SCAN_INTERVAL
     )
 
@@ -315,14 +319,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up a config entry."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    return await component.async_setup_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_setup_entry(entry)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    return await component.async_unload_entry(entry)
+    return await hass.data[DATA_COMPONENT].async_unload_entry(entry)
 
 
 def get_date(date: dict[str, Any]) -> datetime.datetime:
@@ -481,8 +483,14 @@ def is_offset_reached(
     return start + offset_time <= dt_util.now(start.tzinfo)
 
 
+class CalendarEntityDescription(EntityDescription, frozen_or_thawed=True):
+    """A class that describes calendar entities."""
+
+
 class CalendarEntity(Entity):
     """Base class for calendar event entities."""
+
+    entity_description: CalendarEntityDescription
 
     _entity_component_unrecorded_attributes = frozenset({"description"})
 
@@ -699,8 +707,7 @@ async def handle_calendar_event_create(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle creation of a calendar event."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 
@@ -740,8 +747,7 @@ async def handle_calendar_event_delete(
 ) -> None:
     """Handle delete of a calendar event."""
 
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 
@@ -786,8 +792,7 @@ async def handle_calendar_event_update(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Handle creation of a calendar event."""
-    component: EntityComponent[CalendarEntity] = hass.data[DOMAIN]
-    if not (entity := component.get_entity(msg["entity_id"])):
+    if not (entity := hass.data[DATA_COMPONENT].get_entity(msg["entity_id"])):
         connection.send_error(msg["id"], ERR_NOT_FOUND, "Entity not found")
         return
 

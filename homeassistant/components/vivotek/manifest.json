@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/vivotek",
   "iot_class": "local_polling",
   "loggers": ["libpyvivotek"],
+  "quality_scale": "legacy",
   "requirements": ["libpyvivotek==0.4.0"]
 }

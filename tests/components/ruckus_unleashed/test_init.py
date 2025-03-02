@@ -1,4 +1,4 @@
-"""Test the Ruckus Unleashed config flow."""
+"""Test the Ruckus config flow."""
 
 from unittest.mock import AsyncMock
 

@@ -17,7 +17,7 @@
           "password": "[%key:common::config_flow::data::password%]"
         }
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "title": "Reconfigure your MelCloud",
         "description": "Reconfigure the entry to obtain a new token, for your account: `{username}`.",
         "data": {
@@ -36,7 +36,9 @@
     "abort": {
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "already_configured": "MELCloud integration already configured for this email. Access token has been refreshed.",
-      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     }
   },
   "services": {

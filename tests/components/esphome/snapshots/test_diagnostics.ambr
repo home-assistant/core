@@ -10,6 +10,8 @@
         'port': 6053,
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'esphome',
       'entry_id': '08d821dc059cf4f645cb024d32c8e708',
       'minor_version': 1,
@@ -18,6 +20,8 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'ESPHome Device',
       'unique_id': '11:22:33:44:55:aa',
       'version': 1,

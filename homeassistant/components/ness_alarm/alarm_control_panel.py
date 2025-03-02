@@ -9,17 +9,8 @@ from nessclient import ArmingMode, ArmingState, Client
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelState,
     CodeFormat,
-)
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_ARMED_VACATION,
-    STATE_ALARM_ARMING,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_PENDING,
-    STATE_ALARM_TRIGGERED,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,12 +22,12 @@ from . import DATA_NESS, SIGNAL_ARMING_STATE_CHANGED
 _LOGGER = logging.getLogger(__name__)
 
 ARMING_MODE_TO_STATE = {
-    ArmingMode.ARMED_AWAY: STATE_ALARM_ARMED_AWAY,
-    ArmingMode.ARMED_HOME: STATE_ALARM_ARMED_HOME,
-    ArmingMode.ARMED_DAY: STATE_ALARM_ARMED_AWAY,  # no applicable state, fallback to away
-    ArmingMode.ARMED_NIGHT: STATE_ALARM_ARMED_NIGHT,
-    ArmingMode.ARMED_VACATION: STATE_ALARM_ARMED_VACATION,
-    ArmingMode.ARMED_HIGHEST: STATE_ALARM_ARMED_AWAY,  # no applicable state, fallback to away
+    ArmingMode.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
+    ArmingMode.ARMED_HOME: AlarmControlPanelState.ARMED_HOME,
+    ArmingMode.ARMED_DAY: AlarmControlPanelState.ARMED_AWAY,  # no applicable state, fallback to away
+    ArmingMode.ARMED_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
+    ArmingMode.ARMED_VACATION: AlarmControlPanelState.ARMED_VACATION,
+    ArmingMode.ARMED_HIGHEST: AlarmControlPanelState.ARMED_AWAY,  # no applicable state, fallback to away
 }
 
 
@@ -101,19 +92,19 @@ class NessAlarmPanel(AlarmControlPanelEntity):
         """Handle arming state update."""
 
         if arming_state == ArmingState.UNKNOWN:
-            self._attr_state = None
+            self._attr_alarm_state = None
         elif arming_state == ArmingState.DISARMED:
-            self._attr_state = STATE_ALARM_DISARMED
+            self._attr_alarm_state = AlarmControlPanelState.DISARMED
         elif arming_state in (ArmingState.ARMING, ArmingState.EXIT_DELAY):
-            self._attr_state = STATE_ALARM_ARMING
+            self._attr_alarm_state = AlarmControlPanelState.ARMING
         elif arming_state == ArmingState.ARMED:
-            self._attr_state = ARMING_MODE_TO_STATE.get(
-                arming_mode, STATE_ALARM_ARMED_AWAY
+            self._attr_alarm_state = ARMING_MODE_TO_STATE.get(
+                arming_mode, AlarmControlPanelState.ARMED_AWAY
             )
         elif arming_state == ArmingState.ENTRY_DELAY:
-            self._attr_state = STATE_ALARM_PENDING
+            self._attr_alarm_state = AlarmControlPanelState.PENDING
         elif arming_state == ArmingState.TRIGGERED:
-            self._attr_state = STATE_ALARM_TRIGGERED
+            self._attr_alarm_state = AlarmControlPanelState.TRIGGERED
         else:
             _LOGGER.warning("Unhandled arming state: %s", arming_state)
 

@@ -1,0 +1,10 @@
+{
+  "1": {
+    "name": "Aux",
+    "type": "Miscellaneous Audio"
+  },
+  "2": {
+    "name": "Spotify",
+    "type": "Russound Media Streamer"
+  }
+}

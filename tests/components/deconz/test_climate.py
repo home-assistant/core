@@ -259,7 +259,7 @@ async def test_climate_device_without_cooling_support(
 
     # Service set temperature without providing temperature attribute
 
-    with pytest.raises(ValueError):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             CLIMATE_DOMAIN,
             SERVICE_SET_TEMPERATURE,

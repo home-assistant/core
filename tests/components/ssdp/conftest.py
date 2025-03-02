@@ -1,10 +1,13 @@
 """Configuration for SSDP tests."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 from async_upnp_client.server import UpnpServer
 from async_upnp_client.ssdp_listener import SsdpListener
 import pytest
+
+from homeassistant.core import HomeAssistant
 
 
 @pytest.fixture(autouse=True)
@@ -32,7 +35,7 @@ async def disabled_upnp_server():
 
 
 @pytest.fixture
-def mock_flow_init(hass):
+def mock_flow_init(hass: HomeAssistant) -> Generator[AsyncMock]:
     """Mock hass.config_entries.flow.async_init."""
     with patch.object(
         hass.config_entries.flow, "async_init", return_value=AsyncMock()

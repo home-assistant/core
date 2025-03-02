@@ -21,9 +21,6 @@ class OndiloIcoOAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         """Handle a flow initialized by the user."""
         await self.async_set_unique_id(DOMAIN)
 
-        if self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         self.async_register_implementation(
             self.hass,
             OndiloOauth2Implementation(self.hass),

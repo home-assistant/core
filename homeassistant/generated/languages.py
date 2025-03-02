@@ -28,6 +28,7 @@ LANGUAGES = {
     "fi",
     "fr",
     "fy",
+    "ga",
     "gl",
     "gsw",
     "he",

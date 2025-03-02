@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from freezegun.api import FrozenDateTimeFactory
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.telegram import IndividualAddress
 
@@ -10,7 +11,6 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
@@ -19,10 +19,13 @@ from tests.typing import WebSocketGenerator
 
 
 async def test_diagnostic_entities(
-    hass: HomeAssistant, knx: KNXTestKit, entity_registry: er.EntityRegistry
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test diagnostic entities."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
 
     for entity_id in (
         "sensor.knx_interface_individual_address",
@@ -50,7 +53,8 @@ async def test_diagnostic_entities(
     knx.xknx.connection_manager.cemi_count_outgoing_error = 2
 
     events = async_capture_events(hass, "state_changed")
-    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert len(events) == 3  # 5 polled sensors - 2 disabled
@@ -99,7 +103,7 @@ async def test_removed_entity(
     with patch(
         "xknx.core.connection_manager.ConnectionManager.unregister_connection_state_changed_cb"
     ) as unregister_mock:
-        await knx.setup_integration({})
+        await knx.setup_integration()
 
         entity_registry.async_update_entity(
             "sensor.knx_interface_connection_established",
@@ -116,7 +120,7 @@ async def test_remove_interface_device(
 ) -> None:
     """Test device removal."""
     assert await async_setup_component(hass, "config", {})
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
     knx_devices = device_registry.devices.get_devices_for_config_entry_id(
         knx.mock_config_entry.entry_id

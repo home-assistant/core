@@ -7,7 +7,7 @@ from aiohttp.client_exceptions import ClientConnectorError
 from python_awair.exceptions import AuthError, AwairError
 
 from homeassistant.components.awair.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER, SOURCE_ZEROCONF
+from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -136,11 +136,7 @@ async def test_reauth(hass: HomeAssistant, user, cloud_devices) -> None:
     )
     mock_config.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "unique_id": CLOUD_UNIQUE_ID},
-        data={**CLOUD_CONFIG, CONF_ACCESS_TOKEN: "blah"},
-    )
+    result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
@@ -148,27 +144,32 @@ async def test_reauth(hass: HomeAssistant, user, cloud_devices) -> None:
     with patch("python_awair.AwairClient.query", side_effect=AuthError()):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CLOUD_CONFIG,
+            user_input={CONF_ACCESS_TOKEN: "bad"},
         )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "reauth_confirm"
-        assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {CONF_ACCESS_TOKEN: "invalid_access_token"}
 
     with (
         patch(
             "python_awair.AwairClient.query",
             side_effect=[user, cloud_devices],
         ),
-        patch("homeassistant.components.awair.async_setup_entry", return_value=True),
+        patch(
+            "homeassistant.components.awair.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input=CLOUD_CONFIG,
+            user_input={CONF_ACCESS_TOKEN: "good"},
         )
+        await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.ABORT
-        assert result["reason"] == "reauth_successful"
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    mock_setup_entry.assert_called_once()
+    assert dict(mock_config.data) == {CONF_ACCESS_TOKEN: "good"}
 
 
 async def test_reauth_error(hass: HomeAssistant) -> None:
@@ -180,11 +181,7 @@ async def test_reauth_error(hass: HomeAssistant) -> None:
     )
     mock_config.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_REAUTH, "unique_id": CLOUD_UNIQUE_ID},
-        data={**CLOUD_CONFIG, CONF_ACCESS_TOKEN: "blah"},
-    )
+    result = await mock_config.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {}
@@ -403,10 +400,6 @@ async def test_zeroconf_discovery_update_configuration(
             return_value=True,
         ) as mock_setup_entry,
         patch("python_awair.AwairClient.query", side_effect=[local_devices]),
-        patch(
-            "homeassistant.components.awair.async_setup_entry",
-            return_value=True,
-        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,

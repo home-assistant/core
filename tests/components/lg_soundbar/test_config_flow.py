@@ -5,7 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable
 import socket
 from typing import Any
-from unittest.mock import DEFAULT, patch
+from unittest.mock import DEFAULT, MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.lg_soundbar.const import DEFAULT_PORT, DOMAIN
@@ -17,8 +17,12 @@ from tests.common import MockConfigEntry
 
 
 def setup_mock_temescal(
-    hass, mock_temescal, mac_info_dev=None, product_info=None, info=None
-):
+    hass: HomeAssistant,
+    mock_temescal: MagicMock,
+    mac_info_dev: dict[str, Any] | None = None,
+    product_info: dict[str, Any] | None = None,
+    info: dict[str, Any] | None = None,
+) -> None:
     """Set up a mock of the temescal object to craft our expected responses."""
     tmock = mock_temescal.temescal
     instance = tmock.return_value

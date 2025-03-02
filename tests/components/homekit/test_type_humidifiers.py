@@ -26,7 +26,7 @@ from homeassistant.components.humidifier import (
     ATTR_MIN_HUMIDITY,
     DEFAULT_MAX_HUMIDITY,
     DEFAULT_MIN_HUMIDITY,
-    DOMAIN,
+    DOMAIN as HUMIDIFIER_DOMAIN,
     SERVICE_SET_HUMIDITY,
     HumidifierDeviceClass,
 )
@@ -106,7 +106,9 @@ async def test_humidifier(hass: HomeAssistant, hk_driver, events: list[Event]) -
     assert acc.char_active.value == 0
 
     # Set from HomeKit
-    call_set_humidity = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    call_set_humidity = async_mock_service(
+        hass, HUMIDIFIER_DOMAIN, SERVICE_SET_HUMIDITY
+    )
 
     char_target_humidity_iid = acc.char_target_humidity.to_HAP()[HAP_REPR_IID]
 
@@ -194,7 +196,9 @@ async def test_dehumidifier(
     assert acc.char_active.value == 0
 
     # Set from HomeKit
-    call_set_humidity = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    call_set_humidity = async_mock_service(
+        hass, HUMIDIFIER_DOMAIN, SERVICE_SET_HUMIDITY
+    )
 
     char_target_humidity_iid = acc.char_target_humidity.to_HAP()[HAP_REPR_IID]
 
@@ -257,7 +261,7 @@ async def test_hygrostat_power_state(
     assert acc.char_active.value == 0
 
     # Set from HomeKit
-    call_turn_on = async_mock_service(hass, DOMAIN, SERVICE_TURN_ON)
+    call_turn_on = async_mock_service(hass, HUMIDIFIER_DOMAIN, SERVICE_TURN_ON)
 
     char_active_iid = acc.char_active.to_HAP()[HAP_REPR_IID]
 
@@ -281,7 +285,7 @@ async def test_hygrostat_power_state(
     assert len(events) == 1
     assert events[-1].data[ATTR_VALUE] == "Active to 1"
 
-    call_turn_off = async_mock_service(hass, DOMAIN, SERVICE_TURN_OFF)
+    call_turn_off = async_mock_service(hass, HUMIDIFIER_DOMAIN, SERVICE_TURN_OFF)
 
     hk_driver.set_characteristics(
         {
@@ -323,7 +327,9 @@ async def test_hygrostat_get_humidity_range(
     await hass.async_block_till_done()
 
     # Set from HomeKit
-    call_set_humidity = async_mock_service(hass, DOMAIN, SERVICE_SET_HUMIDITY)
+    call_set_humidity = async_mock_service(
+        hass, HUMIDIFIER_DOMAIN, SERVICE_SET_HUMIDITY
+    )
 
     char_target_humidity_iid = acc.char_target_humidity.to_HAP()[HAP_REPR_IID]
 

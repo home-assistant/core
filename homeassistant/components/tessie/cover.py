@@ -22,7 +22,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TessieConfigEntry
 from .const import TessieCoverStates
@@ -35,7 +35,7 @@ PARALLEL_UPDATES = 0
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TessieConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tessie sensor platform from a config entry."""
     data = entry.runtime_data
@@ -168,13 +168,13 @@ class TessieRearTrunkEntity(TessieEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open rear trunk."""
-        if self._value == TessieCoverStates.CLOSED:
+        if self.is_closed:
             await self.run(open_close_rear_trunk)
             self.set((self.key, TessieCoverStates.OPEN))
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close rear trunk."""
-        if self._value == TessieCoverStates.OPEN:
+        if not self.is_closed:
             await self.run(open_close_rear_trunk)
             self.set((self.key, TessieCoverStates.CLOSED))
 

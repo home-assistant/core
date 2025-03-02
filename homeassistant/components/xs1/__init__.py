@@ -1,6 +1,5 @@
 """Support for the EZcontrol XS1 gateway."""
 
-import asyncio
 import logging
 
 import voluptuous as vol
@@ -15,9 +14,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import discovery
-import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import Entity
+from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,11 +40,6 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 PLATFORMS = [Platform.CLIMATE, Platform.SENSOR, Platform.SWITCH]
-
-# Lock used to limit the amount of concurrent update requests
-# as the XS1 Gateway can only handle a very
-# small amount of concurrent requests
-UPDATE_LOCK = asyncio.Lock()
 
 
 def setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -88,16 +80,3 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
         discovery.load_platform(hass, platform, DOMAIN, {}, config)
 
     return True
-
-
-class XS1DeviceEntity(Entity):
-    """Representation of a base XS1 device."""
-
-    def __init__(self, device):
-        """Initialize the XS1 device."""
-        self.device = device
-
-    async def async_update(self):
-        """Retrieve latest device state."""
-        async with UPDATE_LOCK:
-            await self.hass.async_add_executor_job(self.device.update)

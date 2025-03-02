@@ -1,0 +1,58 @@
+# serializer version: 1
+# name: test_number_setup[number.sabnzbd_speedlimit-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': None,
+    'entity_id': 'number.sabnzbd_speedlimit',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Speedlimit',
+    'platform': 'sabnzbd',
+    'previous_unique_id': None,
+    'supported_features': 0,
+    'translation_key': 'speedlimit',
+    'unique_id': '01JD2YVVPBC62D620DGYNG2R8H_speedlimit',
+    'unit_of_measurement': '%',
+  })
+# ---
+# name: test_number_setup[number.sabnzbd_speedlimit-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Sabnzbd Speedlimit',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.BOX: 'box'>,
+      'step': 1,
+      'unit_of_measurement': '%',
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.sabnzbd_speedlimit',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '85',
+  })
+# ---

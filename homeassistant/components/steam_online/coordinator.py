@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from typing import TYPE_CHECKING
 
 import steam
 from steam.api import _interface_method as INTMethod
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -15,8 +15,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_ACCOUNTS, DOMAIN, LOGGER
 
-if TYPE_CHECKING:
-    from . import SteamConfigEntry
+type SteamConfigEntry = ConfigEntry[SteamDataUpdateCoordinator]
 
 
 class SteamDataUpdateCoordinator(
@@ -26,11 +25,12 @@ class SteamDataUpdateCoordinator(
 
     config_entry: SteamConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: SteamConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
@@ -60,9 +60,9 @@ class SteamDataUpdateCoordinator(
             for player in response["response"]["players"]["player"]
             if player["steamid"] in _ids
         }
-        for k in players:
-            data = self.player_interface.GetSteamLevel(steamid=players[k]["steamid"])
-            players[k]["level"] = data["response"].get("player_level")
+        for value in players.values():
+            data = self.player_interface.GetSteamLevel(steamid=value["steamid"])
+            value["level"] = data["response"].get("player_level")
         return players
 
     async def _async_update_data(self) -> dict[str, dict[str, str | int]]:

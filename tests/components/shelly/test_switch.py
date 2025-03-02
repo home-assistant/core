@@ -25,7 +25,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceRegistry
 from homeassistant.helpers.entity_registry import EntityRegistry
 
@@ -118,13 +117,14 @@ async def test_block_restored_motion_switch(
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SWITCH_DOMAIN,
         "test_name_motion_detection",
         "sensor_0-motionActive",
         entry,
+        device_id=device.id,
     )
 
     mock_restore_cache(hass, [State(entity_id, STATE_OFF)])
@@ -154,13 +154,14 @@ async def test_block_restored_motion_switch_no_last_state(
     entry = await init_integration(
         hass, 1, sleep_period=1000, model=model, skip_setup=True
     )
-    register_device(device_registry, entry)
+    device = register_device(device_registry, entry)
     entity_id = register_entity(
         hass,
         SWITCH_DOMAIN,
         "test_name_motion_detection",
         "sensor_0-motionActive",
         entry,
+        device_id=device.id,
     )
     monkeypatch.setattr(mock_block_device, "initialized", False)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -287,6 +288,8 @@ async def test_rpc_device_services(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device turn on/off services."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     await hass.services.async_call(
@@ -309,9 +312,14 @@ async def test_rpc_device_services(
 
 
 async def test_rpc_device_unique_ids(
-    hass: HomeAssistant, mock_rpc_device: Mock, entity_registry: EntityRegistry
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test RPC device unique_ids."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     entry = entity_registry.async_get("switch.test_switch_0")
@@ -339,6 +347,8 @@ async def test_rpc_set_state_errors(
 ) -> None:
     """Test RPC device set state connection/call errors."""
     monkeypatch.setattr(mock_rpc_device, "call_rpc", AsyncMock(side_effect=exc))
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     await init_integration(hass, 2)
 
     with pytest.raises(HomeAssistantError):
@@ -359,6 +369,8 @@ async def test_rpc_auth_error(
         "call_rpc",
         AsyncMock(side_effect=InvalidAuthError),
     )
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     entry = await init_integration(hass, 2)
 
     assert entry.state is ConfigEntryState.LOADED
@@ -408,15 +420,22 @@ async def test_wall_display_relay_mode(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test Wall Display in relay mode."""
-    climate_entity_id = "climate.test_name"
+    climate_entity_id = "climate.test_name_thermostat_0"
     switch_entity_id = "switch.test_switch_0"
+
+    config_entry = await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert hass.states.get(climate_entity_id) is not None
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
 
     new_status = deepcopy(mock_rpc_device.status)
     new_status["sys"]["relay_in_thermostat"] = False
     new_status.pop("thermostat:0")
+    new_status.pop("cover:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
-    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     # the climate entity should be removed
     assert hass.states.get(climate_entity_id) is None
@@ -442,7 +461,7 @@ async def test_wall_display_relay_mode(
 )
 async def test_rpc_device_virtual_switch(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
     name: str | None,
@@ -515,7 +534,7 @@ async def test_rpc_device_virtual_binary_sensor(
 
 async def test_rpc_remove_virtual_switch_when_mode_label(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
@@ -549,7 +568,7 @@ async def test_rpc_remove_virtual_switch_when_mode_label(
 
 async def test_rpc_remove_virtual_switch_when_orphaned(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
+    entity_registry: EntityRegistry,
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
@@ -570,3 +589,62 @@ async def test_rpc_remove_virtual_switch_when_orphaned(
 
     entry = entity_registry.async_get(entity_id)
     assert not entry
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_rpc_device_script_switch(
+    hass: HomeAssistant,
+    entity_registry: EntityRegistry,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a script switch for RPC device."""
+    config = deepcopy(mock_rpc_device.config)
+    key = "script:1"
+    script_name = "aioshelly_ble_integration"
+    entity_id = f"switch.test_name_{script_name}"
+    config[key] = {
+        "id": 1,
+        "name": script_name,
+        "enable": False,
+    }
+    monkeypatch.setattr(mock_rpc_device, "config", config)
+
+    status = deepcopy(mock_rpc_device.status)
+    status[key] = {
+        "running": True,
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+
+    await init_integration(hass, 3)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == f"123456789ABC-{key}-script"
+
+    monkeypatch.setitem(mock_rpc_device.status[key], "running", False)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    monkeypatch.setitem(mock_rpc_device.status[key], "running", True)
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    mock_rpc_device.mock_update()
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON

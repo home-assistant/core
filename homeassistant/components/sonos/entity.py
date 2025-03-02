@@ -8,7 +8,7 @@ import logging
 
 from soco.core import SoCo
 
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
@@ -85,6 +85,7 @@ class SonosEntity(Entity):
             identifiers={(DOMAIN, self.soco.uid)},
             name=self.speaker.zone_name,
             model=self.speaker.model_name.replace("Sonos ", ""),
+            model_id=self.speaker.model_number,
             sw_version=self.speaker.version,
             connections={
                 (dr.CONNECTION_NETWORK_MAC, self.speaker.mac_address),

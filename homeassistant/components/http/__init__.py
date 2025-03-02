@@ -30,11 +30,19 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components.network import async_get_source_ip
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, SERVER_PORT
+from homeassistant.const import (
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STOP,
+    SERVER_PORT,
+)
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import frame, storage
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import (
+    config_validation as cv,
+    frame,
+    issue_registry as ir,
+    storage,
+)
 from homeassistant.helpers.http import (
     KEY_ALLOW_CONFIGURED_CORS,
     KEY_AUTHENTICATED,  # noqa: F401
@@ -264,6 +272,32 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         local_ip, host, server_port, ssl_certificate is not None
     )
 
+    @callback
+    def _async_check_ssl_issue(_: Event) -> None:
+        if (
+            ssl_certificate is not None
+            and (hass.config.external_url or hass.config.internal_url) is None
+        ):
+            # pylint: disable-next=import-outside-toplevel
+            from homeassistant.components.cloud import (
+                CloudNotAvailable,
+                async_remote_ui_url,
+            )
+
+            try:
+                async_remote_ui_url(hass)
+            except CloudNotAvailable:
+                ir.async_create_issue(
+                    hass,
+                    DOMAIN,
+                    "ssl_configured_without_configured_urls",
+                    is_fixable=False,
+                    severity=ir.IssueSeverity.ERROR,
+                    translation_key="ssl_configured_without_configured_urls",
+                )
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_START, _async_check_ssl_issue)
+
     return True
 
 
@@ -296,7 +330,8 @@ class HomeAssistantApplication(web.Application):
             protocol,
             writer,
             task,
-            loop=self._loop,
+            # loop will never be None when called from aiohttp
+            loop=self._loop,  # type: ignore[arg-type]
             client_max_size=self._client_max_size,
         )
 
@@ -475,15 +510,14 @@ class HomeAssistantHTTP:
         self, url_path: str, path: str, cache_headers: bool = True
     ) -> None:
         """Register a folder or file to serve as a static path."""
-        frame.report(
+        frame.report_usage(
             "calls hass.http.register_static_path which is deprecated because "
             "it does blocking I/O in the event loop, instead "
             "call `await hass.http.async_register_static_paths("
-            f'[StaticPathConfig("{url_path}", "{path}", {cache_headers})])`; '
-            "This function will be removed in 2025.7",
+            f'[StaticPathConfig("{url_path}", "{path}", {cache_headers})])`',
             exclude_integrations={"http"},
-            error_if_core=False,
-            error_if_integration=False,
+            core_behavior=frame.ReportBehavior.LOG,
+            breaks_in_ha_version="2025.7",
         )
         configs = [StaticPathConfig(url_path, path, cache_headers)]
         resources = self._make_static_resources(configs)

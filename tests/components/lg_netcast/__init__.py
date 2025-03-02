@@ -1,7 +1,7 @@
 """Tests for LG Netcast TV."""
 
 from unittest.mock import patch
-from xml.etree import ElementTree
+import xml.etree.ElementTree as ET
 
 from pylgnetcast import AccessTokenError, LgNetCastClient, SessionIdError
 import requests
@@ -56,7 +56,7 @@ def _patched_lgnetcast_client(
         if always_404:
             return None
         if invalid_details:
-            raise ElementTree.ParseError("Mocked Parsed Error")
+            raise ET.ParseError("Mocked Parsed Error")
         return {
             "uuid": UNIQUE_ID if not no_unique_id else None,
             "model_name": MODEL_NAME,

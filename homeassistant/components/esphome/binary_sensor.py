@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from aioesphomeapi import BinarySensorInfo, BinarySensorState, EntityInfo
 
 from homeassistant.components.binary_sensor import (
@@ -10,9 +12,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.enum import try_parse_enum
 
+from .const import DOMAIN
 from .entity import EsphomeAssistEntity, EsphomeEntity, platform_async_setup_entry
 from .entry_data import ESPHomeConfigEntry
 
@@ -20,7 +24,7 @@ from .entry_data import ESPHomeConfigEntry
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ESPHomeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up ESPHome binary sensors based on a config entry."""
     await platform_async_setup_entry(
@@ -74,9 +78,44 @@ class EsphomeAssistInProgressBinarySensor(EsphomeAssistEntity, BinarySensorEntit
     """A binary sensor implementation for ESPHome for use with assist_pipeline."""
 
     entity_description = BinarySensorEntityDescription(
+        entity_registry_enabled_default=False,
         key="assist_in_progress",
         translation_key="assist_in_progress",
     )
+
+    async def async_added_to_hass(self) -> None:
+        """Create issue."""
+        await super().async_added_to_hass()
+        if TYPE_CHECKING:
+            assert self.registry_entry is not None
+        ir.async_create_issue(
+            self.hass,
+            DOMAIN,
+            f"assist_in_progress_deprecated_{self.registry_entry.id}",
+            breaks_in_ha_version="2025.4",
+            data={
+                "entity_id": self.entity_id,
+                "entity_uuid": self.registry_entry.id,
+                "integration_name": "ESPHome",
+            },
+            is_fixable=True,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="assist_in_progress_deprecated",
+            translation_placeholders={
+                "integration_name": "ESPHome",
+            },
+        )
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Remove issue."""
+        await super().async_will_remove_from_hass()
+        if TYPE_CHECKING:
+            assert self.registry_entry is not None
+        ir.async_delete_issue(
+            self.hass,
+            DOMAIN,
+            f"assist_in_progress_deprecated_{self.registry_entry.id}",
+        )
 
     @property
     def is_on(self) -> bool | None:

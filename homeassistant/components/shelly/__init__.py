@@ -15,12 +15,14 @@ from aioshelly.exceptions import (
 from aioshelly.rpc_device import RpcDevice
 import voluptuous as vol
 
+from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -192,8 +194,15 @@ async def _async_setup_block_entry(
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
-    elif sleep_period is None or device_entry is None:
+    elif (
+        sleep_period is None
+        or device_entry is None
+        or not er.async_entries_for_device(er.async_get(hass), device_entry.id)
+    ):
         # Need to get sleep info or first time sleeping device setup, wait for device
+        # If there are no entities for the device, it means we added the device, but
+        # Home Assistant was restarted before the device was online. In this case we
+        # cannot restore the entities, so we need to wait for the device to be online.
         LOGGER.debug(
             "Setup for device %s will resume when device is online", entry.title
         )
@@ -268,13 +277,25 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
         await hass.config_entries.async_forward_entry_setups(
             entry, runtime_data.platforms
         )
-    elif sleep_period is None or device_entry is None:
+    elif (
+        sleep_period is None
+        or device_entry is None
+        or not er.async_entries_for_device(er.async_get(hass), device_entry.id)
+    ):
         # Need to get sleep info or first time sleeping device setup, wait for device
+        # If there are no entities for the device, it means we added the device, but
+        # Home Assistant was restarted before the device was online. In this case we
+        # cannot restore the entities, so we need to wait for the device to be online.
         LOGGER.debug(
             "Setup for device %s will resume when device is online", entry.title
         )
         runtime_data.rpc = ShellyRpcCoordinator(hass, entry, device)
         runtime_data.rpc.async_setup(runtime_data.platforms)
+        # Try to connect to the device, if we reached here from config flow
+        # and user woke up the device when adding it, we can continue setup
+        # otherwise we will wait for the device to wake up
+        if sleep_period:
+            await runtime_data.rpc.async_device_online("setup")
     else:
         # Restore sensors for sleeping device
         LOGGER.debug("Setting up offline RPC device %s", entry.title)
@@ -311,3 +332,11 @@ async def async_unload_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> b
     return await hass.config_entries.async_unload_platforms(
         entry, runtime_data.platforms
     )
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> None:
+    """Remove a config entry."""
+    if get_device_entry_gen(entry) in RPC_GENERATIONS and (
+        mac_address := entry.unique_id
+    ):
+        async_remove_scanner(hass, mac_address)

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from typing import Any
 
+from aiohomekit.model import Accessory
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import ServicesTypes
 
@@ -65,7 +66,7 @@ async def test_storage_is_removed_idempotent(hass: HomeAssistant) -> None:
     assert hkid not in entity_map.storage_data
 
 
-def create_lightbulb_service(accessory):
+def create_lightbulb_service(accessory: Accessory) -> None:
     """Define lightbulb characteristics."""
     service = accessory.add_service(ServicesTypes.LIGHTBULB)
     on_char = service.add_char(CharacteristicsTypes.ON)

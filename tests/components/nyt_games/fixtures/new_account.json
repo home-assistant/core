@@ -1,0 +1,51 @@
+{
+  "states": [],
+  "user_id": 260705259,
+  "player": {
+    "user_id": 260705259,
+    "last_updated": 1727358123,
+    "stats": {
+      "wordle": {
+        "legacyStats": {
+          "gamesPlayed": 1,
+          "gamesWon": 1,
+          "guesses": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 1,
+            "6": 0,
+            "fail": 0
+          },
+          "currentStreak": 0,
+          "maxStreak": 1,
+          "lastWonDayOffset": 1118,
+          "hasPlayed": true,
+          "autoOptInTimestamp": 1727357874700,
+          "hasMadeStatsChoice": false,
+          "timestamp": 1727358123
+        },
+        "calculatedStats": {
+          "gamesPlayed": 0,
+          "gamesWon": 0,
+          "guesses": {
+            "1": 0,
+            "2": 0,
+            "3": 0,
+            "4": 0,
+            "5": 0,
+            "6": 0,
+            "fail": 0
+          },
+          "currentStreak": 0,
+          "maxStreak": 1,
+          "lastWonPrintDate": "",
+          "lastCompletedPrintDate": "",
+          "hasPlayed": false,
+          "generation": 1
+        }
+      }
+    }
+  }
+}

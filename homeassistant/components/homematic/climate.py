@@ -63,7 +63,6 @@ class HMThermostat(HMDevice, ClimateEntity):
         | ClimateEntityFeature.TURN_ON
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _enable_turn_on_off_backwards_compatibility = False
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -125,6 +124,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         for node in HM_HUMI_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
     def current_temperature(self):
@@ -132,6 +132,7 @@ class HMThermostat(HMDevice, ClimateEntity):
         for node in HM_TEMP_MAP:
             if node in self._data:
                 return self._data[node]
+        return None
 
     @property
     def target_temperature(self):

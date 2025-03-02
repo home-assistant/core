@@ -12,15 +12,12 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import AOSmithData
-from .const import DOMAIN
-from .coordinator import AOSmithStatusCoordinator
+from .coordinator import AOSmithConfigEntry, AOSmithStatusCoordinator
 from .entity import AOSmithStatusEntity
 
 MODE_HA_TO_AOSMITH = {
@@ -46,10 +43,12 @@ DEFAULT_OPERATION_MODE_PRIORITY = [
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: AOSmithConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up A. O. Smith water heater platform."""
-    data: AOSmithData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     async_add_entities(
         AOSmithWaterHeaterEntity(data.status_coordinator, junction_id)

@@ -16,7 +16,6 @@ from homeassistant.const import (
     CONF_EVENT,
     CONF_ID,
     CONF_UNIQUE_ID,
-    STATE_ALARM_ARMED_AWAY,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -83,7 +82,7 @@ async def test_humanifying_deconz_alarm_event(
                 {
                     CONF_CODE: 1234,
                     CONF_DEVICE_ID: keypad_entry.id,
-                    CONF_EVENT: STATE_ALARM_ARMED_AWAY,
+                    CONF_EVENT: "armed_away",
                     CONF_ID: keypad_event_id,
                     CONF_UNIQUE_ID: keypad_serial,
                 },
@@ -94,7 +93,7 @@ async def test_humanifying_deconz_alarm_event(
                 {
                     CONF_CODE: 1234,
                     CONF_DEVICE_ID: "ff99ff99ff99ff99ff99ff99ff99ff99",
-                    CONF_EVENT: STATE_ALARM_ARMED_AWAY,
+                    CONF_EVENT: "armed_away",
                     CONF_ID: removed_device_event_id,
                     CONF_UNIQUE_ID: removed_device_serial,
                 },

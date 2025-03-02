@@ -2,11 +2,15 @@
 
 from __future__ import annotations
 
-from homeassistant.components.notify import DOMAIN, NotifyEntity, NotifyEntityFeature
+from homeassistant.components.notify import (
+    DOMAIN as NOTIFY_DOMAIN,
+    NotifyEntity,
+    NotifyEntityFeature,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 EVENT_NOTIFY = "notify"
 
@@ -14,7 +18,7 @@ EVENT_NOTIFY = "notify"
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the demo entity platform."""
     async_add_entities([DemoNotifyEntity(unique_id="notify", device_name="Notifier")])
@@ -35,7 +39,7 @@ class DemoNotifyEntity(NotifyEntity):
         self._attr_unique_id = unique_id
         self._attr_supported_features = NotifyEntityFeature.TITLE
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, unique_id)},
+            identifiers={(NOTIFY_DOMAIN, unique_id)},
             name=device_name,
         )
 

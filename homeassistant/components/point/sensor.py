@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 
 from homeassistant.components.sensor import (
-    DOMAIN,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
@@ -14,11 +14,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfSoundPressure, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import parse_datetime
 
-from . import MinutPointEntity
 from .const import DOMAIN as POINT_DOMAIN, POINT_DISCOVERY_NEW
+from .entity import MinutPointEntity
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,13 +48,13 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Point's sensors based on a config entry."""
 
     async def async_discover_sensor(device_id):
         """Discover and add a discovered sensor."""
-        client = hass.data[POINT_DOMAIN][config_entry.entry_id]
+        client = config_entry.runtime_data.client
         async_add_entities(
             [
                 MinutPointSensor(client, device_id, description)
@@ -64,7 +64,9 @@ async def async_setup_entry(
         )
 
     async_dispatcher_connect(
-        hass, POINT_DISCOVERY_NEW.format(DOMAIN, POINT_DOMAIN), async_discover_sensor
+        hass,
+        POINT_DISCOVERY_NEW.format(SENSOR_DOMAIN, POINT_DOMAIN),
+        async_discover_sensor,
     )
 
 

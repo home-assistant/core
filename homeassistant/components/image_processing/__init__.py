@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.config_validation import make_entity_service_schema
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
@@ -223,7 +223,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
                 confidence = f_co
                 for attr in (ATTR_NAME, ATTR_MOTION):
                     if attr in face:
-                        state = face[attr]  # type: ignore[literal-required]
+                        state = face[attr]
                         break
 
         return state

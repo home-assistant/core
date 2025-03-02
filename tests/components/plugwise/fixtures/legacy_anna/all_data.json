@@ -1,0 +1,69 @@
+{
+  "devices": {
+    "0000aaaa0000aaaa0000aaaa0000aa00": {
+      "dev_class": "gateway",
+      "firmware": "1.8.22",
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "mac_address": "01:23:45:67:89:AB",
+      "model": "Gateway",
+      "name": "Smile Anna",
+      "vendor": "Plugwise"
+    },
+    "04e4cbfe7f4340f090f85ec3b9e6a950": {
+      "binary_sensors": {
+        "flame_state": true,
+        "heating_state": true
+      },
+      "dev_class": "heater_central",
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "maximum_boiler_temperature": {
+        "lower_bound": 50.0,
+        "resolution": 1.0,
+        "setpoint": 50.0,
+        "upper_bound": 90.0
+      },
+      "model": "Generic heater",
+      "name": "OpenTherm",
+      "sensors": {
+        "dhw_temperature": 51.2,
+        "intended_boiler_temperature": 17.0,
+        "modulation_level": 0.0,
+        "return_temperature": 21.7,
+        "water_pressure": 1.2,
+        "water_temperature": 23.6
+      },
+      "vendor": "Bosch Thermotechniek B.V."
+    },
+    "0d266432d64443e283b5d708ae98b455": {
+      "active_preset": "home",
+      "climate_mode": "heat",
+      "control_state": "heating",
+      "dev_class": "thermostat",
+      "firmware": "2017-03-13T11:54:58+01:00",
+      "hardware": "6539-1301-500",
+      "location": "0000aaaa0000aaaa0000aaaa0000aa00",
+      "model": "ThermoTouch",
+      "name": "Anna",
+      "preset_modes": ["away", "vacation", "asleep", "home", "no_frost"],
+      "sensors": {
+        "illuminance": 150.8,
+        "setpoint": 20.5,
+        "temperature": 20.4
+      },
+      "thermostat": {
+        "lower_bound": 4.0,
+        "resolution": 0.1,
+        "setpoint": 20.5,
+        "upper_bound": 30.0
+      },
+      "vendor": "Plugwise"
+    }
+  },
+  "gateway": {
+    "cooling_present": false,
+    "gateway_id": "0000aaaa0000aaaa0000aaaa0000aa00",
+    "heater_id": "04e4cbfe7f4340f090f85ec3b9e6a950",
+    "item_count": 41,
+    "smile_name": "Smile Anna"
+  }
+}

@@ -20,7 +20,9 @@
       "yxc_control_url_missing": "The control URL is not given in the ssdp description."
     },
     "error": {
-      "no_musiccast_device": "This device seems to be no MusicCast Device."
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_musiccast_device": "This device seems to be no MusicCast Device.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {

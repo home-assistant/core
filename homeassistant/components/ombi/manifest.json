@@ -4,5 +4,6 @@
   "codeowners": ["@larssont"],
   "documentation": "https://www.home-assistant.io/integrations/ombi",
   "iot_class": "local_polling",
+  "quality_scale": "legacy",
   "requirements": ["pyombi==0.1.10"]
 }

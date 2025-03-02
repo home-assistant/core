@@ -53,7 +53,7 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
         self,
         handler_key: str,
         *,
-        context: dict[str, Any] | None = None,
+        context: data_entry_flow.FlowContext | None = None,
         data: dict[str, Any] | None = None,
     ) -> RepairsFlow:
         """Create a flow. platform is a repairs module."""
@@ -82,7 +82,11 @@ class RepairsFlowManager(data_entry_flow.FlowManager):
     async def async_finish_flow(
         self, flow: data_entry_flow.FlowHandler, result: data_entry_flow.FlowResult
     ) -> data_entry_flow.FlowResult:
-        """Complete a fix flow."""
+        """Complete a fix flow.
+
+        This method is called when a flow step returns FlowResultType.ABORT or
+        FlowResultType.CREATE_ENTRY.
+        """
         if result.get("type") != data_entry_flow.FlowResultType.ABORT:
             ir.async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
         if "result" not in result:

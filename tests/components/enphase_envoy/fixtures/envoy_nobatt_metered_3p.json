@@ -22,6 +22,12 @@
       "watt_hours_today": 1234,
       "watts_now": 1234
     },
+    "system_net_consumption": {
+      "watt_hours_lifetime": 4321,
+      "watt_hours_last_7_days": -1,
+      "watt_hours_today": -1,
+      "watts_now": 2341
+    },
     "system_production": {
       "watt_hours_lifetime": 1234,
       "watt_hours_last_7_days": 1234,
@@ -46,6 +52,26 @@
         "watt_hours_last_7_days": 3321,
         "watt_hours_today": 3323,
         "watts_now": 3324
+      }
+    },
+    "system_net_consumption_phases": {
+      "L1": {
+        "watt_hours_lifetime": 1321,
+        "watt_hours_last_7_days": -1,
+        "watt_hours_today": -1,
+        "watts_now": 12341
+      },
+      "L2": {
+        "watt_hours_lifetime": 2321,
+        "watt_hours_last_7_days": -1,
+        "watt_hours_today": -1,
+        "watts_now": 22341
+      },
+      "L3": {
+        "watt_hours_lifetime": 3321,
+        "watt_hours_last_7_days": -1,
+        "watt_hours_today": -1,
+        "watts_now": 32341
       }
     },
     "system_production_phases": {
@@ -216,7 +242,8 @@
         "reserved_soc": 15.0,
         "very_low_soc": 5,
         "charge_from_grid": true,
-        "date": "1695598084"
+        "date": "1695598084",
+        "opt_schedules": true
       },
       "single_rate": {
         "rate": 0.0,

@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from uasiren.client import Client
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_NAME, CONF_REGION
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -22,12 +23,14 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Initialize a new UkraineAlarmConfigFlow."""
-        self.states = None
-        self.selected_region = None
+        self.states: list[dict[str, Any]] | None = None
+        self.selected_region: dict[str, Any] | None = None
 
-    async def async_step_user(self, user_input=None):
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
 
         if len(self._async_current_entries()) == 5:
@@ -66,17 +69,25 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self._handle_pick_region("user", "district", user_input)
 
-    async def async_step_district(self, user_input=None):
+    async def async_step_district(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle user-chosen district."""
         return await self._handle_pick_region("district", "community", user_input)
 
-    async def async_step_community(self, user_input=None):
+    async def async_step_community(
+        self, user_input: dict[str, str] | None = None
+    ) -> ConfigFlowResult:
         """Handle user-chosen community."""
         return await self._handle_pick_region("community", None, user_input, True)
 
     async def _handle_pick_region(
-        self, step_id: str, next_step: str | None, user_input, last_step=False
-    ):
+        self,
+        step_id: str,
+        next_step: str | None,
+        user_input: dict[str, str] | None,
+        last_step: bool = False,
+    ) -> ConfigFlowResult:
         """Handle picking a (sub)region."""
         if self.selected_region:
             source = self.selected_region["regionChildIds"]
@@ -91,7 +102,11 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             ):
                 self.selected_region = _find(source, user_input[CONF_REGION])
 
-                if next_step and self.selected_region["regionChildIds"]:
+                if (
+                    next_step
+                    and self.selected_region
+                    and self.selected_region["regionChildIds"]
+                ):
                     return await getattr(self, f"async_step_{next_step}")()
 
             return await self._async_finish_flow()
@@ -114,8 +129,10 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id=step_id, data_schema=schema, last_step=last_step
         )
 
-    async def _async_finish_flow(self):
+    async def _async_finish_flow(self) -> ConfigFlowResult:
         """Finish the setup."""
+        if TYPE_CHECKING:
+            assert self.selected_region is not None
         await self.async_set_unique_id(self.selected_region["regionId"])
         self._abort_if_unique_id_configured()
 
@@ -128,10 +145,10 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-def _find(regions, region_id):
+def _find(regions: list[dict[str, Any]], region_id):
     return next((region for region in regions if region["regionId"] == region_id), None)
 
 
-def _make_regions_object(regions):
+def _make_regions_object(regions: list[dict[str, Any]]) -> dict[str, str]:
     regions = sorted(regions, key=lambda region: region["regionName"].lower())
     return {region["regionId"]: region["regionName"] for region in regions}

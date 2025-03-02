@@ -4,6 +4,7 @@ from collections.abc import Callable
 from typing import Any
 from unittest.mock import patch
 
+from pydeconz.models.sensor.air_purifier import AirPurifierFanMode
 from pydeconz.models.sensor.presence import (
     PresenceConfigDeviceMode,
     PresenceConfigTriggerDistance,
@@ -117,6 +118,42 @@ TEST_DATA = [
             "option": PresenceConfigTriggerDistance.FAR.value,
             "request": "/sensors/0/config",
             "request_data": {"triggerdistance": "far"},
+        },
+    ),
+    (  # Air Purifier Fan Mode
+        {
+            "config": {
+                "filterlifetime": 259200,
+                "ledindication": True,
+                "locked": False,
+                "mode": "speed_1",
+                "on": True,
+                "reachable": True,
+            },
+            "ep": 1,
+            "etag": "de26d19d9e91b2db3ded6ee7ab6b6a4b",
+            "lastannounced": None,
+            "lastseen": "2024-08-07T18:27Z",
+            "manufacturername": "IKEA of Sweden",
+            "modelid": "STARKVIND Air purifier",
+            "name": "IKEA Starkvind",
+            "productid": "E2007",
+            "state": {
+                "deviceruntime": 73405,
+                "filterruntime": 73405,
+                "lastupdated": "2024-08-07T18:27:52.543",
+                "replacefilter": False,
+                "speed": 20,
+            },
+            "swversion": "1.1.001",
+            "type": "ZHAAirPurifier",
+            "uniqueid": "0c:43:14:ff:fe:6c:20:12-01-fc7d",
+        },
+        {
+            "entity_id": "select.ikea_starkvind_fan_mode",
+            "option": AirPurifierFanMode.AUTO.value,
+            "request": "/sensors/0/config",
+            "request_data": {"mode": "auto"},
         },
     ),
 ]

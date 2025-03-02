@@ -1,0 +1,146 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "description": "Set up SMLIGHT Zigbee integration",
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the SMLIGHT SLZB-06x device"
+        }
+      },
+      "auth": {
+        "description": "Please enter the username and password",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "reauth_confirm": {
+        "title": "[%key:common::config_flow::title::reauth%]",
+        "description": "Please enter the correct username and password",
+        "data": {
+          "username": "[%key:common::config_flow::data::username%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        }
+      },
+      "confirm_discovery": {
+        "description": "Do you want to set up SMLIGHT at {host}?"
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_failed": "[%key:common::config_flow::error::invalid_auth%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unsupported_device": "This device is not yet supported by the SMLIGHT integration"
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "ethernet": {
+        "name": "Ethernet"
+      },
+      "internet": {
+        "name": "Internet"
+      },
+      "vpn": {
+        "name": "VPN"
+      },
+      "wifi": {
+        "name": "Wi-Fi"
+      }
+    },
+    "sensor": {
+      "zigbee_temperature": {
+        "name": "Zigbee chip temp"
+      },
+      "core_temperature": {
+        "name": "Core chip temp"
+      },
+      "fs_usage": {
+        "name": "Filesystem usage"
+      },
+      "ram_usage": {
+        "name": "RAM usage"
+      },
+      "core_uptime": {
+        "name": "Core uptime"
+      },
+      "socket_uptime": {
+        "name": "Zigbee uptime"
+      },
+      "device_mode": {
+        "name": "Connection mode",
+        "state": {
+          "eth": "Ethernet",
+          "wifi": "Wi-Fi",
+          "usb": "USB"
+        }
+      },
+      "firmware_channel": {
+        "name": "Firmware channel",
+        "state": {
+          "dev": "Development",
+          "release": "Stable"
+        }
+      },
+      "zigbee_type": {
+        "name": "Zigbee type",
+        "state": {
+          "coordinator": "Coordinator",
+          "router": "Router",
+          "thread": "Thread"
+        }
+      }
+    },
+    "button": {
+      "core_restart": {
+        "name": "Core restart"
+      },
+      "zigbee_restart": {
+        "name": "Zigbee restart"
+      },
+      "zigbee_flash_mode": {
+        "name": "Zigbee flash mode"
+      },
+      "reconnect_zigbee_router": {
+        "name": "Reconnect Zigbee router"
+      }
+    },
+    "switch": {
+      "auto_zigbee_update": {
+        "name": "Auto Zigbee update"
+      },
+      "disable_led": {
+        "name": "Disable LEDs"
+      },
+      "night_mode": {
+        "name": "LED night mode"
+      },
+      "vpn_enabled": {
+        "name": "VPN enabled"
+      }
+    },
+    "update": {
+      "core_update": {
+        "name": "Core firmware"
+      },
+      "zigbee_update": {
+        "name": "Zigbee firmware"
+      }
+    }
+  },
+  "issues": {
+    "unsupported_firmware": {
+      "title": "SLZB core firmware update required",
+      "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration."
+    }
+  }
+}

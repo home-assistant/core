@@ -310,6 +310,49 @@ async def test_sleeping_rpc_device_online_new_firmware(
     assert entry.data["sleep_period"] == 1500
 
 
+async def test_sleeping_rpc_device_online_during_setup(
+    hass: HomeAssistant,
+    mock_sleepy_rpc_device: Mock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sleeping device Gen2 woke up by user during setup."""
+    await init_integration(hass, 2, sleep_period=1000)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "will resume when device is online" in caplog.text
+    assert "is online (source: setup)" in caplog.text
+    assert hass.states.get("sensor.test_name_temperature") is not None
+
+
+async def test_sleeping_rpc_device_offline_during_setup(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test sleeping device Gen2 woke up by user during setup."""
+    monkeypatch.setattr(mock_rpc_device, "connected", False)
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
+    monkeypatch.setattr(
+        mock_rpc_device, "initialize", AsyncMock(side_effect=DeviceConnectionError)
+    )
+
+    # Init integration, should fail since device is offline
+    await init_integration(hass, 2, sleep_period=1000)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert "will resume when device is online" in caplog.text
+    assert "is online (source: setup)" in caplog.text
+    assert hass.states.get("sensor.test_name_temperature") is None
+
+    # Create an online event and verify that device is init successfully
+    monkeypatch.setattr(mock_rpc_device, "initialize", AsyncMock())
+    mock_rpc_device.mock_online()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert hass.states.get("sensor.test_name_temperature") is not None
+
+
 @pytest.mark.parametrize(
     ("gen", "entity_id"),
     [
@@ -323,8 +366,11 @@ async def test_entry_unload(
     entity_id: str,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test entry unload."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     entry = await init_integration(hass, gen)
 
     assert entry.state is ConfigEntryState.LOADED
@@ -367,6 +413,9 @@ async def test_entry_unload_not_connected(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test entry unload when not connected."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+
     with patch(
         "homeassistant.components.shelly.coordinator.async_stop_scanner"
     ) as mock_stop_scanner:
@@ -392,6 +441,9 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test entry unload when not connected but we think we are still connected."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+
     with patch(
         "homeassistant.components.shelly.coordinator.async_stop_scanner",
         side_effect=DeviceConnectionError,
@@ -499,3 +551,22 @@ async def test_sleeping_block_device_wrong_sleep_period(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
     assert entry.data[CONF_SLEEP_PERIOD] == BLOCK_EXPECTED_SLEEP_PERIOD
+
+
+async def test_bluetooth_cleanup_on_remove_entry(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+) -> None:
+    """Test bluetooth is cleaned up on entry removal."""
+    entry = await init_integration(hass, 2)
+
+    assert entry.state is ConfigEntryState.LOADED
+
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch("homeassistant.components.shelly.async_remove_scanner") as remove_mock:
+        await hass.config_entries.async_remove(entry.entry_id)
+        await hass.async_block_till_done()
+
+    remove_mock.assert_called_once_with(hass, entry.unique_id.upper())

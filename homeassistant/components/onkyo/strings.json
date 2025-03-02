@@ -1,0 +1,104 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "menu_options": {
+          "manual": "Manual entry",
+          "eiscp_discovery": "Onkyo discovery"
+        }
+      },
+      "manual": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the receiver."
+        }
+      },
+      "eiscp_discovery": {
+        "data": {
+          "device": "[%key:common::config_flow::data::device%]"
+        },
+        "data_description": {
+          "device": "Select the receiver to configure."
+        }
+      },
+      "configure_receiver": {
+        "description": "Configure {name}",
+        "data": {
+          "volume_resolution": "Volume resolution",
+          "input_sources": "[%key:component::onkyo::options::step::init::data::input_sources%]",
+          "listening_modes": "[%key:component::onkyo::options::step::init::data::listening_modes%]"
+        },
+        "data_description": {
+          "volume_resolution": "Number of steps it takes for the receiver to go from the lowest to the highest possible volume.",
+          "input_sources": "[%key:component::onkyo::options::step::init::data_description::input_sources%]",
+          "listening_modes": "[%key:component::onkyo::options::step::init::data_description::listening_modes%]"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "empty_input_source_list": "[%key:component::onkyo::options::error::empty_input_source_list%]",
+      "empty_listening_mode_list": "[%key:component::onkyo::options::error::empty_listening_mode_list%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The serial number of the device does not match the previous serial number",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "max_volume": "Maximum volume limit (%)",
+          "input_sources": "Input sources",
+          "listening_modes": "Listening modes"
+        },
+        "data_description": {
+          "max_volume": "Maximum volume limit as a percentage. This will associate Home Assistant's maximum volume to this value on the receiver, i.e., if you set this to 50%, then setting the volume to 100% in Home Assistant will cause the volume on the receiver to be set to 50% of its maximum value.",
+          "input_sources": "List of input sources supported by the receiver.",
+          "listening_modes": "List of listening modes supported by the receiver."
+        }
+      },
+      "names": {
+        "sections": {
+          "input_sources": {
+            "name": "Input source names",
+            "description": "Mappings of receiver's input sources to their names."
+          },
+          "listening_modes": {
+            "name": "Listening mode names",
+            "description": "Mappings of receiver's listening modes to their names."
+          }
+        }
+      }
+    },
+    "error": {
+      "empty_input_source_list": "Input source list cannot be empty",
+      "empty_listening_mode_list": "Listening mode list cannot be empty"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_no_discover": {
+      "title": "The Onkyo YAML configuration import failed",
+      "description": "Configuring Onkyo using YAML is being removed but no receivers were discovered when importing your YAML configuration.\n\nEnsure the connection to the receiver works and restart Home Assistant to try again or remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    },
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "title": "The Onkyo YAML configuration import failed",
+      "description": "Configuring Onkyo using YAML is being removed but there was a connection error when importing your YAML configuration for host {host}.\n\nEnsure the connection to the receiver works and restart Home Assistant to try again or remove the Onkyo YAML configuration from your configuration.yaml file and continue to [set up the integration]({url}) manually."
+    }
+  },
+  "exceptions": {
+    "invalid_sound_mode": {
+      "message": "Cannot select sound mode \"{invalid_sound_mode}\" for entity: {entity_id}."
+    },
+    "invalid_source": {
+      "message": "Cannot select input source \"{invalid_source}\" for entity: {entity_id}."
+    }
+  }
+}

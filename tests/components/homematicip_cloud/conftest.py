@@ -8,7 +8,6 @@ from homematicip.aio.home import AsyncHome
 from homematicip.base.enums import WeatherCondition, WeatherDayTime
 import pytest
 
-from homeassistant import config_entries
 from homeassistant.components.homematicip_cloud import (
     DOMAIN as HMIPC_DOMAIN,
     async_setup as hmip_async_setup,
@@ -46,7 +45,7 @@ def mock_connection_fixture() -> AsyncConnection:
 
 
 @pytest.fixture(name="hmip_config_entry")
-def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
+def hmip_config_entry_fixture() -> MockConfigEntry:
     """Create a mock config entry for homematic ip cloud."""
     entry_data = {
         HMIPC_HAPID: HAPID,
@@ -66,8 +65,8 @@ def hmip_config_entry_fixture() -> config_entries.ConfigEntry:
 
 @pytest.fixture(name="default_mock_hap_factory")
 async def default_mock_hap_factory_fixture(
-    hass: HomeAssistant, mock_connection, hmip_config_entry
-) -> HomematicipHAP:
+    hass: HomeAssistant, mock_connection, hmip_config_entry: MockConfigEntry
+) -> HomeFactory:
     """Create a mocked homematic access point."""
     return HomeFactory(hass, mock_connection, hmip_config_entry)
 
@@ -94,7 +93,7 @@ def dummy_config_fixture() -> ConfigType:
 
 @pytest.fixture(name="mock_hap_with_service")
 async def mock_hap_with_service_fixture(
-    hass: HomeAssistant, default_mock_hap_factory, dummy_config
+    hass: HomeAssistant, default_mock_hap_factory: HomeFactory, dummy_config
 ) -> HomematicipHAP:
     """Create a fake homematic access point with hass services."""
     mock_hap = await default_mock_hap_factory.async_get_mock_hap()

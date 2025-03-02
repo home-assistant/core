@@ -10,8 +10,10 @@ blueprint:
       selector:
         entity:
           filter:
-            device_class: motion
-            domain: binary_sensor
+            - device_class: occupancy
+              domain: binary_sensor
+            - device_class: motion
+              domain: binary_sensor
     light_target:
       name: Light
       selector:
@@ -33,24 +35,24 @@ blueprint:
 mode: restart
 max_exceeded: silent
 
-trigger:
-  platform: state
+triggers:
+  trigger: state
   entity_id: !input motion_entity
   from: "off"
   to: "on"
 
-action:
+actions:
   - alias: "Turn on the light"
-    service: light.turn_on
+    action: light.turn_on
     target: !input light_target
   - alias: "Wait until there is no motion from device"
     wait_for_trigger:
-      platform: state
+      trigger: state
       entity_id: !input motion_entity
       from: "on"
       to: "off"
   - alias: "Wait the number of seconds that has been set"
     delay: !input no_motion_wait
   - alias: "Turn off the light"
-    service: light.turn_off
+    action: light.turn_off
     target: !input light_target

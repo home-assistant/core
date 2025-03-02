@@ -318,7 +318,12 @@ async def test_trigger_select(hass: HomeAssistant) -> None:
     assert events[0].event_type == "test_number_event"
 
 
-def _verify(hass, expected_current_option, expected_options, entity_name=_TEST_SELECT):
+def _verify(
+    hass: HomeAssistant,
+    expected_current_option: str,
+    expected_options: list[str],
+    entity_name: str = _TEST_SELECT,
+) -> None:
     """Verify select's state."""
     state = hass.states.get(entity_name)
     attributes = state.attributes

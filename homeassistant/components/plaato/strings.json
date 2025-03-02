@@ -41,7 +41,7 @@
     "step": {
       "webhook": {
         "title": "Options for Plaato Airlock",
-        "description": "Webhook info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\n"
+        "description": "Webhook info:\n\n- URL: `{webhook_url}`\n- Method: POST"
       },
       "user": {
         "title": "Options for Plaato",

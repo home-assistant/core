@@ -8,6 +8,7 @@ import logging
 from bs4 import BeautifulSoup
 
 from homeassistant.components.rest import RestData
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -18,12 +19,17 @@ class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
     """Scrape Coordinator."""
 
     def __init__(
-        self, hass: HomeAssistant, rest: RestData, update_interval: timedelta
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry | None,
+        rest: RestData,
+        update_interval: timedelta,
     ) -> None:
         """Initialize Scrape coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Scrape Coordinator",
             update_interval=update_interval,
         )

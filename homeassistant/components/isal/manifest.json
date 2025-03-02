@@ -6,5 +6,5 @@
   "integration_type": "system",
   "iot_class": "local_polling",
   "quality_scale": "internal",
-  "requirements": ["isal==1.6.1"]
+  "requirements": ["isal==1.7.1"]
 }

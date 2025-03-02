@@ -2,15 +2,15 @@
   "services": {
     "power_on": {
       "name": "Power on",
-      "description": "Power on all devices which supports it."
+      "description": "Powers on all devices which support this function."
     },
     "select_device": {
       "name": "Select device",
-      "description": "Select HDMI device.",
+      "description": "Selects an HDMI device.",
       "fields": {
         "device": {
           "name": "[%key:common::config_flow::data::device%]",
-          "description": "Address of device to select. Can be entity_id, physical address or alias from configuration."
+          "description": "Address of device to select. Can be an entity ID, physical address or alias from configuration."
         }
       }
     },
@@ -24,11 +24,11 @@
         },
         "cmd": {
           "name": "Command",
-          "description": "Command itself. Could be decimal number or string with hexadeximal notation: \"0x10\"."
+          "description": "Command itself. Could be decimal number or string with hexadecimal notation: \"0x10\"."
         },
         "dst": {
           "name": "Destination",
-          "description": "Destination for command. Could be decimal number or string with hexadeximal notation: \"0x10\"."
+          "description": "Destination for command. Could be decimal number or string with hexadecimal notation: \"0x10\"."
         },
         "raw": {
           "name": "Raw",
@@ -36,13 +36,13 @@
         },
         "src": {
           "name": "Source",
-          "description": "Source of command. Could be decimal number or string with hexadeximal notation: \"0x10\"."
+          "description": "Source of command. Could be decimal number or string with hexadecimal notation: \"0x10\"."
         }
       }
     },
     "standby": {
       "name": "[%key:common::state::standby%]",
-      "description": "Standby all devices which supports it."
+      "description": "Places in standby all devices which support this function."
     },
     "update": {
       "name": "Update",
@@ -50,19 +50,19 @@
     },
     "volume": {
       "name": "Volume",
-      "description": "Increases or decreases volume of system.",
+      "description": "Increases or decreases the system volume.",
       "fields": {
         "down": {
           "name": "Down",
-          "description": "Decreases volume x levels."
+          "description": "Decreases the volume x levels."
         },
         "mute": {
           "name": "Mute",
-          "description": "Mutes audio system."
+          "description": "Mutes the audio system."
         },
         "up": {
           "name": "Up",
-          "description": "Increases volume x levels."
+          "description": "Increases the volume x levels."
         }
       }
     }

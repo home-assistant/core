@@ -103,6 +103,13 @@ async def test_run_lawn_mower_setup_and_state_updates(
     state = hass.states.get("lawn_mower.test_lawn_mower")
     assert state.state == "mowing"
 
+    async_fire_mqtt_message(hass, "test/lawn_mower_stat", "returning")
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lawn_mower.test_lawn_mower")
+    assert state.state == "returning"
+
     async_fire_mqtt_message(hass, "test/lawn_mower_stat", "docked")
 
     await hass.async_block_till_done()
@@ -197,6 +204,13 @@ async def test_value_template(
 
     state = hass.states.get("lawn_mower.test_lawn_mower")
     assert state.state == "paused"
+
+    async_fire_mqtt_message(hass, "test/lawn_mower_stat", '{"val":"returning"}')
+
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lawn_mower.test_lawn_mower")
+    assert state.state == "returning"
 
     async_fire_mqtt_message(hass, "test/lawn_mower_stat", '{"val": null}')
 
@@ -702,7 +716,8 @@ async def test_mqtt_payload_not_a_valid_activity_warning(
 
     assert (
         "Invalid activity for lawn_mower.test_lawn_mower: 'painting' "
-        "(valid activities: ['error', 'paused', 'mowing', 'docked'])" in caplog.text
+        "(valid activities: ['error', 'paused', 'mowing', 'docked', 'returning'])"
+        in caplog.text
     )
 
 
@@ -774,6 +789,7 @@ async def test_reloadable(
     [
         ("activity_state_topic", "paused", None, "paused"),
         ("activity_state_topic", "docked", None, "docked"),
+        ("activity_state_topic", "returning", None, "returning"),
         ("activity_state_topic", "mowing", None, "mowing"),
     ],
 )
@@ -786,7 +802,9 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][lawn_mower.DOMAIN])
+    config: dict[str, Any] = copy.deepcopy(
+        DEFAULT_CONFIG[mqtt.DOMAIN][lawn_mower.DOMAIN]
+    )
     config["actions"] = ["milk", "beer"]
     await help_test_encoding_subscribable_topics(
         hass,

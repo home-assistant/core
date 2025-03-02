@@ -34,8 +34,10 @@
       'data': dict({
       }),
       'disabled_by': None,
+      'discovery_keys': dict({
+      }),
       'domain': 'systemmonitor',
-      'minor_version': 2,
+      'minor_version': 3,
       'options': dict({
         'binary_sensor': dict({
           'process': list([
@@ -54,6 +56,65 @@
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'System Monitor',
+      'unique_id': None,
+      'version': 1,
+    }),
+  })
+# ---
+# name: test_diagnostics_missing_items[test_diagnostics_missing_items]
+  dict({
+    'coordinators': dict({
+      'data': dict({
+        'addresses': None,
+        'boot_time': '2024-02-24 15:00:00+00:00',
+        'cpu_percent': '10.0',
+        'disk_usage': dict({
+          '/': 'sdiskusage(total=536870912000, used=322122547200, free=214748364800, percent=60.0)',
+          '/home/notexist/': 'sdiskusage(total=536870912000, used=322122547200, free=214748364800, percent=60.0)',
+          '/media/share': 'sdiskusage(total=536870912000, used=322122547200, free=214748364800, percent=60.0)',
+        }),
+        'io_counters': None,
+        'load': '(1, 2, 3)',
+        'memory': 'VirtualMemory(total=104857600, available=41943040, percent=40.0, used=62914560, free=31457280)',
+        'processes': "[tests.components.systemmonitor.conftest.MockProcess(pid=1, name='python3', status='sleeping', started='2024-02-23 15:00:00'), tests.components.systemmonitor.conftest.MockProcess(pid=1, name='pip', status='sleeping', started='2024-02-23 15:00:00')]",
+        'swap': 'sswap(total=104857600, used=62914560, free=41943040, percent=60.0, sin=1, sout=1)',
+        'temperatures': dict({
+          'cpu0-thermal': "[shwtemp(label='cpu0-thermal', current=50.0, high=60.0, critical=70.0)]",
+        }),
+      }),
+      'last_update_success': True,
+    }),
+    'entry': dict({
+      'data': dict({
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'systemmonitor',
+      'minor_version': 3,
+      'options': dict({
+        'binary_sensor': dict({
+          'process': list([
+            'python3',
+            'pip',
+          ]),
+        }),
+        'resources': list([
+          'disk_use_percent_/',
+          'disk_use_percent_/home/notexist/',
+          'memory_free_',
+          'network_out_eth0',
+          'process_python3',
+        ]),
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'System Monitor',
       'unique_id': None,
       'version': 1,

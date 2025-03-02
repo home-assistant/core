@@ -8,21 +8,20 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
     ScannerEntity,
-    SourceType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from . import PingConfigEntry
 from .const import CONF_IMPORTED_BY
-from .coordinator import PingUpdateCoordinator
+from .coordinator import PingConfigEntry, PingUpdateCoordinator
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: PingConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: PingConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Ping config entry."""
     async_add_entities([PingDeviceTracker(entry, entry.runtime_data)])
@@ -34,7 +33,7 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
     _last_seen: datetime | None = None
 
     def __init__(
-        self, config_entry: ConfigEntry, coordinator: PingUpdateCoordinator
+        self, config_entry: PingConfigEntry, coordinator: PingUpdateCoordinator
     ) -> None:
         """Initialize the Ping device tracker."""
         super().__init__(coordinator)
@@ -56,11 +55,6 @@ class PingDeviceTracker(CoordinatorEntity[PingUpdateCoordinator], ScannerEntity)
     def unique_id(self) -> str:
         """Return a unique ID."""
         return self.config_entry.entry_id
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type which is router."""
-        return SourceType.ROUTER
 
     @property
     def is_connected(self) -> bool:

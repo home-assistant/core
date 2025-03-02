@@ -313,7 +313,9 @@ def test_invalid_config_flow_step(
     linter: UnittestLinter, type_hint_checker: BaseChecker
 ) -> None:
     """Ensure invalid hints are rejected for ConfigFlow step."""
-    class_node, func_node, arg_node = astroid.extract_node(
+    type_hint_checker.linter.config.ignore_missing_annotations = True
+
+    class_node, func_node, arg_node, func_node2 = astroid.extract_node(
         """
     class FlowHandler():
         pass
@@ -327,6 +329,12 @@ def test_invalid_config_flow_step(
         async def async_step_zeroconf( #@
             self,
             device_config: dict #@
+        ):
+            pass
+
+        async def async_step_custom( #@
+            self,
+            user_input
         ):
             pass
     """,
@@ -353,6 +361,15 @@ def test_invalid_config_flow_step(
             col_offset=4,
             end_line=11,
             end_col_offset=33,
+        ),
+        pylint.testutils.MessageTest(
+            msg_id="hass-return-type",
+            node=func_node2,
+            args=("ConfigFlowResult", "async_step_custom"),
+            line=17,
+            col_offset=4,
+            end_line=17,
+            end_col_offset=31,
         ),
     ):
         type_hint_checker.visit_classdef(class_node)
@@ -1353,7 +1370,7 @@ def test_valid_generic(
     async def async_setup_entry( #@
         hass: HomeAssistant,
         entry: {entry_annotation},
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         pass
     """,
@@ -1385,7 +1402,7 @@ def test_invalid_generic(
     async def async_setup_entry( #@
         hass: HomeAssistant,
         entry: {entry_annotation}, #@
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         pass
     """,

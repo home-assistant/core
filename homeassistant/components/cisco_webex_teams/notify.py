@@ -1,11 +1,11 @@
-"""Cisco Webex Teams notify component."""
+"""Cisco Webex notify component."""
 
 from __future__ import annotations
 
 import logging
 
 import voluptuous as vol
-from webexteamssdk import ApiError, WebexTeamsAPI, exceptions
+from webexpythonsdk import ApiError, WebexAPI, exceptions
 
 from homeassistant.components.notify import (
     ATTR_TITLE,
@@ -14,7 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,9 +30,9 @@ def get_service(
     hass: HomeAssistant,
     config: ConfigType,
     discovery_info: DiscoveryInfoType | None = None,
-) -> CiscoWebexTeamsNotificationService | None:
-    """Get the CiscoWebexTeams notification service."""
-    client = WebexTeamsAPI(access_token=config[CONF_TOKEN])
+) -> CiscoWebexNotificationService | None:
+    """Get the Cisco Webex notification service."""
+    client = WebexAPI(access_token=config[CONF_TOKEN])
     try:
         # Validate the token & room_id
         client.rooms.get(config[CONF_ROOM_ID])
@@ -40,11 +40,11 @@ def get_service(
         _LOGGER.error(error)
         return None
 
-    return CiscoWebexTeamsNotificationService(client, config[CONF_ROOM_ID])
+    return CiscoWebexNotificationService(client, config[CONF_ROOM_ID])
 
 
-class CiscoWebexTeamsNotificationService(BaseNotificationService):
-    """The Cisco Webex Teams Notification Service."""
+class CiscoWebexNotificationService(BaseNotificationService):
+    """The Cisco Webex Notification Service."""
 
     def __init__(self, client, room):
         """Initialize the service."""
@@ -62,5 +62,5 @@ class CiscoWebexTeamsNotificationService(BaseNotificationService):
             self.client.messages.create(roomId=self.room, html=f"{title}{message}")
         except ApiError as api_error:
             _LOGGER.error(
-                "Could not send CiscoWebexTeams notification. Error: %s", api_error
+                "Could not send Cisco Webex notification. Error: %s", api_error
             )

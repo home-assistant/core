@@ -22,7 +22,7 @@ from aiohomekit.model import Accessories, Accessory, Transport
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
 
-from homeassistant.components.thread.dataset_store import async_get_preferred_dataset
+from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_VIA_DEVICE, EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CALLBACK_TYPE, CoreState, Event, HomeAssistant, callback
@@ -322,8 +322,7 @@ class HKDevice:
                     self.hass,
                     self.async_update_available_state,
                     timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
-                    name=f"HomeKit Device {self.unique_id} BLE availability "
-                    "check poll",
+                    name=f"HomeKit Device {self.unique_id} BLE availability check poll",
                 )
             )
             # BLE devices always get an RSSI sensor as well
@@ -432,7 +431,7 @@ class HKDevice:
                 continue
 
             if self.config_entry.entry_id not in device.config_entries:
-                _LOGGER.info(
+                _LOGGER.warning(
                     (
                         "Found candidate device for %s:aid:%s, but owned by a different"
                         " config entry, skipping"
@@ -442,7 +441,7 @@ class HKDevice:
                 )
                 continue
 
-            _LOGGER.info(
+            _LOGGER.debug(
                 "Migrating device identifiers for %s:aid:%s",
                 self.unique_id,
                 accessory.aid,
@@ -845,21 +844,8 @@ class HKDevice:
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Poll state of all entities attached to this bridge/accessory."""
-        if (
-            len(self.entity_map.accessories) == 1
-            and self.available
-            and not (self.pollable_characteristics - self.watchable_characteristics)
-            and self.pairing.is_available
-            and await self.pairing.controller.async_reachable(
-                self.unique_id, timeout=5.0
-            )
-        ):
-            # If its a single accessory and all chars are watchable,
-            # we don't need to poll.
-            _LOGGER.debug("Accessory is reachable, skip polling: %s", self.unique_id)
-            return
-
-        if not self.pollable_characteristics:
+        to_poll = self.pollable_characteristics
+        if not to_poll:
             self.async_update_available_state()
             _LOGGER.debug(
                 "HomeKit connection not polling any characteristics: %s", self.unique_id
@@ -879,7 +865,7 @@ class HKDevice:
             return
 
         if self._polling_lock_warned:
-            _LOGGER.info(
+            _LOGGER.warning(
                 (
                     "HomeKit device no longer detecting back pressure - not"
                     " skipping poll: %s"
@@ -892,9 +878,7 @@ class HKDevice:
             _LOGGER.debug("Starting HomeKit device update: %s", self.unique_id)
 
             try:
-                new_values_dict = await self.get_characteristics(
-                    self.pollable_characteristics
-                )
+                new_values_dict = await self.get_characteristics(to_poll)
             except AccessoryNotFoundError:
                 # Not only did the connection fail, but also the accessory is not
                 # visible on the network.

@@ -31,8 +31,14 @@
     }
   },
   "services": {
-    "start_watering": "mdi:sprinkler-variant",
-    "suspend": "mdi:pause-circle-outline",
-    "resume": "mdi:play"
+    "start_watering": {
+      "service": "mdi:sprinkler-variant"
+    },
+    "suspend": {
+      "service": "mdi:pause-circle-outline"
+    },
+    "resume": {
+      "service": "mdi:play"
+    }
   }
 }

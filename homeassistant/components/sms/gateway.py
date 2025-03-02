@@ -128,7 +128,7 @@ class Gateway:
         except gammu.ERR_EMPTY:
             # error is raised if memory is empty (this induces wrong reported
             # memory status)
-            _LOGGER.info("Failed to read messages!")
+            _LOGGER.warning("Failed to read messages!")
 
         # Link all SMS when there are concatenated messages
         return gammu.LinkSMS(entries)

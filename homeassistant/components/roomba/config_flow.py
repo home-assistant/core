@@ -11,15 +11,16 @@ from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
 
-from homeassistant.components import dhcp, zeroconf
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithConfigEntry,
+    OptionsFlow,
 )
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import CannotConnect, async_connect_or_timeout, async_disconnect_or_timeout
 from .const import (
@@ -41,7 +42,9 @@ DEFAULT_OPTIONS = {CONF_CONTINUOUS: DEFAULT_CONTINUOUS, CONF_DELAY: DEFAULT_DELA
 MAX_NUM_DEVICES_TO_DISCOVER = 25
 
 AUTH_HELP_URL_KEY = "auth_help_url"
-AUTH_HELP_URL_VALUE = "https://www.home-assistant.io/integrations/roomba/#manually-retrieving-your-credentials"
+AUTH_HELP_URL_VALUE = (
+    "https://www.home-assistant.io/integrations/roomba/#retrieving-your-credentials"
+)
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
@@ -55,7 +58,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
             address=data[CONF_HOST],
             blid=data[CONF_BLID],
             password=data[CONF_PASSWORD],
-            continuous=False,
+            continuous=True,
             delay=data[CONF_DELAY],
         )
     )
@@ -77,7 +80,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
 
     name: str | None = None
-    blid: str | None = None
+    blid: str
     host: str | None = None
 
     def __init__(self) -> None:
@@ -90,10 +93,10 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry: ConfigEntry,
     ) -> RoombaOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return RoombaOptionsFlowHandler(config_entry)
+        return RoombaOptionsFlowHandler()
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         return await self._async_step_discovery(
@@ -101,7 +104,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_dhcp(
-        self, discovery_info: dhcp.DhcpServiceInfo
+        self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery."""
         return await self._async_step_discovery(
@@ -128,7 +131,9 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         # going for a longer hostname we abort so the user
         # does not see two flows if discovery fails.
         for progress in self._async_in_progress():
-            flow_unique_id: str = progress["context"]["unique_id"]
+            flow_unique_id = progress["context"].get("unique_id")
+            if not flow_unique_id:
+                continue
             if flow_unique_id.startswith(self.blid):
                 return self.async_abort(reason="short_blid")
             if self.blid.startswith(flow_unique_id):
@@ -296,7 +301,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class RoombaOptionsFlowHandler(OptionsFlowWithConfigEntry):
+class RoombaOptionsFlowHandler(OptionsFlow):
     """Handle options."""
 
     async def async_step_init(
@@ -306,17 +311,18 @@ class RoombaOptionsFlowHandler(OptionsFlowWithConfigEntry):
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
+        options = self.config_entry.options
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(
                 {
                     vol.Optional(
                         CONF_CONTINUOUS,
-                        default=self.options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
+                        default=options.get(CONF_CONTINUOUS, DEFAULT_CONTINUOUS),
                     ): bool,
                     vol.Optional(
                         CONF_DELAY,
-                        default=self.options.get(CONF_DELAY, DEFAULT_DELAY),
+                        default=options.get(CONF_DELAY, DEFAULT_DELAY),
                     ): int,
                 }
             ),

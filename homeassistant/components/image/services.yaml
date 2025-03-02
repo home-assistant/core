@@ -1,0 +1,12 @@
+# Describes the format for available image services
+
+snapshot:
+  target:
+    entity:
+      domain: image
+  fields:
+    filename:
+      required: true
+      example: "/tmp/image_snapshot.jpg"
+      selector:
+        text:

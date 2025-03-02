@@ -7,7 +7,6 @@ from dataclasses import dataclass
 
 from anova_wifi import AnovaMode, AnovaState, APCUpdateSensor
 
-from homeassistant import config_entries
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -16,13 +15,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
-from .coordinator import AnovaCoordinator
+from .coordinator import AnovaConfigEntry, AnovaCoordinator
 from .entity import AnovaDescriptionEntity
-from .models import AnovaData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -99,11 +96,11 @@ SENSOR_DESCRIPTIONS: list[AnovaSensorEntityDescription] = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: config_entries.ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    entry: AnovaConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Anova device."""
-    anova_data: AnovaData = hass.data[DOMAIN][entry.entry_id]
+    anova_data = entry.runtime_data
 
     for coordinator in anova_data.coordinators:
         setup_coordinator(coordinator, async_add_entities)
@@ -111,7 +108,7 @@ async def async_setup_entry(
 
 def setup_coordinator(
     coordinator: AnovaCoordinator,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up an individual Anova Coordinator."""
 

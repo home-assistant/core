@@ -5,27 +5,54 @@
         "title": "Define your Solar-Log connection",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "name": "The prefix to be used for your Solar-Log sensors",
-          "extended_data": "Get additional data from Solar-Log. Extended data is only accessible, if no password is set for the Solar-Log. Use at your own risk!"
+          "has_password": "I have the password for the Solar-Log user account."
         },
         "data_description": {
-          "host": "The hostname or IP address of your Solar-Log device."
+          "host": "The hostname or IP address of your Solar-Log device.",
+          "has_password": "The password is required, if the open JSON-API is deactivated or if you would like to access additional data provided by your Solar-Log device."
+        }
+      },
+      "password": {
+        "title": "Define your Solar-Log connection",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "password": "The password for the general user of your Solar-Log device."
+        }
+      },
+      "reauth_confirm": {
+        "description": "Update your credentials for Solar-Log device",
+        "data": {
+          "has_password": "[%key:component::solarlog::config::step::user::data::has_password%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "has_password": "[%key:component::solarlog::config::step::user::data_description::has_password%]",
+          "password": "[%key:component::solarlog::config::step::password::data_description::password%]"
         }
       },
       "reconfigure": {
         "title": "Configure SolarLog",
         "data": {
-          "extended_data": "[%key:component::solarlog::config::step::user::data::extended_data%]"
+          "has_password": "[%key:component::solarlog::config::step::user::data::has_password%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "has_password": "[%key:component::solarlog::config::step::user::data_description::has_password%]",
+          "password": "[%key:component::solarlog::config::step::password::data_description::password%]"
         }
       }
     },
     "error": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "password_error": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     }
   },
@@ -100,6 +127,17 @@
       "usage": {
         "name": "Usage"
       }
+    }
+  },
+  "exceptions": {
+    "update_error": {
+      "message": "Error while updating data from the API."
+    },
+    "config_entry_not_ready": {
+      "message": "Error while loading the config entry."
+    },
+    "auth_failed": {
+      "message": "Error while logging in to the API."
     }
   }
 }

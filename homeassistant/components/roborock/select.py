@@ -1,5 +1,6 @@
 """Support for Roborock select."""
 
+import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -10,11 +11,11 @@ from roborock.roborock_typing import RoborockCommand
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RoborockConfigEntry
-from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockCoordinatedEntityV1
+from .const import MAP_SLEEP
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
+from .entity import RoborockCoordinatedEntityV1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -63,7 +64,7 @@ SELECT_DESCRIPTIONS: list[RoborockSelectDescription] = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock select platform."""
 
@@ -133,6 +134,12 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
                     RoborockCommand.LOAD_MULTI_MAP,
                     [map_id],
                 )
+                # Update the current map id manually so that nothing gets broken
+                # if another service hits the api.
+                self.coordinator.current_map = map_id
+                # We need to wait after updating the map
+                # so that other commands will be executed correctly.
+                await asyncio.sleep(MAP_SLEEP)
                 break
 
     @property
@@ -143,6 +150,9 @@ class RoborockCurrentMapSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
     @property
     def current_option(self) -> str | None:
         """Get the current status of the select entity from device_status."""
-        if current_map := self.coordinator.current_map:
+        if (
+            (current_map := self.coordinator.current_map) is not None
+            and current_map in self.coordinator.maps
+        ):  # 63 means it is searching for a map.
             return self.coordinator.maps[current_map].name
         return None

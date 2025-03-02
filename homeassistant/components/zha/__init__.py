@@ -2,6 +2,7 @@
 
 import contextlib
 import logging
+from zoneinfo import ZoneInfo
 
 import voluptuous as vol
 from zha.application.const import BAUD_RATES, RadioType
@@ -11,16 +12,24 @@ from zha.zigbee.device import get_device_automation_triggers
 from zigpy.config import CONF_DATABASE, CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import NetworkSettingsInconsistent, TransientConnectionError
 
+from homeassistant.components.homeassistant_hardware.helpers import (
+    async_notify_firmware_info,
+    async_register_firmware_info_provider,
+)
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_TYPE, EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.const import (
+    CONF_TYPE,
+    EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType
 
-from . import repairs, websocket_api
+from . import homeassistant_hardware, repairs, websocket_api
 from .const import (
     CONF_BAUDRATE,
     CONF_CUSTOM_QUIRKS_PATH,
@@ -105,6 +114,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     ha_zha_data = HAZHAData(yaml_config=config.get(DOMAIN, {}))
     hass.data[DATA_ZHA] = ha_zha_data
 
+    async_register_firmware_info_provider(hass, DOMAIN, homeassistant_hardware)
+
     return True
 
 
@@ -116,6 +127,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     ha_zha_data: HAZHAData = get_zha_data(hass)
     ha_zha_data.config_entry = config_entry
     zha_lib_data: ZHAData = create_zha_config(hass, ha_zha_data)
+
+    zha_gateway = await Gateway.async_from_config(zha_lib_data)
 
     # Load and cache device trigger information early
     device_registry = dr.async_get(hass)
@@ -140,7 +153,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     _LOGGER.debug("Trigger cache: %s", zha_lib_data.device_trigger_cache)
 
     try:
-        zha_gateway = await Gateway.async_from_config(zha_lib_data)
+        await zha_gateway.async_initialize()
     except NetworkSettingsInconsistent as exc:
         await warn_on_inconsistent_network_settings(
             hass,
@@ -201,6 +214,22 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_shutdown)
     )
+
+    @callback
+    def update_config(event: Event) -> None:
+        """Handle Core config update."""
+        zha_gateway.config.local_timezone = ZoneInfo(hass.config.time_zone)
+
+    config_entry.async_on_unload(
+        hass.bus.async_listen(EVENT_CORE_CONFIG_UPDATE, update_config)
+    )
+
+    if fw_info := homeassistant_hardware.get_firmware_info(hass, config_entry):
+        await async_notify_firmware_info(
+            hass,
+            DOMAIN,
+            firmware_info=fw_info,
+        )
 
     await ha_zha_data.gateway_proxy.async_initialize_devices_and_entities()
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)

@@ -14,6 +14,7 @@ from homeassistant.components.mikrotik.const import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -175,18 +176,14 @@ async def test_reauth_success(hass: HomeAssistant, api) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=DEMO_USER_INPUT,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["description_placeholders"] == {CONF_USERNAME: "username"}
+    assert result["description_placeholders"] == {
+        CONF_NAME: "Mock Title",
+        CONF_USERNAME: "username",
+    }
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -207,14 +204,7 @@ async def test_reauth_failed(hass: HomeAssistant, auth_error) -> None:
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=DEMO_USER_INPUT,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
@@ -240,14 +230,7 @@ async def test_reauth_failed_conn_error(hass: HomeAssistant, conn_error) -> None
     )
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-        },
-        data=DEMO_USER_INPUT,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"

@@ -1,6 +1,7 @@
 """Test Environment Canada diagnostics."""
 
 import json
+from typing import Any
 
 from syrupy import SnapshotAssertion
 
@@ -26,6 +27,7 @@ async def test_entry_diagnostics(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
+    ec_data: dict[str, Any],
 ) -> None:
     """Test config entry diagnostics."""
 

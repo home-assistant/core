@@ -6,5 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/enocean",
   "iot_class": "local_push",
   "loggers": ["enocean"],
-  "requirements": ["enocean==0.50"]
+  "requirements": ["enocean==0.50"],
+  "single_config_entry": true
 }

@@ -7,7 +7,11 @@
     }
   },
   "services": {
-    "add_tracking": "mdi:package-variant-plus",
-    "remove_tracking": "mdi:package-variant-minus"
+    "add_tracking": {
+      "service": "mdi:package-variant-plus"
+    },
+    "remove_tracking": {
+      "service": "mdi:package-variant-minus"
+    }
   }
 }

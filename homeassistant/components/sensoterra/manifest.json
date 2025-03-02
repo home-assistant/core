@@ -1,0 +1,10 @@
+{
+  "domain": "sensoterra",
+  "name": "Sensoterra",
+  "codeowners": ["@markruys"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/sensoterra",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "requirements": ["sensoterra==2.0.1"]
+}

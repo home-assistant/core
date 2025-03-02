@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import contextmanager
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 from aiolifx.aiolifx import Light
@@ -25,7 +26,7 @@ DEFAULT_ENTRY_TITLE = LABEL
 class MockMessage:
     """Mock a lifx message."""
 
-    def __init__(self, **kwargs):
+    def __init__(self, **kwargs: Any) -> None:
         """Init message."""
         self.target_addr = SERIAL
         self.count = 9
@@ -37,7 +38,7 @@ class MockMessage:
 class MockFailingLifxCommand:
     """Mock a lifx command that fails."""
 
-    def __init__(self, bulb, **kwargs):
+    def __init__(self, bulb, **kwargs: Any) -> None:
         """Init command."""
         self.bulb = bulb
         self.calls = []
@@ -60,14 +61,17 @@ class MockLifxCommand:
         """Return name."""
         return "mock_lifx_command"
 
-    def __init__(self, bulb, **kwargs):
+    def __init__(self, bulb, **kwargs: Any) -> None:
         """Init command."""
         self.bulb = bulb
         self.calls = []
-        self.msg_kwargs = kwargs
+        self.msg_kwargs = {
+            k.removeprefix("msg_"): v for k, v in kwargs.items() if k.startswith("msg_")
+        }
         for k, v in kwargs.items():
-            if k != "callb":
-                setattr(self.bulb, k, v)
+            if k.startswith("msg_") or k == "callb":
+                continue
+            setattr(self.bulb, k, v)
 
     def __call__(self, *args, **kwargs):
         """Call command."""
@@ -155,9 +159,16 @@ def _mocked_infrared_bulb() -> Light:
 def _mocked_light_strip() -> Light:
     bulb = _mocked_bulb()
     bulb.product = 31  # LIFX Z
-    bulb.color_zones = [MagicMock(), MagicMock()]
+    bulb.zones_count = 3
+    bulb.color_zones = [MagicMock()] * 3
     bulb.effect = {"effect": "MOVE", "speed": 3, "duration": 0, "direction": "RIGHT"}
-    bulb.get_color_zones = MockLifxCommand(bulb)
+    bulb.get_color_zones = MockLifxCommand(
+        bulb,
+        msg_seq_num=bulb.seq_next(),
+        msg_count=bulb.zones_count,
+        msg_index=0,
+        msg_color=bulb.color_zones,
+    )
     bulb.set_color_zones = MockLifxCommand(bulb)
     bulb.get_multizone_effect = MockLifxCommand(bulb)
     bulb.set_multizone_effect = MockLifxCommand(bulb)
@@ -212,7 +223,7 @@ def _patch_device(device: Light | None = None, no_device: bool = False):
     class MockLifxConnecton:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init connection."""
             if no_device:
                 self.device = _mocked_failing_bulb()
@@ -240,7 +251,7 @@ def _patch_discovery(device: Light | None = None, no_device: bool = False):
     class MockLifxDiscovery:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init discovery."""
             if no_device:
                 self.lights = {}
@@ -276,7 +287,7 @@ def _patch_config_flow_try_connect(
     class MockLifxConnection:
         """Mock lifx discovery."""
 
-        def __init__(self, *args, **kwargs):
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
             """Init connection."""
             if no_device:
                 self.device = _mocked_failing_bulb()

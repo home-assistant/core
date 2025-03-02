@@ -1,40 +1,51 @@
 """Generic Omada API coordinator."""
 
+from __future__ import annotations
+
 import asyncio
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from tplink_omada_client import OmadaSiteClient, OmadaSwitchPortDetails
 from tplink_omada_client.clients import OmadaWirelessClient
-from tplink_omada_client.devices import OmadaGateway, OmadaSwitch
+from tplink_omada_client.devices import OmadaGateway, OmadaListDevice, OmadaSwitch
 from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+if TYPE_CHECKING:
+    from . import OmadaConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 POLL_SWITCH_PORT = 300
 POLL_GATEWAY = 300
 POLL_CLIENTS = 300
+POLL_DEVICES = 300
 
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
     """Coordinator for synchronizing bulk Omada data."""
 
+    config_entry: OmadaConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
         omada_client: OmadaSiteClient,
         name: str,
-        poll_delay: int = 300,
+        poll_delay: int | None = 300,
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=f"Omada API Data - {name}",
-            update_interval=timedelta(seconds=poll_delay),
+            update_interval=timedelta(seconds=poll_delay) if poll_delay else None,
         )
         self.omada_client = omada_client
 
@@ -57,12 +68,17 @@ class OmadaSwitchPortCoordinator(OmadaCoordinator[OmadaSwitchPortDetails]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
         omada_client: OmadaSiteClient,
         network_switch: OmadaSwitch,
     ) -> None:
         """Initialize my coordinator."""
         super().__init__(
-            hass, omada_client, f"{network_switch.name} Ports", POLL_SWITCH_PORT
+            hass,
+            config_entry,
+            omada_client,
+            f"{network_switch.name} Ports",
+            POLL_SWITCH_PORT,
         )
         self._network_switch = network_switch
 
@@ -78,11 +94,12 @@ class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
         omada_client: OmadaSiteClient,
         mac: str,
     ) -> None:
         """Initialize my coordinator."""
-        super().__init__(hass, omada_client, "Gateway", POLL_GATEWAY)
+        super().__init__(hass, config_entry, omada_client, "Gateway", POLL_GATEWAY)
         self.mac = mac
 
     async def poll_update(self) -> dict[str, OmadaGateway]:
@@ -91,12 +108,34 @@ class OmadaGatewayCoordinator(OmadaCoordinator[OmadaGateway]):
         return {self.mac: gateway}
 
 
+class OmadaDevicesCoordinator(OmadaCoordinator[OmadaListDevice]):
+    """Coordinator for generic device lists from the controller."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaSiteClient,
+    ) -> None:
+        """Initialize my coordinator."""
+        super().__init__(hass, config_entry, omada_client, "DeviceList", POLL_CLIENTS)
+
+    async def poll_update(self) -> dict[str, OmadaListDevice]:
+        """Poll the site's current registered Omada devices."""
+        return {d.mac: d for d in await self.omada_client.get_devices()}
+
+
 class OmadaClientsCoordinator(OmadaCoordinator[OmadaWirelessClient]):
     """Coordinator for getting details about the site's connected clients."""
 
-    def __init__(self, hass: HomeAssistant, omada_client: OmadaSiteClient) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: OmadaConfigEntry,
+        omada_client: OmadaSiteClient,
+    ) -> None:
         """Initialize my coordinator."""
-        super().__init__(hass, omada_client, "ClientsList", POLL_CLIENTS)
+        super().__init__(hass, config_entry, omada_client, "ClientsList", POLL_CLIENTS)
 
     async def poll_update(self) -> dict[str, OmadaWirelessClient]:
         """Poll the site's current active wi-fi clients."""

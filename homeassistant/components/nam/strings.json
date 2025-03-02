@@ -28,7 +28,7 @@
       "confirm_discovery": {
         "description": "Do you want to set up Nettigo Air Monitor at {host}?"
       },
-      "reconfigure_confirm": {
+      "reconfigure": {
         "description": "Update configuration for {device_name}.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"

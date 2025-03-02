@@ -16,7 +16,7 @@ from homeassistant.components.jewish_calendar.const import (
 from homeassistant.const import CONF_LANGUAGE, CONF_PLATFORM
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from . import alter_time, make_jerusalem_test_params, make_nyc_test_params
 
@@ -93,7 +93,26 @@ TEST_PARAMS = [
             "id": "rosh_hashana_i",
             "type": "YOM_TOV",
             "type_id": 1,
-            "options": [h.description.english for h in htables.HOLIDAYS],
+            "options": htables.get_all_holidays("english"),
+        },
+    ),
+    (
+        dt(2024, 12, 31),
+        "UTC",
+        31.778,
+        35.235,
+        "english",
+        "holiday",
+        False,
+        "Chanukah, Rosh Chodesh",
+        {
+            "device_class": "enum",
+            "friendly_name": "Jewish Calendar Holiday",
+            "icon": "mdi:calendar-star",
+            "id": "chanukah, rosh_chodesh",
+            "type": "MELACHA_PERMITTED_HOLIDAY, ROSH_CHODESH",
+            "type_id": "4, 10",
+            "options": htables.get_all_holidays("english"),
         },
     ),
     (
@@ -180,6 +199,7 @@ TEST_IDS = [
     "date_output_hebrew",
     "holiday",
     "holiday_english",
+    "holiday_multiple",
     "torah_reading",
     "first_stars_ny",
     "first_stars_jerusalem",

@@ -20,7 +20,9 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-def init_config_flow(hass, side_effect=None):
+def init_config_flow(
+    hass: HomeAssistant, side_effect: type[Exception] | None = None
+) -> config_flow.FlowHandler:
     """Init a configuration flow."""
     flow = config_flow.FlowHandler()
     flow.hass = hass

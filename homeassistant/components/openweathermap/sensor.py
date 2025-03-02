@@ -19,8 +19,9 @@ from homeassistant.const import (
     UnitOfVolumetricFlux,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
@@ -47,6 +48,7 @@ from .const import (
     DEFAULT_NAME,
     DOMAIN,
     MANUFACTURER,
+    OWM_MODE_FREE_FORECAST,
 )
 from .coordinator import WeatherUpdateCoordinator
 
@@ -154,23 +156,30 @@ WEATHER_SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OpenweathermapConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OpenWeatherMap sensor entities based on a config entry."""
     domain_data = config_entry.runtime_data
     name = domain_data.name
     weather_coordinator = domain_data.coordinator
 
-    entities: list[AbstractOpenWeatherMapSensor] = [
-        OpenWeatherMapSensor(
-            name,
-            f"{config_entry.unique_id}-{description.key}",
-            description,
-            weather_coordinator,
+    if domain_data.mode == OWM_MODE_FREE_FORECAST:
+        entity_registry = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
         )
-        for description in WEATHER_SENSOR_TYPES
-    ]
-    async_add_entities(entities)
+        for entry in entries:
+            entity_registry.async_remove(entry.entity_id)
+    else:
+        async_add_entities(
+            OpenWeatherMapSensor(
+                name,
+                f"{config_entry.unique_id}-{description.key}",
+                description,
+                weather_coordinator,
+            )
+            for description in WEATHER_SENSOR_TYPES
+        )
 
 
 class AbstractOpenWeatherMapSensor(SensorEntity):

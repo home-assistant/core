@@ -13,7 +13,7 @@ from homematicip.device import Device
 
 from homeassistant.exceptions import HomeAssistantError
 
-from . import HomematicipGenericEntity
+from .entity import HomematicipGenericEntity
 
 _LOGGER = logging.getLogger(__name__)
 

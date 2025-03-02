@@ -5,7 +5,7 @@ from __future__ import annotations
 import configparser
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, ClassVar
 from urllib.parse import urlparse
 
 import aiohttp
@@ -80,7 +80,7 @@ class ChromecastInfo:
                     "+label%3A%22integration%3A+cast%22"
                 )
 
-                _LOGGER.info(
+                _LOGGER.debug(
                     (
                         "Fetched cast details for unknown model '%s' manufacturer:"
                         " '%s', type: '%s'. Please %s"
@@ -129,7 +129,7 @@ class ChromecastInfo:
 class ChromeCastZeroconf:
     """Class to hold a zeroconf instance."""
 
-    __zconf: zeroconf.HaZeroconf | None = None
+    __zconf: ClassVar[zeroconf.HaZeroconf | None] = None
 
     @classmethod
     def set_zeroconf(cls, zconf: zeroconf.HaZeroconf) -> None:

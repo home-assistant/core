@@ -7,9 +7,9 @@ from homeassistant.components.met.const import (
     DEFAULT_HOME_LONGITUDE,
     DOMAIN,
 )
-from homeassistant.config import async_process_ha_core_config
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.core_config import async_process_ha_core_config
 from homeassistant.helpers import device_registry as dr
 
 from . import init_integration

@@ -13,6 +13,7 @@ import voluptuous as vol
 import yarl
 
 from homeassistant.config_entries import (
+    SOURCE_REAUTH,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -58,22 +59,16 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    def __init__(self) -> None:
-        """Initialize the flow."""
-        self.entry: ConfigEntry | None = None
-
     @staticmethod
     @callback
     def async_get_options_flow(config_entry: ConfigEntry) -> SonarrOptionsFlowHandler:
         """Get the options flow for this handler."""
-        return SonarrOptionsFlowHandler(config_entry)
+        return SonarrOptionsFlowHandler()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self.entry = self.hass.config_entries.async_get_entry(self.context["entry_id"])
-
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -81,10 +76,11 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
         if user_input is None:
-            assert self.entry is not None
             return self.async_show_form(
                 step_id="reauth_confirm",
-                description_placeholders={"url": self.entry.data[CONF_URL]},
+                description_placeholders={
+                    "url": self._get_reauth_entry().data[CONF_URL]
+                },
                 errors={},
             )
 
@@ -97,8 +93,15 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if self.entry:
-                user_input = {**self.entry.data, **user_input}
+            # aiopyarr defaults to the service port if one isn't given
+            # this is counter to standard practice where http = 80
+            # and https = 443.
+            if CONF_URL in user_input:
+                url = yarl.URL(user_input[CONF_URL])
+                user_input[CONF_URL] = f"{url.scheme}://{url.host}:{url.port}{url.path}"
+
+            if self.source == SOURCE_REAUTH:
+                user_input = {**self._get_reauth_entry().data, **user_input}
 
             if CONF_VERIFY_SSL not in user_input:
                 user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
@@ -113,8 +116,10 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 return self.async_abort(reason="unknown")
             else:
-                if self.entry:
-                    return await self._async_reauth_update_entry(user_input)
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), data=user_input
+                    )
 
                 parsed = yarl.URL(user_input[CONF_URL])
 
@@ -129,19 +134,9 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_reauth_update_entry(
-        self, data: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Update existing config entry."""
-        assert self.entry is not None
-        self.hass.config_entries.async_update_entry(self.entry, data=data)
-        await self.hass.config_entries.async_reload(self.entry.entry_id)
-
-        return self.async_abort(reason="reauth_successful")
-
     def _get_user_data_schema(self) -> dict[vol.Marker, type]:
         """Get the data schema to display user form."""
-        if self.entry:
+        if self.source == SOURCE_REAUTH:
             return {vol.Required(CONF_API_KEY): str}
 
         data_schema: dict[vol.Marker, type] = {
@@ -159,10 +154,6 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
 class SonarrOptionsFlowHandler(OptionsFlow):
     """Handle Sonarr client options."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.config_entry = config_entry
 
     async def async_step_init(
         self, user_input: dict[str, int] | None = None

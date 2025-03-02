@@ -4,9 +4,15 @@ from unittest.mock import patch
 
 from syrupy import SnapshotAssertion
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
+from homeassistant.components.tesla_fleet.const import CLIENT_ID, DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
 
@@ -17,6 +23,14 @@ async def setup_platform(
     platforms: list[Platform] | None = None,
 ) -> None:
     """Set up the Tesla Fleet platform."""
+
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(CLIENT_ID, "", "Home Assistant"),
+        DOMAIN,
+    )
 
     config_entry.add_to_hass(hass)
 

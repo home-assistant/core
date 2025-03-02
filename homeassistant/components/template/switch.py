@@ -28,7 +28,10 @@ from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.device import async_device_info_to_link_from_device_id
 from homeassistant.helpers.entity import async_generate_entity_id
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.script import Script
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -64,8 +67,8 @@ SWITCH_CONFIG_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.template,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        vol.Optional(CONF_TURN_ON): selector.ActionSelector(),
-        vol.Optional(CONF_TURN_OFF): selector.ActionSelector(),
+        vol.Optional(CONF_TURN_ON): cv.SCRIPT_SCHEMA,
+        vol.Optional(CONF_TURN_OFF): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DEVICE_ID): selector.DeviceSelector(),
     }
 )
@@ -76,7 +79,7 @@ async def _async_create_entities(hass, config):
     switches = []
 
     for object_id, entity_config in config[CONF_SWITCHES].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
         switches.append(
@@ -104,7 +107,7 @@ async def async_setup_platform(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize config entry."""
     _options = dict(config_entry.options)

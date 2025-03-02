@@ -14,7 +14,7 @@ from yarl import URL
 
 from homeassistant.components.camera import CameraImageView
 from homeassistant.components.media_player import BrowseError, MediaClass
-from homeassistant.components.media_source.models import (
+from homeassistant.components.media_source import (
     BrowseMediaSource,
     MediaSource,
     MediaSourceItem,

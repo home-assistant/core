@@ -10,7 +10,11 @@
     }
   },
   "services": {
-    "arm_away_instant": "mdi:shield-lock",
-    "arm_home_instant": "mdi:shield-home"
+    "arm_away_instant": {
+      "service": "mdi:shield-lock"
+    },
+    "arm_home_instant": {
+      "service": "mdi:shield-home"
+    }
   }
 }

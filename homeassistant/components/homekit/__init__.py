@@ -33,6 +33,7 @@ from homeassistant.components.device_automation.trigger import (
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN, EventDeviceClass
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
 from homeassistant.components.humidifier import DOMAIN as HUMIDIFIER_DOMAIN
+from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
@@ -167,7 +168,6 @@ BATTERY_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.BATTERY)
 MOTION_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.MOTION)
 MOTION_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.MOTION)
 DOORBELL_EVENT_SENSOR = (EVENT_DOMAIN, EventDeviceClass.DOORBELL)
-DOORBELL_BINARY_SENSOR = (BINARY_SENSOR_DOMAIN, BinarySensorDeviceClass.OCCUPANCY)
 HUMIDITY_SENSOR = (SENSOR_DOMAIN, SensorDeviceClass.HUMIDITY)
 
 
@@ -409,7 +409,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: HomeKitConfigEntry) -> 
             break
 
         if not logged_shutdown_wait:
-            _LOGGER.info("Waiting for the HomeKit server to shutdown")
+            _LOGGER.debug("Waiting for the HomeKit server to shutdown")
             logged_shutdown_wait = True
 
         await asyncio.sleep(PORT_CLEANUP_CHECK_INTERVAL_SECS)
@@ -1134,13 +1134,11 @@ class HomeKit:
                 config[entity_id].setdefault(
                     CONF_LINKED_MOTION_SENSOR, motion_binary_sensor_entity_id
                 )
+
+        if domain in (CAMERA_DOMAIN, LOCK_DOMAIN):
             if doorbell_event_entity_id := lookup.get(DOORBELL_EVENT_SENSOR):
                 config[entity_id].setdefault(
                     CONF_LINKED_DOORBELL_SENSOR, doorbell_event_entity_id
-                )
-            elif doorbell_binary_sensor_entity_id := lookup.get(DOORBELL_BINARY_SENSOR):
-                config[entity_id].setdefault(
-                    CONF_LINKED_DOORBELL_SENSOR, doorbell_binary_sensor_entity_id
                 )
 
         if domain == HUMIDIFIER_DOMAIN and (

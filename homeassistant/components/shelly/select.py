@@ -13,7 +13,7 @@ from homeassistant.components.select import (
     SelectEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import ShellyConfigEntry, ShellyRpcCoordinator
 from .entity import (
@@ -22,7 +22,7 @@ from .entity import (
     async_setup_entry_rpc,
 )
 from .utils import (
-    async_remove_orphaned_virtual_entities,
+    async_remove_orphaned_entities,
     get_device_entry_gen,
     get_virtual_component_ids,
 )
@@ -45,7 +45,7 @@ RPC_SELECT_ENTITIES: Final = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ShellyConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up selectors for device."""
     if get_device_entry_gen(config_entry) in RPC_GENERATIONS:
@@ -61,13 +61,13 @@ async def async_setup_entry(
         virtual_text_ids = get_virtual_component_ids(
             coordinator.device.config, SELECT_PLATFORM
         )
-        async_remove_orphaned_virtual_entities(
+        async_remove_orphaned_entities(
             hass,
             config_entry.entry_id,
             coordinator.mac,
             SELECT_PLATFORM,
-            "enum",
             virtual_text_ids,
+            "enum",
         )
 
 

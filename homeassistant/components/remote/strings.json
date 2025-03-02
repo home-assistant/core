@@ -28,7 +28,7 @@
   "services": {
     "turn_on": {
       "name": "[%key:common::action::turn_on%]",
-      "description": "Sends the power on command.",
+      "description": "Sends the turn on command.",
       "fields": {
         "activity": {
           "name": "Activity",
@@ -38,11 +38,11 @@
     },
     "toggle": {
       "name": "[%key:common::action::toggle%]",
-      "description": "Toggles a device on/off."
+      "description": "Sends the toggle command."
     },
     "turn_off": {
       "name": "[%key:common::action::turn_off%]",
-      "description": "Turns the device off."
+      "description": "Sends the turn off command."
     },
     "send_command": {
       "name": "Send command",

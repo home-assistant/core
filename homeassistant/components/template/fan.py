@@ -29,7 +29,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import async_generate_entity_id
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.script import Script
@@ -94,7 +94,7 @@ async def _async_create_entities(hass, config):
     fans = []
 
     for object_id, entity_config in config[CONF_FANS].items():
-        entity_config = rewrite_common_legacy_to_modern_conf(entity_config)
+        entity_config = rewrite_common_legacy_to_modern_conf(hass, entity_config)
 
         unique_id = entity_config.get(CONF_UNIQUE_ID)
 
@@ -124,7 +124,6 @@ class TemplateFan(TemplateEntity, FanEntity):
     """A template fan component."""
 
     _attr_should_poll = False
-    _enable_turn_on_off_backwards_compatibility = False
 
     def __init__(
         self,

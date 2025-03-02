@@ -1,4 +1,5 @@
 {
+  "title": "Timer",
   "entity_component": {
     "_": {
       "name": "Timer",
@@ -33,33 +34,33 @@
   "services": {
     "start": {
       "name": "[%key:common::action::start%]",
-      "description": "Starts a timer.",
+      "description": "Starts a timer or restarts it with a provided duration.",
       "fields": {
         "duration": {
           "name": "Duration",
-          "description": "Duration the timer requires to finish. [optional]."
+          "description": "Custom duration to restart the timer with."
         }
       }
     },
     "pause": {
       "name": "[%key:common::action::pause%]",
-      "description": "Pauses a timer."
+      "description": "Pauses a running timer, retaining the remaining duration for later continuation."
     },
     "cancel": {
       "name": "Cancel",
-      "description": "Cancels a timer."
+      "description": "Resets a timer's duration to the last known initial value without firing the timer finished event."
     },
     "finish": {
       "name": "Finish",
-      "description": "Finishes a timer."
+      "description": "Finishes a running timer earlier than scheduled."
     },
     "change": {
       "name": "Change",
-      "description": "Changes a timer.",
+      "description": "Changes a timer by adding or subtracting a given duration.",
       "fields": {
         "duration": {
           "name": "Duration",
-          "description": "Duration to add or subtract to the running timer."
+          "description": "Duration to add to or subtract from the running timer."
         }
       }
     },

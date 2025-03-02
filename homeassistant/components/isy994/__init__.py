@@ -21,8 +21,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client, config_validation as cv
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 
 from .const import (
@@ -144,7 +147,7 @@ async def async_setup_entry(
             isy_data.net_resources.append(resource)
 
     # Dump ISY Clock Information. Future: Add ISY as sensor to Hass with attrs
-    _LOGGER.info(repr(isy.clock))
+    _LOGGER.debug(repr(isy.clock))
 
     isy_data.root = isy
     _async_get_or_create_isy_device_in_registry(hass, entry, isy)

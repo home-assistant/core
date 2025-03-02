@@ -13,13 +13,13 @@ from homeassistant.components.cover import (
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_STOP_COVER,
-    STATE_CLOSING,
-    STATE_OPEN,
-    STATE_OPENING,
+    CoverState,
 )
+from homeassistant.components.homeassistant import SERVICE_UPDATE_ENTITY
 from homeassistant.const import ATTR_ENTITY_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
@@ -42,6 +42,38 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_update(
+    hass: HomeAssistant,
+    mock_dio_chacon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the creation and values of the Chacon Dio covers."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_dio_chacon_client.get_status_details.return_value = {
+        "L4HActuator_idmock1": {
+            "id": "L4HActuator_idmock1",
+            "connected": True,
+            "openlevel": 51,
+            "movement": "stop",
+        }
+    }
+
+    await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
+    await hass.services.async_call(
+        HOMEASSISTANT_DOMAIN,
+        SERVICE_UPDATE_ENTITY,
+        {ATTR_ENTITY_ID: COVER_ENTITY_ID},
+        blocking=True,
+    )
+
+    state = hass.states.get(COVER_ENTITY_ID)
+    assert state
+    assert state.attributes.get(ATTR_CURRENT_POSITION) == 51
+    assert state.state == CoverState.OPEN
+
+
 async def test_cover_actions(
     hass: HomeAssistant,
     mock_dio_chacon_client: AsyncMock,
@@ -61,7 +93,7 @@ async def test_cover_actions(
     )
     await hass.async_block_till_done()
     state = hass.states.get(COVER_ENTITY_ID)
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -71,7 +103,7 @@ async def test_cover_actions(
     )
     await hass.async_block_till_done()
     state = hass.states.get(COVER_ENTITY_ID)
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -81,7 +113,7 @@ async def test_cover_actions(
     )
     await hass.async_block_till_done()
     state = hass.states.get(COVER_ENTITY_ID)
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     await hass.services.async_call(
         COVER_DOMAIN,
@@ -91,7 +123,7 @@ async def test_cover_actions(
     )
     await hass.async_block_till_done()
     state = hass.states.get(COVER_ENTITY_ID)
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
 
 async def test_cover_callbacks(
@@ -100,7 +132,7 @@ async def test_cover_callbacks(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test the creation and values of the Chacon Dio covers."""
+    """Test the callbacks on the Chacon Dio covers."""
 
     await setup_integration(hass, mock_config_entry)
 
@@ -127,19 +159,19 @@ async def test_cover_callbacks(
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 79
-    assert state.state == STATE_OPEN
+    assert state.state == CoverState.OPEN
 
     await _callback_device_state_function(90, "up")
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 90
-    assert state.state == STATE_OPENING
+    assert state.state == CoverState.OPENING
 
     await _callback_device_state_function(60, "down")
     state = hass.states.get(COVER_ENTITY_ID)
     assert state
     assert state.attributes.get(ATTR_CURRENT_POSITION) == 60
-    assert state.state == STATE_CLOSING
+    assert state.state == CoverState.CLOSING
 
 
 async def test_no_cover_found(

@@ -5,5 +5,6 @@
   "documentation": "https://www.home-assistant.io/integrations/sky_hub",
   "iot_class": "local_polling",
   "loggers": ["pyskyqhub"],
+  "quality_scale": "legacy",
   "requirements": ["pyskyqhub==0.1.4"]
 }

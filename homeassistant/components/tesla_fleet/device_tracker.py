@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from homeassistant.components.device_tracker import SourceType
 from homeassistant.components.device_tracker.config_entry import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import STATE_HOME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
 from .entity import TeslaFleetVehicleEntity
@@ -14,7 +14,9 @@ from .models import TeslaFleetVehicleData
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tesla Fleet device tracker platform from a config entry."""
 
@@ -33,9 +35,6 @@ class TeslaFleetDeviceTrackerEntity(
 ):
     """Base class for Tesla Fleet device tracker entities."""
 
-    _attr_latitude: float | None = None
-    _attr_longitude: float | None = None
-
     def __init__(
         self,
         vehicle: TeslaFleetVehicleData,
@@ -53,21 +52,6 @@ class TeslaFleetDeviceTrackerEntity(
         ):
             self._attr_latitude = state.attributes.get("latitude")
             self._attr_longitude = state.attributes.get("longitude")
-
-    @property
-    def latitude(self) -> float | None:
-        """Return latitude value of the device."""
-        return self._attr_latitude
-
-    @property
-    def longitude(self) -> float | None:
-        """Return longitude value of the device."""
-        return self._attr_longitude
-
-    @property
-    def source_type(self) -> SourceType | str:
-        """Return the source type of the device tracker."""
-        return SourceType.GPS
 
 
 class TeslaFleetDeviceTrackerLocationEntity(TeslaFleetDeviceTrackerEntity):
@@ -103,4 +87,7 @@ class TeslaFleetDeviceTrackerRouteEntity(TeslaFleetDeviceTrackerEntity):
     @property
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
-        return self.get("drive_state_active_route_destination")
+        location = self.get("drive_state_active_route_destination")
+        if location == "Home":
+            return STATE_HOME
+        return location

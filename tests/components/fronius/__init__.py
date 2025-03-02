@@ -10,10 +10,9 @@ from homeassistant.components.fronius.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from tests.common import MockConfigEntry, async_fire_time_changed, load_fixture
+from tests.common import MockConfigEntry, load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 MOCK_HOST = "http://fronius"
@@ -112,19 +111,3 @@ def mock_responses(
         f"{host}/solar_api/v1/GetOhmPilotRealtimeData.cgi?Scope=System",
         text=_load(f"{fixture_set}/GetOhmPilotRealtimeData.json", "fronius"),
     )
-
-
-async def enable_all_entities(hass, freezer, config_entry_id, time_till_next_update):
-    """Enable all entities for a config entry and fast forward time to receive data."""
-    registry = er.async_get(hass)
-    entities = er.async_entries_for_config_entry(registry, config_entry_id)
-    for entry in [
-        entry
-        for entry in entities
-        if entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    ]:
-        registry.async_update_entity(entry.entity_id, disabled_by=None)
-    await hass.async_block_till_done()
-    freezer.tick(time_till_next_update)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()

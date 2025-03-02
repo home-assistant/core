@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from homewizard_energy.errors import DisabledError, RequestError
+from homewizard_energy.models import CombinedModels, Measurement, State, System
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -13,7 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
 
@@ -42,9 +43,11 @@ async def test_number_entities(
     assert snapshot == device_entry
 
     # Test unknown handling
-    assert state.state == "100.0"
+    assert state.state == "100"
 
-    mock_homewizardenergy.state.return_value.brightness = None
+    mock_homewizardenergy.combined.return_value = CombinedModels(
+        device=None, measurement=Measurement(), system=System(), state=State()
+    )
 
     async_fire_time_changed(hass, dt_util.utcnow() + UPDATE_INTERVAL)
     await hass.async_block_till_done()
@@ -53,7 +56,7 @@ async def test_number_entities(
     assert state.state == STATE_UNKNOWN
 
     # Test service methods
-    assert len(mock_homewizardenergy.state_set.mock_calls) == 0
+    assert len(mock_homewizardenergy.state.mock_calls) == 0
     await hass.services.async_call(
         number.DOMAIN,
         SERVICE_SET_VALUE,
@@ -64,10 +67,10 @@ async def test_number_entities(
         blocking=True,
     )
 
-    assert len(mock_homewizardenergy.state_set.mock_calls) == 1
-    mock_homewizardenergy.state_set.assert_called_with(brightness=129)
+    assert len(mock_homewizardenergy.system.mock_calls) == 1
+    mock_homewizardenergy.system.assert_called_with(status_led_brightness_pct=50)
 
-    mock_homewizardenergy.state_set.side_effect = RequestError
+    mock_homewizardenergy.system.side_effect = RequestError
     with pytest.raises(
         HomeAssistantError,
         match=r"^An error occurred while communicating with HomeWizard device$",
@@ -82,10 +85,10 @@ async def test_number_entities(
             blocking=True,
         )
 
-    mock_homewizardenergy.state_set.side_effect = DisabledError
+    mock_homewizardenergy.system.side_effect = DisabledError
     with pytest.raises(
         HomeAssistantError,
-        match=r"^The local API of the HomeWizard device is disabled$",
+        match=r"^The local API is disabled$",
     ):
         await hass.services.async_call(
             number.DOMAIN,

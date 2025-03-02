@@ -25,7 +25,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
@@ -133,8 +133,6 @@ class RestBinarySensor(ManualTriggerEntity, RestEntity, BinarySensorEntity):
         )
         self._previous_data = None
         self._value_template: Template | None = config.get(CONF_VALUE_TEMPLATE)
-        if (value_template := self._value_template) is not None:
-            value_template.hass = hass
 
     @property
     def available(self) -> bool:

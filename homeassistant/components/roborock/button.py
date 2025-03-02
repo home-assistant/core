@@ -9,11 +9,10 @@ from roborock.roborock_typing import RoborockCommand
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RoborockConfigEntry
-from .coordinator import RoborockDataUpdateCoordinator
-from .device import RoborockEntityV1
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
+from .entity import RoborockEntityV1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -63,7 +62,7 @@ CONSUMABLE_BUTTON_DESCRIPTIONS = [
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock button platform."""
     async_add_entities(

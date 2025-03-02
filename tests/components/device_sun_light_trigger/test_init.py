@@ -13,7 +13,7 @@ from homeassistant.components import (
     group,
     light,
 )
-from homeassistant.components.device_tracker import DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     CONF_PLATFORM,
@@ -150,21 +150,21 @@ async def test_lights_turn_on_when_coming_home_after_sun_set(
         hass, device_sun_light_trigger.DOMAIN, {device_sun_light_trigger.DOMAIN: {}}
     )
 
-    hass.states.async_set(f"{DOMAIN}.device_2", STATE_UNKNOWN)
+    hass.states.async_set(f"{DEVICE_TRACKER_DOMAIN}.device_2", STATE_UNKNOWN)
     await hass.async_block_till_done()
     assert all(
         hass.states.get(ent_id).state == STATE_OFF
         for ent_id in hass.states.async_entity_ids("light")
     )
 
-    hass.states.async_set(f"{DOMAIN}.device_2", STATE_NOT_HOME)
+    hass.states.async_set(f"{DEVICE_TRACKER_DOMAIN}.device_2", STATE_NOT_HOME)
     await hass.async_block_till_done()
     assert all(
         hass.states.get(ent_id).state == STATE_OFF
         for ent_id in hass.states.async_entity_ids("light")
     )
 
-    hass.states.async_set(f"{DOMAIN}.device_2", STATE_HOME)
+    hass.states.async_set(f"{DEVICE_TRACKER_DOMAIN}.device_2", STATE_HOME)
     await hass.async_block_till_done()
     assert all(
         hass.states.get(ent_id).state == light.STATE_ON
@@ -177,8 +177,11 @@ async def test_lights_turn_on_when_coming_home_after_sun_set_person(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test lights turn on when coming home after sun set."""
-    device_1 = f"{DOMAIN}.device_1"
-    device_2 = f"{DOMAIN}.device_2"
+    # Ensure all setup tasks are done (avoid flaky tests)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    device_1 = f"{DEVICE_TRACKER_DOMAIN}.device_1"
+    device_2 = f"{DEVICE_TRACKER_DOMAIN}.device_2"
 
     test_time = datetime(2017, 4, 5, 3, 2, 3, tzinfo=dt_util.UTC)
     freezer.move_to(test_time)

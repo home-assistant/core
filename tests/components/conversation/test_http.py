@@ -8,6 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation.const import DATA_DEFAULT_ENTITY
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
@@ -214,7 +215,7 @@ async def test_ws_prepare(
     hass: HomeAssistant, init_components, hass_ws_client: WebSocketGenerator, agent_id
 ) -> None:
     """Test the Websocket prepare conversation API."""
-    agent = default_agent.async_get_default_agent(hass)
+    agent = hass.data[DATA_DEFAULT_ENTITY]
     assert isinstance(agent, default_agent.DefaultAgent)
 
     # No intents should be loaded yet
@@ -354,15 +355,15 @@ async def test_ws_hass_agent_debug_null_result(
     """Test homeassistant agent debug websocket command with a null result."""
     client = await hass_ws_client(hass)
 
-    async def async_recognize(self, user_input, *args, **kwargs):
+    async def async_recognize_intent(self, user_input, *args, **kwargs):
         if user_input.text == "bad sentence":
             return None
 
         return await self.async_recognize(user_input, *args, **kwargs)
 
     with patch(
-        "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize",
-        async_recognize,
+        "homeassistant.components.conversation.default_agent.DefaultAgent.async_recognize_intent",
+        async_recognize_intent,
     ):
         await client.send_json_auto_id(
             {
@@ -499,6 +500,19 @@ async def test_ws_hass_agent_debug_sentence_trigger(
     )
 
     client = await hass_ws_client(hass)
+
+    # List sentence
+    await client.send_json_auto_id(
+        {
+            "type": "conversation/sentences/list",
+        }
+    )
+    await hass.async_block_till_done()
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert msg["result"] == snapshot
 
     # Use trigger sentence
     await client.send_json_auto_id(

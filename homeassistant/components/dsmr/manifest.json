@@ -1,7 +1,7 @@
 {
   "domain": "dsmr",
   "name": "DSMR Smart Meter",
-  "codeowners": ["@Robbie1221", "@frenck"],
+  "codeowners": ["@Robbie1221"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/dsmr",
   "integration_type": "hub",

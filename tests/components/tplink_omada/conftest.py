@@ -163,21 +163,10 @@ def mock_omada_clients_only_client(
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_omada_client: MagicMock,
 ) -> MockConfigEntry:
     """Set up the TP-Link Omada integration for testing."""
-    mock_config_entry = MockConfigEntry(
-        title="Test Omada Controller",
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "127.0.0.1",
-            CONF_PASSWORD: "mocked-password",
-            CONF_USERNAME: "mocked-user",
-            CONF_VERIFY_SSL: False,
-            CONF_SITE: "Default",
-        },
-        unique_id="12345",
-    )
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

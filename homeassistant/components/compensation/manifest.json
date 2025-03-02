@@ -4,5 +4,6 @@
   "codeowners": ["@Petro31"],
   "documentation": "https://www.home-assistant.io/integrations/compensation",
   "iot_class": "calculated",
-  "requirements": ["numpy==1.26.0"]
+  "quality_scale": "legacy",
+  "requirements": ["numpy==2.2.2"]
 }

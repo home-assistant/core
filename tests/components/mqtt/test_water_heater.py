@@ -162,7 +162,7 @@ async def test_set_operation_mode_bad_attr_and_state(
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.state == "off"
     with pytest.raises(vol.Invalid) as excinfo:
-        await common.async_set_operation_mode(hass, None, ENTITY_WATER_HEATER)
+        await common.async_set_operation_mode(hass, None, ENTITY_WATER_HEATER)  # type:ignore[arg-type]
     assert "string value is None for dictionary value @ data['operation_mode']" in str(
         excinfo.value
     )

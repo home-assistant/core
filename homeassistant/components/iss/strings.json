@@ -6,7 +6,6 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "latitude_longitude_not_defined": "Latitude and longitude are not defined in Home Assistant."
     }
   },

@@ -52,7 +52,7 @@ async def test_setup_integration_success(
 async def test_set_temperature_mode_cool(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
-    mock_evolution_client_factory: Generator[AsyncMock, None, None],
+    mock_evolution_client_factory: Generator[AsyncMock],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting the temperature in cool mode."""
@@ -83,7 +83,7 @@ async def test_set_temperature_mode_cool(
 async def test_set_temperature_mode_heat(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
-    mock_evolution_client_factory: Generator[AsyncMock, None, None],
+    mock_evolution_client_factory: Generator[AsyncMock],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting the temperature in heat mode."""
@@ -111,7 +111,7 @@ async def test_set_temperature_mode_heat(
 async def test_set_temperature_mode_heat_cool(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
-    mock_evolution_client_factory: Generator[AsyncMock, None, None],
+    mock_evolution_client_factory: Generator[AsyncMock],
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test setting the temperature in heat_cool mode."""
@@ -147,7 +147,7 @@ async def test_set_temperature_mode_heat_cool(
 async def test_set_fan_mode(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
-    mock_evolution_client_factory: Generator[AsyncMock, None, None],
+    mock_evolution_client_factory: Generator[AsyncMock],
 ) -> None:
     """Test that setting fan mode works."""
     mock_client = await mock_evolution_client_factory(1, 1, "/dev/unused")
@@ -175,7 +175,7 @@ async def test_set_fan_mode(
 async def test_set_hvac_mode(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
-    mock_evolution_client_factory: Generator[AsyncMock, None, None],
+    mock_evolution_client_factory: Generator[AsyncMock],
     hvac_mode,
     evolution_mode,
 ) -> None:
@@ -203,7 +203,7 @@ async def test_set_hvac_mode(
 async def test_read_hvac_action_heat_cool(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
-    mock_evolution_client_factory: Generator[AsyncMock, None, None],
+    mock_evolution_client_factory: Generator[AsyncMock],
     freezer: FrozenDateTimeFactory,
     curr_temp: int,
     expected_action: HVACAction,
@@ -236,7 +236,7 @@ async def test_read_hvac_action_heat_cool(
 async def test_read_hvac_action(
     hass: HomeAssistant,
     mock_evolution_entry: MockConfigEntry,
-    mock_evolution_client_factory: Generator[AsyncMock, None, None],
+    mock_evolution_client_factory: Generator[AsyncMock],
     freezer: FrozenDateTimeFactory,
     mode: str,
     active: bool,

@@ -22,7 +22,7 @@ import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 
 from ..const import (
     DEVICE_ADDRESS,

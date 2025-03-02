@@ -6,7 +6,7 @@ from typing import Any
 import uuid
 
 from homeassistant.components.scene import (
-    DOMAIN,
+    DOMAIN as SCENE_DOMAIN,
     PLATFORM_SCHEMA as SCENE_PLATFORM_SCHEMA,
 )
 from homeassistant.config import SCENE_CONFIG_PATH
@@ -27,13 +27,13 @@ def async_setup(hass: HomeAssistant) -> bool:
     async def hook(action: str, config_key: str) -> None:
         """post_write_hook for Config View that reloads scenes."""
         if action != ACTION_DELETE:
-            await hass.services.async_call(DOMAIN, SERVICE_RELOAD)
+            await hass.services.async_call(SCENE_DOMAIN, SERVICE_RELOAD)
             return
 
         ent_reg = er.async_get(hass)
 
         entity_id = ent_reg.async_get_entity_id(
-            DOMAIN, HOMEASSISTANT_DOMAIN, config_key
+            SCENE_DOMAIN, HOMEASSISTANT_DOMAIN, config_key
         )
 
         if entity_id is None:
@@ -43,11 +43,11 @@ def async_setup(hass: HomeAssistant) -> bool:
 
     hass.http.register_view(
         EditSceneConfigView(
-            DOMAIN,
+            SCENE_DOMAIN,
             "config",
             SCENE_CONFIG_PATH,
             cv.string,
-            PLATFORM_SCHEMA,
+            data_schema=PLATFORM_SCHEMA,
             post_write_hook=hook,
         )
     )

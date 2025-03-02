@@ -4,5 +4,6 @@
   "codeowners": ["@fabaff"],
   "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/spaceapi",
-  "iot_class": "cloud_polling"
+  "iot_class": "cloud_polling",
+  "quality_scale": "legacy"
 }

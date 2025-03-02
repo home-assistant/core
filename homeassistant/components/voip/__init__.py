@@ -20,6 +20,7 @@ from .devices import VoIPDevices
 from .voip import HassVoipDatagramProtocol
 
 PLATFORMS = (
+    Platform.ASSIST_SATELLITE,
     Platform.BINARY_SENSOR,
     Platform.SELECT,
     Platform.SWITCH,
@@ -29,9 +30,9 @@ _IP_WILDCARD = "0.0.0.0"
 
 __all__ = [
     "DOMAIN",
+    "async_remove_config_entry_device",
     "async_setup_entry",
     "async_unload_entry",
-    "async_remove_config_entry_device",
 ]
 
 

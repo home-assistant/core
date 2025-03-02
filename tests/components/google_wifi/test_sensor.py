@@ -2,16 +2,21 @@
 
 from datetime import datetime, timedelta
 from http import HTTPStatus
+from typing import Any
 from unittest.mock import Mock, patch
 
 import requests_mock
 
-import homeassistant.components.google_wifi.sensor as google_wifi
+from homeassistant.components.google_wifi import sensor as google_wifi
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import assert_setup_component, async_fire_time_changed
+from tests.common import (
+    MockEntityPlatform,
+    assert_setup_component,
+    async_fire_time_changed,
+)
 
 NAME = "foo"
 
@@ -78,7 +83,9 @@ async def test_setup_get(
     assert_setup_component(6, "sensor")
 
 
-def setup_api(hass, data, requests_mock):
+def setup_api(
+    hass: HomeAssistant | None, data: str | None, requests_mock: requests_mock.Mocker
+) -> tuple[google_wifi.GoogleWifiAPI, dict[str, Any]]:
     """Set up API with fake data."""
     resource = f"http://localhost{google_wifi.ENDPOINT}"
     now = datetime(1970, month=1, day=1)
@@ -101,18 +108,19 @@ def setup_api(hass, data, requests_mock):
     return api, sensor_dict
 
 
-def fake_delay(hass, ha_delay):
+def fake_delay(hass: HomeAssistant, ha_delay: int) -> None:
     """Fake delay to prevent update throttle."""
     hass_now = dt_util.utcnow()
     shifted_time = hass_now + timedelta(seconds=ha_delay)
     async_fire_time_changed(hass, shifted_time)
 
 
-def test_name(requests_mock: requests_mock.Mocker) -> None:
+def test_name(hass: HomeAssistant, requests_mock: requests_mock.Mocker) -> None:
     """Test the name."""
     api, sensor_dict = setup_api(None, MOCK_DATA, requests_mock)
     for value in sensor_dict.values():
         sensor = value["sensor"]
+        sensor.platform = MockEntityPlatform(hass)
         test_name = value["name"]
         assert test_name == sensor.name
 
@@ -220,7 +228,9 @@ def test_update_when_unavailable(
         assert sensor.state is None
 
 
-def update_side_effect(hass, requests_mock):
+def update_side_effect(
+    hass: HomeAssistant, requests_mock: requests_mock.Mocker
+) -> None:
     """Mock representation of update function."""
     api, sensor_dict = setup_api(hass, MOCK_DATA, requests_mock)
     api.data = None

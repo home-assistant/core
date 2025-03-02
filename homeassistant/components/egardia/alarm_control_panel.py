@@ -9,13 +9,7 @@ import requests
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
-)
-from homeassistant.const import (
-    STATE_ALARM_ARMED_AWAY,
-    STATE_ALARM_ARMED_HOME,
-    STATE_ALARM_ARMED_NIGHT,
-    STATE_ALARM_DISARMED,
-    STATE_ALARM_TRIGGERED,
+    AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -33,13 +27,13 @@ from . import (
 _LOGGER = logging.getLogger(__name__)
 
 STATES = {
-    "ARM": STATE_ALARM_ARMED_AWAY,
-    "DAY HOME": STATE_ALARM_ARMED_HOME,
-    "DISARM": STATE_ALARM_DISARMED,
-    "ARMHOME": STATE_ALARM_ARMED_HOME,
-    "HOME": STATE_ALARM_ARMED_HOME,
-    "NIGHT HOME": STATE_ALARM_ARMED_NIGHT,
-    "TRIGGERED": STATE_ALARM_TRIGGERED,
+    "ARM": AlarmControlPanelState.ARMED_AWAY,
+    "DAY HOME": AlarmControlPanelState.ARMED_HOME,
+    "DISARM": AlarmControlPanelState.DISARMED,
+    "ARMHOME": AlarmControlPanelState.ARMED_HOME,
+    "HOME": AlarmControlPanelState.ARMED_HOME,
+    "NIGHT HOME": AlarmControlPanelState.ARMED_NIGHT,
+    "TRIGGERED": AlarmControlPanelState.TRIGGERED,
 }
 
 
@@ -66,7 +60,6 @@ def setup_platform(
 class EgardiaAlarm(AlarmControlPanelEntity):
     """Representation of a Egardia alarm."""
 
-    _attr_state: str | None
     _attr_code_arm_required = False
     _attr_supported_features = (
         AlarmControlPanelEntityFeature.ARM_HOME
@@ -123,7 +116,7 @@ class EgardiaAlarm(AlarmControlPanelEntity):
             _LOGGER.debug("Not ignoring status %s", status)
             newstatus = STATES.get(status.upper())
             _LOGGER.debug("newstatus %s", newstatus)
-            self._attr_state = newstatus
+            self._attr_alarm_state = newstatus
         else:
             _LOGGER.error("Ignoring status")
 

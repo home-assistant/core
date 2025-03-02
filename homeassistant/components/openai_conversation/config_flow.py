@@ -24,21 +24,26 @@ from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    SelectSelectorMode,
     TemplateSelector,
 )
+from homeassistant.helpers.typing import VolDictType
 
 from .const import (
     CONF_CHAT_MODEL,
     CONF_MAX_TOKENS,
     CONF_PROMPT,
+    CONF_REASONING_EFFORT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
     CONF_TOP_P,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_TEMPERATURE,
     RECOMMENDED_TOP_P,
+    UNSUPPORTED_MODELS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +84,7 @@ class OpenAIConfigFlow(ConfigFlow, domain=DOMAIN):
                 step_id="user", data_schema=STEP_USER_DATA_SCHEMA
             )
 
-        errors = {}
+        errors: dict[str, str] = {}
 
         try:
             await validate_input(self.hass, user_input)
@@ -114,7 +119,6 @@ class OpenAIOptionsFlow(OptionsFlow):
 
     def __init__(self, config_entry: ConfigEntry) -> None:
         """Initialize options flow."""
-        self.config_entry = config_entry
         self.last_rendered_recommended = config_entry.options.get(
             CONF_RECOMMENDED, False
         )
@@ -124,33 +128,39 @@ class OpenAIOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         options: dict[str, Any] | MappingProxyType[str, Any] = self.config_entry.options
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             if user_input[CONF_RECOMMENDED] == self.last_rendered_recommended:
                 if user_input[CONF_LLM_HASS_API] == "none":
                     user_input.pop(CONF_LLM_HASS_API)
-                return self.async_create_entry(title="", data=user_input)
 
-            # Re-render the options again, now with the recommended options shown/hidden
-            self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
+                if user_input.get(CONF_CHAT_MODEL) in UNSUPPORTED_MODELS:
+                    errors[CONF_CHAT_MODEL] = "model_not_supported"
+                else:
+                    return self.async_create_entry(title="", data=user_input)
+            else:
+                # Re-render the options again, now with the recommended options shown/hidden
+                self.last_rendered_recommended = user_input[CONF_RECOMMENDED]
 
-            options = {
-                CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
-                CONF_PROMPT: user_input[CONF_PROMPT],
-                CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
-            }
+                options = {
+                    CONF_RECOMMENDED: user_input[CONF_RECOMMENDED],
+                    CONF_PROMPT: user_input[CONF_PROMPT],
+                    CONF_LLM_HASS_API: user_input[CONF_LLM_HASS_API],
+                }
 
         schema = openai_config_option_schema(self.hass, options)
         return self.async_show_form(
             step_id="init",
             data_schema=vol.Schema(schema),
+            errors=errors,
         )
 
 
 def openai_config_option_schema(
     hass: HomeAssistant,
     options: dict[str, Any] | MappingProxyType[str, Any],
-) -> dict:
+) -> VolDictType:
     """Return a schema for OpenAI completion options."""
     hass_apis: list[SelectOptionDict] = [
         SelectOptionDict(
@@ -166,7 +176,7 @@ def openai_config_option_schema(
         for api in llm.async_get_apis(hass)
     )
 
-    schema = {
+    schema: VolDictType = {
         vol.Optional(
             CONF_PROMPT,
             description={
@@ -210,6 +220,17 @@ def openai_config_option_schema(
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=RECOMMENDED_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
+            vol.Optional(
+                CONF_REASONING_EFFORT,
+                description={"suggested_value": options.get(CONF_REASONING_EFFORT)},
+                default=RECOMMENDED_REASONING_EFFORT,
+            ): SelectSelector(
+                SelectSelectorConfig(
+                    options=["low", "medium", "high"],
+                    translation_key="reasoning_effort",
+                    mode=SelectSelectorMode.DROPDOWN,
+                )
+            ),
         }
     )
     return schema

@@ -10,7 +10,7 @@
       },
       "site": {
         "data": {
-          "site_nmi": "Site NMI",
+          "site_id": "Site NMI",
           "site_name": "Site Name"
         },
         "description": "Select the NMI of the site you would like to add"

@@ -9,10 +9,10 @@ from aiovlc.exceptions import AuthError, ConnectError
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hassio import HassioServiceInfo
 from homeassistant.components.vlc_telnet.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -153,15 +153,7 @@ async def test_reauth_flow(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry_data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     with (
         patch("homeassistant.components.vlc_telnet.config_flow.Client.connect"),
@@ -209,15 +201,7 @@ async def test_reauth_errors(
     entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
     entry.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={
-            "source": config_entries.SOURCE_REAUTH,
-            "entry_id": entry.entry_id,
-            "unique_id": entry.unique_id,
-        },
-        data=entry_data,
-    )
+    result = await entry.start_reauth_flow(hass)
 
     with (
         patch(

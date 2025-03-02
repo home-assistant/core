@@ -3,6 +3,7 @@
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -13,7 +14,7 @@
     'identifiers': set({
       tuple(
         'mastodon',
-        'client_id',
+        'trwnh_mastodon_social',
       ),
     }),
     'is_new': False,
@@ -22,7 +23,7 @@
     'manufacturer': 'Mastodon gGmbH',
     'model': '@trwnh@mastodon.social',
     'model_id': None,
-    'name': 'Mastodon',
+    'name': 'Mastodon @trwnh@mastodon.social',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,

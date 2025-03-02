@@ -13,10 +13,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MadVRConfigEntry
 from .const import (
     ASPECT_DEC,
     ASPECT_INT,
@@ -45,7 +44,7 @@ from .const import (
     TEMP_HDMI,
     TEMP_MAINBOARD,
 )
-from .coordinator import MadVRCoordinator
+from .coordinator import MadVRConfigEntry, MadVRCoordinator
 from .entity import MadVREntity
 
 
@@ -254,7 +253,7 @@ SENSORS: tuple[MadvrSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MadVRConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor entities."""
     coordinator = entry.runtime_data
@@ -277,4 +276,15 @@ class MadvrSensor(MadVREntity, SensorEntity):
     @property
     def native_value(self) -> float | str | None:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator)
+        val = self.entity_description.value_fn(self.coordinator)
+        # check if sensor is enum
+        if self.entity_description.device_class == SensorDeviceClass.ENUM:
+            if (
+                self.entity_description.options
+                and val in self.entity_description.options
+            ):
+                return val
+            # return None for values that are not in the options
+            return None
+
+        return val

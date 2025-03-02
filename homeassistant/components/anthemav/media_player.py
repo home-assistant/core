@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import logging
 
-from anthemav.connection import Connection
 from anthemav.protocol import AVR
 
 from homeassistant.components.media_player import (
@@ -13,13 +12,13 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import AnthemavConfigEntry
 from .const import ANTHEMAV_UPDATE_SIGNAL, DOMAIN, MANUFACTURER
 
 _LOGGER = logging.getLogger(__name__)
@@ -27,15 +26,15 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: AnthemavConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
     name = config_entry.title
     mac_address = config_entry.data[CONF_MAC]
     model = config_entry.data[CONF_MODEL]
 
-    avr: Connection = hass.data[DOMAIN][config_entry.entry_id]
+    avr = config_entry.runtime_data
 
     _LOGGER.debug("Connection data dump: %s", avr.dump_conndata)
 

@@ -79,6 +79,7 @@ pytest-*.txt
 .pydevproject
 
 .python-version
+.tool-versions
 
 # emacs auto backups
 *~

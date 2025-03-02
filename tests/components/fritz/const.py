@@ -1,8 +1,6 @@
 """Common stuff for Fritz!Tools tests."""
 
-from homeassistant.components import ssdp
 from homeassistant.components.fritz.const import DOMAIN
-from homeassistant.components.ssdp import ATTR_UPNP_FRIENDLY_NAME, ATTR_UPNP_UDN
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -10,6 +8,11 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_SSL,
     CONF_USERNAME,
+)
+from homeassistant.helpers.service_info.ssdp import (
+    ATTR_UPNP_FRIENDLY_NAME,
+    ATTR_UPNP_UDN,
+    SsdpServiceInfo,
 )
 
 ATTR_HOST = "host"
@@ -655,7 +658,23 @@ MOCK_MESH_DATA = {
                             "cur_data_rate_tx": 0,
                             "cur_availability_rx": 99,
                             "cur_availability_tx": 99,
-                        }
+                        },
+                        {
+                            "uid": "nl-79",
+                            "type": "LAN",
+                            "state": "DISCONNECTED",
+                            "last_connected": 1642872667,
+                            "node_1_uid": "n-167",
+                            "node_2_uid": "n-76",
+                            "node_interface_1_uid": "ni-140",
+                            "node_interface_2_uid": "ni-77",
+                            "max_data_rate_rx": 1000000,
+                            "max_data_rate_tx": 1000000,
+                            "cur_data_rate_rx": 0,
+                            "cur_data_rate_tx": 0,
+                            "cur_availability_rx": 99,
+                            "cur_availability_tx": 99,
+                        },
                     ],
                 }
             ],
@@ -904,6 +923,14 @@ MOCK_HOST_ATTRIBUTES_DATA = [
     },
 ]
 
+MOCK_CALL_DEFLECTION_DATA = {
+    "X_AVM-DE_OnTel1": {
+        "GetDeflections": {
+            "NewDeflectionList": "<List><Item><DeflectionId>0</DeflectionId><Enable>0</Enable><Type>fromAll</Type><Number></Number><DeflectionToNumber>+1234657890</DeflectionToNumber><Mode>eImmediately</Mode><Outgoing></Outgoing><PhonebookID></PhonebookID></Item></List>"
+        }
+    }
+}
+
 MOCK_USER_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
 MOCK_USER_INPUT_ADVANCED = MOCK_USER_DATA
 MOCK_USER_INPUT_SIMPLE = {
@@ -917,7 +944,7 @@ MOCK_DEVICE_INFO = {
     ATTR_HOST: MOCK_HOST,
     ATTR_NEW_SERIAL_NUMBER: MOCK_SERIAL_NUMBER,
 }
-MOCK_SSDP_DATA = ssdp.SsdpServiceInfo(
+MOCK_SSDP_DATA = SsdpServiceInfo(
     ssdp_usn="mock_usn",
     ssdp_st="mock_st",
     ssdp_location=f"https://{MOCK_IPS['fritz.box']}:12345/test",

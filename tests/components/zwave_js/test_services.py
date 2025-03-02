@@ -255,11 +255,10 @@ async def test_set_config_parameter(
     assert args["command"] == "endpoint.set_raw_config_parameter_value"
     assert args["nodeId"] == 52
     assert args["endpoint"] == 0
-    options = args["options"]
-    assert options["parameter"] == 2
-    assert options["value"] == 1
-    assert options["valueSize"] == 2
-    assert options["valueFormat"] == 1
+    assert args["parameter"] == 2
+    assert args["value"] == 1
+    assert args["valueSize"] == 2
+    assert args["valueFormat"] == 1
 
     client.async_send_command_no_wait.reset_mock()
 
@@ -284,11 +283,10 @@ async def test_set_config_parameter(
     assert args["command"] == "endpoint.set_raw_config_parameter_value"
     assert args["nodeId"] == 2
     assert args["endpoint"] == 1
-    options = args["options"]
-    assert options["parameter"] == 32
-    assert options["value"] == 1
-    assert options["valueSize"] == 2
-    assert options["valueFormat"] == 1
+    assert args["parameter"] == 32
+    assert args["value"] == 1
+    assert args["valueSize"] == 2
+    assert args["valueFormat"] == 1
 
     client.async_send_command_no_wait.reset_mock()
     client.async_send_command.reset_mock()
@@ -497,13 +495,12 @@ async def test_set_config_parameter(
 
     caplog.clear()
 
-    config_value = aeotec_zw164_siren.values["2-112-0-32"]
     cmd_result = SetConfigParameterResult("accepted", {"status": 255})
 
     # Test accepted return
     with patch(
         "homeassistant.components.zwave_js.services.Endpoint.async_set_raw_config_parameter_value",
-        return_value=(config_value, cmd_result),
+        return_value=cmd_result,
     ) as mock_set_raw_config_parameter_value:
         await hass.services.async_call(
             DOMAIN,
@@ -534,7 +531,7 @@ async def test_set_config_parameter(
     cmd_result.status = "queued"
     with patch(
         "homeassistant.components.zwave_js.services.Endpoint.async_set_raw_config_parameter_value",
-        return_value=(config_value, cmd_result),
+        return_value=cmd_result,
     ) as mock_set_raw_config_parameter_value:
         await hass.services.async_call(
             DOMAIN,

@@ -3,20 +3,26 @@
 from datetime import timedelta
 import logging
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.knx.const import CONF_PAYLOAD_LENGTH, DOMAIN, KNX_ADDRESS
+from homeassistant.components.knx.const import (
+    CONF_PAYLOAD_LENGTH,
+    KNX_ADDRESS,
+    KNX_MODULE_KEY,
+)
 from homeassistant.components.knx.schema import ButtonSchema
 from homeassistant.const import CONF_NAME, CONF_PAYLOAD, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from .conftest import KNXTestKit
 
 from tests.common import async_capture_events, async_fire_time_changed
 
 
-async def test_button_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
+async def test_button_simple(
+    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+) -> None:
     """Test KNX button with default payload."""
     await knx.setup_integration(
         {
@@ -38,7 +44,8 @@ async def test_button_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # received telegrams on button GA are ignored by the entity
     old_state = hass.states.get("button.test")
-    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=3))
+    freezer.tick(timedelta(seconds=3))
+    async_fire_time_changed(hass)
     await knx.receive_write("1/2/3", False)
     await knx.receive_write("1/2/3", True)
     new_state = hass.states.get("button.test")
@@ -131,4 +138,4 @@ async def test_button_invalid(
         assert record.levelname == "ERROR"
         assert "Setup failed for 'knx': Invalid config." in record.message
     assert hass.states.get("button.test") is None
-    assert hass.data.get(DOMAIN) is None
+    assert hass.data.get(KNX_MODULE_KEY) is None

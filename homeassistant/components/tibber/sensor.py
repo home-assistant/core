@@ -33,7 +33,7 @@ from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -50,7 +50,7 @@ ICON = "mdi:currency-usd"
 SCAN_INTERVAL = timedelta(minutes=1)
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=5)
 PARALLEL_UPDATES = 0
-
+TWENTY_MINUTES = 20 * 60
 
 RT_SENSORS_UNIQUE_ID_MIGRATION = {
     "accumulated_consumption_last_hour": "accumulated consumption current hour",
@@ -261,7 +261,9 @@ SENSORS: tuple[SensorEntityDescription, ...] = (
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Tibber sensor."""
 
@@ -285,7 +287,7 @@ async def async_setup_entry(
         if home.has_active_subscription:
             entities.append(TibberSensorElPrice(home))
             if coordinator is None:
-                coordinator = TibberDataCoordinator(hass, tibber_connection)
+                coordinator = TibberDataCoordinator(hass, entry, tibber_connection)
             entities.extend(
                 TibberDataSensor(home, coordinator, entity_description)
                 for entity_description in SENSORS
@@ -369,7 +371,7 @@ class TibberSensorElPrice(TibberSensor):
         """Initialize the sensor."""
         super().__init__(tibber_home=tibber_home)
         self._last_updated: datetime.datetime | None = None
-        self._spread_load_constant = randrange(5000)
+        self._spread_load_constant = randrange(TWENTY_MINUTES)
 
         self._attr_available = False
         self._attr_extra_state_attributes = {
@@ -383,6 +385,7 @@ class TibberSensorElPrice(TibberSensor):
             "off_peak_1": None,
             "peak": None,
             "off_peak_2": None,
+            "intraday_price_ranking": None,
         }
         self._attr_icon = ICON
         self._attr_unique_id = self._tibber_home.home_id
@@ -396,7 +399,7 @@ class TibberSensorElPrice(TibberSensor):
         if (
             not self._tibber_home.last_data_timestamp
             or (self._tibber_home.last_data_timestamp - now).total_seconds()
-            < 5 * 3600 + self._spread_load_constant
+            < 10 * 3600 - self._spread_load_constant
             or not self.available
         ):
             _LOGGER.debug("Asking for new data")
@@ -411,8 +414,9 @@ class TibberSensorElPrice(TibberSensor):
             return
 
         res = self._tibber_home.current_price_data()
-        self._attr_native_value, price_level, self._last_updated = res
+        self._attr_native_value, price_level, self._last_updated, price_rank = res
         self._attr_extra_state_attributes["price_level"] = price_level
+        self._attr_extra_state_attributes["intraday_price_ranking"] = price_rank
 
         attrs = self._tibber_home.current_attributes()
         self._attr_extra_state_attributes.update(attrs)
@@ -529,7 +533,7 @@ class TibberRtEntityCreator:
 
     def __init__(
         self,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
         tibber_home: tibber.TibberHome,
         entity_registry: er.EntityRegistry,
     ) -> None:
@@ -608,7 +612,7 @@ class TibberRtEntityCreator:
             self._async_add_entities(new_entities)
 
 
-class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-coordinator-module
+class TibberRtDataCoordinator(DataUpdateCoordinator):  # pylint: disable=hass-enforce-class-module
     """Handle Tibber realtime data."""
 
     def __init__(

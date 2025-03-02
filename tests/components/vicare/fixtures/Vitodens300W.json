@@ -1,6 +1,23 @@
 {
   "data": [
     {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "device.serial",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "deviceSerialVitodens300W"
+        }
+      },
+      "timestamp": "2024-07-30T20:03:40.073Z",
+      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/device.serial"
+    },
+    {
       "properties": {},
       "commands": {},
       "components": [],

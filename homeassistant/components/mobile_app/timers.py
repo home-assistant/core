@@ -3,7 +3,7 @@
 from datetime import timedelta
 
 from homeassistant.components import notify
-from homeassistant.components.intent.timers import TimerEventType, TimerInfo
+from homeassistant.components.intent import TimerEventType, TimerInfo
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant, callback
@@ -39,6 +39,8 @@ def async_handle_timer_event(
                     # Android
                     "channel": "Timers",
                     "importance": "high",
+                    "ttl": 0,
+                    "priority": "high",
                     # iOS
                     "push": {
                         "interruption-level": "time-sensitive",

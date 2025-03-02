@@ -5,20 +5,20 @@ from __future__ import annotations
 from typing import Any
 
 from aiohttp.client_exceptions import ClientConnectionError
-from APsystemsEZ1 import Status
+from APsystemsEZ1 import InverterReturnedError
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import ApSystemsConfigEntry, ApSystemsData
+from .coordinator import ApSystemsConfigEntry, ApSystemsData
 from .entity import ApSystemsEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ApSystemsConfigEntry,
-    add_entities: AddEntitiesCallback,
+    add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the switch platform."""
 
@@ -41,16 +41,16 @@ class ApSystemsInverterSwitch(ApSystemsEntity, SwitchEntity):
         """Update switch status and availability."""
         try:
             status = await self._api.get_device_power_status()
-        except (TimeoutError, ClientConnectionError):
+        except (TimeoutError, ClientConnectionError, InverterReturnedError):
             self._attr_available = False
         else:
             self._attr_available = True
-            self._attr_is_on = status == Status.normal
+            self._attr_is_on = status
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self._api.set_device_power_status(0)
+        await self._api.set_device_power_status(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self._api.set_device_power_status(1)
+        await self._api.set_device_power_status(False)

@@ -14,7 +14,7 @@ from pyairvisual.node import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 
 from .const import DOMAIN, LOGGER
@@ -76,23 +76,17 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    def __init__(self) -> None:
-        """Initialize."""
-        self._reauth_entry: ConfigEntry | None = None
+    _reauth_entry_data: Mapping[str, Any]
 
-    async def async_step_import(
-        self, import_config: dict[str, Any]
-    ) -> ConfigFlowResult:
-        """Import a config entry from configuration.yaml."""
-        return await self.async_step_user(import_config)
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Import a config entry from `airvisual` integration (see #83882)."""
+        return await self.async_step_user(import_data)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
         """Handle configuration by re-auth."""
-        self._reauth_entry = self.hass.config_entries.async_get_entry(
-            self.context["entry_id"]
-        )
+        self._reauth_entry_data = entry_data
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -104,10 +98,8 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
                 step_id="reauth_confirm", data_schema=STEP_REAUTH_SCHEMA
             )
 
-        assert self._reauth_entry
-
         validation_result = await async_validate_credentials(
-            self._reauth_entry.data[CONF_IP_ADDRESS], user_input[CONF_PASSWORD]
+            self._reauth_entry_data[CONF_IP_ADDRESS], user_input[CONF_PASSWORD]
         )
 
         if validation_result.errors:
@@ -117,13 +109,9 @@ class AirVisualProFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors=validation_result.errors,
             )
 
-        self.hass.config_entries.async_update_entry(
-            self._reauth_entry, data=self._reauth_entry.data | user_input
+        return self.async_update_reload_and_abort(
+            self._get_reauth_entry(), data_updates=user_input
         )
-        self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self._reauth_entry.entry_id)
-        )
-        return self.async_abort(reason="reauth_successful")
 
     async def async_step_user(
         self, user_input: dict[str, str] | None = None

@@ -15,7 +15,7 @@ from homeassistant.components.lock import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_CODE, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
 from .entity import MatterEntity
@@ -28,7 +28,7 @@ DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter lock from Config Entry."""
     matter = get_matter(hass)
@@ -40,6 +40,7 @@ class MatterLock(MatterEntity, LockEntity):
 
     _feature_map: int | None = None
     _optimistic_timer: asyncio.TimerHandle | None = None
+    _platform_translation_key = "lock"
 
     @property
     def code_format(self) -> str | None:
@@ -61,19 +62,6 @@ class MatterLock(MatterEntity, LockEntity):
 
         return None
 
-    async def send_device_command(
-        self,
-        command: clusters.ClusterCommand,
-        timed_request_timeout_ms: int = 1000,
-    ) -> None:
-        """Send a command to the device."""
-        await self.matter_client.send_device_command(
-            node_id=self._endpoint.node.node_id,
-            endpoint_id=self._endpoint.endpoint_id,
-            command=command,
-            timed_request_timeout_ms=timed_request_timeout_ms,
-        )
-
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock with pin if needed."""
         if not self._attr_is_locked:
@@ -88,7 +76,8 @@ class MatterLock(MatterEntity, LockEntity):
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
-            command=clusters.DoorLock.Commands.LockDoor(code_bytes)
+            command=clusters.DoorLock.Commands.LockDoor(code_bytes),
+            timed_request_timeout_ms=1000,
         )
 
     async def async_unlock(self, **kwargs: Any) -> None:
@@ -109,11 +98,13 @@ class MatterLock(MatterEntity, LockEntity):
             # the unlock command should unbolt only on the unlock command
             # and unlatch on the HA 'open' command.
             await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnboltDoor(code_bytes)
+                command=clusters.DoorLock.Commands.UnboltDoor(code_bytes),
+                timed_request_timeout_ms=1000,
             )
         else:
             await self.send_device_command(
-                command=clusters.DoorLock.Commands.UnlockDoor(code_bytes)
+                command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+                timed_request_timeout_ms=1000,
             )
 
     async def async_open(self, **kwargs: Any) -> None:
@@ -129,7 +120,8 @@ class MatterLock(MatterEntity, LockEntity):
         code: str | None = kwargs.get(ATTR_CODE)
         code_bytes = code.encode() if code else None
         await self.send_device_command(
-            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes)
+            command=clusters.DoorLock.Commands.UnlockDoor(code_bytes),
+            timed_request_timeout_ms=1000,
         )
 
     @callback
@@ -200,10 +192,10 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.LOCK,
         entity_description=LockEntityDescription(
-            key="MatterLock", translation_key="lock"
+            key="MatterLock",
+            name=None,
         ),
         entity_class=MatterLock,
         required_attributes=(clusters.DoorLock.Attributes.LockState,),
-        optional_attributes=(clusters.DoorLock.Attributes.DoorState,),
     ),
 ]
