@@ -14,8 +14,12 @@ from anthropic.types import (
     RawMessageStartEvent,
     RawMessageStopEvent,
     RawMessageStreamEvent,
+    RedactedThinkingBlock,
+    SignatureDelta,
     TextBlock,
     TextDelta,
+    ThinkingBlock,
+    ThinkingDelta,
     ToolUseBlock,
     Usage,
 )
@@ -82,6 +86,57 @@ def create_content_block(
             )
             for text_part in text_parts
         ],
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_thinking_block(
+    index: int, thinking_parts: list[str]
+) -> list[RawMessageStreamEvent]:
+    """Create a thinking block with the specified deltas."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=ThinkingBlock(signature="", thinking="", type="thinking"),
+            index=index,
+        ),
+        *[
+            RawContentBlockDeltaEvent(
+                delta=ThinkingDelta(thinking=thinking_part, type="thinking_delta"),
+                index=index,
+                type="content_block_delta",
+            )
+            for thinking_part in thinking_parts
+        ],
+        RawContentBlockDeltaEvent(
+            delta=SignatureDelta(
+                signature="ErUBCkYIARgCIkCYXaVNJShe3A86Hp7XUzh9YsCYBbJTbQsrklTAPtJ2sP/N"
+                "oB6tSzpK/nTL6CjSo2R6n0KNBIg5MH6asM2R/kmaEgyB/X1FtZq5OQAC7jUaDEPWCdcwGQ"
+                "4RaBy5wiIwmRxExIlDhoY6tILoVPnOExkC/0igZxHEwxK8RU/fmw0b+o+TwAarzUitwzbo"
+                "21E5Kh3pa3I6yqVROf1t2F8rFocNUeCegsWV/ytwYV+ayA==",
+                type="signature_delta",
+            ),
+            index=index,
+            type="content_block_delta",
+        ),
+        RawContentBlockStopEvent(index=index, type="content_block_stop"),
+    ]
+
+
+def create_redacted_thinking_block(index: int) -> list[RawMessageStreamEvent]:
+    """Create a redacted thinking block."""
+    return [
+        RawContentBlockStartEvent(
+            type="content_block_start",
+            content_block=RedactedThinkingBlock(
+                data="EroBCkYIARgCKkBJDytPJhw//4vy3t7aE+LfIkxvkAh51cBPrAvBCo6AjgI57Zt9K"
+                "WPnUVV50OQJ0KZzUFoGZG5sxg95zx4qMwkoEgz43Su3myJKckvj03waDBZLIBSeoAeRUeV"
+                "sJCIwQ5edQN0sa+HNeB/KUBkoMUwV+IT0eIhcpFxnILdvxUAKM4R1o4KG3x+yO0eo/kyOK"
+                "iKfrCPFQhvBVmTZPFhgA2Ow8L9gGDVipcz6x3Uu9YETGEny",
+                type="redacted_thinking",
+            ),
+            index=index,
+        ),
         RawContentBlockStopEvent(index=index, type="content_block_stop"),
     ]
 
@@ -414,7 +469,8 @@ async def test_function_exception(
         "role": "user",
         "content": [
             {
-                "content": '{"error": "HomeAssistantError", "error_text": "Test tool exception"}',
+                "content": '{"error": "HomeAssistantError", "error_text": "Test tool '
+                'exception"}',
                 "tool_use_id": "toolu_0123456789AbCdEfGhIjKlM",
                 "type": "tool_result",
             }
@@ -547,3 +603,184 @@ async def test_conversation_id(
         )
 
         assert result.conversation_id == "koala"
+
+
+async def test_extended_thinking(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test extended thinking support."""
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                [
+                    *create_thinking_block(
+                        0,
+                        [
+                            "The user has just",
+                            ' greeted me with "Hi".',
+                            " This is a simple greeting an",
+                            "d doesn't require any Home Assistant function",
+                            " calls. I should respond with",
+                            " a friendly greeting and let them know I'm available",
+                            " to help with their smart home.",
+                        ],
+                    ),
+                    *create_content_block(1, "Hello, how can I help you today?"),
+                ]
+            ),
+        ),
+    ):
+        result = await conversation.async_converse(
+            hass, "hello", None, Context(), agent_id="conversation.claude"
+        )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    assert len(chat_log.content) == 3
+    assert chat_log.content[1].content == "hello"
+    assert (
+        chat_log.content[2].thinking
+        == 'The user has just greeted me with "Hi". This is a simple greeting and '
+        "doesn't require any Home Assistant function calls. I should respond with a "
+        "friendly greeting and let them know I'm available to help with their smart "
+        "home."
+    )
+    assert chat_log.content[2].content == "Hello, how can I help you today?"
+    assert chat_log.content[2].metadata["signature"]
+
+
+async def test_redacted_thinking(
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test extended thinking with redacted thinking blocks."""
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        return_value=stream_generator(
+            create_messages(
+                [
+                    *create_redacted_thinking_block(0),
+                    *create_redacted_thinking_block(1),
+                    *create_redacted_thinking_block(2),
+                    *create_content_block(3, "How can I help you today?"),
+                ]
+            ),
+        ),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "ANTHROPIC_MAGIC_STRING_TRIGGER_REDACTED_THINKING_46C9A13E193C177646C7398A9"
+            "8432ECCCE4C1253D5E2D82641AC0E52CC2876CB",
+            None,
+            Context(),
+            agent_id="conversation.claude",
+        )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+    assert len(chat_log.content) == 5
+    assert chat_log.content[2].metadata["redacted_thinking"]
+    assert (
+        chat_log.content[2].thinking
+        == "*Some of Claude’s internal reasoning has been automatically encrypted for "
+        "safety reasons. This doesn’t affect the quality of responses.*"
+    )
+    assert chat_log.content[3].metadata["redacted_thinking"]
+    assert chat_log.content[4].metadata["redacted_thinking"]
+    assert chat_log.content[4].content == "How can I help you today?"
+
+
+@patch("homeassistant.components.anthropic.conversation.llm.AssistAPI._async_get_tools")
+async def test_extended_thinking_tool_call(
+    mock_get_tools,
+    hass: HomeAssistant,
+    mock_config_entry_with_assist: MockConfigEntry,
+    mock_init_component,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test that thinking blocks and their order are preserved in with tool calls."""
+    agent_id = "conversation.claude"
+    context = Context()
+
+    mock_tool = AsyncMock()
+    mock_tool.name = "test_tool"
+    mock_tool.description = "Test function"
+    mock_tool.parameters = vol.Schema(
+        {vol.Optional("param1", description="Test parameters"): str}
+    )
+    mock_tool.async_call.return_value = "Test response"
+
+    mock_get_tools.return_value = [mock_tool]
+
+    def completion_result(*args, messages, **kwargs):
+        for message in messages:
+            for content in message["content"]:
+                if not isinstance(content, str) and content["type"] == "tool_use":
+                    return stream_generator(
+                        create_messages(
+                            create_content_block(
+                                0, ["I have ", "successfully called ", "the function"]
+                            ),
+                        )
+                    )
+
+        return stream_generator(
+            create_messages(
+                [
+                    *create_thinking_block(
+                        0,
+                        [
+                            "The user asked me to",
+                            " call a test function.",
+                            "Is it a test? What",
+                            " would the function",
+                            " do? Would it violate",
+                            " any privacy or security",
+                            " policies?",
+                        ],
+                    ),
+                    *create_redacted_thinking_block(1),
+                    *create_thinking_block(
+                        2, ["Okay, let's give it a shot.", " Will I pass the test?"]
+                    ),
+                    *create_content_block(3, ["Certainly, calling it now!"]),
+                    *create_tool_use_block(
+                        1,
+                        "toolu_0123456789AbCdEfGhIjKlM",
+                        "test_tool",
+                        ['{"para', 'm1": "test_valu', 'e"}'],
+                    ),
+                ]
+            )
+        )
+
+    with (
+        patch(
+            "anthropic.resources.messages.AsyncMessages.create",
+            new_callable=AsyncMock,
+            side_effect=completion_result,
+        ) as mock_create,
+        freeze_time("2024-06-03 23:00:00"),
+    ):
+        result = await conversation.async_converse(
+            hass,
+            "Please call the test function",
+            None,
+            context,
+            agent_id=agent_id,
+        )
+
+    chat_log = hass.data.get(conversation.chat_log.DATA_CHAT_LOGS).get(
+        result.conversation_id
+    )
+
+    assert chat_log.content == snapshot
+    assert mock_create.mock_calls[1][2]["messages"] == snapshot

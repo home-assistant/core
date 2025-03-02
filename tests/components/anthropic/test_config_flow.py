@@ -21,9 +21,11 @@ from homeassistant.components.anthropic.const import (
     CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_TEMPERATURE,
+    CONF_THINKING_BUDGET_TOKENS,
     DOMAIN,
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_THINKING_BUDGET_TOKENS,
 )
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import HomeAssistant
@@ -92,6 +94,73 @@ async def test_options(
     assert options["data"]["prompt"] == "Speak like a pirate"
     assert options["data"]["max_tokens"] == 200
     assert options["data"][CONF_CHAT_MODEL] == RECOMMENDED_CHAT_MODEL
+
+
+async def test_options_non_thinking_model(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test error about models that don't support extending thinking when it is enabled."""
+    options_flow = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
+    options = await hass.config_entries.options.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "Speak like a pirate",
+            "max_tokens": 8192,
+            "chat_model": "claude-3-opus-20240229",
+            "thinking_budget_tokens": 1024,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] is FlowResultType.FORM
+    assert options["errors"] == {
+        "thinking_budget_tokens": "model_does_not_support_thinking"
+    }
+
+
+async def test_options_thinking_with_temperature(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test error about extending thinking not being compatible with temperature."""
+    options_flow = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
+    options = await hass.config_entries.options.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "Speak like a pirate",
+            "max_tokens": 8192,
+            "chat_model": "claude-3-7-sonnet-latest",
+            "temperature": 0.3,
+            "thinking_budget_tokens": 1024,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] is FlowResultType.FORM
+    assert options["errors"] == {"temperature": "thinking_budget_incompatible"}
+
+
+async def test_options_thinking_budget_more_than_max(
+    hass: HomeAssistant, mock_config_entry, mock_init_component
+) -> None:
+    """Test error about thinking budget being more than max tokens."""
+    options_flow = await hass.config_entries.options.async_init(
+        mock_config_entry.entry_id
+    )
+    options = await hass.config_entries.options.async_configure(
+        options_flow["flow_id"],
+        {
+            "prompt": "Speak like a pirate",
+            "max_tokens": 8192,
+            "chat_model": "claude-3-7-sonnet-latest",
+            "temperature": 1,
+            "thinking_budget_tokens": 16384,
+        },
+    )
+    await hass.async_block_till_done()
+    assert options["type"] is FlowResultType.FORM
+    assert options["errors"] == {"max_tokens": "thinking_budget_too_large"}
 
 
 @pytest.mark.parametrize(
@@ -186,6 +255,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET_TOKENS: RECOMMENDED_THINKING_BUDGET_TOKENS,
             },
         ),
         (
@@ -195,6 +265,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
                 CONF_TEMPERATURE: 0.3,
                 CONF_CHAT_MODEL: RECOMMENDED_CHAT_MODEL,
                 CONF_MAX_TOKENS: RECOMMENDED_MAX_TOKENS,
+                CONF_THINKING_BUDGET_TOKENS: RECOMMENDED_THINKING_BUDGET_TOKENS,
             },
             {
                 CONF_RECOMMENDED: True,

@@ -8,7 +8,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import asdict, dataclass, field, replace
 import logging
-from typing import Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 import voluptuous as vol
 
@@ -146,8 +146,10 @@ class AssistantContent:
 
     role: str = field(init=False, default="assistant")
     agent_id: str
+    thinking: str | None = None
     content: str | None = None
     tool_calls: list[llm.ToolInput] | None = None
+    metadata: dict[str, Any] | None = None
 
 
 @dataclass(frozen=True)
@@ -168,8 +170,10 @@ class AssistantContentDeltaDict(TypedDict, total=False):
     """Partial content to define an AssistantContent."""
 
     role: Literal["assistant"]
+    thinking: str | None
     content: str | None
     tool_calls: list[llm.ToolInput] | None
+    metadata: dict[str, Any] | None
 
 
 @dataclass
@@ -271,8 +275,10 @@ class ChatLog:
         The keys content and tool_calls will be concatenated if they appear multiple times.
         """
         current_content = ""
+        current_thinking = ""
         current_tool_calls: list[llm.ToolInput] = []
         tool_call_tasks: dict[str, asyncio.Task] = {}
+        current_metadata: dict[str, Any] = {}
 
         async for delta in stream:
             LOGGER.debug("Received delta: %s", delta)
@@ -281,6 +287,8 @@ class ChatLog:
             if "role" not in delta:
                 if delta_content := delta.get("content"):
                     current_content += delta_content
+                if delta_thinking := delta.get("thinking"):
+                    current_thinking += delta_thinking
                 if delta_tool_calls := delta.get("tool_calls"):
                     if self.llm_api is None:
                         raise ValueError("No LLM API configured")
@@ -292,6 +300,8 @@ class ChatLog:
                             self.llm_api.async_call_tool(tool_call),
                             name=f"llm_tool_{tool_call.id}",
                         )
+                if delta_metadata := delta.get("metadata"):
+                    current_metadata.update(delta_metadata)
                 if self.delta_listener:
                     self.delta_listener(self, delta)  # type: ignore[arg-type]
                 continue
@@ -302,11 +312,13 @@ class ChatLog:
                 raise ValueError(f"Only assistant role expected. Got {delta['role']}")
 
             # Yield the previous message if it has content
-            if current_content or current_tool_calls:
+            if current_content or current_tool_calls or current_thinking:
                 content = AssistantContent(
                     agent_id=agent_id,
                     content=current_content or None,
                     tool_calls=current_tool_calls or None,
+                    thinking=current_thinking or None,
+                    metadata=current_metadata or None,
                 )
                 yield content
                 async for tool_result in self.async_add_assistant_content(
@@ -318,15 +330,19 @@ class ChatLog:
 
             current_content = delta.get("content") or ""
             current_tool_calls = delta.get("tool_calls") or []
+            current_thinking = delta.get("thinking") or ""
+            current_metadata = delta.get("metadata") or {}
 
             if self.delta_listener:
                 self.delta_listener(self, delta)  # type: ignore[arg-type]
 
-        if current_content or current_tool_calls:
+        if current_content or current_tool_calls or current_thinking:
             content = AssistantContent(
                 agent_id=agent_id,
                 content=current_content or None,
                 tool_calls=current_tool_calls or None,
+                thinking=current_thinking or None,
+                metadata=current_metadata or None,
             )
             yield content
             async for tool_result in self.async_add_assistant_content(
