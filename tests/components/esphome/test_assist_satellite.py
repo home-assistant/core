@@ -298,7 +298,7 @@ async def test_pipeline_api_audio(
             VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END,
             {
                 "conversation_id": conversation_id,
-                "continue_conversation": True,
+                "continue_conversation": "1",
             },
         )
 
