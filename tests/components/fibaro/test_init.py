@@ -1,4 +1,4 @@
-"""Test the Fibaro base entity."""
+"""Test init methods."""
 
 from unittest.mock import Mock, patch
 
@@ -17,7 +17,7 @@ async def test_unload_integration(
     mock_light: Mock,
     mock_room: Mock,
 ) -> None:
-    """Test activate scene is called."""
+    """Test unload integration stops state listener."""
     # Arrange
     mock_fibaro_client.read_rooms.return_value = [mock_room]
     mock_fibaro_client.read_devices.return_value = [mock_light]
