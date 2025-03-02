@@ -5,6 +5,10 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.ekeybionyx import DOMAIN
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
@@ -167,3 +171,24 @@ def mock_webhook_id():
         "homeassistant.components.webhook.async_generate_id", return_value="1234567890"
     ):
         yield
+
+
+@pytest.fixture(name="config_entry")
+def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Create mocked config entry."""
+    return MockConfigEntry(
+        title="test@test.com",
+        domain=DOMAIN,
+        data={
+            "webhooks": [
+                {
+                    "webhook_id": "a2156edca7fb6671e13845314f6fc68622e5dd7c58f17663a487bd28cac247e7",
+                    "name": "Test1",
+                    "ekey_id": "946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
+                }
+            ]
+        },
+        unique_id="946DA01F-9ABD-4D9D-80C7-02AF85C822A8",
+        version=1,
+        minor_version=1,
+    )
