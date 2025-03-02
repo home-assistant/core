@@ -43,11 +43,73 @@ THERMOSTAT_CAPABILITIES = {
 }
 
 JOB_STATE_MAP = {
+    "airWash": "air_wash",
+    "airwash": "air_wash",
+    "aIRinse": "ai_rinse",
+    "aISpin": "ai_spin",
+    "aIWash": "ai_wash",
+    "aIDrying": "ai_drying",
+    "internalCare": "internal_care",
+    "continuousDehumidifying": "continuous_dehumidifying",
+    "thawingFrozenInside": "thawing_frozen_inside",
+    "delayWash": "delay_wash",
+    "weightSensing": "weight_sensing",
+    "freezeProtection": "freeze_protection",
     "preDrain": "pre_drain",
     "preWash": "pre_wash",
     "wrinklePrevent": "wrinkle_prevent",
     "unknown": None,
 }
+
+OVEN_JOB_STATE_MAP = {
+    "scheduledStart": "scheduled_start",
+    "fastPreheat": "fast_preheat",
+    "scheduledEnd": "scheduled_end",
+    "stone_heating": "stone_heating",
+    "timeHoldPreheat": "time_hold_preheat",
+}
+
+MEDIA_PLAYBACK_STATE_MAP = {
+    "fast forwarding": "fast_forwarding",
+}
+
+ROBOT_CLEANER_TURBO_MODE_STATE_MAP = {
+    "extraSilence": "extra_silence",
+}
+
+ROBOT_CLEANER_MOVEMENT_MAP = {
+    "powerOff": "off",
+}
+
+OVEN_MODE = {
+    "Conventional": "conventional",
+    "Bake": "bake",
+    "BottomHeat": "bottom_heat",
+    "ConvectionBake": "convection_bake",
+    "ConvectionRoast": "convection_roast",
+    "Broil": "broil",
+    "ConvectionBroil": "convection_broil",
+    "SteamCook": "steam_cook",
+    "SteamBake": "steam_bake",
+    "SteamRoast": "steam_roast",
+    "SteamBottomHeatplusConvection": "steam_bottom_heat_plus_convection",
+    "Microwave": "microwave",
+    "MWplusGrill": "microwave_plus_grill",
+    "MWplusConvection": "microwave_plus_convection",
+    "MWplusHotBlast": "microwave_plus_hot_blast",
+    "MWplusHotBlast2": "microwave_plus_hot_blast_2",
+    "SlimMiddle": "slim_middle",
+    "SlimStrong": "slim_strong",
+    "SlowCook": "slow_cook",
+    "Proof": "proof",
+    "Dehydrate": "dehydrate",
+    "Others": "others",
+    "StrongSteam": "strong_steam",
+    "Descale": "descale",
+    "Rinse": "rinse",
+}
+
+WASHER_OPTIONS = ["pause", "run", "stop"]
 
 
 def power_attributes(status: dict[str, Any]) -> dict[str, Any]:
@@ -68,6 +130,7 @@ class SmartThingsSensorEntityDescription(SensorEntityDescription):
     unique_id_separator: str = "."
     capability_ignore_list: list[set[Capability]] | None = None
     options_attribute: Attribute | None = None
+    except_if_state_none: bool = False
 
 
 CAPABILITY_TO_SENSORS: dict[
@@ -198,7 +261,7 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="dishwasher_machine_state",
-                options=["pause", "run", "stop"],
+                options=WASHER_OPTIONS,
                 device_class=SensorDeviceClass.ENUM,
             )
         ],
@@ -207,7 +270,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.DISHWASHER_JOB_STATE,
                 translation_key="dishwasher_job_state",
                 options=[
-                    "airwash",
+                    "air_wash",
                     "cooling",
                     "drying",
                     "finish",
@@ -246,12 +309,33 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="dryer_machine_state",
+                options=WASHER_OPTIONS,
+                device_class=SensorDeviceClass.ENUM,
             )
         ],
         Attribute.DRYER_JOB_STATE: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.DRYER_JOB_STATE,
                 translation_key="dryer_job_state",
+                options=[
+                    "cooling",
+                    "delay_wash",
+                    "drying",
+                    "finished",
+                    "none",
+                    "refreshing",
+                    "weight_sensing",
+                    "wrinkle_prevent",
+                    "dehumidifying",
+                    "ai_drying",
+                    "sanitizing",
+                    "internal_care",
+                    "freeze_protection",
+                    "continuous_dehumidifying",
+                    "thawing_frozen_inside",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: JOB_STATE_MAP.get(value, value),
             )
         ],
         Attribute.COMPLETION_TIME: [
@@ -377,7 +461,7 @@ CAPABILITY_TO_SENSORS: dict[
                 translation_key="media_input_source",
                 device_class=SensorDeviceClass.ENUM,
                 options_attribute=Attribute.SUPPORTED_INPUT_SOURCES,
-                value_fn=lambda value: value.lower(),
+                value_fn=lambda value: value.lower() if value else None,
             )
         ]
     },
@@ -404,6 +488,16 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.PLAYBACK_STATUS,
                 translation_key="media_playback_status",
+                options=[
+                    "paused",
+                    "playing",
+                    "stopped",
+                    "fast_forwarding",
+                    "rewinding",
+                    "buffering",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: MEDIA_PLAYBACK_STATE_MAP.get(value, value),
             )
         ]
     },
@@ -421,6 +515,9 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.OVEN_MODE,
                 translation_key="oven_mode",
                 entity_category=EntityCategory.DIAGNOSTIC,
+                options=list(OVEN_MODE.values()),
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: OVEN_MODE.get(value, value),
             )
         ]
     },
@@ -429,12 +526,35 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="oven_machine_state",
+                options=["ready", "running", "paused"],
+                device_class=SensorDeviceClass.ENUM,
             )
         ],
         Attribute.OVEN_JOB_STATE: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.OVEN_JOB_STATE,
                 translation_key="oven_job_state",
+                options=[
+                    "cleaning",
+                    "cooking",
+                    "cooling",
+                    "draining",
+                    "preheat",
+                    "ready",
+                    "rinsing",
+                    "finished",
+                    "scheduled_start",
+                    "warming",
+                    "defrosting",
+                    "sensing",
+                    "searing",
+                    "fast_preheat",
+                    "scheduled_end",
+                    "stone_heating",
+                    "time_hold_preheat",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: OVEN_JOB_STATE_MAP.get(value, value),
             )
         ],
         Attribute.COMPLETION_TIME: [
@@ -460,6 +580,8 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energy"] / 1000,
+                suggested_display_precision=2,
+                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="power_meter",
@@ -468,14 +590,18 @@ CAPABILITY_TO_SENSORS: dict[
                 native_unit_of_measurement=UnitOfPower.WATT,
                 value_fn=lambda value: value["power"],
                 extra_state_attributes_fn=power_attributes,
+                suggested_display_precision=2,
+                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="deltaEnergy_meter",
                 translation_key="energy_difference",
-                state_class=SensorStateClass.TOTAL_INCREASING,
+                state_class=SensorStateClass.TOTAL,
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["deltaEnergy"] / 1000,
+                suggested_display_precision=2,
+                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="powerEnergy_meter",
@@ -484,6 +610,8 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["powerEnergy"] / 1000,
+                suggested_display_precision=2,
+                except_if_state_none=True,
             ),
             SmartThingsSensorEntityDescription(
                 key="energySaved_meter",
@@ -492,6 +620,8 @@ CAPABILITY_TO_SENSORS: dict[
                 device_class=SensorDeviceClass.ENERGY,
                 native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
                 value_fn=lambda value: value["energySaved"] / 1000,
+                suggested_display_precision=2,
+                except_if_state_none=True,
             ),
         ]
     },
@@ -540,6 +670,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ROBOT_CLEANER_CLEANING_MODE,
                 translation_key="robot_cleaner_cleaning_mode",
+                options=["auto", "part", "repeat", "manual", "stop", "map"],
+                device_class=SensorDeviceClass.ENUM,
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
         ],
@@ -549,6 +681,20 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ROBOT_CLEANER_MOVEMENT,
                 translation_key="robot_cleaner_movement",
+                options=[
+                    "homing",
+                    "idle",
+                    "charging",
+                    "alarm",
+                    "off",
+                    "reserve",
+                    "point",
+                    "after",
+                    "cleaning",
+                    "pause",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: ROBOT_CLEANER_MOVEMENT_MAP.get(value, value),
             )
         ]
     },
@@ -557,6 +703,11 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.ROBOT_CLEANER_TURBO_MODE,
                 translation_key="robot_cleaner_turbo_mode",
+                options=["on", "off", "silence", "extra_silence"],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: ROBOT_CLEANER_TURBO_MODE_STATE_MAP.get(
+                    value, value
+                ),
                 entity_category=EntityCategory.DIAGNOSTIC,
             )
         ]
@@ -586,6 +737,8 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.SMOKE,
                 translation_key="smoke_detector",
+                options=["detected", "clear", "tested"],
+                device_class=SensorDeviceClass.ENUM,
             )
         ]
     },
@@ -751,12 +904,34 @@ CAPABILITY_TO_SENSORS: dict[
             SmartThingsSensorEntityDescription(
                 key=Attribute.MACHINE_STATE,
                 translation_key="washer_machine_state",
+                options=WASHER_OPTIONS,
+                device_class=SensorDeviceClass.ENUM,
             )
         ],
         Attribute.WASHER_JOB_STATE: [
             SmartThingsSensorEntityDescription(
                 key=Attribute.WASHER_JOB_STATE,
                 translation_key="washer_job_state",
+                options=[
+                    "air_wash",
+                    "ai_rinse",
+                    "ai_spin",
+                    "ai_wash",
+                    "cooling",
+                    "delay_wash",
+                    "drying",
+                    "finish",
+                    "none",
+                    "pre_wash",
+                    "rinse",
+                    "spin",
+                    "wash",
+                    "weight_sensing",
+                    "wrinkle_prevent",
+                    "freeze_protection",
+                ],
+                device_class=SensorDeviceClass.ENUM,
+                value_fn=lambda value: JOB_STATE_MAP.get(value, value),
             )
         ],
         Attribute.COMPLETION_TIME: [
@@ -787,16 +962,29 @@ async def async_setup_entry(
     """Add sensors for a config entry."""
     entry_data = entry.runtime_data
     async_add_entities(
-        SmartThingsSensor(entry_data.client, device, description, capability, attribute)
+        SmartThingsSensor(
+            entry_data.client,
+            device,
+            description,
+            entry_data.rooms,
+            capability,
+            attribute,
+        )
         for device in entry_data.devices.values()
-        for capability, attributes in device.status[MAIN].items()
-        if capability in CAPABILITY_TO_SENSORS
-        for attribute in attributes
-        for description in CAPABILITY_TO_SENSORS[capability].get(attribute, [])
-        if not description.capability_ignore_list
-        or not any(
-            all(capability in device.status[MAIN] for capability in capability_list)
-            for capability_list in description.capability_ignore_list
+        for capability, attributes in CAPABILITY_TO_SENSORS.items()
+        if capability in device.status[MAIN]
+        for attribute, descriptions in attributes.items()
+        for description in descriptions
+        if (
+            not description.capability_ignore_list
+            or not any(
+                all(capability in device.status[MAIN] for capability in capability_list)
+                for capability_list in description.capability_ignore_list
+            )
+        )
+        and (
+            not description.except_if_state_none
+            or device.status[MAIN][capability][attribute].value is not None
         )
     )
 
@@ -811,11 +999,12 @@ class SmartThingsSensor(SmartThingsEntity, SensorEntity):
         client: SmartThings,
         device: FullDevice,
         entity_description: SmartThingsSensorEntityDescription,
+        rooms: dict[str, str],
         capability: Capability,
         attribute: Attribute,
     ) -> None:
         """Init the class."""
-        super().__init__(client, device, {capability})
+        super().__init__(client, device, rooms, {capability})
         self._attr_unique_id = f"{device.device.device_id}{entity_description.unique_id_separator}{entity_description.key}"
         self._attribute = attribute
         self.capability = capability
