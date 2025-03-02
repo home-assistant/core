@@ -1,5 +1,6 @@
 """Tests for OpenWeatherMap sensors."""
 
+from pyopenweathermap import WeatherReport
 import pytest
 from syrupy import SnapshotAssertion
 
@@ -19,34 +20,34 @@ from tests.common import AsyncMock, patch
 # Define test data for mocked weather report
 static_weather_report = _create_static_weather_report()
 
-# Define test parameters with different modes and corresponding mock return values
-TEST_CASES = [
-    (
-        OWM_MODE_FREE_CURRENT,
-        "pyopenweathermap.client.free_client.OWMFreeClient.get_weather",
-        static_weather_report,
-    ),
-    (
-        OWM_MODE_FREE_FORECAST,
-        "pyopenweathermap.client.free_client.OWMFreeClient.get_weather",
-        static_weather_report,
-    ),
-    (
-        OWM_MODE_V30,
-        "pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather",
-        static_weather_report,
-    ),
-]
 
-
-@pytest.mark.parametrize(("mode", "patched_function", "mock_return"), TEST_CASES)
+@pytest.mark.parametrize(
+    ("mode", "patched_function", "mock_return"),
+    [
+        (
+            OWM_MODE_FREE_CURRENT,
+            "pyopenweathermap.client.free_client.OWMFreeClient.get_weather",
+            static_weather_report,
+        ),
+        (
+            OWM_MODE_FREE_FORECAST,
+            "pyopenweathermap.client.free_client.OWMFreeClient.get_weather",
+            static_weather_report,
+        ),
+        (
+            OWM_MODE_V30,
+            "pyopenweathermap.client.onecall_client.OWMOneCallClient.get_weather",
+            static_weather_report,
+        ),
+    ],
+)
 async def test_sensor_states(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    mode,
-    patched_function,
-    mock_return,
+    mode: str,
+    patched_function: str,
+    mock_return: WeatherReport,
 ) -> None:
     """Test sensor states are correctly collected from library with different modes and mocked function responses."""
 
