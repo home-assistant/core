@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -69,6 +70,34 @@ class ElevenLabsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for ElevenLabs text-to-speech."""
 
     VERSION = 1
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauthentication upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            try:
+                api_key = user_input[CONF_API_KEY]
+                await get_voices_models(self.hass, api_key)
+            except ApiError:
+                errors["base"] = "invalid_api_key"
+            else:
+                await self.async_set_unique_id(api_key)
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_API_KEY: api_key},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=USER_STEP_SCHEMA, errors=errors
+        )
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
