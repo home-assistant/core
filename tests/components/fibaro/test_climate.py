@@ -220,3 +220,63 @@ async def test_set_fan_mode(
 
         # Assert
         mock_fan_device.execute_action.assert_called_once()
+
+
+async def test_target_temperature(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_thermostat_parent: Mock,
+    mock_thermostat_with_operating_mode: Mock,
+    mock_fan_device: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test that operating mode works."""
+
+    # Arrange
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [
+        mock_thermostat_parent,
+        mock_thermostat_with_operating_mode,
+        mock_fan_device,
+    ]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.CLIMATE]):
+        # Act
+        await init_integration(hass, mock_config_entry)
+        # Assert
+        state = hass.states.get("climate.room_1_test_climate_6")
+        assert state.attributes["temperature"] == 23
+
+
+async def test_set_target_temperature(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_thermostat_parent: Mock,
+    mock_thermostat_with_operating_mode: Mock,
+    mock_fan_device: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test that set_fan_mode() works."""
+
+    # Arrange
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [
+        mock_thermostat_parent,
+        mock_thermostat_with_operating_mode,
+        mock_fan_device,
+    ]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.CLIMATE]):
+        # Act
+        await init_integration(hass, mock_config_entry)
+        await hass.services.async_call(
+            "climate",
+            "set_temperature",
+            {"entity_id": "climate.room_1_test_climate_6", "temperature": 25.5},
+            blocking=True,
+        )
+
+        # Assert
+        mock_thermostat_with_operating_mode.execute_action.assert_called_once()
