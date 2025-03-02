@@ -110,12 +110,17 @@ class HydrawiseWaterUseDataUpdateCoordinator(HydrawiseDataUpdateCoordinator):
     async def _async_update_data(self) -> HydrawiseData:
         """Fetch the latest data from Hydrawise."""
         daily_water_summary: dict[int, ControllerWaterUseSummary] = {}
+        listening_entities = set(self.async_contexts())
         for controller in self._main_coordinator.data.controllers.values():
-            daily_water_summary[controller.id] = await self.api.get_water_use_summary(
-                controller,
-                now().replace(hour=0, minute=0, second=0, microsecond=0),
-                now(),
-            )
+            summary = ControllerWaterUseSummary()
+            if listening_entities:
+                summary = await self.api.get_water_use_summary(
+                    controller,
+                    now().replace(hour=0, minute=0, second=0, microsecond=0),
+                    now(),
+                )
+            daily_water_summary[controller.id] = summary
+
         main_data = self._main_coordinator.data
         return HydrawiseData(
             user=main_data.user,
