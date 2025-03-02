@@ -199,7 +199,7 @@ async def async_get_media_source_audio(
         )
         return await manager.async_get_tts_audio(cache_key)
 
-    token = media_source_id.partition("/")[2]
+    token = media_source_id.split("/")[-1]
     if (stream := manager.token_to_stream.get(token)) is None:
         raise Unresolvable("Token from media source not found")
 

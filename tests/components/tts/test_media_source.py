@@ -2,11 +2,11 @@
 
 from http import HTTPStatus
 import re
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components import media_source
+from homeassistant.components import media_source, tts
 from homeassistant.components.media_player import BrowseError
 from homeassistant.components.tts.media_source import (
     MediaSourceOptions,
@@ -304,7 +304,31 @@ async def test_generate_media_source_id_and_media_source_id_to_kwargs(
     }
 
 
-async def test_stream_media_sources(hass: HomeAssistant) -> None:
+async def test_stream_media_sources(hass: HomeAssistant, setup_media_source) -> None:
     """Test ResultStream as media sources."""
+    assert await async_setup_component(hass, "tts", {})
+    stream = tts.ResultStream(
+        token="mock-token.flac",
+        extension="flac",
+        content_type="audio/flac",
+        engine="test",
+        use_file_cache=True,
+        language="en",
+        options={},
+        _manager=None,
+    )
+    hass.data[tts.DATA_TTS_MANAGER].token_to_stream[stream.token] = stream
+    assert stream.media_source_id == "media-source://tts/temporary/mock-token.flac"
 
-    # media-source://tts/temporary/AT1BH2ZsWHipW0pCy0cm7w.mp3
+    assert await media_source.async_resolve_media(
+        hass, stream.media_source_id, None
+    ) == media_source.PlayMedia(url=stream.url, mime_type=stream.content_type)
+
+    async def async_stream_result():
+        yield b"test"
+
+    with patch.object(stream, "async_stream_result", async_stream_result):
+        assert await tts.async_get_media_source_audio(hass, stream.media_source_id) == (
+            stream.extension,
+            b"test",
+        )
