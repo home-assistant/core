@@ -37,7 +37,7 @@ async def test_up_down_values(
 
     assert hass.states.get("sensor.test_multisensor_state").state == OPEN_CLOSE_MAP[0]
 
-    attribute = mock_homee.nodes[0].attributes[27]
+    attribute = mock_homee.nodes[0].attributes[28]
     for i in range(1, 5):
         await async_update_attribute_value(hass, attribute, i)
         assert (
@@ -69,7 +69,7 @@ async def test_window_position(
         == WINDOW_MAP[0]
     )
 
-    attribute = mock_homee.nodes[0].attributes[32]
+    attribute = mock_homee.nodes[0].attributes[33]
     for i in range(1, 3):
         await async_update_attribute_value(hass, attribute, i)
         assert (
