@@ -28,6 +28,7 @@ from homeassistant.components.esphome.const import (
     CONF_DEVICE_NAME,
     CONF_SUBSCRIBE_LOGS,
     DOMAIN,
+    STABLE_BLE_URL_VERSION,
     STABLE_BLE_VERSION_STR,
 )
 from homeassistant.const import (
@@ -365,7 +366,7 @@ async def test_esphome_device_with_old_bluetooth(
     )
     assert (
         issue.learn_more_url
-        == f"https://esphome.io/changelog/{STABLE_BLE_VERSION_STR}.html"
+        == f"https://esphome.io/changelog/{STABLE_BLE_URL_VERSION}.html"
     )
 
 
