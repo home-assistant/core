@@ -1226,7 +1226,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.7.0
+inkbird-ble==0.7.1
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -2179,7 +2179,7 @@ pyombi==0.1.10
 pyopenuv==2023.02.0
 
 # homeassistant.components.openweathermap
-pyopenweathermap==0.2.1
+pyopenweathermap==0.2.2
 
 # homeassistant.components.opnsense
 pyopnsense==0.4.0
@@ -2199,7 +2199,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.16.1
+pyoverkiz==1.16.2
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -2244,7 +2244,7 @@ pyqvrpro==0.52
 pyqwikswitch==0.93
 
 # homeassistant.components.nmbs
-pyrail==0.0.3
+pyrail==0.4.1
 
 # homeassistant.components.rainbird
 pyrainbird==6.0.1
@@ -2310,7 +2310,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.4.0
+pysmartthings==2.4.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
