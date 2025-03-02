@@ -132,3 +132,30 @@ async def test_hvac_mode_with_operation_mode_support(
         # Assert
         state = hass.states.get("climate.room_1_test_climate_4")
         assert state.state == HVACMode.AUTO
+
+
+async def test_set_hvac_mode_with_operation_mode_support(
+    hass: HomeAssistant,
+    mock_fibaro_client: Mock,
+    mock_config_entry: MockConfigEntry,
+    mock_thermostat_with_operating_mode: Mock,
+    mock_room: Mock,
+) -> None:
+    """Test that set_hvac_mode() works."""
+
+    # Arrange
+    mock_fibaro_client.read_rooms.return_value = [mock_room]
+    mock_fibaro_client.read_devices.return_value = [mock_thermostat_with_operating_mode]
+
+    with patch("homeassistant.components.fibaro.PLATFORMS", [Platform.CLIMATE]):
+        # Act
+        await init_integration(hass, mock_config_entry)
+        await hass.services.async_call(
+            "climate",
+            "set_hvac_mode",
+            {"entity_id": "climate.room_1_test_climate_4", "hvac_mode": HVACMode.HEAT},
+            blocking=True,
+        )
+
+        # Assert
+        mock_thermostat_with_operating_mode.execute_action.assert_called_once()

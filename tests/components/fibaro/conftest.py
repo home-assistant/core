@@ -171,12 +171,13 @@ def mock_thermostat_with_operating_mode() -> Mock:
     climate.type = "com.fibaro.thermostatDanfoss"
     climate.base_type = "com.fibaro.device"
     climate.properties = {"manufacturer": ""}
-    climate.actions = {"setOperationMode": 1}
+    climate.actions = {"setOperatingMode": 1}
     climate.supported_features = {}
     climate.has_supported_operating_modes = True
     climate.supported_operating_modes = [0, 1, 15]
     climate.has_operating_mode = True
     climate.operating_mode = 15
+    climate.has_supported_thermostat_modes = False
     climate.has_thermostat_mode = False
     value_mock = Mock()
     value_mock.has_value = True
