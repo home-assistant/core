@@ -22,7 +22,8 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.template import Template
 
-from . import SimpliSafe, SimpliSafeEntity
+from . import SimpliSafe
+from .entity import SimpliSafeEntity
 from .const import DOMAIN, LOGGER
 
 DEFAULT_IMAGE_WIDTH = 720
