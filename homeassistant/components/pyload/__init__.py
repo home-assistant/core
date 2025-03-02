@@ -11,9 +11,9 @@ from yarl import URL
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_PATH,
     CONF_PORT,
     CONF_SSL,
+    CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
     Platform,
@@ -36,15 +36,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> bo
         verify_ssl=entry.data[CONF_VERIFY_SSL],
         cookie_jar=CookieJar(unsafe=True),
     )
-    url = URL.build(
-        scheme="https" if entry.data[CONF_SSL] else "http",
-        host=entry.data[CONF_HOST],
-        port=entry.data[CONF_PORT],
-        path=entry.data[CONF_PATH],
-    )
     pyloadapi = PyLoadAPI(
         session,
-        api_url=url,
+        api_url=URL(entry.data[CONF_URL]),
         username=entry.data[CONF_USERNAME],
         password=entry.data[CONF_PASSWORD],
     )
@@ -71,8 +65,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PyLoadConfigEntry) -> 
     )
 
     if entry.version == 1 and entry.minor_version == 0:
+        url = URL.build(
+            scheme="https" if entry.data[CONF_SSL] else "http",
+            host=entry.data[CONF_HOST],
+            port=entry.data[CONF_PORT],
+        ).human_repr()
         hass.config_entries.async_update_entry(
-            entry, data={**entry.data, CONF_PATH: "/"}, minor_version=1, version=1
+            entry, data={**entry.data, CONF_URL: url}, minor_version=1, version=1
         )
 
     _LOGGER.debug(

@@ -10,7 +10,6 @@ from homeassistant.components.pyload.const import DEFAULT_NAME, DOMAIN
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
-    CONF_PATH,
     CONF_PORT,
     CONF_SSL,
     CONF_URL,
@@ -26,15 +25,6 @@ USER_INPUT = {
     CONF_USERNAME: "test-username",
     CONF_VERIFY_SSL: False,
 }
-USER_INPUT_RESULT = {
-    CONF_HOST: "pyload.local",
-    CONF_PASSWORD: "test-password",
-    CONF_PORT: 8000,
-    CONF_PATH: "/prefix",
-    CONF_SSL: True,
-    CONF_USERNAME: "test-username",
-    CONF_VERIFY_SSL: False,
-}
 
 REAUTH_INPUT = {
     CONF_PASSWORD: "new-password",
@@ -42,11 +32,8 @@ REAUTH_INPUT = {
 }
 
 NEW_INPUT = {
-    CONF_HOST: "pyload.local",
+    CONF_URL: "https://pyload.local:8000/prefix",
     CONF_PASSWORD: "new-password",
-    CONF_PORT: 8000,
-    CONF_PATH: "/prefix",
-    CONF_SSL: True,
     CONF_USERNAME: "new-username",
     CONF_VERIFY_SSL: False,
 }
@@ -109,7 +96,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title=DEFAULT_NAME,
-        data=USER_INPUT_RESULT,
+        data=USER_INPUT,
         entry_id="XXXXXXXXXXXXXX",
     )
 

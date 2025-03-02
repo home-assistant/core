@@ -8,7 +8,7 @@ from pyloadapi.exceptions import CannotConnect, InvalidAuth, ParserError
 import pytest
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import CONF_PATH
+from homeassistant.const import CONF_PATH, CONF_URL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -107,4 +107,4 @@ async def test_migration(
     assert config_entry_migrate.state is ConfigEntryState.LOADED
     assert config_entry_migrate.version == 1
     assert config_entry_migrate.minor_version == 1
-    assert config_entry_migrate.data.get(CONF_PATH) == "/"
+    assert config_entry_migrate.data[CONF_URL] == "https://pyload.local:8000/"

@@ -2,11 +2,8 @@
 # name: test_diagnostics
   dict({
     'config_entry_data': dict({
-      'host': '**REDACTED**',
       'password': '**REDACTED**',
-      'path': '/prefix',
-      'port': 8000,
-      'ssl': True,
+      'url': 'https://pyload.local:8000/prefix',
       'username': '**REDACTED**',
       'verify_ssl': False,
     }),

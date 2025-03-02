@@ -13,12 +13,8 @@ from yarl import URL
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
-    CONF_HOST,
     CONF_NAME,
     CONF_PASSWORD,
-    CONF_PATH,
-    CONF_PORT,
-    CONF_SSL,
     CONF_URL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -87,7 +83,7 @@ async def validate_input(hass: HomeAssistant, user_input: dict[str, Any]) -> Non
     )
     pyload = PyLoadAPI(
         session,
-        api_url=user_input[CONF_URL],
+        api_url=URL(user_input[CONF_URL]),
         username=user_input[CONF_USERNAME],
         password=user_input[CONF_PASSWORD],
     )
@@ -107,13 +103,8 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            url = URL(user_input[CONF_URL])
-            self._async_abort_entries_match(
-                {
-                    CONF_HOST: url.host,
-                    CONF_PORT: url.port,
-                }
-            )
+            url = URL(user_input[CONF_URL]).human_repr()
+            self._async_abort_entries_match({CONF_URL: url})
             try:
                 await validate_input(self.hass, user_input)
             except (CannotConnect, ParserError):
@@ -125,16 +116,14 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 title = DEFAULT_NAME
-                data = {
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_HOST: url.host,
-                    CONF_PORT: url.port,
-                    CONF_SSL: (url.scheme == "https"),
-                    CONF_PATH: url.path,
-                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                }
-                return self.async_create_entry(title=title, data=data)
+
+                return self.async_create_entry(
+                    title=title,
+                    data={
+                        **user_input,
+                        CONF_URL: url,
+                    },
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -156,18 +145,10 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
         """Dialog that informs the user that reauth is required."""
         errors = {}
         reauth_entry = self._get_reauth_entry()
-        reauth_data = {
-            **reauth_entry.data,
-            CONF_URL: URL.build(
-                scheme="https" if reauth_entry.data[CONF_SSL] else "http",
-                host=reauth_entry.data[CONF_HOST],
-                port=reauth_entry.data[CONF_PORT],
-                path=reauth_entry.data.get(CONF_PATH, "/"),
-            ),
-        }
+
         if user_input is not None:
             try:
-                await validate_input(self.hass, {**reauth_data, **user_input})
+                await validate_input(self.hass, {**reauth_entry.data, **user_input})
             except (CannotConnect, ParserError):
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -187,10 +168,10 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     CONF_USERNAME: user_input[CONF_USERNAME]
                     if user_input is not None
-                    else reauth_data[CONF_USERNAME]
+                    else reauth_entry.data[CONF_USERNAME]
                 },
             ),
-            description_placeholders={CONF_NAME: reauth_data[CONF_USERNAME]},
+            description_placeholders={CONF_NAME: reauth_entry.data[CONF_USERNAME]},
             errors=errors,
         )
 
@@ -212,34 +193,15 @@ class PyLoadConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                url = URL(user_input[CONF_URL])
-                data = {
-                    CONF_USERNAME: user_input[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_HOST: url.host,
-                    CONF_PORT: url.port,
-                    CONF_SSL: (url.scheme == "https"),
-                    CONF_PATH: url.path,
-                    CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
-                }
                 return self.async_update_reload_and_abort(
                     reconfig_entry,
-                    data=data,
+                    data={
+                        **user_input,
+                        CONF_URL: URL(user_input[CONF_URL]).human_repr(),
+                    },
                     reload_even_if_entry_is_unchanged=False,
                 )
-        suggested_values = (
-            user_input
-            if user_input
-            else {
-                **reconfig_entry.data,
-                CONF_URL: URL.build(
-                    scheme="https" if reconfig_entry.data[CONF_SSL] else "http",
-                    host=reconfig_entry.data[CONF_HOST],
-                    port=reconfig_entry.data[CONF_PORT],
-                    path=reconfig_entry.data.get(CONF_PATH, "/"),
-                ).human_repr(),
-            }
-        )
+        suggested_values = user_input if user_input else reconfig_entry.data
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
