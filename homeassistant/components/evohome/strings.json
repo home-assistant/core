@@ -1,5 +1,9 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "A config entry already exists for that account.",
+      "reauth_successful": "Reauthentication was successful."
+    },
     "error": {
       "cannot_connect": "Unable to connect to the vendor's servers.",
       "invalid_auth": "Unknown username or incorrect password.",
@@ -18,6 +22,12 @@
         "title": "Location Index",
         "data": {
           "location_idx": "location index"
+        }
+      },
+      "reauth": {
+        "title": "User Credentials",
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
         }
       }
     }
