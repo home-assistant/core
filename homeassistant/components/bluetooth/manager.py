@@ -25,6 +25,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from .const import (
     CONF_SOURCE,
     CONF_SOURCE_CONFIG_ENTRY_ID,
+    CONF_SOURCE_DEVICE_ID,
     CONF_SOURCE_DOMAIN,
     CONF_SOURCE_MODEL,
     DOMAIN,
@@ -254,6 +255,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         source_domain: str | None = None,
         source_model: str | None = None,
         source_config_entry_id: str | None = None,
+        source_device_id: str | None = None,
     ) -> CALLBACK_TYPE:
         """Register a scanner."""
         cancel = self.async_register_scanner(scanner, connection_slots)
@@ -261,9 +263,6 @@ class HomeAssistantBluetoothManager(BluetoothManager):
             isinstance(scanner, BaseHaRemoteScanner)
             and source_domain
             and source_config_entry_id
-            and not self.hass.config_entries.async_entry_for_domain_unique_id(
-                DOMAIN, scanner.source
-            )
         ):
             self.hass.async_create_task(
                 self.hass.config_entries.flow.async_init(
@@ -274,6 +273,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
                         CONF_SOURCE_DOMAIN: source_domain,
                         CONF_SOURCE_MODEL: source_model,
                         CONF_SOURCE_CONFIG_ENTRY_ID: source_config_entry_id,
+                        CONF_SOURCE_DEVICE_ID: source_device_id,
                     },
                 )
             )

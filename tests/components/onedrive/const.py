@@ -1,5 +1,7 @@
 """Consts for OneDrive tests."""
 
+from onedrive_personal_sdk.models.items import IdentitySet, User
+
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
 
@@ -17,3 +19,13 @@ BACKUP_METADATA = {
     "protected": False,
     "size": 34519040,
 }
+
+INSTANCE_ID = "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0"
+
+IDENTITY_SET = IdentitySet(
+    user=User(
+        display_name="John Doe",
+        id="id",
+        email="john@doe.com",
+    )
+)

@@ -78,7 +78,7 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=title, data={CONF_DEVICE_TYPE: device.device_type}
             )
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:

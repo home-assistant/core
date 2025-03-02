@@ -12,14 +12,13 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CODE_REQUIRED, DOMAIN
-from .coordinator import TotalConnectDataUpdateCoordinator
+from .coordinator import TotalConnectConfigEntry, TotalConnectDataUpdateCoordinator
 from .entity import TotalConnectLocationEntity
 
 SERVICE_ALARM_ARM_AWAY_INSTANT = "arm_away_instant"
@@ -27,7 +26,9 @@ SERVICE_ALARM_ARM_HOME_INSTANT = "arm_home_instant"
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: TotalConnectConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up TotalConnect alarm panels based on a config entry."""
     coordinator = entry.runtime_data
@@ -73,7 +74,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
     ) -> None:
         """Initialize the TotalConnect status."""
         super().__init__(coordinator, location)
-        self._partition_id = partition_id
+        self._partition_id = int(partition_id)
         self._partition = self._location.partitions[partition_id]
 
         """
@@ -81,7 +82,7 @@ class TotalConnectAlarm(TotalConnectLocationEntity, AlarmControlPanelEntity):
         for most users with new support for partitions.
         Add _# for partition 2 and beyond.
         """
-        if partition_id == 1:
+        if int(partition_id) == 1:
             self._attr_name = None
             self._attr_unique_id = str(location.location_id)
         else:
