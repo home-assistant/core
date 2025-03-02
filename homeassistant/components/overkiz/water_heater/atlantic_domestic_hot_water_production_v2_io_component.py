@@ -209,6 +209,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 OverkizCommandParam.MANUAL_ECO_ACTIVE,
                 refresh_afterwards=False,
             )
+            await self.executor.async_execute_command(
+                OverkizCommand.REFRESH_TARGET_TEMPERATURE, refresh_afterwards=False
+            )
             await self.coordinator.async_refresh()
         elif operation_mode == STATE_PERFORMANCE:
             if self.is_boost_mode_on:
