@@ -53,7 +53,9 @@ STEP_AUTH_DATA_SCHEMA_BG = vol.Schema(
 STEP_INIT_DATA_SCHEMA = vol.Schema({vol.Optional(CONF_CODE): str})
 
 
-async def try_connect(data: dict[str, Any], load_selector: int = 0):
+async def try_connect(
+    data: dict[str, Any], load_selector: int = 0
+) -> tuple[str, int | None]:
     """Validate the user input allows us to connect.
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.

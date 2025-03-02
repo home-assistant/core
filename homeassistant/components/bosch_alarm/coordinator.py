@@ -47,7 +47,7 @@ class BoschAlarmCoordinator(DataUpdateCoordinator[Panel]):
 
         self.panel.connection_status_observer.attach(self._on_connection_status_change)
 
-    def _on_connection_status_change(self):
+    def _on_connection_status_change(self) -> None:
         self.last_update_success = self.panel.connection_status()
         self.async_update_listeners()
 
