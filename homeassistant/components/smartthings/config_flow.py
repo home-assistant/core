@@ -34,7 +34,7 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for SmartThings."""
-        if data[CONF_TOKEN]["scope"].split() != SCOPES:
+        if not set(data[CONF_TOKEN]["scope"].split()) >= set(SCOPES):
             return self.async_abort(reason="missing_scopes")
         client = SmartThings(session=async_get_clientsession(self.hass))
         client.authenticate(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
