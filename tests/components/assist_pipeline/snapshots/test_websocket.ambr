@@ -10,6 +10,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -81,6 +82,7 @@
     'tts_output': dict({
       'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -99,6 +101,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -170,6 +173,7 @@
     'tts_output': dict({
       'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -200,6 +204,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -271,6 +276,7 @@
     'tts_output': dict({
       'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -289,6 +295,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -382,6 +389,7 @@
     'tts_output': dict({
       'media_id': "media-source://tts/test?message=Sorry,+I+couldn't+understand+that&language=en-US&tts_options=%7B%22voice%22:%22james_earl_jones%22%7D",
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -400,6 +408,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'test_token.mp3',
       'url': '/api/tts_proxy/test_token.mp3',
     }),
   })
@@ -607,6 +616,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
@@ -660,6 +670,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
@@ -675,6 +686,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
@@ -690,6 +702,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
@@ -705,6 +718,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
@@ -720,6 +734,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
@@ -853,6 +868,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
@@ -868,6 +884,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
@@ -924,6 +941,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
@@ -939,6 +957,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
@@ -998,6 +1017,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
@@ -1013,6 +1033,7 @@
     }),
     'tts_output': dict({
       'mime_type': 'audio/mpeg',
+      'token': 'mocked-token.mp3',
       'url': '/api/tts_proxy/mocked-token.mp3',
     }),
   })
