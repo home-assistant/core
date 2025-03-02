@@ -68,7 +68,7 @@ async def test_step_reauth_errors(
     config_entry: MockConfigEntry,
     error_key: str,
 ) -> None:
-    """Test failure during step_reauth."""
+    """Test exceptions raised during step_reauth."""
 
     config_entry.add_to_hass(hass)
 
@@ -101,7 +101,7 @@ async def test_step_user_errors(
     config: EvoConfigFileDictT,
     error_key: str,
 ) -> None:
-    """Test failure during step_user."""
+    """Test exceptions raised during step_user."""
 
     with patch(
         "evohomeasync2.auth.AbstractTokenManager.fetch_access_token",
@@ -130,7 +130,7 @@ async def test_step_location_errors(
     install: str,
     error_key: str,
 ) -> None:
-    """Test failure during step_location."""
+    """Test exceptions raised during step_location."""
 
     with patch(
         "evohomeasync2.auth.CredentialsManagerBase._post_request",
@@ -174,7 +174,7 @@ async def test_step_location_bad_index(
     config: EvoConfigFileDictT,
     install: str,
 ) -> None:
-    """Test failure during step_location."""
+    """Test invalid location_idx during step_location."""
 
     with patch(
         "evohomeasync2.auth.CredentialsManagerBase._post_request",
@@ -202,7 +202,7 @@ async def test_step_location_bad_index(
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={
-                CONF_LOCATION_IDX: 1e9,
+                CONF_LOCATION_IDX: 1e9,  # invalid location_idx
             },
         )
 
@@ -213,41 +213,9 @@ async def test_step_location_bad_index(
     assert result.get("errors") == {"base": "bad_location"}
 
 
-async def test_step_reauth(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    install: str,
-) -> None:
-    """Test success during step_reauth."""
-
-    config_entry.add_to_hass(hass)
-
-    result = await config_entry.start_reauth_flow(hass)
-
-    assert result.get("type") is FlowResultType.FORM
-    assert result.get("step_id") == "reauth_confirm"
-
-    with patch(
-        "evohomeasync2.auth.CredentialsManagerBase._post_request",
-        mock_post_request(install),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={
-                CONF_PASSWORD: "new_password",
-            },
-        )
-
-    assert result.get("type") is FlowResultType.ABORT
-    assert result.get("reason") == "reauth_successful"
-
-    assert len(hass.config_entries.async_entries()) == 1
-    assert config_entry.data[CONF_PASSWORD] == "new_password"
-
-
 async def test_config_flow(
     hass: HomeAssistant,
-    config: EvoConfigFileDictT,
+    config: EvoConfigFileDictT,  # used only as a source of config data
     install: str,
 ) -> None:
     """Test a successful config flow."""
@@ -405,6 +373,38 @@ async def test_import_flow(
         CONF_HIGH_PRECISION: True,  # True for imports
         CONF_SCAN_INTERVAL: config[CONF_SCAN_INTERVAL].seconds,
     }
+
+
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    install: str,
+) -> None:
+    """Test a successful reauth flow."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    with patch(
+        "evohomeasync2.auth.CredentialsManagerBase._post_request",
+        mock_post_request(install),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_PASSWORD: "new_password",
+            },
+        )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+
+    assert len(hass.config_entries.async_entries()) == 1
+    assert config_entry.data[CONF_PASSWORD] == "new_password"
 
 
 async def test_abort_single_instance_allowed(
