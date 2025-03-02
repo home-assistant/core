@@ -184,7 +184,6 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
 
     _attr_should_poll = False
     _attr_attribution = ATTRIBUTION
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -196,6 +195,7 @@ class AbstractOpenWeatherMapSensor(SensorEntity):
         self.entity_description = description
         self._coordinator = coordinator
 
+        self._attr_name = f"{config_entry.runtime_data.name} {description.name}"
         self._attr_unique_id = f"{config_entry.unique_id}-{description.key}"
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
