@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from propcache.api import cached_property
 
+from propcache.api import cached_property
 from teslemetry_stream import Signal, TeslemetryStreamVehicle
 from teslemetry_stream.const import ShiftState
 
@@ -49,6 +49,7 @@ from .entity import (
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
 
 PARALLEL_UPDATES = 0
+
 
 CHARGE_STATES = {
     "Starting": "starting",
