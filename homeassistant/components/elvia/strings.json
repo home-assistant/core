@@ -19,7 +19,7 @@
     },
     "abort": {
       "metering_point_id_already_configured": "Metering point with ID `{metering_point_id}` is already configured.",
-      "no_metering_points": "The provived API token has no metering points."
+      "no_metering_points": "The provided API token has no metering points."
     }
   }
 }

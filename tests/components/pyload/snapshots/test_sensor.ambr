@@ -310,7 +310,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '1',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_downloads_in_queue-entry]
@@ -361,7 +361,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '6',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_free_space-entry]
@@ -416,7 +416,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '93.1322574606165',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_speed-entry]
@@ -471,7 +471,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '43.247704',
   })
 # ---
 # name: test_sensor_update_exceptions[InvalidAuth][sensor.pyload_total_downloads-entry]
@@ -522,7 +522,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unavailable',
+    'state': '37',
   })
 # ---
 # name: test_sensor_update_exceptions[ParserError][sensor.pyload_active_downloads-entry]
