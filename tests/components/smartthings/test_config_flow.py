@@ -261,7 +261,7 @@ async def test_reauthentication(
             "expires_in": 82806,
             "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
             "r:locations:* w:locations:* x:locations:* "
-            "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
+            "r:scenes:* x:scenes:* r:rules:* sse w:rules:*",
             "access_tier": 0,
             "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
         },
@@ -279,7 +279,7 @@ async def test_reauthentication(
         "expires_in": 82806,
         "scope": "r:devices:* w:devices:* x:devices:* r:hubs:* "
         "r:locations:* w:locations:* x:locations:* "
-        "r:scenes:* x:scenes:* r:rules:* w:rules:* sse",
+        "r:scenes:* x:scenes:* r:rules:* sse w:rules:*",
         "access_tier": 0,
         "installed_app_id": "5aaaa925-2be1-4e40-b257-e4ef59083324",
     }
