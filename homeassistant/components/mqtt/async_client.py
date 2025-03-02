@@ -6,7 +6,14 @@ from functools import lru_cache
 from types import TracebackType
 from typing import Self
 
-from paho.mqtt.client import Client as MQTTClient
+from paho.mqtt.client import (
+    CallbackOnConnect_v2,
+    CallbackOnDisconnect_v2,
+    CallbackOnPublish_v2,
+    CallbackOnSubscribe_v2,
+    CallbackOnUnsubscribe_v2,
+    Client as MQTTClient,
+)
 
 _MQTT_LOCK_COUNT = 7
 
@@ -43,6 +50,12 @@ class AsyncMQTTClient(MQTTClient):
     Wrapper around paho.mqtt.client.Client to remove the locking
     that is not needed since we are running in an async event loop.
     """
+
+    on_connect: CallbackOnConnect_v2
+    on_disconnect: CallbackOnDisconnect_v2
+    on_publish: CallbackOnPublish_v2
+    on_subscribe: CallbackOnSubscribe_v2
+    on_unsubscribe: CallbackOnUnsubscribe_v2
 
     def setup(self) -> None:
         """Set up the client.

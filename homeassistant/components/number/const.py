@@ -11,6 +11,7 @@ from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_BILLION,
     CONCENTRATION_PARTS_PER_MILLION,
+    DEGREE,
     LIGHT_LUX,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS,
@@ -424,6 +425,12 @@ class NumberDeviceClass(StrEnum):
     - USCS / imperial: `oz`, `lb`
     """
 
+    WIND_DIRECTION = "wind_direction"
+    """Wind direction.
+
+    Unit of measurement: `°`
+    """
+
     WIND_SPEED = "wind_speed"
     """Wind speed.
 
@@ -494,7 +501,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     },
     NumberDeviceClass.SOUND_PRESSURE: set(UnitOfSoundPressure),
-    NumberDeviceClass.SPEED: set(UnitOfSpeed).union(set(UnitOfVolumetricFlux)),
+    NumberDeviceClass.SPEED: {*UnitOfSpeed, *UnitOfVolumetricFlux},
     NumberDeviceClass.SULPHUR_DIOXIDE: {CONCENTRATION_MICROGRAMS_PER_CUBIC_METER},
     NumberDeviceClass.TEMPERATURE: set(UnitOfTemperature),
     NumberDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: {
@@ -516,6 +523,7 @@ DEVICE_CLASS_UNITS: dict[NumberDeviceClass, set[type[StrEnum] | str | None]] = {
         UnitOfVolume.LITERS,
     },
     NumberDeviceClass.WEIGHT: set(UnitOfMass),
+    NumberDeviceClass.WIND_DIRECTION: {DEGREE},
     NumberDeviceClass.WIND_SPEED: set(UnitOfSpeed),
 }
 

@@ -517,8 +517,10 @@ async def test_options_flow_local_no_passive_support(hass: HomeAssistant) -> Non
 
 
 @pytest.mark.usefixtures("one_adapter")
-async def test_async_step_user_linux_adapter_is_ignored(hass: HomeAssistant) -> None:
-    """Test we give a hint that the adapter is ignored."""
+async def test_async_step_user_linux_adapter_replace_ignored(
+    hass: HomeAssistant,
+) -> None:
+    """Test we can replace an ignored adapter from user flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="00:00:00:00:00:01",
@@ -530,9 +532,19 @@ async def test_async_step_user_linux_adapter_is_ignored(hass: HomeAssistant) -> 
         context={"source": config_entries.SOURCE_USER},
         data={},
     )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_adapters"
-    assert result["description_placeholders"] == {"ignored_adapters": "1"}
+    with (
+        patch("homeassistant.components.bluetooth.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.bluetooth.async_setup_entry", return_value=True
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "ACME Bluetooth Adapter 5.0 (00:00:00:00:00:01)"
+    assert result2["data"] == {}
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
@@ -596,3 +608,40 @@ async def test_async_step_integration_discovery_remote_adapter(
     await hass.async_block_till_done()
     cancel_scanner()
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_step_integration_discovery_remote_adapter_mac_fix(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test remote adapter corrects mac address via integration discovery."""
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    bluetooth_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOURCE: "AA:BB:CC:DD:EE:FF",
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            CONF_SOURCE_DEVICE_ID: None,
+        },
+    )
+    bluetooth_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={
+            CONF_SOURCE: "AA:AA:AA:AA:AA:AA",
+            CONF_SOURCE_DOMAIN: "test",
+            CONF_SOURCE_MODEL: "test",
+            CONF_SOURCE_CONFIG_ENTRY_ID: entry.entry_id,
+            CONF_SOURCE_DEVICE_ID: None,
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert bluetooth_entry.unique_id == "AA:AA:AA:AA:AA:AA"
+    assert bluetooth_entry.data[CONF_SOURCE] == "AA:AA:AA:AA:AA:AA"

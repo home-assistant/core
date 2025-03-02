@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "motionmount_error_status": {
+        "default": "mdi:alert-circle-outline",
+        "state": {
+          "none": "mdi:check-circle-outline"
+        }
+      }
+    }
+  }
+}

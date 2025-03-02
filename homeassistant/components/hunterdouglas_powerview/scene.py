@@ -10,7 +10,7 @@ from aiopvapi.resources.scene import Scene as PvScene
 
 from homeassistant.components.scene import Scene
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import STATE_ATTRIBUTE_ROOM_NAME
 from .coordinator import PowerviewShadeUpdateCoordinator
@@ -25,7 +25,7 @@ RESYNC_DELAY = 60
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PowerviewConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up powerview scene entries."""
     pv_entry = entry.runtime_data

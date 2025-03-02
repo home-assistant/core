@@ -16,10 +16,9 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from . import RoborockConfigEntry
 from .const import (
     DEFAULT_DRAWABLES,
     DOMAIN,
@@ -28,14 +27,14 @@ from .const import (
     MAP_FILE_FORMAT,
     MAP_SLEEP,
 )
-from .coordinator import RoborockDataUpdateCoordinator
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock image platform."""
 

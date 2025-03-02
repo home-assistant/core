@@ -89,6 +89,28 @@ from tests.common import get_fixture_path
                 size=1234,
             ),
         ),
+        # Check the backup_request_date is used as date if present
+        (
+            b'{"compressed":true,"date":"2024-12-01T00:00:00.000000-00:00","homeassistant":'
+            b'{"exclude_database":true,"version":"2024.12.0.dev0"},"name":"test",'
+            b'"extra":{"supervisor.backup_request_date":"2025-12-01T00:00:00.000000-00:00"},'
+            b'"protected":true,"slug":"455645fe","type":"partial","version":2}',
+            AgentBackup(
+                addons=[],
+                backup_id="455645fe",
+                date="2025-12-01T00:00:00.000000-00:00",
+                database_included=False,
+                extra_metadata={
+                    "supervisor.backup_request_date": "2025-12-01T00:00:00.000000-00:00"
+                },
+                folders=[],
+                homeassistant_included=True,
+                homeassistant_version="2024.12.0.dev0",
+                name="test",
+                protected=True,
+                size=1234,
+            ),
+        ),
     ],
 )
 def test_read_backup(backup_json_content: bytes, expected_backup: AgentBackup) -> None:
@@ -529,10 +551,10 @@ async def test_encrypted_backup_streamer_error(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("name", "resulting_filename"),
     [
-        ("test", "test_-_2025-01-30_13.42_12345678.tar"),
-        ("  leading spaces", "leading_spaces_-_2025-01-30_13.42_12345678.tar"),
-        ("trailing spaces  ", "trailing_spaces_-_2025-01-30_13.42_12345678.tar"),
-        ("double  spaces  ", "double_spaces_-_2025-01-30_13.42_12345678.tar"),
+        ("test", "test_2025-01-30_13.42_12345678.tar"),
+        ("  leading spaces", "leading_spaces_2025-01-30_13.42_12345678.tar"),
+        ("trailing spaces  ", "trailing_spaces_2025-01-30_13.42_12345678.tar"),
+        ("double  spaces  ", "double_spaces_2025-01-30_13.42_12345678.tar"),
     ],
 )
 def test_suggested_filename(name: str, resulting_filename: str) -> None:
