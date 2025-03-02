@@ -14,13 +14,12 @@ import voluptuous as vol
 
 from homeassistant.components import dhcp, ssdp
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_MAC, CONF_PASSWORD
+from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import DiscoveryInfoType
 
-from . import async_discover_devices
 from .const import DOMAIN, TOKEN_NAME
 
 _LOGGER = logging.getLogger(__name__)
@@ -114,11 +113,39 @@ class SwidgetConfigFlow(ConfigFlow, domain=DOMAIN):
         insert_type: str = "Unknown",
         friendly_name: str = "Unknown Swidget Device",
     ) -> ConfigFlowResult:
-        """Handle any discovery."""
-        await self.async_set_unique_id(format_mac(mac))
+        _LOGGER.debug(
+            "Handling discovery of Swidget device; host: %s, mac: %s, insert_type: %s",
+            host,
+            mac,
+            insert_type,
+        )
+        # Check for IP and MAC address mismatches
+        for entry in self._async_current_entries():
+            entry_host = entry.data.get(CONF_HOST)
+            entry_mac = entry.data.get(CONF_MAC)
+
+            if entry_host == host and entry_mac != mac:
+                _LOGGER.warning(
+                    "Swidget insert IP (%s) is already associated with a different MAC address (%s). Aborting discovery",
+                    host,
+                    entry_mac,
+                )
+                return self.async_abort(reason="host_reassigned_to_different_mac")
+
+            if entry.unique_id == mac and entry_host != host:
+                _LOGGER.warning(
+                    "IP address %s now points to a different MAC address (%s). Aborting discovery",
+                    host,
+                    mac,
+                )
+                return self.async_abort(reason="ip_reassigned_to_different_mac")
+
+        # Ensure the user flow takes priority by setting raise_on_progress=False
+        await self.async_set_unique_id(format_mac(mac), raise_on_progress=False)
         self._abort_if_unique_id_configured(
             updates={CONF_HOST: host}, reload_on_update=True
         )
+
         self._discovered_device = SwidgetDiscoveredDevice(
             mac, host, device_type, insert_type, friendly_name
         )
@@ -131,6 +158,7 @@ class SwidgetConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self._discovered_device is not None
         if user_input is not None:
             user_input[CONF_HOST] = self._discovered_device.host
+            user_input[CONF_MAC] = self._discovered_device.mac
             info = await validate_input(self.hass, user_input)
             return self.async_create_entry(title=info["title"], data=user_input)
 
@@ -152,8 +180,6 @@ class SwidgetConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            if not (user_input[CONF_HOST]):
-                return await self.async_step_pick_device()
             try:
                 info = await validate_input(self.hass, user_input)
             except Exception:  # pylint: disable=broad-except
@@ -161,46 +187,14 @@ class SwidgetConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 mac_address = info["mac_address"]
-                await self.async_set_unique_id(format_mac(mac_address))
+                await self.async_set_unique_id(
+                    format_mac(mac_address), raise_on_progress=False
+                )
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(title=info["title"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
-        )
-
-    async def async_step_pick_device(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the step to pick discovered device."""
-        if user_input is not None:
-            user_input[CONF_HOST] = self._discovered_devices[
-                user_input[CONF_DEVICE]
-            ].host
-            info = await validate_input(self.hass, user_input)
-            return self.async_create_entry(title=info["title"], data=user_input)
-
-        configured_devices = {
-            entry.unique_id for entry in self._async_current_entries()
-        }
-        self._discovered_devices = await async_discover_devices(self.hass)
-        devices_name = {
-            mac: f"{device.friendly_name} ({device.host})"
-            for mac, device in self._discovered_devices.items()
-            if mac not in configured_devices
-        }
-        # Check if there is at least one device
-        if not devices_name:
-            return self.async_abort(reason="no_devices_found")
-
-        return self.async_show_form(
-            step_id="pick_device",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_DEVICE): vol.In(devices_name),
-                    vol.Required("password"): str,
-                }
-            ),
         )
 
 

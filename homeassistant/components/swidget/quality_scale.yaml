@@ -25,7 +25,10 @@ rules:
   entity-unavailable: done
   action-exceptions: todo
   reauthentication-flow: todo
-  parallel-updates: done
+  parallel-updates:
+    status: exempt
+    comment: |
+      One entity is created per device.
   test-coverage: todo
   integration-owner: done
   docs-installation-parameters: done
