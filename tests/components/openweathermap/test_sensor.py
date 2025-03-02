@@ -51,22 +51,18 @@ async def test_sensor_states(
 ) -> None:
     """Test sensor states are correctly collected from library with different modes and mocked function responses."""
 
-    with patch(patched_function, new_callable=AsyncMock, return_value=mock_return):
-        entry = mock_config_entry(mode)
-        entry.add_to_hass(hass)
+    entry = mock_config_entry(mode)
+    entry.add_to_hass(hass)
 
+    with patch(patched_function, new_callable=AsyncMock, return_value=mock_return):
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_entries = er.async_entries_for_config_entry(
-            entity_registry, entry.entry_id
-        )
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
-        assert entity_entries
-        for entity_entry in entity_entries:
-            assert entity_entry == snapshot(
-                name=f"{entity_entry.entity_id}-{mode}-entry"
-            )
-            assert hass.states.get(entity_entry.entity_id) == snapshot(
-                name=f"{entity_entry.entity_id}-{mode}-state"
-            )
+    assert entity_entries
+    for entity_entry in entity_entries:
+        assert entity_entry == snapshot(name=f"{entity_entry.entity_id}-{mode}-entry")
+        assert hass.states.get(entity_entry.entity_id) == snapshot(
+            name=f"{entity_entry.entity_id}-{mode}-state"
+        )
