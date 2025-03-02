@@ -57,7 +57,8 @@ async def test_full_flow(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+sse"
+        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps+"
+        "w:installedapps"
     )
 
     client = await hass_client_no_auth()
@@ -128,7 +129,8 @@ async def test_not_enough_scopes(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+sse"
+        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps+"
+        "w:installedapps"
     )
 
     client = await hass_client_no_auth()
@@ -190,7 +192,8 @@ async def test_duplicate_entry(
         f"&state={state}"
         "&scope=r:devices:*+w:devices:*+x:devices:*+r:hubs:*+"
         "r:locations:*+w:locations:*+x:locations:*+r:scenes:*+"
-        "x:scenes:*+r:rules:*+w:rules:*+sse"
+        "x:scenes:*+r:rules:*+w:rules:*+sse+r:installedapps+"
+        "w:installedapps"
     )
 
     client = await hass_client_no_auth()

@@ -11,7 +11,7 @@ from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import CONF_LOCATION_ID, DOMAIN, OLD_DATA, SCOPES
+from .const import CONF_LOCATION_ID, DOMAIN, OLD_DATA, REQUESTED_SCOPES, SCOPES
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,7 +30,7 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     @property
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
-        return {"scope": " ".join(SCOPES)}
+        return {"scope": " ".join(REQUESTED_SCOPES)}
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for SmartThings."""
