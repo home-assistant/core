@@ -451,14 +451,14 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         )
 
     @property
-    def extra_state_attributes(self) -> dict[str, Any]:
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes.
 
         Include attributes from the Demand Response Load Control (drlc)
         and Power Consumption capabilities.
         """
         if not self.supports_capability(Capability.DEMAND_RESPONSE_LOAD_CONTROL):
-            return {}
+            return None
 
         drlc_status = self.get_attribute_value(
             Capability.DEMAND_RESPONSE_LOAD_CONTROL,
