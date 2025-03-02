@@ -3,7 +3,7 @@
   dict({
     'config_entry_data': dict({
       'password': '**REDACTED**',
-      'url': 'https://pyload.local:8000/prefix',
+      'url': 'https://**redacted**:8000/prefix',
       'username': '**REDACTED**',
       'verify_ssl': False,
     }),
