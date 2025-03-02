@@ -27,6 +27,10 @@ import voluptuous as vol
 
 from homeassistant.components import ffmpeg, websocket_api
 from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.media_source import (
+    Unresolvable,
+    generate_media_source_id as ms_generate_media_source_id,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, PLATFORM_FORMAT
 from homeassistant.core import (
@@ -188,10 +192,19 @@ async def async_get_media_source_audio(
 ) -> tuple[str, bytes]:
     """Get TTS audio as extension, data."""
     manager = hass.data[DATA_TTS_MANAGER]
-    cache_key = manager.async_cache_message_in_memory(
-        **media_source_id_to_kwargs(media_source_id)
-    )
-    return await manager.async_get_tts_audio(cache_key)
+
+    if not media_source_id.startswith("media-source://tts/temporary/"):
+        cache_key = manager.async_cache_message_in_memory(
+            **media_source_id_to_kwargs(media_source_id)
+        )
+        return await manager.async_get_tts_audio(cache_key)
+
+    token = media_source_id.partition("/")[2]
+    if (stream := manager.token_to_stream.get(token)) is None:
+        raise Unresolvable("Token from media source not found")
+
+    data = b"".join([chunk async for chunk in stream.async_stream_result()])
+    return stream.extension, data
 
 
 @callback
@@ -393,6 +406,11 @@ class ResultStream:
     def url(self) -> str:
         """Get the URL to stream the result."""
         return f"/api/tts_proxy/{self.token}"
+
+    @cached_property
+    def media_source_id(self) -> str:
+        """Get the media source ID for the result."""
+        return ms_generate_media_source_id(DOMAIN, f"temporary/{self.token}")
 
     @cached_property
     def _result_cache_key(self) -> asyncio.Future[str]:

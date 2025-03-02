@@ -302,3 +302,9 @@ async def test_generate_media_source_id_and_media_source_id_to_kwargs(
         "options": {"age": {"k1": [5, 6], "k2": "v2"}},
         "use_file_cache": True,
     }
+
+
+async def test_stream_media_sources(hass: HomeAssistant) -> None:
+    """Test ResultStream as media sources."""
+
+    # media-source://tts/temporary/AT1BH2ZsWHipW0pCy0cm7w.mp3

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import TypedDict
+from typing import TypedDict, TYPE_CHECKING
 
 from yarl import URL
 
@@ -22,12 +22,15 @@ from homeassistant.exceptions import HomeAssistantError
 from .const import DATA_COMPONENT, DATA_TTS_MANAGER, DOMAIN
 from .helper import get_engine_instance
 
+if TYPE_CHECKING:
+    from . import SpeechManager
+
 URL_QUERY_TTS_OPTIONS = "tts_options"
 
 
 async def async_get_media_source(hass: HomeAssistant) -> TTSMediaSource:
     """Set up tts media source."""
-    return TTSMediaSource(hass)
+    return TTSMediaSource(hass, hass.data[DATA_TTS_MANAGER])
 
 
 @callback
@@ -109,22 +112,31 @@ class TTSMediaSource(MediaSource):
     """Provide text-to-speech providers as media sources."""
 
     name: str = "Text-to-speech"
+    manager: SpeechManager
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, manager: SpeechManager) -> None:
         """Initialize TTSMediaSource."""
         super().__init__(DOMAIN)
         self.hass = hass
+        self.manager = manager
 
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
-        try:
-            stream = self.hass.data[DATA_TTS_MANAGER].async_create_result_stream(
-                **media_source_id_to_kwargs(item.identifier)
-            )
-        except Unresolvable:
-            raise
-        except HomeAssistantError as err:
-            raise Unresolvable(str(err)) from err
+        if item.identifier.startswith("temporary/"):
+            token = item.identifier.partition("/")[2]
+            stream = self.manager.token_to_stream.get(token)
+            if stream is None:
+                raise Unresolvable("Temporary media not found")
+
+        else:
+            try:
+                stream = self.manager.async_create_result_stream(
+                    **media_source_id_to_kwargs(item.identifier)
+                )
+            except Unresolvable:
+                raise
+            except HomeAssistantError as err:
+                raise Unresolvable(str(err)) from err
 
         return PlayMedia(stream.url, stream.content_type)
 
@@ -134,6 +146,9 @@ class TTSMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return media."""
         if item.identifier:
+            if item.identifier.startswith("temporary/"):
+                raise BrowseError("Temporary media cannot be browsed")
+
             engine, _, params = item.identifier.partition("?")
             return self._engine_item(engine, params)
 
