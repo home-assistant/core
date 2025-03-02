@@ -158,11 +158,30 @@ def mock_thermostat() -> Mock:
 
 
 @pytest.fixture
+def mock_thermostat_parent() -> Mock:
+    """Fixture for a thermostat."""
+    climate = Mock()
+    climate.fibaro_id = 5
+    climate.parent_fibaro_id = 0
+    climate.name = "Test climate"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.device"
+    climate.base_type = "com.fibaro.device"
+    climate.properties = {"manufacturer": ""}
+    climate.actions = []
+    return climate
+
+
+@pytest.fixture
 def mock_thermostat_with_operating_mode() -> Mock:
     """Fixture for a thermostat."""
     climate = Mock()
-    climate.fibaro_id = 4
-    climate.parent_fibaro_id = 0
+    climate.fibaro_id = 6
+    climate.endpoint_id = 1
+    climate.parent_fibaro_id = 5
     climate.name = "Test climate"
     climate.room_id = 1
     climate.dead = False
@@ -183,6 +202,27 @@ def mock_thermostat_with_operating_mode() -> Mock:
     value_mock.has_value = True
     value_mock.int_value.return_value = 20
     climate.value = value_mock
+    return climate
+
+
+@pytest.fixture
+def mock_fan_device() -> Mock:
+    """Fixture for a fan endpoint of a thermostat device."""
+    climate = Mock()
+    climate.fibaro_id = 7
+    climate.endpoint_id = 1
+    climate.parent_fibaro_id = 5
+    climate.name = "Test fan"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.fan"
+    climate.base_type = "com.fibaro.device"
+    climate.properties = {"manufacturer": ""}
+    climate.actions = {"setFanMode": 1}
+    climate.supported_modes = [0, 1, 2]
+    climate.mode = 1
     return climate
 
 
