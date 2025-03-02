@@ -52,6 +52,7 @@ _VALID_STATES = [
     AlarmControlPanelState.ARMED_VACATION,
     AlarmControlPanelState.ARMING,
     AlarmControlPanelState.DISARMED,
+    AlarmControlPanelState.DISARMING,
     AlarmControlPanelState.PENDING,
     AlarmControlPanelState.TRIGGERED,
     STATE_UNAVAILABLE,
