@@ -1,14 +1,14 @@
 {
   "config": {
     "abort": {
-      "already_configured": "A config entry already exists for that account.",
       "reauth_successful": "Reauthentication was successful."
     },
     "error": {
+      "already_configured": "A config entry already exists for that account.",
+      "bad_location": "The location index is not within range.",
       "cannot_connect": "Unable to connect to the vendor's servers.",
       "invalid_auth": "Unknown username or incorrect password.",
-      "rate_exceeded": "Vendor's API rate limit exceeded.",
-      "bad_location": "Location index not in range."
+      "rate_exceeded": "Vendor's API rate limit has been exceeded."
     },
     "step": {
       "user": {

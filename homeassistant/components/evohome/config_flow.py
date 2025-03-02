@@ -209,8 +209,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._config[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
 
-            except AbortFlow as err:  # usually: 'already_configured'
-                errors["base"] = str(err)
+            except AbortFlow as err:
+                errors["base"] = str(err.reason)  # usually: 'already_configured'
 
             except (ConfigEntryAuthFailed, ConfigEntryNotReady) as err:
                 if str(err) not in ("rate_exceeded", "cannot_connect", "invalid_auth"):

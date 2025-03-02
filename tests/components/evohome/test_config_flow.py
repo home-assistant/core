@@ -27,7 +27,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_PASSWORD, CONF_SCAN_INTERVAL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import AbortFlow, FlowResultType
 
 from .conftest import mock_make_request, mock_post_request
 
@@ -411,7 +411,7 @@ async def test_abort_single_instance_allowed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test that only one Evohome config_entry is allowed."""
+    """Test that a second Evohome entry is not allowed."""
 
     # load the first entry
     config_entry.add_to_hass(hass)
@@ -423,3 +423,28 @@ async def test_abort_single_instance_allowed(
 
     assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "single_instance_allowed"
+
+
+async def test_error_already_configured(
+    hass: HomeAssistant,
+    config: EvoConfigFileDictT,
+) -> None:
+    """Test that an Evohome config entry has a unique id."""
+
+    with patch(
+        "homeassistant.config_entries.ConfigFlow._abort_if_unique_id_configured",
+        side_effect=AbortFlow("already_configured"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={
+                CONF_USERNAME: config[CONF_USERNAME],
+                CONF_PASSWORD: config[CONF_PASSWORD],
+            },
+        )
+
+        await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("errors") == {"base": "already_configured"}
