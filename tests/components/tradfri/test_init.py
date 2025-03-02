@@ -137,12 +137,6 @@ async def test_migrate_config_entry_and_identifiers(
     # Add non-tradfri config entry for use in testing negation logic
     config_entry3 = MockConfigEntry(
         domain="test_domain",
-        #        data={
-        #            tradfri.CONF_HOST: "mock-host3",
-        #            tradfri.CONF_IDENTITY: "mock-identity3",
-        #            tradfri.CONF_KEY: "mock-key3",
-        #            tradfri.CONF_GATEWAY_ID: "mock-gateway-id3",
-        #        },
     )
 
     config_entry3.add_to_hass(hass)
@@ -169,7 +163,8 @@ async def test_migrate_config_entry_and_identifiers(
     )
 
     # Update bulb 2 device to have an additional config entry from config_entry3
-    # This is to simulate scenario whereby device entry is shared by multiple config entries
+    # This is to simulate scenario whereby a device entry
+    # is shared by multiple config entries
     # and where at least one of those config entries is not the 'tradfri' domain
     device_registry.async_update_device(
         gateway1_bulb2.id,
