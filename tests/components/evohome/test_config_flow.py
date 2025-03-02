@@ -51,7 +51,7 @@ EXC_USER_502 = ec2.AuthenticationFailedError(
     status=HTTPStatus.BAD_GATEWAY,
 )
 
-STEP_LOCATION_EXCEPTIONS = {
+STEP_LOCN_EXCEPTIONS = {
     "cannot_connect": EXC_LOCN_503,
 }
 
@@ -60,6 +60,39 @@ STEP_USER_EXCEPTIONS = {
     "invalid_auth": EXC_USER_401,
     "rate_exceeded": EXC_USER_429,
 }
+
+
+@pytest.mark.parametrize("error_key", STEP_USER_EXCEPTIONS)
+async def test_step_reauth_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    error_key: str,
+) -> None:
+    """Test failure during step_reauth."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    with patch(
+        "evohomeasync2.auth.AbstractTokenManager.fetch_access_token",
+        side_effect=STEP_USER_EXCEPTIONS[error_key],
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_PASSWORD: "new_password",
+            },
+        )
+
+        await hass.async_block_till_done()
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+    assert result.get("errors") == {"base": error_key}
 
 
 @pytest.mark.parametrize("error_key", STEP_USER_EXCEPTIONS)
@@ -90,7 +123,7 @@ async def test_step_user_errors(
     assert result.get("errors") == {"base": error_key}
 
 
-@pytest.mark.parametrize("error_key", STEP_LOCATION_EXCEPTIONS)
+@pytest.mark.parametrize("error_key", STEP_LOCN_EXCEPTIONS)
 async def test_step_location_errors(
     hass: HomeAssistant,
     config: EvoConfigFileDictT,
@@ -120,7 +153,7 @@ async def test_step_location_errors(
 
     with patch(
         "evohome.auth.AbstractAuth._make_request",
-        side_effect=STEP_LOCATION_EXCEPTIONS[error_key],
+        side_effect=STEP_LOCN_EXCEPTIONS[error_key],
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -181,9 +214,11 @@ async def test_step_location_bad_index(
 
 
 async def test_step_reauth(
-    hass: HomeAssistant, config_entry: MockConfigEntry, install: str
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    install: str,
 ) -> None:
-    """Test failure during step_location."""
+    """Test success during step_reauth."""
 
     config_entry.add_to_hass(hass)
 
@@ -372,14 +407,16 @@ async def test_import_flow(
     }
 
 
-async def test_one_config_allowed(
+async def test_abort_single_instance_allowed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test that only one Evohome config_entry is allowed."""
 
+    # load the first entry
     config_entry.add_to_hass(hass)
 
+    # attempt to create a second entry
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
