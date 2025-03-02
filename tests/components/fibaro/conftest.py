@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
+from pyfibaro.fibaro_device import SceneEvent
 import pytest
 
 from homeassistant.components.fibaro import CONF_IMPORT_PLUGINS, DOMAIN
@@ -228,6 +229,26 @@ def mock_fan_device() -> Mock:
     climate.actions = {"setFanMode": 1}
     climate.supported_modes = [0, 1, 2]
     climate.mode = 1
+    return climate
+
+
+@pytest.fixture
+def mock_button_device() -> Mock:
+    """Fixture for a button device."""
+    climate = Mock()
+    climate.fibaro_id = 8
+    climate.parent_fibaro_id = 0
+    climate.name = "Test button"
+    climate.room_id = 1
+    climate.dead = False
+    climate.visible = True
+    climate.enabled = True
+    climate.type = "com.fibaro.remoteController"
+    climate.base_type = "com.fibaro.actor"
+    climate.properties = {"manufacturer": ""}
+    climate.central_scene_event = [SceneEvent(1, "Pressed")]
+    climate.actions = {}
+    climate.interfaces = ["zwaveCentralScene"]
     return climate
 
 
