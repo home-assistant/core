@@ -165,6 +165,59 @@
     }),
   ])
 # ---
+# name: test_add_delta_content_stream[deltas7]
+  list([
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': None,
+      'metadata': dict({
+        'test': 'test',
+      }),
+      'role': 'assistant',
+      'thinking': 'Test',
+      'tool_calls': None,
+    }),
+  ])
+# ---
+# name: test_add_delta_content_stream[deltas8]
+  list([
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': None,
+      'metadata': dict({
+        'test': 'test',
+      }),
+      'role': 'assistant',
+      'thinking': 'Test',
+      'tool_calls': None,
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'content': 'Test',
+      'metadata': dict({
+        'test': 'test 2',
+      }),
+      'role': 'assistant',
+      'thinking': 'Test 2',
+      'tool_calls': list([
+        dict({
+          'id': 'mock-tool-call-id',
+          'tool_args': dict({
+            'param1': 'Test Param 1',
+          }),
+          'tool_name': 'test_tool',
+        }),
+      ]),
+    }),
+    dict({
+      'agent_id': 'mock-agent-id',
+      'role': 'tool_result',
+      'tool_call_id': 'mock-tool-call-id',
+      'tool_name': 'test_tool',
+      'tool_result': 'Test Param 1',
+    }),
+  ])
+# ---
 # name: test_template_error
   dict({
     'continue_conversation': False,
