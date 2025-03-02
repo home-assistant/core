@@ -137,10 +137,19 @@ async def test_migrate_config_entry_and_identifiers(
     # Add non-tradfri config entry for use in testing negation logic
     config_entry3 = MockConfigEntry(
         domain="test_domain",
+        data={
+            "gateway_id": "config_entry_3",
+        },
     )
 
     config_entry3.add_to_hass(hass)
 
+    # Create dummy gateway device for config entry 3
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry3.entry_id,
+        identifiers={(config_entry3.domain, config_entry3.data["gateway_id"])},
+        name="test_gateway",
+    )
     # Create bulb 1 on gateway 1 in Device Registry - this has the old identifiers format
     gateway1_bulb1 = device_registry.async_get_or_create(
         config_entry_id=config_entry1.entry_id,
@@ -169,6 +178,9 @@ async def test_migrate_config_entry_and_identifiers(
     device_registry.async_update_device(
         gateway1_bulb2.id,
         add_config_entry_id=config_entry3.entry_id,
+        merge_identifiers={
+            ("test_domain", f"{config_entry3.data['gateway_id']}-device2")
+        },
     )
 
     # Create a device on config entry 3 in Device Registry
@@ -229,10 +241,10 @@ async def test_migrate_config_entry_and_identifiers(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry3.entry_id
     )
-    assert len(device_entries) == 2
-    assert device_entries[0].id == config_entry3_device.id
-    assert device_entries[0].identifiers == {("test_domain", "config_entry_3-device1")}
-    assert device_entries[0].config_entries == {config_entry3.entry_id}
+    assert len(device_entries) == 3
+    assert device_entries[1].id == config_entry3_device.id
+    assert device_entries[1].identifiers == {("test_domain", "config_entry_3-device1")}
+    assert device_entries[1].config_entries == {config_entry3.entry_id}
 
     # Assert that the tradfri config entries have been migrated to v2 and
     # the non-tradfri config entry remains at v1
