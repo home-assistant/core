@@ -14,9 +14,10 @@ from pyfibaro.fibaro_client import (
 )
 from pyfibaro.fibaro_data_helper import read_rooms
 from pyfibaro.fibaro_device import DeviceModel
+from pyfibaro.fibaro_device_manager import FibaroDeviceManager
 from pyfibaro.fibaro_info import InfoModel
 from pyfibaro.fibaro_scene import SceneModel
-from pyfibaro.fibaro_state_resolver import FibaroEvent, FibaroStateResolver
+from pyfibaro.fibaro_state_resolver import FibaroEvent
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_URL, CONF_USERNAME, Platform
@@ -81,8 +82,8 @@ class FibaroController:
         self._client = fibaro_client
         self._fibaro_info = info
 
-        # Whether to import devices from plugins
-        self._import_plugins = import_plugins
+        # The fibaro device manager exposes higher level API to access fibaro devices
+        self._fibaro_device_manager = FibaroDeviceManager(fibaro_client, import_plugins)
         # Mapping roomId to room object
         self._room_map = read_rooms(fibaro_client)
         self._device_map: dict[int, DeviceModel]  # Mapping deviceId to device object
@@ -91,79 +92,30 @@ class FibaroController:
         )  # List of devices by entity platform
         # All scenes
         self._scenes = self._client.read_scenes()
-        self._callbacks: dict[int, list[Any]] = {}  # Update value callbacks by deviceId
-        # Event callbacks by device id
-        self._event_callbacks: dict[int, list[Callable[[FibaroEvent], None]]] = {}
         # Unique serial number of the hub
         self.hub_serial = info.serial_number
         # Device infos by fibaro device id
         self._device_infos: dict[int, DeviceInfo] = {}
         self._read_devices()
 
-    def enable_state_handler(self) -> None:
-        """Start StateHandler thread for monitoring updates."""
-        self._client.register_update_handler(self._on_state_change)
+    def disconnect(self) -> None:
+        """Close push channel."""
+        self._fibaro_device_manager.close()
 
-    def disable_state_handler(self) -> None:
-        """Stop StateHandler thread used for monitoring updates."""
-        self._client.unregister_update_handler()
-
-    def _on_state_change(self, state: Any) -> None:
-        """Handle change report received from the HomeCenter."""
-        callback_set = set()
-        for change in state.get("changes", []):
-            try:
-                dev_id = change.pop("id")
-                if dev_id not in self._device_map:
-                    continue
-                device = self._device_map[dev_id]
-                for property_name, value in change.items():
-                    if property_name == "log":
-                        if value and value != "transfer OK":
-                            _LOGGER.debug("LOG %s: %s", device.friendly_name, value)
-                        continue
-                    if property_name == "logTemp":
-                        continue
-                    if property_name in device.properties:
-                        device.properties[property_name] = value
-                        _LOGGER.debug(
-                            "<- %s.%s = %s", device.ha_id, property_name, str(value)
-                        )
-                    else:
-                        _LOGGER.warning("%s.%s not found", device.ha_id, property_name)
-                    if dev_id in self._callbacks:
-                        callback_set.add(dev_id)
-            except (ValueError, KeyError):
-                pass
-        for item in callback_set:
-            for callback in self._callbacks[item]:
-                callback()
-
-        resolver = FibaroStateResolver(state)
-        for event in resolver.get_events():
-            # event does not always have a fibaro id, therefore it is
-            # essential that we first check for relevant event type
-            if (
-                event.event_type.lower() == "centralsceneevent"
-                and event.fibaro_id in self._event_callbacks
-            ):
-                for callback in self._event_callbacks[event.fibaro_id]:
-                    callback(event)
-
-    def register(self, device_id: int, callback: Any) -> None:
+    def register(
+        self, device_id: int, callback: Callable[[DeviceModel], None]
+    ) -> Callable[[], None]:
         """Register device with a callback for updates."""
-        device_callbacks = self._callbacks.setdefault(device_id, [])
-        device_callbacks.append(callback)
+        return self._fibaro_device_manager.add_change_listener(device_id, callback)
 
     def register_event(
         self, device_id: int, callback: Callable[[FibaroEvent], None]
-    ) -> None:
+    ) -> Callable[[], None]:
         """Register device with a callback for central scene events.
 
         The callback receives one parameter with the event.
         """
-        device_callbacks = self._event_callbacks.setdefault(device_id, [])
-        device_callbacks.append(callback)
+        return self._fibaro_device_manager.add_event_listener(device_id, callback)
 
     def get_children(self, device_id: int) -> list[DeviceModel]:
         """Get a list of child devices."""
@@ -286,7 +238,7 @@ class FibaroController:
 
     def _read_devices(self) -> None:
         """Read and process the device list."""
-        devices = self._client.read_devices()
+        devices = self._fibaro_device_manager.get_devices()
         self._device_map = {}
         last_climate_parent = None
         last_endpoint = None
@@ -301,8 +253,8 @@ class FibaroController:
                 device.ha_id = (
                     f"{slugify(room_name)}_{slugify(device.name)}_{device.fibaro_id}"
                 )
-                if device.enabled and (not device.is_plugin or self._import_plugins):
-                    platform = self._map_device_to_platform(device)
+
+                platform = self._map_device_to_platform(device)
                 if platform is None:
                     continue
                 device.unique_id_str = f"{slugify(self.hub_serial)}.{device.fibaro_id}"
@@ -392,8 +344,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> bo
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    controller.enable_state_handler()
-
     return True
 
 
@@ -402,8 +352,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: FibaroConfigEntry) -> b
     _LOGGER.debug("Shutting down Fibaro connection")
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    entry.runtime_data.disable_state_handler()
-
+    entry.runtime_data.disconnect()
     return unload_ok
 
 
