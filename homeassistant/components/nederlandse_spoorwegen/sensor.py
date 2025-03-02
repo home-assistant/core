@@ -265,22 +265,23 @@ class NSDepartureSensor(SensorEntity):
                     sorted_times = sorted(filtered_times, key=lambda x: x[1])
                     self._first_trip = self._trips[sorted_times[0][0]]
                     self._state = sorted_times[0][1].strftime("%H:%M")
+
+                    # Filter again to remove trains that leave at the exact same time.
+                    filtered_times = [
+                        (i, time)
+                        for i, time in enumerate(all_times)
+                        if time > sorted_times[0][1]
+                    ]
+
+                    if len(filtered_times) > 0:
+                        sorted_times = sorted(filtered_times, key=lambda x: x[1])
+                        self._next_trip = self._trips[sorted_times[0][0]]
+                    else:
+                        self._next_trip = None
+
                 else:
                     self._first_trip = None
                     self._state = None
-
-                # Filter again to remove trains that leave at the exact same time.
-                filtered_times = [
-                    (i, time)
-                    for i, time in enumerate(all_times)
-                    if time > sorted_times[0][1]
-                ]
-
-                if len(filtered_times) > 0:
-                    sorted_times = sorted(filtered_times, key=lambda x: x[1])
-                    self._next_trip = self._trips[sorted_times[0][0]]
-                else:
-                    self._next_trip = None
 
         except (
             requests.exceptions.ConnectionError,
