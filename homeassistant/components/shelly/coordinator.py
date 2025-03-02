@@ -38,10 +38,8 @@ from .bluetooth import async_connect_scanner
 from .const import (
     ATTR_CHANNEL,
     ATTR_CLICK_TYPE,
-    ATTR_COMPONENT,
     ATTR_DEVICE,
     ATTR_GENERATION,
-    ATTR_TEST_TYPE,
     BATTERY_DEVICES_WITH_PERMANENT_CONNECTION,
     CONF_BLE_SCANNER_MODE,
     CONF_SLEEP_PERIOD,
@@ -49,7 +47,6 @@ from .const import (
     DUAL_MODE_LIGHT_MODELS,
     ENTRY_RELOAD_COOLDOWN,
     EVENT_SHELLY_CLICK,
-    EVENT_SHELLY_TEST,
     INPUTS_EVENTS_DICT,
     LOGGER,
     MAX_PUSH_UPDATE_FAILURES,
@@ -612,17 +609,6 @@ class ShellyRpcCoordinator(ShellyCoordinatorBase[RpcDevice]):
             elif event_type in RPC_TEST_EVENTS_TYPES:
                 for event_callback in self._test_event_listeners:
                     event_callback(event)
-                self.hass.bus.async_fire(
-                    EVENT_SHELLY_TEST,
-                    {
-                        ATTR_DEVICE_ID: self.device_id,
-                        ATTR_DEVICE: self.device.hostname,
-                        ATTR_CHANNEL: event["id"] + 1,
-                        ATTR_COMPONENT: event["component"],
-                        ATTR_GENERATION: 2,
-                        ATTR_TEST_TYPE: event["event"],
-                    },
-                )
             elif event_type in RPC_INPUTS_EVENTS_TYPES:
                 for event_callback in self._input_event_listeners:
                     event_callback(event)
