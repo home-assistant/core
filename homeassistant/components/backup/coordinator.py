@@ -74,7 +74,8 @@ class BackupDataUpdateCoordinator(DataUpdateCoordinator[BackupCoordinatorData]):
             self.backup_manager.config.data.schedule.next_automatic_backup,
         )
 
-    async def async_unsubscribe(self) -> None:
+    @callback
+    def async_unsubscribe(self) -> None:
         """Unsubscribe from events."""
         for unsub in self.unsubscribe:
             unsub()
