@@ -319,12 +319,8 @@ class HomeeSensor(HomeeEntity, SensorEntity):
         if attribute.instance > 0:
             self._attr_translation_key = f"{self._attr_translation_key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
-
-    @property
-    def device_class(self) -> SensorDeviceClass | None:
-        """Return the device class of the sensor."""
-        return self.entity_description.device_class_fn(
-            self._attribute, self.entity_description.device_class
+        self._attr_device_class = description.device_class_fn(
+            attribute, description.device_class
         )
 
     @property
