@@ -71,59 +71,6 @@ async def test_device_registry_update(
     assert gw_dev.sw_version == VERSION_NEW
 
 
-# Device migration test can be removed in 2025.4.0
-async def test_device_migration(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    mock_config_entry: MockConfigEntry,
-    mock_pyotgw: MagicMock,
-) -> None:
-    """Test that the device registry is updated correctly."""
-    mock_config_entry.add_to_hass(hass)
-
-    device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={
-            (DOMAIN, MOCK_GATEWAY_ID),
-        },
-        name="Mock Gateway",
-        manufacturer="Schelte Bron",
-        model="OpenTherm Gateway",
-        sw_version=VERSION_TEST,
-    )
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, MOCK_GATEWAY_ID)})
-        is None
-    )
-
-    gw_dev = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.GATEWAY}")}
-    )
-    assert gw_dev is not None
-
-    assert (
-        device_registry.async_get_device(
-            identifiers={
-                (DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.BOILER}")
-            }
-        )
-        is not None
-    )
-
-    assert (
-        device_registry.async_get_device(
-            identifiers={
-                (DOMAIN, f"{MOCK_GATEWAY_ID}-{OpenThermDeviceIdentifier.THERMOSTAT}")
-            }
-        )
-        is not None
-    )
-
-
 # Entity migration test can be removed in 2025.4.0
 async def test_climate_entity_migration(
     hass: HomeAssistant,
