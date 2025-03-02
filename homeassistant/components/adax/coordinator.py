@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the Adax component."""
 
 import logging
-from typing import Any
+from typing import Any, cast
 
 from adax import Adax
 from adax_local import Adax as AdaxLocal
@@ -52,7 +52,7 @@ class AdaxCloudCoordinator(DataUpdateCoordinator[list[dict[str, Any]]]):
         return await self.adax_data_handler.get_rooms() or []
 
 
-class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any] | None]):
     """Coordinator for updating data to and from Adax (local)."""
 
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
@@ -76,6 +76,8 @@ class AdaxLocalCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             websession=async_get_clientsession(hass, verify_ssl=False),
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, Any] | None:
         """Fetch data from the Adax."""
-        return await self.adax_data_handler.get_status()
+        if result := await self.adax_data_handler.get_status():
+            return cast(dict[str, Any], result)
+        return None

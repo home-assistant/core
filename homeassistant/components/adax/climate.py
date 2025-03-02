@@ -20,7 +20,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import AdaxConfigEntry
@@ -31,19 +31,19 @@ from .coordinator import AdaxCloudCoordinator, AdaxLocalCoordinator
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: AdaxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Adax thermostat with config flow."""
     if entry.data.get(CONNECTION_TYPE) == LOCAL:
-        coordinator: AdaxLocalCoordinator = entry.runtime_data
+        local_coordinator = cast(AdaxLocalCoordinator, entry.runtime_data)
         async_add_entities(
-            [LocalAdaxDevice(coordinator, entry.data[CONF_UNIQUE_ID])],
+            [LocalAdaxDevice(local_coordinator, entry.data[CONF_UNIQUE_ID])],
             True,
         )
     else:
-        coordinator: AdaxCloudCoordinator = entry.runtime_data
+        cloud_coordinator = cast(AdaxCloudCoordinator, entry.runtime_data)
         async_add_entities(
-            (AdaxDevice(room, coordinator) for room in coordinator.data),
+            (AdaxDevice(room, cloud_coordinator) for room in cloud_coordinator.data),
             True,
         )
 
@@ -120,7 +120,7 @@ class AdaxDevice(CoordinatorEntity[AdaxCloudCoordinator], ClimateEntity):
         super()._handle_coordinator_update()
 
     def _apply_data(self, room: dict[str, Any]) -> None:
-        """Update the appropriate attributues based on recieved data."""
+        """Update the appropriate attributues based on received data."""
         self._attr_name = room["name"]
         self._attr_current_temperature = room.get("temperature")
         self._attr_target_temperature = room.get("targetTemperature")
