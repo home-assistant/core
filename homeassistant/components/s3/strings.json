@@ -9,8 +9,10 @@
           "endpoint_url": "Endpoint URL"
         },
         "data_description": {
-          "endpoint_url": "Endpoint URL provided to [Boto3 Session](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html). Region-specific [AWS S3 endpoints](https://docs.aws.amazon.com/general/latest/gr/s3.html) are available in their docs.",
-          "bucket": "Bucket must already exist and be writable by the provided credentials."
+          "access_key_id": "Access Key ID to connect to S3 API",
+          "secret_access_key": "Secret Access Key to connect to S3 API",
+          "bucket": "Bucket must already exist and be writable by the provided credentials.",
+          "endpoint_url": "Endpoint URL provided to [Boto3 Session](https://boto3.amazonaws.com/v1/documentation/api/latest/reference/core/session.html). Region-specific [AWS S3 endpoints](https://docs.aws.amazon.com/general/latest/gr/s3.html) are available in their docs."
         },
         "title": "Add S3 bucket"
       }
