@@ -18,7 +18,7 @@ from spotifyaio import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -56,11 +56,17 @@ class SpotifyCoordinator(DataUpdateCoordinator[SpotifyCoordinatorData]):
     current_user: UserProfile
     config_entry: SpotifyConfigEntry
 
-    def __init__(self, hass: HomeAssistant, client: SpotifyClient) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: SpotifyConfigEntry,
+        client: SpotifyClient,
+    ) -> None:
         """Initialize."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
         )

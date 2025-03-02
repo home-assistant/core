@@ -1,6 +1,6 @@
 {
   "domain": "incomfort",
-  "name": "Intergas InComfort/Intouch Lan2RF gateway",
+  "name": "Intergas gateway",
   "codeowners": ["@jbouwh"],
   "config_flow": true,
   "dhcp": [

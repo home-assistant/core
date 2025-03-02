@@ -40,7 +40,7 @@ from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from .common import MockSensor
@@ -5449,12 +5449,11 @@ async def test_exclude_attributes(hass: HomeAssistant) -> None:
     assert ATTR_FRIENDLY_NAME in states[0].attributes
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["test"])
 @pytest.mark.parametrize(
-    "ignore_translations",
+    "ignore_missing_translations",
     [
         [
-            "component.test.issues..title",
-            "component.test.issues..description",
             "component.sensor.issues..title",
             "component.sensor.issues..description",
         ]

@@ -15,7 +15,7 @@ from homeassistant.components.button import (
 )
 from homeassistant.components.siren import DOMAIN as SIREN_DOMAIN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TPLinkConfigEntry
 from .deprecate import DeprecatedInfo
@@ -70,6 +70,23 @@ BUTTON_DESCRIPTIONS: Final = [
         key="tilt_down",
         available_fn=lambda dev: dev.is_on,
     ),
+    TPLinkButtonEntityDescription(key="pair"),
+    TPLinkButtonEntityDescription(key="unpair"),
+    TPLinkButtonEntityDescription(
+        key="main_brush_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="side_brush_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="sensor_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="filter_reset",
+    ),
+    TPLinkButtonEntityDescription(
+        key="charging_contacts_reset",
+    ),
 ]
 
 BUTTON_DESCRIPTIONS_MAP = {desc.key: desc for desc in BUTTON_DESCRIPTIONS}
@@ -78,7 +95,7 @@ BUTTON_DESCRIPTIONS_MAP = {desc.key: desc for desc in BUTTON_DESCRIPTIONS}
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TPLinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up buttons."""
     data = config_entry.runtime_data

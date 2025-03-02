@@ -7,7 +7,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 
 from .const import (
@@ -28,7 +28,7 @@ HEOS_SIGN_IN_SCHEMA = vol.Schema(
 HEOS_SIGN_OUT_SCHEMA = vol.Schema({})
 
 
-def register(hass: HomeAssistant):
+def register(hass: HomeAssistant) -> None:
     """Register HEOS services."""
     hass.services.async_register(
         DOMAIN,
@@ -46,7 +46,6 @@ def register(hass: HomeAssistant):
 
 def _get_controller(hass: HomeAssistant) -> Heos:
     """Get the HEOS controller instance."""
-
     _LOGGER.warning(
         "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.8.0 release"
     )
@@ -79,16 +78,25 @@ async def _sign_in_handler(service: ServiceCall) -> None:
     try:
         await controller.sign_in(username, password)
     except CommandAuthenticationError as err:
-        _LOGGER.error("Sign in failed: %s", err)
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="sign_in_auth_error"
+        ) from err
     except HeosError as err:
-        _LOGGER.error("Unable to sign in: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="sign_in_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
 
 async def _sign_out_handler(service: ServiceCall) -> None:
     """Sign out of the HEOS account."""
-
     controller = _get_controller(service.hass)
     try:
         await controller.sign_out()
     except HeosError as err:
-        _LOGGER.error("Unable to sign out: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="sign_out_error",
+            translation_placeholders={"error": str(err)},
+        ) from err

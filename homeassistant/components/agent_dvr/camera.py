@@ -10,7 +10,7 @@ from homeassistant.components.mjpeg import MjpegCamera, filter_urllib3_logging
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 
@@ -39,7 +39,7 @@ CAMERA_SERVICES = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: AgentDVRConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Agent cameras."""
     filter_urllib3_logging()

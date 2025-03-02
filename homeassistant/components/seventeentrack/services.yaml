@@ -11,7 +11,7 @@ get_packages:
             - "ready_to_be_picked_up"
             - "undelivered"
             - "delivered"
-            - "returned"
+            - "alert"
           translation_key: package_state
     config_entry_id:
       required: true

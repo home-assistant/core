@@ -17,12 +17,7 @@ from homeassistant.components.device_tracker import (
     CONF_CONSIDER_HOME,
     DEFAULT_CONSIDER_HOME,
 )
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -53,6 +48,7 @@ from .const import (
     ERROR_UPNP_NOT_CONFIGURED,
     FRITZ_AUTH_EXCEPTIONS,
 )
+from .coordinator import FritzConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -67,7 +63,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: FritzConfigEntry,
     ) -> FritzBoxToolsOptionsFlowHandler:
         """Get the options flow for this handler."""
         return FritzBoxToolsOptionsFlowHandler()
@@ -116,7 +112,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return None
 
-    async def async_check_configured_entry(self) -> ConfigEntry | None:
+    async def async_check_configured_entry(self) -> FritzConfigEntry | None:
         """Check if entry is configured."""
         current_host = await self.hass.async_add_executor_job(
             socket.gethostbyname, self._host

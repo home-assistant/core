@@ -183,6 +183,9 @@
       "mode": {
         "name": "Mode"
       },
+      "device_energy_management_mode": {
+        "name": "Energy management mode"
+      },
       "sensitivity_level": {
         "name": "Sensitivity",
         "state": {
@@ -205,6 +208,18 @@
       },
       "temperature_display_mode": {
         "name": "Temperature display mode"
+      },
+      "laundry_washer_number_of_rinses": {
+        "name": "Number of rinses",
+        "state": {
+          "off": "[%key:common::state::off%]",
+          "normal": "Normal",
+          "extra": "Extra",
+          "max": "Max"
+        }
+      },
+      "laundry_washer_spin_speed": {
+        "name": "Spin speed"
       }
     },
     "sensor": {
@@ -246,7 +261,10 @@
           "stopped": "Stopped",
           "running": "Running",
           "paused": "[%key:common::state::paused%]",
-          "error": "Error"
+          "error": "Error",
+          "seeking_charger": "Seeking charger",
+          "charging": "[%key:common::state::charging%]",
+          "docked": "Docked"
         }
       },
       "switch_current_position": {
@@ -257,6 +275,9 @@
       },
       "battery_replacement_description": {
         "name": "Battery type"
+      },
+      "current_phase": {
+        "name": "Current phase"
       }
     },
     "switch": {

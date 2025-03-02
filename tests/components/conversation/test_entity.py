@@ -6,7 +6,7 @@ from homeassistant.components import conversation
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.helpers import intent
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import mock_restore_cache
 

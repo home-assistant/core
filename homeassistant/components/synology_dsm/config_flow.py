@@ -33,7 +33,6 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
@@ -41,7 +40,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -67,7 +65,6 @@ from .const import (
     DEFAULT_BACKUP_PATH,
     DEFAULT_PORT,
     DEFAULT_PORT_SSL,
-    DEFAULT_SCAN_INTERVAL,
     DEFAULT_SNAPSHOT_QUALITY,
     DEFAULT_TIMEOUT,
     DEFAULT_USE_SSL,
@@ -458,12 +455,6 @@ class SynologyDSMOptionsFlowHandler(OptionsFlow):
 
         data_schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_SCAN_INTERVAL,
-                    default=self.config_entry.options.get(
-                        CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL
-                    ),
-                ): cv.positive_int,
                 vol.Required(
                     CONF_SNAPSHOT_QUALITY,
                     default=self.config_entry.options.get(

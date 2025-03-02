@@ -8,6 +8,7 @@ entities to update. Entities subscribe to entity-specific updates within the ent
 from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 from pyheos import (
     Credentials,
@@ -15,6 +16,7 @@ from pyheos import (
     HeosError,
     HeosNowPlayingMedia,
     HeosOptions,
+    HeosPlayer,
     MediaItem,
     MediaType,
     PlayerUpdateResult,
@@ -23,7 +25,7 @@ from pyheos import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HassJob, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_call_later
@@ -57,6 +59,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
                 credentials=credentials,
             )
         )
+        self._platform_callbacks: list[Callable[[Sequence[HeosPlayer]], None]] = []
         self._update_sources_pending: bool = False
         self._source_list: list[str] = []
         self._favorites: dict[int, MediaItem] = {}
@@ -68,6 +71,11 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         """Get input sources across all devices."""
         return self._inputs
 
+    @property
+    def favorites(self) -> dict[int, MediaItem]:
+        """Get favorite stations."""
+        return self._favorites
+
     async def async_setup(self) -> None:
         """Set up the coordinator; connect to the host; and retrieve initial data."""
         # Add before connect as it may occur during initial connection
@@ -76,12 +84,20 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         try:
             await self.heos.connect()
         except HeosError as error:
-            raise ConfigEntryNotReady from error
+            _LOGGER.debug("Unable to connect to %s", self.host, exc_info=True)
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_connect",
+                translation_placeholders={"host": self.host},
+            ) from error
         # Load players
         try:
             await self.heos.get_players()
         except HeosError as error:
-            raise ConfigEntryNotReady from error
+            _LOGGER.debug("Unexpected error retrieving players", exc_info=True)
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN, translation_key="unable_to_get_players"
+            ) from error
 
         if not self.heos.is_signed_in:
             _LOGGER.warning(
@@ -101,12 +117,35 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         await self.heos.disconnect()
         await super().async_shutdown()
 
-    def async_add_listener(self, update_callback, context=None) -> Callable[[], None]:
+    def async_add_listener(
+        self, update_callback: CALLBACK_TYPE, context: Any = None
+    ) -> Callable[[], None]:
         """Add a listener for the coordinator."""
         remove_listener = super().async_add_listener(update_callback, context)
         # Update entities so group_member entity_ids fully populate.
         self.async_update_listeners()
         return remove_listener
+
+    def async_add_platform_callback(
+        self, add_entities_callback: Callable[[Sequence[HeosPlayer]], None]
+    ) -> None:
+        """Add a callback to add entities for a platform."""
+        self._platform_callbacks.append(add_entities_callback)
+
+    def _async_handle_player_update_result(
+        self, update_result: PlayerUpdateResult
+    ) -> None:
+        """Handle a player update result."""
+        if update_result.added_player_ids and self._platform_callbacks:
+            new_players = [
+                self.heos.players[player_id]
+                for player_id in update_result.added_player_ids
+            ]
+            for add_entities_callback in self._platform_callbacks:
+                add_entities_callback(new_players)
+
+        if update_result.updated_player_ids:
+            self._async_update_player_ids(update_result.updated_player_ids)
 
     async def _async_on_auth_failure(self) -> None:
         """Handle when the user credentials are no longer valid."""
@@ -131,8 +170,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         """Handle a controller event, such as players or groups changed."""
         if event == const.EVENT_PLAYERS_CHANGED:
             assert data is not None
-            if data.updated_player_ids:
-                self._async_update_player_ids(data.updated_player_ids)
+            self._async_handle_player_update_result(data)
         elif (
             event in (const.EVENT_SOURCES_CHANGED, const.EVENT_USER_CHANGED)
             and not self._update_sources_pending
@@ -226,9 +264,7 @@ class HeosCoordinator(DataUpdateCoordinator[None]):
         except HeosError as error:
             _LOGGER.error("Unable to refresh players: %s", error)
             return
-        # After reconnecting, player_id may have changed
-        if player_updates.updated_player_ids:
-            self._async_update_player_ids(player_updates.updated_player_ids)
+        self._async_handle_player_update_result(player_updates)
 
     @callback
     def async_get_source_list(self) -> list[str]:
