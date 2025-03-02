@@ -107,6 +107,29 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+
+        if user_input:
+            if not (errors := await self.validate_input(user_input)):
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconf_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA,
+                suggested_values={CONF_EMAIL: reconf_entry.data[CONF_EMAIL]},
+            ),
+            errors=errors,
+        )
+
     async def validate_input(self, user_input: Mapping[str, Any]) -> dict[str, str]:
         """Auth Helper."""
 

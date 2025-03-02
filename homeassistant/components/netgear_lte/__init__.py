@@ -6,7 +6,6 @@ from aiohttp.cookiejar import CookieJar
 import eternalegypt
 from eternalegypt.eternalegypt import SMS
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -23,7 +22,7 @@ from .const import (
     DATA_SESSION,
     DOMAIN,
 )
-from .coordinator import NetgearLTEDataUpdateCoordinator
+from .coordinator import NetgearLTEConfigEntry, NetgearLTEDataUpdateCoordinator
 from .services import async_setup_services
 
 EVENT_SMS = "netgear_lte_sms"
@@ -55,7 +54,6 @@ PLATFORMS = [
     Platform.NOTIFY,
     Platform.SENSOR,
 ]
-type NetgearLTEConfigEntry = ConfigEntry[NetgearLTEDataUpdateCoordinator]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -94,7 +92,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -
 
     await modem.add_sms_listener(fire_sms_event)
 
-    coordinator = NetgearLTEDataUpdateCoordinator(hass, modem)
+    coordinator = NetgearLTEDataUpdateCoordinator(hass, entry, modem)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
@@ -118,12 +116,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: NetgearLTEConfigEntry) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    loaded_entries = [
-        entry
-        for entry in hass.config_entries.async_entries(DOMAIN)
-        if entry.state == ConfigEntryState.LOADED
-    ]
-    if len(loaded_entries) == 1:
+    if not hass.config_entries.async_loaded_entries(DOMAIN):
         hass.data.pop(DOMAIN, None)
         for service_name in hass.services.async_services()[DOMAIN]:
             hass.services.async_remove(DOMAIN, service_name)

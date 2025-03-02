@@ -75,20 +75,34 @@ async def test_coordinator_update_failing_get_appliances(
     assert config_entry.state == ConfigEntryState.SETUP_RETRY
 
 
-async def test_coordinator_update_failing_get_settings_status(
+@pytest.mark.parametrize(
+    "mock_method",
+    [
+        "get_settings",
+        "get_status",
+        "get_all_programs",
+        "get_available_commands",
+        "get_available_program",
+    ],
+)
+async def test_coordinator_update_failing(
+    mock_method: str,
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     setup_credentials: None,
-    client_with_exception: MagicMock,
+    client: MagicMock,
 ) -> None:
     """Test that although is not possible to get settings and status, the config entry is loaded.
 
     This is for cases where some appliances are reachable and some are not in the same configuration entry.
     """
-    # Get home appliances does pass at client_with_exception.get_home_appliances mock, so no need to mock it again
+    setattr(client, mock_method, AsyncMock(side_effect=HomeConnectError()))
+
     assert config_entry.state == ConfigEntryState.NOT_LOADED
-    await integration_setup(client_with_exception)
+    await integration_setup(client)
     assert config_entry.state == ConfigEntryState.LOADED
+
+    getattr(client, mock_method).assert_called()
 
 
 @pytest.mark.parametrize("appliance_ha_id", ["Dishwasher"], indirect=True)

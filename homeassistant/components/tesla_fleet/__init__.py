@@ -139,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 api = VehicleSigned(tesla.vehicle, vin)
             else:
                 api = VehicleSpecific(tesla.vehicle, vin)
-            coordinator = TeslaFleetVehicleDataCoordinator(hass, api, product)
+            coordinator = TeslaFleetVehicleDataCoordinator(hass, entry, api, product)
 
             await coordinator.async_config_entry_first_refresh()
 
@@ -175,9 +175,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 
             api = EnergySpecific(tesla.energy, site_id)
 
-            live_coordinator = TeslaFleetEnergySiteLiveCoordinator(hass, api)
-            history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(hass, api)
-            info_coordinator = TeslaFleetEnergySiteInfoCoordinator(hass, api, product)
+            live_coordinator = TeslaFleetEnergySiteLiveCoordinator(hass, entry, api)
+            history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+                hass, entry, api
+            )
+            info_coordinator = TeslaFleetEnergySiteInfoCoordinator(
+                hass, entry, api, product
+            )
 
             await live_coordinator.async_config_entry_first_refresh()
             await history_coordinator.async_config_entry_first_refresh()

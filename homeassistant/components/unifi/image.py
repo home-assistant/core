@@ -16,7 +16,7 @@ from aiounifi.models.wlan import Wlan
 from homeassistant.components.image import ImageEntity, ImageEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
@@ -67,7 +67,7 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up image platform for UniFi Network integration."""
     config_entry.runtime_data.entity_loader.register_platform(
