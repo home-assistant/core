@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timedelta
-import logging
 from typing import Any
 
 from pytradfri import Gateway, RequestError
@@ -44,8 +43,6 @@ PLATFORMS = [
 ]
 SIGNAL_GW = "tradfri.gw_status"
 TIMEOUT_API = 30
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
@@ -197,7 +194,7 @@ def remove_stale_devices(
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migrating Tradfri configuration from version %s.%s",
         config_entry.version,
         config_entry.minor_version,
@@ -213,7 +210,7 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
 
         hass.config_entries.async_update_entry(config_entry, version=2)
 
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migration to Tradfri configuration version %s.%s successful",
         config_entry.version,
         config_entry.minor_version,

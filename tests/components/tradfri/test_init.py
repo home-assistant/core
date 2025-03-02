@@ -116,9 +116,9 @@ async def test_migrate_config_entry_and_identifiers(
         },
     )
 
-    gateway_1 = mock_gateway_fixture(command_store, GATEWAY_ID1)
+    gateway1 = mock_gateway_fixture(command_store, GATEWAY_ID1)
     command_store.register_device(
-        gateway_1, load_json_object_fixture("bulb_w.json", DOMAIN)
+        gateway1, load_json_object_fixture("bulb_w.json", DOMAIN)
     )
     config_entry1.add_to_hass(hass)
 
@@ -134,53 +134,53 @@ async def test_migrate_config_entry_and_identifiers(
 
     config_entry2.add_to_hass(hass)
 
-    # Add non-tradfri config-entry for use in testing negation logic
+    # Add non-tradfri config entry for use in testing negation logic
     config_entry3 = MockConfigEntry(
-        domain="TestDomain",
-        data={
-            tradfri.CONF_HOST: "mock-host3",
-            tradfri.CONF_IDENTITY: "mock-identity3",
-            tradfri.CONF_KEY: "mock-key3",
-            tradfri.CONF_GATEWAY_ID: "mock-gateway-id3",
-        },
+        domain="test_domain",
+        #        data={
+        #            tradfri.CONF_HOST: "mock-host3",
+        #            tradfri.CONF_IDENTITY: "mock-identity3",
+        #            tradfri.CONF_KEY: "mock-key3",
+        #            tradfri.CONF_GATEWAY_ID: "mock-gateway-id3",
+        #        },
     )
 
     config_entry3.add_to_hass(hass)
 
     # Create bulb 1 on gateway 1 in Device Registry - this has the old identifiers format
-    gateway_1_bulb_1 = device_registry.async_get_or_create(
+    gateway1_bulb1 = device_registry.async_get_or_create(
         config_entry_id=config_entry1.entry_id,
         identifiers={(tradfri.DOMAIN, 65537)},
         name="bulb1",
     )
 
-    # Update bulb 1 device to have both config-entry IDs
+    # Update bulb 1 device to have both config entry IDs
     # This is to simulate existing data scenario with older version of tradfri component
     device_registry.async_update_device(
-        gateway_1_bulb_1.id,
+        gateway1_bulb1.id,
         add_config_entry_id=config_entry2.entry_id,
     )
 
     # Create bulb 2 on gateway 1 in Device Registry - this has the new identifiers format
-    gateway_1_bulb_2 = device_registry.async_get_or_create(
+    gateway1_bulb2 = device_registry.async_get_or_create(
         config_entry_id=config_entry1.entry_id,
         identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID1}-65538")},
         name="bulb2",
     )
 
-    # Update bulb 2 device to have an additional config-entry from config_entry3
-    # This is to simulate scenario whereby device entry is shared by multiple config-entries
-    # and where at least one of those config-entries is not the 'tradfri' domain
+    # Update bulb 2 device to have an additional config entry from config_entry3
+    # This is to simulate scenario whereby device entry is shared by multiple config entries
+    # and where at least one of those config entries is not the 'tradfri' domain
     device_registry.async_update_device(
-        gateway_1_bulb_2.id,
+        gateway1_bulb2.id,
         add_config_entry_id=config_entry3.entry_id,
     )
 
-    # Create a bulb device on gateway 3 in Device Registry
-    gateway_3_bulb = device_registry.async_get_or_create(
+    # Create a device on config entry 3 in Device Registry
+    config_entry3_device = device_registry.async_get_or_create(
         config_entry_id=config_entry3.entry_id,
-        identifiers={("TestDomain", "mock-bulb-id1")},
-        name="bulb1",
+        identifiers={("test_domain", "config_entry_3-device1")},
+        name="device",
     )
 
     # Set up all tradfri config entries.
@@ -188,7 +188,8 @@ async def test_migrate_config_entry_and_identifiers(
     await hass.async_block_till_done()
 
     # Validate that gateway 1 bulb 1 is still the same device entry
-    # This inherently also validates that the device's identifiers have been updated to the new unique format
+    # This inherently also validates that the device's identifiers
+    # have been updated to the new unique format
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry1.entry_id
     )
@@ -196,22 +197,22 @@ async def test_migrate_config_entry_and_identifiers(
         device_registry.async_get_device(
             identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID1}-65537")}
         ).id
-        == gateway_1_bulb_1.id
+        == gateway1_bulb1.id
     )
 
     # Validate that gateway 1 bulb 1 only has gateway 1's config ID associated to it
     # (Device at index 0 is the gateway)
     assert device_entries[1].config_entries == {config_entry1.entry_id}
 
-    # Validate that gateway 1 bulb 2 now only exists associated to config-entry 3.
+    # Validate that gateway 1 bulb 2 now only exists associated to config entry 3.
     # The device will have had its identifiers updated to the new format per
     # migrate_config_entry_and_identifiers() but will have then been removed from
-    # config-entry 1 (gateway1) due to it not matching a device in the command-store.
+    # config entry 1 (gateway1) due to it not matching a device in the command store.
     device_entry = device_registry.async_get_device(
         identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID1}-65538")}
     )
 
-    assert device_entry.id == gateway_1_bulb_2.id
+    assert device_entry.id == gateway1_bulb2.id
     assert device_entry.config_entries == {config_entry3.entry_id}
 
     # Validate that gateway 2 bulb 1 has been added to device registry and with correct unique identifiers
@@ -226,17 +227,23 @@ async def test_migrate_config_entry_and_identifiers(
     # Validate that gateway 2 bulb 1 only has gateway 2's config ID associated to it
     assert device_entries[1].config_entries == {config_entry2.entry_id}
 
-    # Validate that gateway 3 bulb 1 is still present, and has not had its config-entries
-    # or identifiers changed
-    # N.B. The gateway_1_bulb_2 device will qualify in this set because the config-entry of
-    # gateway 3 was added to it above
+    # Validate that config entry 3 bulb 1 is still present,
+    # and has not had its config entries or identifiers changed
+    # N.B. The gateway1_bulb2 device will qualify in this set
+    # because the config entry 3 was added to it above
     device_entries = dr.async_entries_for_config_entry(
         device_registry, config_entry3.entry_id
     )
     assert len(device_entries) == 2
-    assert device_entries[0].id == gateway_3_bulb.id
-    assert device_entries[0].identifiers == {("TestDomain", "mock-bulb-id1")}
+    assert device_entries[0].id == config_entry3_device.id
+    assert device_entries[0].identifiers == {("test_domain", "config_entry_3-device1")}
     assert device_entries[0].config_entries == {config_entry3.entry_id}
+
+    # Assert that the tradfri config entries have been migrated to v2 and
+    # the non-tradfri config entry remains at v1
+    assert config_entry1.version == 2
+    assert config_entry2.version == 2
+    assert config_entry3.version == 1
 
 
 def mock_gateway_fixture(command_store: CommandStore, gateway_id: str) -> Gateway:
