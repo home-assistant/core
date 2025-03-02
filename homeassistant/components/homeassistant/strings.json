@@ -12,7 +12,7 @@
     },
     "imperial_unit_system": {
       "title": "The imperial unit system is deprecated",
-      "description": "The imperial unit system is deprecated and your system is currently using us customary. Please update your configuration to use the us customary unit system and reload the Core configuration to fix this issue."
+      "description": "The imperial unit system is deprecated and your system is currently using US customary. Please update your configuration to use the US customary unit system and reload the Core configuration to fix this issue."
     },
     "deprecated_yaml": {
       "title": "The {integration_title} YAML configuration is being removed",
