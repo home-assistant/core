@@ -90,7 +90,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         await self.executor.async_execute_command(
             OverkizCommand.SET_TARGET_TEMPERATURE, temperature, refresh_afterwards=False
         )
-
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_TARGET_TEMPERATURE, refresh_afterwards=False
         )
@@ -144,6 +143,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         ):
             return True
 
+        # operating_mode can be a dict or a Literal[DHWP_AWAY_MODES]
         operating_mode = self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
         if operating_mode:
             if isinstance(operating_mode, dict):
@@ -173,6 +173,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     def current_operation(self) -> str | None:
         """Return current operation."""
 
+        # away mode leaves the current operation unchanged
         if self.is_boost_mode_on:
             return STATE_ELECTRIC
 
@@ -201,6 +202,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         if operation_mode == STATE_ECO:
             if self.is_boost_mode_on:
                 await self.async_turn_boost_mode_off(refresh_afterwards=False)
+
             if self.is_away_mode_on:
                 await self.async_turn_away_mode_off(refresh_afterwards=False)
 
@@ -209,6 +211,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 OverkizCommandParam.MANUAL_ECO_ACTIVE,
                 refresh_afterwards=False,
             )
+            # ECO changes the target temperature so we have to refresh it
             await self.executor.async_execute_command(
                 OverkizCommand.REFRESH_TARGET_TEMPERATURE, refresh_afterwards=False
             )
@@ -225,6 +228,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
                 OverkizCommandParam.AUTO_MODE,
                 refresh_afterwards=False,
             )
+
             await self.coordinator.async_refresh()
 
         elif operation_mode == STATE_HEAT_PUMP:
@@ -258,7 +262,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             },
             refresh_afterwards=False,
         )
-
+        # toggling the AWAY mode changes away mode duration so we have to refresh it
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_AWAY_MODE_DURATION,
             refresh_afterwards=False,
@@ -277,6 +281,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             },
             refresh_afterwards=False,
         )
+        # toggling the AWAY mode changes away mode duration so we have to refresh it
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_AWAY_MODE_DURATION,
             refresh_afterwards=False,
@@ -291,6 +296,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             MAX_BOOST_MODE_DURATION,
             refresh_afterwards=False,
         )
+
         await self.executor.async_execute_command(
             OverkizCommand.SET_CURRENT_OPERATING_MODE,
             {
@@ -299,6 +305,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             },
             refresh_afterwards=False,
         )
+
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_BOOST_MODE_DURATION,
             refresh_afterwards=False,
@@ -317,9 +324,11 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
             },
             refresh_afterwards=False,
         )
+        # toggling the BOOST mode changes boost mode duration so we have to refresh it
         await self.executor.async_execute_command(
             OverkizCommand.REFRESH_BOOST_MODE_DURATION,
             refresh_afterwards=False,
         )
+
         if refresh_afterwards:
             await self.coordinator.async_refresh()
