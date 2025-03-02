@@ -1,8 +1,5 @@
 """Configure tests for the OpenWeatherMap integration."""
 
-# import pytest
-# from syrupy import SnapshotAssertion
-
 from homeassistant.components.openweathermap.const import DEFAULT_LANGUAGE, DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,
