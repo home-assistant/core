@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 
+from propcache.api import cached_property
 from pyezviz.exceptions import PyEzvizError
 from pyezviz.utils import decrypt_image
 
@@ -61,6 +62,11 @@ class EzvizLastMotion(EzvizEntity, ImageEntity):
             if camera and camera.source != SOURCE_IGNORE
             else None
         )
+
+    @cached_property
+    def available(self) -> bool:
+        """Entity gets data from ezviz API so always available."""
+        return True
 
     async def _async_load_image_from_url(self, url: str) -> Image | None:
         """Load an image by url."""

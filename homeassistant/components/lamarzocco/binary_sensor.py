@@ -83,7 +83,7 @@ async def async_setup_entry(
     ]
 
     if (
-        coordinator.device.model == MachineModel.LINEA_MINI
+        coordinator.device.model in (MachineModel.LINEA_MINI, MachineModel.LINEA_MINI_R)
         and coordinator.device.config.scale
     ):
         entities.extend(

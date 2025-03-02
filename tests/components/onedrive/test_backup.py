@@ -21,6 +21,7 @@ from homeassistant.components.onedrive.backup import (
 from homeassistant.components.onedrive.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
@@ -35,7 +36,8 @@ async def setup_backup_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> AsyncGenerator[None]:
-    """Set up onedrive integration."""
+    """Set up onedrive and backup integrations."""
+    async_initialize_backup(hass)
     with (
         patch("homeassistant.components.backup.is_hassio", return_value=False),
         patch("homeassistant.components.backup.store.STORE_DELAY_SAVE", 0),

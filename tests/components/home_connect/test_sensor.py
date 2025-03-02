@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfEvents,
+    ArrayOfStatus,
     Event,
     EventKey,
     EventMessage,
@@ -565,3 +566,85 @@ async def test_sensors_states(
     )
     await hass.async_block_till_done()
     assert hass.states.is_state(entity_id, expected)
+
+
+@pytest.mark.parametrize(
+    (
+        "appliance_ha_id",
+        "entity_id",
+        "status_key",
+        "unit_get_status",
+        "unit_get_status_value",
+        "get_status_value_call_count",
+    ),
+    [
+        (
+            "Oven",
+            "sensor.oven_current_oven_cavity_temperature",
+            StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
+            "°C",
+            None,
+            0,
+        ),
+        (
+            "Oven",
+            "sensor.oven_current_oven_cavity_temperature",
+            StatusKey.COOKING_OVEN_CURRENT_CAVITY_TEMPERATURE,
+            None,
+            "°C",
+            1,
+        ),
+    ],
+    indirect=["appliance_ha_id"],
+)
+async def test_sensor_unit_fetching(
+    appliance_ha_id: str,
+    entity_id: str,
+    status_key: StatusKey,
+    unit_get_status: str | None,
+    unit_get_status_value: str | None,
+    get_status_value_call_count: int,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    setup_credentials: None,
+    client: MagicMock,
+) -> None:
+    """Test that the sensor entities are capable of fetching units."""
+
+    async def get_status_mock(ha_id: str) -> ArrayOfStatus:
+        if ha_id != appliance_ha_id:
+            return ArrayOfStatus([])
+        return ArrayOfStatus(
+            [
+                Status(
+                    key=status_key,
+                    raw_key=status_key.value,
+                    value=0,
+                    unit=unit_get_status,
+                )
+            ]
+        )
+
+    client.get_status = AsyncMock(side_effect=get_status_mock)
+    client.get_status_value = AsyncMock(
+        return_value=Status(
+            key=status_key,
+            raw_key=status_key.value,
+            value=0,
+            unit=unit_get_status_value,
+        )
+    )
+
+    assert config_entry.state == ConfigEntryState.NOT_LOADED
+    assert await integration_setup(client)
+    assert config_entry.state == ConfigEntryState.LOADED
+
+    entity_state = hass.states.get(entity_id)
+    assert entity_state
+    assert (
+        entity_state.attributes["unit_of_measurement"] == unit_get_status
+        or unit_get_status_value
+    )
+
+    assert client.get_status_value.call_count == get_status_value_call_count

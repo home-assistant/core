@@ -4,15 +4,18 @@ from __future__ import annotations
 
 from dataclasses import asdict
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
+from uuid import UUID
 
 from aiohttp import ClientError
 from habiticalib import (
     Direction,
+    Frequency,
     HabiticaException,
     NotAuthorizedError,
     NotFoundError,
     Skill,
+    Task,
     TaskData,
     TaskPriority,
     TaskType,
@@ -20,6 +23,7 @@ from habiticalib import (
 )
 import voluptuous as vol
 
+from homeassistant.components.todo import ATTR_RENAME
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_NAME, CONF_NAME
 from homeassistant.core import (
@@ -34,19 +38,27 @@ from homeassistant.helpers.issue_registry import IssueSeverity, async_create_iss
 from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import (
+    ATTR_ALIAS,
     ATTR_ARGS,
     ATTR_CONFIG_ENTRY,
+    ATTR_COST,
+    ATTR_COUNTER_DOWN,
+    ATTR_COUNTER_UP,
     ATTR_DATA,
     ATTR_DIRECTION,
+    ATTR_FREQUENCY,
     ATTR_ITEM,
     ATTR_KEYWORD,
+    ATTR_NOTES,
     ATTR_PATH,
     ATTR_PRIORITY,
+    ATTR_REMOVE_TAG,
     ATTR_SKILL,
     ATTR_TAG,
     ATTR_TARGET,
     ATTR_TASK,
     ATTR_TYPE,
+    ATTR_UP_DOWN,
     DOMAIN,
     EVENT_API_CALL_SUCCESS,
     SERVICE_ABORT_QUEST,
@@ -54,6 +66,7 @@ from .const import (
     SERVICE_API_CALL,
     SERVICE_CANCEL_QUEST,
     SERVICE_CAST_SKILL,
+    SERVICE_CREATE_REWARD,
     SERVICE_GET_TASKS,
     SERVICE_LEAVE_QUEST,
     SERVICE_REJECT_QUEST,
@@ -61,6 +74,8 @@ from .const import (
     SERVICE_SCORE_REWARD,
     SERVICE_START_QUEST,
     SERVICE_TRANSFORMATION,
+    SERVICE_UPDATE_HABIT,
+    SERVICE_UPDATE_REWARD,
 )
 from .coordinator import HabiticaConfigEntry
 
@@ -104,6 +119,39 @@ SERVICE_TRANSFORMATION_SCHEMA = vol.Schema(
     }
 )
 
+BASE_TASK_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector(),
+        vol.Optional(ATTR_RENAME): cv.string,
+        vol.Optional(ATTR_NOTES): cv.string,
+        vol.Optional(ATTR_TAG): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_ALIAS): vol.All(
+            cv.string, cv.matches_regex("^[a-zA-Z0-9-_]*$")
+        ),
+        vol.Optional(ATTR_COST): vol.All(vol.Coerce(float), vol.Range(0)),
+        vol.Optional(ATTR_PRIORITY): vol.All(
+            vol.Upper, vol.In(TaskPriority._member_names_)
+        ),
+        vol.Optional(ATTR_UP_DOWN): vol.All(cv.ensure_list, [str]),
+        vol.Optional(ATTR_COUNTER_UP): vol.All(int, vol.Range(0)),
+        vol.Optional(ATTR_COUNTER_DOWN): vol.All(int, vol.Range(0)),
+        vol.Optional(ATTR_FREQUENCY): vol.Coerce(Frequency),
+    }
+)
+
+SERVICE_UPDATE_TASK_SCHEMA = BASE_TASK_SCHEMA.extend(
+    {
+        vol.Required(ATTR_TASK): cv.string,
+        vol.Optional(ATTR_REMOVE_TAG): vol.All(cv.ensure_list, [str]),
+    }
+)
+
+SERVICE_CREATE_TASK_SCHEMA = BASE_TASK_SCHEMA.extend(
+    {
+        vol.Required(ATTR_NAME): cv.string,
+    }
+)
+
 SERVICE_GET_TASKS_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
@@ -136,6 +184,12 @@ ITEMID_MAP = {
     "spooky_sparkles": Skill.SPOOKY_SPARKLES,
     "seafoam": Skill.SEAFOAM,
     "shiny_seed": Skill.SHINY_SEED,
+}
+
+SERVICE_TASK_TYPE_MAP = {
+    SERVICE_UPDATE_REWARD: TaskType.REWARD,
+    SERVICE_CREATE_REWARD: TaskType.REWARD,
+    SERVICE_UPDATE_HABIT: TaskType.HABIT,
 }
 
 
@@ -516,6 +570,169 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
 
         return result
 
+    async def create_or_update_task(call: ServiceCall) -> ServiceResponse:  # noqa: C901
+        """Create or update task action."""
+        entry = get_config_entry(hass, call.data[ATTR_CONFIG_ENTRY])
+        coordinator = entry.runtime_data
+        await coordinator.async_refresh()
+        is_update = call.service in (SERVICE_UPDATE_REWARD, SERVICE_UPDATE_HABIT)
+        current_task = None
+
+        if is_update:
+            try:
+                current_task = next(
+                    task
+                    for task in coordinator.data.tasks
+                    if call.data[ATTR_TASK] in (str(task.id), task.alias, task.text)
+                    and task.Type is SERVICE_TASK_TYPE_MAP[call.service]
+                )
+            except StopIteration as e:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="task_not_found",
+                    translation_placeholders={"task": f"'{call.data[ATTR_TASK]}'"},
+                ) from e
+
+        data = Task()
+
+        if not is_update:
+            data["type"] = TaskType.REWARD
+
+        if (text := call.data.get(ATTR_RENAME)) or (text := call.data.get(ATTR_NAME)):
+            data["text"] = text
+
+        if (notes := call.data.get(ATTR_NOTES)) is not None:
+            data["notes"] = notes
+
+        tags = cast(list[str], call.data.get(ATTR_TAG))
+        remove_tags = cast(list[str], call.data.get(ATTR_REMOVE_TAG))
+
+        if tags or remove_tags:
+            update_tags = set(current_task.tags) if current_task else set()
+            user_tags = {
+                tag.name.lower(): tag.id
+                for tag in coordinator.data.user.tags
+                if tag.id and tag.name
+            }
+
+            if tags:
+                # Creates new tag if it doesn't exist
+                async def create_tag(tag_name: str) -> UUID:
+                    tag_id = (await coordinator.habitica.create_tag(tag_name)).data.id
+                    if TYPE_CHECKING:
+                        assert tag_id
+                    return tag_id
+
+                try:
+                    update_tags.update(
+                        {
+                            user_tags.get(tag_name.lower())
+                            or (await create_tag(tag_name))
+                            for tag_name in tags
+                        }
+                    )
+                except TooManyRequestsError as e:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="setup_rate_limit_exception",
+                        translation_placeholders={"retry_after": str(e.retry_after)},
+                    ) from e
+                except HabiticaException as e:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="service_call_exception",
+                        translation_placeholders={"reason": str(e.error.message)},
+                    ) from e
+                except ClientError as e:
+                    raise HomeAssistantError(
+                        translation_domain=DOMAIN,
+                        translation_key="service_call_exception",
+                        translation_placeholders={"reason": str(e)},
+                    ) from e
+
+            if remove_tags:
+                update_tags.difference_update(
+                    {
+                        user_tags[tag_name.lower()]
+                        for tag_name in remove_tags
+                        if tag_name.lower() in user_tags
+                    }
+                )
+
+            data["tags"] = list(update_tags)
+
+        if (alias := call.data.get(ATTR_ALIAS)) is not None:
+            data["alias"] = alias
+
+        if (cost := call.data.get(ATTR_COST)) is not None:
+            data["value"] = cost
+
+        if priority := call.data.get(ATTR_PRIORITY):
+            data["priority"] = TaskPriority[priority]
+
+        if frequency := call.data.get(ATTR_FREQUENCY):
+            data["frequency"] = frequency
+
+        if up_down := call.data.get(ATTR_UP_DOWN):
+            data["up"] = "up" in up_down
+            data["down"] = "down" in up_down
+
+        if counter_up := call.data.get(ATTR_COUNTER_UP):
+            data["counterUp"] = counter_up
+
+        if counter_down := call.data.get(ATTR_COUNTER_DOWN):
+            data["counterDown"] = counter_down
+
+        try:
+            if is_update:
+                if TYPE_CHECKING:
+                    assert current_task
+                    assert current_task.id
+                response = await coordinator.habitica.update_task(current_task.id, data)
+            else:
+                response = await coordinator.habitica.create_task(data)
+        except TooManyRequestsError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="setup_rate_limit_exception",
+                translation_placeholders={"retry_after": str(e.retry_after)},
+            ) from e
+        except HabiticaException as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e.error.message)},
+            ) from e
+        except ClientError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="service_call_exception",
+                translation_placeholders={"reason": str(e)},
+            ) from e
+        else:
+            return response.data.to_dict(omit_none=True)
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UPDATE_REWARD,
+        create_or_update_task,
+        schema=SERVICE_UPDATE_TASK_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_UPDATE_HABIT,
+        create_or_update_task,
+        schema=SERVICE_UPDATE_TASK_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_CREATE_REWARD,
+        create_or_update_task,
+        schema=SERVICE_CREATE_TASK_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )
     hass.services.async_register(
         DOMAIN,
         SERVICE_API_CALL,

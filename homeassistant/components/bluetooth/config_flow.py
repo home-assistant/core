@@ -186,16 +186,28 @@ class BluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a flow initialized by an external scanner."""
         source = user_input[CONF_SOURCE]
         await self.async_set_unique_id(source)
+        source_config_entry_id = user_input[CONF_SOURCE_CONFIG_ENTRY_ID]
         data = {
             CONF_SOURCE: source,
             CONF_SOURCE_MODEL: user_input[CONF_SOURCE_MODEL],
             CONF_SOURCE_DOMAIN: user_input[CONF_SOURCE_DOMAIN],
-            CONF_SOURCE_CONFIG_ENTRY_ID: user_input[CONF_SOURCE_CONFIG_ENTRY_ID],
+            CONF_SOURCE_CONFIG_ENTRY_ID: source_config_entry_id,
             CONF_SOURCE_DEVICE_ID: user_input[CONF_SOURCE_DEVICE_ID],
         }
         self._abort_if_unique_id_configured(updates=data)
-        manager = get_manager()
-        scanner = manager.async_scanner_by_source(source)
+        for entry in self._async_current_entries(include_ignore=False):
+            # If the mac address needs to be corrected, migrate
+            # the config entry to the new mac address
+            if (
+                entry.data.get(CONF_SOURCE_CONFIG_ENTRY_ID) == source_config_entry_id
+                and entry.unique_id != source
+            ):
+                self.hass.config_entries.async_update_entry(
+                    entry, unique_id=source, data={**entry.data, **data}
+                )
+                self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                return self.async_abort(reason="already_configured")
+        scanner = get_manager().async_scanner_by_source(source)
         assert scanner is not None
         return self.async_create_entry(title=scanner.name, data=data)
 

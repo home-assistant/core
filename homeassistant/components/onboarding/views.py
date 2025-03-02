@@ -20,7 +20,6 @@ from homeassistant.components.backup import (
     BackupManager,
     Folder,
     IncorrectPasswordError,
-    async_get_manager as async_get_backup_manager,
     http as backup_http,
 )
 from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
@@ -29,6 +28,7 @@ from homeassistant.components.http.view import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers.backup import async_get_manager as async_get_backup_manager
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.translation import async_get_translations
 from homeassistant.setup import async_setup_component
@@ -341,7 +341,7 @@ def with_backup_manager[_ViewT: BackupOnboardingView, **_P](
             raise HTTPUnauthorized
 
         try:
-            manager = async_get_backup_manager(request.app[KEY_HASS])
+            manager = await async_get_backup_manager(request.app[KEY_HASS])
         except HomeAssistantError:
             return self.json(
                 {"code": "backup_disabled"},

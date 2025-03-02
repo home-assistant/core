@@ -440,13 +440,27 @@ class HomeConnectCoordinator(
         self, ha_id: str, program_key: ProgramKey
     ) -> dict[OptionKey, ProgramDefinitionOption]:
         """Get options with constraints for appliance."""
-        return {
-            option.key: option
-            for option in (
-                await self.client.get_available_program(ha_id, program_key=program_key)
-            ).options
-            or []
-        }
+        if program_key is ProgramKey.UNKNOWN:
+            return {}
+        try:
+            return {
+                option.key: option
+                for option in (
+                    await self.client.get_available_program(
+                        ha_id, program_key=program_key
+                    )
+                ).options
+                or []
+            }
+        except HomeConnectError as error:
+            _LOGGER.debug(
+                "Error fetching options for %s: %s",
+                ha_id,
+                error
+                if isinstance(error, HomeConnectApiError)
+                else type(error).__name__,
+            )
+            return {}
 
     async def update_options(
         self, ha_id: str, event_key: EventKey, program_key: ProgramKey
@@ -456,8 +470,7 @@ class HomeConnectCoordinator(
         events = self.data[ha_id].events
         options_to_notify = options.copy()
         options.clear()
-        if program_key is not ProgramKey.UNKNOWN:
-            options.update(await self.get_options_definitions(ha_id, program_key))
+        options.update(await self.get_options_definitions(ha_id, program_key))
 
         for option in options.values():
             option_value = option.constraints.default if option.constraints else None

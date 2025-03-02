@@ -41,14 +41,7 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -> bool:
     """Set up OneDrive from a config entry."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
-    session = OAuth2Session(hass, entry, implementation)
-
-    async def get_access_token() -> str:
-        await session.async_ensure_token_valid()
-        return cast(str, session.token[CONF_ACCESS_TOKEN])
-
-    client = OneDriveClient(get_access_token, async_get_clientsession(hass))
+    client, get_access_token = await _get_onedrive_client(hass, entry)
 
     # get approot, will be created automatically if it does not exist
     approot = await _handle_item_operation(client.get_approot, "approot")
@@ -164,18 +157,45 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OneDriveConfigEntry) -
         _LOGGER.debug(
             "Migrating OneDrive config entry from version %s.%s", version, minor_version
         )
-
+        client, _ = await _get_onedrive_client(hass, entry)
         instance_id = await async_get_instance_id(hass)
+        try:
+            approot = await client.get_approot()
+            folder = await client.get_drive_item(
+                f"{approot.id}:/backups_{instance_id[:8]}:"
+            )
+        except OneDriveException:
+            _LOGGER.exception("Migration to version 1.2 failed")
+            return False
+
         hass.config_entries.async_update_entry(
             entry,
             data={
                 **entry.data,
-                CONF_FOLDER_ID: "id",  # will be updated during setup_entry
+                CONF_FOLDER_ID: folder.id,
                 CONF_FOLDER_NAME: f"backups_{instance_id[:8]}",
             },
+            minor_version=2,
         )
         _LOGGER.debug("Migration to version 1.2 successful")
     return True
+
+
+async def _get_onedrive_client(
+    hass: HomeAssistant, entry: OneDriveConfigEntry
+) -> tuple[OneDriveClient, Callable[[], Awaitable[str]]]:
+    """Get OneDrive client."""
+    implementation = await async_get_config_entry_implementation(hass, entry)
+    session = OAuth2Session(hass, entry, implementation)
+
+    async def get_access_token() -> str:
+        await session.async_ensure_token_valid()
+        return cast(str, session.token[CONF_ACCESS_TOKEN])
+
+    return (
+        OneDriveClient(get_access_token, async_get_clientsession(hass)),
+        get_access_token,
+    )
 
 
 async def _handle_item_operation(
