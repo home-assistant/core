@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_setup_sensors[sensor.backup_backup_manager_state-entry]
+# name: test_sensors[sensor.backup_backup_manager_state-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -40,7 +40,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_sensors[sensor.backup_backup_manager_state-state]
+# name: test_sensors[sensor.backup_backup_manager_state-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -60,7 +60,7 @@
     'state': 'idle',
   })
 # ---
-# name: test_setup_sensors[sensor.backup_last_successful_automatic_backup-entry]
+# name: test_sensors[sensor.backup_last_successful_automatic_backup-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -94,7 +94,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_sensors[sensor.backup_last_successful_automatic_backup-state]
+# name: test_sensors[sensor.backup_last_successful_automatic_backup-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -108,7 +108,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_setup_sensors[sensor.backup_next_scheduled_automatic_backup-entry]
+# name: test_sensors[sensor.backup_next_scheduled_automatic_backup-entry]
   EntityRegistryEntrySnapshot({
     'aliases': set({
     }),
@@ -142,7 +142,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_sensors[sensor.backup_next_scheduled_automatic_backup-state]
+# name: test_sensors[sensor.backup_next_scheduled_automatic_backup-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
