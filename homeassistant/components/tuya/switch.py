@@ -612,6 +612,13 @@ SWITCHES: dict[str, tuple[SwitchEntityDescription, ...]] = {
             device_class=SwitchDeviceClass.OUTLET,
         ),
     ),
+    "ywcgq": (
+        SwitchEntityDescription(
+            key=DPCode.SLEEP_SWITCH,
+            translation_key="sleep",
+            entity_category=EntityCategory.CONFIG,
+        ),
+    ),
     # Ceiling Light
     # https://developer.tuya.com/en/docs/iot/ceiling-light?id=Kaiuz03xxfc4r
     "xdd": (
