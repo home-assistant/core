@@ -22,7 +22,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import BoschConfigEntry
@@ -126,7 +126,7 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: BoschConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC sensor platform."""
     session = config_entry.runtime_data

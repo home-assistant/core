@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     FLUME_TYPE_BRIDGE,
@@ -69,7 +69,7 @@ FLUME_BINARY_NOTIFICATION_SENSORS: tuple[FlumeBinarySensorEntityDescription, ...
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: FlumeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Flume binary sensor.."""
     flume_domain_data = config_entry.runtime_data
@@ -80,7 +80,7 @@ async def async_setup_entry(
     ] = []
 
     connection_coordinator = FlumeDeviceConnectionUpdateCoordinator(
-        hass=hass, flume_devices=flume_devices
+        hass=hass, config_entry=config_entry, flume_devices=flume_devices
     )
     notification_coordinator = flume_domain_data.notifications_coordinator
     flume_devices = get_valid_flume_devices(flume_devices)

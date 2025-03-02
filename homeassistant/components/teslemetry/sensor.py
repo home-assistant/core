@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 
 from propcache.api import cached_property
 from teslemetry_stream import Signal
+from teslemetry_stream.const import ShiftState
 
 from homeassistant.components.sensor import (
     RestoreSensor,
@@ -30,7 +31,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
@@ -69,7 +70,7 @@ class TeslemetryVehicleSensorEntityDescription(SensorEntityDescription):
     polling_value_fn: Callable[[StateType], StateType] = lambda x: x
     polling_available_fn: Callable[[StateType], bool] = lambda x: x is not None
     streaming_key: Signal | None = None
-    streaming_value_fn: Callable[[StateType], StateType] = lambda x: x
+    streaming_value_fn: Callable[[str | int | float], StateType] = lambda x: x
     streaming_firmware: str = "2024.26"
 
 
@@ -212,7 +213,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetryVehicleSensorEntityDescription, ...] = (
         polling_available_fn=lambda x: True,
         polling_value_fn=lambda x: SHIFT_STATES.get(str(x), "p"),
         streaming_key=Signal.GEAR,
-        streaming_value_fn=lambda x: SHIFT_STATES.get(str(x)),
+        streaming_value_fn=lambda x: str(ShiftState.get(x, "P")).lower(),
         options=list(SHIFT_STATES.values()),
         device_class=SensorDeviceClass.ENUM,
         entity_registry_enabled_default=False,
@@ -529,7 +530,7 @@ ENERGY_HISTORY_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = tuple(
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Teslemetry sensor platform from a config entry."""
 

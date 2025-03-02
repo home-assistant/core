@@ -13,6 +13,10 @@ from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon 
     get_flasher_addon_manager,
     get_multiprotocol_addon_manager,
 )
+from homeassistant.components.homeassistant_hardware.util import (
+    ApplicationType,
+    FirmwareInfo,
+)
 from homeassistant.components.homeassistant_sky_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -61,10 +65,22 @@ async def test_config_flow(
     async def mock_async_step_pick_firmware_zigbee(self, data):
         return await self.async_step_confirm_zigbee(user_input={})
 
-    with patch(
-        "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow.async_step_pick_firmware_zigbee",
-        autospec=True,
-        side_effect=mock_async_step_pick_firmware_zigbee,
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareConfigFlow.async_step_pick_firmware_zigbee",
+            autospec=True,
+            side_effect=mock_async_step_pick_firmware_zigbee,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            return_value=FirmwareInfo(
+                device=usb_data.device,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                owners=[],
+                source="probe",
+            ),
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -134,10 +150,22 @@ async def test_options_flow(
     async def mock_async_step_pick_firmware_zigbee(self, data):
         return await self.async_step_confirm_zigbee(user_input={})
 
-    with patch(
-        "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow.async_step_pick_firmware_zigbee",
-        autospec=True,
-        side_effect=mock_async_step_pick_firmware_zigbee,
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.BaseFirmwareOptionsFlow.async_step_pick_firmware_zigbee",
+            autospec=True,
+            side_effect=mock_async_step_pick_firmware_zigbee,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
+            return_value=FirmwareInfo(
+                device=usb_data.device,
+                firmware_type=ApplicationType.EZSP,
+                firmware_version=None,
+                owners=[],
+                source="probe",
+            ),
+        ),
     ):
         result = await hass.config_entries.options.async_configure(
             result["flow_id"],

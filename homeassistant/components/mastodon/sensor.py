@@ -12,15 +12,15 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import MastodonConfigEntry
 from .const import (
     ACCOUNT_FOLLOWERS_COUNT,
     ACCOUNT_FOLLOWING_COUNT,
     ACCOUNT_STATUSES_COUNT,
 )
+from .coordinator import MastodonConfigEntry
 from .entity import MastodonEntity
 
 # Coordinator is used to centralize the data updates
@@ -59,7 +59,7 @@ ENTITY_DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: MastodonConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform for entity."""
     coordinator = entry.runtime_data.coordinator

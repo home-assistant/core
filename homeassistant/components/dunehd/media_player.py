@@ -17,7 +17,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import DuneHDConfigEntry
 from .const import ATTR_MANUFACTURER, DEFAULT_NAME, DOMAIN
@@ -39,7 +39,7 @@ DUNEHD_PLAYER_SUPPORT: Final[MediaPlayerEntityFeature] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: DuneHDConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Dune HD entities from a config_entry."""
     async_add_entities(

@@ -79,6 +79,9 @@ async def async_converse(
     extra_system_prompt: str | None = None,
 ) -> ConversationResult:
     """Process text and get intent."""
+    if agent_id is None:
+        agent_id = HOME_ASSISTANT_AGENT
+
     agent = async_get_agent(hass, agent_id)
 
     if agent is None:

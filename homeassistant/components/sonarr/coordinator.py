@@ -48,6 +48,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         host_configuration: PyArrHostConfiguration,
         api_client: SonarrClient,
     ) -> None:
@@ -55,6 +56,7 @@ class SonarrDataUpdateCoordinator(DataUpdateCoordinator[SonarrDataT]):
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
