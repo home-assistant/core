@@ -86,9 +86,6 @@ SENSOR_DESCRIPTIONS: dict[AttributeType, HomeeSensorEntityDescription] = {
             if attribute.unit == "klx"
             else attribute.current_value
         ),
-        native_unit_of_measurement_fn=lambda unit: HOMEE_UNIT_TO_HA_UNIT["lx"]
-        if unit == "klx"
-        else HOMEE_UNIT_TO_HA_UNIT[unit],
     ),
     AttributeType.CURRENT: HomeeSensorEntityDescription(
         key="current",
