@@ -184,7 +184,7 @@ async def test_send_message_thread(hass: HomeAssistant, webhook_platform) -> Non
 
     assert len(events) == 1
     assert events[0].context == context
-    assert events[0].data[ATTR_MESSAGE_THREAD_ID] == "123"
+    assert events[0].data[ATTR_MESSAGE_THREAD_ID] == 123
 
 
 async def test_webhook_endpoint_generates_telegram_text_event(

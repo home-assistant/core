@@ -5,7 +5,7 @@ from typing import Any
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .bridge import DynaliteConfigEntry
 from .entity import DynaliteBase, async_setup_entry_base
@@ -14,7 +14,7 @@ from .entity import DynaliteBase, async_setup_entry_base
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: DynaliteConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Record the async_add_entities function to add them later when received from Dynalite."""
     async_setup_entry_base(

@@ -7,6 +7,7 @@ import logging
 from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
 from Tami4EdgeAPI.water_quality import WaterQuality
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -36,11 +37,16 @@ class FlattenedWaterQuality:
 class Tami4EdgeCoordinator(DataUpdateCoordinator[FlattenedWaterQuality]):
     """Tami4Edge water quality coordinator."""
 
-    def __init__(self, hass: HomeAssistant, api: Tami4EdgeAPI) -> None:
+    config_entry: ConfigEntry
+
+    def __init__(
+        self, hass: HomeAssistant, config_entry: ConfigEntry, api: Tami4EdgeAPI
+    ) -> None:
         """Initialize the water quality coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name="Tami4Edge water quality coordinator",
             update_interval=timedelta(minutes=60),
         )

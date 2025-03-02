@@ -28,6 +28,8 @@ class ToloSaunaData(NamedTuple):
 class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
     """DataUpdateCoordinator for TOLO Sauna."""
 
+    config_entry: ConfigEntry
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize ToloSaunaUpdateCoordinator."""
         self.client = ToloClient(
@@ -38,6 +40,7 @@ class ToloSaunaUpdateCoordinator(DataUpdateCoordinator[ToloSaunaData]):
         super().__init__(
             hass=hass,
             logger=_LOGGER,
+            config_entry=entry,
             name=f"{entry.title} ({entry.data[CONF_HOST]}) Data Update Coordinator",
             update_interval=timedelta(seconds=5),
         )
