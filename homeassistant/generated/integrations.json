@@ -2046,6 +2046,11 @@
       "config_flow": false,
       "iot_class": "cloud_push"
     },
+    "frankever": {
+      "name": "FrankEver",
+      "integration_type": "virtual",
+      "supported_by": "shelly"
+    },
     "free_mobile": {
       "name": "Free Mobile",
       "integration_type": "hub",
