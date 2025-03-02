@@ -212,7 +212,7 @@ class SonosDiscoveryManager:
         try:
             _ = IPv4Address(ip_address)
         except AddressValueError:
-            _LOGGER.warning(
+            _LOGGER.debug(
                 "Sonos integration only supports IPv4 addresses, invalid ip_address received: %s",
                 ip_address,
             )

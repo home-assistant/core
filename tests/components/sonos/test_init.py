@@ -478,7 +478,7 @@ async def test_ipv6_not_supported(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Tests that invalid ipv4 addresses do not generate stack dump."""
-    with caplog.at_level(logging.WARNING):
+    with caplog.at_level(logging.DEBUG):
         caplog.clear()
         await _setup_hass_ipv6_address_not_supported(hass)
         await hass.async_block_till_done()
