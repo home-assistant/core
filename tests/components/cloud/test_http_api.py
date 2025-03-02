@@ -11,7 +11,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, PropertyMock, patch
 
 import aiohttp
 from freezegun.api import FrozenDateTimeFactory
-from hass_nabucasa import thingtalk
+from hass_nabucasa import AlreadyConnectedError, thingtalk
 from hass_nabucasa.auth import (
     InvalidTotpCode,
     MFARequired,
@@ -373,7 +373,38 @@ async def test_login_view_request_timeout(
         "/api/cloud/login", json={"email": "my_username", "password": "my_password"}
     )
 
+    assert cloud.login.call_args[1]["check_connection"] is False
+
     assert req.status == HTTPStatus.BAD_GATEWAY
+
+
+async def test_login_view_with_already_existing_connection(
+    cloud: MagicMock,
+    setup_cloud: None,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test request timeout while trying to log in."""
+    cloud_client = await hass_client()
+    cloud.login.side_effect = AlreadyConnectedError(
+        details={"remote_ip_address": "127.0.0.1", "connected_at": "1"}
+    )
+
+    req = await cloud_client.post(
+        "/api/cloud/login",
+        json={
+            "email": "my_username",
+            "password": "my_password",
+            "check_connection": True,
+        },
+    )
+
+    assert cloud.login.call_args[1]["check_connection"] is True
+    assert req.status == HTTPStatus.CONFLICT
+    resp = await req.json()
+    assert resp == {
+        "code": "alreadyconnectederror",
+        "message": '{"remote_ip_address": "127.0.0.1", "connected_at": "1"}',
+    }
 
 
 async def test_login_view_invalid_credentials(
