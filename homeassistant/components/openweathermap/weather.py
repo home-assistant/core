@@ -14,9 +14,11 @@ from homeassistant.const import (
     UnitOfSpeed,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenweathermapConfigEntry
 from .const import (
@@ -28,6 +30,7 @@ from .const import (
     ATTR_API_FEELS_LIKE_TEMPERATURE,
     ATTR_API_HOURLY_FORECAST,
     ATTR_API_HUMIDITY,
+    ATTR_API_MINUTE_FORECAST,
     ATTR_API_PRESSURE,
     ATTR_API_TEMPERATURE,
     ATTR_API_VISIBILITY_DISTANCE,
@@ -39,16 +42,17 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
     OWM_MODE_FREE_FORECAST,
-    OWM_MODE_V25,
     OWM_MODE_V30,
 )
 from .coordinator import WeatherUpdateCoordinator
+
+SERVICE_GET_MINUTE_FORECAST = "get_minute_forecast"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: OpenweathermapConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OpenWeatherMap weather entity based on a config entry."""
     domain_data = config_entry.runtime_data
@@ -60,6 +64,14 @@ async def async_setup_entry(
     owm_weather = OpenWeatherMapWeather(name, unique_id, mode, weather_coordinator)
 
     async_add_entities([owm_weather], False)
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(
+        name=SERVICE_GET_MINUTE_FORECAST,
+        schema=None,
+        func="async_get_minute_forecast",
+        supports_response=SupportsResponse.ONLY,
+    )
 
 
 class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordinator]):
@@ -91,14 +103,26 @@ class OpenWeatherMapWeather(SingleCoordinatorWeatherEntity[WeatherUpdateCoordina
             manufacturer=MANUFACTURER,
             name=DEFAULT_NAME,
         )
+        self.mode = mode
 
-        if mode in (OWM_MODE_V30, OWM_MODE_V25):
+        if mode == OWM_MODE_V30:
             self._attr_supported_features = (
                 WeatherEntityFeature.FORECAST_DAILY
                 | WeatherEntityFeature.FORECAST_HOURLY
             )
         elif mode == OWM_MODE_FREE_FORECAST:
             self._attr_supported_features = WeatherEntityFeature.FORECAST_HOURLY
+
+    async def async_get_minute_forecast(self) -> dict[str, list[dict]] | dict:
+        """Return Minute forecast."""
+
+        if self.mode == OWM_MODE_V30:
+            return self.coordinator.data[ATTR_API_MINUTE_FORECAST]
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="service_minute_forecast_mode",
+            translation_placeholders={"name": DEFAULT_NAME},
+        )
 
     @property
     def condition(self) -> str | None:

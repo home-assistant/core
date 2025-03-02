@@ -24,19 +24,22 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DEFAULT_PORT, DEFAULT_USERNAME, DOMAIN, LOGGER
 
+type PlugwiseConfigEntry = ConfigEntry[PlugwiseDataUpdateCoordinator]
+
 
 class PlugwiseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, GwEntityData]]):
     """Class to manage fetching Plugwise data from single endpoint."""
 
     _connected: bool = False
 
-    config_entry: ConfigEntry
+    config_entry: PlugwiseConfigEntry
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: PlugwiseConfigEntry) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
             LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=60),
             # Don't refresh immediately, give the device time to process
