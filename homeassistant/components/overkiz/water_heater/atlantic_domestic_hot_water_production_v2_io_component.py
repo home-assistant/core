@@ -129,10 +129,8 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         away_mode_duration = self.executor.select_state(
             OverkizState.IO_AWAY_MODE_DURATION
         )
-        # TODO: OverkizCommandParam.ALWAYS
-        #  after https://github.com/home-assistant/core/pull/139623
         # away_mode_duration can be either a string or an int of 0 to 7 days
-        if cast(str, away_mode_duration) == "always":
+        if cast(str, away_mode_duration) == OverkizCommandParam.ALWAYS:
             return True
 
         away_mode_duration_int = cast(int, away_mode_duration)
