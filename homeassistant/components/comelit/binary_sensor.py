@@ -60,5 +60,4 @@ class ComelitVedoBinarySensorEntity(
     @property
     def is_on(self) -> bool:
         """Presence detected."""
-        zone = self.coordinator.select_zone(self._zone_index)
-        return zone.status_api == "0001"
+        return self.coordinator.select_zone(self._zone_index).status_api == "0001"

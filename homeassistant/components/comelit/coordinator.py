@@ -123,10 +123,6 @@ class ComelitSerialBridge(ComelitBaseCoordinator):
         """Specific method for updating data."""
         return await self.api.get_all_devices()
 
-    def select_device(self, _type: str, index: int) -> ComelitSerialBridgeObject:
-        """Return selected device."""
-        return self.data[_type][index]
-
 
 class ComelitVedoSystem(ComelitBaseCoordinator):
     """Queries Comelit VEDO system."""
