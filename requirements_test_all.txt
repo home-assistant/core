@@ -201,7 +201,7 @@ aiobafi6==0.9.0
 aiobotocore==2.13.1
 
 # homeassistant.components.comelit
-aiocomelit==0.10.1
+aiocomelit==0.11.1
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
@@ -231,7 +231,7 @@ aioelectricitymaps==0.4.0
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==29.3.1
+aioesphomeapi==29.3.2
 
 # homeassistant.components.flo
 aioflo==2021.11.0
@@ -252,7 +252,7 @@ aiohasupervisor==0.3.0
 aiohomeconnect==0.15.1
 
 # homeassistant.components.homekit_controller
-aiohomekit==3.2.7
+aiohomekit==3.2.8
 
 # homeassistant.components.mcp_server
 aiohttp_sse==2.2.0
@@ -353,7 +353,7 @@ aioruuvigateway==0.1.0
 aiosenz==1.0.0
 
 # homeassistant.components.shelly
-aioshelly==13.0.0
+aioshelly==13.1.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -404,7 +404,7 @@ aiowaqi==3.1.0
 aiowatttime==0.1.1
 
 # homeassistant.components.webdav
-aiowebdav2==0.3.0
+aiowebdav2==0.3.1
 
 # homeassistant.components.webostv
 aiowebostv==0.7.1
@@ -646,7 +646,7 @@ dbus-fast==2.33.0
 debugpy==1.8.11
 
 # homeassistant.components.ecovacs
-deebot-client==12.2.0
+deebot-client==12.3.1
 
 # homeassistant.components.ihc
 # homeassistant.components.namecheapdns
@@ -738,7 +738,7 @@ energyzero==2.1.1
 enocean==0.50
 
 # homeassistant.components.environment_canada
-env-canada==0.7.2
+env-canada==0.8.0
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -1040,7 +1040,7 @@ influxdb-client==1.24.0
 influxdb==5.3.1
 
 # homeassistant.components.inkbird
-inkbird-ble==0.7.0
+inkbird-ble==0.7.1
 
 # homeassistant.components.insteon
 insteon-frontend-home-assistant==0.5.0
@@ -1204,7 +1204,7 @@ monzopy==1.4.2
 mopeka-iot-ble==0.8.0
 
 # homeassistant.components.motion_blinds
-motionblinds==0.6.25
+motionblinds==0.6.26
 
 # homeassistant.components.motionblinds_ble
 motionblindsble==0.1.3
@@ -1778,7 +1778,7 @@ pyoctoprintapi==0.1.12
 pyopenuv==2023.02.0
 
 # homeassistant.components.openweathermap
-pyopenweathermap==0.2.1
+pyopenweathermap==0.2.2
 
 # homeassistant.components.opnsense
 pyopnsense==0.4.0
@@ -1795,7 +1795,7 @@ pyotgw==2.2.2
 pyotp==2.8.0
 
 # homeassistant.components.overkiz
-pyoverkiz==1.16.1
+pyoverkiz==1.16.2
 
 # homeassistant.components.onewire
 pyownet==0.10.0.post1
@@ -1834,7 +1834,7 @@ pyps4-2ndscreen==1.3.1
 pyqwikswitch==0.93
 
 # homeassistant.components.nmbs
-pyrail==0.0.3
+pyrail==0.4.1
 
 # homeassistant.components.rainbird
 pyrainbird==6.0.1
@@ -1882,7 +1882,7 @@ pysma==0.7.5
 pysmappee==0.2.29
 
 # homeassistant.components.smartthings
-pysmartthings==2.3.0
+pysmartthings==2.4.1
 
 # homeassistant.components.smarty
 pysmarty2==0.10.2
@@ -2312,7 +2312,7 @@ temperusb==1.6.1
 # homeassistant.components.tesla_fleet
 # homeassistant.components.teslemetry
 # homeassistant.components.tessie
-tesla-fleet-api==0.9.10
+tesla-fleet-api==0.9.12
 
 # homeassistant.components.powerwall
 tesla-powerwall==0.5.2
@@ -2444,7 +2444,7 @@ vultr==0.1.2
 wakeonlan==2.1.0
 
 # homeassistant.components.wallbox
-wallbox==0.7.0
+wallbox==0.8.0
 
 # homeassistant.components.folder_watcher
 watchdog==6.0.0
