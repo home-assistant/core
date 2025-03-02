@@ -7,9 +7,9 @@ from typing import Any
 
 from uiprotect.data import Light, ModelType, ProtectAdoptableDeviceModel
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectDeviceType, UFPConfigEntry
 from .entity import ProtectDeviceEntity
@@ -20,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up lights for UniFi Protect integration."""
     data = entry.runtime_data
@@ -71,13 +71,10 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
-        hass_brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
-        unifi_brightness = hass_to_unifi_brightness(hass_brightness)
-
-        _LOGGER.debug("Turning on light with brightness %s", unifi_brightness)
-        await self.device.set_light(True, unifi_brightness)
+        _LOGGER.debug("Turning on light")
+        await self.device.api.set_light_is_led_force_on(self.device.id, True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         _LOGGER.debug("Turning off light")
-        await self.device.set_light(False)
+        await self.device.api.set_light_is_led_force_on(self.device.id, False)

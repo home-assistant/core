@@ -10,6 +10,10 @@ extend-ignore = [
     "SLF001", # Private member accessed: Tests do often test internals a lot
 ]
 
+[lint.flake8-tidy-imports.banned-api]
+"async_timeout".msg = "use asyncio.timeout instead"
+"pytz".msg = "use zoneinfo instead"
+
 [lint.isort]
 known-first-party = [
     "homeassistant",

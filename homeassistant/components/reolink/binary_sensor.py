@@ -23,7 +23,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ReolinkChannelCoordinatorEntity, ReolinkChannelEntityDescription
 from .util import ReolinkConfigEntry, ReolinkData
@@ -100,6 +100,13 @@ BINARY_PUSH_SENSORS = (
         value=lambda api, ch: api.visitor_detected(ch),
         supported=lambda api, ch: api.is_doorbell(ch),
     ),
+    ReolinkBinarySensorEntityDescription(
+        key="cry",
+        cmd_id=33,
+        translation_key="cry",
+        value=lambda api, ch: api.ai_detected(ch, "cry"),
+        supported=lambda api, ch: api.ai_supported(ch, "cry"),
+    ),
 )
 
 BINARY_SENSORS = (
@@ -118,7 +125,7 @@ BINARY_SENSORS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink IP Camera."""
     reolink_data: ReolinkData = config_entry.runtime_data

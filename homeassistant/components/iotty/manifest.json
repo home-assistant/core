@@ -1,11 +1,11 @@
 {
   "domain": "iotty",
   "name": "iotty",
-  "codeowners": ["@pburgio", "@shapournemati-iotty"],
+  "codeowners": ["@shapournemati-iotty"],
   "config_flow": true,
   "dependencies": ["application_credentials"],
   "documentation": "https://www.home-assistant.io/integrations/iotty",
   "integration_type": "device",
   "iot_class": "cloud_polling",
-  "requirements": ["iottycloud==0.2.1"]
+  "requirements": ["iottycloud==0.3.0"]
 }

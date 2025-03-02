@@ -16,7 +16,7 @@ from aiounifi.models.api import ApiItemT
 from aiounifi.models.client import Client
 from aiounifi.models.device import Device
 from aiounifi.models.event import Event, EventKey
-from propcache import cached_property
+from propcache.api import cached_property
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
@@ -24,10 +24,10 @@ from homeassistant.components.device_tracker import (
     ScannerEntityDescription,
 )
 from homeassistant.core import Event as core_Event, HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.helpers.entity_registry as er
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from . import UnifiConfigEntry
 from .const import DOMAIN as UNIFI_DOMAIN
@@ -222,7 +222,7 @@ def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device tracker for UniFi Network integration."""
     async_update_unique_id(hass, config_entry)

@@ -2,7 +2,7 @@
   "config": {
     "step": {
       "user": {
-        "title": "Setup your tedee locks",
+        "title": "Set up your tedee locks",
         "data": {
           "local_access_token": "Local access token",
           "host": "[%key:common::config_flow::data::host%]"
@@ -14,7 +14,7 @@
       },
       "reauth_confirm": {
         "title": "Update of access key required",
-        "description": "Tedee needs an updated access key, because the existing one is invalid, or might have expired.",
+        "description": "Tedee needs an updated access key because the existing one is invalid or might have expired.",
         "data": {
           "local_access_token": "[%key:component::tedee::config::step::user::data::local_access_token%]"
         },
@@ -23,7 +23,7 @@
         }
       },
       "reconfigure": {
-        "title": "Reconfigure Tedee",
+        "title": "Reconfigure tedee",
         "description": "Update the settings of this integration.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",

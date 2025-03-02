@@ -664,6 +664,6 @@ async def test_provision_fails_invalid_data(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_improv_data"
     assert (
-        "Aborting improv flow, device AA:BB:CC:DD:EE:F0 sent invalid improv data: '000000000000'"
+        "Received invalid improv via BLE data '000000000000' from device with bluetooth address 'AA:BB:CC:DD:EE:F0'"
         in caplog.text
     )

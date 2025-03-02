@@ -15,8 +15,16 @@
         "title": "Confirm",
         "description": "Do you want to set up {product_type} ({serial}) at {ip_address}?"
       },
-      "reauth_confirm": {
+      "reauth_enable_api": {
         "description": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings."
+      },
+      "reauth_confirm_update_token": {
+        "title": "Re-authenticate",
+        "description": "[%key:component::homewizard::config::step::authorize::description%]"
+      },
+      "authorize": {
+        "title": "Authorize",
+        "description": "Press the button on the HomeWizard Energy device, then select the button below."
       },
       "reconfigure": {
         "description": "Update configuration for {title}.",
@@ -30,7 +38,8 @@
     },
     "error": {
       "api_not_enabled": "The local API is disabled. Go to the HomeWizard Energy app and enable the API in the device settings.",
-      "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network"
+      "network_error": "Device unreachable, make sure that you have entered the correct IP address and that the device is available in your network",
+      "authorization_failed": "Failed to authorize, make sure to press the button of the device within 30 seconds"
     },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -38,7 +47,8 @@
       "device_not_supported": "This device is not supported",
       "unknown_error": "[%key:common::config_flow::error::unknown%]",
       "unsupported_api_version": "Detected unsupported API version",
-      "reauth_successful": "Enabling API was successful",
+      "reauth_enable_api_successful": "Enabling API was successful",
+      "reauth_successful": "Authorization successful",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
       "wrong_device": "The configured device is not the same found on this IP address."
     }
@@ -67,6 +77,9 @@
       },
       "wifi_strength": {
         "name": "Wi-Fi strength"
+      },
+      "wifi_rssi": {
+        "name": "Wi-Fi RSSI"
       },
       "total_energy_import_kwh": {
         "name": "Energy import"
@@ -121,6 +134,15 @@
       },
       "total_liter_m3": {
         "name": "Total water usage"
+      },
+      "cycles": {
+        "name": "Battery cycles"
+      },
+      "state_of_charge_pct": {
+        "name": "State of charge"
+      },
+      "uptime": {
+        "name": "Uptime"
       }
     },
     "switch": {
@@ -138,6 +160,26 @@
     },
     "communication_error": {
       "message": "An error occurred while communicating with HomeWizard device"
+    }
+  },
+  "issues": {
+    "migrate_to_v2_api": {
+      "title": "Update authentication method",
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "title": "[%key:component::homewizard::issues::migrate_to_v2_api::title%]",
+            "description": "Your {title} now supports a more secure and feature-rich communication method. To take advantage of this, you need to reconfigure the integration.\n\nSelect **Submit** to start the reconfiguration."
+          },
+          "authorize": {
+            "title": "[%key:component::homewizard::config::step::authorize::title%]",
+            "description": "[%key:component::homewizard::config::step::authorize::description%]"
+          }
+        },
+        "error": {
+          "authorization_failed": "[%key:component::homewizard::config::error::authorization_failed%]"
+        }
+      }
     }
   }
 }

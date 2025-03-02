@@ -81,7 +81,6 @@ async def test_firmware_update_required(
                     "displayName": "test-display-name",
                     "migrationStatus": "NOT_STARTED",
                 },
-                desired=None,
                 connectionState=None,
                 version=None,
                 timestamp=None,

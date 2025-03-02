@@ -25,7 +25,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ABSOLUTE_MOVE,
@@ -235,7 +235,7 @@ class ONVIFDevice:
         LOGGER.debug("%s: Retrieving current device date/time", self.name)
         try:
             device_time = await device_mgmt.GetSystemDateAndTime()
-        except RequestError as err:
+        except (RequestError, Fault) as err:
             LOGGER.warning(
                 "Couldn't get device '%s' date/time. Error: %s", self.name, err
             )
@@ -263,16 +263,22 @@ class ONVIFDevice:
             LOGGER.warning("%s: Could not retrieve date/time on this camera", self.name)
             return
 
-        cam_date = dt.datetime(
-            cdate.Date.Year,
-            cdate.Date.Month,
-            cdate.Date.Day,
-            cdate.Time.Hour,
-            cdate.Time.Minute,
-            cdate.Time.Second,
-            0,
-            tzone,
-        )
+        try:
+            cam_date = dt.datetime(
+                cdate.Date.Year,
+                cdate.Date.Month,
+                cdate.Date.Day,
+                cdate.Time.Hour,
+                cdate.Time.Minute,
+                cdate.Time.Second,
+                0,
+                tzone,
+            )
+        except ValueError as err:
+            LOGGER.warning(
+                "%s: Could not parse date/time from camera: %s", self.name, err
+            )
+            return
 
         cam_date_utc = cam_date.astimezone(dt_util.UTC)
 

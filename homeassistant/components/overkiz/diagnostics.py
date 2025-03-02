@@ -7,20 +7,18 @@ from typing import Any
 from pyoverkiz.enums import APIType
 from pyoverkiz.obfuscate import obfuscate_id
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 
-from . import HomeAssistantOverkizData
-from .const import CONF_API_TYPE, CONF_HUB, DOMAIN
+from . import OverkizDataConfigEntry
+from .const import CONF_API_TYPE, CONF_HUB
 
 
 async def async_get_config_entry_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry
+    hass: HomeAssistant, entry: OverkizDataConfigEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
-    entry_data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
-    client = entry_data.coordinator.client
+    client = entry.runtime_data.coordinator.client
 
     data = {
         "setup": await client.get_diagnostic_data(),
@@ -39,11 +37,10 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: ConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: OverkizDataConfigEntry, device: DeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
-    entry_data: HomeAssistantOverkizData = hass.data[DOMAIN][entry.entry_id]
-    client = entry_data.coordinator.client
+    client = entry.runtime_data.coordinator.client
 
     device_url = min(device.identifiers)[1]
 

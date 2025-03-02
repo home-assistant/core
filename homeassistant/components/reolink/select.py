@@ -19,13 +19,11 @@ from reolink_aio.api import (
     StatusLedEnum,
     TrackMethodEnum,
 )
-from reolink_aio.exceptions import InvalidParameterError, ReolinkError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfFrequency
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import (
     ReolinkChannelCoordinatorEntity,
@@ -33,7 +31,7 @@ from .entity import (
     ReolinkChimeCoordinatorEntity,
     ReolinkChimeEntityDescription,
 )
-from .util import ReolinkConfigEntry, ReolinkData
+from .util import ReolinkConfigEntry, ReolinkData, raise_translated_error
 
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
@@ -82,6 +80,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="day_night_mode",
         cmd_key="GetIsp",
+        cmd_id=26,
         translation_key="day_night_mode",
         entity_category=EntityCategory.CONFIG,
         get_options=[mode.name for mode in DayNightEnum],
@@ -296,7 +295,7 @@ CHIME_SELECT_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink select entities."""
     reolink_data: ReolinkData = config_entry.runtime_data
@@ -354,14 +353,10 @@ class ReolinkSelectEntity(ReolinkChannelCoordinatorEntity, SelectEntity):
         self._log_error = True
         return option
 
+    @raise_translated_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.entity_description.method(self._host.api, self._channel, option)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._host.api, self._channel, option)
         self.async_write_ha_state()
 
 
@@ -396,12 +391,8 @@ class ReolinkChimeSelectEntity(ReolinkChimeCoordinatorEntity, SelectEntity):
         self._log_error = True
         return option
 
+    @raise_translated_error
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
-        try:
-            await self.entity_description.method(self._chime, option)
-        except InvalidParameterError as err:
-            raise ServiceValidationError(err) from err
-        except ReolinkError as err:
-            raise HomeAssistantError(err) from err
+        await self.entity_description.method(self._chime, option)
         self.async_write_ha_state()

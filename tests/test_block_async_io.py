@@ -261,7 +261,7 @@ async def test_protect_path_read_bytes(caplog: pytest.LogCaptureFixture) -> None
         block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
-        Path("/config/data_not_exist").read_bytes(),  # noqa: ASYNC230
+        Path("/config/data_not_exist").read_bytes(),
     ):
         pass
 
@@ -274,7 +274,7 @@ async def test_protect_path_read_text(caplog: pytest.LogCaptureFixture) -> None:
         block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
-        Path("/config/data_not_exist").read_text(encoding="utf8"),  # noqa: ASYNC230
+        Path("/config/data_not_exist").read_text(encoding="utf8"),
     ):
         pass
 
@@ -287,7 +287,7 @@ async def test_protect_path_write_bytes(caplog: pytest.LogCaptureFixture) -> Non
         block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
-        Path("/config/data/not/exist").write_bytes(b"xxx"),  # noqa: ASYNC230
+        Path("/config/data/not/exist").write_bytes(b"xxx"),
     ):
         pass
 
@@ -300,7 +300,7 @@ async def test_protect_path_write_text(caplog: pytest.LogCaptureFixture) -> None
         block_async_io.enable()
     with (
         contextlib.suppress(FileNotFoundError),
-        Path("/config/data/not/exist").write_text("xxx", encoding="utf8"),  # noqa: ASYNC230
+        Path("/config/data/not/exist").write_text("xxx", encoding="utf8"),
     ):
         pass
 
@@ -428,6 +428,12 @@ async def test_protect_loop_load_verify_locations(
     with pytest.raises(OSError):
         context.load_verify_locations("/dev/null")
     assert "Detected blocking call to load_verify_locations" in caplog.text
+
+    # ignore with only cadata
+    caplog.clear()
+    with pytest.raises(ssl.SSLError):
+        context.load_verify_locations(cadata="xxx")
+    assert "Detected blocking call to load_verify_locations" not in caplog.text
 
 
 async def test_protect_loop_load_cert_chain(

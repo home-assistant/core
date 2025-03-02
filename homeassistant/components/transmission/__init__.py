@@ -15,7 +15,7 @@ from transmission_rpc.error import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -42,6 +42,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     ATTR_DELETE_DATA,
+    ATTR_DOWNLOAD_PATH,
     ATTR_TORRENT,
     CONF_ENTRY_ID,
     DEFAULT_DELETE_DATA,
@@ -53,7 +54,7 @@ from .const import (
     SERVICE_START_TORRENT,
     SERVICE_STOP_TORRENT,
 )
-from .coordinator import TransmissionDataUpdateCoordinator
+from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
 from .errors import AuthenticationError, CannotConnect, UnknownError
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,12 +78,19 @@ MIGRATION_NAME_TO_KEY = {
 
 SERVICE_BASE_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(),
+        vol.Required(CONF_ENTRY_ID): selector.ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
     }
 )
 
 SERVICE_ADD_TORRENT_SCHEMA = vol.All(
-    SERVICE_BASE_SCHEMA.extend({vol.Required(ATTR_TORRENT): cv.string}),
+    SERVICE_BASE_SCHEMA.extend(
+        {
+            vol.Required(ATTR_TORRENT): cv.string,
+            vol.Optional(ATTR_DOWNLOAD_PATH, default=None): cv.string,
+        }
+    ),
 )
 
 
@@ -108,8 +116,6 @@ SERVICE_STOP_TORRENT_SCHEMA = vol.All(
 )
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-type TransmissionConfigEntry = ConfigEntry[TransmissionDataUpdateCoordinator]
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -159,12 +165,16 @@ async def async_setup_entry(
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
     """Unload Transmission Entry from config_entry."""
     return await hass.config_entries.async_unload_platforms(config_entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_migrate_entry(
+    hass: HomeAssistant, config_entry: TransmissionConfigEntry
+) -> bool:
     """Migrate an old config entry."""
     _LOGGER.debug(
         "Migrating from version %s.%s",
@@ -213,10 +223,18 @@ def setup_hass_services(hass: HomeAssistant) -> None:
         entry_id: str = service.data[CONF_ENTRY_ID]
         coordinator = _get_coordinator_from_service_data(hass, entry_id)
         torrent: str = service.data[ATTR_TORRENT]
+        download_path: str | None = service.data.get(ATTR_DOWNLOAD_PATH)
         if torrent.startswith(
             ("http", "ftp:", "magnet:")
         ) or hass.config.is_allowed_path(torrent):
-            await hass.async_add_executor_job(coordinator.api.add_torrent, torrent)
+            if download_path:
+                await hass.async_add_executor_job(
+                    partial(
+                        coordinator.api.add_torrent, torrent, download_dir=download_path
+                    )
+                )
+            else:
+                await hass.async_add_executor_job(coordinator.api.add_torrent, torrent)
             await coordinator.async_request_refresh()
         else:
             _LOGGER.warning("Could not add torrent: unsupported type or no permission")

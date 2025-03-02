@@ -5,10 +5,7 @@ rules:
   brands: done
   common-modules: done
   config-flow-test-coverage: done
-  config-flow:
-    status: todo
-    comment: |
-      The data_description for port is missing.
+  config-flow: done
   dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
@@ -33,10 +30,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: todo
-    comment: |
-      Does not set parallel-updates on button/switch action calls.
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |

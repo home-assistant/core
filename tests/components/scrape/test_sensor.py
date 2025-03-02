@@ -443,9 +443,9 @@ async def test_scrape_sensor_errors(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     state = hass.states.get("sensor.ha_class")
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
     state2 = hass.states.get("sensor.ha_class2")
-    assert state2.state == STATE_UNKNOWN
+    assert state2.state == STATE_UNAVAILABLE
 
 
 async def test_scrape_sensor_unique_id(

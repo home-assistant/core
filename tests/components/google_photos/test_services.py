@@ -74,24 +74,55 @@ def mock_upload_file(
         yield
 
 
+@pytest.mark.parametrize(
+    ("media_items_result", "service_response"),
+    [
+        (
+            CreateMediaItemsResult(
+                new_media_item_results=[
+                    NewMediaItemResult(
+                        upload_token="some-upload-token",
+                        status=Status(code=200),
+                        media_item=MediaItem(id="new-media-item-id-1"),
+                    )
+                ]
+            ),
+            [{"media_item_id": "new-media-item-id-1"}],
+        ),
+        (
+            CreateMediaItemsResult(
+                new_media_item_results=[
+                    NewMediaItemResult(
+                        upload_token="some-upload-token",
+                        status=Status(code=200),
+                        media_item=MediaItem(id="new-media-item-id-1"),
+                    ),
+                    NewMediaItemResult(
+                        upload_token="some-upload-token",
+                        status=Status(code=200),
+                        media_item=MediaItem(id="new-media-item-id-2"),
+                    ),
+                ]
+            ),
+            [
+                {"media_item_id": "new-media-item-id-1"},
+                {"media_item_id": "new-media-item-id-2"},
+            ],
+        ),
+    ],
+)
 @pytest.mark.usefixtures("setup_integration")
 async def test_upload_service(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     mock_api: Mock,
+    media_items_result: CreateMediaItemsResult,
+    service_response: list[dict[str, str]],
 ) -> None:
     """Test service call to upload content."""
     assert hass.services.has_service(DOMAIN, "upload")
 
-    mock_api.create_media_items.return_value = CreateMediaItemsResult(
-        new_media_item_results=[
-            NewMediaItemResult(
-                upload_token="some-upload-token",
-                status=Status(code=200),
-                media_item=MediaItem(id="new-media-item-id-1"),
-            )
-        ]
-    )
+    mock_api.create_media_items.return_value = media_items_result
 
     response = await hass.services.async_call(
         DOMAIN,
@@ -106,7 +137,7 @@ async def test_upload_service(
     )
 
     assert response == {
-        "media_items": [{"media_item_id": "new-media-item-id-1"}],
+        "media_items": service_response,
         "album_id": "album-media-id-1",
     }
 

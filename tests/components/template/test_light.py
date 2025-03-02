@@ -7,7 +7,7 @@ import pytest
 from homeassistant.components import light
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
-    ATTR_COLOR_TEMP,
+    ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     ATTR_RGB_COLOR,
@@ -773,7 +773,7 @@ async def test_temperature_action_no_template(
     await hass.services.async_call(
         light.DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP: 345},
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP_KELVIN: 2898},
         blocking=True,
     )
 
@@ -1395,7 +1395,7 @@ async def test_all_colors_mode_no_template(
     await hass.services.async_call(
         light.DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP: 123},
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP_KELVIN: 8130},
         blocking=True,
     )
 
@@ -1531,7 +1531,7 @@ async def test_all_colors_mode_no_template(
     await hass.services.async_call(
         light.DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP: 234},
+        {ATTR_ENTITY_ID: "light.test_template_light", ATTR_COLOR_TEMP_KELVIN: 4273},
         blocking=True,
     )
 
@@ -1845,6 +1845,60 @@ async def test_supports_transition_template(
     assert (
         int(state.attributes.get("supported_features")) & LightEntityFeature.TRANSITION
     ) != expected_value
+
+
+@pytest.mark.parametrize("count", [1])
+async def test_supports_transition_template_updates(
+    hass: HomeAssistant, count: int
+) -> None:
+    """Test the template for the supports transition dynamically."""
+    light_config = {
+        "test_template_light": {
+            "value_template": "{{ 1 == 1 }}",
+            "turn_on": {"service": "light.turn_on", "entity_id": "light.test_state"},
+            "turn_off": {"service": "light.turn_off", "entity_id": "light.test_state"},
+            "set_temperature": {
+                "service": "light.turn_on",
+                "data_template": {
+                    "entity_id": "light.test_state",
+                    "color_temp": "{{color_temp}}",
+                },
+            },
+            "set_effect": {
+                "service": "test.automation",
+                "data_template": {
+                    "entity_id": "test.test_state",
+                    "effect": "{{effect}}",
+                },
+            },
+            "effect_list_template": "{{ ['Disco', 'Police'] }}",
+            "effect_template": "{{ None }}",
+            "supports_transition_template": "{{ states('sensor.test') }}",
+        }
+    }
+    await async_setup_light(hass, count, light_config)
+    state = hass.states.get("light.test_template_light")
+    assert state is not None
+
+    hass.states.async_set("sensor.test", 0)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    supported_features = state.attributes.get("supported_features")
+    assert supported_features == LightEntityFeature.EFFECT
+
+    hass.states.async_set("sensor.test", 1)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    supported_features = state.attributes.get("supported_features")
+    assert (
+        supported_features == LightEntityFeature.TRANSITION | LightEntityFeature.EFFECT
+    )
+
+    hass.states.async_set("sensor.test", 0)
+    await hass.async_block_till_done()
+    state = hass.states.get("light.test_template_light")
+    supported_features = state.attributes.get("supported_features")
+    assert supported_features == LightEntityFeature.EFFECT
 
 
 @pytest.mark.parametrize("count", [1])

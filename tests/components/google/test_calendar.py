@@ -21,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.helpers.template import DATE_STR_FORMAT
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     CALENDAR_ID,
@@ -751,6 +751,7 @@ async def test_unique_id_migration(
     old_unique_id,
 ) -> None:
     """Test that old unique id format is migrated to the new format that supports multiple accounts."""
+    config_entry.add_to_hass(hass)
     # Create an entity using the old unique id format
     entity_registry.async_get_or_create(
         DOMAIN,
@@ -805,6 +806,7 @@ async def test_invalid_unique_id_cleanup(
     mock_calendars_yaml,
 ) -> None:
     """Test that old unique id format that is not actually unique is removed."""
+    config_entry.add_to_hass(hass)
     # Create an entity using the old unique id format
     entity_registry.async_get_or_create(
         DOMAIN,
