@@ -1,0 +1,6 @@
+{
+  "domain": "frankever",
+  "name": "FrankEver",
+  "integration_type": "virtual",
+  "supported_by": "shelly"
+}

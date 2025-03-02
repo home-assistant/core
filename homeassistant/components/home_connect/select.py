@@ -50,6 +50,8 @@ from .coordinator import (
 from .entity import HomeConnectEntity, HomeConnectOptionEntity
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
 
+PARALLEL_UPDATES = 1
+
 FUNCTIONAL_LIGHT_COLOR_TEMPERATURE_ENUM = {
     bsh_key_to_translation_key(option): option
     for option in (

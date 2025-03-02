@@ -72,22 +72,27 @@ def _handle_paired_or_connected_appliance(
                 for entity in get_option_entities_for_appliance(entry, appliance)
                 if entity.unique_id not in known_entity_unique_ids
             )
-            changed_options_listener_remove_callback = (
-                entry.runtime_data.async_add_listener(
-                    partial(
-                        _create_option_entities,
-                        entry,
-                        appliance,
-                        known_entity_unique_ids,
-                        get_option_entities_for_appliance,
-                        async_add_entities,
-                    ),
+            for event_key in (
+                EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM,
+                EventKey.BSH_COMMON_ROOT_SELECTED_PROGRAM,
+            ):
+                changed_options_listener_remove_callback = (
+                    entry.runtime_data.async_add_listener(
+                        partial(
+                            _create_option_entities,
+                            entry,
+                            appliance,
+                            known_entity_unique_ids,
+                            get_option_entities_for_appliance,
+                            async_add_entities,
+                        ),
+                        (appliance.info.ha_id, event_key),
+                    )
                 )
-            )
-            entry.async_on_unload(changed_options_listener_remove_callback)
-            changed_options_listener_remove_callbacks[appliance.info.ha_id].append(
-                changed_options_listener_remove_callback
-            )
+                entry.async_on_unload(changed_options_listener_remove_callback)
+                changed_options_listener_remove_callbacks[appliance.info.ha_id].append(
+                    changed_options_listener_remove_callback
+                )
         known_entity_unique_ids.update(
             {
                 cast(str, entity.unique_id): appliance.info.ha_id

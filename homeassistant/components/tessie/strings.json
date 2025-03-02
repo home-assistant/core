@@ -75,7 +75,7 @@
         "name": "Charging",
         "state": {
           "starting": "Starting",
-          "charging": "Charging",
+          "charging": "[%key:common::state::charging%]",
           "disconnected": "Disconnected",
           "stopped": "Stopped",
           "complete": "Complete",
@@ -212,7 +212,7 @@
         "name": "State",
         "state": {
           "booting": "Booting",
-          "charging": "[%key:component::tessie::entity::sensor::charge_state_charging_state::state::charging%]",
+          "charging": "[%key:common::state::charging%]",
           "disconnected": "[%key:common::state::disconnected%]",
           "connected": "[%key:common::state::connected%]",
           "scheduled": "Scheduled",
