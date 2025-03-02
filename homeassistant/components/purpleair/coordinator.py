@@ -49,16 +49,21 @@ UPDATE_INTERVAL = timedelta(minutes=2)
 class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
     """Define a PurpleAir-specific coordinator."""
 
+    config_entry: ConfigEntry
+
     def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize."""
-        self._entry = entry
         self._api = API(
             entry.data[CONF_API_KEY],
             session=aiohttp_client.async_get_clientsession(hass),
         )
 
         super().__init__(
-            hass, LOGGER, name=entry.title, update_interval=UPDATE_INTERVAL
+            hass,
+            LOGGER,
+            config_entry=entry,
+            name=entry.title,
+            update_interval=UPDATE_INTERVAL,
         )
 
     async def _async_update_data(self) -> GetSensorsResponse:
@@ -66,7 +71,7 @@ class PurpleAirDataUpdateCoordinator(DataUpdateCoordinator[GetSensorsResponse]):
         try:
             return await self._api.sensors.async_get_sensors(
                 SENSOR_FIELDS_TO_RETRIEVE,
-                sensor_indices=self._entry.options[CONF_SENSOR_INDICES],
+                sensor_indices=self.config_entry.options[CONF_SENSOR_INDICES],
             )
         except InvalidApiKeyError as err:
             raise ConfigEntryAuthFailed("Invalid API key") from err

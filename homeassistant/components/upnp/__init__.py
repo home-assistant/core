@@ -8,7 +8,6 @@ from datetime import timedelta
 from async_upnp_client.exceptions import UpnpConnectionError
 
 from homeassistant.components import ssdp
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -28,16 +27,13 @@ from .const import (
     IDENTIFIER_SERIAL_NUMBER,
     LOGGER,
 )
-from .coordinator import UpnpDataUpdateCoordinator
+from .coordinator import UpnpConfigEntry, UpnpDataUpdateCoordinator
 from .device import async_create_device, get_preferred_location
 
 NOTIFICATION_ID = "upnp_notification"
 NOTIFICATION_TITLE = "UPnP/IGD Setup"
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
-
-
-type UpnpConfigEntry = ConfigEntry[UpnpDataUpdateCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool:
@@ -176,6 +172,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
     update_interval = timedelta(seconds=DEFAULT_SCAN_INTERVAL)
     coordinator = UpnpDataUpdateCoordinator(
         hass,
+        config_entry=entry,
         device=device,
         device_entry=device_entry,
         update_interval=update_interval,
@@ -193,7 +190,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool:
     """Unload a UPnP/IGD device from a config entry."""
     LOGGER.debug("Unloading config entry: %s", entry.entry_id)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

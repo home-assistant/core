@@ -9,6 +9,7 @@ import logging
 from kasa import AuthenticationError, Credentials, Device, KasaException
 from kasa.iot import IotStrip
 
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
@@ -123,11 +124,14 @@ class TPLinkDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def get_child_coordinator(
         self,
         child: Device,
+        platform_domain: str,
     ) -> TPLinkDataUpdateCoordinator:
         """Get separate child coordinator for a device or self if not needed."""
         # The iot HS300 allows a limited number of concurrent requests and fetching the
         # emeter information requires separate ones so create child coordinators here.
-        if isinstance(self.device, IotStrip):
+        # This does not happen for switches as the state is available on the
+        # parent device info.
+        if isinstance(self.device, IotStrip) and platform_domain != SWITCH_DOMAIN:
             if not (child_coordinator := self._child_coordinators.get(child.device_id)):
                 # The child coordinators only update energy data so we can
                 # set a longer update interval to avoid flooding the device

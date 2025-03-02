@@ -31,7 +31,7 @@
   "services": {
     "set_fan_speed_tracked_state": {
       "name": "Set fan speed tracked state",
-      "description": "Sets the tracked fan speed for a bond fan.",
+      "description": "Sets the tracked fan speed for a Bond fan.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -45,7 +45,7 @@
     },
     "set_switch_power_tracked_state": {
       "name": "Set switch power tracked state",
-      "description": "Sets the tracked power state of a bond switch.",
+      "description": "Sets the tracked power state of a Bond switch.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -59,7 +59,7 @@
     },
     "set_light_power_tracked_state": {
       "name": "Set light power tracked state",
-      "description": "Sets the tracked power state of a bond light.",
+      "description": "Sets the tracked power state of a Bond light.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -73,7 +73,7 @@
     },
     "set_light_brightness_tracked_state": {
       "name": "Set light brightness tracked state",
-      "description": "Sets the tracked brightness state of a bond light.",
+      "description": "Sets the tracked brightness state of a Bond light.",
       "fields": {
         "entity_id": {
           "name": "Entity",
@@ -87,15 +87,15 @@
     },
     "start_increasing_brightness": {
       "name": "Start increasing brightness",
-      "description": "Start increasing the brightness of the light. (deprecated)."
+      "description": "Starts increasing the brightness of the light (deprecated)."
     },
     "start_decreasing_brightness": {
       "name": "Start decreasing brightness",
-      "description": "Start decreasing the brightness of the light. (deprecated)."
+      "description": "Starts decreasing the brightness of the light (deprecated)."
     },
     "stop": {
       "name": "[%key:common::action::stop%]",
-      "description": "Stop any in-progress action and empty the queue. (deprecated)."
+      "description": "Stops any in-progress action and empty the queue (deprecated)."
     }
   }
 }
