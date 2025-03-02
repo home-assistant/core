@@ -30,7 +30,7 @@ from homeassistant.helpers import (
     entity_platform,
     entity_registry as er,
 )
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.dt import utcnow
 
 from . import LinkPlayConfigEntry, LinkPlayData
@@ -125,11 +125,13 @@ SERVICE_PLAY_PRESET_SCHEMA = cv.make_entity_service_schema(
     }
 )
 
+RETRY_POLL_MAXIMUM = 3
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LinkPlayConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a media player from a config entry."""
 
@@ -156,6 +158,7 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
 
         super().__init__(bridge)
         self._attr_unique_id = bridge.device.uuid
+        self._retry_count = 0
 
         self._attr_source_list = [
             SOURCE_MAP[playing_mode] for playing_mode in bridge.device.playmode_support
@@ -166,9 +169,12 @@ class LinkPlayMediaPlayerEntity(LinkPlayBaseEntity, MediaPlayerEntity):
         """Update the state of the media player."""
         try:
             await self._bridge.player.update_status()
+            self._retry_count = 0
             self._update_properties()
         except LinkPlayRequestException:
-            self._attr_available = False
+            self._retry_count += 1
+            if self._retry_count >= RETRY_POLL_MAXIMUM:
+                self._attr_available = False
 
     @exception_wrap
     async def async_select_source(self, source: str) -> None:

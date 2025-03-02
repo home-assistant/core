@@ -25,6 +25,8 @@ _LOGGER = logging.getLogger(__name__)
 UPDATE_INTERVAL: Final = timedelta(seconds=60)
 REQUEST_REFRESH_COOLDOWN: Final = 5
 
+type APCUPSdConfigEntry = ConfigEntry[APCUPSdCoordinator]
+
 
 class APCUPSdData(dict[str, str]):
     """Store data about an APCUPSd and provide a few helper methods for easier accesses."""
@@ -57,13 +59,20 @@ class APCUPSdCoordinator(DataUpdateCoordinator[APCUPSdData]):
     updates from the server.
     """
 
-    config_entry: ConfigEntry
+    config_entry: APCUPSdConfigEntry
 
-    def __init__(self, hass: HomeAssistant, host: str, port: int) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: APCUPSdConfigEntry,
+        host: str,
+        port: int,
+    ) -> None:
         """Initialize the data object."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=UPDATE_INTERVAL,
             request_refresh_debouncer=Debouncer(

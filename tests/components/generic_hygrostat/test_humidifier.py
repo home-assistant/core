@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
+from homeassistant import core as ha
 from homeassistant.components import input_boolean, switch
 from homeassistant.components.generic_hygrostat import (
     DOMAIN as GENERIC_HYDROSTAT_DOMAIN,
@@ -28,7 +29,6 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
-import homeassistant.core as ha
 from homeassistant.core import (
     DOMAIN as HOMEASSISTANT_DOMAIN,
     CoreState,
@@ -40,7 +40,7 @@ from homeassistant.core import (
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import StateType
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,

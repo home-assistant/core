@@ -1,5 +1,7 @@
 """DataUpdateCoordinator for Flexit Nordic (BACnet) integration.."""
 
+from __future__ import annotations
+
 import asyncio.exceptions
 from datetime import timedelta
 import logging
@@ -17,18 +19,21 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type FlexitConfigEntry = ConfigEntry[FlexitCoordinator]
+
 
 class FlexitCoordinator(DataUpdateCoordinator[FlexitBACnet]):
     """Class to manage fetching data from a Flexit Nordic (BACnet) device."""
 
-    config_entry: ConfigEntry
+    config_entry: FlexitConfigEntry
 
-    def __init__(self, hass: HomeAssistant, device_id: str) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: FlexitConfigEntry) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,
             _LOGGER,
-            name=f"{DOMAIN}_{device_id}",
+            config_entry=config_entry,
+            name=f"{DOMAIN}_{config_entry.data[CONF_DEVICE_ID]}",
             update_interval=timedelta(seconds=60),
         )
 
@@ -44,7 +49,11 @@ class FlexitCoordinator(DataUpdateCoordinator[FlexitBACnet]):
             await self.device.update()
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
             raise ConfigEntryNotReady(
-                f"Timeout while connecting to {self.config_entry.data[CONF_IP_ADDRESS]}"
+                translation_domain=DOMAIN,
+                translation_key="not_ready",
+                translation_placeholders={
+                    "ip": str(self.config_entry.data[CONF_IP_ADDRESS]),
+                },
             ) from exc
 
         return self.device

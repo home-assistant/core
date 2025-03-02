@@ -7,7 +7,7 @@ from unittest.mock import Mock, patch
 
 import requests_mock
 
-import homeassistant.components.google_wifi.sensor as google_wifi
+from homeassistant.components.google_wifi import sensor as google_wifi
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util

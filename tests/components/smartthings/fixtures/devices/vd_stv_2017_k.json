@@ -1,0 +1,148 @@
+{
+  "items": [
+    {
+      "deviceId": "4588d2d9-a8cf-40f4-9a0b-ed5dfbaccda1",
+      "name": "[TV] Samsung 8 Series (49)",
+      "label": "[TV] Samsung 8 Series (49)",
+      "manufacturerName": "Samsung Electronics",
+      "presentationId": "VD-STV_2017_K",
+      "deviceManufacturerCode": "Samsung Electronics",
+      "locationId": "c4d3b2a1-09f8-765e-4d3c-2b1a09f8e7d6 ",
+      "ownerId": "d47f2b19-3a6e-4c8d-bf21-9e8a7c5d134e",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
+      "deviceTypeName": "Samsung OCF TV",
+      "components": [
+        {
+          "id": "main",
+          "label": "main",
+          "capabilities": [
+            {
+              "id": "ocf",
+              "version": 1
+            },
+            {
+              "id": "switch",
+              "version": 1
+            },
+            {
+              "id": "audioVolume",
+              "version": 1
+            },
+            {
+              "id": "audioMute",
+              "version": 1
+            },
+            {
+              "id": "tvChannel",
+              "version": 1
+            },
+            {
+              "id": "mediaInputSource",
+              "version": 1
+            },
+            {
+              "id": "mediaPlayback",
+              "version": 1
+            },
+            {
+              "id": "mediaTrackControl",
+              "version": 1
+            },
+            {
+              "id": "custom.error",
+              "version": 1
+            },
+            {
+              "id": "custom.picturemode",
+              "version": 1
+            },
+            {
+              "id": "custom.soundmode",
+              "version": 1
+            },
+            {
+              "id": "custom.accessibility",
+              "version": 1
+            },
+            {
+              "id": "custom.launchapp",
+              "version": 1
+            },
+            {
+              "id": "custom.recording",
+              "version": 1
+            },
+            {
+              "id": "custom.tvsearch",
+              "version": 1
+            },
+            {
+              "id": "custom.disabledCapabilities",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.ambient",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.ambientContent",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.mediaInputSource",
+              "version": 1
+            },
+            {
+              "id": "refresh",
+              "version": 1
+            },
+            {
+              "id": "execute",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.firmwareVersion",
+              "version": 1
+            },
+            {
+              "id": "samsungvd.supportsPowerOnByOcf",
+              "version": 1
+            }
+          ],
+          "categories": [
+            {
+              "name": "Television",
+              "categoryType": "manufacturer"
+            }
+          ]
+        }
+      ],
+      "createTime": "2020-05-07T02:58:10Z",
+      "profile": {
+        "id": "bac5c673-8eea-3d00-b1d2-283b46539017"
+      },
+      "ocf": {
+        "ocfDeviceType": "oic.d.tv",
+        "name": "[TV] Samsung 8 Series (49)",
+        "specVersion": "core.1.1.0",
+        "verticalDomainSpecVersion": "res.1.1.0,sh.1.1.0",
+        "manufacturerName": "Samsung Electronics",
+        "modelNumber": "UN49MU8000",
+        "platformVersion": "Tizen 3.0",
+        "platformOS": "4.1.10",
+        "hwVersion": "0-0",
+        "firmwareVersion": "T-KTMAKUC-1290.3",
+        "vendorId": "VD-STV_2017_K",
+        "locale": "en_US",
+        "lastSignupTime": "2021-08-21T18:52:56.748359Z",
+        "transferCandidate": false,
+        "additionalAuthCodeRequired": false
+      },
+      "type": "OCF",
+      "restrictionTier": 0,
+      "allowed": [],
+      "executionContext": "CLOUD"
+    }
+  ],
+  "_links": {}
+}

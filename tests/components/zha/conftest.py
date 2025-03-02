@@ -25,7 +25,7 @@ from zigpy.zcl.clusters.general import Basic, Groups
 from zigpy.zcl.foundation import Status
 import zigpy.zdo.types as zdo_t
 
-import homeassistant.components.zha.const as zha_const
+from homeassistant.components.zha import const as zha_const
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -155,6 +155,7 @@ async def zigpy_app_controller():
     app.state.node_info.ieee = zigpy.types.EUI64.convert("00:15:8d:00:02:32:4f:32")
     app.state.node_info.manufacturer = "Coordinator Manufacturer"
     app.state.node_info.model = "Coordinator Model"
+    app.state.node_info.version = "7.1.4.0 build 389"
     app.state.network_info.pan_id = 0x1234
     app.state.network_info.extended_pan_id = app.state.node_info.ieee
     app.state.network_info.channel = 15

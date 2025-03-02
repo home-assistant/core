@@ -20,8 +20,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER,
 )
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.helpers import entity_registry as er
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 

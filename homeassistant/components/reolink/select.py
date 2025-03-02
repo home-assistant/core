@@ -23,7 +23,7 @@ from reolink_aio.api import (
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, UnitOfDataRate, UnitOfFrequency
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import (
     ReolinkChannelCoordinatorEntity,
@@ -80,6 +80,7 @@ SELECT_ENTITIES = (
     ReolinkSelectEntityDescription(
         key="day_night_mode",
         cmd_key="GetIsp",
+        cmd_id=26,
         translation_key="day_night_mode",
         entity_category=EntityCategory.CONFIG,
         get_options=[mode.name for mode in DayNightEnum],
@@ -294,7 +295,7 @@ CHIME_SELECT_ENTITIES = (
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ReolinkConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Reolink select entities."""
     reolink_data: ReolinkData = config_entry.runtime_data

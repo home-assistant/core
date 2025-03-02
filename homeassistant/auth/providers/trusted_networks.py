@@ -21,7 +21,7 @@ import voluptuous as vol
 
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.network import is_cloud_connection
 
 from .. import InvalidAuthError

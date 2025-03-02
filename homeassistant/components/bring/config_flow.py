@@ -63,11 +63,18 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(
-                title=self.info.get("name") or user_input[CONF_EMAIL], data=user_input
+                title=self.info.name or user_input[CONF_EMAIL],
+                data=user_input,
             )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "google_play": "https://play.google.com/store/apps/details?id=ch.publisheria.bring",
+                "app_store": "https://itunes.apple.com/app/apple-store/id580669177",
+            },
         )
 
     async def async_step_reauth(
@@ -97,6 +104,29 @@ class BringConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values={CONF_EMAIL: self.reauth_entry.data[CONF_EMAIL]},
             ),
             description_placeholders={CONF_NAME: self.reauth_entry.title},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconf_entry = self._get_reconfigure_entry()
+
+        if user_input:
+            if not (errors := await self.validate_input(user_input)):
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    reconf_entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA,
+                suggested_values={CONF_EMAIL: reconf_entry.data[CONF_EMAIL]},
+            ),
             errors=errors,
         )
 

@@ -1,4 +1,4 @@
-"""Constants for LG webOS Smart TV tests."""
+"""Constants for LG webOS TV tests."""
 
 from homeassistant.components.media_player import DOMAIN as MP_DOMAIN
 from homeassistant.components.webostv.const import LIVE_TV_APP_ID

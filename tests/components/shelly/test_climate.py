@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock, PropertyMock
 
 from aioshelly.const import (
     BLU_TRV_IDENTIFIER,
-    MODEL_BLU_GATEWAY_GEN3,
+    MODEL_BLU_GATEWAY_G3,
     MODEL_VALVE,
     MODEL_WALL_DISPLAY,
 )
@@ -26,7 +26,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.shelly.const import DOMAIN
+from homeassistant.components.shelly.const import BLU_TRV_TIMEOUT, DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
@@ -751,6 +751,7 @@ async def test_wall_display_thermostat_mode_external_actuator(
 
     new_status = deepcopy(mock_rpc_device.status)
     new_status["sys"]["relay_in_thermostat"] = False
+    new_status.pop("cover:0")
     monkeypatch.setattr(mock_rpc_device, "status", new_status)
 
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
@@ -782,7 +783,7 @@ async def test_blu_trv_climate_set_temperature(
     entity_id = "climate.trv_name"
     monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 17.1
 
@@ -804,6 +805,7 @@ async def test_blu_trv_climate_set_temperature(
             "method": "Trv.SetTarget",
             "params": {"id": 0, "target_C": 28.0},
         },
+        BLU_TRV_TIMEOUT,
     )
 
     assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 28
@@ -819,7 +821,7 @@ async def test_blu_trv_climate_disabled(
     entity_id = "climate.trv_name"
     monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     assert get_entity_attribute(hass, entity_id, ATTR_TEMPERATURE) == 17.1
 
@@ -841,7 +843,7 @@ async def test_blu_trv_climate_hvac_action(
     entity_id = "climate.trv_name"
     monkeypatch.delitem(mock_blu_trv.status, "thermostat:0")
 
-    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_GEN3)
+    await init_integration(hass, 3, model=MODEL_BLU_GATEWAY_G3)
 
     assert get_entity_attribute(hass, entity_id, ATTR_HVAC_ACTION) == HVACAction.IDLE
 

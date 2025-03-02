@@ -24,13 +24,13 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import ElectraSmartConfigEntry
 from .const import (
     API_DELAY,
     CONSECUTIVE_FAILURE_THRESHOLD,
@@ -89,10 +89,12 @@ PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ElectraSmartConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Electra AC devices."""
-    api: ElectraAPI = hass.data[DOMAIN][entry.entry_id]
+    api = entry.runtime_data
 
     _LOGGER.debug("Discovered %i Electra devices", len(api.devices))
     async_add_entities(

@@ -32,6 +32,19 @@
     "targetTemperature": 19,
     "unit": "C"
   },
+  "temperatureInUnits": [
+    {
+      "currentTemperature": 25,
+      "targetTemperature": 19,
+      "unit": "C"
+    },
+    {
+      "currentTemperature": 77,
+      "targetTemperature": 66,
+      "unit": "F"
+    }
+  ],
+
   "timer": {
     "relativeStartTimer": "UNSET",
     "relativeStopTimer": "UNSET",
@@ -39,5 +52,9 @@
     "absoluteStopTimer": "UNSET",
     "absoluteHourToStart": 13,
     "absoluteMinuteToStart": 14
+  },
+  "windDirection": {
+    "rotateUpDown": false,
+    "rotateLeftRight": false
   }
 }

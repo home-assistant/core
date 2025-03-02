@@ -24,8 +24,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_get_clientsession(hass),
     )
     open_garage_data_coordinator = OpenGarageDataUpdateCoordinator(
-        hass,
-        open_garage_connection=open_garage_connection,
+        hass, entry, open_garage_connection
     )
     await open_garage_data_coordinator.async_config_entry_first_refresh()
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = open_garage_data_coordinator

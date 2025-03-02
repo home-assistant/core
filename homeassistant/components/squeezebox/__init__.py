@@ -127,12 +127,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
     )
     _LOGGER.debug("LMS Device %s", device)
 
-    server_coordinator = LMSStatusDataUpdateCoordinator(hass, lms)
+    server_coordinator = LMSStatusDataUpdateCoordinator(hass, entry, lms)
 
-    entry.runtime_data = SqueezeboxData(
-        coordinator=server_coordinator,
-        server=lms,
-    )
+    entry.runtime_data = SqueezeboxData(coordinator=server_coordinator, server=lms)
 
     # set up player discovery
     known_servers = hass.data.setdefault(DOMAIN, {}).setdefault(KNOWN_SERVERS, {})
@@ -151,7 +148,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SqueezeboxConfigEntry) -
             else:
                 _LOGGER.debug("Adding new entity: %s", player)
                 player_coordinator = SqueezeBoxPlayerUpdateCoordinator(
-                    hass, player, lms.uuid
+                    hass, entry, player, lms.uuid
                 )
                 known_players.append(player.player_id)
                 async_dispatcher_send(

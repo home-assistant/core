@@ -16,7 +16,7 @@ from homeassistant.const import ATTR_TEMPERATURE, STATE_ON
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BSBLanConfigEntry, BSBLanData
 from .const import DOMAIN
@@ -37,7 +37,7 @@ OPERATION_MODES_REVERSE = {v: k for k, v in OPERATION_MODES.items()}
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: BSBLanConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up BSBLAN water heater based on a config entry."""
     data = entry.runtime_data

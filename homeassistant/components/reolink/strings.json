@@ -18,6 +18,10 @@
           "username": "Username to login to the Reolink device itself. Not the Reolink cloud account.",
           "password": "Password to login to the Reolink device itself. Not the Reolink cloud account."
         }
+      },
+      "privacy": {
+        "title": "Permission to disable Reolink privacy mode",
+        "description": "Privacy mode is enabled on Reolink device {host}. By pressing SUBMIT, the privacy mode will be disabled to retrieve the necessary information from the Reolink device. You can abort the setup by pressing X and repeat the setup at a time in which privacy mode can be disabled. After this configuration, you are free to enable the privacy mode again using the privacy mode switch entity. During normal startup the privacy mode will not be disabled. Note however that all entities will be marked unavailable as long as the privacy mode is active."
       }
     },
     "error": {
@@ -122,7 +126,7 @@
     },
     "hub_switch_deprecated": {
       "title": "Reolink Home Hub switches deprecated",
-      "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are depricated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned."
+      "description": "The redundant 'Record', 'Email on event', 'FTP upload', 'Push notifications', and 'Buzzer on event' switches on the Reolink Home Hub are deprecated since the new firmware no longer supports these. Please use the equally named switches under each of the camera devices connected to the Home Hub instead. To remove this issue, please adjust automations accordingly and disable the switch entities mentioned."
     }
   },
   "services": {
@@ -737,8 +741,8 @@
       "battery_state": {
         "name": "Battery state",
         "state": {
-          "discharging": "Discharging",
-          "charging": "Charging",
+          "discharging": "[%key:common::state::discharging%]",
+          "charging": "[%key:common::state::charging%]",
           "chargecomplete": "Charge complete"
         }
       },
@@ -808,6 +812,9 @@
       },
       "led": {
         "name": "LED"
+      },
+      "privacy_mode": {
+        "name": "Privacy mode"
       }
     }
   }

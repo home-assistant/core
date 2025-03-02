@@ -6,5 +6,5 @@
   "iot_class": "local_polling",
   "loggers": ["pytouchline"],
   "quality_scale": "legacy",
-  "requirements": ["pytouchline==0.7"]
+  "requirements": ["pytouchline_extended==0.4.5"]
 }

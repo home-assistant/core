@@ -241,6 +241,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=entry,
             name=DOMAIN,
             update_interval=update_interval,
         )
@@ -279,7 +280,7 @@ class ImapDataUpdateCoordinator(DataUpdateCoordinator[int | None]):
             if self.custom_event_template is not None:
                 try:
                     data["custom"] = self.custom_event_template.async_render(
-                        data, parse_result=True
+                        data | {"text": message.text}, parse_result=True
                     )
                     _LOGGER.debug(
                         "IMAP custom template (%s) for msguid %s (%s) rendered to: %s, initial: %s",

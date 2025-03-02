@@ -30,7 +30,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.discovery import async_load_platform
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
@@ -384,6 +384,11 @@ class ModbusHub:
             {ATTR_SLAVE: slave} if slave is not None else {ATTR_SLAVE: 1}
         )
         entry = self._pb_request[use_call]
+
+        if use_call in {"write_registers", "write_coils"}:
+            if not isinstance(value, list):
+                value = [value]
+
         kwargs[entry.value_attr_name] = value
         try:
             result: ModbusPDU = await entry.func(address, **kwargs)

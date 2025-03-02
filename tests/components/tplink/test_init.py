@@ -246,7 +246,6 @@ async def test_config_entry_with_stored_credentials(
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.LOADED
     config = DeviceConfig.from_dict(DEVICE_CONFIG_KLAP.to_dict())
-    config.uses_http = False
     config.http_client = "Foo"
     assert config.credentials != stored_credentials
     config.credentials = stored_credentials
@@ -762,7 +761,6 @@ async def test_credentials_hash_auth_error(
     expected_config = DeviceConfig.from_dict(
         {**DEVICE_CONFIG_DICT_KLAP, "credentials_hash": "theHash"}
     )
-    expected_config.uses_http = False
     expected_config.http_client = "Foo"
     connect_mock.assert_called_with(config=expected_config)
     assert entry.state is ConfigEntryState.SETUP_ERROR
@@ -794,13 +792,20 @@ async def test_migrate_remove_device_config(
     As async_setup_entry will succeed the hash on the parent is updated
     from the device.
     """
+    old_device_config = {
+        k: v for k, v in device_config.to_dict().items() if k != "credentials"
+    }
+    device_config_dict = {
+        **old_device_config,
+        "uses_http": device_config.connection_type.encryption_type
+        is not Device.EncryptionType.Xor,
+    }
+
     OLD_CREATE_ENTRY_DATA = {
         CONF_HOST: expected_entry_data[CONF_HOST],
         CONF_ALIAS: ALIAS,
         CONF_MODEL: MODEL,
-        CONF_DEVICE_CONFIG: {
-            k: v for k, v in device_config.to_dict().items() if k != "credentials"
-        },
+        CONF_DEVICE_CONFIG: device_config_dict,
     }
 
     entry = MockConfigEntry(
@@ -1007,8 +1012,8 @@ async def test_automatic_feature_device_addition_and_removal(
         ),
         pytest.param(
             "climate",
-            [],
-            ["state", "thermostat_mode", "temperature", "target_temperature"],
+            [Module.Thermostat],
+            ["temperature", "target_temperature"],
             None,
             DeviceType.Thermostat,
             id="climate",

@@ -23,7 +23,6 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
-from homeassistant.helpers.typing import ConfigType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util.location import distance
 
@@ -75,16 +74,14 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
 
     config_entry: ProximityConfigEntry
 
-    def __init__(
-        self, hass: HomeAssistant, friendly_name: str, config: ConfigType
-    ) -> None:
+    def __init__(self, hass: HomeAssistant, config_entry: ProximityConfigEntry) -> None:
         """Initialize the Proximity coordinator."""
-        self.ignored_zone_ids: list[str] = config[CONF_IGNORED_ZONES]
-        self.tracked_entities: list[str] = config[CONF_TRACKED_ENTITIES]
-        self.tolerance: int = config[CONF_TOLERANCE]
-        self.proximity_zone_id: str = config[CONF_ZONE]
+        self.ignored_zone_ids: list[str] = config_entry.data[CONF_IGNORED_ZONES]
+        self.tracked_entities: list[str] = config_entry.data[CONF_TRACKED_ENTITIES]
+        self.tolerance: int = config_entry.data[CONF_TOLERANCE]
+        self.proximity_zone_id: str = config_entry.data[CONF_ZONE]
         self.proximity_zone_name: str = self.proximity_zone_id.split(".")[-1]
-        self.unit_of_measurement: str = config.get(
+        self.unit_of_measurement: str = config_entry.data.get(
             CONF_UNIT_OF_MEASUREMENT, hass.config.units.length_unit
         )
         self.entity_mapping: dict[str, list[str]] = defaultdict(list)
@@ -92,7 +89,8 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         super().__init__(
             hass,
             _LOGGER,
-            name=friendly_name,
+            config_entry=config_entry,
+            name=config_entry.title,
             update_interval=None,
         )
 
@@ -166,7 +164,7 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
             )
             return None
 
-        distance_to_zone = distance(
+        distance_to_centre = distance(
             zone.attributes[ATTR_LATITUDE],
             zone.attributes[ATTR_LONGITUDE],
             latitude,
@@ -174,8 +172,13 @@ class ProximityDataUpdateCoordinator(DataUpdateCoordinator[ProximityData]):
         )
 
         # it is ensured, that distance can't be None, since zones must have lat/lon coordinates
-        assert distance_to_zone is not None
-        return round(distance_to_zone)
+        assert distance_to_centre is not None
+
+        zone_radius: float = zone.attributes["radius"]
+        if zone_radius > distance_to_centre:
+            # we've arrived the zone
+            return 0
+        return round(distance_to_centre - zone_radius)
 
     def _calc_direction_of_travel(
         self,

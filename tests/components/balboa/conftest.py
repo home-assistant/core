@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Generator
+from datetime import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pybalboa.enums import HeatMode, LowHighRange
@@ -48,7 +49,12 @@ def client_fixture() -> Generator[MagicMock]:
         client.blowers = []
         client.circulation_pump.state = 0
         client.filter_cycle_1_running = False
+        client.filter_cycle_1_start = time(8, 0)
+        client.filter_cycle_1_end = time(9, 0)
         client.filter_cycle_2_running = False
+        client.filter_cycle_2_enabled = True
+        client.filter_cycle_2_start = time(19, 0)
+        client.filter_cycle_2_end = time(21, 30)
         client.temperature_unit = 1
         client.temperature = 10
         client.temperature_minimum = 10
@@ -61,5 +67,7 @@ def client_fixture() -> Generator[MagicMock]:
         client.lights = []
         client.pumps = []
         client.temperature_range.state = LowHighRange.LOW
+
+        client.fault = None
 
         yield client

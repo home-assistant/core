@@ -14,7 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-import homeassistant.helpers.device_registry as dr
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -106,7 +106,7 @@ async def async_setup_entry(
 
     for device in devices:
         coordinator = TradfriDeviceDataUpdateCoordinator(
-            hass=hass, api=api, device=device
+            hass=hass, config_entry=entry, api=api, device=device
         )
         await coordinator.async_config_entry_first_refresh()
 

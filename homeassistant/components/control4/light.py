@@ -17,14 +17,12 @@ from homeassistant.components.light import (
     LightEntity,
     LightEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import get_items_of_category
-from .const import CONF_DIRECTOR, CONTROL4_ENTITY_TYPE, DOMAIN
+from . import Control4ConfigEntry, Control4RuntimeData, get_items_of_category
+from .const import CONTROL4_ENTITY_TYPE
 from .director_utils import update_variables_for_config_entry
 from .entity import Control4Entity
 
@@ -36,15 +34,13 @@ CONTROL4_DIMMER_VARS = ["LIGHT_LEVEL", "Brightness Percent"]
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: Control4ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Control4 lights from a config entry."""
-    entry_data = hass.data[DOMAIN][entry.entry_id]
-    scan_interval = entry_data[CONF_SCAN_INTERVAL]
-    _LOGGER.debug(
-        "Scan interval = %s",
-        scan_interval,
-    )
+    runtime_data = entry.runtime_data
+    _LOGGER.debug("Scan interval = %s", runtime_data.scan_interval)
 
     async def async_update_data_non_dimmer() -> dict[int, dict[str, Any]]:
         """Fetch data from Control4 director for non-dimmer lights."""
@@ -69,14 +65,14 @@ async def async_setup_entry(
         _LOGGER,
         name="light",
         update_method=async_update_data_non_dimmer,
-        update_interval=timedelta(seconds=scan_interval),
+        update_interval=timedelta(seconds=runtime_data.scan_interval),
     )
     dimmer_coordinator = DataUpdateCoordinator[dict[int, dict[str, Any]]](
         hass,
         _LOGGER,
         name="light",
         update_method=async_update_data_dimmer,
-        update_interval=timedelta(seconds=scan_interval),
+        update_interval=timedelta(seconds=runtime_data.scan_interval),
     )
 
     # Fetch initial data so we have data when entities subscribe
@@ -118,7 +114,7 @@ async def async_setup_entry(
             item_is_dimmer = False
             item_coordinator = non_dimmer_coordinator
         else:
-            director = entry_data[CONF_DIRECTOR]
+            director = runtime_data.director
             item_variables = await director.getItemVariables(item_id)
             _LOGGER.warning(
                 (
@@ -132,7 +128,7 @@ async def async_setup_entry(
 
         entity_list.append(
             Control4Light(
-                entry_data,
+                runtime_data,
                 item_coordinator,
                 item_name,
                 item_id,
@@ -154,7 +150,7 @@ class Control4Light(Control4Entity, LightEntity):
 
     def __init__(
         self,
-        entry_data: dict,
+        runtime_data: Control4RuntimeData,
         coordinator: DataUpdateCoordinator[dict[int, dict[str, Any]]],
         name: str,
         idx: int,
@@ -166,7 +162,7 @@ class Control4Light(Control4Entity, LightEntity):
     ) -> None:
         """Initialize Control4 light entity."""
         super().__init__(
-            entry_data,
+            runtime_data,
             coordinator,
             name,
             idx,
@@ -188,7 +184,7 @@ class Control4Light(Control4Entity, LightEntity):
 
         This exists so the director token used is always the latest one, without needing to re-init the entire entity.
         """
-        return C4Light(self.entry_data[CONF_DIRECTOR], self._idx)
+        return C4Light(self.runtime_data.director, self._idx)
 
     @property
     def is_on(self):

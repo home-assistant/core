@@ -55,7 +55,6 @@ DEVICE_CONFIG_KLAP = DeviceConfig(
     IP_ADDRESS,
     credentials=CREDENTIALS,
     connection_type=CONN_PARAMS_KLAP,
-    uses_http=True,
 )
 CONN_PARAMS_AES = DeviceConnectionParameters(
     DeviceFamily.SmartTapoPlug, DeviceEncryptionType.Aes
@@ -84,7 +83,6 @@ DEVICE_CONFIG_AES = DeviceConfig(
     IP_ADDRESS2,
     credentials=CREDENTIALS,
     connection_type=CONN_PARAMS_AES,
-    uses_http=True,
     aes_keys=AES_KEYS,
 )
 CONN_PARAMS_AES_CAMERA = DeviceConnectionParameters(
@@ -94,7 +92,6 @@ DEVICE_CONFIG_AES_CAMERA = DeviceConfig(
     IP_ADDRESS3,
     credentials=CREDENTIALS,
     connection_type=CONN_PARAMS_AES_CAMERA,
-    uses_http=True,
 )
 
 DEVICE_CONFIG_DICT_KLAP = {

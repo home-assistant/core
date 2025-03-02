@@ -59,6 +59,7 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.Dimmer,
     DeviceType.Fan,
     DeviceType.Thermostat,
+    DeviceType.Vacuum,
 }
 
 # Primary features to always include even when the device type has its own platform
@@ -109,6 +110,9 @@ class TPLinkModuleEntityDescription(TPLinkEntityDescription):
     unique_id_fn: Callable[[Device, TPLinkModuleEntityDescription], str] = (
         lambda device, desc: f"{legacy_device_id(device)}-{desc.key}"
     )
+    entity_name_fn: (
+        Callable[[Device, TPLinkModuleEntityDescription], str | None] | None
+    ) = None
 
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
@@ -504,7 +508,9 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             )
 
         for child in children:
-            child_coordinator = coordinator.get_child_coordinator(child)
+            child_coordinator = coordinator.get_child_coordinator(
+                child, platform_domain
+            )
 
             child_entities = cls._entities_for_device(
                 hass,
@@ -549,7 +555,9 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
         # the description should have a translation key.
         # HA logic is to name entities based on the following logic:
         # _attr_name > translation.name > description.name
-        if not description.translation_key:
+        if entity_name_fn := description.entity_name_fn:
+            self._attr_name = entity_name_fn(device, description)
+        elif not description.translation_key:
             if parent is None or parent.device_type is Device.Type.Hub:
                 self._attr_name = None
             else:
@@ -645,7 +653,9 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
                 device.host,
             )
         for child in children:
-            child_coordinator = coordinator.get_child_coordinator(child)
+            child_coordinator = coordinator.get_child_coordinator(
+                child, platform_domain
+            )
 
             child_entities: list[_E] = cls._entities_for_device(
                 hass,

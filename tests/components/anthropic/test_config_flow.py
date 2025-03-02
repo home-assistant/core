@@ -49,7 +49,7 @@ async def test_form(hass: HomeAssistant) -> None:
 
     with (
         patch(
-            "homeassistant.components.anthropic.config_flow.anthropic.resources.messages.AsyncMessages.create",
+            "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
             new_callable=AsyncMock,
         ),
         patch(
@@ -151,7 +151,7 @@ async def test_form_invalid_auth(hass: HomeAssistant, side_effect, error) -> Non
     )
 
     with patch(
-        "homeassistant.components.anthropic.config_flow.anthropic.resources.messages.AsyncMessages.create",
+        "homeassistant.components.anthropic.config_flow.anthropic.resources.models.AsyncModels.list",
         new_callable=AsyncMock,
         side_effect=side_effect,
     ):

@@ -27,7 +27,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .entity import ViCareEntity
 from .types import (
@@ -353,7 +353,7 @@ def _build_entities(
                 device.api,
             )
             for description in DEVICE_ENTITY_DESCRIPTIONS
-            if is_supported(description.key, description, device.api)
+            if is_supported(description.key, description.value_getter, device.api)
         )
         # add component entities
         entities.extend(
@@ -366,7 +366,7 @@ def _build_entities(
             )
             for circuit in get_circuits(device.api)
             for description in CIRCUIT_ENTITY_DESCRIPTIONS
-            if is_supported(description.key, description, circuit)
+            if is_supported(description.key, description.value_getter, circuit)
         )
     return entities
 
@@ -374,7 +374,7 @@ def _build_entities(
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ViCareConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the ViCare number devices."""
     async_add_entities(

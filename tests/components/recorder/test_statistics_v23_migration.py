@@ -17,7 +17,7 @@ import pytest
 from homeassistant.components import recorder
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.util import session_scope
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .common import (
     CREATE_ENGINE_TARGET,

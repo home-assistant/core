@@ -147,6 +147,7 @@ class OneWireFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="discovery_confirm",
+            description_placeholders={"host": self._discovery_data[CONF_HOST]},
             errors=errors,
         )
 

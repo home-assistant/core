@@ -30,7 +30,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
@@ -46,7 +46,16 @@ NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
     "serial": ATTR_SERIAL_NUMBER,
 }
 
+AMBIENT_THRESHOLD_STATUS_OPTIONS = [
+    "good",
+    "warning-low",
+    "critical-low",
+    "warning-high",
+    "critical-high",
+]
+
 _LOGGER = logging.getLogger(__name__)
+
 
 SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     "ups.status.display": SensorEntityDescription(
@@ -930,12 +939,26 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    "ambient.humidity.status": SensorEntityDescription(
+        key="ambient.humidity.status",
+        translation_key="ambient_humidity_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=AMBIENT_THRESHOLD_STATUS_OPTIONS,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "ambient.temperature": SensorEntityDescription(
         key="ambient.temperature",
         translation_key="ambient_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "ambient.temperature.status": SensorEntityDescription(
+        key="ambient.temperature.status",
+        translation_key="ambient_temperature_status",
+        device_class=SensorDeviceClass.ENUM,
+        options=AMBIENT_THRESHOLD_STATUS_OPTIONS,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "watts": SensorEntityDescription(
@@ -963,7 +986,7 @@ def _get_nut_device_info(data: PyNUTData) -> DeviceInfo:
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: NutConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NUT sensors."""
 

@@ -57,6 +57,7 @@ def call_info() -> CallInfo:
     """Fake call info."""
     return CallInfo(
         caller_endpoint=get_sip_endpoint("192.168.1.210", 5060),
+        local_endpoint=get_sip_endpoint("192.168.1.10", 5060),
         caller_rtp_port=5004,
         server_ip="192.168.1.10",
         headers={

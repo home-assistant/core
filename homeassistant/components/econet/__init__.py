@@ -6,7 +6,7 @@ import logging
 
 from aiohttp.client_exceptions import ClientError
 from pyeconet import EcoNetApiInterface
-from pyeconet.equipment import EquipmentType
+from pyeconet.equipment import Equipment, EquipmentType
 from pyeconet.errors import (
     GenericHTTPError,
     InvalidCredentialsError,
@@ -21,7 +21,7 @@ from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 
-from .const import API_CLIENT, DOMAIN, EQUIPMENT, PUSH_UPDATE
+from .const import PUSH_UPDATE
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -36,7 +36,12 @@ PLATFORMS = [
 INTERVAL = timedelta(minutes=60)
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+type EconetConfigEntry = ConfigEntry[dict[EquipmentType, list[Equipment]]]
+
+
+async def async_setup_entry(
+    hass: HomeAssistant, config_entry: EconetConfigEntry
+) -> bool:
     """Set up EcoNet as config entry."""
 
     email = config_entry.data[CONF_EMAIL]
@@ -57,9 +62,8 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
         )
     except (ClientError, GenericHTTPError, InvalidResponseFormat) as err:
         raise ConfigEntryNotReady from err
-    hass.data.setdefault(DOMAIN, {API_CLIENT: {}, EQUIPMENT: {}})
-    hass.data[DOMAIN][API_CLIENT][config_entry.entry_id] = api
-    hass.data[DOMAIN][EQUIPMENT][config_entry.entry_id] = equipment
+
+    config_entry.runtime_data = equipment
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
@@ -89,10 +93,6 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> b
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EconetConfigEntry) -> bool:
     """Unload a EcoNet config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN][API_CLIENT].pop(entry.entry_id)
-        hass.data[DOMAIN][EQUIPMENT].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

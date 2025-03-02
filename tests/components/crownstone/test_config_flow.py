@@ -163,7 +163,7 @@ async def start_config_flow(hass: HomeAssistant, mocked_cloud: MagicMock):
 
 
 async def start_options_flow(
-    hass: HomeAssistant, entry_id: str, mocked_manager: MagicMock
+    hass: HomeAssistant, entry: MockConfigEntry, mocked_manager: MagicMock
 ):
     """Patch CrownstoneEntryManager and start the flow."""
     # set up integration
@@ -171,9 +171,10 @@ async def start_options_flow(
         "homeassistant.components.crownstone.CrownstoneEntryManager",
         return_value=mocked_manager,
     ):
-        await hass.config_entries.async_setup(entry_id)
+        await hass.config_entries.async_setup(entry.entry_id)
 
-    return await hass.config_entries.options.async_init(entry_id)
+    entry.runtime_data = mocked_manager
+    return await hass.config_entries.options.async_init(entry.entry_id)
 
 
 async def test_no_user_input(
@@ -413,7 +414,7 @@ async def test_options_flow_setup_usb(
 
     result = await start_options_flow(
         hass,
-        entry.entry_id,
+        entry,
         get_mocked_crownstone_entry_manager(
             get_mocked_crownstone_cloud(create_mocked_spheres(2))
         ),
@@ -490,7 +491,7 @@ async def test_options_flow_remove_usb(hass: HomeAssistant) -> None:
 
     result = await start_options_flow(
         hass,
-        entry.entry_id,
+        entry,
         get_mocked_crownstone_entry_manager(
             get_mocked_crownstone_cloud(create_mocked_spheres(2))
         ),
@@ -543,7 +544,7 @@ async def test_options_flow_manual_usb_path(
 
     result = await start_options_flow(
         hass,
-        entry.entry_id,
+        entry,
         get_mocked_crownstone_entry_manager(
             get_mocked_crownstone_cloud(create_mocked_spheres(1))
         ),
@@ -602,7 +603,7 @@ async def test_options_flow_change_usb_sphere(hass: HomeAssistant) -> None:
 
     result = await start_options_flow(
         hass,
-        entry.entry_id,
+        entry,
         get_mocked_crownstone_entry_manager(
             get_mocked_crownstone_cloud(create_mocked_spheres(3))
         ),
