@@ -1,7 +1,8 @@
 rules:
   # Bronze
-  action-setup: exempt
-  comment: |
+  action-setup:
+    status: exempt
+    comment: |
       No custom actions defined
   appropriate-polling: done
   brands: done
@@ -9,9 +10,10 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  action-setup: exempt
-  comment: |
-      No custom actions defined
+  docs-actions:
+    status: exempt
+    comment: |
+      No custom actions are defined.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
