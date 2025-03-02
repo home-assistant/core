@@ -187,10 +187,11 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     @property
     def is_boost_mode_on(self) -> bool:
         """Return true if boost mode is on."""
-        return (
-            cast(int, self.executor.select_state(OverkizState.CORE_BOOST_MODE_DURATION))
-            > 0
+
+        boost_mode_duration = cast(
+            int, self.executor.select_state(OverkizState.CORE_BOOST_MODE_DURATION)
         )
+        return isinstance(boost_mode_duration, int) and boost_mode_duration > 0
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
