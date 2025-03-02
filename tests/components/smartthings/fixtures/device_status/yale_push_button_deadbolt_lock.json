@@ -1,0 +1,110 @@
+{
+  "components": {
+    "main": {
+      "lock": {
+        "supportedUnlockDirections": {
+          "value": null
+        },
+        "supportedLockValues": {
+          "value": null
+        },
+        "lock": {
+          "value": "locked",
+          "data": {},
+          "timestamp": "2025-02-09T17:29:56.641Z"
+        },
+        "supportedLockCommands": {
+          "value": null
+        }
+      },
+      "refresh": {},
+      "battery": {
+        "quantity": {
+          "value": null
+        },
+        "battery": {
+          "value": 86,
+          "unit": "%",
+          "timestamp": "2025-02-09T17:18:14.150Z"
+        },
+        "type": {
+          "value": null
+        }
+      },
+      "firmwareUpdate": {
+        "lastUpdateStatusReason": {
+          "value": null
+        },
+        "availableVersion": {
+          "value": "00840847",
+          "timestamp": "2025-02-09T11:48:45.331Z"
+        },
+        "lastUpdateStatus": {
+          "value": null
+        },
+        "supportedCommands": {
+          "value": null
+        },
+        "state": {
+          "value": "normalOperation",
+          "timestamp": "2025-02-09T11:48:45.331Z"
+        },
+        "updateAvailable": {
+          "value": false,
+          "timestamp": "2025-02-09T11:48:45.332Z"
+        },
+        "currentVersion": {
+          "value": "00840847",
+          "timestamp": "2025-02-09T11:48:45.328Z"
+        },
+        "lastUpdateTime": {
+          "value": null
+        }
+      },
+      "lockCodes": {
+        "codeLength": {
+          "value": null,
+          "timestamp": "2020-08-04T15:29:24.127Z"
+        },
+        "maxCodes": {
+          "value": 250,
+          "timestamp": "2023-08-22T01:34:19.751Z"
+        },
+        "maxCodeLength": {
+          "value": 8,
+          "timestamp": "2023-08-22T01:34:18.690Z"
+        },
+        "codeChanged": {
+          "value": "8 unset",
+          "data": {
+            "codeName": "Code 8"
+          },
+          "timestamp": "2025-01-06T04:56:31.712Z"
+        },
+        "lock": {
+          "value": "locked",
+          "data": {
+            "method": "manual"
+          },
+          "timestamp": "2023-07-10T23:03:42.305Z"
+        },
+        "minCodeLength": {
+          "value": 4,
+          "timestamp": "2023-08-22T01:34:18.781Z"
+        },
+        "codeReport": {
+          "value": 5,
+          "timestamp": "2022-08-01T01:36:58.424Z"
+        },
+        "scanCodes": {
+          "value": "Complete",
+          "timestamp": "2025-01-06T04:56:31.730Z"
+        },
+        "lockCodes": {
+          "value": "{\"1\":\"Salim\",\"2\":\"Saima\",\"3\":\"Sarah\",\"4\":\"Aisha\",\"5\":\"Moiz\"}",
+          "timestamp": "2025-01-06T04:56:28.325Z"
+        }
+      }
+    }
+  }
+}

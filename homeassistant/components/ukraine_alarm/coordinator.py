@@ -10,6 +10,8 @@ import aiohttp
 from aiohttp import ClientSession
 from uasiren.client import Client
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -23,17 +25,25 @@ UPDATE_INTERVAL = timedelta(seconds=10)
 class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Ukraine Alarm API."""
 
+    config_entry: ConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: ConfigEntry,
         session: ClientSession,
-        region_id: str,
     ) -> None:
         """Initialize."""
-        self.region_id = region_id
+        self.region_id = config_entry.data[CONF_REGION]
         self.uasiren = Client(session)
 
-        super().__init__(hass, _LOGGER, name=DOMAIN, update_interval=UPDATE_INTERVAL)
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=DOMAIN,
+            update_interval=UPDATE_INTERVAL,
+        )
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""

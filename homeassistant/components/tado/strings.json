@@ -64,6 +64,11 @@
         }
       }
     },
+    "switch": {
+      "child_lock": {
+        "name": "Child lock"
+      }
+    },
     "sensor": {
       "outdoor_temperature": {
         "name": "Outdoor temperature"
