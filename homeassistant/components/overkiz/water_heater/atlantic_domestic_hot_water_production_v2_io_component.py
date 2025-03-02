@@ -1,6 +1,5 @@
 """Support for AtlanticDomesticHotWaterProductionV2IOComponent."""
 
-import asyncio
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -20,6 +19,12 @@ from ..entity import OverkizEntity
 DEFAULT_MIN_TEMP: float = 50.0
 DEFAULT_MAX_TEMP: float = 62.0
 MAX_BOOST_MODE_DURATION: int = 7
+
+DHWP_AWAY_MODES = [
+    OverkizCommandParam.ABSENCE,
+    OverkizCommandParam.AWAY,
+    OverkizCommandParam.FROSTPROTECTION,
+]
 
 
 class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeaterEntity):
@@ -96,9 +101,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         """Return true if eco mode is on."""
 
         return (
-            self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
-            == OverkizCommandParam.ECO
-            or self.executor.select_state(OverkizState.IO_DHW_MODE)
+            self.executor.select_state(OverkizState.IO_DHW_MODE)
             == OverkizCommandParam.MANUAL_ECO_ACTIVE
         )
 
@@ -109,54 +112,62 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         return (
             self.executor.select_state(OverkizState.IO_DHW_MODE)
             == OverkizCommandParam.AUTO_MODE
-            or self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
-            == OverkizCommandParam.AUTO
         )
 
     @property
     def is_state_heat_pump(self) -> bool:
         """Return true if heat pump mode is on."""
 
-        return self.executor.select_state(
-            OverkizState.IO_DHW_MODE
-        ) == OverkizCommandParam.MANUAL_ECO_INACTIVE or self.executor.select_state(
-            OverkizState.CORE_OPERATING_MODE
-        ) in (
-            OverkizCommandParam.MANUAL,
-            OverkizCommandParam.NORMAL,
-            OverkizCommandParam.ON,
-            OverkizCommandParam.PROG,
-            OverkizCommandParam.PROGRAM,
+        return (
+            self.executor.select_state(OverkizState.IO_DHW_MODE)
+            == OverkizCommandParam.MANUAL_ECO_INACTIVE
         )
 
     @property
-    def is_away_mode_on(self) -> bool:
+    def is_away_mode_on(self) -> bool | None:
         """Return true if away mode is on."""
-        return (
-            self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
-            in (
-                OverkizCommandParam.ANTIFREEZE,
-                OverkizCommandParam.AWAY,
-                OverkizCommandParam.FROSTPROTECTION,
-            )
-            or (
+        # TODO: OverkizCommandParam.ALWAYS
+        #  after https://github.com/iMicknl/python-overkiz-api/pull/1552
+        if (
+            cast(str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION))
+            == "always"
+        ):
+            return True
+
+        if (
+            int(
                 cast(
                     str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION)
                 )
-                # TODO: OverkizCommandParam.ALWAYS
-                #  after https://github.com/iMicknl/python-overkiz-api/pull/1552
-                == "always"
             )
-            or (
-                int(
-                    cast(
-                        str,
-                        self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION),
+            > 0
+        ):
+            return True
+
+        operating_mode = self.executor.select_state(OverkizState.CORE_OPERATING_MODE)
+        if operating_mode:
+            if isinstance(operating_mode, dict):
+                if operating_mode.get(OverkizCommandParam.ABSENCE):
+                    return (
+                        cast(
+                            str,
+                            operating_mode.get(OverkizCommandParam.ABSENCE),
+                        )
+                        == OverkizCommandParam.ON
                     )
-                )
-                > 0
-            )
-        )
+                if operating_mode.get(OverkizCommandParam.AWAY):
+                    return (
+                        cast(
+                            str,
+                            operating_mode.get(OverkizCommandParam.AWAY),
+                        )
+                        == OverkizCommandParam.ON
+                    )
+                return False
+
+            return cast(str, operating_mode) in DHWP_AWAY_MODES
+
+        return None
 
     @property
     def current_operation(self) -> str | None:
