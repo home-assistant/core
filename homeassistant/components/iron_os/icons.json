@@ -102,6 +102,9 @@
       },
       "logo_duration": {
         "default": "mdi:clock-digital"
+      },
+      "usb_pd_mode": {
+        "default": "mdi:meter-electric-outline"
       }
     },
     "sensor": {

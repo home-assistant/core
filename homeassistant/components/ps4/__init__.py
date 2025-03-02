@@ -28,7 +28,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import location
+from homeassistant.util import location as location_util
 from homeassistant.util.json import JsonObjectType, load_json_object
 
 from .config_flow import PlayStation4FlowHandler  # noqa: F401
@@ -103,7 +103,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     # Migrate Version 1 -> Version 2: New region codes.
     if version == 1:
-        loc = await location.async_detect_location_info(async_get_clientsession(hass))
+        loc = await location_util.async_detect_location_info(
+            async_get_clientsession(hass)
+        )
         if loc:
             country = COUNTRYCODE_NAMES.get(loc.country_code)
             if country in COUNTRIES:

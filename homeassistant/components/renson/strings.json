@@ -186,46 +186,46 @@
   "services": {
     "set_timer_level": {
       "name": "Set timer",
-      "description": "Set the ventilation timer",
+      "description": "Sets the ventilation timer",
       "fields": {
         "timer_level": {
           "name": "Level",
-          "description": "Level setting"
+          "description": "Ventilation level"
         },
         "minutes": {
           "name": "Time",
-          "description": "Time of the timer (0 will disable the timer)"
+          "description": "Duration of the timer (0 will disable the timer)"
         }
       }
     },
     "set_breeze": {
-      "name": "Set breeze",
-      "description": "Set the breeze function of the ventilation system",
+      "name": "Set Breeze",
+      "description": "Sets the Breeze function of the ventilation system",
       "fields": {
         "breeze_level": {
           "name": "[%key:component::renson::services::set_timer_level::fields::timer_level::name%]",
-          "description": "Ventilation level when breeze function is activated"
+          "description": "Ventilation level when Breeze function is activated"
         },
         "temperature": {
           "name": "Temperature",
-          "description": "Temperature when the breeze function should be activated"
+          "description": "Temperature when the Breeze function should be activated"
         },
         "activate": {
           "name": "Activate",
-          "description": "Activate or disable the breeze feature"
+          "description": "Activate or disable the Breeze feature"
         }
       }
     },
     "set_pollution_settings": {
       "name": "Set pollution settings",
-      "description": "Set all the pollution settings of the ventilation system",
+      "description": "Sets all the pollution settings of the ventilation system",
       "fields": {
         "day_pollution_level": {
-          "name": "Day pollution Level",
+          "name": "Day pollution level",
           "description": "Ventilation level when pollution is detected in the day"
         },
         "night_pollution_level": {
-          "name": "Night pollution Level",
+          "name": "Night pollution level",
           "description": "Ventilation level when pollution is detected in the night"
         },
         "humidity_control": {
@@ -242,11 +242,11 @@
         },
         "co2_threshold": {
           "name": "CO2 threshold",
-          "description": "Sets the CO2 pollution threshold level in ppm"
+          "description": "The CO2 pollution threshold level in ppm"
         },
         "co2_hysteresis": {
           "name": "CO2 hysteresis",
-          "description": "Sets the CO2 pollution threshold hysteresis level in ppm"
+          "description": "The CO2 pollution threshold hysteresis level in ppm"
         }
       }
     }

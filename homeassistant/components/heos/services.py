@@ -2,12 +2,12 @@
 
 import logging
 
-from pyheos import CommandFailedError, Heos, HeosError, const
+from pyheos import CommandAuthenticationError, Heos, HeosError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 
 from .const import (
@@ -17,6 +17,7 @@ from .const import (
     SERVICE_SIGN_IN,
     SERVICE_SIGN_OUT,
 )
+from .coordinator import HeosConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +28,7 @@ HEOS_SIGN_IN_SCHEMA = vol.Schema(
 HEOS_SIGN_OUT_SCHEMA = vol.Schema({})
 
 
-def register(hass: HomeAssistant):
+def register(hass: HomeAssistant) -> None:
     """Register HEOS services."""
     hass.services.async_register(
         DOMAIN,
@@ -45,7 +46,6 @@ def register(hass: HomeAssistant):
 
 def _get_controller(hass: HomeAssistant) -> Heos:
     """Get the HEOS controller instance."""
-
     _LOGGER.warning(
         "Actions 'heos.sign_in' and 'heos.sign_out' are deprecated and will be removed in the 2025.8.0 release"
     )
@@ -59,39 +59,44 @@ def _get_controller(hass: HomeAssistant) -> Heos:
         translation_key="sign_in_out_deprecated",
     )
 
-    entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
+    entry: HeosConfigEntry | None = (
+        hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, DOMAIN)
+    )
+
     if not entry or not entry.state == ConfigEntryState.LOADED:
         raise HomeAssistantError(
             translation_domain=DOMAIN, translation_key="integration_not_loaded"
         )
-    return entry.runtime_data.controller_manager.controller
+    return entry.runtime_data.heos
 
 
 async def _sign_in_handler(service: ServiceCall) -> None:
     """Sign in to the HEOS account."""
-
     controller = _get_controller(service.hass)
-    if controller.connection_state != const.STATE_CONNECTED:
-        _LOGGER.error("Unable to sign in because HEOS is not connected")
-        return
     username = service.data[ATTR_USERNAME]
     password = service.data[ATTR_PASSWORD]
     try:
         await controller.sign_in(username, password)
-    except CommandFailedError as err:
-        _LOGGER.error("Sign in failed: %s", err)
+    except CommandAuthenticationError as err:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN, translation_key="sign_in_auth_error"
+        ) from err
     except HeosError as err:
-        _LOGGER.error("Unable to sign in: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="sign_in_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
 
 async def _sign_out_handler(service: ServiceCall) -> None:
     """Sign out of the HEOS account."""
-
     controller = _get_controller(service.hass)
-    if controller.connection_state != const.STATE_CONNECTED:
-        _LOGGER.error("Unable to sign out because HEOS is not connected")
-        return
     try:
         await controller.sign_out()
     except HeosError as err:
-        _LOGGER.error("Unable to sign out: %s", err)
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="sign_out_error",
+            translation_placeholders={"error": str(err)},
+        ) from err

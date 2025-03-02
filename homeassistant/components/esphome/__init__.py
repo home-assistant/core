@@ -5,6 +5,7 @@ from __future__ import annotations
 from aioesphomeapi import APIClient
 
 from homeassistant.components import ffmpeg, zeroconf
+from homeassistant.components.bluetooth import async_remove_scanner
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -12,10 +13,10 @@ from homeassistant.const import (
     __version__ as ha_version,
 )
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_NOISE_PSK, DATA_FFMPEG_PROXY, DOMAIN
+from .const import CONF_BLUETOOTH_MAC_ADDRESS, CONF_NOISE_PSK, DATA_FFMPEG_PROXY, DOMAIN
 from .dashboard import async_setup as async_setup_dashboard
 from .domain_data import DomainData
 
@@ -86,4 +87,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> 
 
 async def async_remove_entry(hass: HomeAssistant, entry: ESPHomeConfigEntry) -> None:
     """Remove an esphome config entry."""
+    if bluetooth_mac_address := entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS):
+        async_remove_scanner(hass, bluetooth_mac_address.upper())
     await DomainData.get(hass).get_or_create_store(hass, entry).async_remove()

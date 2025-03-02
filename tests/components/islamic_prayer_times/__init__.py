@@ -3,7 +3,7 @@
 from datetime import datetime
 
 from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 MOCK_USER_INPUT = {
     CONF_NAME: "Home",

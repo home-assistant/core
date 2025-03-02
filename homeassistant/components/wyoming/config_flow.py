@@ -8,10 +8,10 @@ from urllib.parse import urlparse
 
 import voluptuous as vol
 
-from homeassistant.components import zeroconf
 from homeassistant.config_entries import SOURCE_HASSIO, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
 from .data import WyomingService
@@ -117,7 +117,7 @@ class WyomingConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_zeroconf(
-        self, discovery_info: zeroconf.ZeroconfServiceInfo
+        self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle zeroconf discovery."""
         _LOGGER.debug("Zeroconf discovery info: %s", discovery_info)

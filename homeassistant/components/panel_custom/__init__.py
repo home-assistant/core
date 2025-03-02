@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import frontend
 from homeassistant.core import HomeAssistant
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import bind_hass
 

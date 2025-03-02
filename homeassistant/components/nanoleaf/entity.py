@@ -3,8 +3,8 @@
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import NanoleafCoordinator
 from .const import DOMAIN
+from .coordinator import NanoleafCoordinator
 
 
 class NanoleafEntity(CoordinatorEntity[NanoleafCoordinator]):
