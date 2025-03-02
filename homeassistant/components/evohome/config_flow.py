@@ -91,7 +91,7 @@ class EvoConfigFileDictT(TypedDict):
 class _TokenStoreT(TypedDict):
     """Evohome's token cache as stored in local storage (to be deprecated)."""
 
-    username: str
+    username: NotRequired[str]  # in the store's schema, is required
     refresh_token: str
     access_token: str
     access_token_expires: str  # dt.isoformat(), TZ-aware
@@ -109,7 +109,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize a config flow handler for Evohome."""
 
         self._config: EvoConfigDataT = {}  # type: ignore[typeddict-item]
-        self._option: dict[str, Any] = DEFAULT_OPTIONS
+        self._options: dict[str, Any] = DEFAULT_OPTIONS
+        self._token_data: EvoTokenDataT | None = None
 
     async def async_step_import(self, config: EvoConfigFileDictT) -> ConfigFlowResult:
         """Handle a flow initiated by import from a configuration file.
@@ -119,7 +120,7 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # for import, assume the user credentials/location index are valid
         await self.async_set_unique_id(config[CONF_USERNAME].lower())
-        self._abort_if_unique_id_configured()
+        self._abort_if_unique_id_configured()  # dont import a config if already exists
 
         self._config = {
             CONF_USERNAME: config[CONF_USERNAME],
@@ -127,24 +128,22 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_LOCATION_IDX: config[CONF_LOCATION_IDX],
         }
 
-        # leverage any cached tokens by moving them into the config entry
+        # leverage any cached tokens by importing them into the config entry
         store: Store[_TokenStoreT] = Store(self.hass, STORAGE_VER, STORAGE_KEY)
         cache: _TokenStoreT | None = await store.async_load()
 
         await store.async_remove()
 
-        if cache is not None and cache.get(CONF_USERNAME) == config[CONF_USERNAME]:
-            self._config[SZ_TOKEN_DATA] = cache
+        if cache and cache.pop(CONF_USERNAME) == config[CONF_USERNAME]:
+            self._token_data = cache
 
         # a timedelta is not serializable, so convert to seconds
-        self._option[CONF_SCAN_INTERVAL] = config[CONF_SCAN_INTERVAL].seconds
+        self._options[CONF_SCAN_INTERVAL] = config[CONF_SCAN_INTERVAL].seconds
 
         # before config flow, high_precision was implicitly enabled
-        self._option[CONF_HIGH_PRECISION] = DEFAULT_HIGH_PRECISION_LEGACY
+        self._options[CONF_HIGH_PRECISION] = DEFAULT_HIGH_PRECISION_LEGACY
 
-        return self.async_create_entry(
-            title="Evohome", data=self._config, options=self._option
-        )
+        return await self._update_or_create_entry()
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -166,11 +165,7 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(self._config[CONF_USERNAME].lower())
-
             try:
-                # self._abort_if_unique_id_configured()  # not required
-
                 self._token_manager = await self._test_credentials(
                     self._config[CONF_USERNAME], user_input[CONF_PASSWORD]
                 )
@@ -182,10 +177,7 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
 
             else:
                 self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
-
-                return self.async_create_entry(
-                    title="Evohome", data=self._config, options=self._option
-                )
+                return await self._update_or_create_entry()
 
         data_schema = vol.Schema(
             {
@@ -211,7 +203,7 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self._config[CONF_USERNAME].lower())
 
             try:
-                self._abort_if_unique_id_configured()
+                self._abort_if_unique_id_configured()  # to avoid unnecessary I/O
 
                 self._token_manager = await self._test_credentials(
                     self._config[CONF_USERNAME], user_input[CONF_PASSWORD]
@@ -227,7 +219,6 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
 
             else:
                 self._config[CONF_PASSWORD] = user_input[CONF_PASSWORD]
-
                 return await self.async_step_location()
 
         data_schema = vol.Schema(
@@ -293,10 +284,8 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = str(err)
 
             else:
-                self._config.update(user_input)  # type: ignore[typeddict-item]
-                return self.async_create_entry(
-                    title="Evohome", data=self._config, options=self._option
-                )
+                self._config[CONF_LOCATION_IDX] = user_input[CONF_LOCATION_IDX]
+                return await self._update_or_create_entry()
 
         return self.async_show_form(
             step_id="location", data_schema=STEP_LOCATION_SCHEMA, errors=errors
@@ -343,7 +332,26 @@ class EvoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Save the token data to the config entry, so it can be used later."""
 
         if client_id == self._config[CONF_USERNAME]:
-            self._config[SZ_TOKEN_DATA] = token_data
+            self._token_data = token_data
+
+    async def _update_or_create_entry(self) -> ConfigFlowResult:
+        """Create the config entry for this account, or update an existing entry."""
+
+        # from step_reauth: user/pass/locn, td
+        if config_entry := await self.async_set_unique_id(
+            self._config[CONF_USERNAME].lower()
+        ):
+            return self.async_update_reload_and_abort(
+                config_entry,
+                data=self._config | {SZ_TOKEN_DATA: self._token_data},
+            )
+
+        # from step_user or step_import: user/pass/locn, td & (default) options
+        return self.async_create_entry(
+            title="Evohome",
+            data=self._config | {SZ_TOKEN_DATA: self._token_data},
+            options=self._options,
+        )
 
 
 class EvoOptionsFlowHandler(OptionsFlow):

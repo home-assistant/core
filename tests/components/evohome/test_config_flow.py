@@ -85,7 +85,7 @@ async def test_step_user_errors(
 
         await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {"base": error_key}
 
@@ -114,7 +114,7 @@ async def test_step_location_errors(
 
         await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "location"
     assert result.get("errors") == {}
 
@@ -131,7 +131,7 @@ async def test_step_location_errors(
 
         await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "location"
     assert result.get("errors") == {"base": error_key}
 
@@ -158,7 +158,7 @@ async def test_step_location_bad_index(
 
         await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "location"
     assert result.get("errors") == {}
 
@@ -175,9 +175,39 @@ async def test_step_location_bad_index(
 
         await hass.async_block_till_done()
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "location"
     assert result.get("errors") == {"base": "bad_location"}
+
+
+async def test_step_reauth(
+    hass: HomeAssistant, config_entry: MockConfigEntry, install: str
+) -> None:
+    """Test failure during step_location."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "reauth_confirm"
+
+    with patch(
+        "evohomeasync2.auth.CredentialsManagerBase._post_request",
+        mock_post_request(install),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_PASSWORD: "new_password",
+            },
+        )
+
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "reauth_successful"
+
+    assert len(hass.config_entries.async_entries()) == 1
+    assert config_entry.data[CONF_PASSWORD] == "new_password"
 
 
 async def test_config_flow(
@@ -194,7 +224,7 @@ async def test_config_flow(
 
     assert result["handler"] == DOMAIN
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "user"
     assert result.get("errors") == {}
 
@@ -210,7 +240,7 @@ async def test_config_flow(
             },
         )
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
 
     with (
         patch(
@@ -232,7 +262,7 @@ async def test_config_flow(
 
         assert mock_setup_entry.await_count == 1
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
@@ -253,7 +283,7 @@ async def test_config_flow(
     # now the options flow....
     result = await hass.config_entries.options.async_init(entry.entry_id)
 
-    assert result.get("type") == FlowResultType.FORM
+    assert result.get("type") is FlowResultType.FORM
     assert result.get("step_id") == "init"
     assert result.get("errors") == {}
 
@@ -265,7 +295,7 @@ async def test_config_flow(
         },
     )
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
@@ -321,7 +351,7 @@ async def test_import_flow(
 
     assert result["handler"] == DOMAIN
 
-    assert result.get("type") == FlowResultType.CREATE_ENTRY
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
