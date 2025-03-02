@@ -27,11 +27,11 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import (
     CONF_SERVICE_ACCOUNT_INFO,
     CONF_STT_MODEL,
+    CONF_TIMEOUT,
     DEFAULT_STT_MODEL,
+    DEFAULT_TIMEOUT,
     DOMAIN,
     STT_LANGUAGES,
-    CONF_TIMEOUT,
-    DEFAULT_TIMEOUT,
 )
 
 _LOGGER = logging.getLogger(__name__)

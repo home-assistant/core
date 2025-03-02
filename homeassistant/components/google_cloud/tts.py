@@ -217,7 +217,9 @@ class BaseGoogleCloudProvider:
             ),
         )
 
-        response = await self._client.synthesize_speech(request, timeout=options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT))
+        response = await self._client.synthesize_speech(
+            request, timeout=options.get(CONF_TIMEOUT, DEFAULT_TIMEOUT)
+        )
 
         if encoding == texttospeech.AudioEncoding.MP3:
             extension = "mp3"
