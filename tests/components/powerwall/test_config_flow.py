@@ -17,7 +17,7 @@ from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .mocks import (
     MOCK_GATEWAY_DIN,

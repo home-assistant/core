@@ -15,7 +15,7 @@ from xknx.telegram.apci import GroupValueRead, GroupValueResponse, GroupValueWri
 from homeassistant.const import CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.service import async_register_admin_service
 
 from .const import (

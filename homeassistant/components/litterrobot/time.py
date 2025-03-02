@@ -12,19 +12,19 @@ from pylitterbot import LitterRobot3
 from homeassistant.components.time import TimeEntity, TimeEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-import homeassistant.util.dt as dt_util
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from . import LitterRobotConfigEntry
-from .entity import LitterRobotEntity, _RobotT
+from .coordinator import LitterRobotConfigEntry
+from .entity import LitterRobotEntity, _WhiskerEntityT
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotTimeEntityDescription(TimeEntityDescription, Generic[_RobotT]):
+class RobotTimeEntityDescription(TimeEntityDescription, Generic[_WhiskerEntityT]):
     """A class that describes robot time entities."""
 
-    value_fn: Callable[[_RobotT], time | None]
-    set_fn: Callable[[_RobotT, time], Coroutine[Any, Any, bool]]
+    value_fn: Callable[[_WhiskerEntityT], time | None]
+    set_fn: Callable[[_WhiskerEntityT, time], Coroutine[Any, Any, bool]]
 
 
 def _as_local_time(start: datetime | None) -> time | None:
@@ -49,25 +49,25 @@ LITTER_ROBOT_3_SLEEP_START = RobotTimeEntityDescription[LitterRobot3](
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: LitterRobotConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Litter-Robot cleaner using config entry."""
-    hub = entry.runtime_data
+    coordinator = entry.runtime_data
     async_add_entities(
-        [
-            LitterRobotTimeEntity(
-                robot=robot, hub=hub, description=LITTER_ROBOT_3_SLEEP_START
-            )
-            for robot in hub.litter_robots()
-            if isinstance(robot, LitterRobot3)
-        ]
+        LitterRobotTimeEntity(
+            robot=robot,
+            coordinator=coordinator,
+            description=LITTER_ROBOT_3_SLEEP_START,
+        )
+        for robot in coordinator.litter_robots()
+        if isinstance(robot, LitterRobot3)
     )
 
 
-class LitterRobotTimeEntity(LitterRobotEntity[_RobotT], TimeEntity):
+class LitterRobotTimeEntity(LitterRobotEntity[_WhiskerEntityT], TimeEntity):
     """Litter-Robot time entity."""
 
-    entity_description: RobotTimeEntityDescription[_RobotT]
+    entity_description: RobotTimeEntityDescription[_WhiskerEntityT]
 
     @property
     def native_value(self) -> time | None:

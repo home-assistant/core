@@ -36,7 +36,11 @@ from .const import (
     PRIMARY_STATE_ID,
 )
 from .coordinator import TPLinkConfigEntry, TPLinkDataUpdateCoordinator
-from .deprecate import DeprecatedInfo, async_check_create_deprecated
+from .deprecate import (
+    DeprecatedInfo,
+    async_check_create_deprecated,
+    async_process_deprecated,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,6 +59,7 @@ DEVICETYPES_WITH_SPECIALIZED_PLATFORMS = {
     DeviceType.Dimmer,
     DeviceType.Fan,
     DeviceType.Thermostat,
+    DeviceType.Vacuum,
 }
 
 # Primary features to always include even when the device type has its own platform
@@ -102,6 +107,12 @@ class TPLinkModuleEntityDescription(TPLinkEntityDescription):
     """Base class for a TPLink module based entity description."""
 
     exists_fn: Callable[[Device, TPLinkConfigEntry], bool]
+    unique_id_fn: Callable[[Device, TPLinkModuleEntityDescription], str] = (
+        lambda device, desc: f"{legacy_device_id(device)}-{desc.key}"
+    )
+    entity_name_fn: (
+        Callable[[Device, TPLinkModuleEntityDescription], str | None] | None
+    ) = None
 
 
 def async_refresh_after[_T: CoordinatedTPLinkEntity, **_P](
@@ -150,6 +161,8 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     _attr_has_entity_name = True
     _device: Device
+
+    entity_description: TPLinkEntityDescription
 
     def __init__(
         self,
@@ -235,7 +248,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
 
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
-        return legacy_device_id(self._device)
+        raise NotImplementedError
 
     async def async_added_to_hass(self) -> None:
         """Call update attributes after the device is added to the platform."""
@@ -405,6 +418,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         feature_type: Feature.Type,
         entity_class: type[_E],
         descriptions: Mapping[str, _D],
+        platform_domain: str,
         parent: Device | None = None,
     ) -> list[_E]:
         """Return a list of entities to add.
@@ -439,6 +453,9 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 desc,
             )
         ]
+        async_process_deprecated(
+            hass, platform_domain, coordinator.config_entry.entry_id, entities, device
+        )
         return entities
 
     @classmethod
@@ -454,6 +471,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         feature_type: Feature.Type,
         entity_class: type[_E],
         descriptions: Mapping[str, _D],
+        platform_domain: str,
         known_child_device_ids: set[str],
         first_check: bool,
     ) -> list[_E]:
@@ -473,6 +491,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                     feature_type=feature_type,
                     entity_class=entity_class,
                     descriptions=descriptions,
+                    platform_domain=platform_domain,
                 )
             )
 
@@ -489,7 +508,9 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             )
 
         for child in children:
-            child_coordinator = coordinator.get_child_coordinator(child)
+            child_coordinator = coordinator.get_child_coordinator(
+                child, platform_domain
+            )
 
             child_entities = cls._entities_for_device(
                 hass,
@@ -498,6 +519,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 feature_type=feature_type,
                 entity_class=entity_class,
                 descriptions=descriptions,
+                platform_domain=platform_domain,
                 parent=device,
             )
             _LOGGER.debug(
@@ -533,11 +555,18 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
         # the description should have a translation key.
         # HA logic is to name entities based on the following logic:
         # _attr_name > translation.name > description.name
-        if not description.translation_key:
+        if entity_name_fn := description.entity_name_fn:
+            self._attr_name = entity_name_fn(device, description)
+        elif not description.translation_key:
             if parent is None or parent.device_type is Device.Type.Hub:
                 self._attr_name = None
             else:
                 self._attr_name = get_device_name(device)
+
+    def _get_unique_id(self) -> str:
+        """Return unique ID for the entity."""
+        desc = self.entity_description
+        return desc.unique_id_fn(self._device, desc)
 
     @classmethod
     def _entities_for_device[
@@ -551,6 +580,7 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
         *,
         entity_class: type[_E],
         descriptions: Iterable[_D],
+        platform_domain: str,
         parent: Device | None = None,
     ) -> list[_E]:
         """Return a list of entities to add."""
@@ -563,7 +593,15 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
             )
             for description in descriptions
             if description.exists_fn(device, coordinator.config_entry)
+            and async_check_create_deprecated(
+                hass,
+                description.unique_id_fn(device, description),
+                description,
+            )
         ]
+        async_process_deprecated(
+            hass, platform_domain, coordinator.config_entry.entry_id, entities, device
+        )
         return entities
 
     @classmethod
@@ -578,6 +616,7 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
         *,
         entity_class: type[_E],
         descriptions: Iterable[_D],
+        platform_domain: str,
         known_child_device_ids: set[str],
         first_check: bool,
     ) -> list[_E]:
@@ -597,6 +636,7 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
                     coordinator=coordinator,
                     entity_class=entity_class,
                     descriptions=descriptions,
+                    platform_domain=platform_domain,
                 )
             )
             has_parent_entities = bool(entities)
@@ -613,7 +653,9 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
                 device.host,
             )
         for child in children:
-            child_coordinator = coordinator.get_child_coordinator(child)
+            child_coordinator = coordinator.get_child_coordinator(
+                child, platform_domain
+            )
 
             child_entities: list[_E] = cls._entities_for_device(
                 hass,
@@ -621,6 +663,7 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
                 coordinator=child_coordinator,
                 entity_class=entity_class,
                 descriptions=descriptions,
+                platform_domain=platform_domain,
                 parent=device,
             )
             _LOGGER.debug(

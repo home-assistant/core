@@ -9,12 +9,10 @@ from elmax_api.model.command import CoverCommand
 from elmax_api.model.cover_status import CoverStatus
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import ElmaxCoordinator
+from .coordinator import ElmaxConfigEntry
 from .entity import ElmaxEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,11 +26,11 @@ _COMMAND_BY_MOTION_STATUS = {  # Maps the stop command to use for every cover mo
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: ElmaxConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Elmax cover platform."""
-    coordinator: ElmaxCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
     # Add the cover feature only if supported by the current panel.
     if coordinator.data is None or not coordinator.data.cover_feature:
         return

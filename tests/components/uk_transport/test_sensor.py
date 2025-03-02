@@ -8,6 +8,7 @@ import requests_mock
 from homeassistant.components.uk_transport.sensor import (
     ATTR_ATCOCODE,
     ATTR_CALLING_AT,
+    ATTR_LAST_UPDATED,
     ATTR_LOCALITY,
     ATTR_NEXT_BUSES,
     ATTR_NEXT_TRAINS,
@@ -90,3 +91,4 @@ async def test_train(hass: HomeAssistant) -> None:
         == "London Waterloo"
     )
     assert train_state.attributes[ATTR_NEXT_TRAINS][0]["estimated"] == "06:13"
+    assert train_state.attributes[ATTR_LAST_UPDATED] == "2017-07-10T06:10:05+01:00"

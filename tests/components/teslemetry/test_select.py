@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
+from teslemetry_stream.const import Signal
 
 from homeassistant.components.select import (
     ATTR_OPTION,
@@ -16,7 +17,7 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import assert_entities, setup_platform
+from . import assert_entities, reload_platform, setup_platform
 from .const import COMMAND_OK, VEHICLE_DATA_ALT
 
 
@@ -25,6 +26,7 @@ async def test_select(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the select entities are correct."""
 
@@ -106,6 +108,7 @@ async def test_select_invalid_data(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the select entities handle invalid data."""
 
@@ -119,3 +122,45 @@ async def test_select_invalid_data(
     assert state.state == STATE_UNKNOWN
     state = hass.states.get("select.test_steering_wheel_heater")
     assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_select_streaming(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+) -> None:
+    """Tests that the select entities with streaming are correct."""
+
+    entry = await setup_platform(hass, [Platform.SELECT])
+
+    # Stream update
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {
+                Signal.SEAT_HEATER_LEFT: 0,
+                Signal.SEAT_HEATER_RIGHT: 1,
+                Signal.SEAT_HEATER_REAR_LEFT: 2,
+                Signal.SEAT_HEATER_REAR_RIGHT: 3,
+                Signal.HVAC_STEERING_WHEEL_HEAT_LEVEL: 0,
+            },
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    await reload_platform(hass, entry, [Platform.SELECT])
+
+    # Assert the entities restored their values
+    for entity_id in (
+        "select.test_seat_heater_front_left",
+        "select.test_seat_heater_front_right",
+        "select.test_seat_heater_rear_left",
+        "select.test_seat_heater_rear_center",
+        "select.test_seat_heater_rear_right",
+        "select.test_steering_wheel_heater",
+    ):
+        state = hass.states.get(entity_id)
+        assert state.state == snapshot(name=entity_id)

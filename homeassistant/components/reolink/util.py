@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from reolink_aio.exceptions import (
     ApiError,
@@ -26,10 +26,15 @@ from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DOMAIN
-from .host import ReolinkHost
+
+if TYPE_CHECKING:
+    from .host import ReolinkHost
+
+STORAGE_VERSION = 1
 
 type ReolinkConfigEntry = config_entries.ConfigEntry[ReolinkData]
 
@@ -62,6 +67,11 @@ def get_host(hass: HomeAssistant, config_entry_id: str) -> ReolinkHost:
             f"Could not find Reolink config entry id '{config_entry_id}'."
         )
     return config_entry.runtime_data.host
+
+
+def get_store(hass: HomeAssistant, config_entry_id: str) -> Store[str]:
+    """Return the reolink store."""
+    return Store[str](hass, STORAGE_VERSION, f"{DOMAIN}.{config_entry_id}.json")
 
 
 def get_device_uid_and_ch(

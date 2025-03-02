@@ -35,7 +35,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from . import setup_mysensors_platform
@@ -102,6 +102,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
         key="V_DIRECTION",
         native_unit_of_measurement=DEGREE,
         icon="mdi:compass",
+        device_class=SensorDeviceClass.WIND_DIRECTION,
     ),
     "V_WEIGHT": SensorEntityDescription(
         key="V_WEIGHT",
@@ -210,7 +211,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up this platform for a specific ConfigEntry(==Gateway)."""
 
