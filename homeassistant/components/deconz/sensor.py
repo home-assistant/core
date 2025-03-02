@@ -34,7 +34,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     ATTR_VOLTAGE,
@@ -51,10 +50,11 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
+from . import DeconzConfigEntry
 from .const import ATTR_DARK, ATTR_ON
 from .entity import DeconzDevice
 from .hub import DeconzHub
@@ -331,11 +331,11 @@ ENTITY_DESCRIPTIONS: tuple[DeconzSensorDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    config_entry: DeconzConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the deCONZ sensors."""
-    hub = DeconzHub.get_hub(hass, config_entry)
+    hub = config_entry.runtime_data
     hub.entities[SENSOR_DOMAIN] = set()
 
     known_device_entities: dict[str, set[str]] = {
@@ -468,7 +468,7 @@ class DeconzBatteryTracker:
         sensor_id: str,
         hub: DeconzHub,
         description: DeconzSensorDescription,
-        async_add_entities: AddEntitiesCallback,
+        async_add_entities: AddConfigEntryEntitiesCallback,
     ) -> None:
         """Set up tracker."""
         self.sensor = hub.api.sensors[sensor_id]

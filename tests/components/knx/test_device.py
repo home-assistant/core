@@ -22,7 +22,7 @@ async def test_create_device(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test device creation."""
-    await knx.setup_integration({})
+    await knx.setup_integration()
     client = await hass_ws_client(hass)
 
     await client.send_json_auto_id(
@@ -50,12 +50,11 @@ async def test_remove_device(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     hass_ws_client: WebSocketGenerator,
-    load_config_store: None,
     hass_storage: dict[str, Any],
 ) -> None:
     """Test device removal."""
     assert await async_setup_component(hass, "config", {})
-    await knx.setup_integration({})
+    await knx.setup_integration(config_store_fixture="config_store_light_switch.json")
     client = await hass_ws_client(hass)
 
     await knx.assert_read("1/0/21", response=True, ignore_order=True)  # test light

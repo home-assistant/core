@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from datetime import datetime, time
+
 from open_meteo import Forecast as OpenMeteoForecast
 
 from homeassistant.components.weather import (
@@ -18,7 +20,7 @@ from homeassistant.components.weather import (
 from homeassistant.const import UnitOfPrecipitationDepth, UnitOfSpeed, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
@@ -29,7 +31,7 @@ from .coordinator import OpenMeteoConfigEntry
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OpenMeteoConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Open-Meteo weather entity based on a config entry."""
     coordinator = entry.runtime_data
@@ -107,8 +109,9 @@ class OpenMeteoWeatherEntity(
 
         daily = self.coordinator.data.daily
         for index, date in enumerate(self.coordinator.data.daily.time):
+            _datetime = datetime.combine(date=date, time=time(0), tzinfo=dt_util.UTC)
             forecast = Forecast(
-                datetime=date.isoformat(),
+                datetime=_datetime.isoformat(),
             )
 
             if daily.weathercode is not None:
@@ -155,12 +158,14 @@ class OpenMeteoWeatherEntity(
         today = dt_util.utcnow()
 
         hourly = self.coordinator.data.hourly
-        for index, datetime in enumerate(self.coordinator.data.hourly.time):
-            if dt_util.as_utc(datetime) < today:
+        for index, _datetime in enumerate(self.coordinator.data.hourly.time):
+            if _datetime.tzinfo is None:
+                _datetime = _datetime.replace(tzinfo=dt_util.UTC)
+            if _datetime < today:
                 continue
 
             forecast = Forecast(
-                datetime=datetime.isoformat(),
+                datetime=_datetime.isoformat(),
             )
 
             if hourly.weather_code is not None:

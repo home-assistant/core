@@ -40,6 +40,15 @@ ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
 
 
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    # Note: Currently the Image platform is required to make these tests pass since
+    # some initialization of the coordinator happens as a side effect of loading
+    # image platform. Fix that and remove IMAGE here.
+    return [Platform.VACUUM, Platform.IMAGE]
+
+
 async def test_registry_entries(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

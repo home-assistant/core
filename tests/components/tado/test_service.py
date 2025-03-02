@@ -80,7 +80,7 @@ async def test_add_meter_readings_exception(
             blocking=True,
         )
 
-    assert "Could not set meter reading" in str(exc)
+    assert "Error setting Tado meter reading: Error" in str(exc.value)
 
 
 async def test_add_meter_readings_invalid(

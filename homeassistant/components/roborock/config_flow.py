@@ -60,7 +60,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             username = user_input[CONF_USERNAME]
             await self.async_set_unique_id(username.lower())
-            self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured(error="already_configured_account")
             self._username = username
             _LOGGER.debug("Requesting code for Roborock account")
             self._client = RoborockApiClient(username)

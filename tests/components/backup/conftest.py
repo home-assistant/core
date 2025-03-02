@@ -9,10 +9,23 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
+from homeassistant.components.backup import DOMAIN
 from homeassistant.components.backup.manager import NewBackup, WrittenBackup
 from homeassistant.core import HomeAssistant
 
-from .common import TEST_BACKUP_PATH_ABC123
+from .common import TEST_BACKUP_PATH_ABC123, TEST_BACKUP_PATH_DEF456
+
+from tests.common import get_fixture_path
+
+
+@pytest.fixture(name="instance_id", autouse=True)
+def instance_id_fixture(hass: HomeAssistant) -> Generator[None]:
+    """Mock instance ID."""
+    with patch(
+        "homeassistant.components.backup.manager.instance_id.async_get",
+        return_value="our_uuid",
+    ):
+        yield
 
 
 @pytest.fixture(name="mocked_json_bytes")
@@ -35,10 +48,14 @@ def mocked_tarfile_fixture() -> Generator[Mock]:
 
 
 @pytest.fixture(name="path_glob")
-def path_glob_fixture() -> Generator[MagicMock]:
+def path_glob_fixture(hass: HomeAssistant) -> Generator[MagicMock]:
     """Mock path glob."""
     with patch(
-        "pathlib.Path.glob", return_value=[TEST_BACKUP_PATH_ABC123]
+        "pathlib.Path.glob",
+        return_value=[
+            Path(hass.config.path()) / "backups" / TEST_BACKUP_PATH_ABC123,
+            Path(hass.config.path()) / "backups" / TEST_BACKUP_PATH_DEF456,
+        ],
     ) as path_glob:
         yield path_glob
 
@@ -69,9 +86,10 @@ def mock_create_backup() -> Generator[AsyncMock]:
     """Mock manager create backup."""
     mock_written_backup = MagicMock(spec_set=WrittenBackup)
     mock_written_backup.backup.backup_id = "abc123"
+    mock_written_backup.backup.protected = False
     mock_written_backup.open_stream = AsyncMock()
     mock_written_backup.release_stream = AsyncMock()
-    fut = Future()
+    fut: Future[MagicMock] = Future()
     fut.set_result(mock_written_backup)
     with patch(
         "homeassistant.components.backup.CoreBackupReaderWriter.async_create_backup"
@@ -112,4 +130,19 @@ def mock_backup_generation_fixture(
             "2025.1.0",
         ),
     ):
+        yield
+
+
+@pytest.fixture
+def mock_backups() -> Generator[None]:
+    """Fixture to setup test backups."""
+    # pylint: disable-next=import-outside-toplevel
+    from homeassistant.components.backup import backup as core_backup
+
+    class CoreLocalBackupAgent(core_backup.CoreLocalBackupAgent):
+        def __init__(self, hass: HomeAssistant) -> None:
+            super().__init__(hass)
+            self._backup_dir = get_fixture_path("test_backups", DOMAIN)
+
+    with patch.object(core_backup, "CoreLocalBackupAgent", CoreLocalBackupAgent):
         yield
