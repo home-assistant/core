@@ -125,22 +125,18 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     @property
     def is_away_mode_on(self) -> bool | None:
         """Return true if away mode is on."""
+
+        away_mode_duration = self.executor.select_state(
+            OverkizState.IO_AWAY_MODE_DURATION
+        )
         # TODO: OverkizCommandParam.ALWAYS
         #  after https://github.com/home-assistant/core/pull/139623
-        if (
-            cast(str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION))
-            == "always"
-        ):
+        # away_mode_duration can be either a string or an int of 0 to 7 days
+        if cast(str, away_mode_duration) == "always":
             return True
 
-        if (
-            int(
-                cast(
-                    str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION)
-                )
-            )
-            > 0
-        ):
+        away_mode_duration_int = cast(int, away_mode_duration)
+        if isinstance(away_mode_duration_int, int) and away_mode_duration_int > 0:
             return True
 
         # operating_mode can be a dict or a Literal[DHWP_AWAY_MODES]
