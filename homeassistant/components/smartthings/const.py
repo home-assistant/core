@@ -19,6 +19,8 @@ SCOPES = [
     "sse",
 ]
 
+SCOPES_ADDITIONAL = ["sse"]
+
 CONF_APP_ID = "app_id"
 CONF_CLOUDHOOK_URL = "cloudhook_url"
 CONF_INSTALLED_APP_ID = "installed_app_id"

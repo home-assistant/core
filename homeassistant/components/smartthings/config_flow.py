@@ -6,12 +6,14 @@ from typing import Any
 
 from pysmartthings import SmartThings
 
+from homeassistant.components import cloud
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
+from homeassistant.core import async_get_hass
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
 
-from .const import CONF_LOCATION_ID, DOMAIN, OLD_DATA, SCOPES
+from .const import CONF_LOCATION_ID, DOMAIN, OLD_DATA, SCOPES, SCOPES_ADDITIONAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +32,23 @@ class SmartThingsConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     @property
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data that needs to be appended to the authorize url."""
+        hass = async_get_hass()
+
+        if cloud.DATA_CLOUD in hass.data:
+            return {"scope": " ".join(SCOPES).join(SCOPES_ADDITIONAL)}
+
         return {"scope": " ".join(SCOPES)}
 
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for SmartThings."""
-        if data[CONF_TOKEN]["scope"].split() != SCOPES:
-            return self.async_abort(reason="missing_scopes")
+        hass = async_get_hass()
+
+        # This check for scopes should be only for when we use cloud, for local OAauth it
+        # introduces other problems when scopes differs
+        if cloud.DATA_CLOUD in hass.data:
+            if data[CONF_TOKEN]["scope"].split() != (SCOPES + SCOPES_ADDITIONAL):
+                return self.async_abort(reason="missing_scopes")
+
         client = SmartThings(session=async_get_clientsession(self.hass))
         client.authenticate(data[CONF_TOKEN][CONF_ACCESS_TOKEN])
         locations = await client.get_locations()
