@@ -238,7 +238,7 @@ class NSDepartureSensor(SensorEntity):
                 .strftime("%d-%m-%Y %H:%M")
             )
         else:
-            trip_time = datetime.now().strftime("%d-%m-%Y %H:%M")
+            trip_time = dt_util.now().strftime("%d-%m-%Y %H:%M")
 
         try:
             self._trips = self._nsapi.get_trips(
@@ -258,8 +258,7 @@ class NSDepartureSensor(SensorEntity):
                 filtered_times = [
                     (i, time)
                     for i, time in enumerate(all_times)
-                    if time
-                    > datetime.now().replace(tzinfo=dt_util.get_default_time_zone())
+                    if time > dt_util.now()
                 ]
 
                 if len(filtered_times) > 0:
