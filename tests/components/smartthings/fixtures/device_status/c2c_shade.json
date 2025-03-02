@@ -1,0 +1,50 @@
+{
+  "components": {
+    "main": {
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2025-02-07T23:01:15.966Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "offline",
+          "data": {
+            "reason": "DEVICE-OFFLINE"
+          },
+          "timestamp": "2025-02-08T09:04:47.694Z"
+        }
+      },
+      "switchLevel": {
+        "levelRange": {
+          "value": null
+        },
+        "level": {
+          "value": 100,
+          "unit": "%",
+          "timestamp": "2025-02-08T09:04:47.694Z"
+        }
+      },
+      "refresh": {},
+      "windowShade": {
+        "supportedWindowShadeCommands": {
+          "value": null
+        },
+        "windowShade": {
+          "value": "open",
+          "timestamp": "2025-02-08T09:04:47.694Z"
+        }
+      }
+    }
+  }
+}

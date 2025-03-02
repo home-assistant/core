@@ -59,6 +59,7 @@ INTENT_GET_CURRENT_DATE = "HassGetCurrentDate"
 INTENT_GET_CURRENT_TIME = "HassGetCurrentTime"
 INTENT_RESPOND = "HassRespond"
 INTENT_BROADCAST = "HassBroadcast"
+INTENT_GET_TEMPERATURE = "HassClimateGetTemperature"
 
 SLOT_SCHEMA = vol.Schema({}, extra=vol.ALLOW_EXTRA)
 
@@ -506,12 +507,22 @@ def _add_areas(
             candidate.area = areas.async_get_area(candidate.device.area_id)
 
 
+def _default_area_candidate_filter(
+    candidate: MatchTargetsCandidate, possible_area_ids: Collection[str]
+) -> bool:
+    """Keep candidates in the possible areas."""
+    return (candidate.area is not None) and (candidate.area.id in possible_area_ids)
+
+
 @callback
 def async_match_targets(  # noqa: C901
     hass: HomeAssistant,
     constraints: MatchTargetsConstraints,
     preferences: MatchTargetsPreferences | None = None,
     states: list[State] | None = None,
+    area_candidate_filter: Callable[
+        [MatchTargetsCandidate, Collection[str]], bool
+    ] = _default_area_candidate_filter,
 ) -> MatchTargetsResult:
     """Match entities based on constraints in order to handle an intent."""
     preferences = preferences or MatchTargetsPreferences()
@@ -622,9 +633,7 @@ def async_match_targets(  # noqa: C901
             }
 
             candidates = [
-                c
-                for c in candidates
-                if (c.area is not None) and (c.area.id in possible_area_ids)
+                c for c in candidates if area_candidate_filter(c, possible_area_ids)
             ]
             if not candidates:
                 return MatchTargetsResult(
@@ -648,9 +657,7 @@ def async_match_targets(  # noqa: C901
             # May be constrained by floors above
             possible_area_ids.intersection_update(matching_area_ids)
             candidates = [
-                c
-                for c in candidates
-                if (c.area is not None) and (c.area.id in possible_area_ids)
+                c for c in candidates if area_candidate_filter(c, possible_area_ids)
             ]
             if not candidates:
                 return MatchTargetsResult(
@@ -700,7 +707,7 @@ def async_match_targets(  # noqa: C901
                 group_candidates = [
                     c
                     for c in group_candidates
-                    if (c.area is not None) and (c.area.id == preferences.area_id)
+                    if area_candidate_filter(c, {preferences.area_id})
                 ]
                 if len(group_candidates) < 2:
                     # Disambiguated by area
@@ -746,7 +753,7 @@ def async_match_targets(  # noqa: C901
         if preferences.area_id:
             # Filter by area
             filtered_candidates = [
-                c for c in candidates if c.area and (c.area.id == preferences.area_id)
+                c for c in candidates if area_candidate_filter(c, {preferences.area_id})
             ]
 
         if (len(filtered_candidates) > 1) and preferences.floor_id:

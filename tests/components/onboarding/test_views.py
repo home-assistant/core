@@ -16,6 +16,7 @@ from homeassistant.components.onboarding import const, views
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from . import mock_storage
@@ -529,32 +530,6 @@ async def test_onboarding_core_sets_up_radio_browser(
     assert len(hass.config_entries.async_entries("radio_browser")) == 1
 
 
-async def test_onboarding_core_sets_up_rpi_power(
-    hass: HomeAssistant,
-    hass_storage: dict[str, Any],
-    hass_client: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    rpi,
-    mock_default_integrations,
-) -> None:
-    """Test that the core step sets up rpi_power on RPi."""
-    mock_storage(hass_storage, {"done": [const.STEP_USER]})
-
-    assert await async_setup_component(hass, "onboarding", {})
-    await hass.async_block_till_done()
-
-    client = await hass_client()
-
-    resp = await client.post("/api/onboarding/core_config")
-
-    assert resp.status == 200
-
-    await hass.async_block_till_done()
-
-    rpi_power_state = hass.states.get("binary_sensor.rpi_power_status")
-    assert rpi_power_state
-
-
 async def test_onboarding_core_no_rpi_power(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
@@ -791,6 +766,7 @@ async def test_onboarding_backup_info(
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -907,6 +883,7 @@ async def test_onboarding_backup_restore(
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -1003,6 +980,7 @@ async def test_onboarding_backup_restore_error(
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -1046,6 +1024,7 @@ async def test_onboarding_backup_restore_unexpected_error(
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
@@ -1071,6 +1050,7 @@ async def test_onboarding_backup_upload(
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, "onboarding", {})
+    async_initialize_backup(hass)
     assert await async_setup_component(hass, "backup", {})
     await hass.async_block_till_done()
 
