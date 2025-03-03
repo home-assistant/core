@@ -146,13 +146,11 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         """Initialize the Yellow firmware update entity."""
         super().__init__(device, config_entry, update_coordinator, entity_description)
 
-        self._attr_unique_id = f"yellow_{self.entity_description.key}"
+        self._attr_unique_id = self.entity_description.key
 
     @callback
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
         """Handle updated firmware info being pushed by an integration."""
-        super()._firmware_info_callback(firmware_info)
-
         self.hass.config_entries.async_update_entry(
             self._config_entry,
             data={
@@ -161,3 +159,4 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
                 FIRMWARE_VERSION: firmware_info.firmware_version,
             },
         )
+        super()._firmware_info_callback(firmware_info)
