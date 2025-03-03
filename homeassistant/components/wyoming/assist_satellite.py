@@ -239,9 +239,12 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 )
         elif event.type == assist_pipeline.PipelineEventType.TTS_END:
             # TTS stream
-            if event.data and (tts_output := event.data["tts_output"]):
-                media_id = tts_output["media_id"]
-                self.hass.add_job(self._stream_tts(media_id))
+            if (
+                event.data
+                and (tts_output := event.data["tts_output"])
+                and (stream := tts.async_get_stream(self.hass, tts_output["token"]))
+            ):
+                self.hass.add_job(self._stream_tts(stream))
         elif event.type == assist_pipeline.PipelineEventType.ERROR:
             # Pipeline error
             if event.data:
@@ -662,13 +665,16 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
         await self._client.disconnect()
         self._client = None
 
-    async def _stream_tts(self, media_id: str) -> None:
+    async def _stream_tts(self, tts_result: tts.ResultStream) -> None:
         """Stream TTS WAV audio to satellite in chunks."""
         assert self._client is not None
 
-        extension, data = await tts.async_get_media_source_audio(self.hass, media_id)
-        if extension != "wav":
-            raise ValueError(f"Cannot stream audio format to satellite: {extension}")
+        if tts_result.extension != "wav":
+            raise ValueError(
+                f"Cannot stream audio format to satellite: {tts_result.extension}"
+            )
+
+        data = b"".join([chunk async for chunk in tts_result.async_stream_result()])
 
         with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
             sample_rate = wav_file.getframerate()
