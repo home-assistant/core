@@ -65,6 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_key="no_user_agreement",
         ) from err
     except RoborockException as err:
+        _LOGGER.debug("Failed to get Roborock home data: %s", err)
         raise ConfigEntryNotReady(
             "Failed to get Roborock home data",
             translation_domain=DOMAIN,
