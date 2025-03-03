@@ -3,7 +3,7 @@
     "flow_title": "{name}",
     "step": {
       "user": {
-        "description": "Before setup, devices must be connected to the network.\n\nThis path can be configured for refoss product models including R11, etc. \n\nFor more information, please refer to 'Help'.",
+        "description": "Before setup, devices must be connected to the network.\n\nThis path can be configured for Refoss product models including R11, etc. \n\nFor more information, please refer to 'Help'.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
