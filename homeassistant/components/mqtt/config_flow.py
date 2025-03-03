@@ -1217,9 +1217,10 @@ def async_convert_to_pem(
         _LOGGER.exception("Error converting %s file data to PEM format", pem_type.name)
         return None
 
-      
+
 async def _get_uploaded_file(hass: HomeAssistant, id: str) -> bytes:
     """Get file content from uploaded certificate or key file."""
+
     def _proces_uploaded_file() -> bytes:
         with process_uploaded_file(hass, id) as file_path:
             return file_path.read_bytes()
