@@ -429,6 +429,9 @@ async def test_reauthentication_no_cloud(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cloud_not_enabled"
+
 
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_migration(
