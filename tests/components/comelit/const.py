@@ -6,6 +6,8 @@ from aiocomelit import (
     ComelitVedoZoneObject,
 )
 from aiocomelit.const import (
+    ALARM_AREAS,
+    ALARM_ZONES,
     CLIMATE,
     COVER,
     IRRIGATION,
@@ -63,7 +65,7 @@ BRIDGE_DEVICE_QUERY = {
 }
 
 VEDO_DEVICE_QUERY = {
-    "aree": {
+    ALARM_AREAS: {
         0: ComelitVedoAreaObject(
             index=0,
             name="Area0",
@@ -80,7 +82,7 @@ VEDO_DEVICE_QUERY = {
             human_status=AlarmAreaState.UNKNOWN,
         )
     },
-    "zone": {
+    ALARM_ZONES: {
         0: ComelitVedoZoneObject(
             index=0,
             name="Zone0",
