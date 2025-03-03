@@ -6,6 +6,7 @@ from aiostreammagic import (
     RepeatMode as CambridgeRepeatMode,
     ShuffleMode,
     TransportControl,
+    ControlBusMode
 )
 import pytest
 
@@ -125,6 +126,31 @@ async def test_entity_supported_features(
         | MediaPlayerEntityFeature.VOLUME_STEP
         | MediaPlayerEntityFeature.VOLUME_MUTE
         in attrs[ATTR_SUPPORTED_FEATURES]
+    )
+
+async def test_entity_supported_features_with_controlBus(
+    hass: HomeAssistant,
+    mock_stream_magic_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test entity attributes."""
+    await setup_integration(hass, mock_config_entry)
+    await mock_state_update(mock_stream_magic_client)
+    await hass.async_block_till_done()
+    
+    mock_stream_magic_client.state.pre_amp_mode = False
+    mock_stream_magic_client.state.control_bus_mode = ControlBusMode.AMPLIFIER
+
+    await mock_state_update(mock_stream_magic_client)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    attrs = state.attributes
+    assert (MediaPlayerEntityFeature.VOLUME_STEP in attrs[ATTR_SUPPORTED_FEATURES])
+    assert (
+        MediaPlayerEntityFeature.VOLUME_SET
+        | MediaPlayerEntityFeature.VOLUME_MUTE
+        not in attrs[ATTR_SUPPORTED_FEATURES]
     )
 
 
