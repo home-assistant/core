@@ -21,6 +21,7 @@ from .coordinator import (
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS = [
+    Platform.BUTTON,
     Platform.MEDIA_PLAYER,
 ]
 
