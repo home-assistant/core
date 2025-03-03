@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -28,6 +29,7 @@ PRESET_FROST_PROTECTION = "frost_protection"
 PRESET_PROG = "prog"
 PRESET_EXTERNAL = "external"
 
+ATTR_REGULATION_MODE = "regulation_mode"
 
 # Map Overkiz presets to Home Assistant presets
 OVERKIZ_TO_PRESET_MODE: dict[str, str] = {
@@ -154,3 +156,11 @@ class AtlanticElectricalHeaterWithAdjustableTemperatureSetpoint(
         await self.executor.async_execute_command(
             OverkizCommand.SET_TARGET_TEMPERATURE, temperature
         )
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Set extra attributes such as regulation mode (none, standby, increase)."""
+        states = self.device.states
+        if (state := states[OverkizState.CORE_REGULATION_MODE]) and state.value_as_str:
+            return {ATTR_REGULATION_MODE: state.value_as_str}
+        return None
