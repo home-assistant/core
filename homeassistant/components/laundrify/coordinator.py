@@ -7,11 +7,12 @@ import logging
 from laundrify_aio import LaundrifyAPI, LaundrifyDevice
 from laundrify_aio.exceptions import ApiConnectionException, UnauthorizedException
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, REQUEST_TIMEOUT
+from .const import DEFAULT_POLL_INTERVAL, DOMAIN, REQUEST_TIMEOUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -19,15 +20,21 @@ _LOGGER = logging.getLogger(__name__)
 class LaundrifyUpdateCoordinator(DataUpdateCoordinator[dict[str, LaundrifyDevice]]):
     """Class to manage fetching laundrify API data."""
 
+    config_entry: ConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, laundrify_api: LaundrifyAPI, poll_interval: int
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        laundrify_api: LaundrifyAPI,
     ) -> None:
         """Initialize laundrify coordinator."""
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=poll_interval),
+            update_interval=timedelta(seconds=DEFAULT_POLL_INTERVAL),
         )
         self.laundrify_api = laundrify_api
 

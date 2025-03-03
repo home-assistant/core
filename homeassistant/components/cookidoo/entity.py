@@ -21,10 +21,12 @@ class CookidooBaseEntity(CoordinatorEntity[CookidooDataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
 
+        assert coordinator.config_entry.unique_id
+
         self.device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             name="Cookidoo",
-            identifiers={(DOMAIN, coordinator.config_entry.entry_id)},
+            identifiers={(DOMAIN, coordinator.config_entry.unique_id)},
             manufacturer="Vorwerk International & Co. KmG",
             model="Cookidoo - Thermomix® recipe portal",
         )

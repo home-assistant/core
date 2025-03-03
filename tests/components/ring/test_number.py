@@ -14,7 +14,7 @@ from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .common import MockConfigEntry, setup_platform
+from .common import MockConfigEntry, async_check_entity_translations, setup_platform
 
 from tests.common import snapshot_platform
 
@@ -54,6 +54,9 @@ async def test_states(
 
     mock_config_entry.add_to_hass(hass)
     await setup_platform(hass, Platform.NUMBER)
+    await async_check_entity_translations(
+        hass, entity_registry, mock_config_entry.entry_id, NUMBER_DOMAIN
+    )
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 

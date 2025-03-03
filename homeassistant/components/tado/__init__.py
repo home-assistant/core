@@ -3,14 +3,15 @@
 from datetime import timedelta
 import logging
 
-import requests.exceptions
+import PyTado
+import PyTado.exceptions
+from PyTado.interface import Tado
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -21,17 +22,16 @@ from .const import (
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
 )
+from .coordinator import TadoDataUpdateCoordinator, TadoMobileDeviceUpdateCoordinator
+from .models import TadoData
 from .services import setup_services
-from .tado_connector import TadoConnector
-
-_LOGGER = logging.getLogger(__name__)
-
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
+    Platform.SWITCH,
     Platform.WATER_HEATER,
 ]
 
@@ -41,16 +41,17 @@ SCAN_MOBILE_DEVICE_INTERVAL = timedelta(seconds=30)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Tado."""
 
     setup_services(hass)
-
     return True
 
 
-type TadoConfigEntry = ConfigEntry[TadoConnector]
+type TadoConfigEntry = ConfigEntry[TadoData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool:
@@ -58,59 +59,38 @@ async def async_setup_entry(hass: HomeAssistant, entry: TadoConfigEntry) -> bool
 
     _async_import_options_from_data_if_missing(hass, entry)
 
-    username = entry.data[CONF_USERNAME]
-    password = entry.data[CONF_PASSWORD]
-    fallback = entry.options.get(CONF_FALLBACK, CONST_OVERLAY_TADO_DEFAULT)
-
-    tadoconnector = TadoConnector(hass, username, password, fallback)
-
+    _LOGGER.debug("Setting up Tado connection")
     try:
-        await hass.async_add_executor_job(tadoconnector.setup)
-    except KeyError:
-        _LOGGER.error("Failed to login to tado")
-        return False
-    except RuntimeError as exc:
-        _LOGGER.error("Failed to setup tado: %s", exc)
-        return False
-    except requests.exceptions.Timeout as ex:
-        raise ConfigEntryNotReady from ex
-    except requests.exceptions.HTTPError as ex:
-        if ex.response.status_code > 400 and ex.response.status_code < 500:
-            _LOGGER.error("Failed to login to tado: %s", ex)
-            return False
-        raise ConfigEntryNotReady from ex
-
-    # Do first update
-    await hass.async_add_executor_job(tadoconnector.update)
-
-    # Poll for updates in the background
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass,
-            lambda now: tadoconnector.update(),
-            SCAN_INTERVAL,
+        tado = await hass.async_add_executor_job(
+            Tado,
+            entry.data[CONF_USERNAME],
+            entry.data[CONF_PASSWORD],
         )
+    except PyTado.exceptions.TadoWrongCredentialsException as err:
+        raise ConfigEntryError(f"Invalid Tado credentials. Error: {err}") from err
+    except PyTado.exceptions.TadoException as err:
+        raise ConfigEntryNotReady(f"Error during Tado setup: {err}") from err
+    _LOGGER.debug(
+        "Tado connection established for username: %s", entry.data[CONF_USERNAME]
     )
 
-    entry.async_on_unload(
-        async_track_time_interval(
-            hass,
-            lambda now: tadoconnector.update_mobile_devices(),
-            SCAN_MOBILE_DEVICE_INTERVAL,
-        )
-    )
+    coordinator = TadoDataUpdateCoordinator(hass, entry, tado)
+    await coordinator.async_config_entry_first_refresh()
 
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    mobile_coordinator = TadoMobileDeviceUpdateCoordinator(hass, entry, tado)
+    await mobile_coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = tadoconnector
-
+    entry.runtime_data = TadoData(coordinator, mobile_coordinator)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
 
 
 @callback
-def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: ConfigEntry):
+def _async_import_options_from_data_if_missing(
+    hass: HomeAssistant, entry: TadoConfigEntry
+):
     options = dict(entry.options)
     if CONF_FALLBACK not in options:
         options[CONF_FALLBACK] = entry.data.get(
@@ -126,7 +106,7 @@ def _async_import_options_from_data_if_missing(hass: HomeAssistant, entry: Confi
         hass.config_entries.async_update_entry(entry, options=options)
 
 
-async def _async_update_listener(hass: HomeAssistant, entry: ConfigEntry) -> None:
+async def update_listener(hass: HomeAssistant, entry: TadoConfigEntry):
     """Handle options update."""
     await hass.config_entries.async_reload(entry.entry_id)
 
