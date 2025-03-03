@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Generator
 from datetime import timedelta
 from http import HTTPStatus
+import re
 from typing import Any
 
 from freezegun import freeze_time
@@ -14,11 +15,7 @@ import voluptuous as vol
 
 from homeassistant.components.calendar import DOMAIN, SERVICE_GET_EVENTS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    HomeAssistantError,
-    ServiceNotSupported,
-    ServiceValidationError,
-)
+from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -563,29 +560,40 @@ async def test_list_events_missing_fields(hass: HomeAssistant) -> None:
     "frozen_time", ["2023-06-22 10:30:00+00:00"], ids=["frozen_time"]
 )
 @pytest.mark.parametrize(
-    ("service_data"),
+    ("service_data", "error_msg"),
     [
-        {
-            "start_date_time": "2023-06-22T04:30:00-06:00",
-            "end_date_time": "2023-06-22T04:30:00-06:00",
-        },
-        {
-            "start_date_time": "2023-06-22T04:30:00",
-            "end_date_time": "2023-06-22T04:30:00",
-        },
-        {"start_date_time": "2023-06-22", "end_date_time": "2023-06-22"},
-        {"start_date_time": "2023-06-22 10:00:00", "duration": "0"},
+        (
+            {
+                "start_date_time": "2023-06-22T04:30:00-06:00",
+                "end_date_time": "2023-06-22T04:30:00-06:00",
+            },
+            "Expected end time to be after start time (2023-06-22 04:30:00-06:00, 2023-06-22 04:30:00-06:00)",
+        ),
+        (
+            {
+                "start_date_time": "2023-06-22T04:30:00",
+                "end_date_time": "2023-06-22T04:30:00",
+            },
+            "Expected end time to be after start time (2023-06-22 04:30:00, 2023-06-22 04:30:00)",
+        ),
+        (
+            {"start_date_time": "2023-06-22", "end_date_time": "2023-06-22"},
+            "Expected end time to be after start time (2023-06-22 00:00:00, 2023-06-22 00:00:00)",
+        ),
+        (
+            {"start_date_time": "2023-06-22 10:00:00", "duration": "0"},
+            "Expected positive duration (0:00:00)",
+        ),
     ],
 )
 async def test_list_events_service_same_dates(
     hass: HomeAssistant,
     service_data: dict[str, str],
+    error_msg: str,
 ) -> None:
     """Test listing events from the service call using the same start and end time."""
 
-    with pytest.raises(
-        ServiceValidationError, match="End date must be after start date"
-    ):
+    with pytest.raises(vol.error.MultipleInvalid, match=re.escape(error_msg)):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_GET_EVENTS,
