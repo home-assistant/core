@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator
 import dataclasses
+import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
@@ -29,7 +30,10 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningIntegration,
 )
-from homeassistant.components.update import UpdateDeviceClass
+from homeassistant.components.update import (
+    DATA_COMPONENT as UPDATE_DATA_COMPONENT,
+    UpdateDeviceClass,
+)
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, HomeAssistantError, State, callback
@@ -552,3 +556,35 @@ async def test_update_entity_firmware_missing_from_manifest(
     assert state.attributes["latest_version"] is None
     assert state.attributes["release_summary"] is None
     assert state.attributes["release_url"] is None
+
+
+async def test_update_entity_graceful_firmware_type_callback_errors(
+    hass: HomeAssistant,
+    update_config_entry: ConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test firmware update entity handling of firmware type callback errors."""
+
+    assert await hass.config_entries.async_setup(update_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    callback = Mock(side_effect=RuntimeError("Callback failed"))
+
+    entity = hass.data[UPDATE_DATA_COMPONENT].get_entity(TEST_UPDATE_ENTITY_ID)
+    unregister_callback = entity.add_firmware_type_changed_callback(callback)
+
+    with caplog.at_level(logging.WARNING):
+        await async_notify_firmware_info(
+            hass,
+            "some_integration",
+            FirmwareInfo(
+                device=TEST_DEVICE,
+                firmware_type=ApplicationType.SPINEL,
+                firmware_version="SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57",
+                owners=[],
+                source="probe",
+            ),
+        )
+
+    unregister_callback()
+    assert "Failed to call firmware type changed callback" in caplog.text

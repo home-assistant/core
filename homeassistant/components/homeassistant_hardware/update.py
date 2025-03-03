@@ -171,25 +171,27 @@ class BaseFirmwareUpdateEntity(
         """Handle updated firmware info being pushed by an integration."""
         self._current_firmware_info = firmware_info
 
+        # If the firmware type does not change, we can just update the attributes
         if (
             self._current_firmware_info.firmware_type
-            != self.entity_description.expected_firmware_type
+            == self.entity_description.expected_firmware_type
         ):
-            # If the firmware type has changed, fire callbacks and exit out
-            for change_callback in self._firmware_type_change_callbacks.copy():
-                try:
-                    change_callback(
-                        self.entity_description.expected_firmware_type,
-                        self._current_firmware_info.firmware_type,
-                    )
-                except Exception:  # noqa: BLE001
-                    _LOGGER.warning(
-                        "Failed to call firmware type changed callback", exc_info=True
-                    )
+            self._update_attributes()
+            self.async_write_ha_state()
             return
 
-        self._update_attributes()
-        self.async_write_ha_state()
+        # Otherwise, fire the firmware type change callbacks. They are expected to
+        # replace the entity so there is no purpose in firing other callbacks.
+        for change_callback in self._firmware_type_change_callbacks.copy():
+            try:
+                change_callback(
+                    self.entity_description.expected_firmware_type,
+                    self._current_firmware_info.firmware_type,
+                )
+            except Exception:  # noqa: BLE001
+                _LOGGER.warning(
+                    "Failed to call firmware type changed callback", exc_info=True
+                )
 
     def _update_attributes(self) -> None:
         """Recompute the attributes of the entity."""
