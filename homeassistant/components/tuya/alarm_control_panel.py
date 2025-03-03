@@ -135,7 +135,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
 
         # Determine alarm message
         if dp_code := self.find_dpcode(
-                description.alarm_msg, dptype=DPType.RAW, prefer_function=True
+                description.alarm_msg, prefer_function=True
             ):
                 self._alarm_msg_dpcode = dp_code
 
