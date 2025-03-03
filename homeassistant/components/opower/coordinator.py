@@ -64,7 +64,6 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             config_entry.data[CONF_PASSWORD],
             config_entry.data.get(CONF_TOTP_SECRET),
         )
-        self._statistic_ids: set[str] = set()
 
         @callback
         def _dummy_listener() -> None:
@@ -75,12 +74,6 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
         # forecast, which results to no sensors added, no registered listeners, and thus
         # _async_update_data not periodically getting called which is needed for _insert_statistics.
         self.async_add_listener(_dummy_listener)
-
-        self.config_entry.async_on_unload(self._clear_statistics)
-
-    def _clear_statistics(self) -> None:
-        """Clear statistics."""
-        get_instance(self.hass).async_clear_statistics(list(self._statistic_ids))
 
     async def _async_update_data(
         self,
@@ -127,8 +120,6 @@ class OpowerCoordinator(DataUpdateCoordinator[dict[str, Forecast]]):
             )
             cost_statistic_id = f"{DOMAIN}:{id_prefix}_energy_cost"
             consumption_statistic_id = f"{DOMAIN}:{id_prefix}_energy_consumption"
-            self._statistic_ids.add(cost_statistic_id)
-            self._statistic_ids.add(consumption_statistic_id)
             _LOGGER.debug(
                 "Updating Statistics for %s and %s",
                 cost_statistic_id,

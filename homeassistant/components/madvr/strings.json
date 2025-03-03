@@ -3,7 +3,7 @@
     "step": {
       "user": {
         "title": "Set up madVR Envy",
-        "description": "Your device needs to be on in order to add the integation.",
+        "description": "Your device needs to be on in order to add the integration.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
@@ -15,7 +15,7 @@
       },
       "reconfigure": {
         "title": "Reconfigure madVR Envy",
-        "description": "Your device needs to be on in order to reconfigure the integation.",
+        "description": "Your device needs to be on in order to reconfigure the integration.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]"
