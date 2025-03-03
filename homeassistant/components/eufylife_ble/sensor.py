@@ -16,7 +16,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, UnitOfMass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from .models import EufyLifeConfigEntry, EufyLifeData
@@ -27,7 +27,7 @@ IGNORED_STATES = {STATE_UNAVAILABLE, STATE_UNKNOWN}
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EufyLifeConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the EufyLife sensors."""
     data = entry.runtime_data

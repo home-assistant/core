@@ -28,12 +28,19 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]
 
+type FireServiceConfigEntry = ConfigEntry[FireServiceUpdateCoordinator]
+
 
 class FireServiceUpdateCoordinator(DataUpdateCoordinator[dict | None]):
     """Data update coordinator for FireServiceRota."""
 
+    config_entry: FireServiceConfigEntry
+
     def __init__(
-        self, hass: HomeAssistant, client: FireServiceRotaClient, entry: ConfigEntry
+        self,
+        hass: HomeAssistant,
+        client: FireServiceRotaClient,
+        entry: FireServiceConfigEntry,
     ) -> None:
         """Initialize the FireServiceRota DataUpdateCoordinator."""
         super().__init__(
@@ -54,7 +61,9 @@ class FireServiceUpdateCoordinator(DataUpdateCoordinator[dict | None]):
 class FireServiceRotaOauth:
     """Handle authentication tokens."""
 
-    def __init__(self, hass, entry, fsr):
+    def __init__(
+        self, hass: HomeAssistant, entry: ConfigEntry, fsr: FireServiceRota
+    ) -> None:
         """Initialize the oauth object."""
         self._hass = hass
         self._entry = entry
@@ -94,7 +103,7 @@ class FireServiceRotaOauth:
 class FireServiceRotaWebSocket:
     """Define a FireServiceRota websocket manager object."""
 
-    def __init__(self, hass, entry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the websocket object."""
         self._hass = hass
         self._entry = entry
@@ -128,7 +137,7 @@ class FireServiceRotaWebSocket:
 class FireServiceRotaClient:
     """Getting the latest data from fireservicerota."""
 
-    def __init__(self, hass, entry):
+    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
         """Initialize the data object."""
         self._hass = hass
         self._entry = entry
@@ -211,3 +220,7 @@ class FireServiceRotaClient:
         )
 
         await self.update_call(self.fsr.set_incident_response, self.incident_id, value)
+
+    async def async_stop_listener(self) -> None:
+        """Stop listener."""
+        await self._hass.async_add_executor_job(self.websocket.stop_listener)

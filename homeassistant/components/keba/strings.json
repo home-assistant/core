@@ -2,7 +2,7 @@
   "services": {
     "request_data": {
       "name": "Request data",
-      "description": "Requesta new data from the charging station."
+      "description": "Requests new data from the charging station."
     },
     "authorize": {
       "name": "Authorize",
@@ -46,7 +46,7 @@
       "fields": {
         "failsafe_timeout": {
           "name": "Failsafe timeout",
-          "description": "Timeout after which the failsafe mode is triggered, if set_current was not executed during this time."
+          "description": "Timeout after which the failsafe mode is triggered if the 'Set current' action was not run during this time."
         },
         "failsafe_fallback": {
           "name": "Failsafe fallback",
@@ -54,7 +54,7 @@
         },
         "failsafe_persist": {
           "name": "Failsafe persist",
-          "description": "If failsafe_persist is 0, the failsafe option is only until charging station reboot. If failsafe_persist is 1, the failsafe option will survive a reboot."
+          "description": "If set to 0, the failsafe option will be disabled after a charging station reboot. If set to 1, the failsafe option will survive a reboot."
         }
       }
     }
