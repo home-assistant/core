@@ -146,9 +146,10 @@ class DriveClient:
             backup.backup_id,
             backup_metadata,
         )
-        await self._api.upload_file(
+        await self._api.resumable_upload_file(
             backup_metadata,
             open_stream,
+            backup.size,
             timeout=ClientTimeout(total=_UPLOAD_AND_DOWNLOAD_TIMEOUT),
         )
         _LOGGER.debug(

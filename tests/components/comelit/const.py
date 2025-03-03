@@ -1,45 +1,33 @@
 """Common stuff for Comelit SimpleHome tests."""
 
-from aiocomelit import ComelitVedoAreaObject, ComelitVedoZoneObject
-from aiocomelit.api import ComelitSerialBridgeObject
+from aiocomelit import (
+    ComelitSerialBridgeObject,
+    ComelitVedoAreaObject,
+    ComelitVedoZoneObject,
+)
 from aiocomelit.const import (
+    ALARM_AREAS,
+    ALARM_ZONES,
     CLIMATE,
     COVER,
     IRRIGATION,
     LIGHT,
     OTHER,
     SCENARIO,
-    VEDO,
     WATT,
     AlarmAreaState,
     AlarmZoneState,
 )
 
-from homeassistant.components.comelit.const import DOMAIN
-from homeassistant.const import CONF_DEVICES, CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
+BRIDGE_HOST = "fake_bridge_host"
+BRIDGE_PORT = 80
+BRIDGE_PIN = 1234
 
-MOCK_CONFIG = {
-    DOMAIN: {
-        CONF_DEVICES: [
-            {
-                CONF_HOST: "fake_host",
-                CONF_PORT: 80,
-                CONF_PIN: 1234,
-            },
-            {
-                CONF_HOST: "fake_vedo_host",
-                CONF_PORT: 8080,
-                CONF_PIN: 1234,
-                CONF_TYPE: VEDO,
-            },
-        ]
-    }
-}
+VEDO_HOST = "fake_vedo_host"
+VEDO_PORT = 8080
+VEDO_PIN = 5678
 
-MOCK_USER_BRIDGE_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][0]
-MOCK_USER_VEDO_DATA = MOCK_CONFIG[DOMAIN][CONF_DEVICES][1]
-
-FAKE_PIN = 5678
+FAKE_PIN = 0000
 
 BRIDGE_DEVICE_QUERY = {
     CLIMATE: {},
@@ -77,7 +65,7 @@ BRIDGE_DEVICE_QUERY = {
 }
 
 VEDO_DEVICE_QUERY = {
-    "aree": {
+    ALARM_AREAS: {
         0: ComelitVedoAreaObject(
             index=0,
             name="Area0",
@@ -94,7 +82,7 @@ VEDO_DEVICE_QUERY = {
             human_status=AlarmAreaState.UNKNOWN,
         )
     },
-    "zone": {
+    ALARM_ZONES: {
         0: ComelitVedoZoneObject(
             index=0,
             name="Zone0",

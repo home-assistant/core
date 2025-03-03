@@ -21,6 +21,7 @@ from . import util
 from .agent import BackupAgent
 from .const import DATA_MANAGER
 from .manager import BackupManager
+from .models import BackupNotFound
 
 
 @callback
@@ -69,13 +70,16 @@ class DownloadBackupView(HomeAssistantView):
             CONTENT_DISPOSITION: f"attachment; filename={slugify(backup.name)}.tar"
         }
 
-        if not password or not backup.protected:
-            return await self._send_backup_no_password(
-                request, headers, backup_id, agent_id, agent, manager
+        try:
+            if not password or not backup.protected:
+                return await self._send_backup_no_password(
+                    request, headers, backup_id, agent_id, agent, manager
+                )
+            return await self._send_backup_with_password(
+                hass, request, headers, backup_id, agent_id, password, agent, manager
             )
-        return await self._send_backup_with_password(
-            hass, request, headers, backup_id, agent_id, password, agent, manager
-        )
+        except BackupNotFound:
+            return Response(status=HTTPStatus.NOT_FOUND)
 
     async def _send_backup_no_password(
         self,
