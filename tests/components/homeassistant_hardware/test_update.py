@@ -32,7 +32,7 @@ from homeassistant.components.homeassistant_hardware.util import (
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, HomeAssistantError, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -387,6 +387,109 @@ async def test_update_entity_installation(
     assert state_after_install.state == "off"
     assert state_after_install.attributes["title"] == "EmberZNet"
     assert state_after_install.attributes["installed_version"] == "7.4.4.0"
+    assert state_after_install.attributes["latest_version"] == "7.4.4.0"
+
+
+async def test_update_entity_installation_failure(
+    hass: HomeAssistant, update_config_entry: ConfigEntry
+) -> None:
+    """Test installation failing during flashing."""
+    assert await hass.config_entries.async_setup(update_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": TEST_UPDATE_ENTITY_ID},
+        blocking=True,
+    )
+
+    state_before_install = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state_before_install.state == "on"
+    assert state_before_install.attributes["title"] == "EmberZNet"
+    assert state_before_install.attributes["installed_version"] == "7.3.1.0"
+    assert state_before_install.attributes["latest_version"] == "7.4.4.0"
+
+    mock_flasher = AsyncMock()
+    mock_flasher.flash_firmware.side_effect = RuntimeError(
+        "Something broke during flashing!"
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.update.parse_firmware_image",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.update.Flasher",
+            return_value=mock_flasher,
+        ),
+        pytest.raises(HomeAssistantError, match="Failed to flash firmware"),
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": TEST_UPDATE_ENTITY_ID},
+            blocking=True,
+        )
+
+    # After the firmware update fails, we can still try again
+    state_after_install = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state_after_install.state == "on"
+    assert state_after_install.attributes["title"] == "EmberZNet"
+    assert state_after_install.attributes["installed_version"] == "7.3.1.0"
+    assert state_after_install.attributes["latest_version"] == "7.4.4.0"
+
+
+async def test_update_entity_installation_probe_failure(
+    hass: HomeAssistant, update_config_entry: ConfigEntry
+) -> None:
+    """Test installation failing during post-flashing probing."""
+    assert await hass.config_entries.async_setup(update_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {"entity_id": TEST_UPDATE_ENTITY_ID},
+        blocking=True,
+    )
+
+    state_before_install = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state_before_install.state == "on"
+    assert state_before_install.attributes["title"] == "EmberZNet"
+    assert state_before_install.attributes["installed_version"] == "7.3.1.0"
+    assert state_before_install.attributes["latest_version"] == "7.4.4.0"
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.update.parse_firmware_image",
+            return_value=Mock(),
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.update.Flasher",
+            return_value=AsyncMock(),
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.update.probe_silabs_firmware_info",
+            return_value=None,
+        ),
+        pytest.raises(
+            HomeAssistantError, match="Failed to probe the firmware after flashing"
+        ),
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": TEST_UPDATE_ENTITY_ID},
+            blocking=True,
+        )
+
+    # After the firmware update fails, we can still try again
+    state_after_install = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state_after_install.state == "on"
+    assert state_after_install.attributes["title"] == "EmberZNet"
+    assert state_after_install.attributes["installed_version"] == "7.3.1.0"
     assert state_after_install.attributes["latest_version"] == "7.4.4.0"
 
 
