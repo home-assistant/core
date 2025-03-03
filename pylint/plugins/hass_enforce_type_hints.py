@@ -2592,7 +2592,7 @@ _INHERITANCE_MATCH: dict[str, list[ClassTypeHintMatch]] = {
                 ),
                 TypeHintMatch(
                     function_name="update_percentage",
-                    return_type=["int", None],
+                    return_type=["int", "float", None],
                 ),
                 TypeHintMatch(
                     function_name="install",
