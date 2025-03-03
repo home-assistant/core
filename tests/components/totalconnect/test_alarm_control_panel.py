@@ -146,7 +146,7 @@ async def assert_success(
     alarm_state: AlarmControlPanelState,
     data: Any = None,
 ):
-    """TotalConnect failure raises HomeAssistantError."""
+    """Assert that alarm successfully gets to the given state."""
     data = data or DATA
     with patch(ARMING_HELPER, side_effect=None):
         await hass.services.async_call(ALARM_DOMAIN, action, data, blocking=True)
