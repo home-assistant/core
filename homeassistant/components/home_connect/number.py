@@ -3,7 +3,7 @@
 import logging
 from typing import cast
 
-from aiohomeconnect.model import GetSetting, SettingKey
+from aiohomeconnect.model import GetSetting, OptionKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.number import (
@@ -22,13 +22,15 @@ from .const import (
     SVE_TRANSLATION_PLACEHOLDER_ENTITY_ID,
     SVE_TRANSLATION_PLACEHOLDER_KEY,
     SVE_TRANSLATION_PLACEHOLDER_VALUE,
+    UNIT_MAP,
 )
 from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
-from .entity import HomeConnectEntity
+from .entity import HomeConnectEntity, HomeConnectOptionEntity
 from .utils import get_dict_from_home_connect_error
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 1
 
 NUMBERS = (
     NumberEntityDescription(
@@ -77,6 +79,11 @@ NUMBERS = (
         translation_key="wine_compartment_3_setpoint_temperature",
     ),
     NumberEntityDescription(
+        key=SettingKey.COOKING_HOOD_COLOR_TEMPERATURE_PERCENT,
+        translation_key="color_temperature_percent",
+        native_unit_of_measurement="%",
+    ),
+    NumberEntityDescription(
         key=SettingKey.LAUNDRY_CARE_WASHER_I_DOS_1_BASE_LEVEL,
         device_class=NumberDeviceClass.VOLUME,
         translation_key="washer_i_dos_1_base_level",
@@ -85,6 +92,32 @@ NUMBERS = (
         key=SettingKey.LAUNDRY_CARE_WASHER_I_DOS_2_BASE_LEVEL,
         device_class=NumberDeviceClass.VOLUME,
         translation_key="washer_i_dos_2_base_level",
+    ),
+)
+
+NUMBER_OPTIONS = (
+    NumberEntityDescription(
+        key=OptionKey.BSH_COMMON_DURATION,
+        translation_key="duration",
+    ),
+    NumberEntityDescription(
+        key=OptionKey.BSH_COMMON_FINISH_IN_RELATIVE,
+        translation_key="finish_in_relative",
+    ),
+    NumberEntityDescription(
+        key=OptionKey.BSH_COMMON_START_IN_RELATIVE,
+        translation_key="start_in_relative",
+    ),
+    NumberEntityDescription(
+        key=OptionKey.CONSUMER_PRODUCTS_COFFEE_MAKER_FILL_QUANTITY,
+        translation_key="fill_quantity",
+        device_class=NumberDeviceClass.VOLUME,
+        native_step=1,
+    ),
+    NumberEntityDescription(
+        key=OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
+        translation_key="setpoint_temperature",
+        device_class=NumberDeviceClass.TEMPERATURE,
     ),
 )
 
@@ -101,6 +134,18 @@ def _get_entities_for_appliance(
     ]
 
 
+def _get_option_entities_for_appliance(
+    entry: HomeConnectConfigEntry,
+    appliance: HomeConnectApplianceData,
+) -> list[HomeConnectOptionEntity]:
+    """Get a list of currently available option entities."""
+    return [
+        HomeConnectOptionNumberEntity(entry.runtime_data, appliance, description)
+        for description in NUMBER_OPTIONS
+        if description.key in appliance.options
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: HomeConnectConfigEntry,
@@ -111,6 +156,7 @@ async def async_setup_entry(
         entry,
         _get_entities_for_appliance,
         async_add_entities,
+        _get_option_entities_for_appliance,
     )
 
 
@@ -184,3 +230,44 @@ class HomeConnectNumberEntity(HomeConnectEntity, NumberEntity):
             or not hasattr(self, "_attr_native_step")
         ):
             await self.async_fetch_constraints()
+
+
+class HomeConnectOptionNumberEntity(HomeConnectOptionEntity, NumberEntity):
+    """Number option class for Home Connect."""
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the native value of the entity."""
+        await self.async_set_option(value)
+
+    def update_native_value(self) -> None:
+        """Set the value of the entity."""
+        self._attr_native_value = cast(float | None, self.option_value)
+        option_definition = self.appliance.options.get(self.bsh_key)
+        if option_definition:
+            if option_definition.unit:
+                candidate_unit = UNIT_MAP.get(
+                    option_definition.unit, option_definition.unit
+                )
+                if (
+                    not hasattr(self, "_attr_native_unit_of_measurement")
+                    or candidate_unit != self._attr_native_unit_of_measurement
+                ):
+                    self._attr_native_unit_of_measurement = candidate_unit
+                    self.__dict__.pop("unit_of_measurement", None)
+            option_constraints = option_definition.constraints
+            if option_constraints:
+                if (
+                    not hasattr(self, "_attr_native_min_value")
+                    or self._attr_native_min_value != option_constraints.min
+                ) and option_constraints.min:
+                    self._attr_native_min_value = option_constraints.min
+                if (
+                    not hasattr(self, "_attr_native_max_value")
+                    or self._attr_native_max_value != option_constraints.max
+                ) and option_constraints.max:
+                    self._attr_native_max_value = option_constraints.max
+                if (
+                    not hasattr(self, "_attr_native_step")
+                    or self._attr_native_step != option_constraints.step_size
+                ) and option_constraints.step_size:
+                    self._attr_native_step = option_constraints.step_size

@@ -49,7 +49,7 @@ async def test_sensors(
 
     state = hass.states.get("sensor.sonarr_commands")
     assert state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Commands"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "commands"
     assert state.state == "2"
 
     state = hass.states.get("sensor.sonarr_disk_space")
@@ -60,25 +60,25 @@ async def test_sensors(
 
     state = hass.states.get("sensor.sonarr_queue")
     assert state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "episodes"
     assert state.attributes.get("The Andy Griffith Show S01E01") == "100.00%"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_shows")
     assert state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Series"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "series"
     assert state.attributes.get("The Andy Griffith Show") == "0/0 Episodes"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_upcoming")
     assert state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "episodes"
     assert state.attributes.get("Bob's Burgers") == "S04E11"
     assert state.state == "1"
 
     state = hass.states.get("sensor.sonarr_wanted")
     assert state
-    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "Episodes"
+    assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == "episodes"
     assert state.attributes.get("Bob's Burgers S04E11") == "2014-01-26T17:30:00-08:00"
     assert (
         state.attributes.get("The Andy Griffith Show S01E01")
