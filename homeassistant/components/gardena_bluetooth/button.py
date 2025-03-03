@@ -10,9 +10,9 @@ from gardena_bluetooth.parse import CharacteristicBool
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import GardenaBluetoothConfigEntry
+from .coordinator import GardenaBluetoothConfigEntry
 from .entity import GardenaBluetoothDescriptorEntity
 
 
@@ -42,7 +42,7 @@ DESCRIPTIONS = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GardenaBluetoothConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up button based on a config entry."""
     coordinator = entry.runtime_data

@@ -27,7 +27,7 @@ from homeassistant.config_entries import (
     OptionsFlow,
 )
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import callback
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL, SsdpServiceInfo
@@ -49,15 +49,6 @@ from .hub import DeconzHub
 DECONZ_MANUFACTURERURL = "http://www.dresden-elektronik.de"
 CONF_SERIAL = "serial"
 CONF_MANUAL_INPUT = "Manually define gateway"
-
-
-@callback
-def get_master_hub(hass: HomeAssistant) -> DeconzHub:
-    """Return the gateway which is marked as master."""
-    for hub in hass.data[DOMAIN].values():
-        if hub.master:
-            return cast(DeconzHub, hub)
-    raise ValueError
 
 
 class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):

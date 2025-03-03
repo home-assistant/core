@@ -15,10 +15,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfEnergy, UnitOfPower, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PowerfoxConfigEntry
-from .coordinator import PowerfoxDataUpdateCoordinator
+from .coordinator import PowerfoxConfigEntry, PowerfoxDataUpdateCoordinator
 from .entity import PowerfoxEntity
 
 
@@ -131,7 +130,7 @@ SENSORS_HEAT: tuple[PowerfoxSensorEntityDescription[HeatMeter], ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: PowerfoxConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Powerfox sensors based on a config entry."""
     entities: list[SensorEntity] = []
