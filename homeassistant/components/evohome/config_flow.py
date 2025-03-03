@@ -34,7 +34,6 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     MINIMUM_SCAN_INTERVAL,
-    MINIMUM_SCAN_INTERVAL_LEGACY,
     STORAGE_KEY,
     STORAGE_VER,
     SZ_TOKEN_DATA,
@@ -376,14 +375,21 @@ class EvoOptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             self._options.update(user_input)
-            # Finished collecting all settings
             return self.async_create_entry(title="Evohome", data=self._options)
 
-        # suggest False, rather than previous value: self._options[CONF_HIGH_PRECISION]
+        # the options schema is built to encourage a responsible configuration
+        # legacy settings, from an imported configuration, are respected
+
+        # suggest False, rather than previous behaviour, True
         default_high_precision = DEFAULT_HIGH_PRECISION
 
-        # suggest 180 (not 60) seconds, unless previously set to a higher value
+        # suggest a default of 300 (not 180) secs, unless previously set higher
         default_scan_interval = max(
+            (DEFAULT_SCAN_INTERVAL, self._options[CONF_SCAN_INTERVAL])
+        )
+
+        # enforce a minimum of 180 (not 60) secs, unless previously set lower
+        minimum_scan_interval = min(
             (MINIMUM_SCAN_INTERVAL, self._options[CONF_SCAN_INTERVAL])
         )
 
@@ -392,9 +398,7 @@ class EvoOptionsFlowHandler(OptionsFlow):
                 vol.Optional(CONF_HIGH_PRECISION, default=default_high_precision): bool,
                 vol.Optional(
                     CONF_SCAN_INTERVAL, default=default_scan_interval
-                ): vol.All(
-                    cv.positive_int, vol.Range(min=MINIMUM_SCAN_INTERVAL_LEGACY)
-                ),
+                ): vol.All(cv.positive_int, vol.Range(min=minimum_scan_interval)),
             }
         )
 
