@@ -30,6 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 
 METADATA_VERSION = "1"
 BACKUP_TIMEOUT = ClientTimeout(connect=10, total=43200)
+NAMESPACE = "https://home-assistant.io"
 
 
 async def async_get_backup_agents(
@@ -100,14 +101,14 @@ def _is_current_metadata_version(properties: list[Property]) -> bool:
     return any(
         prop.value == METADATA_VERSION
         for prop in properties
-        if prop.namespace == "homeassistant" and prop.name == "metadata_version"
+        if prop.namespace == NAMESPACE and prop.name == "metadata_version"
     )
 
 
 def _backup_id_from_properties(properties: list[Property]) -> str | None:
     """Return the backup ID from properties."""
     for prop in properties:
-        if prop.namespace == "homeassistant" and prop.name == "backup_id":
+        if prop.namespace == NAMESPACE and prop.name == "backup_id":
             return prop.value
     return None
 
@@ -186,12 +187,12 @@ class WebDavBackupAgent(BackupAgent):
             f"{self._backup_path}/{filename_meta}",
             [
                 Property(
-                    namespace="homeassistant",
+                    namespace=NAMESPACE,
                     name="backup_id",
                     value=backup.backup_id,
                 ),
                 Property(
-                    namespace="homeassistant",
+                    namespace=NAMESPACE,
                     name="metadata_version",
                     value=METADATA_VERSION,
                 ),
@@ -252,11 +253,11 @@ class WebDavBackupAgent(BackupAgent):
             self._backup_path,
             [
                 PropertyRequest(
-                    namespace="homeassistant",
+                    namespace=NAMESPACE,
                     name="metadata_version",
                 ),
                 PropertyRequest(
-                    namespace="homeassistant",
+                    namespace=NAMESPACE,
                     name="backup_id",
                 ),
             ],

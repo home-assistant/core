@@ -13,7 +13,11 @@ from azure.storage.blob.aio import ContainerClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
 from .const import (
@@ -52,7 +56,7 @@ async def async_setup_entry(
             translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},
         ) from err
     except ClientAuthenticationError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="invalid_auth",
             translation_placeholders={CONF_ACCOUNT_NAME: entry.data[CONF_ACCOUNT_NAME]},

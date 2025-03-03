@@ -151,6 +151,9 @@ async def mock_habiticalib() -> Generator[AsyncMock]:
         client.create_tag.return_value = HabiticaTagResponse.from_json(
             load_fixture("create_tag.json", DOMAIN)
         )
+        client.create_task.return_value = HabiticaTaskResponse.from_json(
+            load_fixture("task.json", DOMAIN)
+        )
         client.habitipy.return_value = {
             "tasks": {
                 "user": {

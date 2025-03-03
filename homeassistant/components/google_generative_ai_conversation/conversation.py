@@ -111,9 +111,20 @@ def _format_schema(schema: dict[str, Any]) -> Schema:
             continue
         if key == "any_of":
             val = [_format_schema(subschema) for subschema in val]
-        if key == "type":
+        elif key == "type":
             val = val.upper()
-        if key == "items":
+        elif key == "format":
+            # Gemini API does not support all formats, see: https://ai.google.dev/api/caching#Schema
+            # formats that are not supported are ignored
+            if schema.get("type") == "string" and val not in ("enum", "date-time"):
+                continue
+            if schema.get("type") == "number" and val not in ("float", "double"):
+                continue
+            if schema.get("type") == "integer" and val not in ("int32", "int64"):
+                continue
+            if schema.get("type") not in ("string", "number", "integer"):
+                continue
+        elif key == "items":
             val = _format_schema(val)
         elif key == "properties":
             val = {k: _format_schema(v) for k, v in val.items()}

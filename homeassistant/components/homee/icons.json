@@ -9,7 +9,7 @@
       }
     },
     "switch": {
-      "watchdog_on_off": {
+      "watchdog": {
         "default": "mdi:dog"
       },
       "manual_operation": {

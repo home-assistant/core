@@ -274,15 +274,15 @@
         },
         "source_ieee": {
           "name": "Source IEEE",
-          "description": "IEEE address of the joining device (must be used with the install code)."
+          "description": "IEEE address of the joining device (must be combined with the 'Install code' field)."
         },
         "install_code": {
           "name": "Install code",
-          "description": "Install code of the joining device (must be used with the source_ieee)."
+          "description": "Install code of the joining device (must be combined with the 'Source IEEE' field)."
         },
         "qr_code": {
           "name": "QR code",
-          "description": "Value of the QR install code (different between vendors)."
+          "description": "Provides both the IEEE address and the install code of the joining device (different between vendors)."
         }
       }
     },

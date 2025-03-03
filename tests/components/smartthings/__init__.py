@@ -57,19 +57,21 @@ async def trigger_update(
     data: dict[str, Any] | None = None,
 ) -> None:
     """Trigger an update."""
+    event = DeviceEvent(
+        "abc",
+        "abc",
+        "abc",
+        device_id,
+        MAIN,
+        capability,
+        attribute,
+        value,
+        data,
+    )
     for call in mock.add_device_event_listener.call_args_list:
+        if call[0][0] == device_id:
+            call[0][3](event)
+    for call in mock.add_device_capability_event_listener.call_args_list:
         if call[0][0] == device_id and call[0][2] == capability:
-            call[0][3](
-                DeviceEvent(
-                    "abc",
-                    "abc",
-                    "abc",
-                    device_id,
-                    MAIN,
-                    capability,
-                    attribute,
-                    value,
-                    data,
-                )
-            )
+            call[0][3](event)
     await hass.async_block_till_done()

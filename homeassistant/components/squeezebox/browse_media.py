@@ -138,6 +138,8 @@ class BrowseItemResponse:
     child_media_class: dict[str, MediaClass | None]
     can_expand: bool
     can_play: bool
+    title: str
+    id: str
 
 
 def _add_new_command_to_browse_data(
@@ -154,11 +156,12 @@ def _add_new_command_to_browse_data(
 
 
 def _build_response_apps_radios_category(
-    browse_data: BrowseData,
-    cmd: str | MediaType,
+    browse_data: BrowseData, cmd: str | MediaType, item: dict[str, Any]
 ) -> BrowseItemResponse:
     """Build item for App or radio category."""
     return BrowseItemResponse(
+        id=item.get("id", ""),
+        title=item["title"],
         child_item_type=cmd,
         child_media_class=browse_data.content_type_media_class[cmd],
         can_expand=True,
@@ -172,11 +175,68 @@ def _build_response_known_app(
     """Build item for app or radio."""
 
     return BrowseItemResponse(
+        id=item.get("id", ""),
+        title=item["title"],
         child_item_type=search_type,
         child_media_class=browse_data.content_type_media_class[search_type],
         can_play=bool(item["isaudio"] and item.get("url")),
         can_expand=item["hasitems"],
     )
+
+
+def _build_response_favorites(item: dict[str, Any]) -> BrowseItemResponse:
+    """Build item for Favorites."""
+    if "album_id" in item:
+        return BrowseItemResponse(
+            id=str(item["album_id"]),
+            title=item["title"],
+            child_item_type=MediaType.ALBUM,
+            child_media_class=CONTENT_TYPE_MEDIA_CLASS[MediaType.ALBUM],
+            can_expand=True,
+            can_play=True,
+        )
+    if item["hasitems"] and not item["isaudio"]:
+        return BrowseItemResponse(
+            id=item.get("id", ""),
+            title=item["title"],
+            child_item_type="Favorites",
+            child_media_class=CONTENT_TYPE_MEDIA_CLASS["Favorites"],
+            can_expand=True,
+            can_play=False,
+        )
+    return BrowseItemResponse(
+        id=item.get("id", ""),
+        title=item["title"],
+        child_item_type="Favorites",
+        child_media_class=CONTENT_TYPE_MEDIA_CLASS[MediaType.TRACK],
+        can_expand=item["hasitems"],
+        can_play=bool(item["isaudio"] and item.get("url")),
+    )
+
+
+def _get_item_thumbnail(
+    item: dict[str, Any],
+    player: Player,
+    entity: MediaPlayerEntity,
+    item_type: str | MediaType | None,
+    search_type: str,
+    internal_request: bool,
+) -> str | None:
+    """Construct path to thumbnail image."""
+    item_thumbnail: str | None = None
+    if artwork_track_id := item.get("artwork_track_id"):
+        if internal_request:
+            item_thumbnail = player.generate_image_url_from_track_id(artwork_track_id)
+        elif item_type is not None:
+            item_thumbnail = entity.get_browse_image_url(
+                item_type, item.get("id", ""), artwork_track_id
+            )
+
+    elif search_type in ["Apps", "Radios"]:
+        item_thumbnail = player.generate_image_url(item["icon"])
+    if item_thumbnail is None:
+        item_thumbnail = item.get("image_url")  # will not be proxied by HA
+    return item_thumbnail
 
 
 async def build_item_response(
@@ -216,34 +276,12 @@ async def build_item_response(
         children = []
         list_playable = []
         for item in result["items"]:
-            item_id = str(item.get("id", ""))
             item_thumbnail: str | None = None
 
-            if item_type:
-                child_item_type: MediaType | str = item_type
-                child_media_class = CONTENT_TYPE_MEDIA_CLASS[item_type]
-                can_expand = child_media_class["children"] is not None
-                can_play = True
-
             if search_type == "Favorites":
-                if "album_id" in item:
-                    item_id = str(item["album_id"])
-                    child_item_type = MediaType.ALBUM
-                    child_media_class = CONTENT_TYPE_MEDIA_CLASS[MediaType.ALBUM]
-                    can_expand = True
-                    can_play = True
-                elif item["hasitems"] and not item["isaudio"]:
-                    child_item_type = "Favorites"
-                    child_media_class = CONTENT_TYPE_MEDIA_CLASS["Favorites"]
-                    can_expand = True
-                    can_play = False
-                else:
-                    child_item_type = "Favorites"
-                    child_media_class = CONTENT_TYPE_MEDIA_CLASS[MediaType.TRACK]
-                    can_expand = item["hasitems"]
-                    can_play = item["isaudio"] and item.get("url")
+                browse_item_response = _build_response_favorites(item)
 
-            if search_type in ["Apps", "Radios"]:
+            elif search_type in ["Apps", "Radios"]:
                 # item["cmd"] contains the name of the command to use with the cli for the app
                 # add the command to the dictionaries
                 if item["title"] == "Search" or item.get("type") in UNPLAYABLE_TYPES:
@@ -253,18 +291,11 @@ async def build_item_response(
 
                 if app_cmd not in browse_data.known_apps_radios:
                     browse_data.known_apps_radios.add(app_cmd)
-
-                _add_new_command_to_browse_data(browse_data, app_cmd, "item_id")
+                    _add_new_command_to_browse_data(browse_data, app_cmd, "item_id")
 
                 browse_item_response = _build_response_apps_radios_category(
-                    browse_data, app_cmd
+                    browse_data=browse_data, cmd=app_cmd, item=item
                 )
-
-                # Temporary variables until remainder of browse calls are restructured
-                child_item_type = browse_item_response.child_item_type
-                child_media_class = browse_item_response.child_media_class
-                can_expand = browse_item_response.can_expand
-                can_play = browse_item_response.can_play
 
             elif search_type in browse_data.known_apps_radios:
                 if (
@@ -278,39 +309,39 @@ async def build_item_response(
                     browse_data, search_type, item
                 )
 
-                # Temporary variables until remainder of browse calls are restructured
-                child_item_type = browse_item_response.child_item_type
-                child_media_class = browse_item_response.child_media_class
-                can_expand = browse_item_response.can_expand
-                can_play = browse_item_response.can_play
+            elif item_type:
+                browse_item_response = BrowseItemResponse(
+                    id=str(item.get("id", "")),
+                    title=item["title"],
+                    child_item_type=item_type,
+                    child_media_class=CONTENT_TYPE_MEDIA_CLASS[item_type],
+                    can_expand=CONTENT_TYPE_MEDIA_CLASS[item_type]["children"]
+                    is not None,
+                    can_play=True,
+                )
 
-            if artwork_track_id := item.get("artwork_track_id"):
-                if internal_request:
-                    item_thumbnail = player.generate_image_url_from_track_id(
-                        artwork_track_id
-                    )
-                elif item_type is not None:
-                    item_thumbnail = entity.get_browse_image_url(
-                        item_type, item_id, artwork_track_id
-                    )
-            elif search_type in ["Apps", "Radios"]:
-                item_thumbnail = player.generate_image_url(item["icon"])
-            else:
-                item_thumbnail = item.get("image_url")  # will not be proxied by HA
+            item_thumbnail = _get_item_thumbnail(
+                item=item,
+                player=player,
+                entity=entity,
+                item_type=item_type,
+                search_type=search_type,
+                internal_request=internal_request,
+            )
 
-            assert child_media_class["item"] is not None
+            assert browse_item_response.child_media_class["item"] is not None
             children.append(
                 BrowseMedia(
-                    title=item["title"],
-                    media_class=child_media_class["item"],
-                    media_content_id=item_id,
-                    media_content_type=child_item_type,
-                    can_play=can_play,
-                    can_expand=can_expand,
+                    title=browse_item_response.title,
+                    media_class=browse_item_response.child_media_class["item"],
+                    media_content_id=browse_item_response.id,
+                    media_content_type=browse_item_response.child_item_type,
+                    can_play=browse_item_response.can_play,
+                    can_expand=browse_item_response.can_expand,
                     thumbnail=item_thumbnail,
                 )
             )
-            list_playable.append(can_play)
+            list_playable.append(browse_item_response.can_play)
 
     if children is None:
         raise BrowseError(f"Media not found: {search_type} / {search_id}")

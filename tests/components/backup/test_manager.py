@@ -8,6 +8,7 @@ from dataclasses import replace
 from io import StringIO
 import json
 from pathlib import Path
+import re
 import tarfile
 from typing import Any
 from unittest.mock import (
@@ -35,6 +36,7 @@ from homeassistant.components.backup.agent import BackupAgentError
 from homeassistant.components.backup.const import DATA_MANAGER
 from homeassistant.components.backup.manager import (
     BackupManagerError,
+    BackupManagerExceptionGroup,
     BackupManagerState,
     CreateBackupStage,
     CreateBackupState,
@@ -1646,33 +1648,59 @@ async def test_exception_platform_pre(hass: HomeAssistant) -> None:
     assert str(err.value) == "Error during pre-backup: Test exception"
 
 
+@pytest.mark.parametrize(
+    ("unhandled_error", "expected_exception", "expected_msg"),
+    [
+        (None, BackupManagerError, "Error during post-backup: Test exception"),
+        (
+            HomeAssistantError("Boom"),
+            BackupManagerExceptionGroup,
+            (
+                "Multiple errors when creating backup: Error during pre-backup: Boom, "
+                "Error during post-backup: Test exception (2 sub-exceptions)"
+            ),
+        ),
+        (
+            Exception("Boom"),
+            BackupManagerExceptionGroup,
+            (
+                "Multiple errors when creating backup: Error during pre-backup: Boom, "
+                "Error during post-backup: Test exception (2 sub-exceptions)"
+            ),
+        ),
+    ],
+)
 @pytest.mark.usefixtures("mock_backup_generation")
-async def test_exception_platform_post(hass: HomeAssistant) -> None:
+async def test_exception_platform_post(
+    hass: HomeAssistant,
+    unhandled_error: Exception | None,
+    expected_exception: type[Exception],
+    expected_msg: str,
+) -> None:
     """Test exception in post step."""
-
-    async def _mock_step(hass: HomeAssistant) -> None:
-        raise HomeAssistantError("Test exception")
 
     remote_agent = mock_backup_agent("remote")
     await setup_backup_platform(
         hass,
         domain="test",
         platform=Mock(
-            async_pre_backup=AsyncMock(),
-            async_post_backup=_mock_step,
+            # We let the pre_backup fail to test that unhandled errors are not discarded
+            # when post backup fails
+            async_pre_backup=AsyncMock(side_effect=unhandled_error),
+            async_post_backup=AsyncMock(
+                side_effect=HomeAssistantError("Test exception")
+            ),
             async_get_backup_agents=AsyncMock(return_value=[remote_agent]),
         ),
     )
     await setup_backup_integration(hass)
 
-    with pytest.raises(BackupManagerError) as err:
+    with pytest.raises(expected_exception, match=re.escape(expected_msg)):
         await hass.services.async_call(
             DOMAIN,
             "create",
             blocking=True,
         )
-
-    assert str(err.value) == "Error during post-backup: Test exception"
 
 
 @pytest.mark.parametrize(

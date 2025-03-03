@@ -63,6 +63,7 @@ from homeassistant.util.async_ import create_eager_task
 from .bluetooth import async_connect_scanner
 from .const import (
     CONF_ALLOW_SERVICE_CALLS,
+    CONF_BLUETOOTH_MAC_ADDRESS,
     CONF_DEVICE_NAME,
     CONF_SUBSCRIBE_LOGS,
     DEFAULT_ALLOW_SERVICE_CALLS,
@@ -431,6 +432,13 @@ class ESPHomeManager:
 
         device_mac = format_mac(device_info.mac_address)
         mac_address_matches = unique_id == device_mac
+        if (
+            bluetooth_mac_address := device_info.bluetooth_mac_address
+        ) and entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS) != bluetooth_mac_address:
+            hass.config_entries.async_update_entry(
+                entry,
+                data={**entry.data, CONF_BLUETOOTH_MAC_ADDRESS: bluetooth_mac_address},
+            )
         #
         # Migrate config entry to new unique ID if the current
         # unique id is not a mac address.
@@ -498,7 +506,9 @@ class ESPHomeManager:
                 )
             )
         else:
-            bluetooth.async_remove_scanner(hass, device_info.mac_address)
+            bluetooth.async_remove_scanner(
+                hass, device_info.bluetooth_mac_address or device_info.mac_address
+            )
 
         if device_info.voice_assistant_feature_flags_compat(api_version) and (
             Platform.ASSIST_SATELLITE not in entry_data.loaded_platforms
@@ -617,11 +627,22 @@ class ESPHomeManager:
             )
         _setup_services(hass, entry_data, services)
 
-        if entry_data.device_info is not None and entry_data.device_info.name:
-            reconnect_logic.name = entry_data.device_info.name
+        if (device_info := entry_data.device_info) is not None:
+            if device_info.name:
+                reconnect_logic.name = device_info.name
+            if (
+                bluetooth_mac_address := device_info.bluetooth_mac_address
+            ) and entry.data.get(CONF_BLUETOOTH_MAC_ADDRESS) != bluetooth_mac_address:
+                hass.config_entries.async_update_entry(
+                    entry,
+                    data={
+                        **entry.data,
+                        CONF_BLUETOOTH_MAC_ADDRESS: bluetooth_mac_address,
+                    },
+                )
             if entry.unique_id is None:
                 hass.config_entries.async_update_entry(
-                    entry, unique_id=format_mac(entry_data.device_info.mac_address)
+                    entry, unique_id=format_mac(device_info.mac_address)
                 )
 
         await reconnect_logic.start()

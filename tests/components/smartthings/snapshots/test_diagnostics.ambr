@@ -1,0 +1,1163 @@
+# serializer version: 1
+# name: test_device[da_ac_rac_000001]
+  dict({
+    'events': list([
+    ]),
+    'status': dict({
+      '1': dict({
+        'airConditionerFanMode': dict({
+          'availableAcFanModes': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'fanMode': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.381000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'supportedAcFanModes': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.605000+00:00',
+            'unit': None,
+            'value': list([
+              'auto',
+              'low',
+              'medium',
+              'high',
+              'turbo',
+            ]),
+          }),
+        }),
+        'airConditionerMode': dict({
+          'airConditionerMode': dict({
+            'data': None,
+            'timestamp': '2021-04-08T03:50:50.930000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'availableAcModes': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'supportedAcModes': dict({
+            'data': None,
+            'timestamp': '2021-04-08T03:50:50.930000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'airQualitySensor': dict({
+          'airQuality': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:57:57.602000+00:00',
+            'unit': 'CAQI',
+            'value': None,
+          }),
+        }),
+        'audioVolume': dict({
+          'volume': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:53.541000+00:00',
+            'unit': '%',
+            'value': None,
+          }),
+        }),
+        'custom.airConditionerOdorController': dict({
+          'airConditionerOdorControllerProgress': dict({
+            'data': None,
+            'timestamp': '2021-04-08T04:11:38.269000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'airConditionerOdorControllerState': dict({
+            'data': None,
+            'timestamp': '2021-04-08T04:11:38.269000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'custom.airConditionerOptionalMode': dict({
+          'acOptionalMode': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:57:57.659000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'supportedAcOptionalMode': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:57:57.659000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'custom.airConditionerTropicalNightMode': dict({
+          'acTropicalNightModeLevel': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.498000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'custom.autoCleaningMode': dict({
+          'autoCleaningMode': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:53.344000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'operatingState': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'progress': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'supportedAutoCleaningModes': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'supportedOperatingStates': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'timedCleanDuration': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'timedCleanDurationRange': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'custom.deodorFilter': dict({
+          'deodorFilterCapacity': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.118000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'deodorFilterLastResetDate': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.118000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'deodorFilterResetType': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.118000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'deodorFilterStatus': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.118000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'deodorFilterUsage': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.118000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'deodorFilterUsageStep': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.118000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'custom.deviceReportStateConfiguration': dict({
+          'reportStatePeriod': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:09.800000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'reportStateRealtime': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:09.800000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'reportStateRealtimePeriod': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:09.800000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'custom.disabledCapabilities': dict({
+          'disabledCapabilities': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.605000+00:00',
+            'unit': None,
+            'value': list([
+              'remoteControlStatus',
+              'airQualitySensor',
+              'dustSensor',
+              'odorSensor',
+              'veryFineDustSensor',
+              'custom.dustFilter',
+              'custom.deodorFilter',
+              'custom.deviceReportStateConfiguration',
+              'audioVolume',
+              'custom.autoCleaningMode',
+              'custom.airConditionerTropicalNightMode',
+              'custom.airConditionerOdorController',
+              'demandResponseLoadControl',
+              'relativeHumidityMeasurement',
+            ]),
+          }),
+        }),
+        'custom.dustFilter': dict({
+          'dustFilterCapacity': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.145000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'dustFilterLastResetDate': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.145000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'dustFilterResetType': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.145000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'dustFilterStatus': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.145000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'dustFilterUsage': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.145000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'dustFilterUsageStep': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.145000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'custom.energyType': dict({
+          'drMaxDuration': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'energySavingInfo': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'energySavingLevel': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'energySavingOperation': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'energySavingOperationSupport': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'energySavingSupport': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'energyType': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:38.843000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'notificationTemplateID': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'supportedEnergySavingLevels': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'custom.spiMode': dict({
+          'spiMode': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:57:57.686000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'custom.thermostatSetpointControl': dict({
+          'maximumSetpoint': dict({
+            'data': None,
+            'timestamp': '2021-04-08T04:04:19.901000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'minimumSetpoint': dict({
+            'data': None,
+            'timestamp': '2021-04-08T04:04:19.901000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'demandResponseLoadControl': dict({
+          'drlcStatus': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:54.748000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'dustSensor': dict({
+          'dustLevel': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.122000+00:00',
+            'unit': 'μg/m^3',
+            'value': None,
+          }),
+          'fineDustLevel': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.122000+00:00',
+            'unit': 'μg/m^3',
+            'value': None,
+          }),
+        }),
+        'fanOscillationMode': dict({
+          'availableFanOscillationModes': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'fanOscillationMode': dict({
+            'data': None,
+            'timestamp': '2025-02-08T00:44:53.247000+00:00',
+            'unit': None,
+            'value': 'fixed',
+          }),
+          'supportedFanOscillationModes': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.325000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'ocf': dict({
+          'di': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'dmv': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'icv': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'mndt': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'mnfv': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'mnhw': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'mnml': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'mnmn': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'mnmo': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'mnos': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'mnpv': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'mnsl': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'n': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'pi': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'st': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'vid': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.472000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'odorSensor': dict({
+          'odorLevel': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:38.992000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'powerConsumptionReport': dict({
+          'powerConsumption': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:53.364000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'relativeHumidityMeasurement': dict({
+          'humidity': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:35.291000+00:00',
+            'unit': '%',
+            'value': 0,
+          }),
+        }),
+        'remoteControlStatus': dict({
+          'remoteControlEnabled': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:39.097000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'switch': dict({
+          'switch': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.518000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'temperatureMeasurement': dict({
+          'temperature': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:44:10.373000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'temperatureRange': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'thermostatCoolingSetpoint': dict({
+          'coolingSetpoint': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:59.136000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'coolingSetpointRange': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'veryFineDustSensor': dict({
+          'veryFineDustLevel': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:38.529000+00:00',
+            'unit': 'μg/m^3',
+            'value': None,
+          }),
+        }),
+      }),
+      'main': dict({
+        'airConditionerFanMode': dict({
+          'availableAcFanModes': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'fanMode': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:14:39.249000+00:00',
+            'unit': None,
+            'value': 'low',
+          }),
+          'supportedAcFanModes': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:14:39.249000+00:00',
+            'unit': None,
+            'value': list([
+              'auto',
+              'low',
+              'medium',
+              'high',
+              'turbo',
+            ]),
+          }),
+        }),
+        'airConditionerMode': dict({
+          'airConditionerMode': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:14:39.642000+00:00',
+            'unit': None,
+            'value': 'heat',
+          }),
+          'availableAcModes': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'supportedAcModes': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.781000+00:00',
+            'unit': None,
+            'value': list([
+              'cool',
+              'dry',
+              'wind',
+              'auto',
+              'heat',
+            ]),
+          }),
+        }),
+        'audioVolume': dict({
+          'volume': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:14:39.642000+00:00',
+            'unit': '%',
+            'value': 100,
+          }),
+        }),
+        'custom.airConditionerOptionalMode': dict({
+          'acOptionalMode': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:14:39.642000+00:00',
+            'unit': None,
+            'value': 'off',
+          }),
+          'supportedAcOptionalMode': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.781000+00:00',
+            'unit': None,
+            'value': list([
+              'off',
+              'windFree',
+            ]),
+          }),
+        }),
+        'custom.airConditionerTropicalNightMode': dict({
+          'acTropicalNightModeLevel': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:14:39.642000+00:00',
+            'unit': None,
+            'value': 0,
+          }),
+        }),
+        'custom.autoCleaningMode': dict({
+          'autoCleaningMode': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:14:39.642000+00:00',
+            'unit': None,
+            'value': 'off',
+          }),
+          'operatingState': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'progress': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'supportedAutoCleaningModes': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'supportedOperatingStates': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'timedCleanDuration': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'timedCleanDurationRange': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'custom.disabledCapabilities': dict({
+          'disabledCapabilities': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:14:39.642000+00:00',
+            'unit': None,
+            'value': list([
+              'remoteControlStatus',
+              'airQualitySensor',
+              'dustSensor',
+              'veryFineDustSensor',
+              'custom.dustFilter',
+              'custom.deodorFilter',
+              'custom.deviceReportStateConfiguration',
+              'samsungce.dongleSoftwareInstallation',
+              'demandResponseLoadControl',
+              'custom.airConditionerOdorController',
+            ]),
+          }),
+        }),
+        'custom.disabledComponents': dict({
+          'disabledComponents': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:14:39.642000+00:00',
+            'unit': None,
+            'value': list([
+              '1',
+            ]),
+          }),
+        }),
+        'custom.energyType': dict({
+          'drMaxDuration': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'energySavingInfo': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'energySavingLevel': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'energySavingOperation': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'energySavingOperationSupport': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'energySavingSupport': dict({
+            'data': None,
+            'timestamp': '2021-12-29T07:29:17.526000+00:00',
+            'unit': None,
+            'value': 'False',
+          }),
+          'energyType': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.781000+00:00',
+            'unit': None,
+            'value': '1.0',
+          }),
+          'notificationTemplateID': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'supportedEnergySavingLevels': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'custom.spiMode': dict({
+          'spiMode': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:14:39.642000+00:00',
+            'unit': None,
+            'value': 'off',
+          }),
+        }),
+        'custom.thermostatSetpointControl': dict({
+          'maximumSetpoint': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.781000+00:00',
+            'unit': 'C',
+            'value': 30,
+          }),
+          'minimumSetpoint': dict({
+            'data': None,
+            'timestamp': '2025-01-08T06:30:58.307000+00:00',
+            'unit': 'C',
+            'value': 16,
+          }),
+        }),
+        'demandResponseLoadControl': dict({
+          'drlcStatus': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.781000+00:00',
+            'unit': None,
+            'value': dict({
+              'drlcLevel': -1,
+              'drlcType': 1,
+              'duration': 0,
+              'override': False,
+              'start': '1970-01-01T00:00:00Z',
+            }),
+          }),
+        }),
+        'execute': dict({
+          'data': dict({
+            'data': dict({
+              'href': '/temperature/desired/0',
+            }),
+            'timestamp': '2023-07-19T03:07:43.270000+00:00',
+            'unit': None,
+            'value': dict({
+              'payload': dict({
+                'if': list([
+                  'oic.if.baseline',
+                  'oic.if.a',
+                ]),
+                'range': list([
+                  16.0,
+                  30.0,
+                ]),
+                'rt': list([
+                  'oic.r.temperature',
+                ]),
+                'temperature': 22.0,
+                'units': 'C',
+              }),
+            }),
+          }),
+        }),
+        'fanOscillationMode': dict({
+          'availableFanOscillationModes': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'fanOscillationMode': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:14:39.249000+00:00',
+            'unit': None,
+            'value': 'fixed',
+          }),
+          'supportedFanOscillationModes': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:35.782000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'ocf': dict({
+          'di': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': '96a5ef74-5832-a84b-f1f7-ca799957065d',
+          }),
+          'dmv': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': 'res.1.1.0,sh.1.1.0',
+          }),
+          'icv': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': 'core.1.1.0',
+          }),
+          'mndt': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:35.912000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'mnfv': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': '0.1.0',
+          }),
+          'mnhw': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': '1.0',
+          }),
+          'mnml': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': 'http://www.samsung.com',
+          }),
+          'mnmn': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': 'Samsung Electronics',
+          }),
+          'mnmo': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.781000+00:00',
+            'unit': None,
+            'value': 'ARTIK051_KRAC_18K|10193441|60010132001111110200000000000000',
+          }),
+          'mnos': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': 'TizenRT2.0',
+          }),
+          'mnpv': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': '0G3MPDCKA00010E',
+          }),
+          'mnsl': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:35.803000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'n': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': '[room a/c] Samsung',
+          }),
+          'pi': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': '96a5ef74-5832-a84b-f1f7-ca799957065d',
+          }),
+          'st': dict({
+            'data': None,
+            'timestamp': '2021-04-06T16:43:35.933000+00:00',
+            'unit': None,
+            'value': None,
+          }),
+          'vid': dict({
+            'data': None,
+            'timestamp': '2024-09-10T10:26:28.552000+00:00',
+            'unit': None,
+            'value': 'DA-AC-RAC-000001',
+          }),
+        }),
+        'powerConsumptionReport': dict({
+          'powerConsumption': dict({
+            'data': None,
+            'timestamp': '2025-02-09T16:15:33.639000+00:00',
+            'unit': None,
+            'value': dict({
+              'deltaEnergy': 400,
+              'end': '2025-02-09T16:15:33Z',
+              'energy': 2247300,
+              'energySaved': 0,
+              'persistedEnergy': 2247300,
+              'power': 0,
+              'powerEnergy': 0.0,
+              'start': '2025-02-09T15:45:29Z',
+            }),
+          }),
+        }),
+        'refresh': dict({
+        }),
+        'relativeHumidityMeasurement': dict({
+          'humidity': dict({
+            'data': None,
+            'timestamp': '2024-12-30T13:10:23.759000+00:00',
+            'unit': '%',
+            'value': 60,
+          }),
+        }),
+        'samsungce.deviceIdentification': dict({
+          'binaryId': dict({
+            'data': None,
+            'timestamp': '2025-02-08T00:44:53.855000+00:00',
+            'unit': None,
+            'value': 'ARTIK051_KRAC_18K',
+          }),
+          'description': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'micomAssayCode': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'modelClassificationCode': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'modelName': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'releaseYear': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'serialNumber': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'serialNumberExtra': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'samsungce.driverVersion': dict({
+          'versionNumber': dict({
+            'data': None,
+            'timestamp': '2024-09-04T06:35:09.557000+00:00',
+            'unit': None,
+            'value': 24070101,
+          }),
+        }),
+        'samsungce.selfCheck': dict({
+          'errors': dict({
+            'data': None,
+            'timestamp': '2025-02-08T00:44:53.349000+00:00',
+            'unit': None,
+            'value': list([
+            ]),
+          }),
+          'progress': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'result': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'status': dict({
+            'data': None,
+            'timestamp': '2025-02-08T00:44:53.549000+00:00',
+            'unit': None,
+            'value': 'ready',
+          }),
+          'supportedActions': dict({
+            'data': None,
+            'timestamp': '2024-09-04T06:35:09.557000+00:00',
+            'unit': None,
+            'value': list([
+              'start',
+            ]),
+          }),
+        }),
+        'samsungce.softwareUpdate': dict({
+          'availableModules': dict({
+            'data': None,
+            'timestamp': '2025-02-08T00:44:53.855000+00:00',
+            'unit': None,
+            'value': list([
+            ]),
+          }),
+          'lastUpdatedDate': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'newVersionAvailable': dict({
+            'data': None,
+            'timestamp': '2025-02-08T00:44:53.855000+00:00',
+            'unit': None,
+            'value': 'False',
+          }),
+          'operatingState': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'otnDUID': dict({
+            'data': None,
+            'timestamp': '2025-02-08T00:44:53.855000+00:00',
+            'unit': None,
+            'value': '43CEZFTFFL7Z2',
+          }),
+          'progress': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+          'targetModule': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'switch': dict({
+          'switch': dict({
+            'data': None,
+            'timestamp': '2025-02-09T16:37:54.072000+00:00',
+            'unit': None,
+            'value': 'off',
+          }),
+        }),
+        'temperatureMeasurement': dict({
+          'temperature': dict({
+            'data': None,
+            'timestamp': '2025-02-09T16:33:29.164000+00:00',
+            'unit': 'C',
+            'value': 25,
+          }),
+          'temperatureRange': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+        }),
+        'thermostatCoolingSetpoint': dict({
+          'coolingSetpoint': dict({
+            'data': None,
+            'timestamp': '2025-02-09T09:15:11.608000+00:00',
+            'unit': 'C',
+            'value': 25,
+          }),
+          'coolingSetpointRange': dict({
+            'data': None,
+            'timestamp': None,
+            'unit': None,
+            'value': None,
+          }),
+        }),
+      }),
+    }),
+  })
+# ---

@@ -224,7 +224,7 @@ class SqueezeBoxMediaPlayerEntity(
         self._previous_media_position = 0
         self._attr_unique_id = format_mac(player.player_id)
         _manufacturer = None
-        if player.model == "SqueezeLite" or "SqueezePlay" in player.model:
+        if player.model.startswith("SqueezeLite") or "SqueezePlay" in player.model:
             _manufacturer = "Ralph Irving"
         elif (
             "Squeezebox" in player.model

@@ -7,6 +7,6 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["azure-storage-blob"],
-  "quality_scale": "bronze",
+  "quality_scale": "platinum",
   "requirements": ["azure-storage-blob==12.24.0"]
 }

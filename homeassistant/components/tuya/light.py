@@ -327,6 +327,18 @@ LIGHTS: dict[str, tuple[TuyaLightEntityDescription, ...]] = {
             brightness_min=DPCode.BRIGHTNESS_MIN_1,
         ),
     ),
+    # Outdoor Flood Light
+    # Not documented
+    "tyd": (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name=None,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_temp=DPCode.TEMP_VALUE,
+            color_data=DPCode.COLOUR_DATA,
+        ),
+    ),
     # Solar Light
     # https://developer.tuya.com/en/docs/iot/tynd?id=Kaof8j02e1t98
     "tyndj": (

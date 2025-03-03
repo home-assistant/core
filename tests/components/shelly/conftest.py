@@ -101,6 +101,7 @@ MOCK_BLOCKS = [
             "overpower": 0,
             "power": 53.4,
             "energy": 1234567.89,
+            "output": True,
         },
         channel="0",
         type="relay",
@@ -207,7 +208,7 @@ MOCK_CONFIG = {
     },
     "sys": {
         "ui_data": {},
-        "device": {"name": "Test name"},
+        "device": {"name": "Test name", "mac": MOCK_MAC},
     },
     "wifi": {"sta": {"enable": True}, "sta1": {"enable": False}},
     "ws": {"enable": False, "server": None},
@@ -312,7 +313,11 @@ MOCK_STATUS_COAP = {
 
 
 MOCK_STATUS_RPC = {
-    "switch:0": {"output": True},
+    "switch:0": {
+        "id": 0,
+        "output": True,
+        "apower": 85.3,
+    },
     "input:0": {"id": 0, "state": None},
     "input:1": {"id": 1, "percent": 89, "xpercent": 8.9},
     "input:2": {

@@ -1528,3 +1528,46 @@ def test_should_rollover_is_always_false() -> None:
         ).shouldRollover(Mock())
         is False
     )
+
+
+async def test_no_base_platforms_loaded_before_recorder(hass: HomeAssistant) -> None:
+    """Verify stage 0 not load base platforms before recorder.
+
+    If a stage 0 integration has a base platform in its dependencies and
+    it loads before the recorder, it may load integrations that expect
+    the recorder to be loaded. We need to ensure that no stage 0 integration
+    has a base platform in its dependencies that loads before the recorder.
+    """
+    integrations_before_recorder: set[str] = set()
+    for _, integrations, _ in bootstrap.STAGE_0_INTEGRATIONS:
+        integrations_before_recorder |= integrations
+        if "recorder" in integrations:
+            break
+
+    integrations_or_execs = await loader.async_get_integrations(
+        hass, integrations_before_recorder
+    )
+    integrations: list[Integration] = []
+    resolve_deps_tasks: list[asyncio.Task[bool]] = []
+    for integration in integrations_or_execs.values():
+        assert not isinstance(integrations_or_execs, Exception)
+        integrations.append(integration)
+        resolve_deps_tasks.append(integration.resolve_dependencies())
+
+    await asyncio.gather(*resolve_deps_tasks)
+    base_platform_py_files = {f"{base_platform}.py" for base_platform in BASE_PLATFORMS}
+    for integration in integrations:
+        domain_with_base_platforms_deps = BASE_PLATFORMS.intersection(
+            integration.all_dependencies
+        )
+        assert not domain_with_base_platforms_deps, (
+            f"{integration.domain} has base platforms in dependencies: "
+            f"{domain_with_base_platforms_deps}"
+        )
+        integration_top_level_files = base_platform_py_files.intersection(
+            integration._top_level_files
+        )
+        assert not integration_top_level_files, (
+            f"{integration.domain} has base platform files in top level files: "
+            f"{integration_top_level_files}"
+        )

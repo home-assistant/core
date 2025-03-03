@@ -8,7 +8,7 @@
       "presentationId": "c385e2bc-acb8-317b-be2a-6efd1f879720",
       "deviceManufacturerCode": "SmartThings",
       "locationId": "c4d3b2a1-09f8-765e-4d3c-2b1a09f8e7d6 ",
-      "roomId": "b277a3c0-b8fe-44de-9133-c1108747810c",
+      "roomId": "7715151d-0314-457a-a82c-5ce48900e065",
       "components": [
         {
           "id": "main",
@@ -56,7 +56,6 @@
         }
       ],
       "createTime": "2019-02-23T16:53:57Z",
-      "parentDeviceId": "074fa784-8be8-4c70-8e22-6f5ed6f81b7e",
       "profile": {
         "id": "4471213f-121b-38fd-b022-51df37ac1d4c"
       },

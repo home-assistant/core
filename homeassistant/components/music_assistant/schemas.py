@@ -15,6 +15,7 @@ from .const import (
     ATTR_ALBUM,
     ATTR_ALBUMS,
     ATTR_ARTISTS,
+    ATTR_AUDIOBOOKS,
     ATTR_BIT_DEPTH,
     ATTR_CONTENT_TYPE,
     ATTR_CURRENT_INDEX,
@@ -31,6 +32,7 @@ from .const import (
     ATTR_OFFSET,
     ATTR_ORDER_BY,
     ATTR_PLAYLISTS,
+    ATTR_PODCASTS,
     ATTR_PROVIDER,
     ATTR_QUEUE_ID,
     ATTR_QUEUE_ITEM_ID,
@@ -99,6 +101,12 @@ SEARCH_RESULT_SCHEMA = vol.Schema(
             cv.ensure_list, [vol.Schema(MEDIA_ITEM_SCHEMA)]
         ),
         vol.Required(ATTR_RADIO): vol.All(
+            cv.ensure_list, [vol.Schema(MEDIA_ITEM_SCHEMA)]
+        ),
+        vol.Required(ATTR_AUDIOBOOKS): vol.All(
+            cv.ensure_list, [vol.Schema(MEDIA_ITEM_SCHEMA)]
+        ),
+        vol.Required(ATTR_PODCASTS): vol.All(
             cv.ensure_list, [vol.Schema(MEDIA_ITEM_SCHEMA)]
         ),
     },

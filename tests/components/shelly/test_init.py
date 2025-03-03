@@ -366,8 +366,11 @@ async def test_entry_unload(
     entity_id: str,
     mock_block_device: Mock,
     mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test entry unload."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     entry = await init_integration(hass, gen)
 
     assert entry.state is ConfigEntryState.LOADED
@@ -410,6 +413,9 @@ async def test_entry_unload_not_connected(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test entry unload when not connected."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+
     with patch(
         "homeassistant.components.shelly.coordinator.async_stop_scanner"
     ) as mock_stop_scanner:
@@ -435,6 +441,9 @@ async def test_entry_unload_not_connected_but_we_think_we_are(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test entry unload when not connected but we think we are still connected."""
+    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
+
     with patch(
         "homeassistant.components.shelly.coordinator.async_stop_scanner",
         side_effect=DeviceConnectionError,

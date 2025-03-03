@@ -14,6 +14,7 @@ from itertools import chain
 import json
 from pathlib import Path, PurePath
 import shutil
+import sys
 import tarfile
 import time
 from typing import IO, TYPE_CHECKING, Any, Protocol, TypedDict, cast
@@ -306,6 +307,12 @@ class DecryptOnDowloadNotSupported(BackupManagerError):
 
     error_code = "decrypt_on_download_not_supported"
     _message = "On-the-fly decryption is not supported for this backup."
+
+
+class BackupManagerExceptionGroup(BackupManagerError, ExceptionGroup):
+    """Raised when multiple exceptions occur."""
+
+    error_code = "multiple_errors"
 
 
 class BackupManager:
@@ -1605,10 +1612,24 @@ class CoreBackupReaderWriter(BackupReaderWriter):
             )
         finally:
             # Inform integrations the backup is done
+            # If there's an unhandled exception, we keep it so we can rethrow it in case
+            # the post backup actions also fail.
+            unhandled_exc = sys.exception()
             try:
-                await manager.async_post_backup_actions()
-            except BackupManagerError as err:
-                raise BackupReaderWriterError(str(err)) from err
+                try:
+                    await manager.async_post_backup_actions()
+                except BackupManagerError as err:
+                    raise BackupReaderWriterError(str(err)) from err
+            except Exception as err:
+                if not unhandled_exc:
+                    raise
+                # If there's an unhandled exception, we wrap both that and the exception
+                # from the post backup actions in an ExceptionGroup so the caller is
+                # aware of both exceptions.
+                raise BackupManagerExceptionGroup(
+                    f"Multiple errors when creating backup: {unhandled_exc}, {err}",
+                    [unhandled_exc, err],
+                ) from None
 
     def _mkdir_and_generate_backup_contents(
         self,
