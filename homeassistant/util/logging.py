@@ -3,13 +3,15 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Coroutine
+from dataclasses import dataclass
+import datetime
 from functools import partial, wraps
 import inspect
 import logging
 import logging.handlers
-import queue
+from queue import SimpleQueue
 import traceback
-from typing import Any, cast, overload
+from typing import Any, cast, overload, override
 
 from homeassistant.core import (
     HassJobType,
@@ -18,11 +20,68 @@ from homeassistant.core import (
     get_hassjob_callable_job_type,
 )
 
+_LOGGER = logging.getLogger(__name__)
+
+
+@dataclass
+class LoggerCount:
+    """Logger count."""
+
+    count: int
+    start_time: datetime.datetime
+
+
+class HomeAssistantQueueListener(logging.handlers.QueueListener):
+    """Custom QueueListener to watch for noisy loggers."""
+
+    monitor_time_window = datetime.timedelta(minutes=1)
+    max_logs_per_window = 60
+
+    def __init__(
+        self, queue: SimpleQueue[logging.Handler], *handlers: logging.Handler
+    ) -> None:
+        """Initialize the handler."""
+        super().__init__(queue, *handlers)
+        self._occurrences: dict[str, LoggerCount] = {}
+
+    @override
+    def handle(self, record: logging.LogRecord) -> None:
+        """Handle the record."""
+        super().handle(record)
+
+        now = datetime.datetime.now()
+        logger_name = record.name
+        if logger_name == __name__:
+            return
+
+        occurrence = self._occurrences.get(logger_name)
+        if occurrence is None:
+            self._occurrences[logger_name] = LoggerCount(1, now)
+            return
+
+        if (now - occurrence.start_time) > self.monitor_time_window:
+            occurrence.count = 1
+            occurrence.start_time = now
+            return
+
+        occurrence.count += 1
+        if occurrence.count < self.max_logs_per_window:
+            return
+
+        _LOGGER.warning(
+            "Module %s is logging too frequently. %d messages in the last %s seconds",
+            logger_name,
+            occurrence.count,
+            int(self.monitor_time_window.total_seconds()),
+        )
+        occurrence.count = 1
+        occurrence.start_time = now
+
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
     """Process the log in another thread."""
 
-    listener: logging.handlers.QueueListener | None = None
+    listener: HomeAssistantQueueListener | None = None
 
     def handle(self, record: logging.LogRecord) -> Any:
         """Conditionally emit the specified logging record.
@@ -60,7 +119,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
     This allows us to avoid blocking I/O and formatting messages
     in the event loop as log messages are written in another thread.
     """
-    simple_queue: queue.SimpleQueue[logging.Handler] = queue.SimpleQueue()
+    simple_queue: SimpleQueue[logging.Handler] = SimpleQueue()
     queue_handler = HomeAssistantQueueHandler(simple_queue)
     logging.root.addHandler(queue_handler)
 
@@ -71,7 +130,7 @@ def async_activate_log_queue_handler(hass: HomeAssistant) -> None:
         logging.root.removeHandler(handler)
         migrated_handlers.append(handler)
 
-    listener = logging.handlers.QueueListener(simple_queue, *migrated_handlers)
+    listener = HomeAssistantQueueListener(simple_queue, *migrated_handlers)
     queue_handler.listener = listener
 
     listener.start()

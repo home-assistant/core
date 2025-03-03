@@ -149,3 +149,54 @@ async def test_catch_log_exception_catches_and_logs() -> None:
     func("failure sync passed")
 
     assert saved_args == [("failure sync passed",)]
+
+
+@patch("homeassistant.util.logging.HomeAssistantQueueListener.max_logs_per_window", 5)
+@pytest.mark.parametrize(
+    (
+        "logger1_count",
+        "logger1_expected_notices",
+        "logger2_count",
+        "logger2_expected_notices",
+    ),
+    [(4, 0, 0, 0), (5, 1, 1, 0), (11, 2, 5, 1), (20, 4, 20, 4)],
+)
+async def test_noisy_loggers(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    logger1_count: int,
+    logger1_expected_notices: int,
+    logger2_count: int,
+    logger2_expected_notices: int,
+) -> None:
+    """Test that noisy loggers all logged as warnings."""
+
+    logging_util.async_activate_log_queue_handler(hass)
+    logger1 = logging.getLogger("noisy1")
+    logger2 = logging.getLogger("noisy2.module")
+
+    for _ in range(logger1_count):
+        logger1.info("This is a log")
+
+    for _ in range(logger2_count):
+        logger2.info("This is another log")
+
+    log_queue: queue.SimpleQueue = logging.root.handlers[0].queue
+    while not log_queue.empty():
+        await asyncio.sleep(0)
+
+    # close the handler so the queue thread stops
+    logging.root.handlers[0].close()
+
+    assert (
+        caplog.text.count(
+            "Module noisy1 is logging too frequently. 5 messages in the last 60 seconds"
+        )
+        == logger1_expected_notices
+    )
+    assert (
+        caplog.text.count(
+            "Module noisy2.module is logging too frequently. 5 messages in the last 60 seconds"
+        )
+        == logger2_expected_notices
+    )
