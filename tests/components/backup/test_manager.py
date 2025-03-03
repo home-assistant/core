@@ -45,7 +45,8 @@ from homeassistant.components.backup.manager import (
     WrittenBackup,
 )
 from homeassistant.components.backup.util import password_to_key
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 
@@ -3441,3 +3442,32 @@ async def test_restore_progress_after_restart_fail_to_remove(
         "Unexpected error deleting backup restore result file: <class 'OSError'> Boom!"
         in caplog.text
     )
+
+
+async def test_manager_blocked_until_home_assistant_started(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test backup manager's state is blocked until Home Assistant has started."""
+
+    hass.set_state(CoreState.not_running)
+
+    await setup_backup_integration(hass)
+    manager = hass.data[DATA_MANAGER]
+
+    assert manager.state == BackupManagerState.BLOCKED
+    assert manager.last_non_idle_event is None
+
+    # Fired when Home Assistant changes to starting state
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+    assert manager.state == BackupManagerState.BLOCKED
+    assert manager.last_non_idle_event is None
+
+    # Fired when Home Assistant changes to running state
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    assert manager.state == BackupManagerState.IDLE
+    assert manager.last_non_idle_event is None
