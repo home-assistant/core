@@ -872,7 +872,9 @@ async def async_get_events_service(
         end = service_call.data[EVENT_END_DATETIME]
 
     if start >= end:
-        raise ServiceValidationError("End date must be after start date")
+        raise ServiceValidationError(
+            translation_key="end_before_start", translation_domain=DOMAIN
+        )
 
     calendar_event_list = await calendar.async_get_events(
         calendar.hass, dt_util.as_local(start), dt_util.as_local(end)
