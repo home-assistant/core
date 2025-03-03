@@ -46,6 +46,11 @@ NUT_DEV_INFO_TO_DEV_INFO: dict[str, str] = {
     "serial": ATTR_SERIAL_NUMBER,
 }
 
+AMBIENT_HUMIDITY = "ambient.humidity"
+AMBIENT_HUMIDITY_STATUS = "ambient.humidity.status"
+AMBIENT_PRESENT = "ambient.present"
+AMBIENT_TEMPERATURE = "ambient.temperature"
+AMBIENT_TEMPERATURE_STATUS = "ambient.temperature.status"
 AMBIENT_THRESHOLD_STATUS_OPTIONS = [
     "good",
     "warning-low",
@@ -1001,6 +1006,17 @@ async def async_setup_entry(
     # of the UPS instead.
     if KEY_STATUS in resources:
         resources.append(KEY_STATUS_DISPLAY)
+
+    # If device reports ambient sensors are not present, then remove
+    if status.get(AMBIENT_PRESENT) == "no":
+        if AMBIENT_TEMPERATURE in resources:
+            resources.remove(AMBIENT_TEMPERATURE)
+        if AMBIENT_TEMPERATURE_STATUS in resources:
+            resources.remove(AMBIENT_TEMPERATURE_STATUS)
+        if AMBIENT_HUMIDITY in resources:
+            resources.remove(AMBIENT_HUMIDITY)
+        if AMBIENT_HUMIDITY_STATUS in resources:
+            resources.remove(AMBIENT_HUMIDITY_STATUS)
 
     async_add_entities(
         NUTSensor(
