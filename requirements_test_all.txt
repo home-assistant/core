@@ -861,7 +861,7 @@ georss-qld-bushfire-alert-client==0.8
 getmac==0.9.5
 
 # homeassistant.components.gios
-gios==5.0.0
+gios==5.1.0
 
 # homeassistant.components.glances
 glances-api==0.8.0
