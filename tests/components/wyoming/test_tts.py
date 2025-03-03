@@ -18,6 +18,18 @@ from homeassistant.helpers.entity_component import DATA_INSTANCES
 from . import MockAsyncTcpClient
 
 
+async def async_get_media_source_audio(
+    hass: HomeAssistant,
+    media_source_id: str,
+) -> tuple[str, bytes]:
+    """Get TTS audio as extension, data."""
+    manager = hass.data[tts.DATA_TTS_MANAGER]
+    cache_key = manager.async_cache_message_in_memory(
+        **tts.media_source_id_to_kwargs(media_source_id)
+    )
+    return await manager.async_get_tts_audio(cache_key)
+
+
 async def test_support(hass: HomeAssistant, init_wyoming_tts) -> None:
     """Test supported properties."""
     state = hass.states.get("tts.test_tts")
@@ -59,7 +71,7 @@ async def test_get_tts_audio(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        extension, data = await tts.async_get_media_source_audio(
+        extension, data = await async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
                 hass,
@@ -96,7 +108,7 @@ async def test_get_tts_audio_different_formats(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        extension, data = await tts.async_get_media_source_audio(
+        extension, data = await async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
                 hass,
@@ -131,7 +143,7 @@ async def test_get_tts_audio_different_formats(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        extension, data = await tts.async_get_media_source_audio(
+        extension, data = await async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
                 hass,
@@ -157,7 +169,7 @@ async def test_get_tts_audio_connection_lost(
         ),
         pytest.raises(HomeAssistantError),
     ):
-        await tts.async_get_media_source_audio(
+        await async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(hass, "Hello world", "tts.test_tts", "en-US"),
         )
@@ -185,7 +197,7 @@ async def test_get_tts_audio_audio_oserror(
             HomeAssistantError,
         ),
     ):
-        await tts.async_get_media_source_audio(
+        await async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
                 hass, "Hello world", "tts.test_tts", hass.config.language
@@ -207,7 +219,7 @@ async def test_voice_speaker(
         "homeassistant.components.wyoming.tts.AsyncTcpClient",
         MockAsyncTcpClient(audio_events),
     ) as mock_client:
-        await tts.async_get_media_source_audio(
+        await async_get_media_source_audio(
             hass,
             tts.generate_media_source_id(
                 hass,
