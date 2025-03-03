@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, cast
 
@@ -17,7 +16,7 @@ from homeassistant.components.humidifier import (
     HumidifierEntity,
     HumidifierEntityFeature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -45,17 +44,6 @@ class HumidifierComelitCommand(StrEnum):
     AUTO = "auto"
     LOWER = "lower"
     UPPER = "upper"
-
-
-@dataclass
-class HumidifierObject:
-    """Humidifier object properties."""
-
-    current_humidity: float
-    mode: str
-    active: bool
-    automatic: bool
-    target_humidity: float
 
 
 MODE_TO_ACTION: dict[str, HumidifierComelitCommand] = {
@@ -133,55 +121,46 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._active_mode = active_mode
         self._active_action = active_action
         self._set_command = set_command
+        self._active: bool = False
+        self._automatic: bool = False
+        self._mode: str = HumidifierComelitMode.OFF
 
-    @property
-    def _humidifier(self) -> HumidifierObject:
-        """Return humidifier device data."""
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        device = self.coordinator.data[CLIMATE][self._device.index]
+        if not isinstance(device.val, list):
+            raise HomeAssistantError("Invalid clima data")
+
         # CLIMATE has a 2 item tuple:
         # - first  for Clima
         # - second for Humidifier
-        device = self.coordinator.data[CLIMATE][self._device.index]
-        if not isinstance(device.val, list):
-            raise HomeAssistantError("Invalid humidifier data")
-
         values = device.val[1]
 
-        return HumidifierObject(
-            current_humidity=values[0] / 10,
-            mode=values[2],  # Values from API: "O", "L", "U"
-            active=values[1],
-            automatic=(values[3] == HumidifierComelitMode.AUTO),
-            target_humidity=values[4] / 10,
-        )
-
-    @property
-    def target_humidity(self) -> float:
-        """Set target humidity."""
-        return self._humidifier.target_humidity
-
-    @property
-    def current_humidity(self) -> float:
-        """Return current humidity."""
-        return self._humidifier.current_humidity
+        self._attr_current_humidity = values[0] / 10
+        self._active = values[1]
+        self._mode = values[2]  # Values from API: "O", "L", "U"
+        self._automatic = values[3] == HumidifierComelitMode.AUTO
+        self._attr_target_humidity = values[4] / 10
 
     @property
     def is_on(self) -> bool:
         """Return true is humidifier is on."""
-        return self._humidifier.mode == self._active_mode
+        return self._mode == self._active_mode
 
     @property
     def mode(self) -> str:
         """Return current mode."""
-        return MODE_AUTO if self._humidifier.automatic else MODE_NORMAL
+        return MODE_AUTO if self._automatic else MODE_NORMAL
 
     @property
     def action(self) -> HumidifierAction:
         """Return current action."""
 
-        if self._humidifier.mode == HumidifierComelitMode.OFF:
+        if self._mode == HumidifierComelitMode.OFF:
             return HumidifierAction.OFF
 
-        if self._humidifier.active and self._humidifier.mode == self._active_mode:
+        if self._active and self._mode == self._active_mode:
             return self._active_action
 
         return HumidifierAction.IDLE

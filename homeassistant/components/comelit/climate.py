@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, cast
 
@@ -17,7 +16,7 @@ from homeassistant.components.climate import (
     UnitOfTemperature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -42,17 +41,6 @@ class ClimaComelitCommand(StrEnum):
     MANUAL = "man"
     SET = "set"
     AUTO = "auto"
-
-
-@dataclass
-class ClimaObject:
-    """Clima object properties."""
-
-    current_temperature: float
-    mode: str
-    active: bool
-    automatic: bool
-    target_temperature: float
 
 
 API_STATUS: dict[str, dict[str, Any]] = {
@@ -126,49 +114,40 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         # because no serial number or mac is available
         self._attr_unique_id = f"{config_entry_entry_id}-{device.index}"
         self._attr_device_info = coordinator.platform_device_info(device, device.type)
+        self._active: bool = False
+        self._automatic: bool = False
+        self._mode: str = ClimaComelitMode.OFF
 
-    @property
-    def _clima(self) -> ClimaObject:
-        """Return clima device data."""
-        # CLIMATE has a 2 item tuple:
-        # - first  for Clima
-        # - second for Humidifier
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
         device = self.coordinator.data[CLIMATE][self._device.index]
         if not isinstance(device.val, list):
             raise HomeAssistantError("Invalid clima data")
 
+        # CLIMATE has a 2 item tuple:
+        # - first  for Clima
+        # - second for Humidifier
         values = device.val[0]
 
-        return ClimaObject(
-            current_temperature=values[0] / 10,
-            mode=values[2],  # Values from API: "O", "L", "U"
-            active=values[1],
-            automatic=(values[3] == ClimaComelitMode.AUTO),
-            target_temperature=values[4] / 10,
-        )
-
-    @property
-    def target_temperature(self) -> float:
-        """Set target temperature."""
-        return self._clima.target_temperature
-
-    @property
-    def current_temperature(self) -> float:
-        """Return current temperature."""
-        return self._clima.current_temperature
+        self._attr_current_temperature = values[0] / 10
+        self._active = values[1]
+        self._mode = values[2]  # Values from API: "O", "L", "U"
+        self._automatic = values[3] == ClimaComelitMode.AUTO
+        self._attr_target_temperature = values[4] / 10
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """HVAC current mode."""
 
-        if self._clima.mode == ClimaComelitMode.OFF:
+        if self._mode == ClimaComelitMode.OFF:
             return HVACMode.OFF
 
-        if self._clima.automatic:
+        if self._automatic:
             return HVACMode.AUTO
 
-        if self._clima.mode in API_STATUS:
-            return cast(HVACMode, API_STATUS[self._clima.mode]["hvac_mode"])
+        if self._mode in API_STATUS:
+            return cast(HVACMode, API_STATUS[self._mode]["hvac_mode"])
 
         return None
 
@@ -176,14 +155,14 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
     def hvac_action(self) -> HVACAction | None:
         """HVAC current action."""
 
-        if self._clima.mode == ClimaComelitMode.OFF:
+        if self._mode == ClimaComelitMode.OFF:
             return HVACAction.OFF
 
-        if not self._clima.active:
+        if not self._active:
             return HVACAction.IDLE
 
-        if self._clima.mode in API_STATUS:
-            return cast(HVACAction, API_STATUS[self._clima.mode]["hvac_action"])
+        if self._mode in API_STATUS:
+            return cast(HVACAction, API_STATUS[self._mode]["hvac_action"])
 
         return None
 
