@@ -1,6 +1,7 @@
 """Test the Wolf SmartSet Service Sensor platform."""
 
-from unittest.mock import MagicMock, Mock
+from collections.abc import Generator
+from unittest.mock import MagicMock
 
 import pytest
 from syrupy import SnapshotAssertion
@@ -8,7 +9,6 @@ from wolf_comm import (
     EnergyParameter,
     HoursParameter,
     ListItemParameter,
-    Parameter,
     PercentageParameter,
     PowerParameter,
     Pressure,
@@ -16,167 +16,113 @@ from wolf_comm import (
     Temperature,
 )
 
-from homeassistant.components.wolflink.const import (
-    COORDINATOR,
-    DEVICE_ID,
-    DOMAIN,
-    PARAMETERS,
-)
-from homeassistant.components.wolflink.sensor import WolfLinkSensor, async_setup_entry
-from homeassistant.const import (
-    PERCENTAGE,
-    UnitOfEnergy,
-    UnitOfPower,
-    UnitOfPressure,
-    UnitOfTemperature,
-    UnitOfTime,
-)
+from homeassistant.components.wolflink.const import DOMAIN
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import CONFIG
-
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, patch, snapshot_platform
 
 
 @pytest.fixture
-def mock_device_id() -> str:
-    """Fixture for a mock device ID."""
-    return "1234"
+def mock_config_entry() -> MockConfigEntry:
+    """Return the default mocked config entry."""
+    return MockConfigEntry(
+        title="Wolf SmartSet",
+        domain=DOMAIN,
+        data={
+            "device_id": 1234,
+            "device_name": "test-device",
+            "device_gateway": 5678,
+            "username": "test-username",
+            "password": "test-password",
+        },
+        unique_id="1234",
+        version=1,
+        minor_version=2,
+    )
 
 
 @pytest.fixture
-def mock_parameter() -> Parameter:
-    """Fixture for a mock parameter."""
-    return Mock(spec=Parameter)
-
-
-async def mock_config_entry(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
-) -> None:
-    """Test already configured while creating entry."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=CONFIG[DEVICE_ID], data=CONFIG
-    )
-    config_entry.add_to_hass(hass)
-
-    device = device_registry.async_get_device({(DOMAIN, CONFIG[DEVICE_ID])})
-    assert device is not None
-    assert device.identifiers == {(DOMAIN, CONFIG[DEVICE_ID])}
-
-
-def test_wolflink_sensor_native_value() -> None:
-    """Test WolflinkSensor native value."""
-    coordinator = MagicMock()
-    parameter = MagicMock()
-    parameter.parameter_id = "outside_temp"
-    sensor = WolfLinkSensor(coordinator, parameter, "mock_device_id", MagicMock())
-    coordinator.data = {"outside_temp": [None, 20]}
-    assert sensor.native_value == 20
-
-
-def test_wolflink_sensor_extra_state_attributes() -> None:
-    """Test WolflinkSensor extra state attributes."""
-    coordinator = MagicMock()
-    parameter = MagicMock()
-    parameter.parameter_id = "outside_temp"
-    parameter.value_id = "value_id"
-    parameter.parent = "parent"
-    sensor = WolfLinkSensor(coordinator, parameter, "mock_device_id", MagicMock())
-    attributes = sensor.extra_state_attributes
-    assert attributes["parameter_id"] == "outside_temp"
-    assert attributes["value_id"] == "value_id"
-    assert attributes["parent"] == "parent"
-
-
-@pytest.mark.parametrize(
-    ("parameter", "expected_class", "expected_unit"),
-    [
-        (MagicMock(spec=EnergyParameter), WolfLinkSensor, UnitOfEnergy.KILO_WATT_HOUR),
-        (MagicMock(spec=PowerParameter), WolfLinkSensor, UnitOfPower.KILO_WATT),
-        (MagicMock(spec=Pressure), WolfLinkSensor, UnitOfPressure.BAR),
-        (MagicMock(spec=Temperature), WolfLinkSensor, UnitOfTemperature.CELSIUS),
-        (MagicMock(spec=PercentageParameter), WolfLinkSensor, PERCENTAGE),
-        (MagicMock(spec=HoursParameter), WolfLinkSensor, UnitOfTime.HOURS),
-    ],
-)
-async def test_async_setup_entry(
-    hass: HomeAssistant,
-    parameter: Parameter,
-    wolf_parameter: Parameter,
-    expected_class: type,
-    expected_unit: str,
-) -> None:
-    """Test async_setup_entry for various parameter types."""
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=str(CONFIG[DEVICE_ID]), data=CONFIG
-    )
-    config_entry.add_to_hass(hass)
-
-    parameter.parameter_id = "param_id"
-    parameter.name = "Parameter"
-    if isinstance(parameter, PercentageParameter):
-        parameter.unit = PERCENTAGE
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
-        PARAMETERS: [parameter],
-        DEVICE_ID: "1234",
-        COORDINATOR: MagicMock(),  # Ensure COORDINATOR is set up
-    }
-    async_add_entities = MagicMock()
-
-    await async_setup_entry(hass, config_entry, async_add_entities)
-
-    assert async_add_entities.call_count == 1
-    entities = async_add_entities.call_args[0][0]
-    assert len(entities) == 1
-    entity = entities[0]
-    assert isinstance(entity, expected_class)
-    assert entity.native_unit_of_measurement == expected_unit
-
-
-@pytest.fixture(
-    params=[
-        EnergyParameter(6002800000, "Energy Parameter", "Heating", 6005200000),
-        ListItemParameter(
-            8002800000,
-            "List Item Parameter",
-            "Heating",
-            (["Pump", "on"], ["Heating", "on"]),
-            8005200000,
+def mock_wolflink() -> Generator[MagicMock]:
+    """Return a mocked wolflink client."""
+    with (
+        patch(
+            "homeassistant.components.wolflink.WolfClient", autospec=True
+        ) as wolflink_mock,
+        patch(
+            "homeassistant.components.wolflink.config_flow.WolfClient",
+            new=wolflink_mock,
         ),
-        PowerParameter(5002800000, "Power Parameter", "Heating", 5005200000),
-        Pressure(4002800000, "Pressure Parameter", "Heating", 4005200000),
-        Temperature(3002800000, "Temperature Parameter", "Solar", 3005200000),
-        PercentageParameter(2002800000, "Percentage Parameter", "Solar", 2005200000),
-        HoursParameter(7002800000, "Hours Parameter", "Heating", 7005200000),
-        SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000),
-    ]
-)
-def wolf_parameter(request: pytest.FixtureRequest) -> Parameter:
-    """Fixture for different WolfLink parameter types."""
-    return request.param
+    ):
+        wolflink = wolflink_mock.return_value
+
+        wolflink.Parameters = [
+            EnergyParameter(6002800000, "Energy Parameter", "Heating", 6005200000),
+            ListItemParameter(
+                8002800000,
+                "List Item Parameter",
+                "Heating",
+                (["Pump", 0], ["Heating", 1]),
+                8005200000,
+            ),
+            PowerParameter(5002800000, "Power Parameter", "Heating", 5005200000),
+            Pressure(4002800000, "Pressure Parameter", "Heating", 4005200000),
+            Temperature(3002800000, "Temperature Parameter", "Solar", 3005200000),
+            PercentageParameter(
+                2002800000, "Percentage Parameter", "Solar", 2005200000
+            ),
+            HoursParameter(7002800000, "Hours Parameter", "Heating", 7005200000),
+            SimpleParameter(1002800000, "Simple Parameter", "DHW", 1005200000),
+        ]
+
+        yield wolflink
 
 
-async def test_sensor(
+async def test_device_entry(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
-    wolf_parameter: Parameter,
+    mock_wolflink: MagicMock,
 ) -> None:
-    """Test the sensor state for various parameter types."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=str(CONFIG[DEVICE_ID]), data=CONFIG
-    )
-    config_entry.add_to_hass(hass)
+    """Test device entry creation."""
 
-    hass.data.setdefault(DOMAIN, {})[config_entry.entry_id] = {
-        PARAMETERS: [wolf_parameter],
-        DEVICE_ID: "1234",
-        COORDINATOR: MagicMock(),  # Ensure COORDINATOR is set up
-    }
-    async_add_entities = MagicMock()
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    await async_setup_entry(hass, config_entry, async_add_entities)
+    device = device_registry.async_get_device({(mock_config_entry.domain, "1234")})
+    assert device == snapshot
 
-    state = hass.states.get(f"{wolf_parameter.parameter_id}")
-    assert state == snapshot
+
+async def test_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    mock_wolflink: MagicMock,
+) -> None:
+    """Test wolflink sensors."""
+
+    with patch("homeassistant.components.wolflink.PLATFORMS", [Platform.SENSOR]):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Ensure the entity registry is populated with mock_wolflink entities
+    for parameter in mock_wolflink.Parameters:
+        entity_id = entity_registry.async_get_or_create(
+            domain=Platform.SENSOR,
+            platform=DOMAIN,
+            unique_id=f"{'1234'}-{parameter.parameter_id}",
+            config_entry=mock_config_entry,
+            suggested_object_id=parameter.name,
+        ).entity_id
+
+        hass.states.async_set(
+            entity_id,
+            "10",
+        )
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)

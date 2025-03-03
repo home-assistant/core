@@ -39,11 +39,20 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import COORDINATOR, DEVICE_ID, DOMAIN, MANUFACTURER, PARAMETERS, STATES
 
 
+def get_listitem_resolve_state(wolf_object, state):
+    """Resolve list item state."""
+    resolved_state = [item for item in wolf_object.items if item.value == int(state)]
+    if resolved_state:
+        resolved_name = resolved_state[0].name
+        state = STATES.get(resolved_name, resolved_name)
+    return state
+
+
 @dataclass(kw_only=True, frozen=True)
 class WolflinkSensorEntityDescription(SensorEntityDescription):
     """Describes Wolflink sensor entity."""
 
-    name_fn: Callable[[Parameter], str]
+    value_fn: Callable[[Parameter, str], str | None] = lambda param, value: value
     supported_fn: Callable[[Parameter], bool]
 
 
@@ -53,52 +62,45 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         supported_fn=lambda param: isinstance(param, Temperature),
-        name_fn=lambda param: param.name,
     ),
     WolflinkSensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.BAR,
         supported_fn=lambda param: isinstance(param, Pressure),
-        name_fn=lambda param: param.name,
     ),
     WolflinkSensorEntityDescription(
         key="energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         supported_fn=lambda param: isinstance(param, EnergyParameter),
-        name_fn=lambda param: param.name,
     ),
     WolflinkSensorEntityDescription(
         key="power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         supported_fn=lambda param: isinstance(param, PowerParameter),
-        name_fn=lambda param: param.name,
     ),
     WolflinkSensorEntityDescription(
         key="percentage",
         native_unit_of_measurement=PERCENTAGE,
         supported_fn=lambda param: isinstance(param, PercentageParameter),
-        name_fn=lambda param: param.name,
     ),
     WolflinkSensorEntityDescription(
         key="list_item",
         translation_key="state",
         supported_fn=lambda param: isinstance(param, ListItemParameter),
-        name_fn=lambda param: param.name,
+        value_fn=get_listitem_resolve_state,
     ),
     WolflinkSensorEntityDescription(
         key="hours",
         icon="mdi:clock",
         native_unit_of_measurement=UnitOfTime.HOURS,
         supported_fn=lambda param: isinstance(param, HoursParameter),
-        name_fn=lambda param: param.name,
     ),
     WolflinkSensorEntityDescription(
         key="default",
         supported_fn=lambda param: isinstance(param, SimpleParameter),
-        name_fn=lambda param: param.name,
     ),
 ]
 
@@ -139,7 +141,7 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self.wolf_object = wolf_object
-        self._attr_name = description.name_fn(wolf_object)
+        self._attr_name = wolf_object.name
         self._attr_unique_id = f"{device_id}:{wolf_object.parameter_id}"
         self._state = None
         self._attr_device_info = DeviceInfo(
@@ -159,14 +161,9 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
                 isinstance(self.wolf_object, ListItemParameter)
                 and self._state is not None
             ):
-                resolved_state = [
-                    item
-                    for item in self.wolf_object.items
-                    if item.value == int(self._state)
-                ]
-                if resolved_state:
-                    resolved_name = resolved_state[0].name
-                    self._state = STATES.get(resolved_name, resolved_name)
+                self._state = self.entity_description.value_fn(
+                    self.wolf_object, self._state
+                )
         return self._state
 
     @property
