@@ -7,5 +7,5 @@
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["mastodon"],
-  "requirements": ["Mastodon.py==1.8.1"]
+  "requirements": ["Mastodon.py==2.0.1"]
 }

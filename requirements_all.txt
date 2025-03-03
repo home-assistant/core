@@ -22,7 +22,7 @@ HAP-python==4.9.2
 HATasmota==0.10.0
 
 # homeassistant.components.mastodon
-Mastodon.py==1.8.1
+Mastodon.py==2.0.1
 
 # homeassistant.components.doods
 # homeassistant.components.generic
@@ -213,7 +213,7 @@ aiobafi6==0.9.0
 aiobotocore==2.13.1
 
 # homeassistant.components.comelit
-aiocomelit==0.11.1
+aiocomelit==0.11.2
 
 # homeassistant.components.dhcp
 aiodhcpwatcher==1.1.1
@@ -425,7 +425,7 @@ aiowatttime==0.1.1
 aiowebdav2==0.3.1
 
 # homeassistant.components.webostv
-aiowebostv==0.7.1
+aiowebostv==0.7.2
 
 # homeassistant.components.withings
 aiowithings==3.1.6
@@ -1112,7 +1112,7 @@ habiticalib==0.3.7
 habluetooth==3.24.1
 
 # homeassistant.components.cloud
-hass-nabucasa==0.92.0
+hass-nabucasa==0.94.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.1
@@ -1149,7 +1149,7 @@ hole==0.8.0
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.67
+holidays==0.68
 
 # homeassistant.components.frontend
 home-assistant-frontend==20250228.0
