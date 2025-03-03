@@ -664,11 +664,10 @@ def _create_log_file(
         err_handler = _RotatingFileHandlerWithoutShouldRollOver(
             err_log_path, backupCount=1
         )
-
-    try:
-        err_handler.doRollover()
-    except OSError as err:
-        _LOGGER.error("Error rolling over log file: %s", err)
+        try:
+            err_handler.doRollover()
+        except OSError as err:
+            _LOGGER.error("Error rolling over log file: %s", err)
 
     return err_handler
 
