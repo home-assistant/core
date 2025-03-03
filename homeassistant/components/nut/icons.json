@@ -43,9 +43,6 @@
       "input_bypass_phases": {
         "default": "mdi:information-outline"
       },
-      "input_current": {
-        "default": "mdi:gauge"
-      },
       "input_current_status": {
         "default": "mdi:information-outline"
       },
