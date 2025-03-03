@@ -12,9 +12,9 @@ from elmax_api.model.panel import PanelEntry, PanelStatus
 import httpx
 import voluptuous as vol
 
-from homeassistant.components.zeroconf import ZeroconfServiceInfo
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .common import (
     build_direct_ssl_context,
@@ -151,7 +151,9 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
                     port=self._panel_direct_port,
                 )
             )
-            ssl_context = build_direct_ssl_context(cadata=self._panel_direct_ssl_cert)
+            ssl_context = await self.hass.async_add_executor_job(
+                build_direct_ssl_context, self._panel_direct_ssl_cert
+            )
 
         # Attempt the connection to make sure the pin works. Also, take the chance to retrieve the panel ID via APIs.
         client_api_url = get_direct_api_url(
@@ -496,7 +498,11 @@ class ElmaxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
         """Handle device found via zeroconf."""
-        host = discovery_info.host
+        host = (
+            f"[{discovery_info.ip_address}]"
+            if discovery_info.ip_address.version == 6
+            else str(discovery_info.ip_address)
+        )
         https_port = (
             int(discovery_info.port)
             if discovery_info.port is not None

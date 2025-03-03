@@ -8,6 +8,14 @@
         }
       }
     },
+    "button": {
+      "settings_save": {
+        "default": "mdi:content-save-cog"
+      },
+      "settings_reset": {
+        "default": "mdi:refresh"
+      }
+    },
     "number": {
       "setpoint_temperature": {
         "default": "mdi:thermometer"
@@ -94,6 +102,9 @@
       },
       "logo_duration": {
         "default": "mdi:clock-digital"
+      },
+      "usb_pd_mode": {
+        "default": "mdi:meter-electric-outline"
       }
     },
     "sensor": {
@@ -148,6 +159,41 @@
       },
       "estimated_power": {
         "default": "mdi:flash"
+      }
+    },
+    "switch": {
+      "animation_loop": {
+        "default": "mdi:play-box",
+        "state": {
+          "on": "mdi:animation-play"
+        }
+      },
+      "calibrate_cjc": {
+        "default": "mdi:tune-vertical"
+      },
+      "cooling_temp_blink": {
+        "default": "mdi:alarm-light-outline",
+        "state": {
+          "off": "mdi:alarm-light-off-outline"
+        }
+      },
+      "display_invert": {
+        "default": "mdi:invert-colors"
+      },
+      "invert_buttons": {
+        "default": "mdi:plus-minus-variant"
+      },
+      "idle_screen_details": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "off": "mdi:card-bulleted-off-outline"
+        }
+      },
+      "solder_screen_details": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "off": "mdi:card-bulleted-off-outline"
+        }
       }
     }
   }

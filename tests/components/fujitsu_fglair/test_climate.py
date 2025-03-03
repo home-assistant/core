@@ -1,7 +1,9 @@
 """Test for the climate entities of Fujitsu HVAC."""
 
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock
 
+import pytest
 from syrupy import SnapshotAssertion
 
 from homeassistant.components.climate import (
@@ -23,13 +25,19 @@ from homeassistant.components.fujitsu_fglair.climate import (
     HA_TO_FUJI_HVAC,
     HA_TO_FUJI_SWING,
 )
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import entity_id, setup_integration
+from . import entity_id
 
 from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[str]:
+    """Fixture to specify platforms to test."""
+    return [Platform.CLIMATE]
 
 
 async def test_entities(
@@ -38,9 +46,11 @@ async def test_entities(
     snapshot: SnapshotAssertion,
     mock_ayla_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test that coordinator returns the data we expect after the first refresh."""
-    await setup_integration(hass, mock_config_entry)
+    assert await integration_setup()
+
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
@@ -51,9 +61,10 @@ async def test_set_attributes(
     mock_ayla_api: AsyncMock,
     mock_devices: list[AsyncMock],
     mock_config_entry: MockConfigEntry,
+    integration_setup: Callable[[], Awaitable[bool]],
 ) -> None:
     """Test that setting the attributes calls the correct functions on the device."""
-    await setup_integration(hass, mock_config_entry)
+    assert await integration_setup()
 
     await hass.services.async_call(
         CLIMATE_DOMAIN,

@@ -16,16 +16,15 @@ from homeassistant.components.vacuum import (
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_platform
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import RoborockConfigEntry
 from .const import (
     DOMAIN,
     GET_MAPS_SERVICE_NAME,
     GET_VACUUM_CURRENT_POSITION_SERVICE_NAME,
     SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
 )
-from .coordinator import RoborockDataUpdateCoordinator
+from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
 from .entity import RoborockCoordinatedEntityV1
 from .image import ColorsPalette, ImageConfig, RoborockMapDataParser, Sizes
 
@@ -59,7 +58,7 @@ STATE_CODE_TO_STATE = {
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Roborock sensor."""
     async_add_entities(
@@ -88,8 +87,8 @@ async def async_setup_entry(
         SET_VACUUM_GOTO_POSITION_SERVICE_NAME,
         cv.make_entity_service_schema(
             {
-                vol.Required("x_coord"): vol.Coerce(int),
-                vol.Required("y_coord"): vol.Coerce(int),
+                vol.Required("x"): vol.Coerce(int),
+                vol.Required("y"): vol.Coerce(int),
             },
         ),
         RoborockVacuum.async_set_vacuum_goto_position.__name__,
@@ -185,9 +184,9 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
             [self._device_status.get_fan_speed_code(fan_speed)],
         )
 
-    async def async_set_vacuum_goto_position(self, x_coord: int, y_coord: int) -> None:
+    async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
         """Send vacuum to a specific target point."""
-        await self.send(RoborockCommand.APP_GOTO_TARGET, [x_coord, y_coord])
+        await self.send(RoborockCommand.APP_GOTO_TARGET, [x, y])
 
     async def async_send_command(
         self,

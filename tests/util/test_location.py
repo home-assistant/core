@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-import homeassistant.util.location as location_util
+from homeassistant.util import location as location_util
 
 from tests.common import load_fixture
 from tests.test_util.aiohttp import AiohttpClientMocker

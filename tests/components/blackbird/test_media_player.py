@@ -10,7 +10,6 @@ from homeassistant.components.blackbird.const import DOMAIN, SERVICE_SETALLZONES
 from homeassistant.components.blackbird.media_player import (
     DATA_BLACKBIRD,
     PLATFORM_SCHEMA,
-    setup_platform,
 )
 from homeassistant.components.media_player import (
     MediaPlayerEntity,
@@ -18,6 +17,9 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+
+from tests.common import MockEntityPlatform
 
 
 class AttrDict(dict):
@@ -181,21 +183,21 @@ async def setup_blackbird(hass: HomeAssistant, mock_blackbird: MockBlackbird) ->
         "homeassistant.components.blackbird.media_player.get_blackbird",
         return_value=mock_blackbird,
     ):
-        await hass.async_add_executor_job(
-            setup_platform,
+        await async_setup_component(
             hass,
+            "media_player",
             {
-                "platform": "blackbird",
-                "port": "/dev/ttyUSB0",
-                "zones": {3: {"name": "Zone name"}},
-                "sources": {
-                    1: {"name": "one"},
-                    3: {"name": "three"},
-                    2: {"name": "two"},
-                },
+                "media_player": {
+                    "platform": "blackbird",
+                    "port": "/dev/ttyUSB0",
+                    "zones": {3: {"name": "Zone name"}},
+                    "sources": {
+                        1: {"name": "one"},
+                        3: {"name": "three"},
+                        2: {"name": "two"},
+                    },
+                }
             },
-            lambda *args, **kwargs: None,
-            {},
         )
         await hass.async_block_till_done()
 
@@ -207,6 +209,7 @@ def media_player_entity(
     """Return the media player entity."""
     media_player = hass.data[DATA_BLACKBIRD]["/dev/ttyUSB0-3"]
     media_player.hass = hass
+    media_player.platform = MockEntityPlatform(hass)
     media_player.entity_id = "media_player.zone_3"
     return media_player
 
@@ -271,10 +274,6 @@ async def test_update(
     hass: HomeAssistant, media_player_entity: MediaPlayerEntity
 ) -> None:
     """Test updating values from blackbird."""
-    assert media_player_entity.state is None
-    assert media_player_entity.source is None
-
-    await hass.async_add_executor_job(media_player_entity.update)
 
     assert media_player_entity.state == STATE_ON
     assert media_player_entity.source == "one"
@@ -291,9 +290,6 @@ async def test_state(
     mock_blackbird: MockBlackbird,
 ) -> None:
     """Test state property."""
-    assert media_player_entity.state is None
-
-    await hass.async_add_executor_job(media_player_entity.update)
     assert media_player_entity.state == STATE_ON
 
     mock_blackbird.zones[3].power = False
@@ -315,8 +311,6 @@ async def test_source(
     hass: HomeAssistant, media_player_entity: MediaPlayerEntity
 ) -> None:
     """Test source property."""
-    assert media_player_entity.source is None
-    await hass.async_add_executor_job(media_player_entity.update)
     assert media_player_entity.source == "one"
 
 
@@ -324,8 +318,6 @@ async def test_media_title(
     hass: HomeAssistant, media_player_entity: MediaPlayerEntity
 ) -> None:
     """Test media title property."""
-    assert media_player_entity.media_title is None
-    await hass.async_add_executor_job(media_player_entity.update)
     assert media_player_entity.media_title == "one"
 
 

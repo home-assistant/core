@@ -13,7 +13,7 @@ from homeassistant.util.async_ import gather_with_limited_concurrency
 
 from .coordinator import TileConfigEntry, TileCoordinator
 
-PLATFORMS = [Platform.DEVICE_TRACKER]
+PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER]
 DEVICE_TYPES = ["PHONE", "TILE"]
 
 DEFAULT_INIT_TASK_LIMIT = 2

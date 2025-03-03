@@ -40,6 +40,15 @@ ENTITY_ID = "vacuum.roborock_s7_maxv"
 DEVICE_ID = "abc123"
 
 
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Fixture to set platforms used in the test."""
+    # Note: Currently the Image platform is required to make these tests pass since
+    # some initialization of the coordinator happens as a side effect of loading
+    # image platform. Fix that and remove IMAGE here.
+    return [Platform.VACUUM, Platform.IMAGE]
+
+
 async def test_registry_entries(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -197,7 +206,7 @@ async def test_goto(
     vacuum = hass.states.get(ENTITY_ID)
     assert vacuum
 
-    data = {ATTR_ENTITY_ID: ENTITY_ID, "x_coord": 25500, "y_coord": 25500}
+    data = {ATTR_ENTITY_ID: ENTITY_ID, "x": 25500, "y": 25500}
     with patch(
         "homeassistant.components.roborock.coordinator.RoborockLocalClientV1.send_command"
     ) as mock_send_command:

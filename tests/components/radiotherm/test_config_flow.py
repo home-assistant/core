@@ -6,11 +6,11 @@ from radiotherm import CommonThermostat
 from radiotherm.validate import RadiothermTstatError
 
 from homeassistant import config_entries
-from homeassistant.components import dhcp
 from homeassistant.components.radiotherm.const import DOMAIN
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from tests.common import MockConfigEntry
 
@@ -112,7 +112,7 @@ async def test_dhcp_can_confirm(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="radiotherm",
                 ip="1.2.3.4",
                 macaddress="aabbccddeeff",
@@ -156,7 +156,7 @@ async def test_dhcp_fails_to_connect(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="radiotherm",
                 ip="1.2.3.4",
                 macaddress="aabbccddeeff",
@@ -185,7 +185,7 @@ async def test_dhcp_already_exists(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_DHCP},
-            data=dhcp.DhcpServiceInfo(
+            data=DhcpServiceInfo(
                 hostname="radiotherm",
                 ip="1.2.3.4",
                 macaddress="aabbccddeeff",

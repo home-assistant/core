@@ -35,8 +35,8 @@ from homeassistant.helpers.event import (
     async_track_state_change_event,
 )
 from homeassistant.helpers.json import json_bytes
+from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
-import homeassistant.util.dt as dt_util
 
 from .const import EVENT_COALESCE_TIME, MAX_PENDING_HISTORY_STATES
 from .helpers import entities_may_have_state_changes_after, has_states_before
@@ -146,10 +146,12 @@ async def ws_get_history_during_period(
         # end_time. If it's false, we know there are no states in the
         # database up until end_time.
         (end_time and not has_states_before(hass, end_time))
-        or not include_start_time_state
-        and entity_ids
-        and not entities_may_have_state_changes_after(
-            hass, entity_ids, start_time, no_attributes
+        or (
+            not include_start_time_state
+            and entity_ids
+            and not entities_may_have_state_changes_after(
+                hass, entity_ids, start_time, no_attributes
+            )
         )
     ):
         connection.send_result(msg["id"], {})
