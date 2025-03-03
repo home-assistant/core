@@ -72,8 +72,8 @@
           "preset_mode": {
             "state": {
               "auto": "Auto",
-              "comfort-1": "Comfort 1",
-              "comfort-2": "Comfort 2",
+              "comfort-1": "Comfort -1",
+              "comfort-2": "Comfort -2",
               "drying": "Drying",
               "external": "External",
               "freeze": "Freeze",
