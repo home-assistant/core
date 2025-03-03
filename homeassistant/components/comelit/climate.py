@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Any, cast
+from typing import Any, TypedDict, cast
 
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE
@@ -43,22 +43,23 @@ class ClimaComelitCommand(StrEnum):
     AUTO = "auto"
 
 
-API_STATUS: dict[str, dict[str, Any]] = {
-    ClimaComelitMode.OFF: {
-        "action": "off",
-        "hvac_mode": HVACMode.OFF,
-        "hvac_action": HVACAction.OFF,
-    },
-    ClimaComelitMode.LOWER: {
-        "action": "lower",
-        "hvac_mode": HVACMode.COOL,
-        "hvac_action": HVACAction.COOLING,
-    },
-    ClimaComelitMode.UPPER: {
-        "action": "upper",
-        "hvac_mode": HVACMode.HEAT,
-        "hvac_action": HVACAction.HEATING,
-    },
+class ClimaComelitApiStatus(TypedDict):
+    """Comelit Clima API status."""
+
+    hvac_mode: HVACMode
+    hvac_action: HVACAction
+
+
+API_STATUS: dict[str, ClimaComelitApiStatus] = {
+    ClimaComelitMode.OFF: ClimaComelitApiStatus(
+        hvac_mode=HVACMode.OFF, hvac_action=HVACAction.OFF
+    ),
+    ClimaComelitMode.LOWER: ClimaComelitApiStatus(
+        hvac_mode=HVACMode.COOL, hvac_action=HVACAction.COOLING
+    ),
+    ClimaComelitMode.UPPER: ClimaComelitApiStatus(
+        hvac_mode=HVACMode.HEAT, hvac_action=HVACAction.HEATING
+    ),
 }
 
 MODE_TO_ACTION: dict[HVACMode, ClimaComelitCommand] = {
@@ -139,7 +140,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         if not _active:
             self._attr_hvac_action = HVACAction.IDLE
         if _mode in API_STATUS:
-            self._attr_hvac_action = cast(HVACAction, API_STATUS[_mode]["hvac_action"])
+            self._attr_hvac_action = API_STATUS[_mode]["hvac_action"]
 
         self._attr_hvac_mode = None
         if _mode == ClimaComelitMode.OFF:
@@ -147,7 +148,7 @@ class ComelitClimateEntity(CoordinatorEntity[ComelitSerialBridge], ClimateEntity
         if _automatic:
             self._attr_hvac_mode = HVACMode.AUTO
         if _mode in API_STATUS:
-            self._attr_hvac_mode = cast(HVACMode, API_STATUS[_mode]["hvac_mode"])
+            self._attr_hvac_mode = API_STATUS[_mode]["hvac_mode"]
 
         self._attr_target_temperature = values[4] / 10
 
