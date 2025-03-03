@@ -3471,3 +3471,37 @@ async def test_manager_blocked_until_home_assistant_started(
     await hass.async_block_till_done()
     assert manager.state == BackupManagerState.IDLE
     assert manager.last_non_idle_event is None
+
+
+async def test_manager_not_blocked_after_restore(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test restore backup progress after restart."""
+    restore_result = {"error": None, "error_type": None, "success": True}
+
+    hass.set_state(CoreState.not_running)
+    with patch(
+        "pathlib.Path.read_bytes", return_value=json.dumps(restore_result).encode()
+    ):
+        await setup_backup_integration(hass)
+
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id({"type": "backup/info"})
+    result = await ws_client.receive_json()
+    assert result["success"] is True
+    assert result["result"] == {
+        "agent_errors": {},
+        "backups": [],
+        "last_attempted_automatic_backup": None,
+        "last_completed_automatic_backup": None,
+        "last_non_idle_event": {
+            "manager_state": "restore_backup",
+            "reason": None,
+            "stage": None,
+            "state": "completed",
+        },
+        "next_automatic_backup": None,
+        "next_automatic_backup_additional": False,
+        "state": "idle",
+    }
