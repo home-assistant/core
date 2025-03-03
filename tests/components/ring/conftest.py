@@ -1,7 +1,6 @@
 """Configuration for Ring tests."""
 
 from collections.abc import Generator
-from itertools import chain
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
@@ -56,48 +55,81 @@ def mock_ring_devices():
     """Mock Ring devices."""
 
     devices = get_mock_devices()
-    device_list = list(chain.from_iterable(devices.values()))
-
-    def filter_devices(device_api_ai: int, device_family: set | None = None):
-        return next(
-            iter(
-                [
-                    device
-                    for device in device_list
-                    if device.id == device_api_ai
-                    and (not device_family or device.family in device_family)
-                ]
-            )
-        )
 
     class FakeRingDevices:
         """Class fakes the RingDevices class."""
 
-        all_devices = device_list
-        video_devices = (
-            devices["stickup_cams"]
-            + devices["doorbots"]
-            + devices["authorized_doorbots"]
-        )
-        stickup_cams = devices["stickup_cams"]
-        other = devices["other"]
-        chimes = devices["chimes"]
+        def __init__(self, devices) -> None:
+            self._devices = devices
+            self._hidden = set()
+            self._single_family = None
+
+        def _hide_device(self, id):
+            self._hidden.add(id)
+
+        def _unhide_device(self, id):
+            self._hidden.remove(id)
+
+        def _filter_devices(self, device_api_ai: int, device_family: set | None = None):
+            return next(
+                iter(
+                    [
+                        device
+                        for device in self.all_devices
+                        if device.id == device_api_ai
+                        and (not device_family or device.family in device_family)
+                    ]
+                ),
+                None,
+            )
+
+        @property
+        def all_devices(self):
+            return [
+                device
+                for devices in self._devices.values()
+                for device in devices
+                if device.device_api_id not in self._hidden
+                and (
+                    self._single_family is None or device.family == self._single_family
+                )
+            ]
+
+        @property
+        def video_devices(self):
+            return (
+                self._devices["stickup_cams"]
+                + self._devices["doorbots"]
+                + self._devices["authorized_doorbots"]
+            )
+
+        @property
+        def stickup_cams(self):
+            return self._devices["stickup_cams"]
+
+        @property
+        def other(self):
+            return self._devices["other"]
+
+        @property
+        def chimes(self):
+            return self._devices["chimes"]
 
         def get_device(self, id):
-            return filter_devices(id)
+            return self._filter_devices(id)
 
         def get_video_device(self, id):
-            return filter_devices(
+            return self._filter_devices(
                 id, {"stickup_cams", "doorbots", "authorized_doorbots"}
             )
 
         def get_stickup_cam(self, id):
-            return filter_devices(id, {"stickup_cams"})
+            return self._filter_devices(id, {"stickup_cams"})
 
         def get_other(self, id):
-            return filter_devices(id, {"other"})
+            return self._filter_devices(id, {"other"})
 
-    return FakeRingDevices()
+    return FakeRingDevices(devices)
 
 
 @pytest.fixture

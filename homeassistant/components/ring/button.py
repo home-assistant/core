@@ -2,22 +2,45 @@
 
 from __future__ import annotations
 
-from ring_doorbell import RingOther
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+from typing import Any
 
-from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
+from ring_doorbell import RingCapability, RingOther
+
+from homeassistant.components.button import (
+    DOMAIN as BUTTON_DOMAIN,
+    ButtonEntity,
+    ButtonEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import RingConfigEntry
 from .coordinator import RingDataCoordinator
-from .entity import RingEntity, exception_wrap
+from .entity import RingDeviceT, RingEntity, RingEntityDescription, exception_wrap
 
 # Coordinator is used to centralize the data updates
 # Actions restricted to 1 at a time
 PARALLEL_UPDATES = 1
 
-BUTTON_DESCRIPTION = ButtonEntityDescription(
-    key="open_door", translation_key="open_door"
+
+@dataclass(frozen=True, kw_only=True)
+class RingButtonEntityDescription(
+    ButtonEntityDescription, RingEntityDescription[RingDeviceT]
+):
+    """Describes a Ring button entity."""
+
+    press_fn: Callable[[RingDeviceT], Awaitable[Any]]
+
+
+BUTTON_DESCRIPTIONS: tuple[RingButtonEntityDescription[Any], ...] = (
+    RingButtonEntityDescription[RingOther](
+        key="open_door",
+        translation_key="open_door",
+        exists_fn=lambda device: device.has_capability(RingCapability.OPEN),
+        press_fn=lambda device: device.async_open_door(),
+    ),
 )
 
 
@@ -30,31 +53,37 @@ async def async_setup_entry(
     ring_data = entry.runtime_data
     devices_coordinator = ring_data.devices_coordinator
 
-    async_add_entities(
-        RingDoorButton(device, devices_coordinator, BUTTON_DESCRIPTION)
-        for device in ring_data.devices.other
-        if device.has_capability("open")
+    RingButton.process_devices(
+        hass,
+        lambda device, description: RingButton(
+            device, devices_coordinator, description
+        ),
+        devices_coordinator,
+        async_add_entities=async_add_entities,
+        domain=BUTTON_DOMAIN,
+        descriptions=BUTTON_DESCRIPTIONS,
     )
 
 
-class RingDoorButton(RingEntity[RingOther], ButtonEntity):
-    """Creates a button to open the ring intercom door."""
+class RingButton(RingEntity[RingDeviceT], ButtonEntity):
+    """Creates a button entity."""
+
+    entity_description: RingButtonEntityDescription[RingDeviceT]
 
     def __init__(
         self,
-        device: RingOther,
+        device: RingDeviceT,
         coordinator: RingDataCoordinator,
-        description: ButtonEntityDescription,
+        description: RingButtonEntityDescription[RingDeviceT],
     ) -> None:
         """Initialize the button."""
         super().__init__(
             device,
             coordinator,
+            description,
         )
-        self.entity_description = description
-        self._attr_unique_id = f"{device.id}-{description.key}"
 
     @exception_wrap
     async def async_press(self) -> None:
-        """Open the door."""
-        await self._device.async_open_door()
+        """Press the button."""
+        await self.entity_description.press_fn(self._device)
