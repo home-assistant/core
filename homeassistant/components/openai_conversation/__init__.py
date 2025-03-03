@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+from pathlib import Path
 
 import openai
 from openai.types.chat.chat_completion import ChatCompletion
@@ -39,7 +40,14 @@ from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_CHAT_MODEL, DOMAIN, LOGGER, RECOMMENDED_CHAT_MODEL
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_FILENAMES,
+    CONF_PROMPT,
+    DOMAIN,
+    LOGGER,
+    RECOMMENDED_CHAT_MODEL,
+)
 
 SERVICE_GENERATE_IMAGE = "generate_image"
 SERVICE_GENERATE_CONTENT = "generate_content"
@@ -76,7 +84,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         try:
             response: ImagesResponse = await client.images.generate(
                 model="dall-e-3",
-                prompt=call.data["prompt"],
+                prompt=call.data[CONF_PROMPT],
                 size=call.data["size"],
                 quality=call.data["quality"],
                 style=call.data["style"],
@@ -100,35 +108,49 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 translation_placeholders={"config_entry": entry_id},
             )
 
+        model: str = entry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
+
+        prompt_parts: list[ChatCompletionContentPartParam] = [
+            ChatCompletionContentPartTextParam(
+                type="text",
+                text=call.data[CONF_PROMPT],
+            )
+        ]
+
         client: openai.AsyncClient = entry.runtime_data
 
-        try:
-            model: str = entry.data.get(CONF_CHAT_MODEL, RECOMMENDED_CHAT_MODEL)
-            content: list[ChatCompletionContentPartParam] = [
-                ChatCompletionContentPartTextParam(
-                    type="text",
-                    text=call.data["prompt"],
-                )
-            ]
-
-            if "image_filename" in call.data:
-                for file_path in call.data["image_filename"]:
-                    base64_image: str = encode_image(file_path)
-                    image_content = ChatCompletionContentPartImageParam(
-                        type="image_url",
-                        image_url=ImageURL(
-                            url=f"data:image/jpeg;base64,{base64_image}"
-                        ),
+        def append_files_to_prompt() -> None:
+            if CONF_FILENAMES in call.data:
+                for filename in call.data[CONF_FILENAMES]:
+                    if not hass.config.is_allowed_path(filename):
+                        raise HomeAssistantError(
+                            f"Cannot read `{filename}`, no access to path; "
+                            "`allowlist_external_dirs` may need to be adjusted in "
+                            "`configuration.yaml`"
+                        )
+                    if not Path(filename).exists():
+                        raise HomeAssistantError(f"`{filename}` does not exist")
+                    base64_image: str = encode_image(filename)
+                    image_content: ChatCompletionContentPartImageParam = (
+                        ChatCompletionContentPartImageParam(
+                            type="image_url",
+                            image_url=ImageURL(
+                                url=f"data:image/jpeg;base64,{base64_image}"
+                            ),
+                        )
                     )
-                    content.append(image_content)
+                    prompt_parts.append(image_content)
 
-            messages: list[ChatCompletionUserMessageParam] = [
-                ChatCompletionUserMessageParam(
-                    role="user",
-                    content=content,
-                )
-            ]
+        await hass.async_add_executor_job(append_files_to_prompt)
 
+        messages: list[ChatCompletionUserMessageParam] = [
+            ChatCompletionUserMessageParam(
+                role="user",
+                content=prompt_parts,
+            )
+        ]
+
+        try:
             response: ChatCompletion = await client.chat.completions.create(
                 model=model,
                 messages=messages,
@@ -159,8 +181,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         "integration": DOMAIN,
                     }
                 ),
-                vol.Required("prompt"): cv.string,
-                vol.Optional("image_filename", default=[]): vol.All(
+                vol.Required(CONF_PROMPT): cv.string,
+                vol.Optional(CONF_FILENAMES, default=[]): vol.All(
                     cv.ensure_list, [cv.string]
                 ),
             }
@@ -179,7 +201,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                         "integration": DOMAIN,
                     }
                 ),
-                vol.Required("prompt"): cv.string,
+                vol.Required(CONF_PROMPT): cv.string,
                 vol.Optional("size", default="1024x1024"): vol.In(
                     ("1024x1024", "1024x1792", "1792x1024")
                 ),

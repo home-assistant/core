@@ -85,9 +85,9 @@
           "name": "Prompt",
           "description": "The prompt to send"
         },
-        "image_filename": {
+        "filenames": {
           "name": "Files",
-          "description": "List of image files to upload"
+          "description": "List of files to upload"
         }
       }
     }

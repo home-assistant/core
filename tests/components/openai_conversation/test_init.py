@@ -15,6 +15,7 @@ from openai.types.image import Image
 from openai.types.images_response import ImagesResponse
 import pytest
 
+from homeassistant.components.openai_conversation import CONF_FILENAMES
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -137,6 +138,37 @@ async def test_generate_image_service_error(
         )
 
 
+@pytest.mark.usefixtures("mock_init_component")
+async def test_generate_content_service_with_image_not_allowed_path(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test generate content service with an image in a not allowed path."""
+    with (
+        patch("pathlib.Path.exists", return_value=True),
+        patch.object(hass.config, "is_allowed_path", return_value=False),
+        pytest.raises(
+            HomeAssistantError,
+            match=(
+                "Cannot read `doorbell_snapshot.jpg`, no access to path; "
+                "`allowlist_external_dirs` may need to be adjusted in "
+                "`configuration.yaml`"
+            ),
+        ),
+    ):
+        await hass.services.async_call(
+            "openai_conversation",
+            "generate_content",
+            {
+                "config_entry": mock_config_entry.entry_id,
+                "prompt": "Describe this image from my doorbell camera",
+                "filenames": "doorbell_snapshot.jpg",
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
 @pytest.mark.parametrize(
     ("service_name", "error"),
     [
@@ -169,18 +201,29 @@ async def test_invalid_config_entry(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (APIConnectionError(request=None), "Connection error"),
+        (
+            APIConnectionError(request=Request(method="GET", url="test")),
+            "Connection error",
+        ),
         (
             AuthenticationError(
-                response=Response(status_code=None, request=""), body=None, message=None
+                response=Response(
+                    status_code=500, request=Request(method="GET", url="test")
+                ),
+                body=None,
+                message="",
             ),
             "Invalid API key",
         ),
         (
             BadRequestError(
-                response=Response(status_code=None, request=""), body=None, message=None
+                response=Response(
+                    status_code=500, request=Request(method="GET", url="test")
+                ),
+                body=None,
+                message="",
             ),
-            "openai_conversation integration not ready yet: None",
+            "openai_conversation integration not ready yet",
         ),
     ],
 )
@@ -205,7 +248,7 @@ async def test_init_error(
     ("service_data", "expected_args", "number_of_files"),
     [
         (
-            {"prompt": "Picture of a dog", "image_filename": []},
+            {"prompt": "Picture of a dog", "filenames": []},
             {
                 "messages": [
                     {
@@ -221,7 +264,7 @@ async def test_init_error(
             0,
         ),
         (
-            {"prompt": "Picture of a dog", "image_filename": ["/a/b/c.jpg"]},
+            {"prompt": "Picture of a dog", "filenames": ["/a/b/c.jpg"]},
             {
                 "messages": [
                     {
@@ -245,7 +288,7 @@ async def test_init_error(
         (
             {
                 "prompt": "Picture of a dog",
-                "image_filename": ["/a/b/c.jpg", "d/e/f.jpg"],
+                "filenames": ["/a/b/c.jpg", "d/e/f.jpg"],
             },
             {
                 "messages": [
@@ -299,6 +342,8 @@ async def test_generate_content_service(
             "base64.b64encode", side_effect=[b"BASE64IMAGE1", b"BASE64IMAGE2"]
         ) as mock_b64encode,
         patch("builtins.open", mock_open(read_data="ABC")) as mock_file,
+        patch("pathlib.Path.exists", return_value=True),
+        patch.object(hass.config, "is_allowed_path", return_value=True),
     ):
         mock_create.return_value = ChatCompletion(
             id="",
@@ -328,7 +373,7 @@ async def test_generate_content_service(
         assert len(mock_create.mock_calls) == 1
         assert mock_create.mock_calls[0][2] == expected_args
         assert mock_b64encode.call_count == number_of_files
-        for idx, file in enumerate(service_data["image_filename"]):
+        for idx, file in enumerate(service_data[CONF_FILENAMES]):
             assert mock_file.call_args_list[idx][0][0] == file
 
 

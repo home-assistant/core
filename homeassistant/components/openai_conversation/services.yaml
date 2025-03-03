@@ -51,7 +51,7 @@ generate_content:
         text:
           multiline: true
       example: "Hello, how can I help you?"
-    image_filename:
+    filenames:
       selector:
         text:
           multiline: true
