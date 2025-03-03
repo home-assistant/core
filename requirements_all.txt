@@ -1724,9 +1724,6 @@ py-aosmith==1.0.12
 # homeassistant.components.canary
 py-canary==0.5.4
 
-# homeassistant.components.ccm15
-py_ccm15==0.1.1
-
 # homeassistant.components.cpuspeed
 py-cpuinfo==9.0.0
 
@@ -1795,6 +1792,9 @@ pyW215==0.7.0
 
 # homeassistant.components.w800rf32
 pyW800rf32==0.4
+
+# homeassistant.components.ccm15
+py_ccm15==0.1.1
 
 # homeassistant.components.ads
 pyads==3.4.0
