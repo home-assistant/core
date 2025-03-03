@@ -118,6 +118,15 @@ MOCK_SUBENTRY_LIGHT_COMPONENT = {
     },
 }
 
+MOCK_SUBENTRY_AVAILABILITY_DATA = {
+    "availability": {
+        "availability_topic": "test/availability",
+        "availability_template": "{{ value_json.availability }}",
+        "payload_available": "online",
+        "payload_not_available": "offline",
+    }
+}
+
 MOCK_SUBENTRY_LIGHT_BAD_SCHEMA = {
     "light_bla0ab": {
         "platform": "light",
@@ -138,7 +147,7 @@ MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
         "configuration_url": "https://example.com",
     },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
-}
+} | MOCK_SUBENTRY_AVAILABILITY_DATA
 
 MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
     "device": {
@@ -176,7 +185,7 @@ MOCK_SUBENTRY_DATA_SET_MIX = {
     | MOCK_SUBENTRY_NOTIFY_COMPONENT2
     | MOCK_SUBENTRY_SENSOR_COMPONENT
     | MOCK_SUBENTRY_LIGHT_COMPONENT,
-}
+} | MOCK_SUBENTRY_AVAILABILITY_DATA
 
 MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
     "device": {
