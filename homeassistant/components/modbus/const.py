@@ -16,6 +16,7 @@ from homeassistant.const import (
 CONF_BAUDRATE = "baudrate"
 CONF_BYTESIZE = "bytesize"
 CONF_CLIMATES = "climates"
+CONF_COLOR_TEMP_KELVIN = "color_temp_kelvin"
 CONF_DATA_TYPE = "data_type"
 CONF_DEVICE_ADDRESS = "device_address"
 CONF_FANS = "fans"
@@ -157,3 +158,12 @@ PLATFORMS = (
     (Platform.SENSOR, CONF_SENSORS),
     (Platform.SWITCH, CONF_SWITCHES),
 )
+
+# Default values for light
+DEFAULT_MIN_KELVIN = 2000
+DEFAULT_MAX_KELVIN = 7000
+DEFAULT_BRIGHTNESS = 255
+MIN_BRIGHTNESS = 0
+MAX_BRIGHTNESS = 255
+MODBUS_MIN = 0
+MODBUS_MAX = 100

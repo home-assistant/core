@@ -46,6 +46,8 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     SERVICE_RELOAD,
+    CONF_BRIGHTNESS,
+    CONF_COLOR_TEMP
 )
 from homeassistant.core import Event, HomeAssistant, ServiceCall
 from homeassistant.helpers import config_validation as cv
@@ -226,6 +228,10 @@ BASE_SWITCH_SCHEMA = BASE_COMPONENT_SCHEMA.extend(
         ),
         vol.Optional(CONF_COMMAND_OFF, default=0x00): cv.positive_int,
         vol.Optional(CONF_COMMAND_ON, default=0x01): cv.positive_int,
+        vol.Optional(CONF_BRIGHTNESS): cv.positive_int,
+        vol.Optional(CONF_COLOR_TEMP): cv.positive_int,
+        vol.Optional(CONF_MIN_TEMP): cv.positive_int,
+        vol.Optional(CONF_MAX_TEMP): cv.positive_int,
         vol.Optional(CONF_VERIFY): vol.Maybe(
             {
                 vol.Optional(CONF_ADDRESS): cv.positive_int,
