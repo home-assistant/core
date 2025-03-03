@@ -167,4 +167,4 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
         if (status := self._zone_object.human_status) == AlarmZoneState.UNKNOWN:
             return None
 
-        return cast(StateType, status.value)
+        return cast(str, status.value)
