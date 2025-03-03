@@ -117,6 +117,7 @@ class BackupManagerState(StrEnum):
 
     IDLE = "idle"
     CREATE_BACKUP = "create_backup"
+    DISABLED = "disabled"
     RECEIVE_BACKUP = "receive_backup"
     RESTORE_BACKUP = "restore_backup"
 
@@ -223,6 +224,13 @@ class RestoreBackupEvent(ManagerStateEvent):
     reason: str | None
     stage: RestoreBackupStage | None
     state: RestoreBackupState
+
+
+@dataclass(frozen=True, kw_only=True, slots=True)
+class DisabledEvent(ManagerStateEvent):
+    """Backup manager disabled, Home Assistant is starting."""
+
+    manager_state: BackupManagerState = BackupManagerState.DISABLED
 
 
 class BackupPlatformProtocol(Protocol):
@@ -333,7 +341,7 @@ class BackupManager:
         self.remove_next_delete_event: Callable[[], None] | None = None
 
         # Latest backup event and backup event subscribers
-        self.last_event: ManagerStateEvent = IdleEvent()
+        self.last_event: ManagerStateEvent = DisabledEvent()
         self.last_non_idle_event: ManagerStateEvent | None = None
         self._backup_event_subscriptions = hass.data[
             DATA_BACKUP
@@ -347,9 +355,15 @@ class BackupManager:
             self.known_backups.load(stored["backups"])
 
         await self._reader_writer.async_validate_config(config=self.config)
-        await self._reader_writer.async_resume_restore_progress_after_restart(
-            on_progress=self.async_on_backup_event
-        )
+
+        async def set_manager_idle_after_start(hass: HomeAssistant) -> None:
+            """Set manager to idle after start."""
+            self.async_on_backup_event(IdleEvent())
+            await self._reader_writer.async_resume_restore_progress_after_restart(
+                on_progress=self.async_on_backup_event
+            )
+
+        start.async_at_started(self.hass, set_manager_idle_after_start)
 
         await self.load_platforms()
 
