@@ -17,6 +17,7 @@ from homeassistant.components.homeassistant_hardware.coordinator import (
 )
 from homeassistant.components.homeassistant_hardware.helpers import (
     async_notify_firmware_info,
+    async_register_firmware_info_provider,
 )
 from homeassistant.components.homeassistant_hardware.update import (
     BaseFirmwareUpdateEntity,
@@ -274,9 +275,9 @@ async def test_update_entity_installation(
     assert await hass.config_entries.async_setup(update_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Set up ZHA
-    zha_config_entry = MockConfigEntry(
-        domain="zha",
+    # Set up another integration communicating with the device
+    owning_config_entry = MockConfigEntry(
+        domain="another_integration",
         data={
             "device": {
                 "path": TEST_DEVICE,
@@ -287,20 +288,26 @@ async def test_update_entity_installation(
         },
         version=4,
     )
-    zha_config_entry.add_to_hass(hass)
-    zha_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    owning_config_entry.add_to_hass(hass)
+    owning_config_entry.mock_state(hass, ConfigEntryState.LOADED)
 
-    # Pretend ZHA loaded and notified hardware of the running firmware
+    # The integration provides firmware info
+    mock_hw_module = Mock()
+    mock_hw_module.get_firmware_info = lambda hass, config_entry: FirmwareInfo(
+        device=TEST_DEVICE,
+        firmware_type=ApplicationType.EZSP,
+        firmware_version="7.3.1.0 build 0",
+        owners=[OwningIntegration(config_entry_id=config_entry.entry_id)],
+        source="another_integration",
+    )
+
+    async_register_firmware_info_provider(hass, "another_integration", mock_hw_module)
+
+    # Pretend the other integration loaded and notified hardware of the running firmware
     await async_notify_firmware_info(
         hass,
-        "zha",
-        FirmwareInfo(
-            device=TEST_DEVICE,
-            firmware_type=ApplicationType.EZSP,
-            firmware_version="7.3.1.0 build 0",
-            owners=[OwningIntegration(config_entry_id=zha_config_entry.entry_id)],
-            source="zha",
-        ),
+        "another_integration",
+        mock_hw_module.get_firmware_info(hass, owning_config_entry),
     )
 
     state_before_update = hass.states.get(TEST_UPDATE_ENTITY_ID)
@@ -341,7 +348,7 @@ async def test_update_entity_installation(
 
     mock_flasher.flash_firmware = mock_flash_firmware
 
-    # When we install it, ZHA is reloaded
+    # When we install it, the other integration is reloaded
     with (
         patch(
             "homeassistant.components.homeassistant_hardware.update.parse_firmware_image",
@@ -361,6 +368,9 @@ async def test_update_entity_installation(
                 source="probe",
             ),
         ),
+        patch.object(
+            owning_config_entry, "async_unload", wraps=owning_config_entry.async_unload
+        ) as owning_config_entry_unload,
     ):
         await hass.services.async_call(
             "update",
@@ -368,6 +378,9 @@ async def test_update_entity_installation(
             {"entity_id": TEST_UPDATE_ENTITY_ID},
             blocking=True,
         )
+
+    # The owning integration was unloaded and is again running
+    assert len(owning_config_entry_unload.mock_calls) == 1
 
     # After the firmware update, the entity has the new version and the correct state
     state_after_install = hass.states.get(TEST_UPDATE_ENTITY_ID)
