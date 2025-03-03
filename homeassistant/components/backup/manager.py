@@ -27,7 +27,7 @@ from homeassistant.backup_restore import (
     password_to_key,
 )
 from homeassistant.const import __version__ as HAVERSION
-from homeassistant.core import CoreState, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     instance_id,
     integration_platform,
@@ -976,8 +976,6 @@ class BackupManager:
         with_automatic_settings: bool = False,
     ) -> NewBackup:
         """Initiate generating a backup."""
-        if self.hass.state is not CoreState.running:
-            raise BackupManagerError("Home Assistant is not running")
         if self.state is not BackupManagerState.IDLE:
             raise BackupManagerError(f"Backup manager busy: {self.state}")
 
@@ -993,7 +991,7 @@ class BackupManager:
             )
         )
         try:
-            return await self._async_initiate_backup(
+            return await self._async_create_backup(
                 agent_ids=agent_ids,
                 extra_metadata=extra_metadata,
                 include_addons=include_addons,
@@ -1020,7 +1018,7 @@ class BackupManager:
                 self._update_issue_backup_failed()
             raise
 
-    async def _async_initiate_backup(
+    async def _async_create_backup(
         self,
         *,
         agent_ids: list[str],
