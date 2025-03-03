@@ -43,6 +43,7 @@ async def test_form_with_valid_connection(
         "port": 14999,
         "mac": "00:00:00:00:00:01",
         "model": "MRX 520",
+        "volume_step": 0.01,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
