@@ -71,7 +71,7 @@ class FirmwareUpdateExtraStoredData(ExtraStoredData):
     def from_dict(cls, data: dict[str, Any]) -> FirmwareUpdateExtraStoredData:
         """Initialize the extra data from a dict."""
         if data["firmware_manifest"] is None:
-            return cls()
+            return cls(firmware_manifest=None)
 
         return cls(
             FirmwareManifest.from_json(

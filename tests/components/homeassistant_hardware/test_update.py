@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncGenerator
+import dataclasses
 from unittest.mock import AsyncMock, Mock, patch
 
 import aiohttp
 from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
+import pytest
 from yarl import URL
 
 from homeassistant.components.homeassistant_hardware.coordinator import (
@@ -18,6 +21,7 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.update import (
     BaseFirmwareUpdateEntity,
     FirmwareUpdateEntityDescription,
+    FirmwareUpdateExtraStoredData,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -27,7 +31,7 @@ from homeassistant.components.homeassistant_hardware.util import (
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigFlow
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -41,12 +45,35 @@ from tests.common import (
     mock_config_flow,
     mock_integration,
     mock_platform,
+    mock_restore_cache_with_extra_data,
 )
 
 TEST_DOMAIN = "test"
 TEST_DEVICE = "/dev/serial/by-id/some-unique-serial-device-12345"
 TEST_FIRMWARE_RELEASES_URL = "https://example.org/firmware"
-TEST_UPDATE_ENTITY_ID = "update.test_test_firmware"
+TEST_UPDATE_ENTITY_ID = "update.test_firmware"
+TEST_MANIFEST = FirmwareManifest(
+    url=URL("https://example.org/firmware"),
+    html_url=URL("https://example.org/release_notes"),
+    created_at=dt_util.utcnow(),
+    firmwares=(
+        FirmwareMetadata(
+            filename="skyconnect_zigbee_ncp_test.gbl",
+            checksum="aaa",
+            size=123,
+            release_notes="Some release notes go here",
+            metadata={
+                "baudrate": 115200,
+                "ezsp_version": "7.4.4.0",
+                "fw_type": "zigbee_ncp",
+                "fw_variant": None,
+                "metadata_version": 2,
+                "sdk_version": "4.4.4",
+            },
+            url=URL("https://example.org/firmwares/skyconnect_zigbee_ncp_test.gbl"),
+        ),
+    ),
+)
 
 
 TEST_FIRMWARE_ENTITY_DESCRIPTIONS: dict[
@@ -154,7 +181,7 @@ async def mock_async_setup_update_entities(
 
 
 class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
-    """SkyConnect firmware update entity."""
+    """Mock SkyConnect firmware update entity."""
 
     bootloader_reset_type = None
 
@@ -165,9 +192,19 @@ class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         update_coordinator: FirmwareUpdateCoordinator,
         entity_description: FirmwareUpdateEntityDescription,
     ) -> None:
-        """Initialize the SkyConnect firmware update entity."""
+        """Initialize the mock SkyConnect firmware update entity."""
         super().__init__(device, config_entry, update_coordinator, entity_description)
-        self._attr_unique_id = f"test_{self.entity_description.key}"
+        self._attr_unique_id = self.entity_description.key
+
+        # Use the cached firmware info if it exists
+        if self._config_entry.data["firmware"] is not None:
+            self._current_firmware_info = FirmwareInfo(
+                device=device,
+                firmware_type=ApplicationType(self._config_entry.data["firmware"]),
+                firmware_version=self._config_entry.data["firmware_version"],
+                owners=[],
+                source=TEST_DOMAIN,
+            )
 
     @callback
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
@@ -184,37 +221,11 @@ class MockFirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         )
 
 
-@patch(
-    "homeassistant.components.homeassistant_hardware.coordinator.FirmwareUpdateClient",
-    autospec=True,
-)
-async def test_update_entity_installation(
-    mock_update_client: Mock, hass: HomeAssistant
-) -> None:
-    """Test the Hardware firmware update entity installation."""
-    mock_update_client.return_value.async_update_data.return_value = FirmwareManifest(
-        url=URL("https://example.org/firmware"),
-        html_url=URL("https://example.org/release_notes"),
-        created_at=dt_util.utcnow(),
-        firmwares=(
-            FirmwareMetadata(
-                filename="skyconnect_zigbee_ncp_test.gbl",
-                checksum="aaa",
-                size=123,
-                release_notes="Some release notes go here",
-                metadata={
-                    "baudrate": 115200,
-                    "ezsp_version": "7.4.4.0",
-                    "fw_type": "zigbee_ncp",
-                    "fw_variant": None,
-                    "metadata_version": 2,
-                    "sdk_version": "4.4.4",
-                },
-                url=URL("https://example.org/firmwares/skyconnect_zigbee_ncp_test.gbl"),
-            ),
-        ),
-    )
-
+@pytest.fixture(name="update_config_entry")
+async def mock_update_config_entry(
+    hass: HomeAssistant,
+) -> AsyncGenerator[ConfigEntry]:
+    """Set up a mock Home Assistant Hardware firmware update entity."""
     await async_setup_component(hass, "homeassistant", {})
     await async_setup_component(hass, "homeassistant_hardware", {})
 
@@ -244,11 +255,26 @@ async def test_update_entity_installation(
     )
     config_entry.add_to_hass(hass)
 
-    with mock_config_flow(TEST_DOMAIN, ConfigFlow):
-        assert await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
+    with (
+        patch(
+            "homeassistant.components.homeassistant_hardware.coordinator.FirmwareUpdateClient",
+            autospec=True,
+        ) as mock_update_client,
+        mock_config_flow(TEST_DOMAIN, ConfigFlow),
+    ):
+        mock_update_client.return_value.async_update_data.return_value = TEST_MANIFEST
+        yield config_entry
 
-    # And also ZHA
+
+async def test_update_entity_installation(
+    hass: HomeAssistant, update_config_entry: ConfigEntry
+) -> None:
+    """Test the Hardware firmware update entity installation."""
+
+    assert await hass.config_entries.async_setup(update_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Set up ZHA
     zha_config_entry = MockConfigEntry(
         domain="zha",
         data={
@@ -349,3 +375,64 @@ async def test_update_entity_installation(
     assert state_after_install.attributes["title"] == "EmberZNet"
     assert state_after_install.attributes["installed_version"] == "7.4.4.0"
     assert state_after_install.attributes["latest_version"] == "7.4.4.0"
+
+
+async def test_update_entity_state_restoration(
+    hass: HomeAssistant, update_config_entry: ConfigEntry
+) -> None:
+    """Test the Hardware firmware update entity state restoration."""
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(TEST_UPDATE_ENTITY_ID, "on"),
+                FirmwareUpdateExtraStoredData(
+                    firmware_manifest=TEST_MANIFEST
+                ).as_dict(),
+            )
+        ],
+    )
+
+    assert await hass.config_entries.async_setup(update_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The state is correctly restored
+    state = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state.state == "on"
+    assert state.attributes["title"] == "EmberZNet"
+    assert state.attributes["installed_version"] == "7.3.1.0"
+    assert state.attributes["latest_version"] == "7.4.4.0"
+    assert state.attributes["release_summary"] == ("Some release notes go here")
+    assert state.attributes["release_url"] == ("https://example.org/release_notes")
+
+
+async def test_update_entity_firmware_missing_from_manifest(
+    hass: HomeAssistant, update_config_entry: ConfigEntry
+) -> None:
+    """Test the Hardware firmware update entity handles missing firmware."""
+
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            (
+                State(TEST_UPDATE_ENTITY_ID, "on"),
+                # Ensure the manifest does not contain our expected firmware type
+                FirmwareUpdateExtraStoredData(
+                    firmware_manifest=dataclasses.replace(TEST_MANIFEST, firmwares=())
+                ).as_dict(),
+            )
+        ],
+    )
+
+    assert await hass.config_entries.async_setup(update_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # The state is restored, accounting for the missing firmware
+    state = hass.states.get(TEST_UPDATE_ENTITY_ID)
+    assert state.state == "unknown"
+    assert state.attributes["title"] == "EmberZNet"
+    assert state.attributes["installed_version"] == "7.3.1.0"
+    assert state.attributes["latest_version"] is None
+    assert state.attributes["release_summary"] is None
+    assert state.attributes["release_url"] is None
