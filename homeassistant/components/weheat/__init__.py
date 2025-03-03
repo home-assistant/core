@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from http import HTTPStatus
 
 import aiohttp
@@ -72,9 +73,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
             hass, entry, session, pump_info
         )
 
-        await new_data_coordinator.async_config_entry_first_refresh()
-        await new_energy_coordinator.async_config_entry_first_refresh()
-
         entry.runtime_data.append(
             WeheatData(
                 heat_pump_info=new_heat_pump,
@@ -82,6 +80,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: WeheatConfigEntry) -> bo
                 energy_coordinator=new_energy_coordinator,
             )
         )
+
+    await asyncio.gather(
+        *[
+            data.data_coordinator.async_config_entry_first_refresh()
+            for data in entry.runtime_data
+        ],
+        *[
+            data.energy_coordinator.async_config_entry_first_refresh()
+            for data in entry.runtime_data
+        ],
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
