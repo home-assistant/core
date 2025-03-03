@@ -23,6 +23,19 @@ _LOGGER = logging.getLogger(__name__)
 type GoveeLocalConfigEntry = ConfigEntry[GoveeLocalApiCoordinator]
 
 
+# @dataclass
+# class GoveeLocalApiConfig:
+#     """Govee light local configuration."""
+
+#     auto_discovery: bool
+#     manual_devices: list[str]
+
+#     @staticmethod
+#     def from_config_entry(config_entry: GoveeLocalConfigEntry) -> GoveeLocalApiConfig:
+#         """Return Govee light local configuration from config entry."""
+#         return GoveeLocalApiConfig(True, [])
+
+
 class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     """Govee light local coordinator."""
 
@@ -40,13 +53,15 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
             update_interval=SCAN_INTERVAL,
         )
 
+        auto_discovery = config_entry.data.get("auto_discovery", True)
+
         self._controller = GoveeController(
             loop=hass.loop,
             logger=_LOGGER,
             broadcast_address=CONF_MULTICAST_ADDRESS_DEFAULT,
             broadcast_port=CONF_TARGET_PORT_DEFAULT,
             listening_port=CONF_LISTENING_PORT_DEFAULT,
-            discovery_enabled=True,
+            discovery_enabled=auto_discovery,
             discovery_interval=CONF_DISCOVERY_INTERVAL_DEFAULT,
             discovered_callback=None,
             update_enabled=False,
@@ -62,6 +77,18 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     ) -> None:
         """Set discovery callback for automatic Govee light discovery."""
         self._controller.set_device_discovered_callback(callback)
+
+    def add_device_to_discovery_queue(self, ip: str) -> bool:
+        """Add a device by IP address to discovery queue."""
+        return self._controller.add_device_to_discovery_queue(ip)
+
+    def remove_device_from_discovery_queue(self, ip: str) -> bool:
+        """Remove a device by IP address from manual discovery queue."""
+        return self._controller.remove_device_from_discovery_queue(ip)
+
+    def get_device_by_ip(self, ip: str) -> GoveeDevice | None:
+        """Return a device by IP address."""
+        return self._controller.get_device_by_ip(ip)
 
     def cleanup(self) -> asyncio.Event:
         """Stop and cleanup the cooridinator."""
@@ -97,6 +124,11 @@ class GoveeLocalApiCoordinator(DataUpdateCoordinator[list[GoveeDevice]]):
     def devices(self) -> list[GoveeDevice]:
         """Return a list of discovered Govee devices."""
         return self._controller.devices
+
+    @property
+    def discovery_queue(self) -> set[str]:
+        """Return a set of devices in the discovery queue."""
+        return self._controller.discovery_queue
 
     async def _async_update_data(self) -> list[GoveeDevice]:
         self._controller.send_update_message()

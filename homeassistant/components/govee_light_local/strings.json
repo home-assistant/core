@@ -1,6 +1,16 @@
 {
   "config": {
     "step": {
+      "user": {
+        "description": "Make a choice",
+        "data": {
+          "auto_discovery": "Auto discovery"
+        },
+        "menu_options": {
+          "govee_discovery": "Automatically discovery devices (Can be enabled later)",
+          "manual": "Enter one or more devices ip address"
+        }
+      },
       "confirm": {
         "description": "[%key:common::config_flow::description::confirm_setup%]"
       }
@@ -8,6 +18,28 @@
     "abort": {
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "description": "Make a choice",
+        "menu_options": {
+          "configure_auto_discovery": "Enable or disable auto discovery",
+          "add_device": "Enter a device ip address",
+          "remove_device": "Remove a manually added device"
+        }
+      },
+      "remove_device": {
+        "description": "Select one or more ip address to remove",
+        "ips_to_remove": "IPs to remove"
+      },
+      "auto_discovery": {
+        "description": "Enable or disable auto discovery",
+        "data": {
+          "auto_discovery": "Auto discovery enabled"
+        }
+      }
     }
   },
   "entity": {

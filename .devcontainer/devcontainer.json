@@ -16,7 +16,12 @@
     "-e",
     "GIT_EDITOR=code --wait",
     "--security-opt",
-    "label=disable"
+    "label=disable",
+    "--network=host"
+  ],
+  "mounts": [
+    "source=${localEnv:HOME}/.ssh,target=/vscode/.ssh,type=bind,consistency=cached",
+    "source=${localEnv:HOME}/git/home-assistant/govee-local-api/,target=/govee-local-api/,type=bind,consistency=cached"
   ],
   "customizations": {
     "vscode": {
