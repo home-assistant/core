@@ -42,7 +42,7 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
     ) -> None:
         """Initialize the handler."""
         super().__init__(queue, *handlers)
-        self._occurrences: dict[str, LoggerCount] = {}
+        self._log_counts: dict[str, LoggerCount] = {}
 
     @override
     def handle(self, record: logging.LogRecord) -> None:
@@ -54,28 +54,28 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
         if logger_name == __name__:
             return
 
-        occurrence = self._occurrences.get(logger_name)
-        if occurrence is None:
-            self._occurrences[logger_name] = LoggerCount(1, now)
+        module_count = self._log_counts.get(logger_name)
+        if module_count is None:
+            self._log_counts[logger_name] = LoggerCount(1, now)
             return
 
-        if (now - occurrence.start_time) > self.monitor_time_window:
-            occurrence.count = 1
-            occurrence.start_time = now
+        if (now - module_count.start_time) > self.monitor_time_window:
+            module_count.count = 1
+            module_count.start_time = now
             return
 
-        occurrence.count += 1
-        if occurrence.count < self.max_logs_per_window:
+        module_count.count += 1
+        if module_count.count < self.max_logs_per_window:
             return
 
         _LOGGER.warning(
             "Module %s is logging too frequently. %d messages in the last %s seconds",
             logger_name,
-            occurrence.count,
+            module_count.count,
             int(self.monitor_time_window.total_seconds()),
         )
-        occurrence.count = 1
-        occurrence.start_time = now
+        module_count.count = 1
+        module_count.start_time = now
 
 
 class HomeAssistantQueueHandler(logging.handlers.QueueHandler):
