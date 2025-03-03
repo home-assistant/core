@@ -2,7 +2,7 @@
 
 from abc import abstractmethod
 from datetime import timedelta
-from typing import Any
+from typing import TypedDict, TypeVar, cast
 
 from aiocomelit import (
     ComeliteSerialBridgeApi,
@@ -13,7 +13,7 @@ from aiocomelit import (
     exceptions,
 )
 from aiocomelit.api import ComelitCommonApi
-from aiocomelit.const import BRIDGE, VEDO
+from aiocomelit.const import ALARM_AREAS, ALARM_ZONES, BRIDGE, VEDO
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,7 +26,20 @@ from .const import _LOGGER, DOMAIN
 type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
 
 
-class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class AlarmDataObject(TypedDict):
+    """TypedDict for Alarm data objects."""
+
+    alarm_areas: dict[int, ComelitVedoAreaObject]
+    alarm_zones: dict[int, ComelitVedoZoneObject]
+
+
+T = TypeVar(
+    "T",
+    bound=dict[str, dict[int, ComelitSerialBridgeObject]] | AlarmDataObject,
+)
+
+
+class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
     """Base coordinator for Comelit Devices."""
 
     _hw_version: str
@@ -81,7 +94,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hw_version=self._hw_version,
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> T:
         """Update device data."""
         _LOGGER.debug("Polling Comelit %s host: %s", self._device, self._host)
         try:
@@ -93,11 +106,13 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed from err
 
     @abstractmethod
-    async def _async_update_system_data(self) -> dict[str, Any]:
+    async def _async_update_system_data(self) -> T:
         """Class method for updating data."""
 
 
-class ComelitSerialBridge(ComelitBaseCoordinator):
+class ComelitSerialBridge(
+    ComelitBaseCoordinator[dict[str, dict[int, ComelitSerialBridgeObject]]]
+):
     """Queries Comelit Serial Bridge."""
 
     _hw_version = "20003101"
@@ -115,12 +130,14 @@ class ComelitSerialBridge(ComelitBaseCoordinator):
         self.api = ComeliteSerialBridgeApi(host, port, pin)
         super().__init__(hass, entry, BRIDGE, host)
 
-    async def _async_update_system_data(self) -> dict[str, Any]:
+    async def _async_update_system_data(
+        self,
+    ) -> dict[str, dict[int, ComelitSerialBridgeObject]]:
         """Specific method for updating data."""
         return await self.api.get_all_devices()
 
 
-class ComelitVedoSystem(ComelitBaseCoordinator):
+class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
     """Queries Comelit VEDO system."""
 
     _hw_version = "VEDO IP"
@@ -138,6 +155,13 @@ class ComelitVedoSystem(ComelitBaseCoordinator):
         self.api = ComelitVedoApi(host, port, pin)
         super().__init__(hass, entry, VEDO, host)
 
-    async def _async_update_system_data(self) -> dict[str, Any]:
+    async def _async_update_system_data(
+        self,
+    ) -> AlarmDataObject:
         """Specific method for updating data."""
-        return await self.api.get_all_areas_and_zones()
+        data = await self.api.get_all_areas_and_zones()
+
+        return AlarmDataObject(
+            alarm_areas=cast(dict[int, ComelitVedoAreaObject], data[ALARM_AREAS]),
+            alarm_zones=cast(dict[int, ComelitVedoZoneObject], data[ALARM_ZONES]),
+        )
