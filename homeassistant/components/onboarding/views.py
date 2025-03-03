@@ -489,7 +489,7 @@ class CloudForgotPasswordView(CloudOnboardingView, cloud_http.CloudForgotPasswor
 
     @with_cloud
     async def post(self, request: web.Request) -> web.Response:
-        """Handle login request."""
+        """Handle forgot password request."""
         return await super()._post(request)
 
 
