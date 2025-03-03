@@ -270,9 +270,16 @@ class WallboxCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             self._wallbox.disableEcoSmart(self._station)
 
-    async def async_set_eco_smart(self, enable: bool, mode: int = 0) -> None:
+    async def async_set_eco_smart(self, option: str) -> None:
         """Set wallbox solar charging mode."""
-        await self.hass.async_add_executor_job(self._set_eco_smart, enable, mode)
+
+        if option == EcoSmartMode.ECO_MODE:
+            await self.hass.async_add_executor_job(self._set_eco_smart, True, 0)
+        elif option == EcoSmartMode.FULL_SOLAR:
+            await self.hass.async_add_executor_job(self._set_eco_smart, True, 1)
+        else:
+            await self.hass.async_add_executor_job(self._set_eco_smart, False)
+
         await self.async_request_refresh()
 
 

@@ -2,9 +2,13 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
+
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
@@ -21,10 +25,30 @@ from .const import (
 from .coordinator import WallboxCoordinator
 from .entity import WallboxEntity
 
-SELECT_TYPES: dict[str, SelectEntityDescription] = {
-    CHARGER_ECO_SMART_KEY: SelectEntityDescription(
+
+@dataclass(frozen=True)
+class WallboxSelectEntityDescription(SelectEntityDescription):
+    """Describes Wallbox select entity."""
+
+    current_option_fn: Callable[[WallboxCoordinator], str]
+    select_option_fn: Callable[[WallboxCoordinator, str], Awaitable[None]]
+
+
+SELECT_TYPES: dict[str, WallboxSelectEntityDescription] = {
+    CHARGER_ECO_SMART_KEY: WallboxSelectEntityDescription(
         key=CHARGER_ECO_SMART_KEY,
         translation_key="eco_smart",
+        options=[
+            EcoSmartMode.OFF,
+            EcoSmartMode.ECO_MODE,
+            EcoSmartMode.FULL_SOLAR,
+        ],
+        current_option_fn=lambda coordinator: coordinator.data[
+            CHARGER_SOLAR_CHARGING_MODE
+        ],
+        select_option_fn=lambda coordinator, mode: coordinator.async_set_eco_smart(
+            mode
+        ),
     ),
 }
 
@@ -36,28 +60,28 @@ async def async_setup_entry(
 ) -> None:
     """Create wallbox select entities in HASS."""
     coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+
     async_add_entities(
-        [WallboxSelect(coordinator, SELECT_TYPES[CHARGER_ECO_SMART_KEY])]
+        [WallboxSelect(coordinator, entry, SELECT_TYPES[CHARGER_ECO_SMART_KEY])]
     )
 
 
 class WallboxSelect(WallboxEntity, SelectEntity):
     """Representation of the Wallbox portal."""
 
+    entity_description: WallboxSelectEntityDescription
+
     def __init__(
         self,
         coordinator: WallboxCoordinator,
-        description: SelectEntityDescription,
+        entry: ConfigEntry,
+        description: WallboxSelectEntityDescription,
     ) -> None:
         """Initialize a Wallbox select entity."""
         super().__init__(coordinator)
         self.entity_description = description
+        self._coordinator = coordinator
         self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
-        self._attr_options = [
-            EcoSmartMode.OFF,
-            EcoSmartMode.ECO_MODE,
-            EcoSmartMode.FULL_SOLAR,
-        ]
 
     @property
     def available(self) -> bool:
@@ -72,14 +96,15 @@ class WallboxSelect(WallboxEntity, SelectEntity):
 
     @property
     def current_option(self) -> str | None:
-        """Return the current selected option."""
-        return str(self.coordinator.data[CHARGER_SOLAR_CHARGING_MODE])
+        """Return an option."""
+        return self.entity_description.current_option_fn(self.coordinator)
 
     async def async_select_option(self, option: str) -> None:
-        """Change the selected option."""
-        if option == EcoSmartMode.ECO_MODE:
-            await self.coordinator.async_set_eco_smart(True, 0)
-        elif option == EcoSmartMode.FULL_SOLAR:
-            await self.coordinator.async_set_eco_smart(True, 1)
-        else:
-            await self.coordinator.async_set_eco_smart(False)
+        """Handle the selection of an option."""
+        try:
+            await self.entity_description.select_option_fn(self.coordinator, option)
+        except Exception as e:
+            raise HomeAssistantError(
+                translation_key="api_failed", translation_domain=DOMAIN
+            ) from e
+        await self.coordinator.async_request_refresh()

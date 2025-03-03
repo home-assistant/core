@@ -97,5 +97,10 @@
         "name": "Solar charging"
       }
     }
+  },
+  "exceptions": {
+    "api_failed": {
+      "message": "Error communicating with Wallbox API"
+    }
   }
 }
