@@ -57,7 +57,7 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
         else:
             res.raise_for_status()
             try:
-                await self.hass.async_add_executor_job(
+                return await self.hass.async_add_executor_job(
                     IcsCalendarStream.calendar_from_ics, res.text
                 )
             except CalendarParseError as err:
@@ -66,7 +66,3 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
                     translation_key="unable_to_parse",
                     translation_placeholders={"err": str(err)},
                 ) from err
-            else:
-                return await self.hass.async_add_executor_job(
-                    IcsCalendarStream.calendar_from_ics, res.text
-                )
