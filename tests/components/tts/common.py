@@ -282,7 +282,7 @@ class MockResultStream(ResultStream):
             options={},
             _manager=hass.data[DATA_TTS_MANAGER],
         )
-        hass.data[DATA_TTS_MANAGER].token_to_stream["test-token"] = self
+        hass.data[DATA_TTS_MANAGER].token_to_stream[self.token] = self
         self._mock_data = data
 
     async def async_stream_result(self):
