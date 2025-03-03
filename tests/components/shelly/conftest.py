@@ -311,6 +311,7 @@ MOCK_STATUS_COAP = {
     "wifi_sta": {"rssi": -64},
 }
 
+
 MOCK_STATUS_RPC = {
     "switch:0": {
         "id": 0,
@@ -345,7 +346,7 @@ MOCK_STATUS_RPC = {
     "em1:1": {"act_power": 123.3},
     "em1data:0": {"total_act_energy": 123456.4},
     "em1data:1": {"total_act_energy": 987654.3},
-    "relay_in_thermostat": False,
+    "flood:0": {"id": 0, "alarm": False, "mute": False},
     "thermostat:0": {
         "id": 0,
         "enable": True,
@@ -478,6 +479,29 @@ def _mock_rpc_device(version: str | None = None):
         status=MOCK_STATUS_RPC,
         firmware_version="some fw string",
         initialized=True,
+        connected=True,
+        script_getcode=AsyncMock(
+            side_effect=lambda script_id: {"data": MOCK_SCRIPTS[script_id - 1]}
+        ),
+        xmod_info={},
+    )
+    type(device).name = PropertyMock(return_value="Test name")
+    return device
+
+
+def _mock_blu_rtv_device(version: str | None = None):
+    """Mock rpc (Gen2, Websocket) device."""
+    device = Mock(
+        spec=RpcDevice,
+        config=MOCK_CONFIG | MOCK_BLU_TRV_REMOTE_CONFIG,
+        event={},
+        shelly=MOCK_SHELLY_RPC,
+        version=version or "1.0.0",
+        hostname="test-host",
+        status=MOCK_STATUS_RPC | MOCK_BLU_TRV_REMOTE_STATUS,
+        firmware_version="some fw string",
+        initialized=True,
+        connected=True,
     )
     type(device).name = PropertyMock(return_value="Test name")
     return device
@@ -509,6 +533,11 @@ async def mock_rpc_device():
         def disconnected():
             rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
                 {}, RpcUpdateType.DISCONNECTED
+            )
+
+        def initialized():
+            rpc_device_mock.return_value.subscribe_updates.call_args[0][0](
+                {}, RpcUpdateType.INITIALIZED
             )
 
         device = _mock_rpc_device()

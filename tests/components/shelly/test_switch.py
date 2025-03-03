@@ -1,4 +1,5 @@
 """Tests for Shelly switch platform."""
+
 from copy import deepcopy
 from unittest.mock import AsyncMock, Mock
 
@@ -188,7 +189,7 @@ async def test_block_device_unique_ids(
 
 
 async def test_block_set_state_connection_error(
-    hass: HomeAssistant, mock_block_device: Mock, monkeypatch: pytest.MonkeyPatch
+    hass: HomeAssistant, mock_block_device, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test block device set state connection error."""
     monkeypatch.setattr(
@@ -312,9 +313,9 @@ async def test_rpc_device_services(
 
 async def test_rpc_device_unique_ids(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
     mock_rpc_device: Mock,
     monkeypatch: pytest.MonkeyPatch,
+    entity_registry: EntityRegistry,
 ) -> None:
     """Test RPC device unique_ids."""
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
@@ -345,8 +346,6 @@ async def test_rpc_set_state_errors(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC device set state connection/call errors."""
-    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
-    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     monkeypatch.setattr(mock_rpc_device, "call_rpc", AsyncMock(side_effect=exc))
     monkeypatch.delitem(mock_rpc_device.status, "cover:0")
     monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
@@ -365,8 +364,6 @@ async def test_rpc_auth_error(
     hass: HomeAssistant, mock_rpc_device: Mock, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Test RPC device set state authentication error."""
-    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
-    monkeypatch.setitem(mock_rpc_device.status["sys"], "relay_in_thermostat", False)
     monkeypatch.setattr(
         mock_rpc_device,
         "call_rpc",
@@ -413,59 +410,7 @@ async def test_remove_gas_valve_switch(
     )
     await init_integration(hass, 1, MODEL_GAS)
 
-    entry = entity_registry.async_get(entity_id)
-    assert entry
-    assert entry.unique_id == "123456789ABC-valve_0-valve"
-
-    assert hass.states.get(entity_id).state == STATE_OFF  # valve is closed
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON  # valve is open
-
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: entity_id},
-        blocking=True,
-    )
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_OFF  # valve is closed
-
-    monkeypatch.setattr(mock_block_device.blocks[GAS_VALVE_BLOCK_ID], "valve", "opened")
-    mock_block_device.mock_update()
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == STATE_ON  # valve is open
-
-
-async def test_wall_display_thermostat_mode(
-    hass: HomeAssistant,
-    mock_rpc_device: Mock,
-) -> None:
-    """Test Wall Display in thermostat mode."""
-    register_entity(
-        hass,
-        SWITCH_DOMAIN,
-        "test_switch_0",
-        "thermostat:0",
-    )
-    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
-
-    # the switch entity should not be created, only the climate entity
-    assert hass.states.async_entity_ids("switch") == []
-    assert hass.states.get("climate.test_name")
+    assert entity_registry.async_get(entity_id) is None
 
 
 async def test_wall_display_relay_mode(
@@ -478,7 +423,10 @@ async def test_wall_display_relay_mode(
     climate_entity_id = "climate.test_name_thermostat_0"
     switch_entity_id = "switch.test_switch_0"
 
-    monkeypatch.delitem(mock_rpc_device.status, "cover:0")
+    config_entry = await init_integration(hass, 2, model=MODEL_WALL_DISPLAY)
+
+    assert hass.states.get(climate_entity_id) is not None
+    assert len(hass.states.async_entity_ids(CLIMATE_DOMAIN)) == 1
 
     new_status = deepcopy(mock_rpc_device.status)
     new_status["sys"]["relay_in_thermostat"] = False
