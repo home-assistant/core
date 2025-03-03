@@ -213,15 +213,22 @@ async def test_migrate_config_entry_and_identifiers(
     assert device_entries[0].config_entries == gateway1_device.config_entries
 
     # Validate that gateway 1 bulb 2 now only exists associated to config entry 3.
-    # The device will have had its identifiers updated to the new format per
-    # migrate_config_entry_and_identifiers() but will have then been removed from
-    # config entry 1 (gateway1) due to it not matching a device in the command store.
+    # The device will have had its identifiers updated to the new format (for the tradfri
+    # domain) per migrate_config_entry_and_identifiers().
+    # The device will have then been removed from config entry 1 (gateway1)
+    # due to it not matching a device in the command store.
     device_entry = device_registry.async_get_device(
         identifiers={(tradfri.DOMAIN, f"{GATEWAY_ID1}-65538")}
     )
 
     assert device_entry.id == gateway1_bulb2.id
+    # Assert that the only config entry associated to this device is config entry 3
     assert device_entry.config_entries == {config_entry3.entry_id}
+    # Assert that that device's other identifiers remain untouched
+    assert device_entry.identifiers == {
+        (tradfri.DOMAIN, f"{GATEWAY_ID1}-65538"),
+        ("test_domain", "config_entry_3-device2"),
+    }
 
     # Validate that gateway 2 bulb 1 has been added to device registry and with correct unique identifiers
     # (This bulb device exists on gateway 2 because the command_store created above will be executed
@@ -235,7 +242,7 @@ async def test_migrate_config_entry_and_identifiers(
     # Validate that gateway 2 bulb 1 only has gateway 2's config ID associated to it
     assert device_entries[1].config_entries == {config_entry2.entry_id}
 
-    # Validate that config entry 3 bulb 1 is still present,
+    # Validate that config entry 3 device 1 is still present,
     # and has not had its config entries or identifiers changed
     # N.B. The gateway1_bulb2 device will qualify in this set
     # because the config entry 3 was added to it above
