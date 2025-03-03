@@ -320,8 +320,12 @@ class CloudLogoutView(HomeAssistantView):
     name = "api:cloud:logout"
 
     @require_admin
-    @_handle_cloud_errors
     async def post(self, request: web.Request) -> web.Response:
+        """Handle logout request."""
+        return await self._post(request)
+
+    @_handle_cloud_errors
+    async def _post(self, request: web.Request) -> web.Response:
         """Handle logout request."""
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]

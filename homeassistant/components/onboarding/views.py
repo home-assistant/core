@@ -1,7 +1,6 @@
 """Onboarding views."""
 
 # Temporarily disable pylint checks
-# pylint: disable=fixme,hass-component-root-import
 from __future__ import annotations
 
 import asyncio
@@ -25,6 +24,8 @@ from homeassistant.components.backup import (
     http as backup_http,
 )
 from homeassistant.components.cloud import http_api as cloud_http
+
+# pylint: disable-next=hass-component-root-import
 from homeassistant.components.cloud.const import DATA_CLOUD
 from homeassistant.components.http import KEY_HASS, KEY_HASS_REFRESH_TOKEN_ID
 from homeassistant.components.http.data_validator import RequestDataValidator
@@ -66,6 +67,7 @@ async def async_setup(
     hass.http.register_view(UploadBackupView(data))
     hass.http.register_view(CloudForgotPasswordView(data))
     hass.http.register_view(CloudLoginView(data))
+    hass.http.register_view(CloudLogoutView(data))
     hass.http.register_view(CloudStatusView(data))
 
 
@@ -436,63 +438,97 @@ class UploadBackupView(BackupOnboardingView, backup_http.UploadBackupView):
         return await self._post(request)
 
 
-class CloudForgotPasswordView(cloud_http.CloudForgotPasswordView):
-    """Login to Home Assistant Cloud."""
+class CloudOnboardingView(HomeAssistantView):
+    """Cloud onboarding view."""
 
     requires_auth = False
+
+    def __init__(self, data: OnboardingStoreData) -> None:
+        """Initialize the view."""
+        self._data = data
+
+
+def with_cloud[_ViewT: CloudOnboardingView, **_P](
+    func: Callable[
+        Concatenate[_ViewT, web.Request, _P],
+        Coroutine[Any, Any, web.Response],
+    ],
+) -> Callable[Concatenate[_ViewT, web.Request, _P], Coroutine[Any, Any, web.Response]]:
+    """Home Assistant API decorator to check onboarding and cloud."""
+
+    @wraps(func)
+    async def _with_cloud(
+        self: _ViewT,
+        request: web.Request,
+        *args: _P.args,
+        **kwargs: _P.kwargs,
+    ) -> web.Response:
+        """Check onboarding status, cloud and call function."""
+        if self._data["done"]:
+            # If at least one onboarding step is done, we don't allow accessing
+            # the cloud onboarding views.
+            raise HTTPUnauthorized
+
+        hass = request.app[KEY_HASS]
+        if DATA_CLOUD not in hass.data:
+            return self.json(
+                {"code": "cloud_disabled"},
+                status_code=HTTPStatus.INTERNAL_SERVER_ERROR,
+            )
+
+        return await func(self, request, *args, **kwargs)
+
+    return _with_cloud
+
+
+class CloudForgotPasswordView(CloudOnboardingView, cloud_http.CloudForgotPasswordView):
+    """View to start Forgot Password flow."""
+
     url = "/api/onboarding/cloud/forgot_password"
     name = "api:onboarding:cloud:forgot_password"
 
-    def __init__(self, data: OnboardingStoreData) -> None:
-        """Initialize the view."""
-        self._data = data
-
+    @with_cloud
     async def post(self, request: web.Request) -> web.Response:
         """Handle login request."""
-        if self._data["done"]:
-            raise HTTPUnauthorized
-        # TODO: Check the cloud integration is set up
         return await super()._post(request)
 
 
-class CloudLoginView(cloud_http.CloudLoginView):
+class CloudLoginView(CloudOnboardingView, cloud_http.CloudLoginView):
     """Login to Home Assistant Cloud."""
 
-    requires_auth = False
     url = "/api/onboarding/cloud/login"
     name = "api:onboarding:cloud:login"
 
-    def __init__(self, data: OnboardingStoreData) -> None:
-        """Initialize the view."""
-        self._data = data
-
+    @with_cloud
     async def post(self, request: web.Request) -> web.Response:
         """Handle login request."""
-        if self._data["done"]:
-            raise HTTPUnauthorized
-        # TODO: Check the cloud integration is set up
         return await super()._post(request)
 
 
-class CloudStatusView(HomeAssistantView):
+class CloudLogoutView(CloudOnboardingView, cloud_http.CloudLoginView):
+    """Log out of the Home Assistant cloud."""
+
+    url = "/api/onboarding/cloud/login"
+    name = "api:onboarding:cloud:login"
+
+    @with_cloud
+    async def post(self, request: web.Request) -> web.Response:
+        """Handle logout request."""
+        return await super()._post(request)
+
+
+class CloudStatusView(CloudOnboardingView):
     """Get cloud status view."""
 
-    requires_auth = False
     url = "/api/onboarding/cloud/status"
     name = "api:onboarding:cloud:status"
 
-    def __init__(self, data: OnboardingStoreData) -> None:
-        """Initialize the view."""
-        self._data = data
-
+    @with_cloud
     async def get(self, request: web.Request) -> web.Response:
         """Return cloud status."""
-        if self._data["done"]:
-            raise HTTPUnauthorized
         hass = request.app[KEY_HASS]
-        # TODO: Check the cloud integration is set up
         cloud = hass.data[DATA_CLOUD]
-        return self.json(await cloud_http._account_data(hass, cloud))  # noqa: SLF001
+        return self.json({"logged_in": cloud.is_logged_in})
 
 
 @callback
