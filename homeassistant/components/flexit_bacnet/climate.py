@@ -80,10 +80,6 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
         super().__init__(coordinator)
         self._attr_unique_id = coordinator.device.serial_number
 
-    async def async_update(self) -> None:
-        """Refresh unit state."""
-        await self.device.update()
-
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return current HVAC action."""
@@ -115,7 +111,13 @@ class FlexitClimateEntity(FlexitEntity, ClimateEntity):
             else:
                 await self.device.set_air_temp_setpoint_home(temperature)
         except (asyncio.exceptions.TimeoutError, ConnectionError, DecodingError) as exc:
-            raise HomeAssistantError from exc
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature",
+                translation_placeholders={
+                    "temperature": str(temperature),
+                },
+            ) from exc
         finally:
             await self.coordinator.async_refresh()
 
