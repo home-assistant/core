@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Mapping
 from datetime import timedelta
-from typing import Any, cast
+from typing import TypeVar, cast
 
 from aiocomelit import (
     ComeliteSerialBridgeApi,
@@ -26,8 +26,14 @@ from .const import _LOGGER, DOMAIN
 
 type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
 
+T = TypeVar(
+    "T",
+    bound=dict[str, dict[int, ComelitSerialBridgeObject]]
+    | dict[str, Mapping[int, ComelitVedoAreaObject | ComelitVedoZoneObject]],
+)
 
-class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+
+class ComelitBaseCoordinator(DataUpdateCoordinator[T]):
     """Base coordinator for Comelit Devices."""
 
     _hw_version: str
@@ -82,7 +88,7 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             hw_version=self._hw_version,
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> T:
         """Update device data."""
         _LOGGER.debug("Polling Comelit %s host: %s", self._device, self._host)
         try:
@@ -94,16 +100,17 @@ class ComelitBaseCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise ConfigEntryAuthFailed from err
 
     @abstractmethod
-    async def _async_update_system_data(self) -> dict[str, Any]:
+    async def _async_update_system_data(self) -> T:
         """Class method for updating data."""
 
 
-class ComelitSerialBridge(ComelitBaseCoordinator):
+class ComelitSerialBridge(
+    ComelitBaseCoordinator[dict[str, dict[int, ComelitSerialBridgeObject]]]
+):
     """Queries Comelit Serial Bridge."""
 
     _hw_version = "20003101"
     api: ComeliteSerialBridgeApi
-    data: dict[str, dict[int, ComelitSerialBridgeObject]]
 
     def __init__(
         self,
@@ -124,12 +131,15 @@ class ComelitSerialBridge(ComelitBaseCoordinator):
         return await self.api.get_all_devices()
 
 
-class ComelitVedoSystem(ComelitBaseCoordinator):
+class ComelitVedoSystem(
+    ComelitBaseCoordinator[
+        dict[str, Mapping[int, ComelitVedoAreaObject | ComelitVedoZoneObject]]
+    ]
+):
     """Queries Comelit VEDO system."""
 
     _hw_version = "VEDO IP"
     api: ComelitVedoApi
-    data: dict[str, Mapping[int, ComelitVedoAreaObject | ComelitVedoZoneObject]]
 
     def __init__(
         self,
