@@ -123,13 +123,15 @@ from .const import (
     TRANSPORT_WEBSOCKETS,
     Platform,
 )
-from .models import MqttDeviceData, MqttSubentryData
+from .models import MqttAvailabilityData, MqttDeviceData, MqttSubentryData
 from .util import (
     async_create_certificate_temp_files,
     get_file_path,
     valid_birth_will,
     valid_publish_topic,
     valid_qos_schema,
+    valid_subscribe_topic,
+    valid_subscribe_topic_template,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -1085,6 +1087,57 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
             },
         )
 
+    async def async_step_availability(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Configure availability options."""
+        errors: dict[str, str] = {}
+        validate_field(
+            "availability_topic",
+            valid_subscribe_topic,
+            user_input,
+            errors,
+            "invalid_subscribe_topic",
+        )
+        validate_field(
+            "availability_template",
+            valid_subscribe_topic_template,
+            user_input,
+            errors,
+            "invalid_template",
+        )
+        if not errors and user_input is not None:
+            self._dirty = True
+            if user_input.pop("no_availability"):
+                self._subentry_data["availability"] = MqttAvailabilityData()
+            else:
+                self._subentry_data["availability"] = cast(
+                    MqttAvailabilityData, user_input
+                )
+            return await self.async_step_summary_menu()
+
+        data_schema = vol.Schema(
+            {
+                vol.Required("no_availability", default=False): BOOLEAN_SELECTOR,
+                vol.Optional("availability_topic"): TEXT_SELECTOR,
+                vol.Optional("availability_template"): TEMPLATE_SELECTOR,
+                vol.Optional("payload_available"): TEXT_SELECTOR,
+                vol.Optional("payload_not_available"): TEXT_SELECTOR,
+            }
+        )
+        data_schema = self.add_suggested_values_to_schema(
+            data_schema,
+            dict(self._subentry_data.setdefault("availability", {}))
+            if self.source == SOURCE_RECONFIGURE
+            else user_input,
+        )
+        return self.async_show_form(
+            step_id="availability",
+            data_schema=data_schema,
+            errors=errors,
+            last_step=False,
+        )
+
     async def async_step_summary_menu(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
@@ -1101,7 +1154,7 @@ class MQTTSubentryFlowHandler(ConfigSubentryFlow):
         ]
         if len(self._subentry_data["components"]) > 1:
             menu_options.append("delete_entity")
-        menu_options.append("device")
+        menu_options.extend(["device", "availability"])
         if self._dirty:
             menu_options.append("finish_reconfigure")
         return self.async_show_menu(

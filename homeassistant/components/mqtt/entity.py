@@ -297,6 +297,7 @@ def async_setup_entity_entry_helper(
         # process subentry entity setup
         for config_subentry_id, subentry in entry.subentries.items():
             subentry_data = cast(MqttSubentryData, subentry.data)
+            availability_config = subentry_data.get("availability", {})
             subentry_entities: list[Entity] = []
             device_config = subentry_data["device"].copy()
             device_config["identifiers"] = config_subentry_id
@@ -309,6 +310,7 @@ def async_setup_entity_entry_helper(
                 )
                 component_config[CONF_DEVICE] = device_config
                 component_config.pop("platform")
+                component_config.update(availability_config)
 
                 try:
                     config = platform_schema_modern(component_config)
