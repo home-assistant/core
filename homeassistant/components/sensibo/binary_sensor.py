@@ -16,7 +16,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SensiboConfigEntry
 from .const import LOGGER
@@ -118,7 +118,7 @@ DESCRIPTION_BY_MODELS = {"pure": PURE_SENSOR_TYPES}
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SensiboConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sensibo binary sensor platform."""
 
@@ -130,9 +130,10 @@ async def async_setup_entry(
         """Handle additions of devices and sensors."""
         entities: list[SensiboMotionSensor | SensiboDeviceSensor] = []
         nonlocal added_devices
-        new_devices, remove_devices, added_devices = coordinator.get_devices(
+        new_devices, remove_devices, new_added_devices = coordinator.get_devices(
             added_devices
         )
+        added_devices = new_added_devices
 
         if LOGGER.isEnabledFor(logging.DEBUG):
             LOGGER.debug(
@@ -168,8 +169,7 @@ async def async_setup_entry(
                     device_data.model, DEVICE_SENSOR_TYPES
                 )
             )
-
-        async_add_entities(entities)
+            async_add_entities(entities)
 
     entry.async_on_unload(coordinator.async_add_listener(_add_remove_devices))
     _add_remove_devices()

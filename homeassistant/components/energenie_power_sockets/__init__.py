@@ -8,12 +8,14 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 
-from .const import CONF_DEVICE_API_ID, DOMAIN
+from .const import CONF_DEVICE_API_ID
 
 PLATFORMS = [Platform.SWITCH]
 
+type EnergenieConfigEntry = ConfigEntry[PowerStripUSB]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(hass: HomeAssistant, entry: EnergenieConfigEntry) -> bool:
     """Set up Energenie Power Sockets."""
     try:
         powerstrip: PowerStripUSB | None = get_device(entry.data[CONF_DEVICE_API_ID])
@@ -26,19 +28,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "Can't access Energenie Power Sockets, will retry later."
         )
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = powerstrip
+    entry.runtime_data = powerstrip
+    entry.async_on_unload(powerstrip.release)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: EnergenieConfigEntry) -> bool:
     """Unload config entry."""
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        powerstrip = hass.data[DOMAIN].pop(entry.entry_id)
-        powerstrip.release()
-
-    if not hass.data[DOMAIN]:
-        hass.data.pop(DOMAIN)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

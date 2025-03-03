@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock
 from pyenphase import EnvoyAuthenticationError, EnvoyError
 import pytest
 
-from homeassistant.components import zeroconf
 from homeassistant.components.enphase_envoy.const import (
     DOMAIN,
     OPTION_DIAGNOSTICS_INCLUDE_FIXTURES,
@@ -19,6 +18,7 @@ from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import setup_integration
 
@@ -163,7 +163,7 @@ async def test_zeroconf(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.1.1.1"),
             ip_addresses=[ip_address("1.1.1.1")],
             hostname="mock_hostname",
@@ -273,7 +273,7 @@ async def test_zeroconf_serial_already_exists(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("4.4.4.4"),
             ip_addresses=[ip_address("4.4.4.4")],
             hostname="mock_hostname",
@@ -301,7 +301,7 @@ async def test_zeroconf_serial_already_exists_ignores_ipv6(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("fd00::b27c:63bb:cc85:4ea0"),
             ip_addresses=[ip_address("fd00::b27c:63bb:cc85:4ea0")],
             hostname="mock_hostname",
@@ -330,7 +330,7 @@ async def test_zeroconf_host_already_exists(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.1.1.1"),
             ip_addresses=[ip_address("1.1.1.1")],
             hostname="mock_hostname",
@@ -363,7 +363,7 @@ async def test_zero_conf_while_form(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.1.1.1"),
             ip_addresses=[ip_address("1.1.1.1")],
             hostname="mock_hostname",
@@ -396,7 +396,7 @@ async def test_zero_conf_second_envoy_while_form(
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("4.4.4.4"),
             ip_addresses=[ip_address("4.4.4.4")],
             hostname="mock_hostname",
@@ -439,7 +439,7 @@ async def test_zero_conf_old_blank_entry(
     mock_setup_entry: AsyncMock,
     mock_envoy: AsyncMock,
 ) -> None:
-    """Test re-using old blank entry."""
+    """Test reusing old blank entry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -455,7 +455,7 @@ async def test_zero_conf_old_blank_entry(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.1.1.1"),
             ip_addresses=[ip_address("1.1.1.1"), ip_address("1.1.1.2")],
             hostname="mock_hostname",
@@ -478,7 +478,7 @@ async def test_zero_conf_old_blank_entry_standard_title(
     mock_setup_entry: AsyncMock,
     mock_envoy: AsyncMock,
 ) -> None:
-    """Test re-using old blank entry was Envoy as title."""
+    """Test reusing old blank entry was Envoy as title."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -496,7 +496,7 @@ async def test_zero_conf_old_blank_entry_standard_title(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.1.1.1"),
             ip_addresses=[ip_address("1.1.1.1"), ip_address("1.1.1.2")],
             hostname="mock_hostname",
@@ -519,7 +519,7 @@ async def test_zero_conf_old_blank_entry_user_title(
     mock_setup_entry: AsyncMock,
     mock_envoy: AsyncMock,
 ) -> None:
-    """Test re-using old blank entry with user title."""
+    """Test reusing old blank entry with user title."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -537,7 +537,7 @@ async def test_zero_conf_old_blank_entry_user_title(
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_ZEROCONF},
-        data=zeroconf.ZeroconfServiceInfo(
+        data=ZeroconfServiceInfo(
             ip_address=ip_address("1.1.1.1"),
             ip_addresses=[ip_address("1.1.1.1"), ip_address("1.1.1.2")],
             hostname="mock_hostname",

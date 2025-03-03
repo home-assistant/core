@@ -371,6 +371,12 @@
       },
       "led": {
         "default": "mdi:lightning-bolt-circle"
+      },
+      "privacy_mode": {
+        "default": "mdi:eye",
+        "state": {
+          "on": "mdi:eye-off"
+        }
       }
     }
   },

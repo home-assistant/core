@@ -13,7 +13,7 @@ from homeassistant.components.media_player import (
     MediaClass,
     MediaPlayerEntityFeature,
 )
-import homeassistant.components.universal.media_player as universal
+from homeassistant.components.universal import media_player as universal
 from homeassistant.const import (
     SERVICE_RELOAD,
     STATE_OFF,
@@ -27,7 +27,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_mock_service, get_fixture_path
+from tests.common import MockEntityPlatform, async_mock_service, get_fixture_path
 
 CONFIG_CHILDREN_ONLY = {
     "name": "test",
@@ -74,6 +74,7 @@ class MockMediaPlayer(media_player.MediaPlayerEntity):
         self._shuffle = False
         self._sound_mode = None
         self._repeat = None
+        self.platform = MockEntityPlatform(hass)
 
         self.service_calls = {
             "turn_on": async_mock_service(
@@ -361,26 +362,10 @@ async def test_config_bad_key(hass: HomeAssistant) -> None:
 async def test_platform_setup(hass: HomeAssistant) -> None:
     """Test platform setup."""
     config = {"name": "test", "platform": "universal"}
-    bad_config = {"platform": "universal"}
-    entities = []
-
-    def add_entities(new_entities):
-        """Add devices to list."""
-        entities.extend(new_entities)
-
-    setup_ok = True
-    try:
-        await universal.async_setup_platform(
-            hass, validate_config(bad_config), add_entities
-        )
-    except MultipleInvalid:
-        setup_ok = False
-    assert not setup_ok
-    assert len(entities) == 0
-
-    await universal.async_setup_platform(hass, validate_config(config), add_entities)
-    assert len(entities) == 1
-    assert entities[0].name == "test"
+    assert await async_setup_component(hass, "media_player", {"media_player": config})
+    await hass.async_block_till_done()
+    assert hass.states.async_all() != []
+    assert hass.states.get("media_player.test") is not None
 
 
 async def test_master_state(hass: HomeAssistant) -> None:
@@ -461,11 +446,10 @@ async def test_active_child_state(hass: HomeAssistant, mock_states) -> None:
 
 async def test_name(hass: HomeAssistant) -> None:
     """Test name property."""
-    config = validate_config(CONFIG_CHILDREN_ONLY)
-
-    ump = universal.UniversalMediaPlayer(hass, config)
-
-    assert config["name"] == ump.name
+    assert await async_setup_component(
+        hass, "media_player", {"media_player": CONFIG_CHILDREN_ONLY}
+    )
+    assert hass.states.get("media_player.test") is not None
 
 
 async def test_polling(hass: HomeAssistant) -> None:

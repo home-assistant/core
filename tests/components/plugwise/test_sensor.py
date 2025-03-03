@@ -7,8 +7,8 @@ import pytest
 from homeassistant.components.plugwise.const import DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import async_update_entity
-import homeassistant.helpers.entity_registry as er
 
 from tests.common import MockConfigEntry
 
@@ -41,7 +41,9 @@ async def test_adam_climate_sensor_entities(
 
 
 async def test_adam_climate_sensor_entity_2(
-    hass: HomeAssistant, mock_smile_adam_4: MagicMock, init_integration: MockConfigEntry
+    hass: HomeAssistant,
+    mock_smile_adam_jip: MagicMock,
+    init_integration: MockConfigEntry,
 ) -> None:
     """Test creation of climate related sensor entities."""
     state = hass.states.get("sensor.woonkamer_humidity")
@@ -52,7 +54,7 @@ async def test_adam_climate_sensor_entity_2(
 async def test_unique_id_migration_humidity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_smile_adam_4: MagicMock,
+    mock_smile_adam_jip: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unique ID migration of -relative_humidity to -humidity."""
@@ -92,6 +94,8 @@ async def test_unique_id_migration_humidity(
     assert entity_entry.unique_id == "f61f1a2535f54f52ad006a3d18e459ca-battery"
 
 
+@pytest.mark.parametrize("chosen_env", ["anna_heatpump_heating"], indirect=True)
+@pytest.mark.parametrize("cooling_present", [True], indirect=True)
 async def test_anna_as_smt_climate_sensor_entities(
     hass: HomeAssistant, mock_smile_anna: MagicMock, init_integration: MockConfigEntry
 ) -> None:
@@ -113,6 +117,10 @@ async def test_anna_as_smt_climate_sensor_entities(
     assert float(state.state) == 86.0
 
 
+@pytest.mark.parametrize("chosen_env", ["p1v4_442_single"], indirect=True)
+@pytest.mark.parametrize(
+    "gateway_id", ["a455b61e52394b2db5081ce025a430f3"], indirect=True
+)
 async def test_p1_dsmr_sensor_entities(
     hass: HomeAssistant, mock_smile_p1: MagicMock, init_integration: MockConfigEntry
 ) -> None:
@@ -137,11 +145,15 @@ async def test_p1_dsmr_sensor_entities(
     assert not state
 
 
+@pytest.mark.parametrize("chosen_env", ["p1v4_442_triple"], indirect=True)
+@pytest.mark.parametrize(
+    "gateway_id", ["03e65b16e4b247a29ae0d75a78cb492e"], indirect=True
+)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_p1_3ph_dsmr_sensor_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_smile_p1_2: MagicMock,
+    mock_smile_p1: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test creation of power related sensor entities."""
@@ -163,10 +175,14 @@ async def test_p1_3ph_dsmr_sensor_entities(
     assert float(state.state) == 233.2
 
 
+@pytest.mark.parametrize("chosen_env", ["p1v4_442_triple"], indirect=True)
+@pytest.mark.parametrize(
+    "gateway_id", ["03e65b16e4b247a29ae0d75a78cb492e"], indirect=True
+)
 async def test_p1_3ph_dsmr_sensor_disabled_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_smile_p1_2: MagicMock,
+    mock_smile_p1: MagicMock,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test disabled power related sensor entities intent."""

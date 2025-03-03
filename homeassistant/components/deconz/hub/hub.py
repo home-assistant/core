@@ -11,7 +11,7 @@ from pydeconz.interfaces.api_handlers import APIHandler, GroupedAPIHandler
 from pydeconz.interfaces.groups import GroupHandler
 from pydeconz.models.event import EventType
 
-from homeassistant.config_entries import SOURCE_HASSIO, ConfigEntry
+from homeassistant.config_entries import SOURCE_HASSIO
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
@@ -26,6 +26,7 @@ from ..const import (
 from .config import DeconzConfig
 
 if TYPE_CHECKING:
+    from .. import DeconzConfigEntry
     from ..deconz_event import (
         DeconzAlarmEvent,
         DeconzEvent,
@@ -67,7 +68,7 @@ class DeconzHub:
     """Manages a single deCONZ gateway."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, api: DeconzSession
+        self, hass: HomeAssistant, config_entry: DeconzConfigEntry, api: DeconzSession
     ) -> None:
         """Initialize the system."""
         self.hass = hass
@@ -93,12 +94,6 @@ class DeconzHub:
         self.clip_sensors: set[tuple[Callable[[EventType, str], None], str]] = set()
         self.deconz_groups: set[tuple[Callable[[EventType, str], None], str]] = set()
         self.ignored_devices: set[tuple[Callable[[EventType, str], None], str]] = set()
-
-    @callback
-    @staticmethod
-    def get_hub(hass: HomeAssistant, config_entry: ConfigEntry) -> DeconzHub:
-        """Return hub with a matching config entry ID."""
-        return cast(DeconzHub, hass.data[DECONZ_DOMAIN][config_entry.entry_id])
 
     @property
     def bridgeid(self) -> str:
@@ -208,7 +203,7 @@ class DeconzHub:
 
     @staticmethod
     async def async_config_entry_updated(
-        hass: HomeAssistant, config_entry: ConfigEntry
+        hass: HomeAssistant, config_entry: DeconzConfigEntry
     ) -> None:
         """Handle signals of config entry being updated.
 
@@ -217,11 +212,7 @@ class DeconzHub:
         Causes for this is either discovery updating host address or
         config entry options changing.
         """
-        if config_entry.entry_id not in hass.data[DECONZ_DOMAIN]:
-            # A race condition can occur if multiple config entries are
-            # unloaded in parallel
-            return
-        hub = DeconzHub.get_hub(hass, config_entry)
+        hub = config_entry.runtime_data
         previous_config = hub.config
         hub.config = DeconzConfig.from_config_entry(config_entry)
         if previous_config.host != hub.config.host:

@@ -4,7 +4,7 @@ from unittest.mock import ANY, call
 
 import pytest
 
-import homeassistant.components.mqtt_statestream as statestream
+from homeassistant.components import mqtt_statestream as statestream
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.setup import async_setup_component

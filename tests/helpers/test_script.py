@@ -44,7 +44,7 @@ from homeassistant.helpers import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.typing import UNDEFINED
 from homeassistant.setup import async_setup_component
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from tests.common import (
     MockConfigEntry,
@@ -450,6 +450,68 @@ async def test_service_response_data_errors(
 
     with pytest.raises(vol.Invalid, match=expected_error):
         await script_obj.async_run(context=context)
+
+
+async def test_calling_service_response_data_in_scopes(hass: HomeAssistant) -> None:
+    """Test response variable is still set after scopes end."""
+    expected_var = {"data": "value-12345"}
+
+    def mock_service(call: ServiceCall) -> ServiceResponse:
+        """Mock service call."""
+        if call.return_response:
+            return expected_var
+        return None
+
+    hass.services.async_register(
+        "test", "script", mock_service, supports_response=SupportsResponse.OPTIONAL
+    )
+
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "parallel": [
+                {
+                    "alias": "Sequential group",
+                    "sequence": [
+                        {
+                            "alias": "variables",
+                            "variables": {"state": "off"},
+                        },
+                        {
+                            "alias": "service step1",
+                            "action": "test.script",
+                            "response_variable": "my_response",
+                        },
+                    ],
+                }
+            ]
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+
+    assert result.variables["my_response"] == expected_var
+
+    expected_trace = {
+        "0": [{"variables": {"my_response": expected_var}}],
+        "0/parallel/0/sequence/0": [{"variables": {"state": "off"}}],
+        "0/parallel/0/sequence/1": [
+            {
+                "result": {
+                    "params": {
+                        "domain": "test",
+                        "service": "script",
+                        "service_data": {},
+                        "target": {},
+                    },
+                    "running_script": False,
+                },
+                "variables": {"my_response": expected_var},
+            }
+        ],
+    }
+    assert_action_trace(expected_trace)
 
 
 async def test_data_template_with_templated_key(hass: HomeAssistant) -> None:
@@ -1704,6 +1766,90 @@ async def test_wait_variables_out(hass: HomeAssistant, mode, action_type) -> Non
             assert 0.0 < float(remaining) < 5
         else:
             assert float(remaining) == 0.0
+
+
+async def test_wait_in_sequence(hass: HomeAssistant) -> None:
+    """Test wait variable is still set after sequence ends."""
+    sequence = cv.SCRIPT_SCHEMA(
+        [
+            {
+                "alias": "Sequential group",
+                "sequence": [
+                    {
+                        "alias": "variables",
+                        "variables": {"state": "off"},
+                    },
+                    {
+                        "alias": "wait template",
+                        "wait_template": "{{ state == 'off' }}",
+                    },
+                ],
+            },
+        ]
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+
+    expected_var = {"completed": True, "remaining": None}
+
+    assert result.variables["wait"] == expected_var
+
+    expected_trace = {
+        "0": [{"variables": {"wait": expected_var}}],
+        "0/sequence/0": [{"variables": {"state": "off"}}],
+        "0/sequence/1": [
+            {
+                "result": {"wait": expected_var},
+                "variables": {"wait": expected_var},
+            }
+        ],
+    }
+    assert_action_trace(expected_trace)
+
+
+async def test_wait_in_parallel(hass: HomeAssistant) -> None:
+    """Test wait variable is not set after parallel ends."""
+    sequence = cv.SCRIPT_SCHEMA(
+        {
+            "parallel": [
+                {
+                    "alias": "Sequential group",
+                    "sequence": [
+                        {
+                            "alias": "variables",
+                            "variables": {"state": "off"},
+                        },
+                        {
+                            "alias": "wait template",
+                            "wait_template": "{{ state == 'off' }}",
+                        },
+                    ],
+                }
+            ]
+        }
+    )
+
+    script_obj = script.Script(hass, sequence, "Test Name", "test_domain")
+
+    result = await script_obj.async_run(context=Context())
+
+    expected_var = {"completed": True, "remaining": None}
+
+    assert "wait" not in result.variables
+
+    expected_trace = {
+        "0": [{}],
+        "0/parallel/0/sequence/0": [{"variables": {"state": "off"}}],
+        "0/parallel/0/sequence/1": [
+            {
+                "result": {"wait": expected_var},
+                "variables": {"wait": expected_var},
+            }
+        ],
+    }
+    assert_action_trace(expected_trace)
 
 
 async def test_wait_for_trigger_bad(
@@ -4118,6 +4264,14 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "action": "test.script",
+                            "data": {"label_id": "label_sequence"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -4135,6 +4289,7 @@ async def test_referenced_labels(hass: HomeAssistant) -> None:
         "label_if_then",
         "label_if_else",
         "label_parallel",
+        "label_sequence",
     }
     # Test we cache results.
     assert script_obj.referenced_labels is script_obj.referenced_labels
@@ -4220,6 +4375,14 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "action": "test.script",
+                            "data": {"floor_id": "floor_sequence"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -4236,6 +4399,7 @@ async def test_referenced_floors(hass: HomeAssistant) -> None:
         "floor_if_then",
         "floor_if_else",
         "floor_parallel",
+        "floor_sequence",
     }
     # Test we cache results.
     assert script_obj.referenced_floors is script_obj.referenced_floors
@@ -4321,6 +4485,14 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "action": "test.script",
+                            "data": {"area_id": "area_sequence"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -4337,6 +4509,7 @@ async def test_referenced_areas(hass: HomeAssistant) -> None:
         "area_if_then",
         "area_if_else",
         "area_parallel",
+        "area_sequence",
         # 'area_service_template',  # no area extraction from template
     }
     # Test we cache results.
@@ -4437,6 +4610,14 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "action": "test.script",
+                            "data": {"entity_id": "light.sequence"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -4456,6 +4637,7 @@ async def test_referenced_entities(hass: HomeAssistant) -> None:
         "light.if_then",
         "light.if_else",
         "light.parallel",
+        "light.sequence",
         # "light.service_template",  # no entity extraction from template
         "scene.hello",
         "sensor.condition",
@@ -4554,6 +4736,14 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
                         }
                     ],
                 },
+                {
+                    "sequence": [
+                        {
+                            "action": "test.script",
+                            "target": {"device_id": "sequence-device"},
+                        }
+                    ],
+                },
             ]
         ),
         "Test Name",
@@ -4575,6 +4765,7 @@ async def test_referenced_devices(hass: HomeAssistant) -> None:
         "if-then",
         "if-else",
         "parallel-device",
+        "sequence-device",
     }
     # Test we cache results.
     assert script_obj.referenced_devices is script_obj.referenced_devices

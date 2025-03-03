@@ -57,9 +57,7 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices:
-    status: todo
-    comment: Add devices dynamically
+  dynamic-devices: done
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -70,9 +68,7 @@ rules:
     status: exempt
     comment: no configuration possible
   repair-issues: done
-  stale-devices:
-    status: todo
-    comment: We only remove devices on reload
+  stale-devices: done
 
   # Platinum
   async-dependency: done

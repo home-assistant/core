@@ -15,23 +15,44 @@ from habiticalib import (
     TaskType,
     UserData,
     deserialize_task,
+    ha,
 )
 
+from homeassistant.components.automation import automations_with_entity
+from homeassistant.components.script import scripts_with_entity
 from homeassistant.components.sensor import (
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    async_create_issue,
+    async_delete_issue,
+)
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
-from .const import ASSETS_URL
+from .const import ASSETS_URL, DOMAIN
+from .coordinator import HabiticaConfigEntry, HabiticaDataUpdateCoordinator
 from .entity import HabiticaBase
-from .types import HabiticaConfigEntry
-from .util import get_attribute_points, get_attributes_total
+from .util import get_attribute_points, get_attributes_total, inventory_list
 
 _LOGGER = logging.getLogger(__name__)
+
+SVG_CLASS = {
+    HabiticaClass.WARRIOR: ha.WARRIOR,
+    HabiticaClass.ROGUE: ha.ROGUE,
+    HabiticaClass.MAGE: ha.WIZARD,
+    HabiticaClass.HEALER: ha.HEALER,
+}
+
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -73,6 +94,11 @@ class HabiticaSensorEntity(StrEnum):
     INTELLIGENCE = "intelligence"
     CONSTITUTION = "constitution"
     PERCEPTION = "perception"
+    EGGS_TOTAL = "eggs_total"
+    HATCHING_POTIONS_TOTAL = "hatching_potions_total"
+    FOOD_TOTAL = "food_total"
+    SADDLE = "saddle"
+    QUEST_SCROLLS = "quest_scrolls"
 
 
 SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
@@ -80,12 +106,27 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         key=HabiticaSensorEntity.DISPLAY_NAME,
         translation_key=HabiticaSensorEntity.DISPLAY_NAME,
         value_fn=lambda user, _: user.profile.name,
+        attributes_fn=lambda user, _: {
+            "blurb": user.profile.blurb,
+            "joined": (
+                dt_util.as_local(joined).date()
+                if (joined := user.auth.timestamps.created)
+                else None
+            ),
+            "last_login": (
+                dt_util.as_local(last).date()
+                if (last := user.auth.timestamps.loggedin)
+                else None
+            ),
+            "total_logins": user.loginIncentives,
+        },
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.HEALTH,
         translation_key=HabiticaSensorEntity.HEALTH,
         suggested_display_precision=0,
         value_fn=lambda user, _: user.stats.hp,
+        entity_picture=ha.HP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.HEALTH_MAX,
@@ -98,21 +139,25 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.MANA,
         suggested_display_precision=0,
         value_fn=lambda user, _: user.stats.mp,
+        entity_picture=ha.MP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.MANA_MAX,
         translation_key=HabiticaSensorEntity.MANA_MAX,
         value_fn=lambda user, _: user.stats.maxMP,
+        entity_picture=ha.MP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.EXPERIENCE,
         translation_key=HabiticaSensorEntity.EXPERIENCE,
         value_fn=lambda user, _: user.stats.exp,
+        entity_picture=ha.XP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.EXPERIENCE_MAX,
         translation_key=HabiticaSensorEntity.EXPERIENCE_MAX,
         value_fn=lambda user, _: user.stats.toNextLevel,
+        entity_picture=ha.XP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.LEVEL,
@@ -124,6 +169,7 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         translation_key=HabiticaSensorEntity.GOLD,
         suggested_display_precision=2,
         value_fn=lambda user, _: user.stats.gp,
+        entity_picture=ha.GP,
     ),
     HabiticaSensorEntityDescription(
         key=HabiticaSensorEntity.CLASS,
@@ -179,6 +225,44 @@ SENSOR_DESCRIPTIONS: tuple[HabiticaSensorEntityDescription, ...] = (
         suggested_display_precision=0,
         native_unit_of_measurement="CON",
     ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.EGGS_TOTAL,
+        translation_key=HabiticaSensorEntity.EGGS_TOTAL,
+        value_fn=lambda user, _: sum(n for n in user.items.eggs.values()),
+        entity_picture="Pet_Egg_Egg.png",
+        attributes_fn=lambda user, content: inventory_list(user, content, "eggs"),
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.HATCHING_POTIONS_TOTAL,
+        translation_key=HabiticaSensorEntity.HATCHING_POTIONS_TOTAL,
+        value_fn=lambda user, _: sum(n for n in user.items.hatchingPotions.values()),
+        entity_picture="Pet_HatchingPotion_RoyalPurple.png",
+        attributes_fn=(
+            lambda user, content: inventory_list(user, content, "hatchingPotions")
+        ),
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.FOOD_TOTAL,
+        translation_key=HabiticaSensorEntity.FOOD_TOTAL,
+        value_fn=(
+            lambda user, _: sum(n for k, n in user.items.food.items() if k != "Saddle")
+        ),
+        entity_picture=ha.FOOD,
+        attributes_fn=lambda user, content: inventory_list(user, content, "food"),
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.SADDLE,
+        translation_key=HabiticaSensorEntity.SADDLE,
+        value_fn=lambda user, _: user.items.food.get("Saddle", 0),
+        entity_picture="Pet_Food_Saddle.png",
+    ),
+    HabiticaSensorEntityDescription(
+        key=HabiticaSensorEntity.QUEST_SCROLLS,
+        translation_key=HabiticaSensorEntity.QUEST_SCROLLS,
+        value_fn=(lambda user, _: sum(n for n in user.items.quests.values())),
+        entity_picture="inventory_quest_scroll_dustbunnies.png",
+        attributes_fn=lambda user, content: inventory_list(user, content, "quests"),
+    ),
 )
 
 
@@ -226,22 +310,73 @@ TASK_SENSOR_DESCRIPTION: tuple[HabiticaTaskSensorEntityDescription, ...] = (
 )
 
 
+def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Get list of related automations and scripts."""
+    used_in = automations_with_entity(hass, entity_id)
+    used_in += scripts_with_entity(hass, entity_id)
+    return used_in
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HabiticaConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the habitica sensors."""
 
     coordinator = config_entry.runtime_data
+    ent_reg = er.async_get(hass)
+    entities: list[SensorEntity] = []
+    description: SensorEntityDescription
 
-    entities: list[SensorEntity] = [
-        HabiticaSensor(coordinator, description) for description in SENSOR_DESCRIPTIONS
-    ]
-    entities.extend(
-        HabiticaTaskSensor(coordinator, description)
-        for description in TASK_SENSOR_DESCRIPTION
-    )
+    def add_deprecated_entity(
+        description: SensorEntityDescription,
+        entity_cls: Callable[
+            [HabiticaDataUpdateCoordinator, SensorEntityDescription], SensorEntity
+        ],
+    ) -> None:
+        """Add deprecated entities."""
+        if entity_id := ent_reg.async_get_entity_id(
+            SENSOR_DOMAIN,
+            DOMAIN,
+            f"{config_entry.unique_id}_{description.key}",
+        ):
+            entity_entry = ent_reg.async_get(entity_id)
+            if entity_entry and entity_entry.disabled:
+                ent_reg.async_remove(entity_id)
+                async_delete_issue(
+                    hass,
+                    DOMAIN,
+                    f"deprecated_entity_{description.key}",
+                )
+            elif entity_entry:
+                entities.append(entity_cls(coordinator, description))
+                if entity_used_in(hass, entity_id):
+                    async_create_issue(
+                        hass,
+                        DOMAIN,
+                        f"deprecated_entity_{description.key}",
+                        breaks_in_ha_version="2025.8.0",
+                        is_fixable=False,
+                        severity=IssueSeverity.WARNING,
+                        translation_key="deprecated_entity",
+                        translation_placeholders={
+                            "name": str(
+                                entity_entry.name or entity_entry.original_name
+                            ),
+                            "entity": entity_id,
+                        },
+                    )
+
+    for description in SENSOR_DESCRIPTIONS:
+        if description.key is HabiticaSensorEntity.HEALTH_MAX:
+            add_deprecated_entity(description, HabiticaSensor)
+        else:
+            entities.append(HabiticaSensor(coordinator, description))
+
+    for description in TASK_SENSOR_DESCRIPTION:
+        add_deprecated_entity(description, HabiticaTaskSensor)
+
     async_add_entities(entities, True)
 
 
@@ -268,8 +403,23 @@ class HabiticaSensor(HabiticaBase, SensorEntity):
     @property
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
+        if self.entity_description.key is HabiticaSensorEntity.CLASS and (
+            _class := self.coordinator.data.user.stats.Class
+        ):
+            return SVG_CLASS[_class]
+
+        if self.entity_description.key is HabiticaSensorEntity.DISPLAY_NAME and (
+            img_url := self.coordinator.data.user.profile.imageUrl
+        ):
+            return img_url
+
         if entity_picture := self.entity_description.entity_picture:
-            return f"{ASSETS_URL}{entity_picture}"
+            return (
+                entity_picture
+                if entity_picture.startswith("data:image")
+                else f"{ASSETS_URL}{entity_picture}"
+            )
+
         return None
 
 

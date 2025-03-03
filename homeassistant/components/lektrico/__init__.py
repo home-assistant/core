@@ -4,11 +4,10 @@ from __future__ import annotations
 
 from lektricowifi import Device
 
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_SERIAL_NUMBER, CONF_TYPE, Platform
+from homeassistant.const import CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import LektricoDeviceDataUpdateCoordinator
+from .coordinator import LektricoConfigEntry, LektricoDeviceDataUpdateCoordinator
 
 # List the platforms that charger supports.
 CHARGERS_PLATFORMS: list[Platform] = [
@@ -26,15 +25,10 @@ LB_DEVICES_PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 
-type LektricoConfigEntry = ConfigEntry[LektricoDeviceDataUpdateCoordinator]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: LektricoConfigEntry) -> bool:
     """Set up Lektrico Charging Station from a config entry."""
-    coordinator = LektricoDeviceDataUpdateCoordinator(
-        hass,
-        f"{entry.data[CONF_TYPE]}_{entry.data[ATTR_SERIAL_NUMBER]}",
-    )
+    coordinator = LektricoDeviceDataUpdateCoordinator(hass, entry)
 
     await coordinator.async_config_entry_first_refresh()
 
@@ -45,7 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LektricoConfigEntry) -> 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: LektricoConfigEntry) -> bool:
     """Unload a config entry."""
 
     return await hass.config_entries.async_unload_platforms(
@@ -53,7 +47,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     )
 
 
-def _get_platforms(entry: ConfigEntry) -> list[Platform]:
+def _get_platforms(entry: LektricoConfigEntry) -> list[Platform]:
     """Return the platforms for this type of device."""
     _device_type: str = entry.data[CONF_TYPE]
     if _device_type in (Device.TYPE_1P7K, Device.TYPE_3P22K):

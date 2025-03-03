@@ -10,12 +10,14 @@
       'discovery_keys': dict({
       }),
       'domain': 'velbus',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
       'pref_disable_polling': False,
       'source': 'user',
+      'subentries': list([
+      ]),
       'title': 'Mock Title',
       'unique_id': None,
       'version': 2,
@@ -79,7 +81,7 @@
       }),
       dict({
         'address': list([
-          99,
+          88,
         ]),
         'channels': dict({
         }),
