@@ -28,7 +28,13 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.fixture
+def use_cloud(hass: HomeAssistant) -> None:
+    """Set up the cloud component."""
+    hass.config.components.add("cloud")
+
+
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -100,7 +106,7 @@ async def test_full_flow(
     assert result["result"].unique_id == "397678e5-9995-4a39-9d9f-ae6ba310236c"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_not_enough_scopes(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -161,7 +167,7 @@ async def test_not_enough_scopes(
     assert result["reason"] == "missing_scopes"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_duplicate_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -224,6 +230,23 @@ async def test_duplicate_entry(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+async def test_no_cloud(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Check we abort when cloud is not enabled."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cloud_not_enabled"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_reauthentication(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -285,7 +308,7 @@ async def test_reauthentication(
     }
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_reauthentication_wrong_scopes(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -336,7 +359,7 @@ async def test_reauthentication_wrong_scopes(
     assert result["reason"] == "missing_scopes"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_reauth_account_mismatch(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -387,7 +410,7 @@ async def test_reauth_account_mismatch(
     assert result["reason"] == "reauth_account_mismatch"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_migration(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -468,7 +491,7 @@ async def test_migration(
     assert mock_old_config_entry.minor_version == 1
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_migration_wrong_location(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
