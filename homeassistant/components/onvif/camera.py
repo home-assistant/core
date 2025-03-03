@@ -204,10 +204,8 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
                 self._stream_uri_future.set_exception(err)
             raise
         url = URL(uri_no_auth)
-        if self.device.username:
-            url = url.with_user(self.device.username)
-        if self.device.password:
-            url = url.with_password(self.device.password)
+        url = url.with_user(self.device.username or None)
+        url = url.with_password(self.device.password or None)
         self._stream_uri = str(url)
         self._stream_uri_future.set_result(self._stream_uri)
         return self._stream_uri
