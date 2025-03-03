@@ -54,15 +54,13 @@ class RemoteCalendarDataUpdateCoordinator(DataUpdateCoordinator[Calendar]):
                 translation_key="unable_to_fetch",
                 translation_placeholders={"err": str(err)},
             ) from err
-        else:
-            res.raise_for_status()
-            try:
-                return await self.hass.async_add_executor_job(
-                    IcsCalendarStream.calendar_from_ics, res.text
-                )
-            except CalendarParseError as err:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="unable_to_parse",
-                    translation_placeholders={"err": str(err)},
-                ) from err
+        try:
+            return await self.hass.async_add_executor_job(
+                IcsCalendarStream.calendar_from_ics, res.text
+            )
+        except CalendarParseError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_parse",
+                translation_placeholders={"err": str(err)},
+            ) from err

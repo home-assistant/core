@@ -59,7 +59,6 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown_url_type"
             _LOGGER.debug("ValueError: %s", err)
         else:
-            res.raise_for_status()
             try:
                 await self.hass.async_add_executor_job(
                     IcsCalendarStream.calendar_from_ics, res.text
