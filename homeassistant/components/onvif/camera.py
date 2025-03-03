@@ -117,7 +117,7 @@ class ONVIFCameraEntity(ONVIFBaseEntity, Camera):
         self._attr_entity_registry_enabled_default = (
             device.max_resolution == profile.video.resolution.width
         )
-        self._attr_unique_id = f"{self.mac_or_serial}_{profile.token}"
+        self._attr_unique_id = f"{self.mac_or_serial}#{profile.token}"
         self._attr_name = f"{device.name} {profile.name}"
 
     @property
