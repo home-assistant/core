@@ -1,9 +1,8 @@
 """Support for Comelit."""
 
 from abc import abstractmethod
-from collections.abc import Mapping
 from datetime import timedelta
-from typing import TypeVar, cast
+from typing import TypedDict, TypeVar, cast
 
 from aiocomelit import (
     ComeliteSerialBridgeApi,
@@ -14,7 +13,7 @@ from aiocomelit import (
     exceptions,
 )
 from aiocomelit.api import ComelitCommonApi
-from aiocomelit.const import ALARM_ZONES, BRIDGE, VEDO
+from aiocomelit.const import ALARM_AREAS, ALARM_ZONES, BRIDGE, VEDO
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,10 +25,17 @@ from .const import _LOGGER, DOMAIN
 
 type ComelitConfigEntry = ConfigEntry[ComelitBaseCoordinator]
 
+
+class AlarmDataObject(TypedDict):
+    """TypedDict for Alarm data objects."""
+
+    alarm_areas: dict[int, ComelitVedoAreaObject]
+    alarm_zones: dict[int, ComelitVedoZoneObject]
+
+
 T = TypeVar(
     "T",
-    bound=dict[str, dict[int, ComelitSerialBridgeObject]]
-    | dict[str, Mapping[int, ComelitVedoAreaObject | ComelitVedoZoneObject]],
+    bound=dict[str, dict[int, ComelitSerialBridgeObject]] | AlarmDataObject,
 )
 
 
@@ -131,11 +137,7 @@ class ComelitSerialBridge(
         return await self.api.get_all_devices()
 
 
-class ComelitVedoSystem(
-    ComelitBaseCoordinator[
-        dict[str, Mapping[int, ComelitVedoAreaObject | ComelitVedoZoneObject]]
-    ]
-):
+class ComelitVedoSystem(ComelitBaseCoordinator[AlarmDataObject]):
     """Queries Comelit VEDO system."""
 
     _hw_version = "VEDO IP"
@@ -155,14 +157,11 @@ class ComelitVedoSystem(
 
     async def _async_update_system_data(
         self,
-    ) -> dict[str, Mapping[int, ComelitVedoAreaObject | ComelitVedoZoneObject]]:
+    ) -> AlarmDataObject:
         """Specific method for updating data."""
-        return await self.api.get_all_areas_and_zones()
+        data = await self.api.get_all_areas_and_zones()
 
-    def select_zone(self, index: int) -> ComelitVedoZoneObject:
-        """Return selected zone."""
-        return cast(ComelitVedoZoneObject, self.data[ALARM_ZONES][index])
-
-    def select_area(self, index: int) -> ComelitVedoAreaObject:
-        """Return selected zone."""
-        return cast(ComelitVedoAreaObject, self.data[ALARM_ZONES][index])
+        return AlarmDataObject(
+            alarm_areas=cast(dict[int, ComelitVedoAreaObject], data[ALARM_AREAS]),
+            alarm_zones=cast(dict[int, ComelitVedoZoneObject], data[ALARM_ZONES]),
+        )

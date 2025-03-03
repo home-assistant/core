@@ -5,7 +5,6 @@ from __future__ import annotations
 from typing import cast
 
 from aiocomelit import ComelitVedoZoneObject
-from aiocomelit.const import ALARM_ZONES
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -29,8 +28,7 @@ async def async_setup_entry(
 
     async_add_entities(
         ComelitVedoBinarySensorEntity(coordinator, device, config_entry.entry_id)
-        for device in coordinator.data[ALARM_ZONES].values()
-        if isinstance(device, ComelitVedoZoneObject)
+        for device in coordinator.data["alarm_zones"].values()
     )
 
 
@@ -60,4 +58,4 @@ class ComelitVedoBinarySensorEntity(
     @property
     def is_on(self) -> bool:
         """Presence detected."""
-        return self.coordinator.select_zone(self._zone_index).status_api == "0001"
+        return self.coordinator.data["alarm_zones"][self._zone_index].status == 1

@@ -121,9 +121,6 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         self._active_mode = active_mode
         self._active_action = active_action
         self._set_command = set_command
-        self._active: bool = False
-        self._automatic: bool = False
-        self._mode: str = HumidifierComelitMode.OFF
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -137,33 +134,20 @@ class ComelitHumidifierEntity(CoordinatorEntity[ComelitSerialBridge], Humidifier
         # - second for Humidifier
         values = device.val[1]
 
+        _active = values[1]
+        _mode = values[2]  # Values from API: "O", "L", "U"
+        _automatic = values[3] == HumidifierComelitMode.AUTO
+
+        self._attr_action = HumidifierAction.IDLE
+        if _mode == HumidifierComelitMode.OFF:
+            self._attr_action = HumidifierAction.OFF
+        if _active and _mode == self._active_mode:
+            self._attr_action = self._active_action
+
         self._attr_current_humidity = values[0] / 10
-        self._active = values[1]
-        self._mode = values[2]  # Values from API: "O", "L", "U"
-        self._automatic = values[3] == HumidifierComelitMode.AUTO
+        self._attr_is_on = _mode == self._active_mode
+        self._attr_mode = MODE_AUTO if _automatic else MODE_NORMAL
         self._attr_target_humidity = values[4] / 10
-
-    @property
-    def is_on(self) -> bool:
-        """Return true is humidifier is on."""
-        return self._mode == self._active_mode
-
-    @property
-    def mode(self) -> str:
-        """Return current mode."""
-        return MODE_AUTO if self._automatic else MODE_NORMAL
-
-    @property
-    def action(self) -> HumidifierAction:
-        """Return current action."""
-
-        if self._mode == HumidifierComelitMode.OFF:
-            return HumidifierAction.OFF
-
-        if self._active and self._mode == self._active_mode:
-            return self._active_action
-
-        return HumidifierAction.IDLE
 
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""

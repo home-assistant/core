@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Final, cast
 
 from aiocomelit import ComelitSerialBridgeObject, ComelitVedoZoneObject
-from aiocomelit.const import ALARM_ZONES, BRIDGE, OTHER, AlarmZoneState
+from aiocomelit.const import BRIDGE, OTHER, AlarmZoneState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -82,13 +82,12 @@ async def async_setup_vedo_entry(
     coordinator = cast(ComelitVedoSystem, config_entry.runtime_data)
 
     entities: list[ComelitVedoSensorEntity] = []
-    for device in coordinator.data[ALARM_ZONES].values():
+    for device in coordinator.data["alarm_zones"].values():
         entities.extend(
             ComelitVedoSensorEntity(
                 coordinator, device, config_entry.entry_id, sensor_desc
             )
             for sensor_desc in SENSOR_VEDO_TYPES
-            if isinstance(device, ComelitVedoZoneObject)
         )
     async_add_entities(entities)
 
@@ -155,7 +154,7 @@ class ComelitVedoSensorEntity(CoordinatorEntity[ComelitVedoSystem], SensorEntity
     @property
     def _zone_object(self) -> ComelitVedoZoneObject:
         """Zone object."""
-        return self.coordinator.select_zone(self._zone_index)
+        return self.coordinator.data["alarm_zones"][self._zone_index]
 
     @property
     def available(self) -> bool:
