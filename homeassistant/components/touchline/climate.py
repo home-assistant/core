@@ -17,7 +17,10 @@ from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, CONF_HOST, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    AddEntitiesCallback,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
@@ -90,28 +93,21 @@ async def async_setup_platform(
         },
     )
 
-    # Initialize PyTouchline instance
-    py_touchline = PyTouchline(url=host)
-
-    # Discover devices
-    number_of_devices = await hass.async_add_executor_job(
-        py_touchline.get_number_of_devices
+    # Import YAML as a new config entry
+    hass.async_create_task(
+        hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_HOST: host},
+        )
     )
-    _LOGGER.debug("Number of devices found (YAML): %s", number_of_devices)
-
-    # Create entities for each device
-    devices = [
-        Touchline(PyTouchline(id=device_id, url=host))
-        for device_id in range(number_of_devices)
-    ]
-    async_add_entities(devices, True)
 
 
 # This function sets up the Touchline device from the configuration entry.
 async def async_setup_entry(
     hass: HomeAssistant,
     config: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Touchline device from config entry."""
     host = config.data[CONF_HOST]
