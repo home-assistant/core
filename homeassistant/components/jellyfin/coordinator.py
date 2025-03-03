@@ -13,15 +13,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CLIENT_DEVICE_ID, DOMAIN, LOGGER, USER_APP_NAME
 
+type JellyfinConfigEntry = ConfigEntry[JellyfinDataUpdateCoordinator]
+
 
 class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]]):
     """Data update coordinator for the Jellyfin integration."""
 
-    config_entry: ConfigEntry
+    config_entry: JellyfinConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
+        config_entry: JellyfinConfigEntry,
         api_client: JellyfinClient,
         system_info: dict[str, Any],
         user_id: str,
@@ -30,6 +33,7 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, An
         super().__init__(
             hass=hass,
             logger=LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=10),
         )
@@ -37,7 +41,7 @@ class JellyfinDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, An
         self.server_id: str = system_info["Id"]
         self.server_name: str = system_info["Name"]
         self.server_version: str | None = system_info.get("Version")
-        self.client_device_id: str = self.config_entry.data[CONF_CLIENT_DEVICE_ID]
+        self.client_device_id: str = config_entry.data[CONF_CLIENT_DEVICE_ID]
         self.user_id: str = user_id
 
         self.session_ids: set[str] = set()

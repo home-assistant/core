@@ -2,26 +2,26 @@
   "config": {
     "step": {
       "user": {
-        "title": "Set up your Azure Event Hub integration",
+        "title": "Set up Azure Event Hub",
         "data": {
-          "event_hub_instance_name": "Event Hub Instance Name",
-          "use_connection_string": "Use Connection String"
+          "event_hub_instance_name": "Event Hub instance name",
+          "use_connection_string": "Use connection string"
         }
       },
       "conn_string": {
-        "title": "Connection String method",
+        "title": "Connection string method",
         "description": "Please enter the connection string for: {event_hub_instance_name}",
         "data": {
-          "event_hub_connection_string": "Event Hub Connection String"
+          "event_hub_connection_string": "Event Hub connection string"
         }
       },
       "sas": {
-        "title": "SAS Credentials method",
+        "title": "SAS credentials method",
         "description": "Please enter the SAS (shared access signature) credentials for: {event_hub_instance_name}",
         "data": {
-          "event_hub_namespace": "Event Hub Namespace",
-          "event_hub_sas_policy": "Event Hub SAS Policy",
-          "event_hub_sas_key": "Event Hub SAS Key"
+          "event_hub_namespace": "Event Hub namespace",
+          "event_hub_sas_policy": "Event Hub SAS policy",
+          "event_hub_sas_key": "Event Hub SAS key"
         }
       }
     },
@@ -38,7 +38,7 @@
   "options": {
     "step": {
       "init": {
-        "title": "Options for the Azure Event Hub.",
+        "title": "Options for Azure Event Hub.",
         "data": {
           "send_interval": "Interval between sending batches to the hub."
         }

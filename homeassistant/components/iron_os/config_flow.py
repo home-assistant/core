@@ -61,7 +61,7 @@ class IronOSConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self.async_create_entry(title=title, data={})
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, True):
             address = discovery_info.address
             if (

@@ -5,5 +5,5 @@
   "documentation": "https://www.home-assistant.io/integrations/compensation",
   "iot_class": "calculated",
   "quality_scale": "legacy",
-  "requirements": ["numpy==2.2.0"]
+  "requirements": ["numpy==2.2.2"]
 }

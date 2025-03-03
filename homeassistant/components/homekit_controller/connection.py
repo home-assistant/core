@@ -154,7 +154,6 @@ class HKDevice:
         self._pending_subscribes: set[tuple[int, int]] = set()
         self._subscribe_timer: CALLBACK_TYPE | None = None
         self._load_platforms_lock = asyncio.Lock()
-        self._full_update_requested: bool = False
 
     @property
     def entity_map(self) -> Accessories:
@@ -323,8 +322,7 @@ class HKDevice:
                     self.hass,
                     self.async_update_available_state,
                     timedelta(seconds=BLE_AVAILABILITY_CHECK_INTERVAL),
-                    name=f"HomeKit Device {self.unique_id} BLE availability "
-                    "check poll",
+                    name=f"HomeKit Device {self.unique_id} BLE availability check poll",
                 )
             )
             # BLE devices always get an RSSI sensor as well
@@ -842,48 +840,11 @@ class HKDevice:
 
     async def async_request_update(self, now: datetime | None = None) -> None:
         """Request an debounced update from the accessory."""
-        self._full_update_requested = True
         await self._debounced_update.async_call()
 
     async def async_update(self, now: datetime | None = None) -> None:
         """Poll state of all entities attached to this bridge/accessory."""
         to_poll = self.pollable_characteristics
-        accessories = self.entity_map.accessories
-
-        if (
-            not self._full_update_requested
-            and len(accessories) == 1
-            and self.available
-            and not (to_poll - self.watchable_characteristics)
-            and self.pairing.is_available
-            and await self.pairing.controller.async_reachable(
-                self.unique_id, timeout=5.0
-            )
-        ):
-            # If its a single accessory and all chars are watchable,
-            # only poll the firmware version to keep the connection alive
-            # https://github.com/home-assistant/core/issues/123412
-            #
-            # Firmware revision is used here since iOS does this to keep camera
-            # connections alive, and the goal is to not regress
-            # https://github.com/home-assistant/core/issues/116143
-            # by polling characteristics that are not normally polled frequently
-            # and may not be tested by the device vendor.
-            #
-            _LOGGER.debug(
-                "Accessory is reachable, limiting poll to firmware version: %s",
-                self.unique_id,
-            )
-            first_accessory = accessories[0]
-            accessory_info = first_accessory.services.first(
-                service_type=ServicesTypes.ACCESSORY_INFORMATION
-            )
-            assert accessory_info is not None
-            firmware_iid = accessory_info[CharacteristicsTypes.FIRMWARE_REVISION].iid
-            to_poll = {(first_accessory.aid, firmware_iid)}
-
-        self._full_update_requested = False
-
         if not to_poll:
             self.async_update_available_state()
             _LOGGER.debug(

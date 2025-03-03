@@ -2,120 +2,120 @@
 # name: test_ctl_set_hvac_mode[default]
   list([
     tuple(
-      'HeatingOff',
+      <SystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
     tuple(
-      'Auto',
+      <SystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h032585]
   list([
     tuple(
-      'Off',
+      <SystemMode.OFF: 'Off'>,
     ),
     tuple(
-      'Heat',
+      <SystemMode.HEAT: 'Heat'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[h099625]
   list([
     tuple(
-      'HeatingOff',
+      <SystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
     tuple(
-      'Auto',
+      <SystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[minimal]
   list([
     tuple(
-      'HeatingOff',
+      <SystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
     tuple(
-      'Auto',
+      <SystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_set_hvac_mode[sys_004]
   list([
     tuple(
-      'HeatingOff',
+      <SystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
     tuple(
-      'Auto',
+      <SystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[default]
   list([
     tuple(
-      'HeatingOff',
+      <SystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h032585]
   list([
     tuple(
-      'Off',
+      <SystemMode.OFF: 'Off'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[h099625]
   list([
     tuple(
-      'HeatingOff',
+      <SystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[minimal]
   list([
     tuple(
-      'HeatingOff',
+      <SystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_off[sys_004]
   list([
     tuple(
-      'HeatingOff',
+      <SystemMode.HEATING_OFF: 'HeatingOff'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[default]
   list([
     tuple(
-      'Auto',
+      <SystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h032585]
   list([
     tuple(
-      'Heat',
+      <SystemMode.HEAT: 'Heat'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[h099625]
   list([
     tuple(
-      'Auto',
+      <SystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[minimal]
   list([
     tuple(
-      'Auto',
+      <SystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
 # name: test_ctl_turn_on[sys_004]
   list([
     tuple(
-      'Auto',
+      <SystemMode.AUTO: 'Auto'>,
     ),
   ])
 # ---
@@ -137,16 +137,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -184,16 +184,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -230,21 +230,21 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
+        'activeFaults': tuple(
           dict({
-            'faultType': 'TempZoneActuatorLowBattery',
-            'since': '2022-03-02T04:50:20',
+            'fault_type': 'TempZoneActuatorLowBattery',
+            'since': '2022-03-02T04:50:20+00:00',
           }),
-        ]),
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'TemporaryOverride',
           'target_heat_temperature': 21.0,
-          'until': '2022-03-07T20:00:00+01:00',
+          'until': '2022-03-07T19:00:00+00:00',
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -282,16 +282,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -329,16 +329,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -376,16 +376,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -423,20 +423,20 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
+        'activeFaults': tuple(
           dict({
-            'faultType': 'TempZoneActuatorCommunicationLost',
-            'since': '2022-03-02T15:56:01',
+            'fault_type': 'TempZoneActuatorCommunicationLost',
+            'since': '2022-03-02T15:56:01+00:00',
           }),
-        ]),
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'PermanentOverride',
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -477,8 +477,8 @@
         'Custom',
       ]),
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'activeSystemFaults': tuple(
+        ),
         'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -513,16 +513,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -560,16 +560,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -606,17 +606,17 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'TemporaryOverride',
           'target_heat_temperature': 21.0,
-          'until': '2022-03-07T20:00:00+01:00',
+          'until': '2022-03-07T19:00:00+00:00',
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -654,16 +654,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -701,16 +701,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -748,16 +748,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 16.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -795,16 +795,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'PermanentOverride',
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -845,8 +845,8 @@
         'Custom',
       ]),
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'activeSystemFaults': tuple(
+        ),
         'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -881,16 +881,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'PermanentOverride',
           'target_heat_temperature': 14.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -923,8 +923,8 @@
       'max_temp': 35,
       'min_temp': 7,
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'activeSystemFaults': tuple(
+        ),
         'system_id': '416856',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -959,16 +959,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 21.5,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -1006,8 +1006,8 @@
         'away',
       ]),
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'activeSystemFaults': tuple(
+        ),
         'system_id': '8557535',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -1042,16 +1042,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 21.5,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+03:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+03:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -1089,16 +1089,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 21.5,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+03:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+03:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Kiev')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -1136,16 +1136,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'FollowSchedule',
           'target_heat_temperature': 17.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+01:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+01:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/London')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -1186,8 +1186,8 @@
         'Custom',
       ]),
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'activeSystemFaults': tuple(
+        ),
         'system_id': '3432522',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -1222,8 +1222,12 @@
         'away',
       ]),
       'status': dict({
-        'active_system_faults': list([
-        ]),
+        'activeSystemFaults': tuple(
+          dict({
+            'fault_type': 'GatewayCommunicationLost',
+            'since': '2023-05-04T18:47:36.772704+02:00',
+          }),
+        ),
         'system_id': '4187769',
         'system_mode_status': dict({
           'is_permanent': True,
@@ -1258,16 +1262,16 @@
         'permanent',
       ]),
       'status': dict({
-        'active_faults': list([
-        ]),
+        'activeFaults': tuple(
+        ),
         'setpoint_status': dict({
           'setpoint_mode': 'PermanentOverride',
           'target_heat_temperature': 15.0,
         }),
         'setpoints': dict({
-          'next_sp_from': '2024-07-10T22:10:00+02:00',
+          'next_sp_from': HAFakeDatetime(2024, 7, 10, 22, 10, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
           'next_sp_temp': 18.6,
-          'this_sp_from': '2024-07-10T08:00:00+02:00',
+          'this_sp_from': HAFakeDatetime(2024, 7, 10, 8, 0, tzinfo=zoneinfo.ZoneInfo(key='Europe/Berlin')),
           'this_sp_temp': 16.0,
         }),
         'temperature_status': dict({
@@ -1331,7 +1335,7 @@
       17.0,
     ),
     dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---
@@ -1344,7 +1348,7 @@
       21.5,
     ),
     dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---
@@ -1357,7 +1361,7 @@
       21.5,
     ),
     dict({
-      'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---
@@ -1370,7 +1374,7 @@
       17.0,
     ),
     dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---
@@ -1383,35 +1387,35 @@
       15.0,
     ),
     dict({
-      'until': datetime.datetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 20, 10, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[default]
   list([
     dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[h032585]
   list([
     dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[h099625]
   list([
     dict({
-      'until': datetime.datetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 19, 10, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---
 # name: test_zone_set_temperature[minimal]
   list([
     dict({
-      'until': datetime.datetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
+      'until': HAFakeDatetime(2024, 7, 10, 21, 10, tzinfo=datetime.timezone.utc),
     }),
   ])
 # ---

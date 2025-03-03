@@ -906,6 +906,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -928,7 +929,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.DAILIES: 'dailys'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_dailys',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_dailys',
     'unit_of_measurement': None,
   })
 # ---
@@ -959,6 +960,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -981,7 +983,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.DAILY_REMINDERS: 'daily_reminders'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_daily_reminders',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_daily_reminders',
     'unit_of_measurement': None,
   })
 # ---
@@ -1011,6 +1013,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1033,7 +1036,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.TODO_REMINDERS: 'todo_reminders'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_todo_reminders',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todo_reminders',
     'unit_of_measurement': None,
   })
 # ---
@@ -1063,6 +1066,7 @@
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'device_class': None,
     'device_id': <ANY>,
     'disabled_by': None,
@@ -1085,7 +1089,7 @@
     'previous_unique_id': None,
     'supported_features': 0,
     'translation_key': <HabiticaCalendar.TODOS: 'todos'>,
-    'unique_id': '00000000-0000-0000-0000-000000000000_todos',
+    'unique_id': 'a380546a-94be-4b8e-8a0b-23e0d5c03303_todos',
     'unit_of_measurement': None,
   })
 # ---

@@ -23,10 +23,10 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-import homeassistant.helpers.config_validation as cv
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
-    AddEntitiesCallback,
+    AddConfigEntryEntitiesCallback,
     async_get_current_platform,
 )
 from homeassistant.helpers.event import async_track_point_in_utc_time
@@ -94,7 +94,11 @@ def _get_obj_holidays(
         language=language,
         categories=set_categories,
     )
-    if (supported_languages := obj_holidays.supported_languages) and language == "en":
+    if (
+        (supported_languages := obj_holidays.supported_languages)
+        and language
+        and language.startswith("en")
+    ):
         for lang in supported_languages:
             if lang.startswith("en"):
                 obj_holidays = country_holidays(
@@ -109,7 +113,9 @@ def _get_obj_holidays(
 
 
 async def async_setup_entry(
-    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+    hass: HomeAssistant,
+    entry: ConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Workday sensor."""
     add_holidays: list[str] = entry.options[CONF_ADD_HOLIDAYS]

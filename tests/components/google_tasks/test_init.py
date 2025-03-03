@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 import http
 from http import HTTPStatus
+import json
 import time
 from unittest.mock import Mock
 
@@ -15,13 +16,15 @@ from homeassistant.components.google_tasks.const import OAUTH2_TOKEN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import LIST_TASK_LIST_RESPONSE
+from .conftest import LIST_TASK_LIST_RESPONSE, LIST_TASKS_RESPONSE_WATER
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.mark.parametrize("api_responses", [[LIST_TASK_LIST_RESPONSE]])
+@pytest.mark.parametrize(
+    "api_responses", [[LIST_TASK_LIST_RESPONSE, LIST_TASKS_RESPONSE_WATER]]
+)
 async def test_setup(
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -42,8 +45,10 @@ async def test_setup(
     assert not hass.services.async_services().get(DOMAIN)
 
 
-@pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
-@pytest.mark.parametrize("api_responses", [[LIST_TASK_LIST_RESPONSE]])
+@pytest.mark.parametrize("expires_at", [time.time() - 86400], ids=["expired"])
+@pytest.mark.parametrize(
+    "api_responses", [[LIST_TASK_LIST_RESPONSE, LIST_TASKS_RESPONSE_WATER]]
+)
 async def test_expired_token_refresh_success(
     hass: HomeAssistant,
     integration_setup: Callable[[], Awaitable[bool]],
@@ -60,8 +65,8 @@ async def test_expired_token_refresh_success(
         json={
             "access_token": "updated-access-token",
             "refresh_token": "updated-refresh-token",
-            "expires_at": time.time() + 3600,
-            "expires_in": 3600,
+            "expires_at": time.time() + 86400,
+            "expires_in": 86400,
         },
     )
 
@@ -69,26 +74,26 @@ async def test_expired_token_refresh_success(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert config_entry.data["token"]["access_token"] == "updated-access-token"
-    assert config_entry.data["token"]["expires_in"] == 3600
+    assert config_entry.data["token"]["expires_in"] == 86400
 
 
 @pytest.mark.parametrize(
     ("expires_at", "status", "exc", "expected_state"),
     [
         (
-            time.time() - 3600,
+            time.time() - 86400,
             http.HTTPStatus.UNAUTHORIZED,
             None,
             ConfigEntryState.SETUP_ERROR,
         ),
         (
-            time.time() - 3600,
+            time.time() - 86400,
             http.HTTPStatus.INTERNAL_SERVER_ERROR,
             None,
             ConfigEntryState.SETUP_RETRY,
         ),
         (
-            time.time() - 3600,
+            time.time() - 86400,
             None,
             ClientError("error"),
             ConfigEntryState.SETUP_RETRY,
@@ -124,6 +129,16 @@ async def test_expired_token_refresh_failure(
     "response_handler",
     [
         ([(Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR}), b"")]),
+        # First request succeeds, second request fails
+        (
+            [
+                (
+                    Response({"status": HTTPStatus.OK}),
+                    json.dumps(LIST_TASK_LIST_RESPONSE),
+                ),
+                (Response({"status": HTTPStatus.INTERNAL_SERVER_ERROR}), b""),
+            ]
+        ),
     ],
 )
 async def test_setup_error(

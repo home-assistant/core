@@ -32,7 +32,7 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_TIMESTAMP, DEFAULT_NAME, DOMAIN
+from .const import CONF_TIMESTAMP, DOMAIN
 
 BOOLEAN_SELECTOR = BooleanSelector(BooleanSelectorConfig())
 TEMPLATE_SELECTOR = TemplateSelector(TemplateSelectorConfig())
@@ -105,7 +105,7 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             if not await self.validate_file_path(user_input[CONF_FILE_PATH]):
                 errors[CONF_FILE_PATH] = "not_allowed"
             else:
-                title = f"{DEFAULT_NAME} [{user_input[CONF_FILE_PATH]}]"
+                title = f"{platform.capitalize()} [{user_input[CONF_FILE_PATH]}]"
                 data = deepcopy(user_input)
                 options = {}
                 for key, value in user_input.items():

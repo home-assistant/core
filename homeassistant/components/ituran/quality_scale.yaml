@@ -55,10 +55,7 @@ rules:
       Only device_tracker platform.
   devices: done
   entity-category: todo
-  entity-disabled-by-default:
-    status: exempt
-    comment: |
-      No noisy entities
+  entity-disabled-by-default: done
   discovery:
     status: exempt
     comment: |

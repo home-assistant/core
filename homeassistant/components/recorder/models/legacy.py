@@ -14,7 +14,7 @@ from homeassistant.const import (
     COMPRESSED_STATE_STATE,
 )
 from homeassistant.core import Context, State
-import homeassistant.util.dt as dt_util
+from homeassistant.util import dt as dt_util
 
 from .state_attributes import decode_attributes_from_source
 from .time import process_timestamp
@@ -24,12 +24,12 @@ class LegacyLazyState(State):
     """A lazy version of core State after schema 31."""
 
     __slots__ = [
-        "_row",
         "_attributes",
-        "_last_changed_ts",
-        "_last_updated_ts",
-        "_last_reported_ts",
         "_context",
+        "_last_changed_ts",
+        "_last_reported_ts",
+        "_last_updated_ts",
+        "_row",
         "attr_cache",
     ]
 
