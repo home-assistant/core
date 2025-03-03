@@ -70,7 +70,64 @@ async def async_setup_platform(
 
     if not host:
         _LOGGER.error("No Roth Touchline detected")
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "missing_host",
+            is_fixable=True,
+            severity=IssueSeverity.ERROR,
+            translation_key="missing_host",
+            translation_placeholders={
+                "platform": "climate",
+                "integration_title": "Roth Touchline",
+            },
+        )
         return
+
+    _LOGGER.debug("Attempting to connect to Roth Touchline at %s", host)
+
+    # Verify that the host is reachable
+    try:
+        py_touchline = PyTouchline(url=host)
+        number_of_devices = await hass.async_add_executor_job(
+            py_touchline.get_number_of_devices
+        )
+
+        if number_of_devices == 0:
+            _LOGGER.error("No devices found on Roth Touchline at %s", host)
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "no_devices_found",
+                is_fixable=False,
+                severity=IssueSeverity.ERROR,
+                translation_key="no_devices_found",
+                translation_placeholders={
+                    "platform": "climate",
+                    "integration_title": "Roth Touchline",
+                },
+            )
+            return
+
+    except ConnectionError as err:
+        _LOGGER.error("Failed to connect to Roth Touchline at %s: %s", host, err)
+        async_create_issue(
+            hass,
+            DOMAIN,
+            "connection_failed",
+            is_fixable=False,
+            severity=IssueSeverity.ERROR,
+            translation_key="connection_failed",
+            translation_placeholders={
+                "platform": "climate",
+                "integration_title": "Roth Touchline",
+            },
+        )
+        return
+
+    _LOGGER.debug(
+        "Successfully connected to Roth Touchline at %s, importing config", host
+    )
 
     # Log a deprecation warning in the logs
     _LOGGER.warning(
