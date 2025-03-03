@@ -505,11 +505,11 @@ class CloudLoginView(CloudOnboardingView, cloud_http.CloudLoginView):
         return await super()._post(request)
 
 
-class CloudLogoutView(CloudOnboardingView, cloud_http.CloudLoginView):
+class CloudLogoutView(CloudOnboardingView, cloud_http.CloudLogoutView):
     """Log out of the Home Assistant cloud."""
 
-    url = "/api/onboarding/cloud/login"
-    name = "api:onboarding:cloud:login"
+    url = "/api/onboarding/cloud/logout"
+    name = "api:onboarding:cloud:logout"
 
     @with_cloud
     async def post(self, request: web.Request) -> web.Response:
