@@ -5,6 +5,7 @@ from io import StringIO
 import json
 from unittest.mock import Mock, patch
 
+from botocore.exceptions import ConnectTimeoutError
 import pytest
 
 from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
@@ -14,13 +15,17 @@ from homeassistant.components.s3.backup import (
     _serialize,
     async_register_backup_agents_listener,
 )
-from homeassistant.components.s3.const import DATA_BACKUP_AGENT_LISTENERS, DOMAIN
+from homeassistant.components.s3.const import (
+    CONF_ENDPOINT_URL,
+    DATA_BACKUP_AGENT_LISTENERS,
+    DOMAIN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.backup import async_initialize_backup
 from homeassistant.setup import async_setup_component
 
 from . import setup_integration
-from .const import TEST_BACKUP
+from .const import TEST_BACKUP, USER_INPUT
 
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator, MagicMock, WebSocketGenerator
@@ -332,6 +337,67 @@ async def test_agents_upload(
     mock_client.create_multipart_upload.assert_awaited_once()
     mock_client.upload_part.assert_awaited()
     mock_client.complete_multipart_upload.assert_awaited_once()
+
+
+async def test_agents_upload_network_failure(
+    hass_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test agent upload backup with network failure."""
+    client = await hass_client()
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+        ) as fetch_backup,
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=AgentBackup(
+                addons=[],
+                backup_id="23e64aec",
+                date="2024-11-22T11:48:48.727189+01:00",
+                database_included=True,
+                extra_metadata={},
+                folders=[],
+                homeassistant_included=True,
+                homeassistant_version="2024.12.0.dev0",
+                name="Core 2024.12.0.dev0",
+                protected=False,
+                size=34519040,
+            ),
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(side_effect=[b"test", b""])
+        fetch_backup.return_value = AgentBackup(
+            addons=[],
+            backup_id="23e64aec",
+            date="2024-11-22T11:48:48.727189+01:00",
+            database_included=True,
+            extra_metadata={},
+            folders=[],
+            homeassistant_included=True,
+            homeassistant_version="2024.12.0.dev0",
+            name="Core 2024.12.0.dev0",
+            protected=False,
+            size=34519040,
+        )
+        # simulate network failure
+        mock_client.upload_part.side_effect = (
+            mock_client.abort_multipart_upload.side_effect
+        ) = ConnectTimeoutError(endpoint_url=USER_INPUT[CONF_ENDPOINT_URL])
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+    assert resp.status == 201
+    assert "Upload failed for s3" in caplog.text
+    assert "Failed to abort multipart upload" in caplog.text
+    mock_client.create_multipart_upload.assert_awaited_once()
+    mock_client.upload_part.assert_awaited()
+    mock_client.abort_multipart_upload.assert_awaited_once()
 
 
 async def test_agents_download(

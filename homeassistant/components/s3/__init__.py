@@ -51,8 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: S3ConfigEntry) -> bool:
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err
-    else:
-        entry.runtime_data = client
+    entry.runtime_data = client
 
     # Notify backup listeners
     def notify_backup_listeners() -> None:
