@@ -122,7 +122,7 @@ class ComelitBridgeSensorEntity(CoordinatorEntity[ComelitSerialBridge], SensorEn
         return cast(
             StateType,
             getattr(
-                self._device,
+                self.coordinator.data[OTHER][self._device.index],
                 self.entity_description.key,
             ),
         )
