@@ -410,6 +410,26 @@ async def test_reauth_account_mismatch(
     assert result["reason"] == "reauth_account_mismatch"
 
 
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauthentication_no_cloud(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test SmartThings reauthentication without cloud."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+
 @pytest.mark.usefixtures("current_request_with_host", "use_cloud")
 async def test_migration(
     hass: HomeAssistant,
@@ -562,3 +582,27 @@ async def test_migration_wrong_location(
     )
     assert mock_old_config_entry.version == 3
     assert mock_old_config_entry.minor_version == 1
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_migration_no_cloud(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_smartthings: AsyncMock,
+    mock_old_config_entry: MockConfigEntry,
+) -> None:
+    """Test SmartThings reauthentication with different account."""
+    mock_old_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_old_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_old_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    result = hass.config_entries.flow.async_progress()[0]
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cloud_not_enabled"
