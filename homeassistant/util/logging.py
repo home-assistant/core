@@ -34,8 +34,8 @@ class LoggerCount:
 class HomeAssistantQueueListener(logging.handlers.QueueListener):
     """Custom QueueListener to watch for noisy loggers."""
 
-    monitor_time_window = datetime.timedelta(minutes=1)
-    max_logs_per_window = 60
+    monitor_time_window = datetime.timedelta(minutes=2)
+    max_logs_per_window = 120
 
     def __init__(
         self, queue: SimpleQueue[logging.Handler], *handlers: logging.Handler
@@ -59,7 +59,8 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             self._log_counts[logger_name] = LoggerCount(1, now)
             return
 
-        if (now - module_count.start_time) > self.monitor_time_window:
+        ellapsed_time = now - module_count.start_time
+        if ellapsed_time > self.monitor_time_window:
             module_count.count = 1
             module_count.start_time = now
             return
@@ -72,7 +73,7 @@ class HomeAssistantQueueListener(logging.handlers.QueueListener):
             "Module %s is logging too frequently. %d messages in the last %s seconds",
             logger_name,
             module_count.count,
-            int(self.monitor_time_window.total_seconds()),
+            int(ellapsed_time.total_seconds()),
         )
         module_count.count = 1
         module_count.start_time = now

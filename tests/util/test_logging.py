@@ -190,13 +190,13 @@ async def test_noisy_loggers(
 
     assert (
         caplog.text.count(
-            "Module noisy1 is logging too frequently. 5 messages in the last 60 seconds"
+            "Module noisy1 is logging too frequently. 5 messages in the last"
         )
         == logger1_expected_notices
     )
     assert (
         caplog.text.count(
-            "Module noisy2.module is logging too frequently. 5 messages in the last 60 seconds"
+            "Module noisy2.module is logging too frequently. 5 messages in the last"
         )
         == logger2_expected_notices
     )
