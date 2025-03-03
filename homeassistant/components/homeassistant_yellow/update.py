@@ -148,6 +148,16 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
 
         self._attr_unique_id = self.entity_description.key
 
+        # Use the cached firmware info if it exists
+        if self._config_entry.data[FIRMWARE] is not None:
+            self._current_firmware_info = FirmwareInfo(
+                device=device,
+                firmware_type=ApplicationType(self._config_entry.data[FIRMWARE]),
+                firmware_version=self._config_entry.data[FIRMWARE_VERSION],
+                owners=[],
+                source="homeassistant_yellow",
+            )
+
     @callback
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
         """Handle updated firmware info being pushed by an integration."""
