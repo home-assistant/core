@@ -44,7 +44,6 @@ class FibaroEntity(Entity):
 
     def _update_callback(self, fibaro_device: DeviceModel) -> None:
         """Update the state."""
-        self.fibaro_device = fibaro_device
         self.schedule_update_ha_state(True)
 
     @property
