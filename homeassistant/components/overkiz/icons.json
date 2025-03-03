@@ -1,0 +1,28 @@
+{
+  "entity": {
+    "climate": {
+      "overkiz": {
+        "state_attributes": {
+          "preset_mode": {
+            "default": "mdi:circle-medium",
+            "state": {
+              "activity": "mdi:motion-sensor",
+              "auto": "mdi:thermostat-auto",
+              "away": "mdi:account-arrow-right",
+              "boost": "mdi:rocket-launch",
+              "comfort": "mdi:thermometer-high",
+              "comfort-1": "mdi:thermometer",
+              "comfort-2": "mdi:thermometer-low",
+              "frost_protection": "mdi:snowflake",
+              "eco": "mdi:leaf",
+              "home": "mdi:home",
+              "sleep": "mdi:bed",
+              "prog": "mdi:clock-outline",
+              "external": "mdi:remote"
+            }
+          }
+        }
+      }
+    }
+  }
+}
