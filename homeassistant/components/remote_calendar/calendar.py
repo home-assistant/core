@@ -27,8 +27,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the remote calendar platform."""
     coordinator = entry.runtime_data
-    name = entry.data[CONF_CALENDAR_NAME]
-    entity = RemoteCalendarEntity(coordinator, name)
+    entity = RemoteCalendarEntity(coordinator, entry)
     async_add_entities([entity])
 
 
@@ -42,12 +41,12 @@ class RemoteCalendarEntity(
     def __init__(
         self,
         coordinator: RemoteCalendarDataUpdateCoordinator,
-        name: str,
+        entry: RemoteCalendarConfigEntry,
     ) -> None:
         """Initialize RemoteCalendarEntity."""
         super().__init__(coordinator)
-        self._attr_name = name
-        self._attr_unique_id = name
+        self._attr_name = entry.data[CONF_CALENDAR_NAME]
+        self._attr_unique_id = entry.entry_id
 
     @property
     def event(self) -> CalendarEvent | None:
