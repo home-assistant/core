@@ -151,10 +151,10 @@ class SwitchTemplate(TemplateEntity, SwitchEntity, RestoreEntity):
             assert name is not None
         self._template = config.get(CONF_VALUE_TEMPLATE)
 
-        if (on_action := config.get(CONF_TURN_ON)) is not None:
-            self.add_script(hass, CONF_TURN_ON, on_action, name, DOMAIN)
-        if (off_action := config.get(CONF_TURN_OFF)) is not None:
-            self.add_script(hass, CONF_TURN_OFF, off_action, name, DOMAIN)
+        if on_action := config.get(CONF_TURN_ON):
+            self.add_script(CONF_TURN_ON, on_action, name, DOMAIN)
+        if off_action := config.get(CONF_TURN_OFF):
+            self.add_script(CONF_TURN_OFF, off_action, name, DOMAIN)
 
         self._state: bool | None = False
         self._attr_assumed_state = self._template is None

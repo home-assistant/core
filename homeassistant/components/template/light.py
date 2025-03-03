@@ -193,11 +193,9 @@ class LightTemplate(TemplateEntity, LightEntity):
         self._min_mireds_template = config.get(CONF_MIN_MIREDS_TEMPLATE)
         self._supports_transition_template = config.get(CONF_SUPPORTS_TRANSITION)
 
-        for action_id in (CONF_ON_ACTION, CONF_OFF_ACTION):
-            self.add_script(hass, action_id, config[action_id], name, DOMAIN)
-
-        if (effect_config := config.get(CONF_EFFECT_ACTION)) is not None:
-            self.add_script(hass, CONF_EFFECT_ACTION, effect_config, name, DOMAIN)
+        for action_id in (CONF_ON_ACTION, CONF_OFF_ACTION, CONF_EFFECT_ACTION):
+            if action_config := config.get(action_id):
+                self.add_script(action_id, action_config, name, DOMAIN)
 
         self._state = False
         self._brightness = None
@@ -225,7 +223,7 @@ class LightTemplate(TemplateEntity, LightEntity):
             (CONF_RGBWW_ACTION, ColorMode.RGBWW),
         ):
             if (action_config := config.get(action_id)) is not None:
-                self.add_script(hass, action_id, action_config, name, DOMAIN)
+                self.add_script(action_id, action_config, name, DOMAIN)
                 color_modes.add(color_mode)
         self._supported_color_modes = filter_supported_color_modes(color_modes)
         if len(self._supported_color_modes) > 1:

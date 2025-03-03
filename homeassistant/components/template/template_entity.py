@@ -268,7 +268,7 @@ class TemplateEntity(AbstractTemplateEntity):  # pylint: disable=hass-enforce-cl
         unique_id: str | None = None,
     ) -> None:
         """Template Entity."""
-        super().__init__()
+        super().__init__(hass)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
         self._attr_extra_state_attributes = {}

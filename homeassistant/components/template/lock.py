@@ -93,11 +93,14 @@ class TemplateLock(TemplateEntity, LockEntity):
             assert name is not None
 
         self._state_template = config.get(CONF_VALUE_TEMPLATE)
-        self.add_script(hass, CONF_LOCK, config[CONF_LOCK], name, DOMAIN)
-        self.add_script(hass, CONF_UNLOCK, config[CONF_UNLOCK], name, DOMAIN)
-        if (action_id := CONF_OPEN) in config:
-            self.add_script(hass, action_id, config[action_id], name, DOMAIN)
-            self._attr_supported_features |= LockEntityFeature.OPEN
+        for action_id, supported_feature in (
+            (CONF_LOCK, 0),
+            (CONF_UNLOCK, 0),
+            (CONF_OPEN, LockEntityFeature.OPEN),
+        ):
+            if action_config := config.get(action_id):
+                self.add_script(action_id, action_config, name, DOMAIN)
+                self._attr_supported_features |= supported_feature
         self._code_format_template = config.get(CONF_CODE_FORMAT_TEMPLATE)
         self._code_format: str | None = None
         self._code_format_template_error: TemplateError | None = None

@@ -214,8 +214,8 @@ class AlarmControlPanelTemplate(TemplateEntity, AlarmControlPanelEntity, Restore
             ),
             (CONF_TRIGGER_ACTION, AlarmControlPanelEntityFeature.TRIGGER),
         ):
-            if (action_config := config.get(action_id)) is not None:
-                self.add_script(hass, action_id, action_config, name, DOMAIN)
+            if action_config := config.get(action_id):
+                self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
 
         self._state: AlarmControlPanelState | None = None

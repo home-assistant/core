@@ -12,9 +12,10 @@ from homeassistant.helpers.template import TemplateStateFromEntityId
 class AbstractTemplateEntity(Entity):
     """Actions linked to a template entity."""
 
-    def __init__(self) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the entity."""
 
+        self.hass = hass
         self._action_scripts: dict[str, Script] = {}
 
     @property
@@ -29,7 +30,6 @@ class AbstractTemplateEntity(Entity):
 
     def add_script(
         self,
-        hass: HomeAssistant,
         script_id: str,
         config: Sequence[dict[str, Any]],
         name: str,
@@ -40,7 +40,7 @@ class AbstractTemplateEntity(Entity):
         # Cannot use self.hass because it may be None in child class
         # at instantiation.
         self._action_scripts[script_id] = Script(
-            hass,
+            self.hass,
             config,
             f"{name} {script_id}",
             domain,

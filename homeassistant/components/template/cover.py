@@ -160,24 +160,20 @@ class CoverTemplate(TemplateEntity, CoverEntity):
         self._tilt_template = config.get(CONF_TILT_TEMPLATE)
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
 
-        if (open_config := config.get(OPEN_ACTION)) is not None:
-            self.add_script(hass, OPEN_ACTION, open_config, name, DOMAIN)
-
-        if (close_config := config.get(CLOSE_ACTION)) is not None:
-            self.add_script(hass, CLOSE_ACTION, close_config, name, DOMAIN)
-
-        # The config requires open and close scripts, therefore the base
-        # supported features will always include them.
+        # The config requires (open and close scripts) or a set position script,
+        # therefore the base supported features will always include them.
         self._attr_supported_features = (
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
         )
         for action_id, supported_feature in (
+            (OPEN_ACTION, 0),
+            (CLOSE_ACTION, 0),
             (STOP_ACTION, CoverEntityFeature.STOP),
             (POSITION_ACTION, CoverEntityFeature.SET_POSITION),
             (TILT_ACTION, TILT_FEATURES),
         ):
-            if (action_config := config.get(action_id)) is not None:
-                self.add_script(hass, action_id, action_config, name, DOMAIN)
+            if action_config := config.get(action_id):
+                self.add_script(action_id, action_config, name, DOMAIN)
                 self._attr_supported_features |= supported_feature
 
         optimistic = config.get(CONF_OPTIMISTIC)

@@ -157,9 +157,7 @@ class TemplateNumber(TemplateEntity, NumberEntity):
         super().__init__(hass, config=config, unique_id=unique_id)
         assert self._attr_name is not None
         self._value_template = config[CONF_STATE]
-        self.add_script(
-            hass, CONF_SET_VALUE, config[CONF_SET_VALUE], self._attr_name, DOMAIN
-        )
+        self.add_script(CONF_SET_VALUE, config[CONF_SET_VALUE], self._attr_name, DOMAIN)
 
         self._step_template = config[CONF_STEP]
         self._min_value_template = config[CONF_MIN]
