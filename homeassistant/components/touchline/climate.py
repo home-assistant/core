@@ -167,29 +167,26 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Touchline device from config entry."""
-    host = config.data[CONF_HOST]
+
+    # Retrieve stored API and device count from `runtime_data`
+    touchline_data = hass.data[DOMAIN].get(config.entry_id)
+    if not touchline_data:
+        _LOGGER.error("Touchline runtime data missing for entry %s", config.entry_id)
+        return
+
+    py_touchline = touchline_data["api"]
+    number_of_devices = touchline_data["device_count"]
+
     _LOGGER.debug(
-        "Host: %s",
-        host,
+        "Setting up %s Touchline devices from stored runtime data", number_of_devices
     )
 
-    # Create a new PyTouchline instance with the host as the IP address.
-    py_touchline = PyTouchline(url=host)
-
-    # Get the number of devices from the PyTouchline instance.
-    number_of_devices = int(
-        await hass.async_add_executor_job(py_touchline.get_number_of_devices)
-    )
-    _LOGGER.debug(
-        "Number of devices found: %s",
-        number_of_devices,
-    )
-
+    # Create entities for each device
     devices = [
-        Touchline(PyTouchline(id=device_id, url=host))
+        Touchline(PyTouchline(id=device_id, url=py_touchline.url))
         for device_id in range(number_of_devices)
     ]
-    # Add the devices to Home Assistant.
+
     async_add_entities(devices, True)
 
 
