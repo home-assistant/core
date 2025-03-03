@@ -6,16 +6,19 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.homee.const import (
+    DOMAIN,
     OPEN_CLOSE_MAP,
     OPEN_CLOSE_MAP_REVERSED,
     WINDOW_MAP,
     WINDOW_MAP_REVERSED,
 )
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import LIGHT_LUX, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 
 from . import async_update_attribute_value, build_mock_node, setup_integration
+from .conftest import HOMEE_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -37,7 +40,7 @@ async def test_up_down_values(
 
     assert hass.states.get("sensor.test_multisensor_state").state == OPEN_CLOSE_MAP[0]
 
-    attribute = mock_homee.nodes[0].attributes[26]
+    attribute = mock_homee.nodes[0].attributes[27]
     for i in range(1, 5):
         await async_update_attribute_value(hass, attribute, i)
         assert (
@@ -69,7 +72,7 @@ async def test_window_position(
         == WINDOW_MAP[0]
     )
 
-    attribute = mock_homee.nodes[0].attributes[31]
+    attribute = mock_homee.nodes[0].attributes[32]
     for i in range(1, 3):
         await async_update_attribute_value(hass, attribute, i)
         assert (
@@ -107,6 +110,38 @@ async def test_brightness_sensor(
     assert sensor_state.state == "7000.0"
     assert sensor_state.attributes["unit_of_measurement"] == LIGHT_LUX
     assert sensor_state.attributes["friendly_name"] == "Test MultiSensor Illuminance 2"
+
+
+async def test_sensor_deprecation_issue(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test sensor deprecation issue."""
+    mock_homee.nodes = [build_mock_node("sensors.json")]
+    mock_homee.get_node_by_id.return_value = mock_homee.nodes[0]
+    entity_uid = f"{HOMEE_ID}-1-9"
+    entity_id = "test_multisensor_valve_position"
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        entity_uid,
+        suggested_object_id=entity_id,
+        disabled_by=None,
+    )
+
+    with patch(
+        "homeassistant.components.homee.sensor.entity_used_in", return_value=True
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert entity_registry.async_get(f"sensor.{entity_id}") is not None
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=f"deprecated_entity_{entity_uid}",
+    )
 
 
 async def test_sensor_snapshot(

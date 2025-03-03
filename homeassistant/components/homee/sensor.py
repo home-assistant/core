@@ -269,6 +269,13 @@ NODE_SENSOR_DESCRIPTIONS: tuple[HomeeNodeSensorEntityDescription, ...] = (
 )
 
 
+def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
+    """Get list of related automations and scripts."""
+    used_in = automations_with_entity(hass, entity_id)
+    used_in += scripts_with_entity(hass, entity_id)
+    return used_in
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
@@ -282,15 +289,7 @@ async def async_setup_entry(
         attribute: HomeeAttribute, description: HomeeSensorEntityDescription
     ) -> None:
         """Add deprecated entities."""
-
-        def entity_used_in(hass: HomeAssistant, entity_id: str) -> list[str]:
-            """Get list of related automations and scripts."""
-            used_in = automations_with_entity(hass, entity_id)
-            used_in += scripts_with_entity(hass, entity_id)
-            return used_in
-
         entity_uid = f"{config_entry.runtime_data.settings.uid}-{attribute.node_id}-{attribute.id}"
-
         if entity_id := ent_reg.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, entity_uid):
             entity_entry = ent_reg.async_get(entity_id)
             if entity_entry and entity_entry.disabled:
