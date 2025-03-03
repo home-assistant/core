@@ -3,7 +3,11 @@ from contextlib import asynccontextmanager
 
 from aiobotocore.client import AioBaseClient
 from aiobotocore.session import AioSession
-import botocore
+from botocore.exceptions import (
+    ClientError,
+    EndpointConnectionError,
+    ParamValidationError,
+)
 
 
 @asynccontextmanager
@@ -20,11 +24,11 @@ async def get_client(data: dict[str, str]) -> AsyncGenerator[AioBaseClient]:
             yield client
     except ValueError as err:
         raise InvalidEndpointURLError from err
-    except botocore.exceptions.EndpointConnectionError as err:
+    except EndpointConnectionError as err:
         raise CannotConnectError from err
-    except botocore.exceptions.ClientError as err:
+    except ClientError as err:
         raise InvalidCredentialsError from err
-    except botocore.exceptions.ParamValidationError as err:
+    except ParamValidationError as err:
         if "Invalid bucket name" in str(err):
             raise InvalidBucketNameError from err
 

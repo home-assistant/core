@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import logging
 from typing import Any
+from urllib.parse import urlparse
 
 import voluptuous as vol
 
@@ -14,6 +14,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util import slugify
 
 from ._api import (
     CannotConnectError,
@@ -30,8 +31,6 @@ from .const import (
     DOMAIN,
 )
 
-_LOGGER = logging.getLogger(__name__)
-
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ACCESS_KEY_ID): cv.string,
@@ -46,16 +45,22 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_input(data: dict[str, Any]) -> None:
-    """Validate the user input allows us to connect."""
-    async with get_client(data):
-        pass
+def _get_unique_id(data: dict[str, str]) -> str:
+    """Generate config entry's unique ID from the provided user input."""
+    parsed_url = urlparse(data[CONF_ENDPOINT_URL])
+    return ".".join(
+        map(
+            slugify,
+            [
+                parsed_url.netloc,
+                data[CONF_BUCKET],
+            ],
+        )
+    )
 
 
 class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
-
-    VERSION = 1
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -64,10 +69,11 @@ class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            await self.async_set_unique_id(user_input[CONF_BUCKET])
+            await self.async_set_unique_id(_get_unique_id(user_input))
             self._abort_if_unique_id_configured()
             try:
-                await validate_input(user_input)
+                async with get_client(user_input):
+                    pass
             except InvalidCredentialsError:
                 errors["base"] = "invalid_credentials"
             except InvalidBucketNameError:

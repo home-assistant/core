@@ -52,6 +52,7 @@ def mock_client() -> Generator[MagicMock]:
         )
         client.upload_part = AsyncMock(return_value={"ETag": "etag"})
         client.complete_multipart_upload = AsyncMock()
+        client.abort_multipart_upload = AsyncMock()
 
         class MockStream:
             async def iter_chunks(self) -> AsyncIterator[bytes]:
@@ -68,6 +69,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         unique_id="test",
+        entry_id="test",
         title="test",
         domain=DOMAIN,
         data=USER_INPUT,
