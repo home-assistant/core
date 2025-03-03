@@ -1,6 +1,6 @@
 """Calendar platform for a Remote Calendar."""
 
-from datetime import date, datetime, timedelta
+from datetime import datetime
 import logging
 
 from ical.event import Event
@@ -70,23 +70,15 @@ class RemoteCalendarEntity(
 
 def _get_calendar_event(event: Event) -> CalendarEvent:
     """Return a CalendarEvent from an API event."""
-    start: datetime | date
-    end: datetime | date
-    if isinstance(event.start, datetime) and isinstance(event.end, datetime):
-        start = dt_util.as_local(event.start)
-        end = dt_util.as_local(event.end)
-        if (end - start) <= timedelta(seconds=0):
-            end = start + timedelta(minutes=30)
-    else:
-        start = event.start
-        end = event.end
-        if (end - start) < timedelta(days=0):
-            end = start + timedelta(days=1)
 
     return CalendarEvent(
         summary=event.summary,
-        start=start,
-        end=end,
+        start=dt_util.as_local(event.start)
+        if isinstance(event.start, datetime)
+        else event.start,
+        end=dt_util.as_local(event.end)
+        if isinstance(event.end, datetime)
+        else event.end,
         description=event.description,
         uid=event.uid,
         rrule=event.rrule.as_rrule_str() if event.rrule else None,
